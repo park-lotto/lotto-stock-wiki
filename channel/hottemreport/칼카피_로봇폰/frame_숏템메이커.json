@@ -1,0 +1,206 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 559,
+   "w": 1080,
+   "h": 1361,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템메이커",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    242,
+    255,
+    240
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 200,
+    "rgb": [
+     0,
+     255,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템메이커",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    242,
+    255,
+    240
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 200,
+    "rgb": [
+     0,
+     255,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템메이커",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    242,
+    255,
+    240
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 120,
+    "rgb": [
+     0,
+     255,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "text": "AI인 줄 알았던\n춤추는 로봇 폰",
+   "x": 540,
+   "y": 288,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "TmonMonsori",
+   "size": 125,
+   "line_h": 134,
+   "rgb": [
+    250,
+    234,
+    2
+   ],
+   "line_rgb": [
+    [
+     250,
+     234,
+     2
+    ],
+    [
+     253,
+     32,
+     30
+    ]
+   ],
+   "line_scale": [
+    0.85,
+    1.16
+   ],
+   "outline": null,
+   "line_outline": [
+    [
+     4,
+     0,
+     0,
+     0
+    ],
+    [
+     4,
+     70,
+     0,
+     0
+    ]
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1383,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 84,
+   "line_h": 104,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "outline": {
+    "px": 8,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "frame_로봇폰.json 복사 — 채널명(brand 층 3장, 글로우 겹침)만 '숏템메이커'로(사장님 10-16). 글꼴·크기·색·글로우·자리·가운데 정렬 그대로"
+}

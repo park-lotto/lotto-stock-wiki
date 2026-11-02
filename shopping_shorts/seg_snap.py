@@ -49,7 +49,7 @@ def _cache_path(video_path):
 def detect_cuts(video_path, timeout=300):
     """영상 → 장면 전환 프레임의 pts(초) 목록(새 장면 첫 프레임). 원본 프레임률 그대로(60fps 소재도 프레임마다)."""
     cmd = ["ffmpeg", "-v", "info", "-nostats", "-threads", "2", "-i", str(video_path), "-an",
-           "-vf", "scale=%d:%d,format=rgb24,showinfo" % (_W, _H), "-vsync", "passthrough", "-f", "rawvideo", "-"]
+           "-vf", "scale=%d:%d,format=rgb24,showinfo" % (_W, _H), "-fps_mode", "passthrough", "-f", "rawvideo", "-"]
     r = subprocess.run(cmd, capture_output=True, timeout=timeout)
     if r.returncode != 0:
         raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])

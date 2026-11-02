@@ -1,0 +1,796 @@
+{
+ "topic": "Chill Systems(얼음 없이 냉동 젤로 캔 3개를 차갑게 하는 휴대 쿨러) — 15만 달러/15% 요청 → '가장 큰 경쟁자는 얼음' · 3캔·원가 37달러 · 발표 태도 → 샤크 전원 거절(방송 안 결과)",
+ "bench": {
+  "id": "qRhDJRH63Ec",
+  "channel": "Spark_Moment @Spark_Moments6",
+  "title": "가장 큰 경쟁자는 얼음🧊 (화면 제목: 가장 큰 경쟁자는? / ??: 얼음이요)",
+  "dur": 38.05,
+  "views": 1807648,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "form_bench": "foreignshowshow 같은 제품 쇼츠 없음 → 소재·원음 순간 = Spark, 0초 훅·효과·자막 꼴 = foreignshowshow 공식 6박자(공통 지시)"
+ },
+ "form": "방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 301.41~302.91 'Who is your number one competitor?' · 303.57~303.81 'Ice.' · 304.61~305.17 'Ice?' (whisper-small 낱말 시각 + 구간 단독 gemini-flash-latest·3.5-flash-lite 2모델 asr/span_v1.json) · 화면 299.87~301.94 분홍 Chill 쿨러 → 301.94 금발 투자자 → 303.34 창업자 → 304.14 금발 투자자 → 305.61 남색 정장 투자자 웃음",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 19.20~21.94 'It's a portable beverage cooler with freezing gel built in.'(whisper + flash-latest·flash-lite-latest asr/span_v1·v2) · 32.04~34.16 'the chiller doesn't need ice'(whisper + 2모델) · 화면 76.28~82.58 분홍·빨간 쿨러",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 28.24~31.82 'Hey sharks. This is Brian. Sorry I'm late. I had to buy ice.'(whisper + 2모델 일치) · 화면 28.43~31.83 얼음 봉지 든 창업자. 이름 띠 109~114초 'CHASE MITCHELL & BRIAN BLOCH'(화면 글자) — 자막에는 이름 안 씀",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 130.02~131.78 'It only holds three cans.' · 132.36~136.36 'I mean, I don't know about you, but I'll get through this in about 45 minutes.'(whisper + 2모델 일치) · 투자자 앞 쿨러 샘플 글자 'KEVIN'(화면)",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 136.66~141.18 'Sure. And you know, Kevin, we've heard that feedback before from macho men on the internet. Only three beers?'(whisper 'Macho Man' · flash-latest 'macho men' · flash-lite-latest 'Macho Man' — 마초 3/3, 단·복수만 갈림) → '빗대 버린 셈'은 해석 → 전언체 '~셈인데'",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 160.26~160.94 'What's the cost?' · 162.06~165.38 'The chiller you have in front of you, our product cost is awful.'(whisper + flash-lite-latest)",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 172.90~187.42 '$18 a unit to build' → 'import $3.50' → '$22' → 'sleeves another $11' → '$32' → 'all the way up to $37 for that one that you have in front of you' · 187.42~189.08 'To make it? To make it? The cost?' · 190.10 '$37.' · 193.8~196.76 'since then … bring that cost down to $18'(whisper 전체 + d37·wow 구간 flash-lite-latest)",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 382.43~384.61 'This is a really bad idea.' · 389.39~394.77 'I don't even buy the sustainability thing … I hate it. I'm out.' · 397.55~399.89 'Look, first of all, your presentation sucked.'(whisper + flash-lite-latest)",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f9": {
+   "text": "원본 'I'm out' 5회: 394.47 · 414.63('for those reasons, I'm out') · 511.77 · 530.23('So I'm sorry I'm out') · 545.53('I personally am out')(whisper 전체 받아쓰기) + 551~560 두 창업자 퇴장 화면 · 벤치 Spark '아무한테서도 투자받지 못하고'",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  },
+  "f10": {
+   "text": "원본 562.05~563.67 'and the sharks are gonna wish that they invested.'(whisper + flash-lite-latest) · 화면 560.16~563.83 퇴장 인터뷰(방송 안)",
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "kind": "방송 원음+화면"
+  }
+ },
+ "dropped": [
+  "벤치 나레 '이 제품은 한 번에 음료 세 병을 칠링할 수 있는 아이스박스입니다' — 존댓말 설명체 → 우리 반말 전언체 N1('얼음 없이 … 쿨러인데')로, 3병은 O5 원음(Kevin)으로",
+  "벤치 나레 '이들은 또 큰 실수를 합니다' + 원음 'Never ever start …'(167.40~168.56) — 받아쓰기 끝이 잘림('never ever start' 뒤 낱말 없음) = 번역 확정 못 함 + 길이 → 뺌",
+  "벤치 나레 '비용을 다시 묻자' → 원본엔 다시 묻는 말이 없음(창업자가 이어서 원가를 쌓아 설명, 172.9~187.4) → N5 '원가를 다시 따져 보니 자꾸 불어났다는데'",
+  "벤치 나레 '하지만 발표자들의 태도에 분노하는데' — 원본 근거 = 플라스틱·친환경 주장 불신(389~393)·발표(397~399). '분노'는 해석 → 빼고 원음 O10·O12 로 보여 줌",
+  "벤치 마무리 '방송 후 이야기는 댓글에서 확인하세요' — 방송 후 사실(매출·회사 현황) 조사 안 함 → 방송 안 퇴장 인터뷰 원음(O13)으로 닫음",
+  "원본 '6시간'(150.52) — 2모델 갈림('Six hours'/'12 hours') → 안 씀",
+  "15만 달러/15% 요청(110.32~113.40, 화면 띠 'Seeking $150k for a 15% stake') — 벤치도 안 다룸, 길이 → 뺌"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "0초 훅(질문)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "가장 큰 경쟁자가",
+     "누구예요?"
+    ],
+    "cap_at": [
+     301.3,
+     302.29
+    ],
+    "span": [
+     301.3,
+     303.0
+    ],
+    "orig_en": "Who is your number one competitor?",
+    "text": "가장 큰 경쟁자가 누구예요?",
+    "style": "보통",
+    "fx": "0초 빨간 실선 원 — 제품(분홍 Chill 쿨러 로고). 벤치 Spark 0초 = 같은 제품 컷 + 같은 질문 원음",
+    "emph": [
+     {
+      "cap": "가장 큰 경쟁자가",
+      "span": "경쟁자가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "누구예요?",
+      "span": "누구예요?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "0초 훅(답)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "얼음이요"
+    ],
+    "cap_at": [
+     303.45
+    ],
+    "span": [
+     303.4,
+     304.1
+    ],
+    "orig_en": "Ice.",
+    "text": "얼음이요",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "얼음이요",
+      "span": "얼음이요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "0초 훅(반응)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "얼음이라고요?"
+    ],
+    "cap_at": [
+     304.55
+    ],
+    "span": [
+     304.2,
+     306.4
+    ],
+    "orig_en": "Ice? (투자자 웃음)",
+    "text": "얼음이라고요?",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "얼음이라고요?",
+      "span": "얼음이라고요?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "시연(정체)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "얼음 없이 음료를",
+     "차갑게 해 준다는",
+     "쿨러인데"
+    ],
+    "text": "얼음 없이 음료를 차갑게 해 준다는 쿨러인데",
+    "tts": "얼음 없이 음료를 차갑게 해 준다는 쿨러인데",
+    "emph": [
+     {
+      "cap": "얼음 없이 음료를",
+      "span": "없이 음료를",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차갑게 해 준다는",
+      "span": "해 준다는",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿨러인데",
+      "span": "쿨러인데",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "기존 불편",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "늦어서 죄송해요",
+     "얼음 사 오느라고요"
+    ],
+    "cap_at": [
+     30.1,
+     30.86
+    ],
+    "span": [
+     30.05,
+     31.8
+    ],
+    "orig_en": "Sorry I'm late. I had to buy ice.",
+    "text": "늦어서 죄송해요 얼음 사 오느라고요",
+    "style": "보통",
+    "fx": "빨간 점선 원(얼음 봉지 든 창업자) + 빨강 번쩍 — foreignshowshow 불편 박자(벤치 Spark 엔 이 장면 없음)",
+    "emph": [
+     {
+      "cap": "늦어서 죄송해요",
+      "span": "늦어서 죄송해요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "얼음 사 오느라고요",
+      "span": "오느라고요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "숫자(문제)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "딱 세 캔밖에",
+     "안 들어가네요",
+     "솔직히 저는",
+     "45분이면 다 마셔요"
+    ],
+    "cap_at": [
+     130.07,
+     130.94,
+     132.36,
+     134.14
+    ],
+    "span": [
+     130.07,
+     136.4
+    ],
+    "orig_en": "It only holds three cans. I mean, I don't know about you, but I'll get through this in about 45 minutes.",
+    "text": "딱 세 캔밖에 안 들어가네요 솔직히 저는 45분이면 다 마셔요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 장면 넘김(벤치 Spark 7.8 같은 원음)",
+    "emph": [
+     {
+      "cap": "딱 세 캔밖에",
+      "span": "딱 세 캔밖에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 들어가네요",
+      "span": "안 들어가네요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "솔직히 저는",
+      "span": "솔직히 저는",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "45분이면 다 마셔요",
+      "span": "45분이면",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "도발",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "그런 말 많이 들었어요",
+     "인터넷 마초들한테요",
+     "'겨우 세 캔?'이냐고"
+    ],
+    "cap_at": [
+     136.98,
+     138.62,
+     140.28
+    ],
+    "span": [
+     136.76,
+     141.2
+    ],
+    "orig_en": "And you know, Kevin, we've heard that feedback before from macho men on the internet. Only three beers?",
+    "text": "그런 말 많이 들었어요 인터넷 마초들한테요 '겨우 세 캔?'이냐고",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "그런 말 많이 들었어요",
+      "span": "많이 들었어요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "인터넷 마초들한테요",
+      "span": "마초들한테요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "'겨우 세 캔?'이냐고",
+      "span": "세 캔?'이냐고",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "도발(해설)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "투자자를",
+     "인터넷 마초에",
+     "빗대 버린 셈인데"
+    ],
+    "text": "투자자를 인터넷 마초에 빗대 버린 셈인데",
+    "tts": "투자자를 인터넷 마초에 빗대 버린 셈인데",
+    "emph": [
+     {
+      "cap": "투자자를",
+      "span": "투자자를",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "인터넷 마초에",
+      "span": "인터넷 마초에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "빗대 버린 셈인데",
+      "span": "버린 셈인데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "숫자(원가)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "원가가 얼마죠?",
+     "앞에 놓인 그 제품은",
+     "원가가 끔찍해요"
+    ],
+    "cap_at": [
+     160.26,
+     162.06,
+     164.18
+    ],
+    "span": [
+     160.2,
+     165.38
+    ],
+    "orig_en": "What's the cost? OK. The chiller you have in front of you, our product cost is awful.",
+    "text": "원가가 얼마죠? 앞에 놓인 그 제품은 원가가 끔찍해요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "원가가 얼마죠?",
+      "span": "원가가 얼마죠?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "앞에 놓인 그 제품은",
+      "span": "그 제품은",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "원가가 끔찍해요",
+      "span": "원가가 끔찍해요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "숫자(해설)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "원가를 다시",
+     "따져 보니",
+     "자꾸 불어났다는데"
+    ],
+    "text": "원가를 다시 따져 보니 자꾸 불어났다는데",
+    "tts": "원가를 다시 따져 보니 자꾸 불어났다는데",
+    "emph": [
+     {
+      "cap": "원가를 다시",
+      "span": "원가를 다시",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "따져 보니",
+      "span": "따져 보니",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자꾸 불어났다는데",
+      "span": "불어났다는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "숫자(37달러)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "앞에 있는 그 제품이",
+     "37달러까지 갔어요",
+     "만드는 데요?"
+    ],
+    "cap_at": [
+     185.6,
+     186.4,
+     187.42
+    ],
+    "span": [
+     185.6,
+     187.83
+    ],
+    "orig_en": "$37 for that one that you have in front of you. / To make it?",
+    "text": "앞에 있는 그 제품이 37달러까지 갔어요 만드는 데요?",
+    "style": "보통",
+    "fx": "분홍 위 화살표('37달러' 조각) + 초록 번쩍 — 숫자 박자",
+    "emph": [
+     {
+      "cap": "앞에 있는 그 제품이",
+      "span": "그 제품이",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "37달러까지 갔어요",
+      "span": "37달러까지",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만드는 데요?",
+      "span": "만드는 데요?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O10",
+    "kind": "원음",
+    "fn": "결정(거절)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "이건 정말",
+     "최악의 아이디어예요"
+    ],
+    "cap_at": [
+     382.45,
+     383.03
+    ],
+    "span": [
+     382.45,
+     384.56
+    ],
+    "orig_en": "This is a really bad idea.",
+    "text": "이건 정말 최악의 아이디어예요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 결정",
+    "emph": [
+     {
+      "cap": "이건 정말",
+      "span": "이건 정말",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "최악의 아이디어예요",
+      "span": "아이디어예요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O12",
+    "kind": "원음",
+    "fn": "결정(거절)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "우선 발표부터가",
+     "형편없었어요"
+    ],
+    "cap_at": [
+     397.55,
+     398.81
+    ],
+    "span": [
+     397.55,
+     399.84
+    ],
+    "orig_en": "Look, first of all, your presentation sucked.",
+    "text": "우선 발표부터가 형편없었어요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "우선 발표부터가",
+      "span": "우선 발표부터가",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "형편없었어요",
+      "span": "형편없었어요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "kind": "나레",
+    "fn": "결과",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "결국 샤크",
+     "누구도 투자하지",
+     "않았는데"
+    ],
+    "text": "결국 샤크 누구도 투자하지 않았는데",
+    "tts": "결국 샤크 누구도 투자하지 않았는데",
+    "emph": [
+     {
+      "cap": "결국 샤크",
+      "span": "결국 샤크",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "누구도 투자하지",
+      "span": "누구도 투자하지",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "않았는데",
+      "span": "않았는데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O13",
+    "kind": "원음",
+    "fn": "결과(퇴장 인터뷰)",
+    "facts": [
+     "f10"
+    ],
+    "caps": [
+     "샤크들이",
+     "투자 안 한 걸",
+     "후회할 거예요"
+    ],
+    "cap_at": [
+     562.05,
+     562.37,
+     562.79
+    ],
+    "span": [
+     562.0,
+     563.72
+    ],
+    "orig_en": "and the sharks are gonna wish that they invested.",
+    "text": "샤크들이 투자 안 한 걸 후회할 거예요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 결과",
+    "emph": [
+     {
+      "cap": "샤크들이",
+      "span": "샤크들이",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "투자 안 한 걸",
+      "span": "투자 안 한 걸",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "후회할 거예요",
+      "span": "후회할 거예요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "titles": {
+  "line1": "경쟁자가 얼음이라는",
+  "line2": "3캔짜리 쿨러?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '가장 큰 경쟁자는? / ??: 얼음이요'와 3어절 연속 겹침 0, 줄당 ≤12자(rules title.line_chars_max)"
+ },
+ "render": {
+  "gap": 0.03
+ }
+}

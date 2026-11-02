@@ -1,0 +1,144 @@
+{
+ "slug": "ggultemlab",
+ "ref": "@ggultem_lab1",
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 16.9,
+   "at": "2026-10-20 00:57",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\ggultemlab\\top.json"
+   },
+   "note": "꿀템연구소 lab 구독 39300 편 109 조회중앙 10,000 최대 57,000,000 (구독 대비 중앙 0.25)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 00:59",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\ggultemlab\\src",
+    "ids": [
+     "I6S4yyxBOus",
+     "cO66RnH3CE4",
+     "-61x15OUMh0",
+     "ULOCXRKmZq8",
+     "9h-qBve-udc",
+     "e0BJzVGXd_0"
+    ]
+   },
+   "note": "받음 6/6"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 1157.2,
+   "at": "2026-10-20 01:19",
+   "outputs": {
+    "ids": [
+     "I6S4yyxBOus",
+     "cO66RnH3CE4",
+     "-61x15OUMh0",
+     "ULOCXRKmZq8",
+     "9h-qBve-udc",
+     "e0BJzVGXd_0"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 110.8,
+   "at": "2026-10-20 01:21",
+   "outputs": {
+    "dirs": {
+     "I6S4yyxBOus": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_I6S4yyxBOus",
+     "cO66RnH3CE4": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_cO66RnH3CE4",
+     "-61x15OUMh0": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_-61x15OUMh0",
+     "ULOCXRKmZq8": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_ULOCXRKmZq8",
+     "9h-qBve-udc": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_9h-qBve-udc",
+     "e0BJzVGXd_0": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_e0BJzVGXd_0"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 01:21",
+   "outputs": {
+    "skeletons": [
+     "I6S4yyxBOus",
+     "cO66RnH3CE4",
+     "-61x15OUMh0",
+     "ULOCXRKmZq8",
+     "9h-qBve-udc",
+     "e0BJzVGXd_0"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 6편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.1,
+   "at": "2026-10-20 01:21",
+   "outputs": {
+    "pending": {
+     "I6S4yyxBOus": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "lines 비어 있음"
+     ],
+     "cO66RnH3CE4": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "lines 비어 있음"
+     ],
+     "-61x15OUMh0": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.6) speaker 미기입",
+      "줄0(0.0~0.6) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.1~1.6) speaker 미기입",
+      "줄1(1.1~1.6) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "ULOCXRKmZq8": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~3.2) speaker 미기입",
+      "줄0(0.0~3.2) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(4.8~7.7) speaker 미기입",
+      "줄1(4.8~7.7) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "9h-qBve-udc": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "lines 비어 있음"
+     ],
+     "e0BJzVGXd_0": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "lines 비어 있음"
+     ]
+    }
+   },
+   "note": "줄판독 미완 6/6편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "꿀템연구썰",
+ "n": 6,
+ "hybrid": "예",
+ "channel": {
+  "name": "꿀템연구소 lab",
+  "url": "https://www.youtube.com/@ggultem_lab1/shorts",
+  "subs": 39300,
+  "total": 109,
+  "view_median": 10000,
+  "view_max": 57000000,
+  "top_ids": [
+   "I6S4yyxBOus",
+   "cO66RnH3CE4",
+   "-61x15OUMh0",
+   "ULOCXRKmZq8",
+   "9h-qBve-udc",
+   "e0BJzVGXd_0"
+  ],
+  "views_per_sub": 0.25
+ }
+}

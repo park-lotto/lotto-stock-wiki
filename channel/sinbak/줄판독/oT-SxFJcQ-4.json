@@ -1,0 +1,709 @@
+{
+ "id": "oT-SxFJcQ-4",
+ "dur": 27.9,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "사소하지만 귀티나는 행동들",
+   "colors": [
+    {
+     "word": "사소하지만 귀티나는 행동들",
+     "hex": "#000000"
+    }
+   ],
+   "t0": 0.0,
+   "t1": 1.667,
+   "y": [
+    456,
+    517
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   456,
+   517
+  ],
+  "logo_y": [
+   280,
+   405
+  ],
+  "logo": "마스코트(주황 모자·돋보기 든 아이, 가슴에 '신박발견') x120 근방 + 'a novel discovery'(검정 굵은 영문, y280~359) + '신박발견'(검정 한글, y355~405) — 0~1.667초에만 보임",
+  "window": [
+   24,
+   27,
+   1056,
+   1279
+  ],
+  "window_open": [
+   24,
+   540,
+   1056,
+   1287
+  ],
+  "window_note": "0~1.667초는 로고·제목 아래 작은 창(y540~1287), 1.667초 컷부터 끝까지 창이 위로 커져 y27~1279(로고·제목 사라짐). 둥근 모서리",
+  "caption_band": [
+   1300,
+   1363
+  ],
+  "source_hex": "#f2f2f2",
+  "bottom_shade": "y1735~1920 #f2f2f2→#dcdcdc 옅은 그라데이션",
+  "watermark": null,
+  "source_y": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.667,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "서양 사람들 반응이 나뉜다는",
+   "layer": "신박발견-본문",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "야외 레스토랑, 크림색 재킷 여성이 테이블 앞 의자에 앉는 중(작은 창, 위에 로고·제목)",
+   "fit": 3,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    0.0
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 1.667,
+   "t1": 3.667,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "잘 배운 집안 에티켓 이라는데",
+   "layer": "신박발견-본문",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 여성이 앉아 카메라 보고 미소(창이 위로 커짐)",
+   "fit": 4,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    1.667
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 3.667,
+   "t1": 5.6,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "테이블은 '식사와 대화'의 공간",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 226,
+     "y": 273,
+     "w": 302,
+     "t_in": 3.667,
+     "t_out": 5.6,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "하늘색 원피스 여성이 분홍 클러치를 식탁 위에 올려놓음 → 4.9 클러치가 접시·잔 옆에 놓인 근접(틀린 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    3.667,
+    4.9
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 5.6,
+   "t1": 7.633,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "소지품은 뒤에 두세요",
+   "layer": "신박발견-본문",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "같은 여성이 클러치를 등 뒤 의자에 두고 앉음(원본 글 '✅ behind you')",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    5.6,
+    6.633
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 7.633,
+   "t1": 9.733,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "시끄럽게 여러번 끌지말고",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 357,
+     "y": 728,
+     "w": 405,
+     "t_in": 7.633,
+     "t_out": 9.733,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "크림 재킷 여성이 의자를 여러 번 덜컥덜컥 끌어 당김(틀린 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    7.633
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 9.733,
+   "t1": 11.733,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "코어에 힘을 줘 한번에 슥!",
+   "layer": "신박발견-본문",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "의자를 한 번에 조용히 빼고 앉음(바른 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    9.733
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 11.733,
+   "t1": 13.733,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "먼지 날리면 실례니까",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 334,
+     "y": 434,
+     "w": 270,
+     "t_in": 11.733,
+     "t_out": 13.733,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "검은 냅킨을 식탁 위에서 털어 펼침 → 12.83 흰 니트 근접(틀린 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    11.733,
+    12.833
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 13.733,
+   "t1": 15.8,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "냅킨은 아래에서 펴주세요",
+   "layer": "신박발견-본문",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "식탁 아래 무릎 위에서 냅킨을 펼침(바른 예)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    13.733,
+    15.3
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 15.8,
+   "t1": 17.8,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "스프는 몸쪽으로 뜨지말고",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 441,
+     "y": 115,
+     "w": 402,
+     "t_in": 15.8,
+     "t_out": 17.8,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토마토 수프를 숟가락으로 몸쪽으로 떠올림(틀린 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    15.8
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 17.8,
+   "t1": 19.8,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "밖으로 밀어 떠야 옷에 안 흘림",
+   "layer": "신박발견-본문",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "숟가락을 바깥쪽으로 밀어 떠서 먹음(바른 예)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    17.8
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 19.8,
+   "t1": 21.8,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "누군가 악수 하러 왔을땐",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 384,
+     "y": 684,
+     "w": 407,
+     "t_in": 19.8,
+     "t_out": 21.8,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "앉은 채로 악수하러 손만 내밂(틀린 예)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    19.8
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 21.8,
+   "t1": 23.8,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "나이 불문, 일어나 반겨줘요",
+   "layer": "신박발견-본문",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "일어나서 손을 맞잡음(바른 예)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    21.8
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 23.8,
+   "t1": 25.9,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "오른쪽에 물건을 두지 말고",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "주황 손그림 X(#f95d32, 획 두께 약 40px, 외곽선 없음)",
+     "x": 454,
+     "y": 638,
+     "w": 206,
+     "t_in": 23.8,
+     "t_out": 25.9,
+     "anim": "손그림 주황 X: 첫 획(왼위→오른아래)이 그어지고 둘째 획이 그어진 뒤 작아졌다 다시 그려지는 반복(약 0.9~1.1초 주기, 매 주기 한두 프레임 사라짐) · 줄 안에서 컷이 바뀌어도 화면 자리 고정"
+    }
+   ],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "오른손에 와인잔을 든 채 악수 손이 들어옴 → 25.23 잔이 다른 손으로 옮겨지는 중(틀린 예)",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    23.8,
+    25.233
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 25.9,
+   "t1": 27.9,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "왼쪽으로 옮겨 악수하세요",
+   "layer": "신박발견-본문",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant(다음 자막과 같은 프레임에 바뀜)",
+   "y": [
+    1300,
+    1363
+   ],
+   "x": 540,
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 손글씨풍 한글(이름 미확인)",
+    "basis": "눈"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "와인잔을 왼손으로 옮긴 모습 → 26.83 카메라 보고 미소로 끝",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    25.9,
+    26.833
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 5.6,
+   "t1": 7.633,
+   "speaker": "불명",
+   "voiced": false,
+   "text": "✅ behind you",
+   "layer": "원본박힘",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "exit": "instant",
+   "y": [
+    430,
+    575
+   ],
+   "x": 430,
+   "align": "left",
+   "size_px": 110,
+   "font": {
+    "name": "틱톡 기본 굵은 영문(원본 글자)",
+    "basis": "눈"
+   },
+   "fill_hex": "#ffffff",
+   "outline": "검정·약 6px(틱톡 글자 외곽)",
+   "emph": [
+    {
+     "word": "✅",
+     "hex": "#2e9e3e"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "원본 영상(틱톡류)에 박혀 있던 영문 글 — 소지품을 등 뒤에 두는 장면",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    5.6,
+    6.633
+   ],
+   "confidence": "눈"
+  }
+ ],
+ "beats": "훅(0~1.67 로고·제목 '사소하지만 귀티나는 행동들' + '서양 사람들 반응이 나뉜다는') → 다리(1.67~3.67 '잘 배운 집안 에티켓' 얼굴) → 틀린 예(X)/바른 예 짝 6번(3.67~25.9: 소지품·의자·냅킨·스프·악수 일어나기·악수 손) → 끝(25.9~27.9 '왼쪽으로 옮겨 악수하세요' 미소)",
+ "narr_share": {
+  "lines": "14/15",
+  "sec": "27.9/27.9",
+  "note": "채널 자막(나레 역할, 소리 없음) 14줄 0~27.9초 빈틈 없음 · 원본박힘 1줄"
+ },
+ "notes": [
+  "소리: 말소리 없음 — faster_whisper small int8 VAD 구간 0(VAD 끄면 '구독과 좋아요 부탁드려요!' 0~28초 한 줄 = 환각), 배경음악 연속(0.1초 RMS 대개 -18~-28dB). X 등장 자리에 맞춘 효과음은 파형에서 구분 안 됨 → sfx 전부 null(신호 기준, 귀로 확인 못 함)",
+  "구조: 틀린 행동 줄(짝수 본문) = 주황 X 손그림 6/6, 바른 행동 줄(답) = 표시 없음 6/6(첫 짝만 원본 글 '✅ behind you'). 자막이 바뀌는 프레임 = 컷 프레임(14/14 동시)",
+  "자막 바뀜 프레임(30fps): 50·110·168·229·292·352·412·474·534·594·654·714·777 — 거의 정확히 2초(60프레임) 간격",
+  "X 가 원본에 있던 표시인지 신박발견이 넣은 것인지는 판별 못 함(줄 안 컷 4.9·12.83·25.23 을 넘어도 화면 자리 고정 → 편집 층일 가능성)",
+  "제목은 고정 아님: 0~1.667초에만 보이고 창이 커지며 사라짐. 의성어 자막 없음(0개)",
+  "줄판독 근거 그림: C:/숏템_칼카피/sinbak/work/oT-SxFJcQ-4/ (ov·s1~s6·caps·top·behind·cap)"
+ ],
+ "name_evidence": [],
+ "_made_by": "줄판독 워커(1080 원본 프레임 눈·픽셀) 10-20",
+ "frame0": {
+  "what": "연회색 바탕 위 로고줄+제목+작은 창(크림 재킷 여성 착석)+본문 자막",
+  "face_frac": 0.0,
+  "text": "a novel discovery / 신박발견 / 사소하지만 귀티나는 행동들 / 서양 사람들 반응이 나뉜다는"
+ }
+}

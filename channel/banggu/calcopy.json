@@ -1,19 +1,22 @@
 {
- "name": "방구석 친구들 / 선물가게",
- "url": "https://www.youtube.com/channel/UChmVE-MBoZBGbiM5Q1w02Og",
+ "name": "방구석 친구들",
+ "url": "https://www.youtube.com/@방구석친구들D",
  "concept": "게시글 썰(이유 숨김)",
- "stats": {},
+ "stats": {
+  "subs": 21600,
+  "total": 107
+ },
  "steps": {
   "1": {
    "state": "done",
-   "date": "2026-10-05",
-   "note": "info 107편, 50만↑ 13편 + 선물가게 9편",
+   "date": "2026-10-15",
+   "note": "전체 107편 중 조회 상위 50편(10,000,000~39,000)",
    "files": []
   },
   "2": {
-   "state": "done",
-   "date": "2026-10-05",
-   "note": "컷·그림 상자·말 속도 실측(bench 자막 값은 이 틀에서 못 씀)",
+   "state": "doing",
+   "date": "2026-10-15",
+   "note": "1차 분석 멈춤 — 사장님: 버텍스·제미나이 말고 클로드로 분석",
    "files": []
   },
   "3": {
@@ -50,5 +53,5 @@
    "state": "todo"
   }
  },
- "next": "픽션 썰 시청 판정 → 엔진에 붙일 형식 결정"
+ "next": "② 썰풀다 다음: 상위 50편 1차 분석(analyze50)"
 }

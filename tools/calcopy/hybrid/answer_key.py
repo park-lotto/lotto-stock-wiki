@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""정답지 검증(볼케이노형 회원 라인, 관제 234·097 2026-10-21) — 집 PC 가 만든 편을 기준으로 회원 경로 결과를 단계마다 대조한다.
+"""정답지 검증(단계형 회원 라인, 관제 234·097 2026-10-21) — 집 PC 가 만든 편을 기준으로 회원 경로 결과를 단계마다 대조한다.
 
     py tools/calcopy/hybrid/answer_key.py cache  <편> --to <캐시 폴더>      # 받아 둔 원본·벤치·재료로 소스 캐시(유튜브 0회 시험용) — 원본 폴더는 복사만
     py tools/calcopy/hybrid/answer_key.py compare <편> --job <회원 작업 폴더> # 합격 표(answer_key_report.md) + 종료코드(0 합격)
 
-정답지 = KEYS[편] (조사.md §1 원본·근거.md 원음 구간·재료·쿠팡 번호). 합격 기준 = 설계 2026-10-21-숏템MCP-볼케이노형-design §8.
+정답지 = KEYS[편] (조사.md §1 원본·근거.md 원음 구간·재료·쿠팡 번호). 합격 기준 = 설계 2026-10-21-숏템MCP-단계형-design §8.
 """
 from __future__ import annotations
 

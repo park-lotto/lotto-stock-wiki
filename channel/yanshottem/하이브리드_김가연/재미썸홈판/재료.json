@@ -1,0 +1,175 @@
+{
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_김가연/src",
+ "src_main": "BzAhuUBlOAk.mp4",
+ "A": [
+  {
+   "at": 0.0,
+   "src": "BzAhuUBlOAk.mp4",
+   "ss": 1026.05,
+   "crop": [
+    710,
+    40,
+    640,
+    640
+   ],
+   "see": "화이트보드 들고 말하는 김가연 얼굴 크게(입 모양 맞음) — 0초 첫 화면"
+  },
+  {
+   "at": 2.9,
+   "src": "BzAhuUBlOAk.mp4",
+   "ss": 1198.0,
+   "crop": [
+    630,
+    30,
+    800,
+    800
+   ],
+   "see": "클리오 튜브·글로우 병 들고 말하는 김가연(입 모양 맞음)"
+  }
+ ],
+ "F1": [
+  {
+   "src": "BzAhuUBlOAk.mp4",
+   "ss": 1149.0,
+   "crop": [
+    560,
+    60,
+    760,
+    760
+   ],
+   "from_piece": 0,
+   "see": "웃는 김가연 얼굴 한 샷(1148.25~1152.4) — 301초 샷과 이어 붙이면 점프줌(배율 0.66)이라 한 샷으로"
+  }
+ ],
+ "B": [
+  {
+   "src": "P9DqLkT7X5Q.mp4",
+   "ss": 27.5,
+   "crop": [
+    600,
+    0,
+    860
+   ],
+   "kind": "제품",
+   "pieces": [
+    4,
+    5
+   ],
+   "seen": "원 색 glow 병을 손에 들어 보여 줌(얼굴은 손 뒤)"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 25.0,
+   "crop": [
+    240,
+    510,
+    780
+   ],
+   "kind": "제품",
+   "pieces": [
+    6,
+    7,
+    8
+   ],
+   "seen": "손등에 원 색 비비를 펴 바름"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 30.5,
+   "crop": [
+    240,
+    510,
+    780
+   ],
+   "kind": "제품",
+   "pieces": [
+    9,
+    10
+   ],
+   "seen": "촉촉하게 빛나는 손등"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 16.85,
+   "crop": [
+    240,
+    510,
+    780
+   ],
+   "kind": "제품",
+   "pieces": [
+    11,
+    12
+   ],
+   "seen": "화이트를 펴 바른 손바닥"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 0.3,
+   "crop": [
+    2,
+    480,
+    1400
+   ],
+   "kind": "제품",
+   "pieces": [
+    13,
+    14,
+    15
+   ],
+   "seen": "글로우 화이트·원 병 근접 팬"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 36.95,
+   "crop": [
+    240,
+    510,
+    780
+   ],
+   "kind": "제품",
+   "pieces": [
+    16,
+    17,
+    18
+   ],
+   "seen": "화이트·원 두 색을 손등에 섞음"
+  },
+  {
+   "src": "oNlAC-IqjQs.mp4",
+   "ss": 9.4,
+   "crop": [
+    2,
+    480,
+    1400
+   ],
+   "kind": "제품",
+   "pieces": [
+    19,
+    20
+   ],
+   "seen": "화이트 병을 두 손으로 든 근접"
+  },
+  {
+   "src": "fsO0QC6P-Qk.mp4",
+   "ss": 5.2,
+   "crop": [
+    200,
+    790,
+    850
+   ],
+   "kind": "제품",
+   "pieces": [
+    21,
+    22
+   ],
+   "seen": "손등에 비비를 펴 바름(끝 컷)"
+  }
+ ],
+ "src_urls": {
+  "BzAhuUBlOAk.mp4": "https://www.youtube.com/watch?v=BzAhuUBlOAk (김가연 임요환의 게임부부, 2026-10-09, 1080p)",
+  "oNlAC-IqjQs.mp4": "https://youtu.be/oNlAC-IqjQs (#글로우 #브리더블비비크림 #화이트 #원, 세로 1080x1920)",
+  "fsO0QC6P-Qk.mp4": "https://youtu.be/fsO0QC6P-Qk (glow breathable blemish balm, 세로 9초)",
+  "P9DqLkT7X5Q.mp4": "https://youtu.be/P9DqLkT7X5Q (Glow K-Beauty Review!, 0~34초 구간만)"
+ }
+}

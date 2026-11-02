@@ -1,0 +1,2154 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.361
+   ],
+   "O1": [
+    3.421,
+    7.111
+   ],
+   "N2": [
+    7.171,
+    8.372
+   ],
+   "O2": [
+    8.432,
+    11.162
+   ],
+   "N3": [
+    11.222,
+    14.288
+   ],
+   "N4": [
+    14.348,
+    16.66
+   ],
+   "N5": [
+    16.72,
+    20.089
+   ],
+   "N6": [
+    20.149,
+    24.407
+   ],
+   "N7": [
+    24.467,
+    27.948
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 이영애가",
+    "t0": 0.0,
+    "t1": 1.13,
+    "key": "이영애가",
+    "show": [
+     0.0,
+     1.13
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "메이크업을 해도",
+    "t0": 1.13,
+    "t1": 1.92,
+    "key": "메이크업을",
+    "show": [
+     1.13,
+     1.92
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "클렌징 오일을",
+    "t0": 1.92,
+    "t1": 2.677,
+    "key": "오일을",
+    "show": [
+     1.92,
+     2.677
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "안 쓴다네요?",
+    "t0": 2.677,
+    "t1": 3.361,
+    "key": "안 쓴다네요?",
+    "show": [
+     2.677,
+     3.421
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나 같은 경우엔",
+    "t0": 3.421,
+    "t1": 4.671,
+    "key": "경우엔",
+    "show": [
+     3.421,
+     4.671
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "메이크업해도",
+    "t0": 4.671,
+    "t1": 5.821,
+    "key": "메이크업해도",
+    "show": [
+     4.671,
+     5.821
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "따로 클렌저",
+    "t0": 5.821,
+    "t1": 6.521,
+    "key": "클렌저",
+    "show": [
+     5.821,
+     6.521
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 3,
+    "speaker": "orig",
+    "text": "안 해요",
+    "t0": 6.521,
+    "t1": 7.111,
+    "key": "안 해요",
+    "show": [
+     6.521,
+     7.171
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 뭘로",
+    "t0": 7.171,
+    "t1": 7.79,
+    "key": "뭘로",
+    "show": [
+     7.171,
+     7.79
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "지우길래?",
+    "t0": 7.79,
+    "t1": 8.372,
+    "key": "지우길래?",
+    "show": [
+     7.79,
+     8.432
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "클렌저",
+    "t0": 8.432,
+    "t1": 8.912,
+    "key": "클렌저",
+    "show": [
+     8.432,
+     8.912
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이걸로 그냥",
+    "t0": 8.912,
+    "t1": 9.572,
+    "key": "이걸로",
+    "show": [
+     8.912,
+     9.572
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "세수하시고",
+    "t0": 9.572,
+    "t1": 10.322,
+    "key": "세수하시고",
+    "show": [
+     9.572,
+     10.322
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "포밍 다 돼요",
+    "t0": 10.322,
+    "t1": 11.162,
+    "key": "다 돼요",
+    "show": [
+     10.322,
+     11.222
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "알고 보니",
+    "t0": 11.222,
+    "t1": 11.923,
+    "key": "알고 보니",
+    "show": [
+     11.222,
+     11.923
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "본인 브랜드인",
+    "t0": 11.923,
+    "t1": 12.811,
+    "key": "본인 브랜드",
+    "show": [
+     11.923,
+     12.811
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "리아네이처의",
+    "t0": 12.811,
+    "t1": 13.582,
+    "key": "리아네이처의",
+    "show": [
+     12.811,
+     13.582
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "클렌저였대요",
+    "t0": 13.582,
+    "t1": 14.288,
+    "key": "클렌저였대요",
+    "show": [
+     13.582,
+     14.348
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 14.348,
+    "t1": 15.449,
+    "key": "보자마자",
+    "show": [
+     14.348,
+     15.449
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나 사서",
+    "t0": 15.449,
+    "t1": 15.927,
+    "key": "하나",
+    "show": [
+     15.449,
+     15.927
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 해 봤어요",
+    "t0": 15.927,
+    "t1": 16.66,
+    "key": "따라",
+    "show": [
+     15.927,
+     16.72
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "약산성 폼클렌저라",
+    "t0": 16.72,
+    "t1": 18.356,
+    "key": "약산성",
+    "show": [
+     16.72,
+     18.356
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "거품 한 번에",
+    "t0": 18.356,
+    "t1": 19.038,
+    "key": "거품",
+    "show": [
+     18.356,
+     19.038
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세안이 끝나더라고요",
+    "t0": 19.038,
+    "t1": 20.089,
+    "key": "끝나더라고요",
+    "show": [
+     19.038,
+     20.149
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 임신하고",
+    "t0": 20.149,
+    "t1": 21.179,
+    "key": "심지어",
+    "show": [
+     20.149,
+     21.179
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "나서 순한",
+    "t0": 21.179,
+    "t1": 22.088,
+    "key": "순한",
+    "show": [
+     21.179,
+     22.088
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "화장품을 찾다가",
+    "t0": 22.088,
+    "t1": 23.313,
+    "key": "화장품을",
+    "show": [
+     22.088,
+     23.313
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "직접 만든",
+    "t0": 23.313,
+    "t1": 23.866,
+    "key": "직접 만든",
+    "show": [
+     23.313,
+     23.866
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "브랜드래요",
+    "t0": 23.866,
+    "t1": 24.407,
+    "key": "브랜드래요",
+    "show": [
+     23.866,
+     24.467
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 이영애",
+    "t0": 24.467,
+    "t1": 25.078,
+    "key": "이영애",
+    "show": [
+     24.467,
+     25.078
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "영상은 조회수",
+    "t0": 25.078,
+    "t1": 26.285,
+    "key": "조회수",
+    "show": [
+     25.078,
+     26.285
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "111만이 넘을 만큼",
+    "t0": 26.285,
+    "t1": 27.569,
+    "key": "111만이",
+    "show": [
+     26.285,
+     27.569
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 3,
+    "speaker": "narr",
+    "text": "인기래요",
+    "t0": 27.569,
+    "t1": 27.948,
+    "key": "인기래요",
+    "show": [
+     27.569,
+     28.1
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "JCWpjtOdtjE_336_376.mp4",
+    "ss": 15.067,
+    "crop": [
+     620,
+     0,
+     760,
+     760
+    ],
+    "w": 1.0,
+    "see": "이영애 정면 근접(원본 350.8초) — 0초 얼굴",
+    "max": 1.4,
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.14,
+    "dur": 1.14,
+    "over": 0.0,
+    "ss_reuse": 14.8
+   },
+   {
+    "src": "JCWpjtOdtjE_190_210.mp4",
+    "ss": 3.7,
+    "crop": [
+     600,
+     40,
+     640,
+     640
+    ],
+    "w": 1.0,
+    "see": "이영애 옆을 보며 말함(원본 193.7초)",
+    "max": 1.6,
+    "line": "N1",
+    "t0": 1.14,
+    "kind": "tts",
+    "t1": 2.281,
+    "dur": 1.141,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 3.4,
+    "crop": [
+     700,
+     20,
+     620,
+     620
+    ],
+    "w": 1.0,
+    "see": "이영애 테이블에서 말하는 얼굴(원본 1183.4초)",
+    "max": 1.6,
+    "line": "N1",
+    "t0": 2.281,
+    "kind": "tts",
+    "t1": 3.421,
+    "dur": 1.14,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "ss": 133.77,
+    "crop": [
+     150,
+     0,
+     800,
+     800
+    ],
+    "see": "이영애 테이블에 기대 '나 같은 경우엔 메이크업해도 따로 클렌저 안 해요'(입 맞음, 손을 이마에) — 샷 133.47~137.47",
+    "line": "O1",
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "t0": 3.421,
+    "kind": "orig",
+    "t1": 7.171,
+    "dur": 3.75,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 46.2,
+    "crop": [
+     690,
+     20,
+     620,
+     620
+    ],
+    "w": 1.0,
+    "see": "이영애 고개 돌려 웃으며 말함(원본 1226초)",
+    "max": 1.8,
+    "line": "N2",
+    "t0": 7.171,
+    "kind": "tts",
+    "t1": 8.432,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     980,
+     200,
+     470,
+     470
+    ],
+    "see": "이영애 옆얼굴 턱 괴고 '클렌저 이걸로 그냥 세수하시고 / 포밍 다 돼요'(넓은 화면 샷 137.47~149.75 이영애 쪽, 입 움직임) — 앞 남자 얼굴 가장자리(x≥1415)는 흐림, 홍진경 팔·펜(y≥670)은 크롭 밖",
+    "ss": 142.47,
+    "line": "O2",
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "t0": 8.432,
+    "kind": "orig",
+    "t1": 10.322,
+    "dur": 1.89,
+    "over": 0.0
+   },
+   {
+    "at": 1.89,
+    "crop": [
+     980,
+     200,
+     470,
+     470
+    ],
+    "see": "이영애 옆얼굴 턱 괴고 '포밍 다 돼요'(같은 샷, 흐림·크롭 같음)",
+    "ss": 145.08,
+    "line": "O2",
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "t0": 10.322,
+    "kind": "orig",
+    "t1": 11.222,
+    "dur": 0.9,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 149.9,
+    "crop": [
+     620,
+     60,
+     640,
+     640
+    ],
+    "w": 1.0,
+    "see": "이영애 근접(원본 1329.9초 선물 준 뒤 테이블)",
+    "max": 1.85,
+    "line": "N3",
+    "t0": 11.222,
+    "kind": "tts",
+    "t1": 12.785,
+    "dur": 1.563,
+    "over": 0.0
+   },
+   {
+    "src": "cp_8844575755.jpg",
+    "ss": 0,
+    "crop": [
+     150,
+     0,
+     600,
+     600
+    ],
+    "w": 1.0,
+    "see": "쿠팡 8844575755 대표 사진 튜브 윗부분 'PURE BOTANIC AO KLENZER' — '에이오 클렌저래요' 자리",
+    "move": "in",
+    "line": "N3",
+    "t0": 12.785,
+    "kind": "tts",
+    "t1": 14.348,
+    "dur": 1.563,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_190_210.mp4",
+    "ss": 8.6,
+    "crop": [
+     530,
+     0,
+     640,
+     640
+    ],
+    "w": 1.0,
+    "see": "이영애 턱 괴고 웃는 얼굴(원본 198.6초)",
+    "max": 1.6,
+    "line": "N4",
+    "t0": 14.348,
+    "kind": "tts",
+    "t1": 15.534,
+    "dur": 1.186,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_712_728.mp4",
+    "ss": 3.2,
+    "crop": [
+     1160,
+     60,
+     560,
+     560
+    ],
+    "w": 1.0,
+    "see": "이영애 근접(화면 오른쪽 반, 원본 715.2초) — 왼쪽 홍진경 크롭 밖",
+    "max": 1.3,
+    "line": "N4",
+    "t0": 15.534,
+    "kind": "tts",
+    "t1": 16.72,
+    "dur": 1.186,
+    "over": 0.0
+   },
+   {
+    "src": "lya_8ae4cbae.jpg",
+    "ss": 0,
+    "crop": [
+     150,
+     150,
+     500,
+     500
+    ],
+    "w": 1.0,
+    "see": "리아네이처 공식몰 에이오클렌저 사진(물방울 맺힌 회색 튜브 'AO KLENZER') — '폼클렌저라' 자리",
+    "move": "in",
+    "line": "N5",
+    "t0": 16.72,
+    "kind": "tts",
+    "t1": 18.434,
+    "dur": 1.714,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 85.3,
+    "crop": [
+     800,
+     20,
+     640,
+     640
+    ],
+    "w": 1.0,
+    "see": "이영애 옆얼굴로 말함(원본 1265.3초)",
+    "max": 2.2,
+    "line": "N5",
+    "t0": 18.434,
+    "kind": "tts",
+    "t1": 20.149,
+    "dur": 1.715,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_336_376.mp4",
+    "ss": 0.5,
+    "crop": [
+     620,
+     0,
+     720,
+     720
+    ],
+    "w": 1.0,
+    "see": "이영애 옆얼굴 근접(원본 336.5초)",
+    "max": 1.6,
+    "line": "N6",
+    "t0": 20.149,
+    "kind": "tts",
+    "t1": 21.588,
+    "dur": 1.439,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_336_376.mp4",
+    "ss": 10.6,
+    "crop": [
+     680,
+     130,
+     640,
+     640
+    ],
+    "w": 1.0,
+    "see": "이영애 어깨에 손 얹고 말함(원본 346.6초)",
+    "max": 1.6,
+    "line": "N6",
+    "t0": 21.588,
+    "kind": "tts",
+    "t1": 23.028,
+    "dur": 1.44,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_712_728.mp4",
+    "ss": 11.7,
+    "crop": [
+     580,
+     100,
+     700,
+     700
+    ],
+    "w": 1.0,
+    "see": "이영애 눈 감고 말함(원본 723.7초)",
+    "max": 1.6,
+    "line": "N6",
+    "t0": 23.028,
+    "kind": "tts",
+    "t1": 24.467,
+    "dur": 1.439,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 59.0,
+    "crop": [
+     720,
+     20,
+     620,
+     620
+    ],
+    "w": 1.0,
+    "see": "이영애 정면 근접(원본 1239초)",
+    "max": 1.5,
+    "line": "N7",
+    "t0": 24.467,
+    "kind": "tts",
+    "t1": 25.678,
+    "dur": 1.211,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 91.5,
+    "crop": [
+     780,
+     20,
+     620,
+     620
+    ],
+    "w": 1.0,
+    "see": "이영애 옆얼굴(원본 1271.5초)",
+    "max": 1.6,
+    "line": "N7",
+    "t0": 25.678,
+    "kind": "tts",
+    "t1": 26.889,
+    "dur": 1.211,
+    "over": 0.0
+   },
+   {
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "ss": 39.0,
+    "crop": [
+     1120,
+     30,
+     560,
+     560
+    ],
+    "w": 1.0,
+    "see": "이영애 화면 오른쪽 반 웃는 얼굴(원본 1219초) — 왼쪽 홍진경 크롭 밖",
+    "line": "N7",
+    "t0": 26.889,
+    "kind": "tts",
+    "t1": 28.1,
+    "dur": 1.211,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "span": [
+     133.77,
+     137.46
+    ],
+    "t0": 3.421,
+    "t1": 7.111
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "span": [
+     142.47,
+     144.36
+    ],
+    "t0": 8.432,
+    "t1": 10.322
+   },
+   {
+    "line": "O2",
+    "k": 1,
+    "src": "JCWpjtOdtjE_1180_1360.mp4",
+    "span": [
+     145.08,
+     145.92
+    ],
+    "t0": 10.322,
+    "t1": 11.162
+   }
+  ],
+  "end": 28.1
+ },
+ "placement": {
+  "reference": "BRa5Iv4A3Y8",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 이영애가",
+    "t0": 0.0,
+    "t1": 1.13,
+    "key": "이영애가",
+    "show": [
+     0.0,
+     1.13
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "이영애가"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "메이크업을 해도",
+    "t0": 1.13,
+    "t1": 1.92,
+    "key": "메이크업을",
+    "show": [
+     1.13,
+     1.92
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "메이크업을"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "클렌징 오일을",
+    "t0": 1.92,
+    "t1": 2.677,
+    "key": "오일을",
+    "show": [
+     1.92,
+     2.677
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "오일을"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "안 쓴다네요?",
+    "t0": 2.677,
+    "t1": 3.361,
+    "key": "안 쓴다네요?",
+    "show": [
+     2.677,
+     3.421
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "안 쓴다네요?"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나 같은 경우엔",
+    "t0": 3.421,
+    "t1": 4.671,
+    "key": "경우엔",
+    "show": [
+     3.421,
+     4.671
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "reveal",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "메이크업해도",
+    "t0": 4.671,
+    "t1": 5.821,
+    "key": "메이크업해도",
+    "show": [
+     4.671,
+     5.821
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "메이크업해도"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "따로 클렌저",
+    "t0": 5.821,
+    "t1": 6.521,
+    "key": "클렌저",
+    "show": [
+     5.821,
+     6.521
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "클렌저"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O1",
+    "j": 3,
+    "speaker": "orig",
+    "text": "안 해요",
+    "t0": 6.521,
+    "t1": 7.111,
+    "key": "안 해요",
+    "show": [
+     6.521,
+     7.171
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "variant": "typing"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 뭘로",
+    "t0": 7.171,
+    "t1": 7.79,
+    "key": "뭘로",
+    "show": [
+     7.171,
+     7.79
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "뭘로"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "지우길래?",
+    "t0": 7.79,
+    "t1": 8.372,
+    "key": "지우길래?",
+    "show": [
+     7.79,
+     8.432
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "지우길래?"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "클렌저",
+    "t0": 8.432,
+    "t1": 8.912,
+    "key": "클렌저",
+    "show": [
+     8.432,
+     8.912
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이걸로 그냥",
+    "t0": 8.912,
+    "t1": 9.572,
+    "key": "이걸로",
+    "show": [
+     8.912,
+     9.572
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "이걸로"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "세수하시고",
+    "t0": 9.572,
+    "t1": 10.322,
+    "key": "세수하시고",
+    "show": [
+     9.572,
+     10.322
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "세수하시고"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "포밍 다 돼요",
+    "t0": 10.322,
+    "t1": 11.162,
+    "key": "다 돼요",
+    "show": [
+     10.322,
+     11.222
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "다 돼요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "알고 보니",
+    "t0": 11.222,
+    "t1": 11.923,
+    "key": "알고 보니",
+    "show": [
+     11.222,
+     11.923
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "twist",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "알고 보니"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "본인 브랜드인",
+    "t0": 11.923,
+    "t1": 12.811,
+    "key": "본인 브랜드",
+    "show": [
+     11.923,
+     12.811
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "본인 브랜드"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "리아네이처의",
+    "t0": 12.811,
+    "t1": 13.582,
+    "key": "리아네이처의",
+    "show": [
+     12.811,
+     13.582
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "리아네이처의"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "클렌저였대요",
+    "t0": 13.582,
+    "t1": 14.288,
+    "key": "클렌저였대요",
+    "show": [
+     13.582,
+     14.348
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "클렌저였대요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 14.348,
+    "t1": 15.449,
+    "key": "보자마자",
+    "show": [
+     14.348,
+     15.449
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "보자마자"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나 사서",
+    "t0": 15.449,
+    "t1": 15.927,
+    "key": "하나",
+    "show": [
+     15.449,
+     15.927
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "하나"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 해 봤어요",
+    "t0": 15.927,
+    "t1": 16.66,
+    "key": "따라",
+    "show": [
+     15.927,
+     16.72
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "약산성 폼클렌저라",
+    "t0": 16.72,
+    "t1": 18.356,
+    "key": "약산성",
+    "show": [
+     16.72,
+     18.356
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "약산성"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "거품 한 번에",
+    "t0": 18.356,
+    "t1": 19.038,
+    "key": "거품",
+    "show": [
+     18.356,
+     19.038
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "거품"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세안이 끝나더라고요",
+    "t0": 19.038,
+    "t1": 20.089,
+    "key": "끝나더라고요",
+    "show": [
+     19.038,
+     20.149
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "끝나더라고요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 임신하고",
+    "t0": 20.149,
+    "t1": 21.179,
+    "key": "심지어",
+    "show": [
+     20.149,
+     21.179
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "심지어"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "나서 순한",
+    "t0": 21.179,
+    "t1": 22.088,
+    "key": "순한",
+    "show": [
+     21.179,
+     22.088
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "순한"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "화장품을 찾다가",
+    "t0": 22.088,
+    "t1": 23.313,
+    "key": "화장품을",
+    "show": [
+     22.088,
+     23.313
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "화장품을"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "직접 만든",
+    "t0": 23.313,
+    "t1": 23.866,
+    "key": "직접 만든",
+    "show": [
+     23.313,
+     23.866
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [],
+    "variant": "",
+    "plain_by": "rhythm.plain_share"
+   },
+   {
+    "line": "N6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "브랜드래요",
+    "t0": 23.866,
+    "t1": 24.407,
+    "key": "브랜드래요",
+    "show": [
+     23.866,
+     24.467
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "브랜드래요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 이영애",
+    "t0": 24.467,
+    "t1": 25.078,
+    "key": "이영애",
+    "show": [
+     24.467,
+     25.078
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "이영애"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "영상은 조회수",
+    "t0": 25.078,
+    "t1": 26.285,
+    "key": "조회수",
+    "show": [
+     25.078,
+     26.285
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "emph": [],
+    "variant": "",
+    "plain_by": "rhythm.plain_share"
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "111만이 넘을 만큼",
+    "t0": 26.285,
+    "t1": 27.569,
+    "key": "111만이",
+    "show": [
+     26.285,
+     27.569
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [
+     {
+      "kind": "gem",
+      "word": "111만이"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "111만이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N7",
+    "j": 3,
+    "speaker": "narr",
+    "text": "인기래요",
+    "t0": 27.569,
+    "t1": 27.948,
+    "key": "인기래요",
+    "show": [
+     27.569,
+     28.1
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "emph": [],
+    "variant": "",
+    "plain_by": "rhythm.plain_share"
+   }
+  ],
+  "sfx": [
+   {
+    "t": 1.13,
+    "kind": "ding",
+    "why": "cap"
+   }
+  ],
+  "transitions": [
+   {
+    "t": 7.171,
+    "kind": "zoomblur",
+    "ms": 167,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 8.432,
+    "kind": "black",
+    "ms": 33,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 23.028,
+    "kind": "zoomblur",
+    "ms": 167,
+    "why": "컷 경계"
+   }
+  ],
+  "flashes": [],
+  "cut_bounds": 18,
+  "trans_plan": {
+   "src": "판 cuts.transition.kinds",
+   "share": {
+    "zoomblur": 0.1,
+    "black": 0.071,
+    "flash": 0.014
+   },
+   "cut_bounds": 18,
+   "want_raw": {
+    "zoomblur": 1.8,
+    "black": 1.278,
+    "flash": 0.252
+   },
+   "want": 3,
+   "eligible": 10,
+   "picked": {
+    "zoomblur": 2,
+    "black": 1
+   },
+   "min_cut": 1.2
+  },
+  "log": [
+   "본보기 벤치 편 = BRa5Iv4A3Y8",
+   "스티커 gem → N7「111만이 넘을 만큼」",
+   "스티커 gem 본보기 3개 중 1개만(조건 맞는 덩어리 모자람)",
+   "스티커 spark_lines 본보기 2개 중 0개만(조건 맞는 덩어리 모자람)",
+   "전환 [(7.171, 'zoomblur'), (8.432, 'black'), (23.028, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 18·붙일 수 있는 10(≥1.2초))",
+   "효과음 1발(본보기 1) [(1.13, 'cap')]",
+   "꾸밈 없음 2→5/33(판 plain_share 0.163 → 5) 강조 뺌 ['N6「직접 만든」', 'N7「영상은 조회수」', 'N7「인기래요」']",
+   "등장 {'pop': 12, 'typing': 8, 'cut': 13} · 강조 27/33",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "JCWpjtOdtjE_336_376.mp4",
+     "ss": 15.067,
+     "crop": [
+      620,
+      0,
+      760,
+      760
+     ],
+     "w": 1.0,
+     "see": "이영애 정면 근접(원본 350.8초) — 0초 얼굴",
+     "max": 1.4,
+     "line": "N1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 1.14,
+     "dur": 1.14,
+     "over": 0.0,
+     "ss_reuse": 14.8
+    },
+    {
+     "src": "JCWpjtOdtjE_190_210.mp4",
+     "ss": 3.7,
+     "crop": [
+      600,
+      40,
+      640,
+      640
+     ],
+     "w": 1.0,
+     "see": "이영애 옆을 보며 말함(원본 193.7초)",
+     "max": 1.6,
+     "line": "N1",
+     "t0": 1.14,
+     "kind": "tts",
+     "t1": 2.281,
+     "dur": 1.141,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 3.4,
+     "crop": [
+      700,
+      20,
+      620,
+      620
+     ],
+     "w": 1.0,
+     "see": "이영애 테이블에서 말하는 얼굴(원본 1183.4초)",
+     "max": 1.6,
+     "line": "N1",
+     "t0": 2.281,
+     "kind": "tts",
+     "t1": 3.421,
+     "dur": 1.14,
+     "over": 0.0
+    },
+    {
+     "at": 0.0,
+     "ss": 133.77,
+     "crop": [
+      150,
+      0,
+      800,
+      800
+     ],
+     "see": "이영애 테이블에 기대 '나 같은 경우엔 메이크업해도 따로 클렌저 안 해요'(입 맞음, 손을 이마에) — 샷 133.47~137.47",
+     "line": "O1",
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "t0": 3.421,
+     "kind": "orig",
+     "t1": 7.171,
+     "dur": 3.75,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 46.2,
+     "crop": [
+      690,
+      20,
+      620,
+      620
+     ],
+     "w": 1.0,
+     "see": "이영애 고개 돌려 웃으며 말함(원본 1226초)",
+     "max": 1.8,
+     "line": "N2",
+     "t0": 7.171,
+     "kind": "tts",
+     "t1": 8.432,
+     "dur": 1.261,
+     "over": 0.0
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      980,
+      200,
+      470,
+      470
+     ],
+     "see": "이영애 옆얼굴 턱 괴고 '클렌저 이걸로 그냥 세수하시고 / 포밍 다 돼요'(넓은 화면 샷 137.47~149.75 이영애 쪽, 입 움직임) — 앞 남자 얼굴 가장자리(x≥1415)는 흐림, 홍진경 팔·펜(y≥670)은 크롭 밖",
+     "ss": 142.47,
+     "line": "O2",
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "t0": 8.432,
+     "kind": "orig",
+     "t1": 10.322,
+     "dur": 1.89,
+     "over": 0.0
+    },
+    {
+     "at": 1.89,
+     "crop": [
+      980,
+      200,
+      470,
+      470
+     ],
+     "see": "이영애 옆얼굴 턱 괴고 '포밍 다 돼요'(같은 샷, 흐림·크롭 같음)",
+     "ss": 145.08,
+     "line": "O2",
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "t0": 10.322,
+     "kind": "orig",
+     "t1": 11.222,
+     "dur": 0.9,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 149.9,
+     "crop": [
+      620,
+      60,
+      640,
+      640
+     ],
+     "w": 1.0,
+     "see": "이영애 근접(원본 1329.9초 선물 준 뒤 테이블)",
+     "max": 1.85,
+     "line": "N3",
+     "t0": 11.222,
+     "kind": "tts",
+     "t1": 12.785,
+     "dur": 1.563,
+     "over": 0.0
+    },
+    {
+     "src": "cp_8844575755.jpg",
+     "ss": 0,
+     "crop": [
+      150,
+      0,
+      600,
+      600
+     ],
+     "w": 1.0,
+     "see": "쿠팡 8844575755 대표 사진 튜브 윗부분 'PURE BOTANIC AO KLENZER' — '에이오 클렌저래요' 자리",
+     "move": "in",
+     "line": "N3",
+     "t0": 12.785,
+     "kind": "tts",
+     "t1": 14.348,
+     "dur": 1.563,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_190_210.mp4",
+     "ss": 8.6,
+     "crop": [
+      530,
+      0,
+      640,
+      640
+     ],
+     "w": 1.0,
+     "see": "이영애 턱 괴고 웃는 얼굴(원본 198.6초)",
+     "max": 1.6,
+     "line": "N4",
+     "t0": 14.348,
+     "kind": "tts",
+     "t1": 15.534,
+     "dur": 1.186,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_712_728.mp4",
+     "ss": 3.2,
+     "crop": [
+      1160,
+      60,
+      560,
+      560
+     ],
+     "w": 1.0,
+     "see": "이영애 근접(화면 오른쪽 반, 원본 715.2초) — 왼쪽 홍진경 크롭 밖",
+     "max": 1.3,
+     "line": "N4",
+     "t0": 15.534,
+     "kind": "tts",
+     "t1": 16.72,
+     "dur": 1.186,
+     "over": 0.0
+    },
+    {
+     "src": "lya_8ae4cbae.jpg",
+     "ss": 0,
+     "crop": [
+      150,
+      150,
+      500,
+      500
+     ],
+     "w": 1.0,
+     "see": "리아네이처 공식몰 에이오클렌저 사진(물방울 맺힌 회색 튜브 'AO KLENZER') — '폼클렌저라' 자리",
+     "move": "in",
+     "line": "N5",
+     "t0": 16.72,
+     "kind": "tts",
+     "t1": 18.434,
+     "dur": 1.714,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 85.3,
+     "crop": [
+      800,
+      20,
+      640,
+      640
+     ],
+     "w": 1.0,
+     "see": "이영애 옆얼굴로 말함(원본 1265.3초)",
+     "max": 2.2,
+     "line": "N5",
+     "t0": 18.434,
+     "kind": "tts",
+     "t1": 20.149,
+     "dur": 1.715,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_336_376.mp4",
+     "ss": 0.5,
+     "crop": [
+      620,
+      0,
+      720,
+      720
+     ],
+     "w": 1.0,
+     "see": "이영애 옆얼굴 근접(원본 336.5초)",
+     "max": 1.6,
+     "line": "N6",
+     "t0": 20.149,
+     "kind": "tts",
+     "t1": 21.588,
+     "dur": 1.439,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_336_376.mp4",
+     "ss": 10.6,
+     "crop": [
+      680,
+      130,
+      640,
+      640
+     ],
+     "w": 1.0,
+     "see": "이영애 어깨에 손 얹고 말함(원본 346.6초)",
+     "max": 1.6,
+     "line": "N6",
+     "t0": 21.588,
+     "kind": "tts",
+     "t1": 23.028,
+     "dur": 1.44,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_712_728.mp4",
+     "ss": 11.7,
+     "crop": [
+      580,
+      100,
+      700,
+      700
+     ],
+     "w": 1.0,
+     "see": "이영애 눈 감고 말함(원본 723.7초)",
+     "max": 1.6,
+     "line": "N6",
+     "t0": 23.028,
+     "kind": "tts",
+     "t1": 24.467,
+     "dur": 1.439,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 59.0,
+     "crop": [
+      720,
+      20,
+      620,
+      620
+     ],
+     "w": 1.0,
+     "see": "이영애 정면 근접(원본 1239초)",
+     "max": 1.5,
+     "line": "N7",
+     "t0": 24.467,
+     "kind": "tts",
+     "t1": 25.678,
+     "dur": 1.211,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 91.5,
+     "crop": [
+      780,
+      20,
+      620,
+      620
+     ],
+     "w": 1.0,
+     "see": "이영애 옆얼굴(원본 1271.5초)",
+     "max": 1.6,
+     "line": "N7",
+     "t0": 25.678,
+     "kind": "tts",
+     "t1": 26.889,
+     "dur": 1.211,
+     "over": 0.0
+    },
+    {
+     "src": "JCWpjtOdtjE_1180_1360.mp4",
+     "ss": 39.0,
+     "crop": [
+      1120,
+      30,
+      560,
+      560
+     ],
+     "w": 1.0,
+     "see": "이영애 화면 오른쪽 반 웃는 얼굴(원본 1219초) — 왼쪽 홍진경 크롭 밖",
+     "line": "N7",
+     "t0": 26.889,
+     "kind": "tts",
+     "t1": 28.1,
+     "dur": 1.211,
+     "over": 0.0
+    }
+   ],
+   "end": 28.1
+  },
+  "transitions_drawn": [
+   {
+    "t": 7.171,
+    "kind": "zoomblur",
+    "ms": 167.0,
+    "zoom": 0.12,
+    "sigma": 0.5,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 8.432,
+    "kind": "black",
+    "ms": 33.0,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 23.028,
+    "kind": "zoomblur",
+    "ms": 167.0,
+    "zoom": 0.12,
+    "sigma": 0.5,
+    "why": "컷 경계"
+   }
+  ]
+ }
+}

@@ -1,0 +1,223 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": null,
+ "made_from": {
+  "tool": "channel/banggu/썰템홈샷_하이브리드/make.py",
+  "note": "썰템홈샷 외관(샘플 B 차콜·민트) — make_썰템홈샷 body 와 같은 층"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    238,
+    240,
+    242
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 510,
+   "w": 1080,
+   "h": 1300,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 510,
+   "w": 48,
+   "h": 1300,
+   "rgb": [
+    238,
+    240,
+    242
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 1032,
+   "y": 510,
+   "w": 48,
+   "h": 1300,
+   "rgb": [
+    238,
+    240,
+    242
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "image",
+   "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20246%20325%27%3E%3Cpath%20fill-rule=%27evenodd%27%20fill=%27%23EEF0F2%27%20d=%27M0,0h246v325H0z%20M7,0h232a7,7,0,0,1,7,7v311a7,7,0,0,1-7,7H7a7,7,0,0,1-7-7V7a7,7,0,0,1,7-7z%27/%3E%3C/svg%3E",
+   "x": 48,
+   "y": 510,
+   "w": 984,
+   "h": 1300
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 210,
+   "rgb": [
+    28,
+    30,
+    34
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 64,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 68.1,
+   "line_h": 78,
+   "rgb": [
+    220,
+    255,
+    244
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷",
+   "glow": {
+    "px": 28,
+    "rgb": [
+     40,
+     230,
+     180
+    ]
+   }
+  },
+  {
+   "kind": "band",
+   "x": 480,
+   "y": 170,
+   "w": 120,
+   "h": 3,
+   "rgb": [
+    40,
+    230,
+    180
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 48,
+   "y": 250,
+   "w": 984,
+   "h": 220,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "radius": 28
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 281,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 26.7,
+   "line_h": 31,
+   "rgb": [
+    30,
+    170,
+    140
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷 · 14:25"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 326,
+   "w": 920,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 54.9,
+   "line_h": 70,
+   "rgb": [
+    26,
+    28,
+    32
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "세 번 망한 사장이\n만든 목걸이 녹음기"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1588,
+   "w": 900,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Bold",
+   "size": 55.6,
+   "line_h": 82,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": {
+    "rgb": [
+     28,
+     30,
+     34
+    ],
+    "pad": 22,
+    "radius": 22
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "valign": "top"
+  }
+ ]
+}

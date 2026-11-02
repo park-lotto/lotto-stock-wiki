@@ -112,8 +112,29 @@ def _flow_erases(version: str | None) -> bool:
         return True
 
 
+def free_ok() -> bool:
+    """무료 엔진(회원 GPU, tools/free_subclean)이 이 PC 에 깔렸나."""
+    try:
+        from tools.free_subclean import engine as FE
+    except ImportError:          # 옛 묶음 회원 PC — 엔진 파일이 없으면 기존 길 그대로
+        return False
+    return FE.installed()
+
+
+def erase_engine() -> str:
+    """지우는 엔진 고르기(판단 주인) — 회원 설정 SHORTEM_ERASE_ENGINE(free|vmake) > 키 있으면 VMake(기존 그대로) > 무료 엔진이 깔렸으면 무료 > ''."""
+    e = (os.environ.get("SHORTEM_ERASE_ENGINE") or "").strip().lower()
+    if e == "free":
+        return "free" if free_ok() else ""
+    if e == "vmake" or key_source() == "server" or member_key():
+        return "vmake"
+    return "free" if free_ok() else ""
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
+    if mode != "blur" and erase_engine() == "free":   # 돈이 안 드니 SHORTEM_NO_PAID 도 막지 않는다
+        return {"mode": "vmake", "via": "free", "why": ""}
     if mode == "blur" or paid_off():
         return {"mode": "blur", "why": "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"}
     if key_source() == "server":
@@ -318,7 +339,95 @@ def splice(f: Path, pieces: list) -> Path:
     return f
 
 
-def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> dict:
+def _frames(f: Path) -> int:
+    """영상 프레임 수(실제로 세어 본 값)."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries", "stream=nb_read_packets",
+                          "-of", "csv=p=0", str(f)], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    return int(out.stdout.strip().split(",")[0])
+
+
+def _rate(f: Path) -> str:
+    return subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", str(f)],
+                          capture_output=True, text=True, stdin=subprocess.DEVNULL).stdout.strip()
+
+
+def _ledger_pieces(j: Path, fs: list) -> None:
+    """합본 호출 줄을 조각별 줄로 바꾼다 — 보낸 초 검사(sent_from_ledger)는 원본 이름·구간으로 센다."""
+    p = j.parent / LEDGER
+    rows = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+    out = []
+    for r in rows:
+        if r.get("file") != j.name:
+            out.append(r)
+            continue
+        out.append({**r, "mode": "joined_call", "pieces": len(fs)})
+        out += [{**r, "file": f.name, "calls": 0, "joined": j.name, **_sent(f)} for f in fs]
+    p.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def send_joined(files: list, send, log=print) -> dict:
+    """(주인: VMake 호출 수) 조각을 크기가 같은 것끼리 이어 붙여 1회로 보내고, 지운 결과를 프레임 단위로 다시 조각 자리에 돌려준다.
+    숏템메이커 _clean_joined 와 같은 방식(11-01 실측: 호출마다 대기가 복불복이라 13회 = 느린 1건에 걸릴 확률 13배).
+    프레임 수가 안 맞으면 그 묶음은 실패로 돌려준다(어긋난 그림을 끼우지 않는다). send(파일 목록) = server_clean·member_clean."""
+    import hashlib
+    groups: dict = {}
+    for f in map(Path, files):
+        groups.setdefault((*_wh(f), _rate(f)), []).append(f)
+    out = {"cleaned": [], "fail": {}, "calls": 0}
+    jobs = {}
+    for size, fs in groups.items():
+        if len(fs) == 1:
+            jobs[fs[0]] = None
+            continue
+        tag = hashlib.sha1("|".join(f"{f.name}:{f.stat().st_size}" for f in fs).encode()).hexdigest()[:10]
+        j = fs[0].with_name(f"joined_{tag}.mp4")
+        args = ["ffmpeg", "-v", "error", "-y"]
+        for f in fs:
+            args += ["-i", str(f)]
+        chain = "".join(f"[{i}:v]setsar=1,setpts=PTS-STARTPTS[v{i}];" for i in range(len(fs))) + "".join(f"[v{i}]" for i in range(len(fs))) + f"concat=n={len(fs)}:v=1:a=0[o]"
+        subprocess.run(args + ["-filter_complex", chain, "-map", "[o]", "-an", "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(j)],
+                       check=True, stdin=subprocess.DEVNULL)
+        jobs[j] = fs
+    log(f"[vmake] 조각 {len(files)}개 → 호출 {len(jobs)}회로 묶음")
+    r = send(list(jobs))
+    out["calls"] = r.get("calls", 0)
+    out["fail"].update(r.get("fail") or {})
+    for j, fs in jobs.items():
+        if j.name not in r.get("cleaned", []):
+            if fs:
+                for f in fs:
+                    out["fail"].setdefault(f.name, str((r.get("fail") or {}).get(j.name) or "묶음 실패"))
+            continue
+        if fs is None:
+            out["cleaned"].append(j.name)
+            continue
+        counts = [_frames(f) for f in fs]      # 같은 fps 끼리만 묶으니 프레임 수 그대로 이어진다
+        have = _frames(j)
+        if have != sum(counts):
+            for f in fs:
+                out["fail"][f.name] = f"합본 프레임 불일치 {have} != {sum(counts)}"
+            log(f"[vmake] 합본 프레임 불일치 {have} != {sum(counts)} — 끼우지 않는다")
+            continue
+        at = 0
+        for f, n in zip(fs, counts):
+            tmp = f.with_name(f.stem + "_vclean" + f.suffix)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(j), "-vf", f"trim=start_frame={at}:end_frame={at + n},setpts=PTS-STARTPTS", "-an",
+                            "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(tmp)], check=True, stdin=subprocess.DEVNULL)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            at += n
+    for j, fs in jobs.items():
+        if fs:
+            _ledger_pieces(j, fs)
+            for x in (j, j.with_name(j.stem + "_orig" + j.suffix)):
+                try:
+                    x.unlink()
+                except OSError:
+                    pass
+    return out
+
+
+def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print, spots: dict | None = None) -> dict:
     """쓰는 구간만 지우기(주인) — 구간마다 잘라 VMake(서버 키/회원 키 = ready 판정) → 지운 조각을 원본에 덮어 끼움.
     반환 {mode, via, done:{이름:[[a,b]…]}(지운 구간), cleaned:[이름], calls, sec(보낸 초), why, (fix)}. 구간이 없으면 호출 0."""
     src_dir = Path(src_dir)
@@ -332,7 +441,11 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
         return {**rd, "done": {}, "cleaned": [], "calls": 0, "sec": 0.0}
     pieces = {n: [(cut_piece(src_dir / n, a, b), a, b) for a, b in iv] for n, iv in spans.items()}
     files = [p for ps in pieces.values() for p, _, _ in ps]
-    r = server_clean(files, log=log) if rd["via"] == "server" else member_clean(files, member_key(), log=log)
+    if rd["via"] == "free":
+        r = free_clean(files, spots or {}, log=log)
+    else:
+        send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
+        r = send_joined(files, send, log=log)
     done, cleaned = {}, []
     for n, ps in pieces.items():
         ok = [(p, a, b) for p, a, b in ps if p.name in r["cleaned"]]
@@ -434,6 +547,30 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
 
     with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎 — 서버 길과 같게 동시에(10-26)
         list(ex.map(one, files))
+    return out
+
+
+def free_clean(files: list, spots: dict, log=print) -> dict:
+    """회원 GPU 로 지운다(돈 0) — spots = {원본 이름: 자리}(회원 Claude 지정, flow f_spots). 자리 없는 조각은 안 지우고 실패로(흐림이 덮는다)."""
+    from tools.free_subclean import engine as FE
+    out = {"cleaned": [], "calls": 0, "fail": {}}
+    for f in files:                                  # GPU 하나라 차례로
+        f = Path(f)
+        spot = spots.get(of_piece(f.name)[0])
+        if not spot or not (spot.get("bands") or spot.get("emoji")):
+            out["fail"][f.name] = "자막 자리 지정 없음"
+            continue
+        t0 = time.time()
+        tmp = f.with_name(f.stem + "_fclean" + f.suffix)
+        try:
+            res = FE.clean_file(f, tmp, spot)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": True, "sec": round(time.time() - t0, 1), "calls": 0, **_sent(f), **res})
+        except Exception as e:  # noqa: BLE001 — 실패는 이유를 남기고 다음 조각
+            out["fail"][f.name] = f"{type(e).__name__}: {str(e)[:200]}"
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": False, "calls": 0, "why": out["fail"][f.name]})
+            log(f"[free] {f.name} 실패: {out['fail'][f.name]}")
     return out
 
 

@@ -1,0 +1,95 @@
+[
+ {
+  "style": "(판독 없음)",
+  "n": 50,
+  "views_median": 1400000,
+  "views_max": 4700000,
+  "voice": [
+   [
+    null,
+    50
+   ]
+  ],
+  "honorific": [
+   [
+    null,
+    50
+   ]
+  ],
+  "duration_median": 27.12,
+  "cps_median": 11.74,
+  "first_word_median": 0.0,
+  "cuts_median": 21.0,
+  "effects_per_video": 0.0,
+  "effect_kinds": [],
+  "sfx_per_video": 0.0,
+  "frame_variants": [
+   [
+    "A",
+    49
+   ],
+   [
+    "B",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "",
+    50
+   ]
+  ],
+  "ids": [
+   "ABjQ0YCZoes",
+   "LHembw8EUU0",
+   "tcaIPaGWLrE",
+   "kC8fkx1Ve3Q",
+   "1kfqEB2b1xM",
+   "Y2YXuAE4J00",
+   "CbpaHePEHHc",
+   "r8gMcLwgpE8",
+   "d-mcihU5wNs",
+   "N3kG92-7wt0",
+   "Iet-btoTSnU",
+   "gf25fMSZHO4",
+   "1EJB0irk2Lw",
+   "DkjcqgijF9Q",
+   "3RxLl0NeR2Q",
+   "2sUHI8hEafE",
+   "K5AaCbt2iLM",
+   "4sX-LpujfTE",
+   "tbHlRXv7tdk",
+   "OyseGsctVwg",
+   "OVs6NryhpSk",
+   "eDHoIXyXOq0",
+   "a18gmzXGYE8",
+   "9mtUoCs0tGM",
+   "_86REXAjv0U",
+   "pCysyPgwZFI",
+   "JdlTvT-P8JY",
+   "_JJ_B3s5H74",
+   "uJJw4zQ9kdA",
+   "DeFXeSLCJuk",
+   "BF_dFpCnbzA",
+   "zZZsiLyTekQ",
+   "iBs7xxBuTLU",
+   "YZeOoHMON74",
+   "np5t8wQuTHc",
+   "gxthiti6maw",
+   "ndDhCshKH_k",
+   "KjuBroZWbvo",
+   "ua__rNc1WDo",
+   "FFwxHI7iCwE",
+   "9DtRJEPAt0o",
+   "oFfS_HcJzgg",
+   "sySSSNB8CLM",
+   "zOVaGcGvbgA",
+   "xRiIGXrjwBg",
+   "YYswROBVbI4",
+   "2BEDwz7-TRU",
+   "v8-lPGv_pWY",
+   "Xchdfjnmx1E",
+   "pW3bxhrs690"
+  ]
+ }
+]

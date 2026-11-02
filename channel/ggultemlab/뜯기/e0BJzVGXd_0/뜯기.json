@@ -1,0 +1,602 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:\\숏템_칼카피\\ggultemlab\\src\\e0BJzVGXd_0.mp4",
+ "measured_at": "2026-10-20 01:17",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 5.9,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 177,
+   "duration": 5.9,
+   "duration_container": 5.968,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "window_method": "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편",
+  "bg_rgb": [
+   144,
+   127,
+   113
+  ],
+  "ink_polarity": null,
+  "caption_pos": "none",
+  "caption_band": null,
+  "other_frame_segments": [],
+  "above_bands": [],
+  "bench_full_single": {
+   "window": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "bg_rgb": [
+    144,
+    127,
+    113
+   ],
+   "bg_lum": 130.7,
+   "caption": {
+    "pos": "inside",
+    "band": [
+     637,
+     1544
+    ],
+    "ink": "bright"
+   },
+   "above_bands": [],
+   "n_samples": 12,
+   "window_method": "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "inside",
+    "band": [
+     637,
+     1544
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 2,
+    "persist": 0.04,
+    "coverage": 0.966,
+    "change": 0.978,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     41,
+     117
+    ],
+    "ink": "dark",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.638,
+    "coverage": 0.644,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     2,
+     110
+    ],
+    "ink": "bright",
+    "score": 0.05,
+    "spans": 2,
+    "persist": 0.078,
+    "coverage": 0.322,
+    "change": 0.994,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     388,
+     601
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.027,
+    "coverage": 0.542,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     880,
+     913
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.0,
+    "coverage": 0.966,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     933,
+     1054
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 2,
+    "persist": 0.002,
+    "coverage": 0.932,
+    "change": 0.924,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1062,
+     1126
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.0,
+    "coverage": 0.847,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1581,
+     1718
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.04,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1817,
+     1846
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.016,
+    "coverage": 0.356,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1875,
+     1918
+    ],
+    "ink": "bright",
+    "score": 0.03,
+    "spans": 2,
+    "persist": 0.039,
+    "coverage": 0.424,
+    "change": 0.947,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1581,
+     1846
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.036,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1581,
+     1918
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.032,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1817,
+     1918
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 2,
+    "persist": 0.037,
+    "coverage": 0.322,
+    "change": 0.917,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     214,
+     236
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.008,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1570,
+     1754
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.036,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1808,
+     1848
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.013,
+    "coverage": 0.322,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1860,
+     1918
+    ],
+    "ink": "bright",
+    "score": 0.05,
+    "spans": 2,
+    "persist": 0.059,
+    "coverage": 0.39,
+    "change": 0.875,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     686,
+     769
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.0,
+    "coverage": 0.881,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     815,
+     852
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.0,
+    "coverage": 0.932,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1200,
+     1226
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.004,
+    "coverage": 0.508,
+    "change": 0.0,
+    "static": 0.0
+   }
+  ]
+ },
+ "captions": {
+  "failed": "자막 띠 못 찾음(1등 점수 0.05 < 1.0)",
+  "method": "bench.captions.choose_caption"
+ },
+ "fonts": {
+  "failed": "자막이 없어 글꼴 대조 못 함"
+ },
+ "text_fx": {
+  "failed": "자막이 없어 글자 효과 못 잼"
+ },
+ "caption_motion": {
+  "failed": "자막 없음"
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -18.0,
+   "LRA": 6.2,
+   "TP": 0.1,
+   "S_spread": 5.0,
+   "S_n": 30,
+   "open3s_M": -24.0,
+   "rest_M": -26.2,
+   "hf_8k16k_dbfs": -38.22,
+   "openvoice": {
+    "floor_db": -35.71,
+    "open": 19.74,
+    "body": 14.51
+   }
+  },
+  "ok": true,
+  "transcript": {
+   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+  },
+  "composition": {
+   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  }
+ },
+ "script_tone": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   1.133,
+   3.667,
+   5.067
+  ],
+  "shots": 4,
+  "shot_len": {
+   "median": 1.27,
+   "p10": 0.92,
+   "p90": 2.19
+  },
+  "first_cut": 1.13,
+  "cut_per_min": 30.5,
+  "cut_eq_sub": null,
+  "cut_eq_sub_rate": null,
+  "zoom": {
+   "n": 20,
+   "median_rate_pct_s": 0.03,
+   "p90_abs_rate_pct_s": 11.82,
+   "zoomin_frac": 0.25,
+   "zoomout_frac": 0.35
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    1.133,
+    3.667,
+    5.067
+   ],
+   "raw_stats": {
+    "shots": 4,
+    "first_cut": 1.13,
+    "cut_std": 0.64,
+    "cut_eq_sub": null
+   },
+   "candidates": [
+    1.133,
+    3.667,
+    5.067
+   ],
+   "corr": [
+    0.153,
+    0.445,
+    -0.075
+   ],
+   "cuts": [
+    1.133,
+    3.667,
+    5.067
+   ],
+   "bg_gray": null,
+   "detected": [
+    1.133,
+    3.667,
+    5.067
+   ],
+   "moved": [],
+   "merged_out": [],
+   "rejected": [],
+   "shots": 4,
+   "shot_median": 1.27,
+   "shot_min": 0.83,
+   "shot_max": 2.53,
+   "first_cut": 1.13,
+   "cut_std": 0.64,
+   "cut_per_min": 30.5,
+   "cut_eq_sub": null,
+   "longest_still": 2.6,
+   "event_gap_med": 1.25,
+   "zoom": {
+    "n": 20,
+    "median_rate_pct_s": 0.03,
+    "p90_abs_rate_pct_s": 11.82,
+    "zoomin_frac": 0.25,
+    "zoomout_frac": 0.35
+   }
+  },
+  "picture_boxes": {
+   "per_shot": [
+    {
+     "shot": 0,
+     "t": [
+      0.0,
+      1.13
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      1920
+     ]
+    },
+    {
+     "shot": 1,
+     "t": [
+      1.13,
+      3.67
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      1461
+     ]
+    },
+    {
+     "shot": 2,
+     "t": [
+      3.67,
+      5.07
+     ],
+     "box": [
+      0,
+      597,
+      1080,
+      1323
+     ]
+    },
+    {
+     "shot": 3,
+     "t": [
+      5.07,
+      5.9
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      1917
+     ]
+    }
+   ],
+   "mode": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "mode_share": 0.5,
+   "range": {
+    "x": [
+     0,
+     0
+    ],
+    "y": [
+     0,
+     597
+    ],
+    "w": [
+     1080,
+     1080
+    ],
+    "h": [
+     1323,
+     1920
+    ]
+   },
+   "kinds": 3,
+   "method": "bench.layout.picture_box(컷 가운데 프레임, 바탕색과 다른 화소 행·열 50%)"
+  }
+ },
+ "materials": {
+  "failed": "건너뜀(--no-materials)"
+ },
+ "sfx_rules": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "bgm_rules": {
+  "failed": "제미나이 배경음악 판독 없음",
+  "end": {
+   "fade": false,
+   "last0.5s_db": -10.9,
+   "prev_db": -26.3,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  }
+ },
+ "voice_rules": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "overlay_rules": {
+  "failed": "건너뜀(--no-materials)"
+ },
+ "unknown": [
+  "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+  "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "bgm_rules: 제미나이 배경음악 판독 없음",
+  "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "overlay_rules: 건너뜀(--no-materials)"
+ ],
+ "llm_calls": [],
+ "timing_sec": {
+  "probe": 0.1,
+  "layout": 77.2,
+  "captions": 0.0,
+  "fonts_fx": 0.0,
+  "caption_motion": 0.0,
+  "audio_tone": 0.5,
+  "cuts_materials": 4.3,
+  "rules": 0.1,
+  "total": 82.2
+ }
+}

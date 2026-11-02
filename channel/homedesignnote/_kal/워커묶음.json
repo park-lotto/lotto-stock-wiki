@@ -1,0 +1,51 @@
+{
+ "slug": "homedesignnote",
+ "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "_QqLEH4qlFQ",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\_QqLEH4qlFQ.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames__QqLEH4qlFQ",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\_QqLEH4qlFQ\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\_QqLEH4qlFQ.json"
+  },
+  {
+   "id": "DCXQjaWcZ-g",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\DCXQjaWcZ-g.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_DCXQjaWcZ-g",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\DCXQjaWcZ-g\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\DCXQjaWcZ-g.json"
+  },
+  {
+   "id": "iiBUscncqIk",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\iiBUscncqIk.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_iiBUscncqIk",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\iiBUscncqIk\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\iiBUscncqIk.json"
+  },
+  {
+   "id": "WTgQPFfdSOQ",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\WTgQPFfdSOQ.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_WTgQPFfdSOQ",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\WTgQPFfdSOQ\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\WTgQPFfdSOQ.json"
+  },
+  {
+   "id": "EINoAh8C9rQ",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\EINoAh8C9rQ.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_EINoAh8C9rQ",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\EINoAh8C9rQ\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\EINoAh8C9rQ.json"
+  },
+  {
+   "id": "SU9YofB1IoI",
+   "mp4": "C:\\숏템_칼카피\\homedesignnote\\src\\SU9YofB1IoI.mp4",
+   "frames": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_SU9YofB1IoI",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기\\SU9YofB1IoI\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독\\SU9YofB1IoI.json"
+  }
+ ],
+ "workers": 3,
+ "per_worker": 2
+}

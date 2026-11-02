@@ -1,0 +1,969 @@
+{
+ "_note": "샥탬스토리 25편 Snow in Seconds 재료 계획. 창 1080x1052(벤치 N2SNg-9RDEc, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(8X9tQmmGUJU_audio.m4a).",
+ "sources": {
+  "8X9tQmmGUJU": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Kevin HATES Snow In Seconds Product",
+   "해상도": "1920x1080 30fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 490.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(86~95·314~318·396~399·410~412초) 안 씀 · 470초 뒤 끝 화면 안 씀 · 무대 'SNOW IN SECONDS' 글 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "가루에 물만 부으면",
+  "line2": "눈이 생긴다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 96.7,
+   "audio_dur": 1.76,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    143.2,
+    144.96
+   ],
+   "ss": 143.2,
+   "dur": 1.76,
+   "t_final_est": [
+    0.0,
+    1.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    650,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 손에 들린 눈 그릇(원본 샷 141.91~145.01, 얼굴 없음 — 소리 = 투자자 원음 'It's a Christmas miracle.' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    97.98,
+    99.069
+   ],
+   "ss": 97.98,
+   "dur": 1.089,
+   "t_final_est": [
+    1.76,
+    2.85
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    476,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위에서 눈을 맞는 투자자(원본 샷 97.96~99.53, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    99.56,
+    101.508
+   ],
+   "ss": 99.56,
+   "dur": 1.948,
+   "t_final_est": [
+    2.85,
+    4.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    510,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "쏟아지는 눈을 올려다보는 다른 투자자(샷 99.53~102.30, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 46.76,
+   "audio_dur": 1.64,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    46.76,
+    48.4
+   ],
+   "ss": 46.76,
+   "dur": 1.64,
+   "t_final_est": [
+    4.8,
+    6.44
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    482,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(원본 샷 45.31~48.42)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 48.4,
+   "audio_dur": 1.38,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    48.45,
+    49.83
+   ],
+   "ss": 48.45,
+   "dur": 1.38,
+   "t_final_est": [
+    6.44,
+    7.82
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    595,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "숟가락으로 가루를 뜨는 손(샷 48.42~49.85 — 소리 = 창업자 원음 이어서 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 49.78,
+   "audio_dur": 0.89,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    51.25,
+    52.14
+   ],
+   "ss": 51.25,
+   "dur": 0.89,
+   "t_final_est": [
+    7.82,
+    8.71
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "그릇에 물을 붓는 손(샷 51.18~56.62 — 소리 = 창업자 원음 이어서 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    52.2,
+    54.192
+   ],
+   "ss": 52.2,
+   "dur": 1.992,
+   "t_final_est": [
+    8.71,
+    10.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    265,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "물을 붓자 그릇 안에서 하얗게 부푸는 가루(원본 샷 51.18~56.62, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    68.4,
+    69.27
+   ],
+   "ss": 68.4,
+   "dur": 0.87,
+   "t_final_est": [
+    10.7,
+    11.57
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "유리 그릇 가득 부푼 눈을 손으로 뒤적임(샷 68.33~74.21 중 뒤 포스터 아이 사진 보이기 전, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 140.92,
+   "audio_dur": 0.5,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    135.4,
+    135.9
+   ],
+   "ss": 135.4,
+   "dur": 0.5,
+   "t_final_est": [
+    11.57,
+    12.07
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    595,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "숟가락으로 가루를 뜨는 투자자 손(원본 샷 135.30~136.74 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 141.42,
+   "audio_dur": 2.1,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    157.9,
+    160.0
+   ],
+   "ss": 157.9,
+   "dur": 2.1,
+   "t_final_est": [
+    12.07,
+    14.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    398,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "눈을 손에 쥐고 감탄하는 투자자(샷 157.86~160.06 — 직접 해 본 투자자, 소리 = 원음 이어서 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    149.3,
+    150.49
+   ],
+   "ss": 149.3,
+   "dur": 1.19,
+   "t_final_est": [
+    14.17,
+    15.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "눈을 손가락으로 집어 보는 손(원본 샷 149.25~150.78, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N3",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    151.1,
+    152.714
+   ],
+   "ss": 151.1,
+   "dur": 1.614,
+   "t_final_est": [
+    15.36,
+    16.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "눈을 집어 뿌려 보는 투자자 손(샷 150.78~153.09, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    164.0,
+    165.157
+   ],
+   "ss": 164.0,
+   "dur": 1.157,
+   "t_final_est": [
+    16.97,
+    18.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "물병과 Snow in Seconds 봉지(원본 샷 163.23~166.37, 제품 브랜드, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N4",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    191.0,
+    193.365
+   ],
+   "ss": 191.0,
+   "dur": 2.365,
+   "t_final_est": [
+    18.13,
+    20.49
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    418,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자(샷 190.69~195.76, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "O4",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 345.71,
+   "audio_dur": 1.68,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    345.71,
+    347.39
+   ],
+   "ss": 345.71,
+   "dur": 1.68,
+   "t_final_est": [
+    20.49,
+    22.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    536,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 투자자 본인(원본 샷 345.58~347.48)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "N5",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    350.8,
+    352.249
+   ],
+   "ss": 350.8,
+   "dur": 1.449,
+   "t_final_est": [
+    22.17,
+    23.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    240,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 투자자(원본 샷 350.75~352.65, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N5",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    356.4,
+    358.492
+   ],
+   "ss": 356.4,
+   "dur": 2.092,
+   "t_final_est": [
+    23.62,
+    25.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    293,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "제안을 고민하는 바바라(샷 356.26~359.09 — 이름은 396초 Barbara offer 띠·원음으로 확인, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "O5",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 418.66,
+   "audio_dur": 4.24,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    418.66,
+    422.9
+   ],
+   "ss": 418.66,
+   "dur": 4.24,
+   "t_final_est": [
+    25.72,
+    29.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    293,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(원본 샷 417.88~422.96)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "N6",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    427.2,
+    428.825
+   ],
+   "ss": 427.2,
+   "dur": 1.625,
+   "t_final_est": [
+    29.96,
+    31.58
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대로 나와 창업자에게 다가가는 바바라(원본 샷 427.13~429.86, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "N6",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    330.2,
+    331.825
+   ],
+   "ss": 330.2,
+   "dur": 1.625,
+   "t_final_est": [
+    31.58,
+    33.21
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    480,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "독설하던 투자자(샷 328.43~334.00, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "O6",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 435.12,
+   "audio_dur": 1.23,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    434.92,
+    436.15
+   ],
+   "ss": 434.92,
+   "dur": 1.23,
+   "t_final_est": [
+    33.21,
+    34.44
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    475,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 투자자 본인(원본 샷 434.90~436.17 — 소리 = 이 줄 원음, 입 모양 0.2초 앞섬)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O6",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 436.35,
+   "audio_dur": 0.85,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    436.2,
+    437.05
+   ],
+   "ss": 436.2,
+   "dur": 0.85,
+   "t_final_est": [
+    34.44,
+    35.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "웃는 창업자와 바바라(샷 436.17~437.24 — 소리 = 투자자 원음 이어서 cover, 첫 자막 '네가 투자받은 게' 칸)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O6",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 437.2,
+   "audio_dur": 0.72,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    438.3,
+    439.02
+   ],
+   "ss": 438.3,
+   "dur": 0.72,
+   "t_final_est": [
+    35.29,
+    36.01
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    434,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "손 흔들며 말하는 투자자 본인(샷 437.24~439.04 중 바바라가 지나간 뒤 — 둘째 자막 '크리스마스 기적이다!' 칸)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O6",
+   "kind": "원음",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": false,
+   "audio_src": "8X9tQmmGUJU_audio.m4a",
+   "audio_ss": 437.92,
+   "audio_dur": 0.85,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    308.4,
+    309.25
+   ],
+   "ss": 308.4,
+   "dur": 0.85,
+   "t_final_est": [
+    36.01,
+    36.86
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    290,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "그 투자자 얼굴(샷 308.31~310.91 — 소리 = 원음 이어서 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "N7",
+   "kind": "나레",
+   "src": "8X9tQmmGUJU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8X9tQmmGUJU",
+   "src_orig_span": [
+    442.2,
+    445.549
+   ],
+   "ss": 442.2,
+   "dur": 3.349,
+   "t_final_est": [
+    36.86,
+    40.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤로 걸어 나오는 창업자(원본 샷 440.47~448.98, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/25편_SnowInSeconds/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    311,
+    765,
+    768,
+    1018
+   ],
+   "target_what": "투자자 손에 들린 눈 그릇 — 143.2·143.45초 원본 프레임 눈 측정(창 크롭 [651,0,1109,1080] 안 x 970~1440·y 340~600, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품으로 만든 눈) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    540,
+    892
+   ],
+   "size": 658,
+   "face_clear": true,
+   "target_box": [
+    311,
+    765,
+    768,
+    1018
+   ],
+   "target_path": [
+    [
+     0.0,
+     311.0,
+     765.0,
+     768.0,
+     1018.0
+    ],
+    [
+     0.067,
+     313.0,
+     768.7,
+     782.0,
+     1028.3
+    ],
+    [
+     0.133,
+     313.7,
+     768.7,
+     795.0,
+     1035.3
+    ],
+    [
+     0.2,
+     315.0,
+     768.3,
+     802.7,
+     1038.7
+    ],
+    [
+     0.267,
+     306.3,
+     767.0,
+     807.0,
+     1044.7
+    ],
+    [
+     0.333,
+     293.7,
+     768.3,
+     808.0,
+     1053.3
+    ],
+    [
+     0.4,
+     275.0,
+     769.0,
+     810.0,
+     1065.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     540,
+     892
+    ],
+    [
+     0.067,
+     548,
+     898
+    ],
+    [
+     0.133,
+     554,
+     902
+    ],
+    [
+     0.2,
+     559,
+     904
+    ],
+    [
+     0.267,
+     557,
+     906
+    ],
+    [
+     0.333,
+     551,
+     911
+    ],
+    [
+     0.4,
+     542,
+     917
+    ]
+   ],
+   "track_conf": 0.931,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.931 · 원 658px = 물건 반대각선 306×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 16.5 해답"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 24.2 '절대 녹지 않고'"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "성사"
+  }
+ ]
+}

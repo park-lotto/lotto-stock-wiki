@@ -1,0 +1,298 @@
+{
+ "windows": [
+  {
+   "t": 0.0,
+   "label": "other"
+  },
+  {
+   "t": 0.5,
+   "label": "other"
+  },
+  {
+   "t": 1.0,
+   "label": "other"
+  },
+  {
+   "t": 1.5,
+   "label": "other"
+  },
+  {
+   "t": 2.0,
+   "label": "other"
+  },
+  {
+   "t": 2.5,
+   "label": "other"
+  },
+  {
+   "t": 3.0,
+   "label": "other"
+  },
+  {
+   "t": 3.5,
+   "label": "other"
+  },
+  {
+   "t": 4.0,
+   "label": "other"
+  },
+  {
+   "t": 4.5,
+   "label": "other"
+  },
+  {
+   "t": 5.0,
+   "label": "other"
+  },
+  {
+   "t": 5.5,
+   "label": "other"
+  },
+  {
+   "t": 6.0,
+   "label": "other"
+  },
+  {
+   "t": 6.5,
+   "label": "other"
+  },
+  {
+   "t": 7.0,
+   "label": "other"
+  },
+  {
+   "t": 7.5,
+   "label": "other"
+  },
+  {
+   "t": 8.0,
+   "label": "other"
+  },
+  {
+   "t": 8.5,
+   "label": "other"
+  },
+  {
+   "t": 9.0,
+   "label": "talk"
+  },
+  {
+   "t": 9.5,
+   "label": "talk"
+  },
+  {
+   "t": 10.0,
+   "label": "talk"
+  },
+  {
+   "t": 10.5,
+   "label": "talk"
+  },
+  {
+   "t": 11.0,
+   "label": "talk"
+  },
+  {
+   "t": 11.5,
+   "label": "talk"
+  },
+  {
+   "t": 12.0,
+   "label": "other"
+  },
+  {
+   "t": 12.5,
+   "label": "other"
+  },
+  {
+   "t": 13.0,
+   "label": "other"
+  },
+  {
+   "t": 13.5,
+   "label": "other"
+  },
+  {
+   "t": 14.0,
+   "label": "other"
+  },
+  {
+   "t": 14.5,
+   "label": "other"
+  },
+  {
+   "t": 15.0,
+   "label": "other"
+  },
+  {
+   "t": 15.5,
+   "label": "talk"
+  },
+  {
+   "t": 16.0,
+   "label": "talk"
+  },
+  {
+   "t": 16.5,
+   "label": "talk"
+  },
+  {
+   "t": 17.0,
+   "label": "talk"
+  },
+  {
+   "t": 17.5,
+   "label": "sing"
+  },
+  {
+   "t": 18.0,
+   "label": "sing"
+  },
+  {
+   "t": 18.5,
+   "label": "sing"
+  },
+  {
+   "t": 19.0,
+   "label": "sing"
+  },
+  {
+   "t": 19.5,
+   "label": "sing"
+  },
+  {
+   "t": 20.0,
+   "label": "sing"
+  },
+  {
+   "t": 20.5,
+   "label": "sing"
+  },
+  {
+   "t": 21.0,
+   "label": "sing"
+  },
+  {
+   "t": 21.5,
+   "label": "sing"
+  },
+  {
+   "t": 22.0,
+   "label": "sing"
+  },
+  {
+   "t": 22.5,
+   "label": "sing"
+  },
+  {
+   "t": 23.0,
+   "label": "sing"
+  },
+  {
+   "t": 23.5,
+   "label": "sing"
+  },
+  {
+   "t": 24.0,
+   "label": "sing"
+  },
+  {
+   "t": 24.5,
+   "label": "sing"
+  },
+  {
+   "t": 25.0,
+   "label": "sing"
+  },
+  {
+   "t": 25.5,
+   "label": "sing"
+  },
+  {
+   "t": 26.0,
+   "label": "sing"
+  },
+  {
+   "t": 26.5,
+   "label": "sing"
+  },
+  {
+   "t": 27.0,
+   "label": "sing"
+  },
+  {
+   "t": 27.5,
+   "label": "sing"
+  },
+  {
+   "t": 28.0,
+   "label": "talk"
+  },
+  {
+   "t": 28.5,
+   "label": "talk"
+  },
+  {
+   "t": 29.0,
+   "label": "talk"
+  },
+  {
+   "t": 29.5,
+   "label": "sing"
+  },
+  {
+   "t": 30.0,
+   "label": "sing"
+  },
+  {
+   "t": 30.5,
+   "label": "sing"
+  },
+  {
+   "t": 31.0,
+   "label": "sing"
+  },
+  {
+   "t": 31.5,
+   "label": "sing"
+  },
+  {
+   "t": 32.0,
+   "label": "sing"
+  },
+  {
+   "t": 32.5,
+   "label": "sing"
+  },
+  {
+   "t": 33.0,
+   "label": "sing"
+  },
+  {
+   "t": 33.5,
+   "label": "sing"
+  }
+ ],
+ "talk": [
+  {
+   "start": 9.1,
+   "end": 12.0,
+   "lang": "hi",
+   "text": "Hello, dance karte phone dekha hai kabhi?"
+  },
+  {
+   "start": 15.6,
+   "end": 17.5,
+   "lang": "en",
+   "text": "Play music and dance."
+  },
+  {
+   "start": 28.0,
+   "end": 29.3,
+   "lang": "en",
+   "text": "Okay, bye."
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "ss": 0.0
+}

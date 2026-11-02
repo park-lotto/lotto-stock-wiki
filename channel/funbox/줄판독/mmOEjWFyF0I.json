@@ -1,0 +1,504 @@
+{
+ "id": "mmOEjWFyF0I",
+ "dur": 28.25,
+ "title_card": "배라가 싫어하는 / 아이스크림?",
+ "post_title": "배라가 싫어하는 아이스크림?",
+ "frame": {
+  "header": "노란 머리띠(연노랑) 가운데 '펀박스' 로고(웃는 선물상자 캐릭터+빨간 글자)·오른쪽 돋보기 → 흰 바탕 게시글 제목 1줄(검정 얇은 고딕) → 오른쪽 메타 '펀박스 | 18:00'(회색 작은 글자) → 주황빨강 가로줄",
+  "layout_y": "1080x1920 기준: 머리띠 0~180 · 제목 190~310 · 메타 330~390 · 가로줄 ~405 · 자막 칸 430~620(검정 굵은 고딕 가운데, 최대 2줄 누적) · 그림 칸 640~1500(가로 꽉 또는 가운데, 비율대로 높이 가변, 아래 흰 여백) · AI 고지 1840~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 맨 아래 가운데(y≈1840~1880) 회색 굵은 글자, 훅 카드 끝난 뒤부터 끝까지 상시(훅 카드 구간엔 없음)",
+  "hook_card": "0~1.2초: 틀 위에 어두운 덮개 + 큰 2줄 제목(흰 글자 + 둘째 줄 색 글자, 검은 테두리) + 흰 띠에 제목 한 줄, 아래 영상. 끝나면 덮개 걷히며 본 틀",
+  "caption_style": "누적형 2줄: 1줄 뜨고 0.5~1.3초 뒤 2줄째 덧붙음 → 다음 줄에서 둘 다 지우고 새 1줄. 글꼴: 둥근 굵은 고딕"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.2,
+   "caption": "배라가 싫어하는 아이스크림?(훅 카드)",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "사빠딸 통에서 스쿱 뜨는 옛 영상(저화질)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.2,
+   "t1": 2.1,
+   "caption": "배라가 이 아이스크림을",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "사빠딸 콘 누끼",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.1,
+   "t1": 3.1,
+   "caption": "세 번이나 없앴는데,",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "콘 그림에 빨간 X + 회색 큰 숫자 '3'",
+   "infographic": {
+    "type": "아이콘+숫자(횟수 표시)",
+    "motion": "컷 전환으로 한 번에 등장, 정지(살짝 확대)",
+    "value": "단종 ×3"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.1,
+   "t1": 3.9,
+   "caption": "없앨 때마다 손님들",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "뉴시스 기사 제목 '배스킨라빈스 인기메뉴 사빠딸 이달 단종된다' 2024.05.08",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.9,
+   "t1": 5.0,
+   "caption": "등쌀에 못 이겨 살려냄.",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "3.9~4.5 기사 위로 이라스토야풍 두 인물: 손가락질하는 여성(손님) + 땀 흘리며 두 손 든 분홍 모자 점원 / 4.5~5.0 'WELCOME BACK' 파란 공식 배너",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 손님·점원",
+    "feeling": "손님=항의·짜증 / 점원=당황·항복",
+    "prop": "땀방울, 손가락질, 두 손 들기"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.0,
+   "t1": 5.9,
+   "caption": "그건 바로 사랑에",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "아이스크림 통 위에 '사랑에 빠진 딸기 SIGNATURE' 라벨 카드 들고 보여주는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.9,
+   "t1": 6.9,
+   "caption": "빠진 딸기,",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "아이스크림 통 위에 '사랑에 빠진 딸기 SIGNATURE' 라벨 카드 들고 보여주는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.9,
+   "t1": 8.0,
+   "caption": "이름은 사빠딸인데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "옛 배라 TV 광고: 소녀가 사빠딸 콘 먹는 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.0,
+   "t1": 9.0,
+   "caption": "한동안 배스킨라빈스",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "옛 배라 TV 광고: 소녀가 사빠딸 콘 먹는 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 9.0,
+   "t1": 10.1,
+   "caption": "대표 메뉴로 자리잡았음.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "옛 배라 TV 광고: 소녀가 사빠딸 콘 먹는 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.5,
+   "caption": "근데 2015년 가을에",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "추모 영정 틀(검은 띠) 속 사빠딸 사진 + 페이스북 추모 페이지 캡처, 아래로 스크롤(기사 본문까지)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "영정 틀 합성, 세로 스크롤"
+  },
+  {
+   "t0": 11.5,
+   "t1": 12.7,
+   "caption": "처음 단종됐는데",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "추모 영정 틀(검은 띠) 속 사빠딸 사진 + 페이스북 추모 페이지 캡처, 아래로 스크롤(기사 본문까지)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "영정 틀 합성, 세로 스크롤"
+  },
+  {
+   "t0": 12.7,
+   "t1": 13.4,
+   "caption": "SNS에 추모",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "기사 제목 '생산중단 사빠딸 재판매 가능할까?…SNS서 응원물결 잇따라' 2015.09.09",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 13.4,
+   "t1": 14.7,
+   "caption": "페이지까지 만들었고,",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "기사 제목 '생산중단 사빠딸 재판매 가능할까?…SNS서 응원물결 잇따라' 2015.09.09",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 14.7,
+   "t1": 16.0,
+   "caption": "결국엔 다시 돌아왔는데,",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "분홍 콘 든 여성 + 노란 별 반짝",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 여성",
+    "feeling": "기쁨",
+    "prop": "별 반짝이, 아이스크림 콘"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.0,
+   "t1": 16.9,
+   "caption": "몇 년 뒤 신메뉴한테",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "분홍 초코칩 콘이 노란 콘에 밀려 기울고 땀방울",
+   "infographic": null,
+   "emotion": {
+    "who": "의인화 아이스크림 콘",
+    "feeling": "밀려남·당황",
+    "prop": "땀방울"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.9,
+   "t1": 18.6,
+   "caption": "자리 뺏겨서 또 단종됐고",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "분홍 초코칩 콘이 노란 콘에 밀려 기울고 땀방울",
+   "infographic": null,
+   "emotion": {
+    "who": "의인화 아이스크림 콘",
+    "feeling": "밀려남·당황",
+    "prop": "땀방울"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.6,
+   "t1": 19.8,
+   "caption": "그것도 금세 다시 돌아왔음.",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "'COMEBACK' 분홍 공식 배너(망토 두른 사빠딸 콘)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.9,
+   "caption": "그러다 올해 5월,",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "검은 영정 틀 속 사빠딸 콘(추모 표현)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "영정 틀"
+  },
+  {
+   "t0": 20.9,
+   "t1": 22.0,
+   "caption": "세 번째로 단종됐는데,",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "검은 영정 틀 속 사빠딸 콘(추모 표현)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "영정 틀"
+  },
+  {
+   "t0": 22.0,
+   "t1": 22.8,
+   "caption": "이번엔 재출시 계획",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "모자 쓴 남자가 콘 들고 땀 흘리며 시무룩",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 남성(손님)",
+    "feeling": "걱정·시무룩",
+    "prop": "땀방울"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.8,
+   "t1": 23.8,
+   "caption": "없다고 못 박았지만",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "정장 남성 팔짱(회사 측)",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 정장 남성(회사)",
+    "feeling": "단호",
+    "prop": "팔짱"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.8,
+   "t1": 24.9,
+   "caption": "또 두 달 만에 재출시함.",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "같은 남성 회색 처리 + 기사 제목 '배스킨라빈스, 사랑에 빠진 딸기 등 인기 플레이버 4종 재출시' 띠가 가로질러 등장",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 정장 남성",
+    "feeling": "(말 뒤집힘 — 회색으로 무력화)",
+    "prop": null
+   },
+   "ai": null,
+   "effect": "회색 처리+기사 띠 슬라이드"
+  },
+  {
+   "t0": 24.9,
+   "t1": 25.6,
+   "caption": "그렇게 사빠딸은",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "라벨 카드 든 아이스크림 통 영상 재사용",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.6,
+   "t1": 26.8,
+   "caption": "이번에도 살아남았는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "라벨 카드 든 아이스크림 통 영상 재사용",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.5,
+   "caption": "그냥 계속 팔면",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "디카프리오(울프 오브 월스트리트) 소리치는 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "밈(디카프리오)",
+    "feeling": "답답·분통",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.5,
+   "t1": 28.25,
+   "caption": "안되는거임?ㅋㅋ",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "디카프리오(울프 오브 월스트리트) 소리치는 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "밈(디카프리오)",
+    "feeling": "답답·분통",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드(질문형 제목) → 요점 선공개(세 번 없앴는데 살려냄) → 정체 공개(사빠딸) → 전성기 → 단종 1(SNS 추모) → 부활 → 단종 2 → 부활 → 단종 3(재출시 없다) → 반전(두 달 만에 재출시) → 시청자 대변 한마디('그냥 계속 팔면 안되는거임?ㅋㅋ')",
+ "ratios": {
+  "infographic_sec": 1.0,
+  "character_sec": 6.3,
+  "ai_image_sec": 0,
+  "real_video_sec": 8.2,
+  "meme_sec": 1.4,
+  "note": "구간(초) 합. 캐릭터 초는 AI 생성 이라스토야풍 인물 포함(겹침 허용). real_video = 실제 촬영 영상(제품·인물·매장·광고 CF)."
+ },
+ "segments": [
+  {
+   "t0": 0.0,
+   "t1": 1.2,
+   "screen": "제품영상",
+   "desc": "사빠딸 통에서 스쿱 뜨는 옛 영상(저화질)"
+  },
+  {
+   "t0": 1.2,
+   "t1": 2.1,
+   "screen": "제품사진",
+   "desc": "사빠딸 콘 누끼"
+  },
+  {
+   "t0": 2.1,
+   "t1": 3.1,
+   "screen": "인포그래픽",
+   "desc": "콘 그림에 빨간 X + 회색 큰 숫자 '3'"
+  },
+  {
+   "t0": 3.1,
+   "t1": 3.9,
+   "screen": "캡처",
+   "desc": "뉴시스 기사 제목 '배스킨라빈스 인기메뉴 사빠딸 이달 단종된다' 2024.05.08"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.5,
+   "screen": "캐릭터일러스트",
+   "desc": "기사 위로 이라스토야풍 두 인물: 손가락질하는 여성(손님) + 땀 흘리며 두 손 든 분홍 모자 점원"
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.0,
+   "screen": "제품사진",
+   "desc": "'WELCOME BACK' 파란 공식 배너"
+  },
+  {
+   "t0": 5.0,
+   "t1": 6.9,
+   "screen": "제품영상",
+   "desc": "아이스크림 통 위에 '사랑에 빠진 딸기 SIGNATURE' 라벨 카드 들고 보여주는 영상"
+  },
+  {
+   "t0": 6.9,
+   "t1": 10.1,
+   "screen": "제품영상",
+   "desc": "옛 배라 TV 광고: 소녀가 사빠딸 콘 먹는 장면"
+  },
+  {
+   "t0": 10.1,
+   "t1": 12.7,
+   "screen": "캡처",
+   "desc": "추모 영정 틀(검은 띠) 속 사빠딸 사진 + 페이스북 추모 페이지 캡처, 아래로 스크롤(기사 본문까지)"
+  },
+  {
+   "t0": 12.7,
+   "t1": 14.7,
+   "screen": "캡처",
+   "desc": "기사 제목 '생산중단 사빠딸 재판매 가능할까?…SNS서 응원물결 잇따라' 2015.09.09"
+  },
+  {
+   "t0": 14.7,
+   "t1": 16.0,
+   "screen": "캐릭터일러스트",
+   "desc": "분홍 콘 든 여성 + 노란 별 반짝"
+  },
+  {
+   "t0": 16.0,
+   "t1": 18.6,
+   "screen": "캐릭터일러스트",
+   "desc": "분홍 초코칩 콘이 노란 콘에 밀려 기울고 땀방울"
+  },
+  {
+   "t0": 18.6,
+   "t1": 19.8,
+   "screen": "제품사진",
+   "desc": "'COMEBACK' 분홍 공식 배너(망토 두른 사빠딸 콘)"
+  },
+  {
+   "t0": 19.8,
+   "t1": 22.0,
+   "screen": "캡처",
+   "desc": "검은 영정 틀 속 사빠딸 콘(추모 표현)"
+  },
+  {
+   "t0": 22.0,
+   "t1": 22.8,
+   "screen": "캐릭터일러스트",
+   "desc": "모자 쓴 남자가 콘 들고 땀 흘리며 시무룩"
+  },
+  {
+   "t0": 22.8,
+   "t1": 23.8,
+   "screen": "캐릭터일러스트",
+   "desc": "정장 남성 팔짱(회사 측)"
+  },
+  {
+   "t0": 23.8,
+   "t1": 24.9,
+   "screen": "캡처",
+   "desc": "같은 남성 회색 처리 + 기사 제목 '배스킨라빈스, 사랑에 빠진 딸기 등 인기 플레이버 4종 재출시' 띠가 가로질러 등장"
+  },
+  {
+   "t0": 24.9,
+   "t1": 26.8,
+   "screen": "제품영상",
+   "desc": "라벨 카드 든 아이스크림 통 영상 재사용"
+  },
+  {
+   "t0": 26.8,
+   "t1": 28.25,
+   "screen": "밈짤",
+   "desc": "디카프리오(울프 오브 월스트리트) 소리치는 짤"
+  }
+ ]
+}

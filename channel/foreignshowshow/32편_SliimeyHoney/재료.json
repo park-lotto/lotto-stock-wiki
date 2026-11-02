@@ -1,0 +1,639 @@
+{
+ "_note": "샥탬스토리 32편 Sliimey Honey 재료 계획. 창 1080x1052(벤치 Lbct5sgnyjM, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(AJTIEVJn7x4_audio.m4a).",
+ "sources": {
+  "AJTIEVJn7x4": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Homemade Slime Slimey Honey Entrepreneur Keeps Asking For More",
+   "해상도": "1920x1080 30fps (137) + 140-7 영어 원어(더빙 7개 중 original)",
+   "길이": 691.0,
+   "받은 구간": "전체",
+   "남의 글자": "103~107초 이름/요청 띠·제안 띠 안 씀 · 88초 'COME JOIN OUR SLIME' 안 씀 · 끝 화면 안 씀 · 'sliimey honey' 간판·티셔츠·통 글 = 이 회사 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "17살이 만든 슬라임",
+  "line2": "한국 바나나우유 맛?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 224.09,
+   "audio_dur": 1.2,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    235.6,
+    236.8
+   ],
+   "ss": 235.6,
+   "dur": 1.2,
+   "t_final_est": [
+    0.0,
+    1.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 손에 엉겨 붙은 흰 슬라임 근접(원본 샷 235.47~237.94, 얼굴 없음 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 225.29,
+   "audio_dur": 3.32,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    225.29,
+    228.61
+   ],
+   "ss": 225.29,
+   "dur": 3.32,
+   "t_final_est": [
+    1.2,
+    4.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    256,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 묻은 손을 들고 말하는 투자자 본인(원본 샷 223.86~229.10 — 화면초 = 소리초)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    20.5,
+    23.329
+   ],
+   "ss": 20.5,
+   "dur": 2.829,
+   "t_final_est": [
+    4.52,
+    7.35
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    369,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대에서 말하는 창업자(원본 샷 16.75~27.86, 띠 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    140.05,
+    141.343
+   ],
+   "ss": 140.05,
+   "dur": 1.293,
+   "t_final_est": [
+    7.35,
+    8.64
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "음식 모양 슬라임이 늘어선 진열대(원본 샷 139.97~141.71, 사람 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    52.8,
+    54.475
+   ],
+   "ss": 52.8,
+   "dur": 1.675,
+   "t_final_est": [
+    8.64,
+    10.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "와플 모양 슬라임(원본 샷 52.75~54.82, 사람 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    54.88,
+    56.066
+   ],
+   "ss": 54.88,
+   "dur": 1.186,
+   "t_final_est": [
+    10.32,
+    11.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "음식 이름 붙은 슬라임 통들(원본 샷 54.82~56.32, 사람 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    56.4,
+    58.376
+   ],
+   "ss": 56.4,
+   "dur": 1.976,
+   "t_final_est": [
+    11.5,
+    13.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "여러 맛 슬라임 통 더미(원본 샷 56.32~58.76, 사람 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O2",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 62.88,
+   "audio_dur": 1.26,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    78.72,
+    79.98
+   ],
+   "ss": 78.72,
+   "dur": 1.26,
+   "t_final_est": [
+    13.48,
+    14.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "바나나 장식 든 손바닥 근접(원본 샷 78.71~80.01, 사람 얼굴 없음 — 소리 = 창업자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O2",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 64.14,
+   "audio_dur": 3.38,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    64.14,
+    67.52
+   ],
+   "ss": 64.14,
+   "dur": 3.38,
+   "t_final_est": [
+    14.74,
+    18.12
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 진열대 옆에서 말하는 창업자 본인(원본 샷 63.00~67.53 — 화면초 = 소리초)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O2",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 67.52,
+   "audio_dur": 0.44,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    85.9,
+    86.34
+   ],
+   "ss": 85.9,
+   "dur": 0.44,
+   "t_final_est": [
+    18.12,
+    18.56
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 통 뚜껑들 근접(원본 샷 85.82~87.19, 사람 없음 — 소리 = 창업자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O3",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 108.92,
+   "audio_dur": 0.6,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    124.5,
+    125.1
+   ],
+   "ss": 124.5,
+   "dur": 0.6,
+   "t_final_est": [
+    18.56,
+    19.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 통 뚜껑을 여는 그 투자자의 손 근접(원본 샷 124.22~128.13, 얼굴 없음 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O3",
+   "kind": "원음",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": false,
+   "audio_src": "AJTIEVJn7x4_audio.m4a",
+   "audio_ss": 109.52,
+   "audio_dur": 3.32,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    109.52,
+    112.84
+   ],
+   "ss": 109.52,
+   "dur": 3.32,
+   "t_final_est": [
+    19.16,
+    22.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    382,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 통을 받아 든 말하는 투자자 본인(원본 샷 109.51~112.95 — 화면초 = 소리초)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "N3",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    131.7,
+    133.512
+   ],
+   "ss": 131.7,
+   "dur": 1.812,
+   "t_final_est": [
+    22.48,
+    24.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    350,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "손에 슬라임을 들고 말하는 창업자(원본 샷 131.53~134.13, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N3",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    149.4,
+    151.055
+   ],
+   "ss": 149.4,
+   "dur": 1.655,
+   "t_final_est": [
+    24.29,
+    25.95
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "슬라임 진열대 옆 창업자(원본 샷 149.32~151.62, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N3",
+   "kind": "나레",
+   "src": "AJTIEVJn7x4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4",
+   "src_orig_span": [
+    95.0,
+    96.261
+   ],
+   "ss": 95.0,
+   "dur": 1.261,
+   "t_final_est": [
+    25.95,
+    27.21
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    339,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자(원본 샷 94.76~98.87, 띠 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/32편_SliimeyHoney/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    370,
+    800,
+    625,
+    1060
+   ],
+   "target_what": "투자자 두 손에 엉겨 붙은 흰 슬라임 덩이(235.7초 프레임 눈 측정, 창 크롭 [405,0,1109,1080] 안 x190~320·y190~325 of 554 → 완성본 좌표) — fx_place fix 가 완성본 좌표로 다시 잼",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    498,
+    930
+   ],
+   "size": 432,
+   "face_clear": true,
+   "target_box": [
+    370,
+    800,
+    625,
+    1060
+   ],
+   "target_path": [
+    [
+     0.0,
+     370.0,
+     800.0,
+     625.0,
+     1060.0
+    ],
+    [
+     0.067,
+     368.3,
+     797.3,
+     626.7,
+     1060.7
+    ],
+    [
+     0.133,
+     366.7,
+     795.0,
+     628.3,
+     1061.7
+    ],
+    [
+     0.2,
+     364.7,
+     792.7,
+     629.7,
+     1062.7
+    ],
+    [
+     0.267,
+     364.0,
+     792.0,
+     629.0,
+     1062.0
+    ],
+    [
+     0.333,
+     361.3,
+     790.7,
+     630.0,
+     1064.3
+    ],
+    [
+     0.4,
+     357.0,
+     789.0,
+     633.0,
+     1070.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     498,
+     930
+    ],
+    [
+     0.067,
+     498,
+     929
+    ],
+    [
+     0.133,
+     498,
+     928
+    ],
+    [
+     0.2,
+     497,
+     928
+    ],
+    [
+     0.267,
+     496,
+     927
+    ],
+    [
+     0.333,
+     496,
+     928
+    ],
+    [
+     0.4,
+     495,
+     930
+    ]
+   ],
+   "track_conf": 0.959,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.959 · 원 432px = 물건 반대각선 197×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 7.7"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    3.0,
+    3.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "한국 바나나우유"
+  }
+ ]
+}

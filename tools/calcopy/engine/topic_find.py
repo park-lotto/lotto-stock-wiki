@@ -665,7 +665,7 @@ CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 �
 
 def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=print, per_channel: int = 30,
                        stats=None) -> tuple[list[dict], list[dict]]:
-    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 칼카피한 채널 목록을 넘기고 어떻게 찾아나가는지").
+    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 프리셋한 채널 목록을 넘기고 어떻게 찾아나가는지").
     같은 결 채널(channel_find 가 판정한 목록 — 확정만)의 최근 쇼츠에서 **그 채널 조회 중앙값의 1.5배 이상** 터진 편을
     조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
     stats = channel_find.channel_stats(시험에서 가짜). 반환 (후보, 실패)."""
@@ -884,7 +884,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     return res
 
 
-# 채널 소재 유형 설명 — manifest.channel_desc 가 주인. 없을 때 기본(근거: 각 채널 손 칼카피 편·top50 제목 결, 10-16)
+# 채널 소재 유형 설명 — manifest.channel_desc 가 주인. 없을 때 기본(근거: 각 채널 손 프리셋 편·top50 제목 결, 10-16)
 CHANNEL_DESC = {
     "sseolpulda": "해외에서 조회수가 터진 신기한 생활 제품·가젯을 한국어 자막으로 소개하는 제품 이야기썰 — 실제 사용·시연 영상이 있는 소비자 제품(사람·요리·코미디·브이로그 아님)",
     "yummyknow": "한국 식품·유통 브랜드(코스트코·맘스터치·다이소 등)의 억울한 사연·영업비밀·실수·숨은 이유를 전언체로 푸는 비하인드 썰 — 공식 홍보·신상 소개가 아니라 사건과 사람들 반응",

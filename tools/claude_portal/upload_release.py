@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import subprocess
+import time
 import sys
 import tempfile
 import urllib.request
@@ -41,7 +42,17 @@ def ssh(cmd):
 
 
 def scp(files, dst):
-    return sh(["scp", "-o", "ConnectTimeout=20", "-i", KEY, *map(str, files), f"{HOST}:{dst}"], timeout=3600)
+    # 큰 파일 전송 중 연결이 끊기면 다시 보낸다(10-31 Connection reset 4번). 파일 하나씩, 속도 제한으로
+    for f in files:
+        for n in range(1, 7):
+            try:
+                sh(["scp", "-l", "30000", "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=15", "-i", KEY, str(f), f"{HOST}:{dst}"], timeout=3600)
+                break
+            except SystemExit:
+                if n == 6:
+                    raise
+                print(f"[upload] {Path(f).name} 전송 끊김 — {n}/6 다시", flush=True)
+                time.sleep(20)
 
 
 def sha256(p: Path) -> str:
@@ -61,6 +72,7 @@ def main(argv=None) -> int:
     ap.add_argument("--dry", action="store_true", help="파일·서버 상태만 보고 올리지 않는다")
     ap.add_argument("--update-stage", help="설치 폴더(빌드 win-x64/Shortem) — 주면 server·engine 묶음을 켤 때 자동 업데이트로도 올린다(publish_update.make_zip)")
     ap.add_argument("--notes", default="")
+    ap.add_argument("--benchmark", help="고급반 벤치마킹 묶음 benchmark_pack.zip(benchmark_pack.py build) — 주면 서버 benchmark/ 에 올린다(관제 304)")
     a = ap.parse_args(argv)
     dist, packs = Path(a.dist), Path(a.packs)
     mcpb = dist / "shortem.mcpb"
@@ -87,6 +99,9 @@ def main(argv=None) -> int:
 
     ssh(f"mkdir -p {STORE}/preset_packs {STORE}/installers {UPLOAD}")
     scp(presets, f"{STORE}/preset_packs/")
+    if a.benchmark:
+        ssh(f"mkdir -p {STORE}/benchmark")
+        scp([Path(a.benchmark)], f"{STORE}/benchmark/")
     items = [{"os": "desktop", "file": mcpb.name, "version": a.version, "sha256": sha256(mcpb), "size": mcpb.stat().st_size},
              {"os": "code-win-x64", "file": kit.name, "version": a.version, "sha256": sha256(kit), "size": kit.stat().st_size}]
     with tempfile.TemporaryDirectory() as td:
@@ -106,10 +121,9 @@ def main(argv=None) -> int:
             uz.write_bytes(make_zip(Path(a.update_stage), a.version))
             u_sha = sha256(uz)
             scp([uz], f"{UPLOAD}/")
-        reg = ("import json,os;from pathlib import Path;from shopping_shorts import claude_portal as cp;"
+        reg = ("from pathlib import Path;from shopping_shorts import claude_portal as cp;"     # 판 표 쓰기 주인 = update_register(단계 배포 중이면 거절)
                f"p=Path('{UPLOAD}/shortem-app-{a.version}.zip');sha,size=cp.put_blob(p);p.unlink();"
-               f"cp.update_path().parent.mkdir(parents=True,exist_ok=True);"
-               f"cp.update_path().write_text(json.dumps({{'version':'{a.version}','sha256':sha,'size':size,'notes':{json.dumps(a.notes)}}}),encoding='utf-8');print(sha)")
+               f"cp.update_register('{a.version}',sha,size,{a.notes!r});print(sha)")
         import base64      # 따옴표가 셸을 두 번 지나며 깨지지 않게 글을 통째로 넘긴다
         got_u = ssh(f"cd {REPO} && echo {base64.b64encode(reg.encode()).decode()} | base64 -d | /usr/bin/python3 -").strip().splitlines()[-1]
         out["update_sha_match"] = got_u == u_sha

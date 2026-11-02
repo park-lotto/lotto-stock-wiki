@@ -1,0 +1,798 @@
+{
+ "slug": "kitchit",
+ "n_docs": 8,
+ "src_dir": "C:/숏템_칼카피/kitchit/src",
+ "docs": [
+  "BRa5Iv4A3Y8",
+  "Cs-Ka_S8nDM",
+  "Ks5kYYKAUlQ",
+  "Nv99RyxmrfU",
+  "_Wa4IehA6yE",
+  "cNo91ddBwB8",
+  "oTi41R74WIY",
+  "vSEaZ-BCELY"
+ ],
+ "made_by": "tools/calcopy/engine/readline_tools/handconst.py",
+ "cells": {
+  "cps_target": {
+   "value": 9.2,
+   "n": 8,
+   "per_ep": [
+    9.39,
+    9.0,
+    8.6,
+    9.76,
+    10.16,
+    8.89,
+    10.14,
+    7.94
+   ],
+   "method": "kal_analyze.rules_of episodes.narr_cps(나레 글자/자막 초) 편 중앙"
+  },
+  "length": {
+   "min": 10,
+   "max": 18,
+   "n": 8,
+   "per_ep": [
+    10.17,
+    10.356,
+    13.723,
+    14.118,
+    14.141,
+    14.35,
+    17.879,
+    21.014
+   ],
+   "method": "편 길이 p17 내림·p83 올림"
+  },
+  "timing.tail": {
+   "value": 0.152,
+   "n": 8,
+   "per_ep": [
+    0.154,
+    0.15,
+    0.156,
+    0.258,
+    0.081,
+    0.083,
+    0.09,
+    0.159
+   ],
+   "caption_tail": [
+    0.114,
+    0.08,
+    0.056,
+    0.118,
+    0.041,
+    0.09,
+    0.07,
+    0.079
+   ],
+   "method": "편 길이 − 마지막 말 소리 끝(로컬 위스퍼 asrwords 마지막 낱말 t1, p≥0.4), 편 중앙 · 자막 꼬리(편 길이 − 마지막 말 조각 t1)는 참고 — 벤치는 마지막 자막을 끝까지 붙들어 0 이 많다"
+  },
+  "timing.gap": {
+   "value": 0.06,
+   "n": 47,
+   "nonzero": 34,
+   "p25": 0.0,
+   "p75": 0.08,
+   "cap_gap_med": 0.05,
+   "method": "줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙(경계 ±0.15초 창, 쉼 문턱 (말 p50+p5)/2)"
+  },
+  "timing.gap_after_tts": {
+   "value": 0.06,
+   "n": 19,
+   "nonzero": 17,
+   "p25": 0.05,
+   "p75": 0.06,
+   "cap_gap_med": 0.04,
+   "method": "위 경계 중 앞이 나레"
+  },
+  "timing.gap_after_orig": {
+   "value": 0.04,
+   "n": 28,
+   "nonzero": 17,
+   "p25": 0.0,
+   "p75": 0.085,
+   "cap_gap_med": 0.05,
+   "method": "위 경계 중 앞이 원음(원음→원음 포함)"
+  },
+  "timing.gap_after_orig_x_oo": {
+   "value": 0.04,
+   "n": 9,
+   "nonzero": 8,
+   "p25": 0.04,
+   "p75": 0.08,
+   "cap_gap_med": 0.066,
+   "method": "앞 원음·뒤 나레(gap_oo 칸이 있을 때 gap_after_orig)"
+  },
+  "timing.gap_oo": {
+   "value": 0.0,
+   "n": 19,
+   "nonzero": 9,
+   "p25": 0.0,
+   "p75": 0.09,
+   "cap_gap_med": 0.05,
+   "method": "원음→원음 문장 경계"
+  },
+  "caption.chunk_max_chars": {
+   "value": 8,
+   "n": 51,
+   "who": "나레",
+   "p50": 6.0,
+   "max": 10,
+   "method": "나레 조각 자수 p90"
+  },
+  "caption.typing_cps": {
+   "value": 18.18,
+   "k": 13,
+   "measured": 13,
+   "n": 135,
+   "method": "타이핑 줄 type_cps(없으면 글자÷enter_ms) 중앙"
+  },
+  "caption.band": {
+   "value": [
+    1321,
+    1385
+   ],
+   "n": 51,
+   "who": "나레",
+   "bbox_med": [
+    1314,
+    1392
+   ],
+   "outline_med": 7,
+   "method": "나레 픽셀 줄 y 중앙 ± 외곽 px 중앙(채움 잉크)"
+  },
+  "cuts.push_tts": {
+   "value": 0.0,
+   "k_zoom_in": 0,
+   "n": 51,
+   "motion": {
+    "cam": 45,
+    "still": 6
+   },
+   "method": "나레 줄 motion 분포 — zoom_in 과반이 아니면 push 0(재료 움직임 그대로), 과반이면 세기 미측정"
+  },
+  "cuts.push_orig": {
+   "value": 0.0,
+   "k_zoom_in": 0,
+   "n": 83,
+   "motion": {
+    "cam": 80,
+    "still": 3
+   },
+   "method": "원음 줄 motion 분포 — zoom_in 과반이 아니면 push 0(재료 움직임 그대로), 과반이면 세기 미측정"
+  },
+  "bgm.db_below_voice": {
+   "value": 14.945,
+   "n": 8,
+   "per_ep": [
+    11.01,
+    9.65,
+    14.9,
+    14.99,
+    15.05,
+    11.85,
+    17.94,
+    20.08
+   ],
+   "method": "말 p50 − (말 없는 구간 ≥1초면 그 p10, 아니면 줄 경계 쉼 프레임 중앙)"
+  },
+  "bgm.duck_narr_db": {
+   "value": 0.0,
+   "n": 0,
+   "per_ep": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "method": "줄 경계 쉼 바닥 − 말 없는 구간 바닥(−3dB 넘게 낮으면 그 차, 아니면 0). 비교 편 0이면 0 = db_below_voice 가 이미 말 사이 바닥 기준"
+  },
+  "bgm.duck_orig_db": {
+   "value": 0.0,
+   "n": 7,
+   "per_ep": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    null,
+    0.0
+   ],
+   "method": "원음 조각 바닥 p5 − 나레 조각 바닥 p5(−3dB 넘게 낮으면 그 차, 아니면 0). 비교 편 0이면 0(원음·나레 같이 나온 편 없음)"
+  },
+  "bgm.fade_out": {
+   "value": 0.046,
+   "n": 8,
+   "per_ep": [
+    0.134,
+    0.05,
+    0.056,
+    0.038,
+    0.041,
+    0.043,
+    0.07,
+    0.039
+   ],
+   "method": "끝 3~1초 전 p50 −6dB 이상 마지막 프레임 → 끝까지 초, 편 중앙"
+  }
+ },
+ "episodes": [
+  {
+   "id": "BRa5Iv4A3Y8",
+   "dur": 21.014,
+   "n_speech": 21,
+   "tail_caption": 0.114,
+   "last_word_t1": 20.86,
+   "tail": 0.154,
+   "bounds_n": 4,
+   "audio": {
+    "speech_p50": -20.76,
+    "speech_p5": -35.82,
+    "thr": -28.29,
+    "pause_floor": -31.77,
+    "pause_frames": 4,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -46.9,
+    "orig_p5": -33.18,
+    "end_ref": -20.93,
+    "fade_out": 0.134
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 2.73,
+     "t0": 2.77,
+     "cap_gap": 0.04,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 4.9,
+     "t0": 5.1,
+     "cap_gap": 0.2,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 5.93,
+     "t0": 5.93,
+     "cap_gap": 0.0,
+     "pause": 0.08
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 18.07,
+     "t0": 18.2,
+     "cap_gap": 0.13,
+     "pause": 0.0
+    }
+   ]
+  },
+  {
+   "id": "Cs-Ka_S8nDM",
+   "dur": 14.35,
+   "n_speech": 18,
+   "tail_caption": 0.08,
+   "last_word_t1": 14.2,
+   "tail": 0.15,
+   "bounds_n": 6,
+   "audio": {
+    "speech_p50": -16.71,
+    "speech_p5": -26.97,
+    "thr": -21.84,
+    "pause_floor": -26.36,
+    "pause_frames": 18,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -41.2,
+    "orig_p5": -26.23,
+    "end_ref": -15.37,
+    "fade_out": 0.05
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 1.4,
+     "t0": 1.43,
+     "cap_gap": 0.03,
+     "pause": 0.1
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 6.9,
+     "t0": 6.9,
+     "cap_gap": 0.0,
+     "pause": 0.12
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 7.9,
+     "t0": 7.97,
+     "cap_gap": 0.07,
+     "pause": 0.04
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 8.73,
+     "t0": 8.77,
+     "cap_gap": 0.04,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 10.87,
+     "t0": 10.9,
+     "cap_gap": 0.03,
+     "pause": 0.04
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 11.67,
+     "t0": 11.73,
+     "cap_gap": 0.06,
+     "pause": 0.06
+    }
+   ]
+  },
+  {
+   "id": "Ks5kYYKAUlQ",
+   "dur": 10.356,
+   "n_speech": 13,
+   "tail_caption": 0.056,
+   "last_word_t1": 10.2,
+   "tail": 0.156,
+   "bounds_n": 4,
+   "audio": {
+    "speech_p50": -17.82,
+    "speech_p5": -33.4,
+    "thr": -25.61,
+    "pause_floor": -32.72,
+    "pause_frames": 12,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -40.94,
+    "orig_p5": -28.17,
+    "end_ref": -16.74,
+    "fade_out": 0.056
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 2.27,
+     "t0": 2.3,
+     "cap_gap": 0.03,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 4.23,
+     "t0": 4.27,
+     "cap_gap": 0.04,
+     "pause": 0.12
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 5.9,
+     "t0": 5.93,
+     "cap_gap": 0.03,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 9.3,
+     "t0": 9.37,
+     "cap_gap": 0.07,
+     "pause": 0.0
+    }
+   ]
+  },
+  {
+   "id": "Nv99RyxmrfU",
+   "dur": 14.118,
+   "n_speech": 16,
+   "tail_caption": 0.118,
+   "last_word_t1": 13.86,
+   "tail": 0.258,
+   "bounds_n": 7,
+   "audio": {
+    "speech_p50": -15.03,
+    "speech_p5": -34.17,
+    "thr": -24.6,
+    "pause_floor": -30.02,
+    "pause_frames": 11,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -35.73,
+    "orig_p5": -33.83,
+    "end_ref": -17.55,
+    "fade_out": 0.038
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 1.73,
+     "t0": 1.77,
+     "cap_gap": 0.04,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 2.57,
+     "t0": 2.57,
+     "cap_gap": 0.0,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 3.1,
+     "t0": 3.13,
+     "cap_gap": 0.03,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 8.3,
+     "t0": 8.3,
+     "cap_gap": 0.0,
+     "pause": 0.04
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 9.5,
+     "t0": 9.53,
+     "cap_gap": 0.03,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 11.5,
+     "t0": 11.57,
+     "cap_gap": 0.07,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 12.33,
+     "t0": 12.37,
+     "cap_gap": 0.04,
+     "pause": 0.06
+    }
+   ]
+  },
+  {
+   "id": "_Wa4IehA6yE",
+   "dur": 14.141,
+   "n_speech": 17,
+   "tail_caption": 0.041,
+   "last_word_t1": 14.06,
+   "tail": 0.081,
+   "bounds_n": 8,
+   "audio": {
+    "speech_p50": -19.04,
+    "speech_p5": -32.79,
+    "thr": -25.92,
+    "pause_floor": -34.09,
+    "pause_frames": 32,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -39.44,
+    "orig_p5": -31.49,
+    "end_ref": -18.91,
+    "fade_out": 0.041
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 1.15,
+     "t0": 1.2,
+     "cap_gap": 0.05,
+     "pause": 0.04
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 4.12,
+     "t0": 4.167,
+     "cap_gap": 0.047,
+     "pause": 0.14
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 5.467,
+     "t0": 5.533,
+     "cap_gap": 0.066,
+     "pause": 0.06
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 6.583,
+     "t0": 6.633,
+     "cap_gap": 0.05,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 8.75,
+     "t0": 8.8,
+     "cap_gap": 0.05,
+     "pause": 0.16
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 9.9,
+     "t0": 9.933,
+     "cap_gap": 0.033,
+     "pause": 0.12
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 11.667,
+     "t0": 11.767,
+     "cap_gap": 0.1,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 12.45,
+     "t0": 12.5,
+     "cap_gap": 0.05,
+     "pause": 0.06
+    }
+   ]
+  },
+  {
+   "id": "cNo91ddBwB8",
+   "dur": 13.723,
+   "n_speech": 15,
+   "tail_caption": 0.09,
+   "last_word_t1": 13.64,
+   "tail": 0.083,
+   "bounds_n": 8,
+   "audio": {
+    "speech_p50": -16.13,
+    "speech_p5": -32.14,
+    "thr": -24.14,
+    "pause_floor": -27.98,
+    "pause_frames": 19,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -34.91,
+    "orig_p5": -29.51,
+    "end_ref": -18.09,
+    "fade_out": 0.043
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 1.467,
+     "t0": 1.467,
+     "cap_gap": 0.0,
+     "pause": 0.1
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 2.233,
+     "t0": 2.267,
+     "cap_gap": 0.034,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 2.95,
+     "t0": 3.0,
+     "cap_gap": 0.05,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 3.667,
+     "t0": 4.567,
+     "cap_gap": 0.9,
+     "pause": 0.04
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 5.9,
+     "t0": 5.967,
+     "cap_gap": 0.067,
+     "pause": 0.06
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 11.3,
+     "t0": 11.367,
+     "cap_gap": 0.067,
+     "pause": 0.1
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 11.9,
+     "t0": 11.967,
+     "cap_gap": 0.067,
+     "pause": 0.0
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 12.667,
+     "t0": 12.733,
+     "cap_gap": 0.066,
+     "pause": 0.08
+    }
+   ]
+  },
+  {
+   "id": "oTi41R74WIY",
+   "dur": 10.17,
+   "n_speech": 15,
+   "tail_caption": 0.07,
+   "last_word_t1": 10.08,
+   "tail": 0.09,
+   "bounds_n": 5,
+   "audio": {
+    "speech_p50": -18.05,
+    "speech_p5": -36.22,
+    "thr": -27.13,
+    "pause_floor": -35.99,
+    "pause_frames": 11,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -36.22,
+    "orig_p5": null,
+    "end_ref": -18.15,
+    "fade_out": 0.07
+   },
+   "bounds": [
+    {
+     "prev": "나레",
+     "next": "나레",
+     "t1": 2.7,
+     "t0": 2.733,
+     "cap_gap": 0.033,
+     "pause": 0.06
+    },
+    {
+     "prev": "나레",
+     "next": "나레",
+     "t1": 3.5,
+     "t0": 3.533,
+     "cap_gap": 0.033,
+     "pause": 0.04
+    },
+    {
+     "prev": "나레",
+     "next": "나레",
+     "t1": 5.033,
+     "t0": 5.1,
+     "cap_gap": 0.067,
+     "pause": 0.0
+    },
+    {
+     "prev": "나레",
+     "next": "나레",
+     "t1": 6.233,
+     "t0": 6.3,
+     "cap_gap": 0.067,
+     "pause": 0.06
+    },
+    {
+     "prev": "나레",
+     "next": "나레",
+     "t1": 8.9,
+     "t0": 8.933,
+     "cap_gap": 0.033,
+     "pause": 0.06
+    }
+   ]
+  },
+  {
+   "id": "vSEaZ-BCELY",
+   "dur": 17.879,
+   "n_speech": 19,
+   "tail_caption": 0.079,
+   "last_word_t1": 17.72,
+   "tail": 0.159,
+   "bounds_n": 5,
+   "audio": {
+    "speech_p50": -17.18,
+    "speech_p5": -35.78,
+    "thr": -26.48,
+    "pause_floor": -37.26,
+    "pause_frames": 38,
+    "free_sec": 0,
+    "free_p10": null,
+    "narr_p5": -119.79,
+    "orig_p5": -31.76,
+    "end_ref": -21.55,
+    "fade_out": 0.039
+   },
+   "bounds": [
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 2.4,
+     "t0": 2.467,
+     "cap_gap": 0.067,
+     "pause": 0.08
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 6.667,
+     "t0": 6.733,
+     "cap_gap": 0.066,
+     "pause": 0.22
+    },
+    {
+     "prev": "원음",
+     "next": "원음",
+     "t1": 8.95,
+     "t0": 9.0,
+     "cap_gap": 0.05,
+     "pause": 0.16
+    },
+    {
+     "prev": "원음",
+     "next": "나레",
+     "t1": 10.567,
+     "t0": 10.667,
+     "cap_gap": 0.1,
+     "pause": 0.04
+    },
+    {
+     "prev": "나레",
+     "next": "원음",
+     "t1": 12.467,
+     "t0": 12.533,
+     "cap_gap": 0.066,
+     "pause": 0.26
+    }
+   ]
+  }
+ ]
+}

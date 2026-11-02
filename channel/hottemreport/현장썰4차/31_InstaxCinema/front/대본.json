@@ -1,0 +1,35 @@
+{
+ "topic": "후지필름 인스탁스 미니 에보 시네마(instax mini Evo Cinema) — 처음 꺼내 쥐어 보는 Henry's Camera 'wow, what a wild looking camera. I actually can't believe this exists'·'Wow. Yeah. Okay. So that feels really good in the hands'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "Ls7BKO0e3Us",
+ "bench_note": "벤치 '아이폰 유저들만 환장하는 카메라'(3.1만, 핫템리포트 10-27 목록 117편 조회수 55위, 설명란 '다이얼만 돌리면 과거의 감성으로 촬영하고, 사진 인화는 물론 영상까지 다시 재생 … #instaxminiEvoCinema') — 화면 속 제품 = 인스탁스 미니 에보 시네마. 원음형 = 유튜브 Henry's Camera 'Fujifilm's Instax Mini Evo CINEMA (Unboxing & Walkthrough)' wtxpqVtOymY(8.6천, 자동 더빙 12개 — 원어 140-12) 260~550초 사본 30fps(사본 시각 = 원래 −260, 위에서 찍은 손만, 오른쪽 위 채널 표식은 crop 밖) + SmartphoneFan 'Fujifilm Instax Mini Evo Cinema Unboxing' cNLHS5tsRc0(1.9천, 원어 140-17) 250~346초 사본(사본 시각 = 원래 −250, 손만). 벤치의 '아이폰 유저들만'은 근거 없는 표현이라 안 씀.",
+ "sources": {
+  "hc": {"file": "hc.mp4", "who": "유튜브 Henry's Camera wtxpqVtOymY 260~550초 사본(원어 140-12) — 노란 바탕 위에서 찍은 손만(얼굴 0), 오른쪽 위 채널 표식 x≥1840", "views": 8607, "dur": 290.0, "res": "1920x1080"},
+  "sf": {"file": "sf.mp4", "who": "유튜브 SmartphoneFan cNLHS5tsRc0 250~346초 사본(원어 140-17) — 나무 책상 위 손만(얼굴 0)", "views": 1906, "dur": 96.07, "res": "1920x1080"}
+ },
+ "titles": {"hook": "사진 뽑는\n영화 카메라"},
+ "facts": {
+  "f1": {"text": "후지필름 공식 제품 페이지(fujifilm.com/us/en/consumer/instax/cameras/minievocinema) 'Easily print videos utilizing the print lever or print instax photos with QR code' · Henry's Camera 원본 383.42~403.50 'the photos that you're going to print right out of the top of the camera … twist this print lever' · 원본 110~ 'makes this camera feel like an old super eight camera' · 쿠팡 9360934130 '인스탁스 미니 에보 시네마 카메라'", "kind": "공식·리뷰·판매처"},
+  "f2": {"text": "Henry's Camera 원본 246.46~269.38 'extension grip … once you slap that grip on there it actually is very surprising' · SmartphoneFan 원본 253.18~260.22 'unlike most cameras we can hold this vertically just like old eight millimetres movie camera'", "kind": "리뷰"},
+  "f3": {"text": "Henry's Camera 원본 274.18~280.62 'And wow what a wild looking camera I actually can't believe this exists I think this is pretty cool'", "kind": "본인 말"},
+  "f4": {"text": "Henry's Camera 원본 322.36~325.28 'Wow. Yeah. Okay. So that feels really good in the hands'", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(물건+~있는데요)", "text": "생긴 건 옛날 영화 카메라인데, 찍은 걸 바로 사진으로 뽑아 준다는 카메라가 있는데요.", "caps": ["생긴 건 옛날 영화 카메라인데", "찍은 걸 바로 사진으로", "뽑아 준다는 카메라가 있는데요"], "facts": ["f1"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "근데 손잡이를 끼우면, 옛날 8밀리 카메라처럼 세로로 쥐고 찍는다는데요.", "caps": ["근데 손잡이를 끼우면", "옛날 8밀리 카메라처럼", "세로로 쥐고 찍는다는데요"], "facts": ["f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "hc", "span": [14.1, 20.75], "en": "And wow, what a wild looking camera. I actually can't believe this exists. I think this is pretty cool.", "caps": ["와, 생긴 게 완전 특이한데요", "이런 게 진짜 있다니", "꽤 멋진데요!"], "check": "사본 시각(원래 −260): 앞 camera 13.62~14.18 · And 14.18 · wow 14.66~15.06 · exists 18.66~19.26 · cool 20.18~20.62 · 다음 This 21.02 · 원본 한 샷(269.10~292.38 → 9.10~32.38) 안 — 주머니에서 꺼내 쥐는 손 · 자막 칸은 말 차례(wow…camera 2.4초 → can't believe … exists 2.2초 → pretty cool 1.4초)"},
+   {"id": "O2", "src": "hc", "span": [62.25, 65.3], "en": "Wow. Yeah. Okay. So that feels really good in the hands.", "caps": ["와…", "오, 손에 착 감기는데요!"], "check": "사본 시각: 앞 are 61.72~62.00 · Wow 62.36~62.72 · hands 64.80~65.28 · 다음 So 65.28 · 원본 한 샷(295.38~352.73 → 35.38~92.73) 안 — 손잡이 낀 카메라를 쥔 손 · 자막 칸: 와 0.6초 → 나머지 2.3초"}
+  ],
+  "dropped": {
+   "벤치 '아이폰 유저들만 환장하는'": "근거 없는 표현 — 안 씀",
+   "해상도·필름 장수·배터리 숫자": "판·리뷰마다 달라 숫자 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

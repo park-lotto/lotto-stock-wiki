@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/30_HushJet/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "pd.mp4",
+   "ss": 186.0,
+   "cuts": [
+    {
+     "src": "pd.mp4",
+     "ss": 186.0,
+     "dur": 4.184,
+     "block": "N1",
+     "src_crop": [
+      470,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "me.mp4",
+     "ss": 179.67,
+     "dur": 5.38,
+     "block": "O1",
+     "src_crop": [
+      530,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "pd.mp4",
+     "ss": 200.5,
+     "dur": 3.58,
+     "block": "N2",
+     "src_crop": [
+      470,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "pd.mp4",
+     "ss": 234.95,
+     "dur": 5.75,
+     "block": "O2",
+     "src_crop": [
+      470,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "pd",
+   "ss": 186.0,
+   "vs": 0.0,
+   "src_crop": [
+    470,
+    0,
+    857,
+    1080
+   ],
+   "why": "pd 142.18~ 한 샷 — 손에 든 허쉬젯(스톤), 얼굴 없음",
+   "ve": 4.184,
+   "src_end": 190.184
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "me",
+   "ss": 179.67,
+   "vs": 4.184,
+   "src_crop": [
+    530,
+    0,
+    857,
+    1080
+   ],
+   "why": "켠 남색 허쉬젯 앞에 손을 대 보며 'Very powerful … that's impressive'(0~211.27 한 샷, 얼굴 없음)",
+   "ve": 9.564,
+   "src_end": 185.05
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "pd",
+   "ss": 200.5,
+   "vs": 9.564,
+   "src_crop": [
+    470,
+    0,
+    857,
+    1080
+   ],
+   "why": "pd 단추를 누르는 손(한 샷 안)",
+   "ve": 13.144,
+   "src_end": 204.08
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "pd",
+   "ss": 234.95,
+   "vs": 13.144,
+   "src_crop": [
+    470,
+    0,
+    857,
+    1080
+   ],
+   "why": "손에 든 허쉬젯 + 'but wow. That power is actually amazing on something this tiny'(한 샷 안)",
+   "ve": 18.894,
+   "src_end": 240.7
+  }
+ ]
+}

@@ -1,0 +1,467 @@
+{
+ "잠자리 모기 퇴치": {
+  "ep": "1 가짜잠자리",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%9E%A0%EC%9E%90%EB%A6%AC%20%EB%AA%A8%EA%B8%B0%20%ED%87%B4%EC%B9%98",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "가짜 잠자리 모기": {
+  "ep": "1 가짜잠자리",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8639986165",
+    "name": "오토림 해충기피 잠자리 모형 모기 퇴치기 분리 가능 야외 활동, 12g, 4개,GR-7152-KO",
+    "url": "https://www.coupang.com/vp/products/8639986165?itemId=25072721539&vendorItemId=92082896180",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/63e0/697fc019737c5bd3ed5b1dccc371fddda617302acda9de98baedbcb2fcb3.png",
+    "price": "7,500원",
+    "rating": "(319)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9572322781",
+    "name": "태양광 모기퇴치용 야외 캠핑 정원등 무선 해충퇴치기, 4개",
+    "url": "https://www.coupang.com/vp/products/9572322781?itemId=28571337667&vendorItemId=93023417006",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/4689/ebd53bca5f960168a9dc04961d1025548616a6d91d12c0a615962e1d1428.png",
+    "price": "55,000원",
+    "rating": "(229)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8891196321",
+    "name": "DKE 다기능 잠자리 모기퇴치기 가정용 캠핑 야외 휴대용 파리 조류 퇴치기 어디에 두어도 어색하지 않은 감성데코템, 4가지 색상 각 1개",
+    "url": "https://www.coupang.com/vp/products/8891196321?itemId=25902047916&vendorItemId=92922281261",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/23f4/2f5db56455e47282bed86075eb721dac943543463a25bedb44666ec21703.jpg",
+    "price": "19,800원",
+    "rating": "(19)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9726290759",
+    "name": "잠자리 모형 클립형/3D 모기 해충 퇴치 곤충, 랜덤색상",
+    "url": "https://www.coupang.com/vp/products/9726290759?itemId=29106250345&vendorItemId=96031139867",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/fbb2/0445578570e5c6019aac24426bd6e5c3d938cd8b2f5021943b7e2908de72.jpg",
+    "price": "1,600원",
+    "rating": "(4)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8938718767",
+    "name": "osshop 곤충 모형 장수 잠자리, 장수잠자리모형 2개",
+    "url": "https://www.coupang.com/vp/products/8938718767?itemId=26137138794&vendorItemId=93117305754",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/prod/3a927861-94d5-4004-a4d6-86ea1b498060_fixing_v2.png",
+    "price": "12,900원",
+    "rating": "(17)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9510246670",
+    "name": "무선 LED 무드등 모기퇴치기 캠핑 가정용 무소음 휴대용 모기퇴치기 외용 모기퇴치기 가정용 모기퇴치기, S01(블랙)",
+    "url": "https://www.coupang.com/vp/products/9510246670?itemId=28340026125&vendorItemId=95292267628",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/6aa5/cca6255a05519dcb35b42d446ff8d68fefdf39af9466eaae7f3c8fb5c55c.jpg",
+    "price": "9,900원",
+    "rating": "(156)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "6110048222",
+    "name": "화이트리버 장수잠자리 벌레퇴치 모기퇴치 모형핀, 2개",
+    "url": "https://www.coupang.com/vp/products/6110048222?itemId=19210480827&vendorItemId=86327653924",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/b92f/e4ef7afbe9ad4e45d671d16797ff271ed48f09b6b309bc3f2f85f335a02f.jpg",
+    "price": "12,900원",
+    "rating": "(41)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EA%B0%80%EC%A7%9C%20%EC%9E%A0%EC%9E%90%EB%A6%AC%20%EB%AA%A8%EA%B8%B0",
+  "source": "crawl",
+  "notice": ""
+ },
+ "대용량 물병 4L": {
+  "ep": "2 대용량물병",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EB%8C%80%EC%9A%A9%EB%9F%89%20%EB%AC%BC%EB%B3%91%204L",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "4리터 물병 손잡이": {
+  "ep": "2 대용량물병",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8803349635",
+    "name": "리빙메이커 BPA FREE 업소용 PP비커 가벼운 워터포트 계량컵 물 피쳐 물통, 투명, 4L, 1개",
+    "url": "https://www.coupang.com/vp/products/8803349635?itemId=25636296887&vendorItemId=92766209068",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2025/06/16/13/8/f7a7dc2d-c7fb-4e29-bb27-c64c30bb43ba.jpg",
+    "price": "5,900원",
+    "rating": "(630)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9145844092",
+    "name": "피올라 스테인리스 냉장고 물병 1리터 (1000ml), 10개, 1L, 실버",
+    "url": "https://www.coupang.com/vp/products/9145844092?itemId=26925370289&vendorItemId=96085612166",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/c8ff/de3e031403811a8eac0d5e13e7699c083f0c762956e89f63347f5894d4fe.jpg",
+    "price": "46,900원",
+    "rating": "(102)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9661544019",
+    "name": "UH홈데코 대용량 맒통 대형 생수통, 1개, 20L",
+    "url": "https://www.coupang.com/vp/products/9661544019?itemId=28883045752&vendorItemId=95815914708",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2026/07/22/13/8/1613db8d-9564-4a5a-83f9-8ac407fdfa34.jpg",
+    "price": "29,500원",
+    "rating": "(20)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8873289957",
+    "name": "동남 하이쿨 보냉 보온 물통 4리터, 1개, 4L",
+    "url": "https://www.coupang.com/vp/products/8873289957?itemId=25890638965&vendorItemId=92876558408",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/97c7/bc643c610d849a0e2f07f61ce46947207ae37af76f0f0aab6a6f09587c4f.jpg",
+    "price": "18,500원",
+    "rating": "(2)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7598299509",
+    "name": "필하이 대용량 보온보냉물통 스테인리스 워터저그 B타입 4L(실용량 3.8L), 1개, 오리지널, 4L",
+    "url": "https://www.coupang.com/vp/products/7598299509?itemId=25312323876&vendorItemId=91929979990",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/2f2110a37fa4e0adddf853701d01a6170c40815263b7ccc8175b0c26964f_1782106671098.jpg",
+    "price": "25,800원",
+    "rating": "(251)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "5390277138",
+    "name": "유스타 원리빙 스텐손잡이물병, 1L, 10개, 스텐손잡이",
+    "url": "https://www.coupang.com/vp/products/5390277138?itemId=25492339968&vendorItemId=92484523189",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/prod/05ea40f8-efe6-42e0-9e02-04a92a5760ee_fixing_v2.png",
+    "price": "52,000원",
+    "rating": "(27)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9629686453",
+    "name": "스텐 304 아이스 냉장고 업소 카페 핸들 물병 물통, 2개, 1.45L, 올스텐",
+    "url": "https://www.coupang.com/vp/products/9629686453?itemId=28762062393&vendorItemId=95700261650",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/a743/6d3676140caf71ea461545b2f04e030cde7c00de47e6bdf2d621968f1461.png",
+    "price": "29,300원",
+    "rating": "(25)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8701196489",
+    "name": "크레이 홈 여름 청하 냉수병 내열물병, 1개, 4L, 밀키 베이지",
+    "url": "https://www.coupang.com/vp/products/8701196489?itemId=25267737155&vendorItemId=92263501502",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/ad20/cd337ecec1a7d3d04741825787f7b894843779cec7f3d029e1072234c00b.jpg",
+    "price": "13,900원",
+    "rating": "(31)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=4%EB%A6%AC%ED%84%B0%20%EB%AC%BC%EB%B3%91%20%EC%86%90%EC%9E%A1%EC%9D%B4",
+  "source": "crawl",
+  "notice": ""
+ },
+ "전동 롤러 신발": {
+  "ep": "3 전동신발",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%A0%84%EB%8F%99%20%EB%A1%A4%EB%9F%AC%20%EC%8B%A0%EB%B0%9C",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "전동 인라인 신발": {
+  "ep": "3 전동신발",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9698908256",
+    "name": "인라인 신발 전동 운동화 바퀴 슈즈 롤러, 1개, 233 라이트 포함 충전식 화이트",
+    "url": "https://www.coupang.com/vp/products/9698908256?itemId=29012360048&vendorItemId=95940444991",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/22ed/eb99e8b65a82d739a0c40cfe9c0cc763cb0a41641a5797cc7cd4b8f1409d.jpg",
+    "price": "133,500원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9172347277",
+    "name": "liekick 쿼드 스케이트 스케이트 개폐식 롤러 슈즈 휠 스니커즈롤러 스케이트롤러슈즈, 블랙 하이힐 LED, 1개",
+    "url": "https://www.coupang.com/vp/products/9172347277?itemId=27034472987&vendorItemId=91104268832",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/5b1e/131e718489e36b4b1330d036bf459c780852e5c25c9477965d566e728548.jpg",
+    "price": "114,290원",
+    "rating": "(193)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8930079172",
+    "name": "주트 성인용 뉴 프리미엄 인라인스케이트, 블랙 + 민트, 1개",
+    "url": "https://www.coupang.com/vp/products/8930079172?itemId=22314979123&vendorItemId=89735531294",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/rs_quotation_api/3jpbyqnk/564950e6e20f4e91b277551e146570b9.jpg",
+    "price": "94,900원",
+    "rating": "(69)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8936842193",
+    "name": "PHTEER 롤러슈즈 하이탑 바퀴달린운동화 롤러스케이트 2륜 T01, 1개, 녹색",
+    "url": "https://www.coupang.com/vp/products/8936842193?itemId=26130409146&vendorItemId=93341581505",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/13dc/030368a0620d1cd3d65d77830da6a949b1e8585d05f4a212f39357cc4fbd.jpg",
+    "price": "39,800원",
+    "rating": "(180)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7488326694",
+    "name": "주트 Z5 인라인스케이트, 레드, 1세트",
+    "url": "https://www.coupang.com/vp/products/7488326694?itemId=19576350751&vendorItemId=3271337260",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/6101300919546414-8f43be18-d619-456f-92a0-cc3ef1bac1b8.jpg",
+    "price": "75,050원",
+    "rating": "(174)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8635725635",
+    "name": "주트 뉴 롤러스케이트, 블랙, 1개",
+    "url": "https://www.coupang.com/vp/products/8635725635?itemId=25056471279&vendorItemId=92060828715",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/570561148379219-7d2d13e8-6cfe-44a3-b1f9-805049c0334e.jpg",
+    "price": "79,700원",
+    "rating": "(142)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9667275527",
+    "name": "롤러슈즈 바퀴달린 운동화 탈부착 바퀴 롤러스케이트 4륜 PU휠 스케이트 신발, 1개, 베이지 그레이",
+    "url": "https://www.coupang.com/vp/products/9667275527?itemId=29218952976&vendorItemId=96138670929",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/1430/df4b883d5f8349ea3fef84b60c038349d7dd77a18e2454bce9604670932d.jpg",
+    "price": "79,800원",
+    "rating": "(45)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%A0%84%EB%8F%99%20%EC%9D%B8%EB%9D%BC%EC%9D%B8%20%EC%8B%A0%EB%B0%9C",
+  "source": "crawl",
+  "notice": ""
+ },
+ "유아 전동차 포르쉐": {
+  "ep": "4 미니카",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8936286604",
+    "name": "포르쉐 키즈 전동차 전동카 원격제어 좌석 화이트 4륜구동 어린이 아기전동차 아기 아동, 버니쉬핑크 플라스틱휠 플라스틱시트, 전기 구동, 버니쉬핑크 플라스틱휠 플라스틱시트",
+    "url": "https://www.coupang.com/vp/products/8936286604?itemId=26127681999&vendorItemId=95526445913",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/81ee/c16d6914375be18d3e28bd9527c0139290be7182af94c398dded6f3376ad.jpg",
+    "price": "844,400원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9156694677",
+    "name": "키들 아기 흔들말 붕붕카 스프링카, 베이지그린, 1개",
+    "url": "https://www.coupang.com/vp/products/9156694677?itemId=26968232033&vendorItemId=93945477629",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/ab56/9fad705e1767df9b428961e266c811ccc779e0e76010ab20828f2ac78729.png",
+    "price": "99,900원",
+    "rating": "(437)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9535948616",
+    "name": "대호토이즈 포르쉐 카이엔 푸쉬카, 화이트, 1개",
+    "url": "https://www.coupang.com/vp/products/9535948616?itemId=28441471722&vendorItemId=95409600843",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2026/05/11/17/9/c96f6b0e-f21e-4b4c-b0fe-3220ae4931ea.jpg",
+    "price": "198,000원",
+    "rating": "(22)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8665919128",
+    "name": "고고다이노 무소음 붕붕카, 렉스, 1개",
+    "url": "https://www.coupang.com/vp/products/8665919128?itemId=25149767162&vendorItemId=92148340913",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2025/03/21/11/2/9ba4b850-de53-4751-9c8d-57a946c7a1b3.jpg",
+    "price": "32,570원",
+    "rating": "(566)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9461364356",
+    "name": "대호토이즈 유아용 벤츠 지바겐 G63 AMG 전동차, 화이트, 1개",
+    "url": "https://www.coupang.com/vp/products/9461364356?itemId=28153511179&vendorItemId=95108797920",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2026/03/27/13/7/99d36154-63ab-43fc-a6a2-26ab90751fb3.jpg",
+    "price": "258,000원",
+    "rating": "(31)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9697340895",
+    "name": "람보르기니 유아 아기 전동차, 1개, 화이트",
+    "url": "https://www.coupang.com/vp/products/9697340895?itemId=29006870632&vendorItemId=95935166343",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/bc51/0a4976e0797162b9a40f03f405eaa31e236423a819529e696bb1257ace6c.jpg",
+    "price": "398,000원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9369194514",
+    "name": "유아 전동차 전동오토바이 블루투스 듀얼모터 LED헤드라이트 대용량배터리, 1개, 흰색White",
+    "url": "https://www.coupang.com/vp/products/9369194514?itemId=27806162344&vendorItemId=95796214418",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/0a39/8370764c9bc143340f928b2ad5ffe1a0c650a83d9a3d53d099026fac5e22.png",
+    "price": "119,990원",
+    "rating": "(14)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "7770196124",
+    "name": "꼬마천사 레트로 붕붕카 붕붕이, 1개, 1개",
+    "url": "https://www.coupang.com/vp/products/7770196124?itemId=20974926991&vendorItemId=88039828416",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/3807/90a70b6a91c8e11c6c56689609e670a8c7f3e5e67c1995aebc83f961e9ed.jpg",
+    "price": "배송비 3,500원",
+    "rating": "(130)",
+    "rocket": false,
+    "is_ad": true
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%9C%A0%EC%95%84%20%EC%A0%84%EB%8F%99%EC%B0%A8%20%ED%8F%AC%EB%A5%B4%EC%89%90",
+  "source": "crawl",
+  "notice": ""
+ },
+ "미니 전동차 어린이": {
+  "ep": "4 미니카",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EB%AF%B8%EB%8B%88%20%EC%A0%84%EB%8F%99%EC%B0%A8%20%EC%96%B4%EB%A6%B0%EC%9D%B4",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "고양이 빵 봉지 클립": {
+  "ep": "5 고양이집게",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9459825697",
+    "name": "루베이 다용도 고양이 밀봉집게 서류정리 식품 밀봉 잡동사니 수납 정리 주방/사무실/식당/베이킹, 8개, A",
+    "url": "https://www.coupang.com/vp/products/9459825697?itemId=28147879430&vendorItemId=95103249472",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/d4cd/4e91394df7a78cefb586fcf2536a15dd72b234a9ca7a8949687139884880.jpg",
+    "price": "9,900원",
+    "rating": "(3)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9699316784",
+    "name": "캠프달링 주방 봉지집게 밀봉 주방클립, 1세트, 파스텔",
+    "url": "https://www.coupang.com/vp/products/9699316784?itemId=29013902698&vendorItemId=95941933630",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/d740/c9a9f4f784f4686767d724375b6df859c33efe3b1e6ad8ee9a4ed5132350.png",
+    "price": "4,800원",
+    "rating": "(37)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8223357138",
+    "name": "Joie 원숭이 유니콘 부엉이 고양이 봉투 집게 과자 조미료 간식 밀봉 9종, 1세트",
+    "url": "https://www.coupang.com/vp/products/8223357138?itemId=23642101391&vendorItemId=90667499656",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/bd8f/7d5d78959beb0326d3918749621e6b0c9e2adc29eb1703de1504ada2584e.jpg",
+    "price": "7,880원",
+    "rating": "(3)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9619148678",
+    "name": "[MSMULTIVERSE] 고양이 자석 밀봉 집게 세트 주방 봉지 클립 냉장고 마그넷 거치대 포함, 1개",
+    "url": "https://www.coupang.com/vp/products/9619148678?itemId=28723374834&vendorItemId=95663830964",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/f980/f753a6f36c28e0c56e20bd9f73582ae93e7021c30a84d3178a26d8ce48b3.jpg",
+    "price": "11,700원",
+    "rating": "(9)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9631793948",
+    "name": "살림마녀 과자 봉지 집게 밀봉 클립 세트, 1개, 고양이 브라운",
+    "url": "https://www.coupang.com/vp/products/9631793948?itemId=28770558687&vendorItemId=95708431419",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/5586/ce3632c275d584365191a0701a551a2f3404920887a3bbbbf5a76d028a28.jpg",
+    "price": "배송비 3,000원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8551302309",
+    "name": "쿠캐치 다용도 밀봉 뚜껑 클립, 화이트, 9개",
+    "url": "https://www.coupang.com/vp/products/8551302309?itemId=29199834550&vendorItemId=96120280345",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/f7aa2460-ffce-44cf-8565-53cf0fd37bf910552759513520754705.png",
+    "price": "26,700원",
+    "rating": "(335)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9276335447",
+    "name": "캐릭터 다용도 과자 봉지 클립 집게, 1세트, 3종 혼합 대형3P+소형3P",
+    "url": "https://www.coupang.com/vp/products/9276335447?itemId=27460343299&vendorItemId=94425622077",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/prod/3073c7f1-5a7f-4179-a969-8a2c14d3b87c_fixing_v2.png",
+    "price": "9,900원",
+    "rating": "(48)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9499210125",
+    "name": "음식의 신선함과 유머러스한 주방 장식을 위한 3D 프린팅 기술이 특징인 기묘한 고양이 모양 빵 봉지 클립, Light Grey, L",
+    "url": "https://www.coupang.com/vp/products/9499210125?itemId=28298175147&vendorItemId=95732598007",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/cf87/c96e09365c00bd60f78df3e0e7e3b2f0ab4a89fa5d6690719716b89f8c51.jpg",
+    "price": "6,790원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EA%B3%A0%EC%96%91%EC%9D%B4%20%EB%B9%B5%20%EB%B4%89%EC%A7%80%20%ED%81%B4%EB%A6%BD",
+  "source": "crawl",
+  "notice": ""
+ },
+ "고양이 봉지 집게": {
+  "ep": "5 고양이집게",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EA%B3%A0%EC%96%91%EC%9D%B4%20%EB%B4%89%EC%A7%80%20%EC%A7%91%EA%B2%8C",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ }
+}

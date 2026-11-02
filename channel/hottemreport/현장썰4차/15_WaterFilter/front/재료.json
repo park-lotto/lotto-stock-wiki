@@ -1,0 +1,21 @@
+{
+ "_note": "숏템리폿 4차 15 정수기 앞 화면 소스. 시각은 1편 make_render.timeline(현장썰_run.py). sh = @sharpafedc 피클 국물 편, ca = @carliejimenez2 콜라 편(분홍 기계). files.pp = 무음 칸 자리표시. 원본 장면 경계 = ffmpeg 320px scene>0.12.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/15_WaterFilter/front/src",
+ "files": {"sh": "sh.mp4", "ca": "ca.mp4", "pp": "sh.mp4"},
+ "voice_src": {"sh": "sh_voice.wav"},
+ "scene_cuts": {
+  "sh": [3.93, 4.53, 5.57, 8.73, 10.63, 13.6, 15.33, 19.0, 23.07, 25.83, 29.47, 32.63, 37.17, 39.57, 42.23],
+  "ca": [0.93, 1.43, 1.85, 3.12, 3.97, 4.47, 4.93, 5.35, 8.68, 9.52, 10.65, 11.62, 14.97, 15.92, 16.92, 17.8, 18.25, 19.02, 19.73, 21.0, 21.82, 23.7, 26.88],
+  "how": "ffmpeg 320px select scene>0.12"
+ },
+ "blocks": {
+  "N1": {"src": "ca", "ss": 5.40, "why": "첫 프레임 = 제품: 콜라 든 물통 옆 꼭지를 눌러 맑은 물이 컵에(ca 5.35~8.68 한 샷)"},
+  "O1": {"src": "sh", "why": "피클 병을 물통에 붓으며 'turn pickle juice clear'(0~3.93 한 샷 + 3.93~4.53 같은 사람 가까운 샷)"},
+  "N2": {"src": "sh", "cont": true, "why": "O2 화면을 앞으로 늘림 — 얼음 붓기(5.57~8.73) → 버튼·맑은 물(8.73~10.63) → 마심(10.63~) 원본 순서 그대로"},
+  "O2": {"src": "sh", "why": "'Oh. That's some high quality H2O.' 마신 뒤 감탄(10.63~13.60 한 샷)"}
+ },
+ "consts": {
+  "LUFS_FINAL": -14.0, "LUFS_NARR": -13.8, "LIMIT": 0.8, "GAINS": [11.8, 13.3], "GAP_NN": 0.25, "LEAD": 0.05,
+  "_why": "브리프 −14 LUFS(03_Mousegun 과 같음) · GAINS = −16 − 원음 창 LUFS(ebur128: O1 −27.8 · O2 −29.3) · LEAD 0.05 = O1 이 소스 0.05초에서 시작해 화면 ss 가 0 아래로 안 가게"
+ }
+}

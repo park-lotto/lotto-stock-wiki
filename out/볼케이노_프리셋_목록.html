@@ -1,0 +1,220 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>볼케이노 프리셋 목록</title><style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--sub:#5d6470;--line:#e3e6eb;--short:#2563eb;--long:#7c3aed;--etc:#0f766e;--pro:#c2410c;--req:#fee2e2;--reqi:#991b1b;--opt:#e0f2fe;--opti:#075985}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1a1d24;--ink:#e8eaee;--sub:#9aa1ad;--line:#2a2f39;--req:#3b1717;--reqi:#fca5a5;--opt:#0c2a3b;--opti:#7dd3fc}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,"Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px}h1{margin:0 0 4px;font-size:24px}.lead{color:var(--sub);margin:0 0 14px}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--pro);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}.bar button,.bar input{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;cursor:pointer}
+.bar input{border-radius:8px;flex:1;min-width:160px;cursor:text}.bar button.on{background:var(--ink);color:var(--bg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}.card[hidden]{display:none}
+.card header{display:flex;justify-content:space-between;align-items:center;gap:8px}h3{margin:0;font-size:18px}
+.tags{display:flex;gap:4px;flex-shrink:0}.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;color:#fff}
+.t-short{background:var(--short)}.t-long{background:var(--long)}.t-etc{background:var(--etc)}.pro{background:var(--pro)}
+.maker{margin:4px 0 8px;color:var(--sub);font-size:13px}.desc{margin:0 0 8px;font-size:14px}.muted{color:var(--sub)}
+dl{display:grid;grid-template-columns:72px 1fr;gap:6px 8px;margin:0;font-size:13px}dt{color:var(--sub)}dd{margin:0}
+.steps{font-family:ui-monospace,Consolas,monospace;font-size:12px;word-break:break-word}
+.chip{display:inline-block;padding:1px 8px;border-radius:6px;margin:0 4px 4px 0;font-size:12px}.req{background:var(--req);color:var(--reqi)}.opt{background:var(--opt);color:var(--opti)}
+footer{margin-top:20px;color:var(--sub);font-size:12px}
+</style></head><body><div class="wrap">
+<h1>볼케이노 프리셋 목록</h1><p class="lead">총 38개 · 프반 전용 12개 · 볼케이노 서버 setup 응답 기준 (2026-10-24)</p>
+<div class="note"><b>내용 설명이 비어 있는 이유</b> — 볼케이노 서버의 setup 응답(channel_needs)에는 프리셋마다 <b>필요한 키·언어·이용 등급만</b> 오고, 어떤 영상을 만드는지 설명은 없습니다. 이름만 보고 추측해 적지 않았습니다. 종류(숏폼/롱폼)·만든 사람·제작 단계 이름은 볼케이노 도구 설명에서 가져왔습니다.</div>
+<div class="bar"><button class="on" data-f="all">전체</button><button data-f="숏폼">숏폼</button><button data-f="롱폼">롱폼</button><button data-f="pro">프반 전용</button><button data-f="nokey">키 없이 시작</button><input id="q" placeholder="프리셋 이름 검색"></div>
+<div class="grid" id="grid"><article class="card" data-type="숏폼" data-pro="0" data-name="린박스">
+<header><h3>린박스</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="원본에 자막 파일이 없을 때 원본 대사를 전사합니다(자막 파일이 있으면 필요 없습니다) — 음성 합성(유료)보다 앞 단계에서 확인하므로 미리 넣어 두면 거기서 멈추지 않습니다">Speechmatics</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">rinbox_source → plan → camera → preview → render → review → finish</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="명화관cinema">
+<header><h3>명화관cinema</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="원본에 자막 파일이 없을 때 원본 대사를 전사합니다(자막 파일이 있으면 필요 없습니다) — 음성 합성(유료)보다 앞 단계에서 확인하므로 미리 넣어 두면 거기서 멈추지 않습니다">Speechmatics</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="뇌전구">
+<header><h3>뇌전구</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">EvoLink</span><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="웃긴버거">
+<header><h3>웃긴버거</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="원본에 자막 파일이 없을 때 원본 대사를 전사합니다(자막 파일이 있으면 필요 없습니다) — 음성 합성(유료)보다 앞 단계에서 확인하므로 미리 넣어 두면 거기서 멈추지 않습니다">Speechmatics</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="어랍숏">
+<header><h3>어랍숏</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="원본에 자막 파일이 없을 때 원본 대사를 전사합니다(자막 파일이 있으면 필요 없습니다) — 음성 합성(유료)보다 앞 단계에서 확인하므로 미리 넣어 두면 거기서 멈추지 않습니다">Speechmatics</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="인물형">
+<header><h3>인물형</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">person_script → footage → clips → frame → render → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="군림보">
+<header><h3>군림보</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">EvoLink</span><span class="chip req">Typecast</span><span class="chip req">전사(ASR)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 일본어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="강석주">
+<header><h3>강석주</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span><span class="chip req">전사(ASR)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="쇼핑">
+<header><h3>쇼핑</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span><span class="chip req">전사(ASR)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">shop_footage → shots → … → shop_render → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="인물형 롱폼">
+<header><h3>인물형 롱폼</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어</dd><dt>제작 단계</dt><dd class="steps">longform_seed → run → status → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="정치">
+<header><h3>정치</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">네이버 API HUB 이미지 검색 — 키 ID</span><span class="chip req">Typecast</span><span class="chip req">네이버 API HUB 이미지 검색 — 키 Secret</span><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="대본(구간 기획) LLM 의 예비 통로가 켜집니다 — 기본은 이 PC 의 claude -p(구독)이고, 그것이 실패할 때만 EvoLink(유료)로 넘어갑니다. 열쇠가 없으면 구독으로만 만들고, claude 가 실패하면 그 단계에서 멈춥니다">EvoLink</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">politics_seed → run → status → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="3D쇼츠">
+<header><h3>3D쇼츠</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="플로우(볼케이노킷)·클로드(claude · 대본)·구독 제미나이(agy)를 못 쓸 때 그림·영상·글을 EvoLink(유료)로 대신 만듭니다 — 없으면 플로우+클로드·agy 로만 만들고, 그것도 못 쓰면 사전 점검이 돈 쓰기 전에 멈춥니다">EvoLink</span></dd><dt>언어</dt><dd>36개 언어 (한국어·영어·일본어 등)</dd><dt>제작 단계</dt><dd class="steps">info3d_preflight → run → status → result → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="저승이">
+<header><h3>저승이</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 러시아어</dd><dt>제작 단계</dt><dd class="steps">angel_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="가라사대 정치">
+<header><h3>가라사대 정치</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 가라사대</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">네이버 API HUB 이미지 검색 — 키 ID</span><span class="chip req">Typecast</span><span class="chip req">네이버 API HUB 이미지 검색 — 키 Secret</span><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="대본(구간 기획) LLM 의 예비 통로가 켜집니다 — 기본은 이 PC 의 claude -p(구독)이고, 그것이 실패할 때만 EvoLink(유료)로 넘어갑니다. 열쇠가 없으면 구독으로만 만들고, claude 가 실패하면 그 단계에서 멈춥니다">EvoLink</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="우팔롬아 정치">
+<header><h3>우팔롬아 정치</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 가라사대</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">네이버 API HUB 이미지 검색 — 키 ID</span><span class="chip req">Typecast</span><span class="chip req">네이버 API HUB 이미지 검색 — 키 Secret</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">upalroma_seed → run → status → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="정치롱">
+<header><h3>정치롱</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 월억페라리</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">jeongchirong_seed → screen → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="웰컴투코리아롱폼">
+<header><h3>웰컴투코리아롱폼</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 조교 망뎅이</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">wtk_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="미국경찰">
+<header><h3>미국경찰</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 호주아재</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">uspolice_seed → source_review → pick → clip → make → plan_review → render → master → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="리센느 팬튜브형">
+<header><h3>리센느 팬튜브형</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 산이1</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">rescene_seed → list → pick → make → render → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="팬튜브 이슈형">
+<header><h3>팬튜브 이슈형</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 산이1</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="사건 공식 원본을 TikHub 로 먼저 찾는다 — 없으면 플랫폼 직접 검색·yt-dlp 로 찾는다">TikHub</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">fantube_issue_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="인스타형 예능프리셋">
+<header><h3>인스타형 예능프리셋</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 하루백</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">insta_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="예능픽">
+<header><h3>예능픽</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 월억페라리</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">yeneungpick_seed → screen → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="영어 예능">
+<header><h3>영어 예능</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 호주아재</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="격기록">
+<header><h3>격기록</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 쇼츠열공</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">gyeokgirok_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="스케치코미디">
+<header><h3>스케치코미디</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 조교 태도</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">sketchcomedy_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="1" data-name="신비한우주사전">
+<header><h3>신비한우주사전</h3><div class="tags"><span class="tag t-long">롱폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 가라사대</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 스페인어, 일본어</dd><dt>제작 단계</dt><dd class="steps">spacedict_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="인스타그램 쇼핑">
+<header><h3>인스타그램 쇼핑</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 에디슨리치</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">ElevenLabs</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="[B] 벤치 링크 받기·원본 소스 찾기(TikHub) — 없으면 [A] 소스 폴더로만 만든다">TikHub</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">edison_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="랭킹송형">
+<header><h3>랭킹송형</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 에디슨리치</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="노래 자동 만들기(에버링크 → Suno v6 · 한 번 8크레딧 · 2곡) — 없으면 Suno 웹에서 만든 mp3 를 넣는다">EvoLink</span><span class="chip opt" title="[B] 주제로 틱톡 원본 찾기(틱허브) — 없으면 [A] 소스 폴더로 만든다">TikHub</span><span class="chip opt" title="새 효과음 만들기(일레븐랩스) — 없으면 함께 넣은 효과음 33개로 만든다">ElevenLabs</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">rankingsong_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="1" data-name="철멍뭉 미스테리">
+<header><h3>철멍뭉 미스테리</h3><div class="tags"><span class="tag t-long">롱폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 가라사대</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">chulmeongmung_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="팟캐스트">
+<header><h3>팟캐스트</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>47개 언어 (한국어·영어·일본어 등)</dd><dt>제작 단계</dt><dd class="steps">podcast_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="썰쇼핑">
+<header><h3>썰쇼핑</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 일본어</dd><dt>제작 단계</dt><dd class="steps">sseol_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="VOX">
+<header><h3>VOX</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">vox_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="플리">
+<header><h3>플리</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어</dd><dt>제작 단계</dt><dd class="steps">pli_seed → make → check → music_plan → music_ok → art_style → brand → deliver</dd></dl>
+</article><article class="card" data-type="전자책" data-pro="0" data-name="전자책 메이커">
+<header><h3>전자책 메이커</h3><div class="tags"><span class="tag t-etc">전자책</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="muted">없음 (키 없이 시작)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어, 영어, 스페인어</dd><dt>제작 단계</dt><dd class="steps">ebook_seed → make → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="0" data-name="갱상도">
+<header><h3>갱상도</h3><div class="tags"><span class="tag t-short">숏폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">Typecast</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">gangsangdo_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="숏폼" data-pro="1" data-name="너이봤">
+<header><h3>너이봤</h3><div class="tags"><span class="tag t-short">숏폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span><span class="chip req">Typecast</span><span class="chip req">누끼(배경 지우기)</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">neoibwa_seed → make → check → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="1" data-name="영화 리뷰 롱폼">
+<header><h3>영화 리뷰 롱폼</h3><div class="tags"><span class="tag t-long">롱폼</span><span class="tag pro">프반 전용</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">ElevenLabs</span><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="muted">—</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">longmovie_seed → run → status → deliver</dd></dl>
+</article><article class="card" data-type="롱폼" data-pro="0" data-name="컬투">
+<header><h3>컬투</h3><div class="tags"><span class="tag t-long">롱폼</span></div></header>
+<p class="maker">만든 사람 · 쇼츠대폭발</p>
+<p class="desc"><b>내용 설명</b> <span class="muted">서버 미제공 — 확인 필요</span></p>
+<dl><dt>필수 키</dt><dd><span class="chip req">Speechmatics</span></dd><dt>선택 키</dt><dd><span class="chip opt" title="목소리를 타입캐스트로 만들 때 필요합니다 — 열쇠 없이 고를 수 있는 목소리: 제미나이 TTS(볼케이노킷) · 본인 목소리(녹음)">Typecast</span><span class="chip opt" title="목소리를 일레븐랩스로 만들 때 필요합니다 — 열쇠 없이 고를 수 있는 목소리: 제미나이 TTS(볼케이노킷) · 본인 목소리(녹음)">ElevenLabs</span><span class="chip opt" title="목소리를 피쉬오디오로 만들 때 필요합니다 — 열쇠 없이 고를 수 있는 목소리: 제미나이 TTS(볼케이노킷) · 본인 목소리(녹음)">Fish Audio</span></dd><dt>언어</dt><dd>한국어</dd><dt>제작 단계</dt><dd class="steps">공용 단계(script·images·voice·subtitle·render 등) — 서버가 next_step 으로 지정</dd></dl>
+</article></div>
+<footer>출처: volcano_video step='setup'(preset 없음) 응답 · 바탕화면 볼케이노작업 폴더에서 호출. 선택 키 칩에 마우스를 올리면 언제 필요한지 보입니다.</footer>
+</div><script>
+const cards=[...document.querySelectorAll('.card')];let f='all';
+function apply(){const q=document.getElementById('q').value.trim();cards.forEach(c=>{const ok=(f==='all'||c.dataset.type===f||(f==='pro'&&c.dataset.pro==='1')||(f==='nokey'&&!c.querySelector('.chip.req')))&&(!q||c.dataset.name.includes(q));c.hidden=!ok})}
+document.querySelectorAll('.bar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bar button').forEach(x=>x.classList.toggle('on',x===b));f=b.dataset.f;apply()});
+document.getElementById('q').oninput=apply;
+</script></body></html>

@@ -1,0 +1,391 @@
+{
+ "made_by": "quality_gate.plan_frames_check",
+ "min_sim": 0.97,
+ "rows": [
+  {
+   "k": 0,
+   "line": "N1",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 27.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9946,
+   "sims": [
+    0.9947,
+    0.9945,
+    0.9946
+   ],
+   "why": null
+  },
+  {
+   "k": 1,
+   "line": "N1",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 0.1,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9966,
+   "sims": [
+    0.9966,
+    0.9965,
+    0.9966
+   ],
+   "why": null
+  },
+  {
+   "k": 2,
+   "line": "N2",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 298.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9924,
+   "sims": [
+    0.9923,
+    0.9925,
+    0.9924
+   ],
+   "why": null
+  },
+  {
+   "k": 3,
+   "line": "N2",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 0.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9943,
+   "sims": [
+    0.9943,
+    0.994,
+    0.9946
+   ],
+   "why": null
+  },
+  {
+   "k": 4,
+   "line": "N2",
+   "src": "Hgx86Jz4B6U.mp4",
+   "ss": 45.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.991,
+   "sims": [
+    0.9913,
+    0.991,
+    0.9907
+   ],
+   "why": null
+  },
+  {
+   "k": 5,
+   "line": "N2",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 3.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9948,
+   "sims": [
+    0.9947,
+    0.9948,
+    0.9948
+   ],
+   "why": null
+  },
+  {
+   "k": 6,
+   "line": "N3",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 16.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9952,
+   "sims": [
+    0.9948,
+    0.9952,
+    0.9952
+   ],
+   "why": null
+  },
+  {
+   "k": 7,
+   "line": "N3",
+   "src": "Un8dhJ_rgGc.mp4",
+   "ss": 16.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9942,
+   "sims": [
+    0.9948,
+    0.9942,
+    0.9939
+   ],
+   "why": null
+  },
+  {
+   "k": 8,
+   "line": "N4",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 5.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9968,
+   "sims": [
+    0.9968,
+    0.9968,
+    0.9968
+   ],
+   "why": null
+  },
+  {
+   "k": 9,
+   "line": "N4",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 256.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9958,
+   "sims": [
+    0.9957,
+    0.9958,
+    0.9958
+   ],
+   "why": null
+  },
+  {
+   "k": 10,
+   "line": "N4",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 260.5,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9964,
+   "sims": [
+    0.9963,
+    0.9964,
+    0.9964
+   ],
+   "why": null
+  },
+  {
+   "k": 11,
+   "line": "N5",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 15.633,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9943,
+   "sims": [
+    0.9942,
+    0.9943,
+    0.9944
+   ],
+   "why": null
+  },
+  {
+   "k": 12,
+   "line": "N5",
+   "src": "Hgx86Jz4B6U.mp4",
+   "ss": 21.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9942,
+   "sims": [
+    0.9941,
+    0.9942,
+    0.995
+   ],
+   "why": null
+  },
+  {
+   "k": 13,
+   "line": "N5",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 38.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9926,
+   "sims": [
+    0.9924,
+    0.9926,
+    0.9927
+   ],
+   "why": null
+  },
+  {
+   "k": 14,
+   "line": "N5",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 7.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9949,
+   "sims": [
+    0.9949,
+    0.9948,
+    0.9949
+   ],
+   "why": null
+  },
+  {
+   "k": 15,
+   "line": "N6",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 36.5,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9953,
+   "sims": [
+    0.9951,
+    0.9953,
+    0.9953
+   ],
+   "why": null
+  },
+  {
+   "k": 16,
+   "line": "N6",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 50.3,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9928,
+   "sims": [
+    0.9928,
+    0.9929,
+    0.9926
+   ],
+   "why": null
+  },
+  {
+   "k": 17,
+   "line": "N6",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 19.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.996,
+   "sims": [
+    0.9956,
+    0.996,
+    0.9966
+   ],
+   "why": null
+  },
+  {
+   "k": 18,
+   "line": "N7",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 53.333,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9965,
+   "sims": [
+    0.9965,
+    0.9965,
+    0.9965
+   ],
+   "why": null
+  },
+  {
+   "k": 19,
+   "line": "N7",
+   "src": "7xzvgnv2WjI.mp4",
+   "ss": 8.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.995,
+   "sims": [
+    0.9947,
+    0.995,
+    0.995
+   ],
+   "why": null
+  },
+  {
+   "k": 20,
+   "line": "N7",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 306.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9957,
+   "sims": [
+    0.9954,
+    0.9957,
+    0.9962
+   ],
+   "why": null
+  },
+  {
+   "k": 21,
+   "line": "N8",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 62.4,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9912,
+   "sims": [
+    0.991,
+    0.9912,
+    0.9914
+   ],
+   "why": null
+  },
+  {
+   "k": 22,
+   "line": "N8",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 12.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9953,
+   "sims": [
+    0.9955,
+    0.9953,
+    0.9952
+   ],
+   "why": null
+  },
+  {
+   "k": 23,
+   "line": "N8",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 49.2,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9933,
+   "sims": [
+    0.9936,
+    0.9932,
+    0.9933
+   ],
+   "why": null
+  }
+ ],
+ "screen": "base.mp4(자막 전 완성 화면)"
+}

@@ -1,5 +1,5 @@
 {
- "_what": "샥탬스토리(벤치 해외쇼츠 샤크탱크 8편) 칼카피 기계값 한 곳 — caption_style·emph·fx·render(부르기만)·compare_bench 가 전부 이 파일을 읽는다(0순위-B). 왜·근거는 channel/foreignshowshow/칼카피_원리.md 같은 절 번호. 실측 도구 tools/calcopy/shark/fx_bench.py, 판독 channel/foreignshowshow/preset/_hand/emph_read.json (관제 097, 2026-10-18)",
+ "_what": "샥탬스토리(벤치 해외쇼츠 샤크탱크 8편) 프리셋 기계값 한 곳 — caption_style·emph·fx·render(부르기만)·compare_bench 가 전부 이 파일을 읽는다(0순위-B). 왜·근거는 channel/foreignshowshow/칼카피_원리.md 같은 절 번호. 실측 도구 tools/calcopy/shark/fx_bench.py, 판독 channel/foreignshowshow/preset/_hand/emph_read.json (관제 097, 2026-10-18)",
  "version": 2,
  "loudness": {"_src": "R5 사장님 10-19 '음량이 너무커' → 유튜브 기준 크기 −14 LUFS · 트루피크 ≤ −1.5 dBTP(옛 −9.0/−0.5 폐기). render.audio_final·check B2·hybrid.join 이 전부 여기서 읽는다",
   "target_lufs": -14.0, "true_peak_max": -1.5, "tol": 0.3, "check_tol": 0.5},

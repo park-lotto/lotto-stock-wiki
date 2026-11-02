@@ -1,0 +1,153 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": null,
+ "made_from": {
+  "tool": "channel/banggu/썰템홈샷_하이브리드/make.py",
+  "note": "훅 카드 — make_썰템홈샷 hook 과 같은 층"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    28,
+    30,
+    34
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 780,
+   "w": 1080,
+   "h": 1140,
+   "radius": 28
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 210,
+   "rgb": [
+    28,
+    30,
+    34
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 64,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 68.1,
+   "line_h": 78,
+   "rgb": [
+    220,
+    255,
+    244
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷",
+   "glow": {
+    "px": 28,
+    "rgb": [
+     40,
+     230,
+     180
+    ]
+   }
+  },
+  {
+   "kind": "band",
+   "x": 480,
+   "y": 170,
+   "w": 120,
+   "h": 3,
+   "rgb": [
+    40,
+    230,
+    180
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 259,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 95.8,
+   "line_h": 150,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     90,
+     240,
+     200
+    ]
+   ],
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "회장님도 핥는 요플레,\n처음엔 반품투성이였다"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 646,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 35.3,
+   "line_h": 41,
+   "rgb": [
+    168,
+    180,
+    184
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "회장님도 뚜껑 핥는다는 요플레, 처음엔 실패작이었다"
+  }
+ ]
+}

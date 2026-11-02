@@ -1,0 +1,185 @@
+{
+ "_note": "잇템로그판 해외반응 시리즈 — 한국 선크림 백탁(2026-10-22). 원본 2개 잇기(떠튜브 편집점): hershy 'SyIH85GgbaY'(1,843만, 조선미녀) 5~20초 + kristina nguyen 'hYKci3bw4NY'(2,376만, 채널 중앙 1.0만의 2,437배, 라운드랩). 한국 검증 = 잇템로그 '백탁 0% 한국 썬크림 발라본 외국인 반응' 693만. hershy 0~5초는 남의 틱톡(daesung98) 이어 붙인 구간이라 안 씀.",
+ "slug": "ititemlog_ep03_sunscreen",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "무백탁 한국 선크림(쿠팡: 조선미녀 맑은쌀 선크림·라운드랩 자작나무 선크림 류)",
+ "title_lines": [
+  [
+   [
+    "한국 선크림 발랐다가"
+   ]
+  ],
+  [
+   [
+    "산타 된 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "hershy 5.08~7.96 'Okay but will it really blend out on me? We're gonna find out'",
+  "f2": "hershy 10~12초 얼굴에 흰 선 여러 줄 · 12.76~14.72 'It's giving Indian Santa Claus right now'(14초 산타 스티커)",
+  "f3": "hershy 15~17초 두드려 펴 바름(흰 기 사라짐) · 17.76~19.80 'Beauty of Joseon is brown girl approved'",
+  "f4": "kristina 원본 박힌 글 'It doesn't show a white cast bc ur pale' + 라운드랩 튜브 · 3~9초 남자가 짜서 얼굴에 바름, 9초 흰 기 없음"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 선크림을 바르고 산타가 돼 버린 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 선크림을 바르고"
+    },
+    {
+     "text": "산타가 돼 버린 외국인이 있는데요",
+     "key": "산타"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(의심)",
+   "src": "SyIH85GgbaY.mp4",
+   "spans": [
+    [
+     5.08,
+     7.96
+    ]
+   ],
+   "said": "Okay but will it really blend out on me? We're gonna find out",
+   "caps_rel": [
+    [
+     "근데 이게 나한테도 스며들까?",
+     0.0,
+     2.0
+    ],
+    [
+     "한번 확인해 보자",
+     2.0,
+     2.88
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 문제",
+   "tts": "피부가 어두우면 한국 선크림이 하얗게 뜬다는 말이 많았는데요.",
+   "caps": [
+    {
+     "text": "피부가 어두우면 한국 선크림이"
+    },
+    {
+     "text": "하얗게 뜬다는 말이 많았는데요",
+     "key": "하얗게"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 시도",
+   "tts": "얼굴에 듬뿍 짜서 펴 바르자 정말 하얗게 떠 버렸는데요.",
+   "caps": [
+    {
+     "text": "얼굴에 듬뿍 짜서 펴 바르자"
+    },
+    {
+     "text": "정말 하얗게 떠 버렸는데요"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "SyIH85GgbaY.mp4",
+   "spans": [
+    [
+     12.76,
+     14.72
+    ]
+   ],
+   "said": "It's giving Indian Santa Claus right now",
+   "caps_rel": [
+    [
+     "완전 인도 산타클로스네",
+     0.0,
+     1.96,
+     "산타클로스"
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 공개",
+   "tts": "그런데 계속 두드려 펴 바르자 하얀 기가 싹 사라졌는데요.",
+   "caps": [
+    {
+     "text": "그런데 계속 두드려 펴 바르자"
+    },
+    {
+     "text": "하얀 기가 싹 사라졌는데요",
+     "key": "싹"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 결론",
+   "src": "SyIH85GgbaY.mp4",
+   "spans": [
+    [
+     17.76,
+     19.8
+    ]
+   ],
+   "said": "Beauty of Joseon is brown girl approved",
+   "caps_rel": [
+    [
+     "조선미녀 선크림, 갈색 피부도 인정!",
+     0.0,
+     2.04,
+     "인정"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 두 번째",
+   "tts": "또 다른 외국인은 네가 하얘서 안 뜨는 거라는 말에 직접 발라 봤는데요.",
+   "caps": [
+    {
+     "text": "또 다른 외국인은"
+    },
+    {
+     "text": "네가 하얘서 안 뜨는 거라는 말에"
+    },
+    {
+     "text": "직접 발라 봤는데요"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "역시 하얀 기 없이 스며들어서 다들 한국 선크림을 찾는다고 하네요.",
+   "caps": [
+    {
+     "text": "역시 하얀 기 없이 스며들어서"
+    },
+    {
+     "text": "다들 한국 선크림을 찾는다고 하네요"
+    }
+   ]
+  }
+ ]
+}

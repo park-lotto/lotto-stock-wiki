@@ -1,0 +1,1347 @@
+{
+ "id": "MfptnwqlGKs",
+ "dur": 21.873,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "안유진이 중독된다는",
+   "colors": [
+    {
+     "word": "안유진이 중독된다는",
+     "hex": "#FCFAFB"
+    }
+   ]
+  },
+  {
+   "text": "미국 마트 보라 로션",
+   "colors": [
+    {
+     "word": "미국 마트 보라 로션",
+     "hex": "#FBED03"
+    }
+   ],
+   "note": "2줄 통째 노랑(1판 8/8)"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "caption_band": [
+   1209,
+   1325
+  ],
+  "title_y": [
+   [
+    222,
+    313
+   ],
+   [
+    337,
+    427
+   ]
+  ],
+  "bg_hex": "#090000",
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰·2줄 노랑, 굵은 고딕) + 영상 창 y480~1920(세로 1440) + 창 안 자막 1줄(나레 = 굵은 흰+강조 노랑/분홍, 원음 = “ ” 기울인 흰+강조 노랑/분홍) · 화면 출처 표기 없음(설명란 '출처:')"
+ },
+ "lines": [
+  {
+   "t0": 0.1,
+   "t1": 0.533,
+   "speaker": "나레",
+   "text": "월드투어 중인",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "월드투어",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 정면 웃는 얼굴(숙소 커튼)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.533,
+   "t1": 1.6,
+   "speaker": "나레",
+   "text": "안유진이 약 사던",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "안유진이 타이레놀 상자를 얼굴 옆에 듦",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.2,
+   "speaker": "나레",
+   "text": "미국 마트에서",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "미국 마트",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "타이레놀 상자 든 얼굴 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.2,
+   "t1": 3.267,
+   "speaker": "나레",
+   "text": "집어 온 로션 한 병",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "로션",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "턱 괴고 손 모은 안유진(로션 안 보임)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.267,
+   "t1": 4.1,
+   "speaker": "나레",
+   "text": "바를수록 묘하게",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1302
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "묘하게",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 손을 턱 아래 모으는 안유진",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.1,
+   "t1": 4.8,
+   "speaker": "나레",
+   "text": "중독된다고",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "턱 괴고 웃는 안유진",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.867,
+   "t1": 5.6,
+   "speaker": "원음:안유진",
+   "text": "이 바디로션이",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1300
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "바디로션",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "보라 eos 로션 통을 얼굴 옆에 든 안유진(호텔)",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.6,
+   "t1": 6.033,
+   "speaker": "원음:안유진",
+   "text": "있습니다",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "eos 바디로션 제품 사진(보라 통·흰 바탕)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.033,
+   "t1": 6.767,
+   "speaker": "원음:안유진",
+   "text": "이게 제가 엄청",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 얼굴 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.767,
+   "t1": 8.133,
+   "speaker": "원음:안유진",
+   "text": "SNS에서 많이 본",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "SNS",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "다른 사람 손이 eos 통을 짜는 SNS 광고 장면",
+   "fit": 8,
+   "cut_at": [
+    7.767
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.133,
+   "t1": 8.7,
+   "speaker": "원음:안유진",
+   "text": "아이거든요",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 옆얼굴 근접(호텔)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.767,
+   "t1": 9.567,
+   "speaker": "나레",
+   "text": "가방 소개 다 끝내고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1236,
+    1309
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "가방 소개",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "후드 입은 안유진 얼굴(숙소) — 컷 직후 화면 확대",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "cutdet v2 가 8.7 컷을 zoomblur 로 냈으나 1프레임 시트(zb87.jpg)로 보면 흐림 없이 하드컷 + 화면 확대(zoom_in) — 눈 판정 cut"
+  },
+  {
+   "t0": 9.567,
+   "t1": 10.2,
+   "speaker": "나레",
+   "text": "밥까지 먹고 온",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1297
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 얼굴 근접(밤, 호텔)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.2,
+   "t1": 11.033,
+   "speaker": "나레",
+   "text": "호텔 침대에서",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "호텔 침대",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "호텔 침대 위 안유진 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.033,
+   "t1": 11.9,
+   "speaker": "나레",
+   "text": "따로 보여 준 한 병",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "한 병",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "eos shea better 24H 바디로션 제품 사진(연보라 바탕)",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.9,
+   "t1": 13.067,
+   "speaker": "원음:안유진",
+   "text": "바닐라 캐시미어향인데",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "바닐라 캐시미어향인데",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 들고 말하는 안유진",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.067,
+   "t1": 13.633,
+   "speaker": "원음:안유진",
+   "text": "바닐라향이",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "줄무늬 니트 입은 사람이 로션 통을 듦(다른 장면)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.7,
+   "t1": 14.6,
+   "speaker": "원음:안유진",
+   "text": "처음엔 좀 과한가",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1238,
+    1318
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "과한가",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 안유진 얼굴 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.6,
+   "t1": 15.033,
+   "speaker": "원음:안유진",
+   "text": "싶다가도",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 얼굴 근접(호텔 창가)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.033,
+   "t1": 15.833,
+   "speaker": "원음:안유진",
+   "text": "뭔가 계속 바르다보면",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "바르다보면",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 얼굴 근접(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.833,
+   "t1": 16.933,
+   "speaker": "원음:안유진",
+   "text": "묘하게 중독되는",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "중독되는",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 옆 안유진 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.933,
+   "t1": 17.267,
+   "speaker": "원음:안유진",
+   "text": "그런향",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 얼굴 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.267,
+   "t1": 17.967,
+   "speaker": "나레",
+   "text": "향 얘기 끝에",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "향",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안유진 얼굴 근접(호텔)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.967,
+   "t1": 18.833,
+   "speaker": "나레",
+   "text": "안유진이 두 마디를",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "두 마디",
+     "hex": "#F93E3D",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "후드 입은 안유진·타이레놀 상자(앞 장면 재사용)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.833,
+   "t1": 19.467,
+   "speaker": "나레",
+   "text": "더 붙였다고",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 안유진 얼굴 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 19.467,
+   "t1": 20.067,
+   "speaker": "원음:안유진",
+   "text": "맡아보시면",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통을 얼굴 쪽으로 든 안유진",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.067,
+   "t1": 20.7,
+   "speaker": "원음:안유진",
+   "text": "좋을 것 같습니다",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 안유진 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.7,
+   "t1": 21.4,
+   "speaker": "원음:안유진",
+   "text": "이것도 타겟에서",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "타겟",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 안유진 얼굴(말하는 중)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.4,
+   "t1": 21.767,
+   "speaker": "원음:안유진",
+   "text": "샀어요",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "로션 통 든 안유진 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.1,
+   "첫 3프레임 자막 없음"
+  ],
+  [
+   4.8,
+   4.867,
+   "컷 사이"
+  ],
+  [
+   8.7,
+   8.767,
+   "컷 직후"
+  ],
+  [
+   13.633,
+   13.7,
+   "컷 직후"
+  ]
+ ],
+ "beats": "나레 훅 6줄(0.1~4.8 '월드투어 중인 안유진이 약 사던 미국 마트에서 집어 온 로션 한 병, 바를수록 묘하게 중독된다고') → 원음 공개(4.87~8.7 '이 바디로션이 있습니다·SNS에서 많이 본 아이거든요') → 나레 다리(8.77~11.9 가방 소개 끝·호텔 침대·따로 보여 준 한 병 + 제품 사진) → 원음 증언(11.9~17.27 바닐라 캐시미어향·과한가 싶다가도 묘하게 중독) → 나레 이음(17.27~19.47 '향 얘기 끝에 두 마디를 더 붙였다고') → 원음 끝(19.47~21.77 '맡아보시면 좋을 것 같습니다·이것도 타겟에서 샀어요')",
+ "narr_share": "나레 줄 13/29, 나레 10.0초/21.873초",
+ "notes": [
+  "나레/원음 구분 = 따옴표(“ ”)와 글꼴(나레 굵은 똑바른체 · 원음 기울인 가는체) — 화면에서 바로 보인다.",
+  "등장 pop 은 자막 없는 틈(컷 사이 2프레임) 다음 덩어리에서만(0.1·4.87·8.77·13.7·17.97) — 나머지 덩어리는 첫 프레임부터 완성(cut).",
+  "줄 29 중 18줄이 cutdet 컷 프레임(±0.05초)에서 시작 — 자막 바뀜이 컷을 따라간다."
+ ],
+ "name_evidence": [
+  "제목 '안유진이 중독된다는'",
+  "나레 자막 '안유진이 약 사던'"
+ ],
+ "frame0": {
+  "what": "안유진 얼굴 정면 웃는 얼굴(검정 후드·커튼 배경) — 자막 0.1초부터",
+  "face_frac": "약 0.25(창 대비 얼굴 면적, 눈)",
+  "text": "안유진이 중독된다는 / 미국 마트 보라 로션(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet --v2 컷/전환/광류 motion·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

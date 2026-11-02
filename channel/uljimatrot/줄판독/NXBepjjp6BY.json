@@ -1,0 +1,893 @@
+{
+ "id": "NXBepjjp6BY",
+ "dur": 19.06,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정 도경완 집에 있는",
+   "box": "빨강 띠 #FF1700 (y164~315 전체 폭)",
+   "colors": [
+    {
+     "word": "장윤정 도경완 집에 있는",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    192,
+    280
+   ],
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "shadow": {
+    "dx": 5,
+    "dy": 5,
+    "hex": "#000000"
+   }
+  },
+  {
+   "text": "리클라이너 소파 가격",
+   "box": "없음(검정 바탕)",
+   "colors": [
+    {
+     "word": "리클라이너 소파 가격",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    322,
+    402
+   ],
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "shadow": {
+    "dx": 4,
+    "dy": 6,
+    "hex": "#000000"
+   }
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   [
+    164,
+    315
+   ],
+   [
+    319,
+    405
+   ]
+  ],
+  "title_band_hex": "#FF1700",
+  "window": [
+   0,
+   441,
+   1080,
+   1346
+  ],
+  "caption_band": [
+   1165,
+   1250
+  ],
+  "cta_band": [
+   862,
+   1052
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": null,
+  "fixed_icon": {
+   "what": "빨강·흰 손가락 탭 커서 아이콘(창 오른쪽 아래, 창 아래 가장자리에 걸침)",
+   "x": [
+    858,
+    973
+   ],
+   "y": [
+    1256,
+    1367
+   ],
+   "hex": "#C82E1D",
+   "t_in": 4.067,
+   "t_out": 19.06,
+   "anim": "톡톡 흔들림 — 0.4~0.5초 주기로 x·y ±4~8px 이동(0.1초 측정)"
+  }
+ },
+ "frame0": {
+  "what": "누끼 두 사람 얼굴(남·여) + 초록 리클라이너 누끼 + 빨간 곡선 화살표, 검정 바탕 위 창 없음",
+  "face_frac": 0.2,
+  "text": "제목 2줄만(자막 없음)"
+ },
+ "hook": {
+  "t0": 0,
+  "t1": 3.967,
+  "what": "누끼 두 사람(제목 '장윤정 도경완' — 얼굴 대조는 미확인) 크게 + 가운데 초록 리클라이너 누끼가 4초간 서서히 커짐(약 x1.2)",
+  "arrow": {
+   "hex": "#FF1A31",
+   "shape": "빨간 굵은 곡선 화살표, 왼쪽(의자 발받침)을 가리킴",
+   "t_in": 0,
+   "t_out": 4.033,
+   "anim": "0프레임부터 있음(등장 애니 없음). 좌우로 흔들리며(0.2초마다 x ±40px) 의자와 같이 커짐(면적 7.5k→11.2k px)",
+   "bbox_0s": [
+    786,
+    1094,
+    982,
+    1215
+   ],
+   "bbox_3.8s": [
+    574,
+    1062,
+    815,
+    1194
+   ]
+  },
+  "exit": "3.967~4.133 회오리(트월) 왜곡 전환으로 창 영상이 들어옴"
+ },
+ "lines": [
+  {
+   "t0": 4.067,
+   "t1": 5.333,
+   "speaker": "나레",
+   "text": "장윤정이 없는 틈을 타",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 727,
+   "ink_x": [
+    178,
+    905
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "남성 셀카(거실, 뒤에 초록 리클라이너) — 회오리 전환 끝나며 등장",
+   "motion": "cam",
+   "transition": "기타(회오리 왜곡 3.967~4.133)",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 5.367,
+   "t1": 6.633,
+   "speaker": "나레",
+   "text": "도경완은 집구경을",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 593,
+   "ink_x": [
+    243,
+    836
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 셀카, 거실 둘러봄",
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 8,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 6.667,
+   "t1": 7.567,
+   "speaker": "나레",
+   "text": "시켜주는데요",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 433,
+   "ink_x": [
+    322,
+    755
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 셀카",
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 7.6,
+   "t1": 8.767,
+   "speaker": "나레",
+   "text": "이때 거실에 보이는",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 640,
+   "ink_x": [
+    220,
+    860
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "남성이 짜장면 먹는 탁자, 옆에 초록 리클라이너",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    7.6
+   ],
+   "fit": 8,
+   "confidence": "눈",
+   "notes": null
+  },
+  {
+   "t0": 8.8,
+   "t1": 10.2,
+   "speaker": "나레",
+   "text": "초록색 고급스러운 소파",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 777,
+   "ink_x": [
+    141,
+    918
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "초록 리클라이너 크게 보임(먹방 컷 계속)",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 9,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 10.233,
+   "t1": 11.5,
+   "speaker": "나레",
+   "text": "하나가 눈에 띄었습니다",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 800,
+   "ink_x": [
+    140,
+    940
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 컷, 리클라이너+짜장면",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 9,
+   "confidence": "눈",
+   "notes": null
+  },
+  {
+   "t0": 11.533,
+   "t1": 12.667,
+   "speaker": "나레",
+   "text": "굉장히 편안해 보이고",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 722,
+   "ink_x": [
+    178,
+    900
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "거실 전경 — 소파에 앉은 여성, 초록 리클라이너와 발받침",
+   "motion": "pan",
+   "transition": "cut",
+   "cut_at": [
+    11.533
+   ],
+   "fit": 8,
+   "confidence": "눈",
+   "notes": null
+  },
+  {
+   "t0": 12.7,
+   "t1": 14.167,
+   "speaker": "나레",
+   "text": "이번에 새로 산 제품 같은데",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 906,
+   "ink_x": [
+    87,
+    993
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "리클라이너 쪽으로 이동하는 거실 컷",
+   "motion": "pan",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 8,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 14.2,
+   "t1": 15.267,
+   "speaker": "나레",
+   "text": "과연 어디 거고 얼마일까요",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1165,
+    1250
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 881,
+   "ink_x": [
+    100,
+    981
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "남성 얼굴 아래 근접(셀카) — 14.2 컷 첫 프레임은 자막 비움",
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    14.2
+   ],
+   "fit": 6,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.767,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기타(창 가운데로 올라감 y915 — CTA 자리)",
+   "y": [
+    915,
+    999
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 637,
+   "ink_x": [
+    222,
+    859
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": null,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "셀카가 계단·거실로 돌아감",
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 3,
+   "confidence": "픽셀",
+   "notes": "말은 '화면을 빠르게 톡톡 두 번 누르고 확인하세요'(vtt)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 18.067,
+   "speaker": "나레",
+   "text": "두 번 눌러주시면\n감사합니다",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기타(2줄 · 창 가운데 y862~1051)",
+   "y": [
+    862,
+    1051
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 543,
+   "ink_x": [
+    267,
+    810
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": 23,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "거실 바닥·초록 리클라이너 다리 쪽 흔들리는 셀카",
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 3,
+   "confidence": "픽셀",
+   "notes": "화면 글과 말이 다름 — 말은 '두 번 누르고 확인하세요', 화면은 '눌러주시면 감사합니다'. 2줄 잉크 x 267~810 / 354~726"
+  },
+  {
+   "t0": 18.1,
+   "t1": 19.06,
+   "speaker": "불명",
+   "text": "스트레스리스 리클라이너\n가격 약 2,500,000 원",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기타(가격 공개 카드 = 같은 자막 꼴 2줄, 창 가운데)",
+   "y": [
+    862,
+    1052
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 815,
+   "ink_x": [
+    131,
+    946
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "둥근 굵은 고딕(G마켓 산스 Bold 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양 대조, 등록 글꼴 잉크비 대조 안 함"
+   },
+   "size_px": 96,
+   "letter_gap_px": 1,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 11,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "베이지색 리클라이너 제품 사진(원목 받침) — 앞의 초록 소파와 색이 다른 판매 사진",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    18.1
+   ],
+   "fit": 10,
+   "confidence": "픽셀",
+   "notes": "말 없음 추정(vtt 마지막 '확인하세요' 뒤, 파형 18.0~19.0 약 10dB 낮아짐) — 화면 글만. 2줄 잉크 x 131~946 / 163~910"
+  }
+ ],
+ "no_caption": [
+  [
+   0,
+   4.067
+  ]
+ ],
+ "beats": "훅(0~3.97 누끼 두 사람+의자 누끼+빨간 화살표, 나레가 제목 읽음 '장윤정 도경완 집에 있는 초록색 리클라이너 의자 정보와 가격', 자막 없음) → 전환(회오리 0.17초) → 나레 상황(4.07~7.6 셀카 '장윤정이 없는 틈을 타 도경완은 집구경을 시켜주는데요') → 제품 등장(7.6~11.5 '초록색 고급스러운 소파 하나가 눈에 띄었습니다') → 궁금증(11.5~15.3 '과연 어디 거고 얼마일까요') → CTA(15.3~18.1 '화면을 빠르게 톡톡 / 두 번 눌러주시면 감사합니다', 창 가운데) → 끝(18.1~19.06 가격 카드 '스트레스리스 리클라이너 가격 약 2,500,000 원' 판매 사진)",
+ "narr_share": "나레 줄 11/12 · 나레 초 약 18.1/19.06 (훅 0~4.07 은 자막 없이 나레만, 마지막 가격 카드 0.96초만 말 없음 추정)",
+ "price_reveal": {
+  "t": 18.1,
+  "form": "자막과 같은 꼴(흰 굵은 고딕+검정 외곽 11px) 2줄 카드를 창 가운데에, 제품 판매 사진 위",
+  "text": "스트레스리스 리클라이너 / 가격 약 2,500,000 원"
+ },
+ "name_evidence": [
+  "장윤정 = 제목 1줄 '장윤정 도경완 집에 있는'·자막 4.07 '장윤정이 없는 틈을 타'",
+  "도경완 = 제목 1줄·자막 5.37 '도경완은 집구경을'"
+ ],
+ "notes": [
+  "지휘자 관찰과 다른 점: 제목 2줄째는 검정 바탕 흰 글자(같음)지만 제목 글자에 외곽 4px+오른쪽 아래 그림자(약 5px)가 있다. 빨강 띠 y164~315(지휘자 150~260보다 아래·두꺼움)",
+  "창 = y441~1346(16:9 아님, 1080x905). 창 아래 1346~1920 검정 빈칸 — 출처·로고·워터마크 없음(원본 크기 확인)",
+  "자막 = 흰 #FFFFFF + 검정 외곽 11px(상하좌우 같음 = 그림자 없음), 잉크 y1165~1250(창 안 아래), 가운데 정렬, 한 줄 최대 약 900px",
+  "등장은 전 줄 instant(30fps 띠에서 한 프레임에 완성), 퇴장도 컷. 타이핑 없음 → type_cps null",
+  "CTA 2줄·가격 카드는 자막 자리를 창 가운데(y862~1052)로 올림 — 변형",
+  "오른쪽 아래 탭 아이콘은 창 영상 구간(4.07~끝) 내내 고정, 훅 구간엔 없음",
+  "훅 누끼 두 사람의 실제 신원은 얼굴 대조 안 함 — 제목 글자로만 장윤정·도경완",
+  "효과음: 들을 수 없음·배경음악 상시라 파형 솟음으로 못 가름 → 전 줄 sfx null(미측정)",
+  "나레 목소리 성별·TTS 여부는 귀로 확인 못 함(vtt 와 말투 '~는데요'로 나레 판정)",
+  "글꼴 이름은 눈 추정, 자간은 외곽선이 겹쳐 0~2px(눈)"
+ ]
+}

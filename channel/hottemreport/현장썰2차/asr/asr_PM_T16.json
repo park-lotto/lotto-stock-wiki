@@ -1,0 +1,19 @@
+{
+ "items": [
+  {
+   "music_bed": true,
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 42.0,
+     "speaker": "S1",
+     "text": "",
+     "kind": "music"
+    }
+   ]
+  }
+ ],
+ "_model": "gemini-flash-lite-latest",
+ "_src": "T16AAuU7MFk.m4a",
+ "_offset": 0.0
+}

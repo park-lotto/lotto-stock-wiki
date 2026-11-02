@@ -313,7 +313,7 @@ AIM_KINDS = ("circle_arrow",)
 AIM_EDGE = 0.05            # 샷 경계 여유(초) — placement._cut_inside 와 같은 값
 AIM_R_MIN, AIM_R_MAX = 55.0, 245.0      # 원 반지름 px — 벤치 줄판독 빨간원 지름 w 110~487 실측(ititemlog zOSp 110 · foreignshowshow 487)의 반
 AIM_MODEL = "opus"         # 눈 판정 = 오푸스(사장님 10-25)
-# 대상 크기별 강조 방식(벤치 실측 — channel/칼카피_제작순서/aim_bench.json, fx_target.py bench-aim, 30개 · 10-25):
+# 대상 크기별 강조 방식(벤치 실측 — channel/production_guide/aim_bench.json, fx_target.py bench-aim, 30개 · 10-25):
 #   원(원·원+화살표 12개)은 대상이 화면의 10% 이하일 때만(최대 0.100) · 원 지름 = 대상 긴 변 × 0.85~2.25(중앙 1.4).
 #   화살표만(18개)은 대상 0.173 까지 — 우리 자막팩은 원+화살표 한 꼴뿐이라 화살표만 꼴은 아직 못 그린다(남은 것).
 #   대상이 속한 전체(사람·물건)가 화면 15% 넘는 13개 중 9개는 전체가 아니라 특징 부위(얼굴·손·틈·젖은 바닥 등, 화면 0.9~10%)를 가리켰다.
@@ -434,7 +434,7 @@ def aim(video, row: dict, cuts: list | None, win=None, caption_band=None, line_t
     return out
 
 
-AIM_BENCH = ROOT / "channel" / "칼카피_제작순서" / "aim_bench.json"      # bench_aim 실측 표(대상 크기별 강조 방식 근거)
+AIM_BENCH = ROOT / "channel" / "production_guide" / "aim_bench.json"      # bench_aim 실측 표(대상 크기별 강조 방식 근거)
 
 
 def _bench_srcs() -> dict:
@@ -654,7 +654,7 @@ def main():
         from collections import Counter
         print("anchor 표:", dict(Counter(r.get("anchor") for r in rows if r.get("anchor"))))
         return 0
-    if a[0] == "bench-aim":       # fx_target.py bench-aim — 벤치 원·화살표가 대상 크기별로 어떻게 그려졌나(오푸스 눈) → channel/칼카피_제작순서/aim_bench.json
+    if a[0] == "bench-aim":       # fx_target.py bench-aim — 벤치 원·화살표가 대상 크기별로 어떻게 그려졌나(오푸스 눈) → channel/production_guide/aim_bench.json
         rows = bench_aim()
         print(f"{len([r for r in rows if 'skip' not in r])}/{len(rows)} 잼 → {AIM_BENCH}")
         return 0

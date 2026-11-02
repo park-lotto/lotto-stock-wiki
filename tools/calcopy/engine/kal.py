@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 한 입구 — "<채널> 칼카피하자" 한마디로 선정→수집→뜯기→판독 묶음→규칙→카피→제작→검증→적용 (관제 097, 2026-10-20).
+"""프리셋 한 입구 — "<채널> 프리셋하자" 한마디로 선정→수집→뜯기→판독 묶음→규칙→카피→제작→검증→적용 (관제 097, 2026-10-20).
     PYTHONUTF8=1 py tools/calcopy/engine/kal.py <채널주소|@핸들> [--slug <slug>] [--brand <우리 브랜드>] [--n 6] [--from <단계>] [--hybrid 예|아니오]
                                                [--ours-mp4 <시험편.mp4> --ours-lines <자막표|줄판독.json>]
 상태 = channel/<slug>/kal_state.json (단계마다 state·sec·outputs). 끝난 단계는 건너뛴다. --from 으로 그 단계부터 다시.
@@ -543,7 +543,7 @@ def step_verify(S: State):
     T["ours_media"], T["bench_media"] = om, bm
     out = S.dir / "_kal" / "재현일치도.md"
     bmp4 = next((p for p in (DATA / S.d["slug"] / "src" / f"{d.get('id')}.mp4" for d in bench) if p.exists()), None)
-    if bmp4:   # 1차 칼카피 관문 하나 = 줄 단위 자 + 픽셀·소리 자(compare) — 둘 다 통과여야 통과(지침서 맨 위 엔진 순서)
+    if bmp4:   # 1차 프리셋 관문 하나 = 줄 단위 자 + 픽셀·소리 자(compare) — 둘 다 통과여야 통과(지침서 맨 위 엔진 순서)
         K.with_pixel(T, str(bmp4), o["ours_mp4"], str(S.dir / "_kal" / "재현일치도_픽셀"))
     out.write_text(K.match_md(T, S.d["slug"]), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(T, ensure_ascii=False, indent=1), encoding="utf-8")

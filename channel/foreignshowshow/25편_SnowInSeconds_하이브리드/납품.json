@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 13:24:28",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\25_snow_in_seconds_1028_1324.mp4",
+  "md5": "67f85c825c0dfb694959e0c5d689a2a5",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\25편_SnowInSeconds\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]

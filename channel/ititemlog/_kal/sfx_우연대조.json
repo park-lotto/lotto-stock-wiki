@@ -1,0 +1,271 @@
+{
+ "made": "2026-10-24",
+ "tool": "tools/calcopy/engine/sound/sfx_events.py detect()(5~10kHz broad·1~6kHz tonal 신호) — 채널 인자판(03 지시서) 아직 없어 원본 mp4 6편에 직접 돌림",
+ "filter": "고립 = isolated≥0.5 그리고 voiced≤0.3(말소리 사이 아님)",
+ "match_win_s": 0.15,
+ "episodes": {
+  "AZ2q07mBzlM": {
+   "dur": 24.567,
+   "raw_n": 16,
+   "isolated_n": 0,
+   "per_s": 0.0,
+   "chance_caption_win": 0.35,
+   "events": []
+  },
+  "J7GxfaVdwSU": {
+   "dur": 28.537,
+   "raw_n": 14,
+   "isolated_n": 1,
+   "per_s": 0.035,
+   "chance_caption_win": 0.35,
+   "events": [
+    {
+     "t": 18.68,
+     "kind": "broad",
+     "dur": 0.08,
+     "db": 24.0,
+     "voiced": 0.15,
+     "isolated": 0.55,
+     "cen_hz": 7027,
+     "near": "표식없음"
+    }
+   ]
+  },
+  "SbWTqCnleC8": {
+   "dur": 32.461,
+   "raw_n": 35,
+   "isolated_n": 13,
+   "per_s": 0.4,
+   "chance_caption_win": 0.29,
+   "events": [
+    {
+     "t": 1.74,
+     "kind": "broad",
+     "dur": 0.23,
+     "db": 23.5,
+     "voiced": 0.27,
+     "isolated": 0.55,
+     "cen_hz": 6227,
+     "near": "표식없음"
+    },
+    {
+     "t": 1.74,
+     "kind": "broad",
+     "dur": 0.23,
+     "db": 21.1,
+     "voiced": 0.27,
+     "isolated": 0.55,
+     "cen_hz": 6531,
+     "near": "표식없음"
+    },
+    {
+     "t": 6.48,
+     "kind": "broad",
+     "dur": 0.16,
+     "db": 18.9,
+     "voiced": 0.3,
+     "isolated": 0.5,
+     "cen_hz": 6928,
+     "near": "자막교체"
+    },
+    {
+     "t": 9.69,
+     "kind": "broad",
+     "dur": 0.09,
+     "db": 21.9,
+     "voiced": 0.29,
+     "isolated": 0.6,
+     "cen_hz": 5766,
+     "near": "표식없음"
+    },
+    {
+     "t": 13.32,
+     "kind": "broad",
+     "dur": 0.13,
+     "db": 23.8,
+     "voiced": 0.29,
+     "isolated": 0.75,
+     "cen_hz": 6962,
+     "near": "표식없음"
+    },
+    {
+     "t": 13.8,
+     "kind": "broad",
+     "dur": 0.13,
+     "db": 24.4,
+     "voiced": 0.12,
+     "isolated": 0.75,
+     "cen_hz": 6388,
+     "near": "표식없음"
+    },
+    {
+     "t": 15.17,
+     "kind": "broad",
+     "dur": 0.07,
+     "db": 19.8,
+     "voiced": 0.0,
+     "isolated": 0.7,
+     "cen_hz": 6258,
+     "near": "표식없음"
+    },
+    {
+     "t": 16.68,
+     "kind": "broad",
+     "dur": 0.08,
+     "db": 19.9,
+     "voiced": 0.08,
+     "isolated": 0.85,
+     "cen_hz": 6803,
+     "near": "표식없음"
+    },
+    {
+     "t": 20.74,
+     "kind": "broad",
+     "dur": 0.13,
+     "db": 29.5,
+     "voiced": 0.0,
+     "isolated": 0.75,
+     "cen_hz": 6344,
+     "near": "표식없음"
+    },
+    {
+     "t": 21.04,
+     "kind": "broad",
+     "dur": 0.1,
+     "db": 23.6,
+     "voiced": 0.27,
+     "isolated": 0.65,
+     "cen_hz": 6986,
+     "near": "표식없음"
+    },
+    {
+     "t": 22.26,
+     "kind": "broad",
+     "dur": 0.2,
+     "db": 27.4,
+     "voiced": 0.3,
+     "isolated": 0.5,
+     "cen_hz": 6406,
+     "near": "자막교체"
+    },
+    {
+     "t": 22.26,
+     "kind": "broad",
+     "dur": 0.2,
+     "db": 32.2,
+     "voiced": 0.3,
+     "isolated": 0.5,
+     "cen_hz": 7500,
+     "near": "자막교체"
+    },
+    {
+     "t": 27.71,
+     "kind": "broad",
+     "dur": 0.2,
+     "db": 35.9,
+     "voiced": 0.3,
+     "isolated": 0.9,
+     "cen_hz": 6734,
+     "near": "표식없음"
+    }
+   ]
+  },
+  "aUicTeDoW04": {
+   "dur": 29.367,
+   "raw_n": 21,
+   "isolated_n": 3,
+   "per_s": 0.102,
+   "chance_caption_win": 0.3,
+   "events": [
+    {
+     "t": 10.02,
+     "kind": "broad",
+     "dur": 0.14,
+     "db": 30.0,
+     "voiced": 0.17,
+     "isolated": 0.95,
+     "cen_hz": 7530,
+     "near": "자막교체"
+    },
+    {
+     "t": 10.44,
+     "kind": "broad",
+     "dur": 0.09,
+     "db": 21.6,
+     "voiced": 0.07,
+     "isolated": 0.5,
+     "cen_hz": 7165,
+     "near": "표식없음"
+    },
+    {
+     "t": 19.98,
+     "kind": "broad",
+     "dur": 0.08,
+     "db": 28.7,
+     "voiced": 0.15,
+     "isolated": 0.55,
+     "cen_hz": 6765,
+     "near": "자막교체"
+    }
+   ]
+  },
+  "ro1l3u734v4": {
+   "dur": 29.967,
+   "raw_n": 29,
+   "isolated_n": 2,
+   "per_s": 0.067,
+   "chance_caption_win": 0.31,
+   "events": [
+    {
+     "t": 6.77,
+     "kind": "broad",
+     "dur": 0.23,
+     "db": 26.2,
+     "voiced": 0.04,
+     "isolated": 0.5,
+     "cen_hz": 7387,
+     "near": "자막교체"
+    },
+    {
+     "t": 12.56,
+     "kind": "broad",
+     "dur": 0.07,
+     "db": 26.8,
+     "voiced": 0.17,
+     "isolated": 0.5,
+     "cen_hz": 6794,
+     "near": "표식없음"
+    }
+   ]
+  },
+  "zOSpeiMw1nA": {
+   "dur": 27.794,
+   "raw_n": 22,
+   "isolated_n": 1,
+   "per_s": 0.036,
+   "chance_caption_win": 0.4,
+   "events": [
+    {
+     "t": 12.71,
+     "kind": "broad",
+     "dur": 0.14,
+     "db": 24.1,
+     "voiced": 0.11,
+     "isolated": 0.8,
+     "cen_hz": 7217,
+     "near": "자막교체"
+    }
+   ]
+  }
+ },
+ "summary": {
+  "raw": 137,
+  "iso": 20,
+  "cap": 7,
+  "stk": 0,
+  "cut": 0,
+  "none": 13,
+  "chance_caption_mean": 0.33,
+  "reading": "고립 솟음 중 자막교체 ±0.15초에 붙은 비율을 우연 기대(자막교체 창이 길이에서 차지하는 비율)와 비교 — 비슷하면 '자막마다 효과음' 규칙 근거 없음. 귀로 확인 못 함(종류 미상)."
+ }
+}

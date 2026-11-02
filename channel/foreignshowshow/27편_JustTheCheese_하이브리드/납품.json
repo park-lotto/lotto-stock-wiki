@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 16:55:02",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\27_just_the_cheese_1028_1655.mp4",
+  "md5": "71734557fcba2a75e3d05918b95a3e54",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\27편_JustTheCheese\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]

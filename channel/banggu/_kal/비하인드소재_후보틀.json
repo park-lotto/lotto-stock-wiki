@@ -1,0 +1,2402 @@
+[
+{
+"name": "오레오",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "칸쵸",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "꼬깔콘",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "포카칩",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "홈런볼",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "오징어땅콩",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "바나나킥",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "허니버터칩",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "고래밥",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "에이스",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "몽쉘",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "마가렛트",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "롯데 자일리톨 껌",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "킷캣",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "엠앤엠즈",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "허쉬 키세스",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "페레로로쉐",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "멘토스",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "칙촉",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "맛동산",
+"category": "과자·사탕",
+"tier": "대중"
+},
+{
+"name": "사브레",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "참크래커",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "크라운산도",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "죠리퐁",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "썬칩",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "오감자",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "꿀꽈배기",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "자갈치",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "콘칩",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "왕꿈틀이",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "마이쮸",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "아이셔",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "토블론",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "리터스포트",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "알포트",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "리츠",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "웨르더스 오리지널",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "틱택",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "스키틀즈",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "연양갱",
+"category": "과자·사탕",
+"tier": "덜유명"
+},
+{
+"name": "신라면",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "진라면",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "안성탕면",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "짜파게티",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "너구리",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "삼양라면",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "컵누들",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "오뚜기 3분카레",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "햇반",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "비비고 왕교자",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "동원참치",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "순창고추장",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "미원",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "다시다",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "오뚜기 케챂",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "하인즈 케첩",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "오뚜기 마요네즈",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "큐피 마요네즈",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "리챔",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "사리곰탕면",
+"category": "라면·식품",
+"tier": "대중"
+},
+{
+"name": "왕뚜껑",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "꼬꼬면",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "팔도비빔면",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "육개장 사발면",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "맛선생",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "기꼬만 간장",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "타바스코",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "후이펑 스리라차",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "라오간마",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "바릴라 파스타",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "데체코 파스타",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "캠벨 수프",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "몽고간장",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "샘표 간장",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "해표 식용유",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "종가 김치",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "이금기 굴소스",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "맥코믹 향신료",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "닛신 치킨라멘",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "허브솔트",
+"category": "라면·식품",
+"tier": "덜유명"
+},
+{
+"name": "코카콜라",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "펩시",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "스프라이트",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "환타",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "포카리스웨트",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "게토레이",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "비락식혜",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "데미소다",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "밀키스",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "웰치스",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "립톤",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "제주삼다수",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "레드불",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "몬스터 에너지",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "트레비",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "페리에",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "에비앙",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "맥심 TOP",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "스타벅스 RTD",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "코코팜",
+"category": "음료",
+"tier": "대중"
+},
+{
+"name": "갈아만든배",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "실론티",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "옥수수수염차",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "솔의눈",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "쌕쌕",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "봉봉",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "맥콜",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "아침햇살",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "초록매실",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "탐스",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "산펠레그리노",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "닥터페퍼",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "캐나다드라이",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "마운틴듀",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "오란씨",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "미닛메이드",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "네스퀵",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "마일로",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "트와이닝",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "일리 커피",
+"category": "음료",
+"tier": "덜유명"
+},
+{
+"name": "바나나맛우유",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "서울우유",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "매일 상하목장",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "덴마크 드링킹요구르트",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "불가리스",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "액티비아",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "야쿠르트",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "앙팡 치즈",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "끼리 크림치즈",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "메로나",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "비비빅",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "월드콘",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "부라보콘",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "붕어싸만코",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "돼지바",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "수박바",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "설레임",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "투게더",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "나뚜루",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "베스킨라빈스",
+"category": "유제품·아이스크림",
+"tier": "대중"
+},
+{
+"name": "폴라포",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "누가바",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "쌍쌍바",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "바밤바",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "캔디바",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "더위사냥",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "빵빠레",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "티코",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "벤앤제리스",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "매그넘",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "앵커 버터",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "레꼬르 버터",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "프레지덩 까망베르",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "벨큐브",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "래핑카우",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "그라나파다노",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "파스퇴르 우유",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "남양 초코에몽",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "빙그레 요플러스",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "그릭데이",
+"category": "유제품·아이스크림",
+"tier": "덜유명"
+},
+{
+"name": "다우니",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "퍼실",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "스파크",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "피죤",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "페브리즈",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "유한락스",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "옥시크린",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "퐁퐁",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "트리오",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "홈스타",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "스카치브라이트",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "미스터클린 매직블럭",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "깨끗한나라",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "잘풀리는집",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "모나리자 화장지",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "듀라셀",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "에너자이저",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "아이깨끗해",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "오투액션",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "리큐",
+"category": "생활용품·세제",
+"tier": "대중"
+},
+{
+"name": "샤프란",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "엑츠",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "테크",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "비트",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "세이프가드 비누",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "산도깨비",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "에어윅",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "글레이드",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "레이드",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "홈키파",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "에프킬라",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "제로스",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "바이오크린콜",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "메소드",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "에코버",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "미세스마이어스",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "닥터브로너스",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "슈가버블",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "벨로 세탁세제",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "존슨왁스",
+"category": "생활용품·세제",
+"tier": "덜유명"
+},
+{
+"name": "락앤락",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "해피콜",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "쿠첸",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "쿠쿠",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "타파웨어",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "글라스락",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "코렐",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "휘슬러",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "WMF",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "브리타",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "지퍼락",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "크린랩",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "파이렉스",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "스타우브",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "르크루제",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "키친아트",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "PN풍년",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "실리트",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "쓰리잘",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "네오플램",
+"category": "주방용품",
+"tier": "대중"
+},
+{
+"name": "베스트클린 고무장갑",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "마미손 고무장갑",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "교세라 세라믹칼",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "쌍둥이칼 헹켈",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "빅토리녹스 주방칼",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "코멕스",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "오덴세",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "보덤",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "하리오",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "칼리타",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "비알레띠 모카포트",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "스탠리 텀블러",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "서모스 보온병",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "조지루시",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "타이거 보온병",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "옥소",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "조셉조셉",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "브레빌",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "치후",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "에밀앙리",
+"category": "주방용품",
+"tier": "덜유명"
+},
+{
+"name": "니베아",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "바세린",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "존슨즈 베이비",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "도브",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "비오레",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "해피바스",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "려",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "케라시스",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "엘라스틴",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "팬틴",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "헤드앤숄더",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "위스퍼",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "좋은느낌",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "콜게이트",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "페리오",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "2080 치약",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "오랄비",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "질레트",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "쉬크",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "록시땅",
+"category": "화장품·위생",
+"tier": "대중"
+},
+{
+"name": "시드물",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "피지오겔",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "세타필",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "유세린",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "라로슈포제",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "아벤느",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "일리윤",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "더바디샵",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "러쉬",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "버츠비",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "카멕스",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "아이소이",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "비레디",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "메디힐",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "미샤",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "이니스프리",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "센카",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "갸스비",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "가그린",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "미쟝센",
+"category": "화장품·위생",
+"tier": "덜유명"
+},
+{
+"name": "모나미 153",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "파버카스텔",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "스테들러",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "제브라",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "파일럿",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "유니볼",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "스카치 테이프",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "아모스 물감",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "딕슨 연필",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "몰스킨",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "왕자파스",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "크레욜라",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "샤피",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "스테빌로",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "하이테크C",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "프릭션",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "톰보우 지우개",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "라미",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "알파색채 물감",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "신한 물감",
+"category": "문구",
+"tier": "대중"
+},
+{
+"name": "문화연필",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "동아연필",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "아이비스",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "마패드",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "로디아",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "미도리 트래블러스노트",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "블랙윙 연필",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "카렌다쉬",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "세일러 만년필",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "르땅",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "쿠루토가",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "제트스트림",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "에너겔",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "미쓰비시 포스카",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "지그 클린컬러",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "펠리칸",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "카웨코",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "트위스비",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "오토(OHTO) 볼펜",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "맥스 호치키스",
+"category": "문구",
+"tier": "덜유명"
+},
+{
+"name": "뽀로로 인형",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "또봇",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "터닝메카드",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "실바니안",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "바비",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "핫휠",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "토미카",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "플레이모빌",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "너프",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "루빅스 큐브",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "보드게임 할리갈리",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "모노폴리",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "젠가",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "우노",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "부루마불",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "포켓몬 카드",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "닌텐도 스위치",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "플레이도우",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "미미인형",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "미스터 포테이토 헤드",
+"category": "완구·게임",
+"tier": "대중"
+},
+{
+"name": "옥스포드 블록",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "맥포머스",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "카프라",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "나노블록",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "마그포마",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "타요 버스",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "시크릿쥬쥬",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "캐치티니핑",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "치킨차차",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "스플렌더",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "카탄",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "다빈치코드 보드게임",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "티켓투라이드",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "도블",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "루미큐브",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "스머프 피규어",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "베이블레이드",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "유희왕 카드",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "슬링키",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "타미야 미니카",
+"category": "완구·게임",
+"tier": "덜유명"
+},
+{
+"name": "다이슨",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "샤오미 미밴드",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "필립스 면도기",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "브라운 면도기",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "발뮤다",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "드롱기",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "네스프레소 머신",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "로지텍",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "소니 워크맨",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "앤커",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "삼성 버즈",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "LG 코드제로",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "신일 선풍기",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "위닉스",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "코웨이 정수기",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "유닉스 헤어드라이어",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "이어팟",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "아이폰 맥세이프",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "고프로",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "캐논 셀피",
+"category": "가전·전자 소형",
+"tier": "대중"
+},
+{
+"name": "보스 헤드폰",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "슈어 이어폰",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "마샬 스피커",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "JBL 스피커",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "레이저 마우스",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "파나소닉 건전지",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "카시오 전자계산기",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "타이맥스",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "오아",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "플래닛 멀티탭",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "벨킨",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "오디오테크니카",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "후지 인스탁스",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "샤크 청소기",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "비셀",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "보국전자",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "한일전기",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "한경희 스팀다리미",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "닌자 블렌더",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "티피링크",
+"category": "가전·전자 소형",
+"tier": "덜유명"
+},
+{
+"name": "나이키 에어포스",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "아디다스 슈퍼스타",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "뉴발란스",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "컨버스 척테일러",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "반스",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "크록스",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "유니클로 히트텍",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "리바이스 501",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "레이밴",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "카시오 지샥",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "MLB 모자",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "폴로 랄프로렌",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "라코스테",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "노스페이스 눕시",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "이스트팩",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "잔스포츠",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "디스커버리",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "내셔널지오그래픽",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "휠라",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "프로스펙스",
+"category": "패션·신발·가방",
+"tier": "대중"
+},
+{
+"name": "닥터마틴",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "버켄스탁",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "클락스 왈라비",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "팀버랜드",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "어그",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "하바이아나스",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "칼하트",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "디키즈",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "챔피온",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "캉골",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "프라이탁",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "르꼬끄",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "미즈노",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "아식스",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "리복",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "오니츠카타이거",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "콜롬비아",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "헌터 부츠",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "탠디",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "금강제화",
+"category": "패션·신발·가방",
+"tier": "덜유명"
+},
+{
+"name": "코베아",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "콜맨",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "스노우피크",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "헬리녹스",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "블랙야크",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "코오롱스포츠",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "K2",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "네파",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "파타고니아",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "나이프 오피넬",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "지포 라이터",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "불스원샷",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "불스원 레인OK",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "소낙스",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "터틀왁스",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "카렉스",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "한국타이어",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "미쉐린",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "보쉬 와이퍼",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "아머올",
+"category": "아웃도어·자동차용품",
+"tier": "대중"
+},
+{
+"name": "제로그램",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "MSR",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "제트보일",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "트랑지아",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "나이트코어",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "레더맨",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "블랙다이아몬드",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "몽벨",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "맥라이트",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "마모트",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "아크테릭스",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "노르디스크",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "호루스벤누",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "오스프리",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "그레고리",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "말표 구두약",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "메구이어스",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "리퀴몰리",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "레인엑스",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+},
+{
+"name": "오토솔",
+"category": "아웃도어·자동차용품",
+"tier": "덜유명"
+}
+]

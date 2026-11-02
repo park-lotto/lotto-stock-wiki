@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 한 편 한 명령 — 뜯기 + 틀 → (재료 후보 시트) → 대본 → 우리 영상 → 대조 (관제 097, 2026-10-16).
+"""프리셋 한 편 한 명령 — 뜯기 + 틀 → (재료 후보 시트) → 대본 → 우리 영상 → 대조 (관제 097, 2026-10-16).
 
     PYTHONUTF8=1 py tools/calcopy/engine/remake.py <뜯기.json> <frame.json> --out <폴더> [--materials 재료.json] [--script 대본.json]
           [--queries "검색어1|검색어2"] [--topic 주제 --roles "역할1,역할2,…" --scenes "화면1|…" --points "포인트"] [--bgm qiuqiu]
@@ -384,7 +384,7 @@ def write_plan(out: Path, J: dict, frames: list, S: dict, M: dict, kind: str) ->
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="칼카피 한 편 한 명령")
+    ap = argparse.ArgumentParser(description="프리셋 한 편 한 명령")
     ap.add_argument("tteutgi")
     ap.add_argument("frame", help="본문 틀(frame.json)")
     ap.add_argument("--out", required=True)

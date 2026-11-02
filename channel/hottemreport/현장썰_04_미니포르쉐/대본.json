@@ -1,0 +1,194 @@
+{
+ "topic": "포르쉐 911 마티니 도색 미니 전기차 — 운전자가 쇼룸에서 시동·드리프트 브레이크를 보여 주고 바깥 주차장에서 몰아 봄",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": {
+  "id": "IRFN5B_2LMo",
+  "channel": "핫템리포트",
+  "views": 1300000,
+  "note": "같은 원본. 벤치는 나레 위주+원음 1구절('This is fun. I want one.'). 우리는 원음 4구간 현장썰로 각색. 원본 가격 말($15,000, 7.3~13.1)과 번인 영어 자막(가격 글자 포함)은 안 씀/지움"
+ },
+ "sources": {
+  "main": {
+   "file": "zkzGEiHqJRQ.mp4",
+   "clean": "zk_clean.mp4(번인 자막 띠 delogo x110 y1322 w860 h100)",
+   "views": 644444,
+   "dur": 83.9,
+   "res": "1080x1920"
+  }
+ },
+ "sell": "경계 — 고가 주문 제작품(원본 말). 구매 페이지 확인 안 함. 사장님 판단 필요",
+ "titles": {
+  "hook": "어른이 타고 달리는\n미니 포르쉐"
+ },
+ "facts": {
+  "f1": {
+   "text": "0~14초 흰 쇼룸의 마티니 도색 미니 포르쉐, 어른이 운전석에 앉음 · 'fully drivable mini Porsche'(가격 말은 안 씀)",
+   "kind": "화면+본인 말"
+  },
+  "f2": {
+   "text": "15.8~23.7 'You press this button right here, and the engine goes on' · 16~19 계기판·버튼 근접 · 23.7~26.9 'we've got hazard lights around the back'",
+   "kind": "본인 말+화면"
+  },
+  "f3": {
+   "text": "30.75~34.4 'Look at this. It is made for drifting, so you've got your drift brake' · 35~38 'because this goes up to 80km an hour'",
+   "kind": "본인 말+화면"
+  },
+  "f4": {
+   "text": "42.2~45.3 'Got it in mode 3, the fastest mode.' · 45.3~46.7 'Woo!' · 44~53 쇼룸 출발",
+   "kind": "본인 말+화면"
+  },
+  "f5": {
+   "text": "56~67 차고 문이 열리고 차가 나옴 · 64.1~68.0 'I love the sound. It's awesome.' · 68~83 바깥 주차장 주행 · 74.1~76.4 'This is fun, I want one.'",
+   "kind": "화면+본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2",
+   "N3",
+   "O3",
+   "N4",
+   "N5",
+   "O4"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품+~있는데요)",
+    "text": "다 큰 어른도 타고 달릴 수 있는, 미니 포르쉐가 있는데요.",
+    "caps": [
+     "다 큰 어른도 타고",
+     "달릴 수 있는",
+     "미니 포르쉐가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "note": "1차 \"어른이 직접 타고\" — 완성본 받아쓰기 2회 연속 \"어린이가\"(뜻 뒤집힘)"
+   },
+   {
+    "id": "N2",
+    "fn": "사용법 → 원음 증거",
+    "text": "버튼 하나로 시동이 걸리고, 뒤에는 비상등까지 달려 있대요.",
+    "caps": [
+     "버튼 하나로 시동이 걸리고",
+     "뒤에는 비상등까지",
+     "달려 있대요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "불러냄 → 원음 증거",
+    "text": "가장 빠른 모드로 놓고, 차고 밖으로 몰고 나왔더니.",
+    "caps": [
+     "가장 빠른 모드로 놓고",
+     "차고 밖으로 몰고 나왔더니"
+    ],
+    "facts": [
+     "f4",
+     "f5"
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "장점 몰아치기",
+    "text": "작아도 최고 시속 80킬로미터까지 나가서, 드리프트도 된대요.",
+    "caps": [
+     "작아도 최고 시속",
+     "80킬로미터까지 나가서",
+     "드리프트도 된대요"
+    ],
+    "facts": [
+     "f3"
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "끝 전언(~다고 하네요)",
+    "text": "직접 몰아 본 소감은, 딱 이 한마디였다고 하네요.",
+    "caps": [
+     "직접 몰아 본 소감은",
+     "딱 이 한마디였다고 하네요"
+    ],
+    "facts": [
+     "f5"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "zk",
+    "span": [
+     45.3,
+     46.7
+    ],
+    "en": "Woo!",
+    "caps": [
+     "우후~!!"
+    ],
+    "check": "45.3~46.7·48.5 두 모델 'Woo!' · 번인 자막 'Woo, woo.' 45~46"
+   },
+   {
+    "id": "O2",
+    "src": "zk",
+    "span": [
+     30.75,
+     34.4
+    ],
+    "en": "Look at this. It is made for drifting, so you've got your drift brake.",
+    "caps": [
+     "이것 좀 봐!",
+     "드리프트용이라",
+     "드리프트 브레이크까지 있어!"
+    ],
+    "check": "30.75~34.3/34.5 두 모델 일치(34.5 부터 'Be(cause)' 섞임 → 34.4)"
+   },
+   {
+    "id": "O3",
+    "src": "zk",
+    "span": [
+     64.1,
+     68.0
+    ],
+    "en": "I love the sound. It's awesome.",
+    "caps": [
+     "이 소리 너무 좋아",
+     "완전 최고야!"
+    ],
+    "check": "두 모델 'I love the sound. It's/So awesome.' · 번인 자막 64.3~65.9·66.7~67.9"
+   },
+   {
+    "id": "O4",
+    "src": "zk",
+    "span": [
+     74.1,
+     76.4
+    ],
+    "en": "This is fun, I want one.",
+    "caps": [
+     "이거 너무 재밌다",
+     "나도 하나 갖고 싶어!"
+    ],
+    "check": "74.1~76.4 두 모델 일치 · 번인 자막 74.5~76.2"
+   }
+  ],
+  "dropped": {
+   "7.3~13.1 '$15,000 fully drivable…'": "금액 언급 금지(번인 자막 '$15,000'도 지움)",
+   "80.3~83.1 'What do you think?'": "끝 질문형은 댓글 유도처럼 들려 'I want one' 으로 끝냄",
+   "출연자 이름": "화면 글자로 확인 안 함 — 안 씀"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 필재 tc_68257f68bc6e3c161ab5078d · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0
+ }
+}

@@ -1,0 +1,347 @@
+{
+ "_note": "샥탬스토리 하이브리드 30편 Prank-O — 앞 0~O2 끝 = 칼카피 그대로(끝 원음 창업자 '우리 진짜 회사는 프랭크오! 장난 선물 상자를 팔아요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 Prank-O 상자는 없음 → 비슷한 장난 선물 상자(돌려서 여는 통이 겹겹이 든 '중첩 나사 선물 상자', 다른 회사) — B1 '똑같은 건 없고 비슷하게'로 숨기지 않음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "짜증나는 중첩 나사 선물 상자(쿠팡 9563896304 '짜증나는 중첩 나사 선물 상자 - 크리스마스, WhiteElephant 및 기프트 카드용 생일을 위한 재사용 가능한 재미있는 장난 선물 상자' — 방송 제품 Prank-O 와 다른 회사의 비슷한 장난 선물 상자)",
+ "same_product": false,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "진짜 선물은 안에 숨기고 겉 상자로 받는 사람을 놀리는 장난 선물 상자 — 앞 O2 창업자 '장난 선물 상자를 팔아요'로 끝남",
+  "뒤흥미": "리본 달린 선물 상자인데 뚜껑을 돌려 열면 안에 또 통, 또 통 — 맨 안쪽에 진짜 선물을 숨겨 받는 사람을 놀리는 상자(Thin Air 3D 'Annoying NESTED Gift Box' pV5ftJip6Sc 손 시점)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 '장난 선물 상자' → 9563896304(사진 C:/숏템_칼카피/foreignshowshow/29편_소재/img/cp_9563896304.jpg 금색 리본 검정·빨강 원통 + 겹겹 통) · 'prank-o'·'가짜 선물 포장 박스 장난'·'프랭크 박스' 검색에 Prank-O 없음 — 결과 C:/숏템_칼카피/foreignshowshow/29편_소재/쿠팡API_29a.json·쿠팡API_29b.json"
+ },
+ "hybrid": {
+  "front_doc": "../30편_PrankO",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/30편_PrankO/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/30편_PrankO/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/30편_PrankO/work",
+  "cut_after": "O2",
+  "cut_why": "O2 창업자 원음 '우리 진짜 회사는 프랭크오! 장난 선물 상자를 팔아요' 끝 — 그 '장난 선물 상자?'를 뒤 체험(쿠팡에서 비슷한 장난 선물 상자를 사서 써 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~28편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "선물 뜯었더니",
+  "line2": "황당한 물건이?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~28편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 장난 선물 상자가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고 비슷하게 선물로 장난치는 상자가 있더라고요.",
+    "tts": "근데 저 장난 선물 상자가 궁금해서, 쿠팡에 쳐 봤더니, 똑같은 건 없고, 비슷하게 선물로 장난치는 상자가 있더라고요.",
+    "caps": [
+     "근데 저 장난 선물 상자가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "똑같은 건 없고",
+     "비슷하게 선물로 장난치는",
+     "상자가 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "상자가 있더라고요"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 장난 선물 상자가",
+      "span": "선물 상자가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없고",
+      "span": "건 없고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷하게 선물로 장난치는",
+      "span": "선물로 장난치는",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "상자가 있더라고요",
+      "span": "있더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②공개(와우1)",
+    "text": "이게 말도 안 되는 게, 겉은 리본 달린 선물 상자인데 뚜껑을 돌려서 열면 안에 통이 또 있어요.",
+    "tts": "이게 말도 안 되는 게, 겉은 리본 달린 선물 상자인데, 뚜껑을 돌려서 열면, 안에 통이 또 있어요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "겉은 리본 달린 선물 상자인데",
+     "뚜껑을 돌려서 열면",
+     "안에 통이 또 있어요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "겉은 리본 달린 선물 상자인데",
+      "span": "선물 상자인데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뚜껑을 돌려서 열면",
+      "span": "돌려서 열면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안에 통이 또 있어요",
+      "span": "또 있어요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 그 통을 열면 또 통이 나오고 또 돌려야 해요.",
+    "tts": "진짜 핵심은 이건데, 그 통을 열면, 또 통이 나오고, 또 돌려야 해요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "그 통을 열면",
+     "또 통이 나오고",
+     "또 돌려야 해요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 통을 열면",
+      "span": "그 통을 열면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "또 통이 나오고",
+      "span": "나오고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "또 돌려야 해요",
+      "span": "돌려야 해요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 맨 안쪽 작은 통에 진짜 선물을 쏙 숨겨 두면 돼요.",
+    "tts": "심지어 이게 대박인 게, 맨 안쪽 작은 통에, 진짜 선물을 쏙 숨겨 두면 돼요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "맨 안쪽 작은 통에",
+     "진짜 선물을",
+     "쏙 숨겨 두면 돼요"
+    ],
+    "facts": [
+     "c1",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "노랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "맨 안쪽 작은 통에",
+      "span": "작은 통에",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 선물을",
+      "span": "진짜 선물을",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쏙 숨겨 두면 돼요",
+      "span": "두면 돼요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 조카 생일 선물을 여기 넣어 줬더니 끝까지 돌리면서 깔깔 웃더라고요.",
+    "tts": "요즘은 조카 생일 선물을 여기 넣어 줬더니, 끝까지 돌리면서, 깔깔 웃더라고요.",
+    "caps": [
+     "요즘은 조카 생일 선물을",
+     "여기 넣어 줬더니",
+     "끝까지 돌리면서",
+     "깔깔 웃더라고요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 조카 생일 선물을",
+      "span": "생일 선물을",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "여기 넣어 줬더니",
+      "span": "넣어 줬더니",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "끝까지 돌리면서",
+      "span": "끝까지 돌리면서",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "깔깔 웃더라고요",
+      "span": "깔깔 웃더라고요",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) '장난 선물 상자' → 9563896304 '짜증나는 중첩 나사 선물 상자 - 크리스마스, WhiteElephant 및 기프트 카드용 … 재미있는 장난 선물 상자'(→ B1 '똑같은 건 없고 비슷하게 선물로 장난치는 상자' · B4 '맨 안쪽에 선물' = 상품명 '기프트 카드용') · 'prank-o' 검색 결과에 방송 제품 없음 · 결과 C:/숏템_칼카피/foreignshowshow/29편_소재/쿠팡API_29a.json·쿠팡API_29b.json",
+  "c2": "Thin Air 3D 'Annoying NESTED Gift Box (For Cash!)' https://www.youtube.com/watch?v=pV5ftJip6Sc (리본 달린 빨간 원통을 손에 듦 3~11·231~234초 · 뚜껑을 돌려 열어 안 통이 나옴 83~86·206~213초 · 겹겹 통을 돌림 162~165·188~191초 · 맨 안쪽 작은 통 120~123·138~141초, 손만)",
+  "창작": "B5 '조카 생일 선물을 여기 넣어 줬더니 끝까지 돌리면서 깔깔 웃더라고요' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

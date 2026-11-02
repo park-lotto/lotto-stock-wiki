@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 홈(/admin/calcopy) 탭 5개 스크린샷 + 탭마다 내용이 실제로 채워졌나 점검(관제 097).
+"""프리셋 홈(/admin/calcopy) 탭 5개 스크린샷 + 탭마다 내용이 실제로 채워졌나 점검(관제 097).
 
     PYTHONUTF8=1 py tools/calcopy/shot_home.py --base http://127.0.0.1:8853 --out out/calcopy_board
 판정: 탭마다 '채워짐' 기준(행 수·타일 수·iframe 안 글자)이 0 이면 실패(rc=1) — 빈 화면을 찍고 됐다고 하지 않게.

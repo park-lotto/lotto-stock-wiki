@@ -1,0 +1,173 @@
+{
+ "_note": "잇템로그판 해외반응 시리즈 — 한국 거품 염색약(2026-10-22). 원본 = Brad Mondo 'Testing the VIRAL KOREAN FOAM HAIR DYE' '9gCTrv5mQlU'(264만, 채널 중앙 6.0만의 44배) — 위 칸 Erin Degan 영상 + 아래 칸 Brad 반응. 위 칸(Erin)만 씀. 원음은 Erin 목소리 구간만(Brad 말 구간은 나레 전언으로).",
+ "slug": "ititemlog_ep06_hairdye",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "한국 거품 염색약(쿠팡: 거품 염색약 류)",
+ "title_lines": [
+  [
+   [
+    "한국 거품 염색약 쓰고"
+   ]
+  ],
+  [
+   [
+    "핑크 머리 된 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "0.08~6.04 'Trying my hair with the viral Korean foam hair dye. Hopefully this will be turning my hair pink'(위 칸 Erin)",
+  "f2": "6~10초 거품을 머리 위에 산처럼 · 29.44 Brad 'she used, I think, three bottles of color' · 40.24 'it is all over your face'",
+  "f3": "55.16 'It is time to let it sit in for at least an hour' · 59.52~61.20 'I'm actually so happy with the results'",
+  "f4": "70.32~75.96 'It's actually way brighter than I expected. It's like a fuchsia color instead of like a pink'",
+  "f5": "80.40~83 Brad 'The color looks really good. This is really, really pretty on her'(Brad Mondo = 헤어 유튜버)"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 거품 염색약을 머리에 산처럼 쌓은 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 거품 염색약을",
+     "key": "거품 염색약"
+    },
+    {
+     "text": "머리에 산처럼 쌓은 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(시도)",
+   "src": "9gCTrv5mQlU.mp4",
+   "spans": [
+    [
+     0.08,
+     6.04
+    ]
+   ],
+   "said": "Trying my hair with the viral Korean foam hair dye. Hopefully this will be turning my hair pink",
+   "caps_rel": [
+    [
+     "요즘 난리 난 한국 거품 염색약 써 볼게",
+     0.0,
+     3.76
+    ],
+    [
+     "머리가 분홍색이 되면 좋겠다",
+     3.8,
+     5.96
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "거품을 머리 위에 짜서 그대로 문질러 바르는데요.",
+   "caps": [
+    {
+     "text": "거품을 머리 위에 짜서"
+    },
+    {
+     "text": "그대로 문질러 바르는데요"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 고조",
+   "tts": "한 통으로는 모자라서 세 통 넘게 짜 넣었는데요.",
+   "caps": [
+    {
+     "text": "한 통으로는 모자라서"
+    },
+    {
+     "text": "세 통 넘게 짜 넣었는데요",
+     "key": "세 통"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "얼굴까지 온통 거품투성이가 된 채로 한 시간을 기다렸는데요.",
+   "caps": [
+    {
+     "text": "얼굴까지 온통 거품투성이가 된 채로"
+    },
+    {
+     "text": "한 시간을 기다렸는데요"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "9gCTrv5mQlU.mp4",
+   "spans": [
+    [
+     59.52,
+     61.2
+    ]
+   ],
+   "said": "I'm actually so happy with the results",
+   "caps_rel": [
+    [
+     "결과 진짜 맘에 들어",
+     0.0,
+     1.68
+    ]
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응(정점)",
+   "src": "9gCTrv5mQlU.mp4",
+   "spans": [
+    [
+     70.32,
+     75.96
+    ]
+   ],
+   "said": "It's actually way brighter than I expected. It's like a fuchsia color instead of like a pink",
+   "caps_rel": [
+    [
+     "생각보다 훨씬 선명해",
+     0.0,
+     2.88,
+     "선명해"
+    ],
+    [
+     "핑크가 아니라 진한 자홍색이야",
+     2.88,
+     5.64
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "이 영상을 본 헤어 유튜버도 색이 정말 예쁘다고 인정했다고 하네요.",
+   "caps": [
+    {
+     "text": "이 영상을 본 헤어 유튜버도"
+    },
+    {
+     "text": "색이 정말 예쁘다고 인정했다고 하네요",
+     "key": "인정"
+    }
+   ]
+  }
+ ]
+}

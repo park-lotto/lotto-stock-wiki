@@ -1,0 +1,15 @@
+{
+ "music_bed": true,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 3.12,
+   "speaker": "S1",
+   "text": "3, 2, 1, Grand Prix!",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "_src": "carwakee_bD-oRbeD5_g.mp4",
+ "_offset": 0.0
+}

@@ -16,7 +16,7 @@
               render_bench 는 모션그래픽팩을 motion_graphics 로 그린다(02 2차) — snapshot_fields 는 팩 칸만 준다.
   효과음팩    shopping_shorts/assets/sfx_packs/packs.json(slots 7 한글 이름) + 폴더 팩NN/<slot>.wav (파일 이름 = sfx_pack.SLOTS, 같은 순서)
   배경음      shopping_shorts/assets/bgm_lib/catalog.json tracks[].id
-  짤          칼카피 길 = 로컬 팩(material_auto.MEME_*) · 회원 길 = 서버 /api/meme/prefs — render_bench 는 로컬만(server 는 거절)
+  짤          프리셋 길 = 로컬 팩(material_auto.MEME_*) · 회원 길 = 서버 /api/meme/prefs — render_bench 는 로컬만(server 는 거절)
 
 packs 칸 꼴(styles/README.md 'packs 칸' 절이 문서 주인):
   caption {pack, stand_in?, rank[], enter_cover{}, from, gap[]}
@@ -235,7 +235,7 @@ def apply_to_style(st: dict, patch_packs: dict | None = None, name: str = "?") -
         _set(st, path, copy.deepcopy(v))
     st["packs"] = P
     if P["meme"].get("pack") == "server" and _get(st, "placement.rules.meme") is not _MISSING:
-        raise PackError(f"판 {name}: meme.pack server(회원 prefs 짤)는 칼카피 길(render_bench·placement)이 못 받는다 — 지시서 12 연결 전엔 local")
+        raise PackError(f"판 {name}: meme.pack server(회원 prefs 짤)는 프리셋 길(render_bench·placement)이 못 받는다 — 지시서 12 연결 전엔 local")
     return st
 
 
@@ -493,7 +493,8 @@ def cap_distance(B: dict, key: str) -> dict:
 
 
 def cap_rank(B: dict) -> list[dict]:
-    return sorted((cap_distance(B, k) for k in caption_packs()), key=lambda r: r["d"])
+    """가까운 순 — 글꼴이 같은 팩이 먼저(cap_distance 의 '같은 항목'은 글꼴이 같아야 한다. 글꼴이 다른 팩이 크기·자리 평균으로 앞서면 같은 팩을 찾는 이 순위의 뜻이 없다, 예 만템 0.786 > 굿레터 자기 팩 0.792)."""
+    return sorted((cap_distance(B, k) for k in caption_packs()), key=lambda r: (r["terms"].get("font", 0) > 0, r["d"]))
 
 
 def font_pitch(family: str, size: float) -> float | None:
@@ -777,6 +778,10 @@ def map_all(name: str) -> tuple[dict, list[dict]]:
     P["bgm"] = {"id": Bg.get("id"), "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"}
     if "candidates" in Bg:
         P["bgm"]["candidates"] = Bg["candidates"]
+    if Bg.get("id") is not None and Bg["id"] not in bgm_ids():     # 판 전용 곡(노래형 — 릴리릴리 유메토로 등) = 회원이 고르는 배경음 목록 밖 — packs 는 id 를 안 정하고 판 bgm.id 가 그대로 쓰인다
+        del P["bgm"]["id"]
+        P["bgm"]["from"] = f"판 전용 곡 '{Bg['id']}' — 회원 배경음 목록(catalog.json) 밖이라 packs 가 정하지 않음(판 bgm.id 그대로)"
+        P["bgm"]["gap"] = [f"판 전용 곡 '{Bg['id']}' 회원이 팩에서 못 바꾼다(목록에 넣을지는 사람 결정 — 곡 사용 범위)"]
 
     # 짤
     Mm = ((st.get("placement") or {}).get("rules") or {}).get("meme")
@@ -786,9 +791,9 @@ def map_all(name: str) -> tuple[dict, list[dict]]:
             E["tone"] = Mm["tone"]
         if "pack" in Mm:
             E["dir"] = Mm["pack"]
-        E["from"] = f"벤치 짤 빈도 = placement.rules.meme.rate {Mm.get('rate')}(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 {Mm.get('tone') or '없음'}"
+        E["from"] = f"벤치 짤 빈도 = placement.rules.meme.rate {Mm.get('rate')}(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 {Mm.get('tone') or '없음'}"
     else:
-        E["from"] = "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+        E["from"] = "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
     P["meme"] = E
     return P, reqs
 

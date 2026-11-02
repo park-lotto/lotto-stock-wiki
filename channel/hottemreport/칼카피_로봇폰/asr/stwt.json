@@ -1,0 +1,56 @@
+{
+ "src": "v_stwtJyFQyKg.mp4",
+ "ss": 0.0,
+ "to": 34.3,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 8.8,
+   "text": "[birds chirping]",
+   "ko": "[새 지저귐]",
+   "abs_start": 0.0,
+   "abs_end": 8.8
+  },
+  {
+   "start": 8.8,
+   "end": 11.8,
+   "text": "Hello, dance करते phone देखा है कभी?",
+   "ko": "안녕하세요, 춤추는 핸드폰 본 적 있으세요?",
+   "abs_start": 8.8,
+   "abs_end": 11.8
+  },
+  {
+   "start": 14.8,
+   "end": 17.4,
+   "text": "Play music and dance.",
+   "ko": "음악을 틀고 춤을 춰.",
+   "abs_start": 14.8,
+   "abs_end": 17.4
+  },
+  {
+   "start": 17.4,
+   "end": 28.0,
+   "text": "[music]",
+   "ko": "[음악]",
+   "abs_start": 17.4,
+   "abs_end": 28.0
+  },
+  {
+   "start": 28.0,
+   "end": 29.8,
+   "text": "Okay, bye!",
+   "ko": "좋아요, 안녕!",
+   "abs_start": 28.0,
+   "abs_end": 29.8
+  },
+  {
+   "start": 29.8,
+   "end": 34.0,
+   "text": "[music]",
+   "ko": "[음악]",
+   "abs_start": 29.8,
+   "abs_end": 34.0
+  }
+ ]
+}

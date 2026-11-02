@@ -1,0 +1,904 @@
+{
+ "id": "GqSkDhM_bV0",
+ "dur": 19.156,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "VR몰입감 폼미쳤다",
+   "colors": [
+    {
+     "word": "VR몰입감 폼미쳤다",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "이거 진짜 개신박함",
+   "colors": [
+    {
+     "word": "이거 진짜 개신박함",
+     "hex": "#F2D10F"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   460,
+   1080,
+   1920
+  ],
+  "bg_hex": "#000000",
+  "caption_band": [
+   1240,
+   1350
+  ],
+  "title_y": [
+   [
+    184,
+    279
+   ],
+   [
+    320,
+    429
+   ]
+  ],
+  "split_tail": {
+   "t": [
+    16.0,
+    19.156
+   ],
+   "top": [
+    0,
+    460,
+    1080,
+    1120
+   ],
+   "bottom": [
+    0,
+    1170,
+    1080,
+    1920
+   ],
+   "caption_y": [
+    1190,
+    1380
+   ],
+   "note": "16.0 부터 위·아래 두 창(위 VR 걷기 실험실, 아래 게임 화면) 사이에 자막"
+  },
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "틀 B(위 검정 띠 + 제목 2줄 흰/노랑 기울임 + 아래 전폭 창). 자막 흰 기울인 굵은 글 검정 외곽, 낱말 강조색"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.533,
+   "speaker": "나레",
+   "text": "이거 보고 소름 돋았습니다",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1266,
+    1335
+   ],
+   "fill_hex": "#FBFAFB",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "소름",
+     "hex": "#F278C9"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "빨간 화살표",
+     "t_in": 0.0,
+     "t_out": 1.367,
+     "x": 459,
+     "y": 716,
+     "w": 167,
+     "h": 268,
+     "anim": "cut 등장 · 컷마다 자리 바뀜(0.0 x459,y716 → 0.5 x164,y942 → 1.0 x382,y1446), 사이에 깜빡 꺼짐(0.3~0.5·0.8~1.0)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파란 원통 바닥 근접(화살표가 짚음)",
+   "fit": 6,
+   "cut_at": [
+    0.933,
+    1.233
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.6,
+   "speaker": "나레",
+   "text": "아무리 뛰어도",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1350
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 바닥 위를 밟는 빨간 운동화",
+   "fit": 8,
+   "cut_at": [
+    2.533
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.6,
+   "t1": 3.533,
+   "speaker": "나레",
+   "text": "제자리인 바닥이",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1336
+   ],
+   "fill_hex": "#FEFDFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "바닥 위에 선 남성",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.533,
+   "t1": 4.6,
+   "speaker": "나레",
+   "text": "실제로 존재한다고?",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1337
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(빨간 마우스 커서 + 클릭 반짝)",
+     "t_in": 4.033,
+     "t_out": 5.167,
+     "x": 636,
+     "y": 1082,
+     "w": 130,
+     "h": 158,
+     "anim": "cut 등장 후 아래로 이동(x636→744), 5.0 클릭 반짝 — 원본 3D 영상 소속일 가능성(눈, 확정 못 함)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "제자리 걷는 남성 → 3D 원통 그림(커서)",
+   "fit": 6,
+   "cut_at": [
+    4.033
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.8,
+   "t1": 5.933,
+   "speaker": "나레",
+   "text": "수천 개의 초소형",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1261,
+    1337
+   ],
+   "fill_hex": "#FEFDFE",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "3D 원통 한 개 + 커서 클릭",
+   "fit": 8,
+   "cut_at": [
+    5.4
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.0,
+   "t1": 6.867,
+   "speaker": "나레",
+   "text": "플랫폼이 당신의",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1261,
+    1336
+   ],
+   "fill_hex": "#F4DCC8",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "플랫폼",
+     "hex": "#DDAA76"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "육각 배열·제어 화면",
+   "fit": 7,
+   "cut_at": [
+    6.467
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.933,
+   "t1": 7.8,
+   "speaker": "나레",
+   "text": "발걸음을 역으로",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1337
+   ],
+   "fill_hex": "#FEFEFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 바닥 위 발걸음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.8,
+   "t1": 8.967,
+   "speaker": "나레",
+   "text": "움직이면서 완벽하게",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1337
+   ],
+   "fill_hex": "#FDFDFE",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "3D 원통 구조 그림",
+   "fit": 7,
+   "cut_at": [
+    7.967
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.967,
+   "t1": 9.867,
+   "speaker": "나레",
+   "text": "상쇄시켜버립니다",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1336
+   ],
+   "fill_hex": "#FCFAFA",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "상쇄",
+     "hex": "#F1D51F"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 회전 그림(OVERALL SPIN)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.867,
+   "t1": 11.267,
+   "speaker": "나레",
+   "text": "마치 런닝머신이지만",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1349
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 회전 그림 → 원통 근접",
+   "fit": 6,
+   "cut_at": [
+    10.633,
+    11.033
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.267,
+   "t1": 11.9,
+   "speaker": "나레",
+   "text": "모든 방향으로",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1351
+   ],
+   "fill_hex": "#FCFDFC",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 위 신발",
+   "fit": 7,
+   "cut_at": [
+    11.633
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.9,
+   "t1": 12.567,
+   "speaker": "나레",
+   "text": "가능하다는 게",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1350
+   ],
+   "fill_hex": "#FAF9FA",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원통 위 신발 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.567,
+   "t1": 13.367,
+   "speaker": "나레",
+   "text": "말이 됩니까?",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1248,
+    1336
+   ],
+   "fill_hex": "#FEFCFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "의자에 앉아 말하는 남성",
+   "fit": 4,
+   "cut_at": [
+    12.933
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.6,
+   "t1": 14.867,
+   "speaker": "나레",
+   "text": "3평짜리 원룸에서",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1261,
+    1336
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "원형 바닥 위 걷는 사람들",
+   "fit": 6,
+   "cut_at": [
+    13.733
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.867,
+   "t1": 15.5,
+   "speaker": "나레",
+   "text": "백두산 종주를",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1336
+   ],
+   "fill_hex": "#D6FFCE",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "백두산 종주",
+     "hex": "#C4FFB8"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파란 육각 바닥 위 발",
+   "fit": 5,
+   "cut_at": [
+    15.1
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.5,
+   "t1": 16.1,
+   "speaker": "나레",
+   "text": "할 수 있는",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1337
+   ],
+   "fill_hex": "#FCFCFC",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "바닥 위 발 → 위아래 두 창(VR 걷기·게임 숲)",
+   "fit": 5,
+   "cut_at": [
+    15.933
+   ],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.1,
+   "t1": 16.967,
+   "speaker": "나레",
+   "text": "시대가 온 겁니다",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1263,
+    1351
+   ],
+   "fill_hex": "#F9FAFA",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "위 VR 걷는 사람 / 아래 게임 숲",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.967,
+   "t1": 19.067,
+   "speaker": "나레",
+   "text": "게임 덕후들\n지갑 열 준비하세요",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1200,
+    1378
+   ],
+   "fill_hex": "#F6ECEF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "게임 덕후",
+     "hex": "#F278C9"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "위 VR 걷는 사람 / 아래 게임 숲",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(기울인 굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0px(눈)",
+   "line_gap_px": "약 10px(2줄, 눈)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "이 편 유일한 2줄 자막(CTA 성격의 마무리)"
+  }
+ ],
+ "no_caption": [
+  [
+   1.533,
+   1.8
+  ],
+  [
+   4.6,
+   4.8
+  ],
+  [
+   5.933,
+   6.0
+  ],
+  [
+   6.867,
+   6.933
+  ],
+  [
+   13.367,
+   13.6
+  ],
+  [
+   19.067,
+   19.156
+  ]
+ ],
+ "beats": "훅(0~1.53 '이거 보고 소름 돋았습니다', 분홍 강조 + 빨간 화살표) → 질문(1.8~4.6 '아무리 뛰어도 제자리인 바닥이 실제로 존재한다고?') → 공개(4.8~6.87 '수천 개의 초소형 플랫폼이', 커서 클릭) → 원리(6.93~12.57 '발걸음을 역으로…상쇄시켜버립니다…모든 방향으로') → 질문(12.57~13.37 '말이 됩니까?') → 고조(13.6~16.1 '3평짜리 원룸에서 백두산 종주를') → 끝(16.1~19.07 '시대가 온 겁니다 / 게임 덕후들 지갑 열 준비하세요', 위아래 두 창)",
+ "narr_share": "나레 줄 18/18, 나레 18.2초/19.156초",
+ "notes": [
+  "낱말 강조 5줄/18줄 — 색이 줄마다 다름(분홍 #F278C9 2·주황 #DDAA76 1·노랑 #F1D51F 1·연두 #C4FFB8 1). 강조 = 핵심 명사(소름·플랫폼·상쇄·백두산 종주·게임 덕후).",
+  "나레 1명 존댓말 설명조(스피치매틱스 44단어가 자막과 맞음). 등장 효과 0 — 30fps 띠(en.jpg) 첫 프레임부터 완성.",
+  "16.0 부터 위아래 두 창 레이아웃으로 바뀜(제목 띠 유지).",
+  "자막 교체 18번 중 원본 컷과 같은 프레임(±0.07) 2(2.6·4.033 근처) — 컷 14개."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "파란 원통 수천 개(초소형 플랫폼) 근접 위 빨간 화살표 + 제목 2줄 + 첫 자막(강조 '소름' 분홍)",
+  "face_frac": 0.0,
+  "text": "VR몰입감 폼미쳤다 / 이거 진짜 개신박함 / 이거 보고 소름 돋았습니다"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "상시 고정 2줄",
+ "sound_detail": "한국어 존댓말 나레 1명(judge·스피치매틱스) + 배경음 신호는 bgm_fp 표"
+}

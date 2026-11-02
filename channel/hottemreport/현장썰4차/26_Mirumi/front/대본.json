@@ -1,0 +1,36 @@
+{
+ "topic": "미루미(Mirumi) 가방 참 로봇(일본 Yukai Engineering — 소리·손길에 고개를 돌리는 털뭉치) — 처음 꺼내 보는 grav3yardgirl 'look at its little face. Oh my God, it's so cute'·'I love this little guy. Oh my God' + 공식 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "y2JFXIjCHrM",
+ "bench_note": "벤치 '가방에 사는 일본 AI 로봇의 정체'(4.3만, 핫템리포트 44위, 설명란 '#미루미 #Mirumi … CES 2025') — 컷 모음. 원음형 = 유튜브 grav3yardgirl 'MIRUMI- Does This Thing Really Work?!' aUAz08jM2i8(4.7만, 1920x1080, 자동 더빙 20개 — 원어 트랙 140-20 en-US original 로 받음) 100~420초 사본(전체본 삭제). 화면 보조 = 공식 영상 Yukai Engineering 'Mirumi official video' PEtshGcvtRk(1920x1080, 말 없음). 벤치 'AI 로봇'은 쓰지 않음(미루미는 AI 가 아니라 소리·손길 센서 — LunatheMoflin Mfng7xpbBqw 'doesn't use AI. It uses sound and touch sensors')",
+ "sources": {
+  "gv": {"file": "gv.mp4", "who": "유튜브 grav3yardgirl aUAz08jM2i8 100~420초 사본(원어 140-20). 226~258초 오른쪽 덧그림(가방 사진)·284초 뒤 남의 상표 가방 구간은 안 씀", "views": 46726, "dur": 320.0, "res": "1920x1080"},
+  "yk": {"file": "yk.mp4", "who": "유튜브 Yukai Engineering PEtshGcvtRk 공식 영상(말 없음) — 0.5~1.5초 'mirumi' 글자 화면·17~19초 캠코더 화면 글자는 안 씀", "views": 66616, "dur": 30.1, "res": "1920x1080"}
+ },
+ "titles": {"hook": "가방에 사는\n털뭉치 로봇"},
+ "facts": {
+  "f1": {"text": "grav3yardgirl 원본(사본 스피치매틱스) 46.44~49.96 'it is supposed to be clipped to a handbag or backpack' · 공식 영상 화면(가방에 매달린 미루미) · 쿠팡 9626134724 '미루미 로봇 … 가방 키링 참 … 유카이'", "kind": "리뷰·공식·판매처"},
+  "f2": {"text": "같은 원본 50.16~61.36 'mimic the curious, shy behaviors of a baby or a pet. It responds to touch, movement, and sound by tilting its head, looking around or hiding shyly' · Yanko Design 2025-01-06 'It turns its head with delightful curiosity … Designed to embody the wide-eyed wonder of an infant'", "kind": "리뷰·기사"},
+  "f3": {"text": "같은 원본 31.88~35.36 'look at its little face. Oh my God, it's so cute.'", "kind": "본인 말"},
+  "f4": {"text": "같은 원본 112.32~115.88 'I love this little guy. Oh my God.'", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(물건+~있는데요)", "text": "가방에 매달려 사는, 털뭉치 로봇이 있는데요.", "caps": ["가방에 매달려 사는", "털뭉치 로봇이", "있는데요"], "facts": ["f1"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "근데 이게 소리나 손길에 반응해서, 아기처럼 슬쩍 쳐다본다는데요.", "caps": ["근데 이게 소리나 손길에", "반응해서", "아기처럼 슬쩍 쳐다본다는데요"], "facts": ["f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "gv", "span": [31.86, 35.45], "en": "look at its little face. Oh my God, it's so cute.", "caps": ["얼굴 좀 봐", "어머, 너무 귀여워!"], "check": "앞 which 31.60~31.88(끝 0.02초만 걸침) · look 31.88 · cute 35.36 · 다음 So 35.52 · 원본 한 샷(20.59~44.78) 안 — 미루미 얼굴을 카메라 앞으로"},
+   {"id": "O2", "src": "gv", "span": [112.28, 115.95], "en": "I love this little guy. Oh my God.", "caps": ["이 녀석 진짜 사랑해요", "어머 세상에!"], "check": "앞 But 111.76~112.32(안 넣음) · I 112.32 · God 115.88 · 다음 So 116.04 · 원본 한 샷(44.78~193.36) 안 — 미루미를 화면 가득"}
+  ],
+  "dropped": {
+   "벤치 'AI 로봇'": "미루미는 AI 를 안 씀(소리·손길 센서) — 안 씀",
+   "이름 뜻(miru+nuigurumi)": "2차 기사·남의 리뷰뿐, 공식 출처 못 엶 — 안 씀",
+   "가격(£129 등)": "금액 금지",
+   "grav3yardgirl 가방(그래피티 명품 가방)": "남의 상표 — 그 구간 화면 안 씀"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

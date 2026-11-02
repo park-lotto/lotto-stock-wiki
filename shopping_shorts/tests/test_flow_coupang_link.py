@@ -32,7 +32,7 @@ def test_link_limit_stops_with_member_fix():
     st = _st()
     st["tries"]["product_link"] = F.LINK_MAX
     out = F.step(st, {"coupang": {"search_failed": True}}, {}, {})
-    assert out["status"] == "stop" and "파트너스" in json.dumps(out, ensure_ascii=False)
+    assert out["status"] == "stop" and "다시 시도" in out["fix"] and "주소" not in out["fix"], out     # 제작 도중 회원에게 키·주소를 요구하지 않는다(사장님 10-26)
 
 
 def test_blocked_page_title():

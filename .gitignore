@@ -214,6 +214,13 @@ out/lang_mode_check_*.json
 # 단어 강조 검사 결과물(tools/word_fx_check.py) — 영상·프레임이라 올리지 않는다
 /out/_word_fx_check/
 
+# 구글 렌즈 크롬 프로필(tools/calcopy/lens.py, 잠기면 _<pid> 사본)
+/.lens_profile*/
+
+# 쿠팡 브라우저 프로필(로그인·쿠키) — 절대 추적 금지 (10-26, 63729e22d 에 딸려 들어감)
+.coupang_profile*/
+.coupang_w3/
+
 # 대본 칼카피 엔진 — 음성 원본은 커밋하지 않는다(받아쓰기·태그·카드만)
 out/script_calcopy/*/audio/
 out/script_calcopy/*/_pull_ids.txt

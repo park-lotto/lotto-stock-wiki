@@ -1,0 +1,852 @@
+{
+ "_note": "샥탬스토리 23편 Stretchlace 재료 계획. 창 1080x1052(벤치 yeUP61IW6bM, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(FW4-8lfU-4o_audio.m4a).",
+ "sources": {
+  "FW4-8lfU-4o": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Mark Cuban Tries To Pit The Original Stretchlace's Entrepreneurs Against Robert",
+   "해상도": "1920x1080 30fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 615.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(62~65·67~69·466~476·500~504·568~572초) 안 씀 · 596초 뒤 끝 화면 안 씀 · 옷·상자 'STRETCHLACE' = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "신발끈 한 번만 묶고",
+  "line2": "평생 쑥 신는다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 123.76,
+   "audio_dur": 1.68,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    92.8,
+    94.48
+   ],
+   "ss": 92.8,
+   "dur": 1.68,
+   "t_final_est": [
+    0.0,
+    1.68
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "받침대 위 흰 끈 검정 운동화 두 짝(원본 샷 92.73~94.53, 사람 없음 · 상표 없음 — 소리 = 끈을 끼워 본 투자자 원음 'it really works.' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    201.15,
+    202.974
+   ],
+   "ss": 201.15,
+   "dur": 1.824,
+   "t_final_est": [
+    1.68,
+    3.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    43,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자가 사연을 말함(원본 샷 201.07~204.70, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    215.0,
+    216.481
+   ],
+   "ss": 215.0,
+   "dur": 1.481,
+   "t_final_est": [
+    3.5,
+    4.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    462,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "세 아들 이야기를 하는 창업자 제이미(샷 214.25~, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 36.36,
+   "audio_dur": 2.04,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    36.36,
+    38.4
+   ],
+   "ss": 36.36,
+   "dur": 2.04,
+   "t_final_est": [
+    4.99,
+    7.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    500,
+    140,
+    760,
+    740
+   ],
+   "scale": 1.422,
+   "ours": "무대 화면 속 아이들이 신발을 신는 영상(원본 샷 34.30~41.37, 화면 안쪽만 자름 — 소리 = 창업자 원음 cover, 말하는 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    47.7,
+    49.116
+   ],
+   "ss": 47.7,
+   "dur": 1.416,
+   "t_final_est": [
+    7.03,
+    8.44
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 신발끈을 쭉 늘여 보임(원본 샷 45.41~49.58, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    50.3,
+    53.053
+   ],
+   "ss": 50.3,
+   "dur": 2.753,
+   "t_final_est": [
+    8.44,
+    11.19
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "'TURN LACE UP SHOES INTO SLIP-ONS' 제품 상자들(샷 49.58~57.12 — 제품 자기 상자 글, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N3",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    71.15,
+    73.559
+   ],
+   "ss": 71.15,
+   "dur": 2.409,
+   "t_final_est": [
+    11.19,
+    13.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "부츠를 벗고 운동화에 발을 넣는 창업자 발(원본 샷 71.07~74.21, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "N3",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    74.25,
+    75.173
+   ],
+   "ss": 74.25,
+   "dur": 0.923,
+   "t_final_est": [
+    13.6,
+    14.53
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    450,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "웃으며 보는 투자자(샷 74.21~75.44, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 83.58,
+   "audio_dur": 1.0,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    75.5,
+    76.5
+   ],
+   "ss": 75.5,
+   "dur": 1.0,
+   "t_final_est": [
+    14.53,
+    15.53
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "운동화에 쑥 들어가는 발(원본 샷 75.44~77.34 — 소리 = 투자자 원음 'Too fast' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "N4",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    112.75,
+    114.18
+   ],
+   "ss": 112.75,
+   "dur": 1.43,
+   "t_final_est": [
+    15.53,
+    16.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    332,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "신발에 끈을 끼우는 투자자(원본 샷 112.65~114.38, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N4",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    114.45,
+    116.527
+   ],
+   "ss": 114.45,
+   "dur": 2.077,
+   "t_final_est": [
+    16.96,
+    19.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    247,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "신발을 신어 보는 다른 투자자(샷 114.38~116.78, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N5",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    383.85,
+    385.054
+   ],
+   "ss": 383.85,
+   "dur": 1.204,
+   "t_final_est": [
+    19.03,
+    20.24
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    413,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 투자자(원본 샷 383.78~386.59, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N5",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    397.0,
+    398.726
+   ],
+   "ss": 397.0,
+   "dur": 1.726,
+   "t_final_est": [
+    20.24,
+    21.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    440,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 다른 투자자(샷 396.80~401.23, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 339.47,
+   "audio_dur": 1.7,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    339.47,
+    341.17
+   ],
+   "ss": 339.47,
+   "dur": 1.7,
+   "t_final_est": [
+    21.96,
+    23.66
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 넓은 화면 — 말하는 본인이 오른쪽(원본 샷 337.34~341.17)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "N6",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    391.75,
+    393.025
+   ],
+   "ss": 391.75,
+   "dur": 1.275,
+   "t_final_est": [
+    23.66,
+    24.94
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    807,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "고개 숙인 창업자 제이미 근접(원본 샷 391.66~394.59, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "N6",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    414.55,
+    416.127
+   ],
+   "ss": 414.55,
+   "dur": 1.577,
+   "t_final_est": [
+    24.94,
+    26.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    384,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말을 꺼내는 로버트(샷 414.45~418.05, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "O5",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 442.71,
+   "audio_dur": 0.8,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    442.71,
+    443.51
+   ],
+   "ss": 442.71,
+   "dur": 0.8,
+   "t_final_est": [
+    26.52,
+    27.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "제안하는 로버트(원본 샷 442.61~443.51, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "O6",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 445.41,
+   "audio_dur": 0.78,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    445.41,
+    446.19
+   ],
+   "ss": 445.41,
+   "dur": 0.78,
+   "t_final_est": [
+    27.32,
+    28.1
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    795,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "놀라 묻는 투자자(원본 샷 445.41~446.25, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O7",
+   "kind": "원음",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": false,
+   "audio_src": "FW4-8lfU-4o_audio.m4a",
+   "audio_ss": 576.55,
+   "audio_dur": 1.14,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    575.86,
+    577.0
+   ],
+   "ss": 575.86,
+   "dur": 1.14,
+   "t_final_est": [
+    28.1,
+    29.24
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    626,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 팔 들고 기뻐하는 로버트(원본 샷 575.84~577.01 — 소리 = 다른 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "N7",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    587.0,
+    588.788
+   ],
+   "ss": 587.0,
+   "dur": 1.788,
+   "t_final_est": [
+    29.24,
+    31.02
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "손잡고 무대 뒤로 걸어 나오는 두 창업자(원본 샷 586.05~, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "N7",
+   "kind": "나레",
+   "src": "FW4-8lfU-4o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=FW4-8lfU-4o",
+   "src_orig_span": [
+    590.1,
+    592.067
+   ],
+   "ss": 590.1,
+   "dur": 1.967,
+   "t_final_est": [
+    31.02,
+    32.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "복도를 걸어 나오는 두 창업자(같은 샷, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/23편_Stretchlace/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    423,
+    755,
+    949,
+    1174
+   ],
+   "target_what": "오른쪽 운동화의 흰 끈 — 93.6초 원본 프레임 눈 측정(창 크롭 [546,0,1108,1080] 안 x 434~974·y 330~760, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    686,
+    964
+   ],
+   "size": 749,
+   "face_clear": true,
+   "target_box": [
+    423,
+    755,
+    949,
+    1174
+   ],
+   "target_path": [
+    [
+     0.0,
+     423.0,
+     755.0,
+     949.0,
+     1174.0
+    ],
+    [
+     0.067,
+     423.7,
+     755.3,
+     949.7,
+     1174.3
+    ],
+    [
+     0.133,
+     422.0,
+     753.7,
+     955.0,
+     1178.3
+    ],
+    [
+     0.2,
+     420.3,
+     752.0,
+     960.3,
+     1182.3
+    ],
+    [
+     0.267,
+     419.3,
+     750.0,
+     966.3,
+     1186.0
+    ],
+    [
+     0.333,
+     420.7,
+     750.3,
+     967.7,
+     1186.3
+    ],
+    [
+     0.4,
+     422.0,
+     751.0,
+     969.0,
+     1187.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     686,
+     964
+    ],
+    [
+     0.067,
+     687,
+     965
+    ],
+    [
+     0.133,
+     688,
+     966
+    ],
+    [
+     0.2,
+     690,
+     967
+    ],
+    [
+     0.267,
+     693,
+     968
+    ],
+    [
+     0.333,
+     694,
+     968
+    ],
+    [
+     0.4,
+     696,
+     969
+    ]
+   ],
+   "track_conf": 0.933,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.933 · 원 749px = 물건 반대각선 350×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5 '3초 만에'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 10.0 '고무줄 운동화끈'"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 6.0 '신발을 갈아신는 남자'"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 24.0 '오 마이 갓'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 41.0 '결국 모두 거래를 거절'"
+  },
+  {
+   "line": "O7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "성사"
+  }
+ ]
+}

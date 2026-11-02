@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 02:40:26",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\19_wad_free_1028_0240.mp4",
+  "md5": "af4a2f02a56bcd111393cd067f581d30",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\19편_WadFree\\work\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]

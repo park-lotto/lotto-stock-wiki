@@ -1,0 +1,169 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 419,
+   "w": 1080,
+   "h": 1082,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 213,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 97.8,
+   "line_h": 101,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     253,
+     137,
+     203
+    ]
+   ],
+   "line_scale": [
+    0.967,
+    1.034
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -2.9,
+   "enter": null,
+   "text": "\"두달 지나도 싱싱해요\"\n한고은 채소보관법"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1258,
+   "lines": 1,
+   "font": "CcKirangHaerang",
+   "size": 92.3,
+   "line_h": 106,
+   "rgb": [
+    252,
+    251,
+    231
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "rise",
+    "ms": 300
+   },
+   "emphasis": null
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34.0,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "text": "출처 : 고은언니 한고은"
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36.0,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "itYwQVyuCcc",
+ "made_from": {
+  "tool": "ap_preset.hand",
+  "from": "itYwQVyuCcc_auto.json",
+  "notes": [
+   "출처 줄(label)·로고(brand) 층 손으로 추가 — 3초 프레임 실측 자리"
+  ]
+ }
+}

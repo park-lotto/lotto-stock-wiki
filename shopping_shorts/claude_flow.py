@@ -21,11 +21,12 @@ import uuid
 import zlib
 from pathlib import Path
 
+from shopping_shorts import claude_live as LIVE
 from shopping_shorts import claude_portal as CP
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
-    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT)"""
+    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -47,6 +48,28 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
+        if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
+            c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
+
+
+def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
+    """앱 판별 막힘 수 — 새 판 = version 으로 since_new 뒤 시작한 편, 옛 판 = 그 밖의 판(칸 없던 옛 행 포함) since_old 뒤.
+    끝난 편(stop·done)만 센다. 진행 중이거나 버려진 편은 분모에 안 넣는다. 판정은 claude_portal.rollout_bad."""
+    _ensure(store)
+    with CP._tx(store) as c:
+        rows = CP._rows(c, "SELECT COALESCE(engine,'') engine, status, created FROM claude_flow_runs "
+                           "WHERE status IN ('stop','done') AND created>=?", (min(since_new, since_old),))
+    out = {"new_stop": 0, "new_n": 0, "old_stop": 0, "old_n": 0}
+    for r in rows:
+        if r["engine"] == version:
+            side = "new" if r["created"] >= since_new else None
+        else:
+            side = "old" if r["created"] >= since_old else None
+        if side:
+            out[side + "_n"] += 1
+            out[side + "_stop"] += r["status"] == "stop"
+    return out
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -117,6 +140,20 @@ def _pool_kw(fn, **kw) -> dict:
     return {k: v for k, v in kw.items() if k in names}
 
 
+def knowhow(ctx: dict, body: dict, store=None) -> dict:
+    """막혔을 때 노하우 — 상황 글·단계에 맞는 막힘표·가이드·경험. 판단 주인 = flow.knowhow."""
+    store = CP._store(store)
+    _ensure(store)
+    cid, _, _ = CP._front(store, ctx, "knowhow")
+    body = body if isinstance(body, dict) else {}
+    tier = CP.member_tier(store, cid)
+    if str(body.get("topic") or "") == "benchmark":      # 채널 벤치마킹 노하우 = 고급 이상(사장님 11-02) — 나머지 노하우는 전 반 같다
+        if tier == "basic":
+            return {"ok": True, "locked": True, "say": "채널 벤치마킹은 고급반에서 제공돼요", "tier": tier}
+        return {"ok": True, "tier": tier, "guide": _flow().benchmark_guide()}
+    return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -169,8 +206,8 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             st["auto_source"] = auto
             st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
-            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
-                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
     else:
         st, seq = _open(body.get("payload"))
         sid = str(st.get("sid") or "")
@@ -180,13 +217,20 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
-    user = {"approve": kind == "approve", "retry": kind == "retry", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
-    res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
+    try:
+        res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    except CP.PortalError:
+        raise
+    except Exception as e:      # noqa: BLE001 — 그대로 터뜨린다. 회원은 서버 오류만 보니 사건으로 남긴다(판단 = claude_live)
+        LIVE.flow_crash(store, cid, sid, e)
+        raise
     st2 = res.pop("state")
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",
                   (seq2, st2.get("phase"), res.get("status"), CP._now(), json.dumps(_summary(st2), ensure_ascii=False), sid))
+    LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
     return res

@@ -1,0 +1,452 @@
+{
+ "topic": "체스넛 무브(Chessnut Move) 로봇 체스판 — 처음 '보드 초기화'를 누르자 말들이 혼자 제자리로 가는 걸 보고 The Curious Object 'They're so cute. They're adorable. … They're just getting in line right now.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "ZENBe5VXh4A",
+ "bench_note": "벤치 '체스 몰라도 무조건 탐나는 체스판'(8,000, 핫템리포트 10-27 목록 117편 조회수 96위, 설명란 '체스를 몰라도 눈길이 갈 수밖에 없는 이유는 말이 혼자 움직이기 때문 … #chessnut') — 화면 속 제품 = 체스넛 무브. 원음형 = 유튜브 The Curious Object 'Robotic Chess Set review! Unboxing Chessnut's self moving AI board of the future.' eGfv2fRNTb8(소리 트랙 1개 en 140 — 자동 더빙 없음) 전체.",
+ "sources": {
+  "co": {
+   "file": "co.mp4",
+   "who": "유튜브 The Curious Object eGfv2fRNTb8 전체(137+140, 24fps) — 110~120 말들이 줄 서는 걸 보고 놀라는 진행자(얼굴)와 체스판 · 163~170 위에서 찍은 판(말이 움직임, 사람 없음) · 40~49 말 밑을 보여 주는 손 · 234~245 판 근접(말이 움직임)",
+   "views": 2025,
+   "dur": 415.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "말이 혼자\n움직이는 체스판"
+ },
+ "facts": {
+  "f1": {
+   "text": "The Curious Object 원본(스피치매틱스) 36.4~39.3 'the pieces here move on their own just like in Harry Potter' · 97.4 'reset board' 뒤 103.8~117.5 말들이 혼자 제자리로 감 · 쿠팡 9771196745 'Chessnut Move 로봇 체스보드 자동 피스 이동 음성 제어 비디오 통합'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "The Curious Object 원본 39.3~47.3 'Each one of these pieces have a special sensor on them as well as little wheels that can move the pieces automatically' · Chess-U-See NRWDQoCn1Oo 152.2~157.6 'all of the pieces are little robots each one has wheels inside of them' · 체스넛 공식 블로그 리뷰 글(chessnutech.com/blogs/news/chessnut-move-robotic-chessboard-review, 검색 요약) 'Each chess piece is equipped with its own motor, wheels, and battery … without any mechanical arm beneath the board' · 원본 40.37~48.72 화면(말 밑을 보여 주는 손)",
+   "kind": "리뷰·공식"
+  },
+  "f3": {
+   "text": "The Curious Object 원본 110.54~117.46 'They're so cute. They're adorable. Oh my gosh, they're sentient. They're just getting in line right now.' · 164.96~170.00 'Look at them go. Look at the little soldiers. Oh my goodness.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "체스 말이 혼자서 알아서 움직이는 체스판이 있는데요 알고 보니 말 하나하나에 작은 바퀴가 달려 있는 거라네요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "co",
+    "span": [
+     110.45,
+     117.55
+    ],
+    "en": "They're so cute. They're adorable. Oh my gosh, they're sentient. They're just getting in line right now.",
+    "caps": [
+     "너무 귀엽고 너무 사랑스러워요",
+     "세상에, 얘네 진짜 살아 있나 봐요",
+     "알아서 줄 서는 중이에요!"
+    ],
+    "check": "스피치매틱스: They're 110.54 · cute 111.10~111.74 · adorable 112.46~112.94 · Oh my gosh 112.98~113.74 · sentient 114.66~115.30 · They're 115.78 · now 117.10~117.46 · 한 샷 110.03~119.87(진행자 얼굴 + 체스판, 말들이 줄 섬) · 자막 칸은 말소리 구간(−38dB 한 덩어리 3.06~10.16) 글자 수 비례라 글 수 13:13:10 으로 말 차례(adorable 끝 112.94 → 5.62 · They're just 115.78 → 8.39)에 맞춤"
+   },
+   {
+    "id": "O2",
+    "src": "cz",
+    "span": [
+     0.85,
+     6.1
+    ],
+    "en": "Look at them go. Look at the little soldiers. Oh my goodness.",
+    "caps": [
+     "저것 봐",
+     "꼬마 병정들 좀 봐요",
+     "세상에!"
+    ],
+    "check": "사본 co_z 시각(원래 −164.0): 스피치매틱스: Look 164.96 · go 165.48~165.60 · Look 165.64 · soldiers 166.36~167.08 · Oh 169.16 · goodness 169.56~170.00 · 한 샷 163.29~170.42(위에서 찍은 판, 말들이 움직임 — 사람 없음) · 자막 칸 글 수 3:8:3(말소리 구간 세 조각 13.64~15.88·16.04~16.79·17.87~18.69 — 'Oh my goodness' 가 셋째 조각 첫머리에 뜨게)"
+   }
+  ],
+  "dropped": {
+   "가격(원본 '$799')": "금액 금지",
+   "AI·체스 엔진 말": "앞에선 안 씀(뒤 B4 온라인 대국만)",
+   "벤치 '사람이 실수하면 봐주는 법이 없다'": "1차 출처 없음 — 안 씀"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "체스 말이",
+   "kind": "나레"
+  },
+  {
+   "t0": 0.481,
+   "text": "혼자서 알아서 움직이는",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.85,
+   "text": "체스판이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.063,
+   "text": "너무 귀엽고 너무 사랑스러워요",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.627,
+   "text": "세상에, 얘네 진짜 살아 있나 봐요",
+   "kind": "원음"
+  },
+  {
+   "t0": 8.191,
+   "text": "알아서 줄 서는 중이에요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.413,
+   "text": "알고 보니 말 하나하나에",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.706,
+   "text": "작은 바퀴가",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.352,
+   "text": "달려 있는 거라네요",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.636,
+   "text": "저것 봐",
+   "kind": "원음"
+  },
+  {
+   "t0": 14.454,
+   "text": "꼬마 병정들 좀 봐요",
+   "kind": "원음"
+  },
+  {
+   "t0": 17.874,
+   "text": "세상에!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "체스 말이",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 0.481,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "혼자서 알아서 움직이는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.481,
+   "dur": 1.369,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "체스판이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.85,
+   "dur": 1.213,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "너무 귀엽고 너무 사랑스러워요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.063,
+   "dur": 2.564,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "세상에, 얘네 진짜 살아 있나 봐요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.627,
+   "dur": 2.564,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "알아서 줄 서는 중이에요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 8.191,
+   "dur": 2.222,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "알고 보니 말 하나하나에",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.413,
+   "dur": 1.293,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "작은 바퀴가",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.706,
+   "dur": 0.646,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "달려 있는 거라네요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.352,
+   "dur": 1.284,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "저것 봐",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.636,
+   "dur": 0.818,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "꼬마 병정들 좀 봐요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 14.454,
+   "dur": 3.42,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "세상에!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 17.874,
+   "dur": 1.262,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.063,
+    10.163
+   ],
+   [
+    13.636,
+    18.886
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 2.813
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.063,
+    "a1": 10.163,
+    "audio_ss": 110.45,
+    "src": "co"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 10.413,
+    "n1": 13.386
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 13.636,
+    "a1": 18.886,
+    "audio_ss": 0.85,
+    "src": "cz"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "co",
+    "ss": 236.0,
+    "vs": 0.0,
+    "src_crop": [
+     530,
+     0,
+     857,
+     1080
+    ],
+    "why": "co 234.40~245.08 한 샷 — 판 근접, 말이 혼자 움직임(사람 없음)",
+    "ve": 3.033,
+    "src_end": 239.033
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "co",
+    "ss": 110.42,
+    "vs": 3.033,
+    "src_crop": [
+     520,
+     0,
+     857,
+     1080
+    ],
+    "why": "co 110.03~119.87 한 샷 — 말들이 줄 서는 판과 놀라는 진행자",
+    "ve": 10.413,
+    "src_end": 117.8
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "co",
+    "ss": 43.0,
+    "vs": 10.413,
+    "src_crop": [
+     500,
+     0,
+     857,
+     1080
+    ],
+    "why": "co 40.37~48.72 한 샷 — 말을 뒤집어 밑(바퀴)을 보여 주는 손, 얼굴 없음",
+    "ve": 13.606,
+    "src_end": 46.193
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "cz",
+    "ss": 0.82,
+    "vs": 13.606,
+    "src_crop": [
+     540,
+     0,
+     857,
+     1080
+    ],
+    "why": "co 163.29~170.42 한 샷(위에서 찍은 판, 말들이 움직임 — 사람 없음)의 164.0~170.4 를 1.15배 천천히 다가가는 사본 co_z.mp4(zoomclip_av 수리판, cx·cy 0.5, 원음 그대로) — 1차 완성본에서 말이 멈춘 뒤 판 정지 17.03~18.87 freezedetect 0.9초×2 대응 · 사본 시각 = 원래 −164.0",
+    "ve": 19.136,
+    "src_end": 6.35
+   }
+  ],
+  "dur": 19.136,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\34_ChessnutMove\\front\\render\\narr_N1.wav",
+    "dur": 2.813,
+    "tempo": 0.818,
+    "chars": 22,
+    "speech": 2.813,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      0.546
+     ],
+     [
+      0.712,
+      2.813
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\34_ChessnutMove\\front\\render\\narr_N2.wav",
+    "dur": 2.973,
+    "tempo": 0.81,
+    "chars": 23,
+    "speech": 2.973,
+    "cps": 7.74,
+    "segs": [
+     [
+      0.0,
+      2.973
+     ]
+    ]
+   }
+  ]
+ }
+}

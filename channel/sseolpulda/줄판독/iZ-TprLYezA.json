@@ -1,0 +1,412 @@
+{
+ "id": "iZ-TprLYezA",
+ "dur": 14.134,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "요즘 커플링 수준ㄷㄷ",
+   "colors": [
+    {
+     "word": "요즘 커플링 수준ㄷㄷ",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "1위는 반칙임",
+   "colors": [
+    {
+     "word": "1위는 반칙임",
+     "hex": "#E90053"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   370,
+   1080,
+   1800
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1301,
+   1371
+  ],
+  "title_y": [
+   [
+    175,
+    255
+   ],
+   [
+    278,
+    353
+   ]
+  ],
+  "top_band": {
+   "y": [
+    427,
+    497
+   ],
+   "box_hex": "#000000",
+   "ink_hex": "#FFFFFF",
+   "radius": "둥근 알약(눈)",
+   "note": "창 윗머리 검정 알약 상자 — 메달 이모지 + 'N위 | 제품 한 줄' 순위 표지"
+  },
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    925,
+    15,
+    1065,
+    65
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "full_screen_tail": [
+   12.633,
+   14.134
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "틀 A'(흰 바탕+제목 2줄 검정/빨강+창) + 창 위 순위 알약 + 창 아래 흰 둥근 상자 본 자막. 12.633~끝은 틀 없이 마지막 샷만 전체화면"
+ },
+ "lines": [
+  {
+   "t0": 0.2,
+   "t1": 5.733,
+   "speaker": "불명",
+   "text": "따로 보면 두 개지만 합치면 하나의 디자인이 완성됨",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 둥근 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1360
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손가락에 든 반지 두 개를 맞대 하나로 끼움",
+   "fit": 9,
+   "cut_at": [
+    0.967,
+    2.133,
+    3.767,
+    4.6,
+    4.7
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "black",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말 없음(자막만) — 소리는 피아노 배경음(스펙트럼). 0.167 검정 1프레임 전환 뒤 등장",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 15px",
+    "radius": "약 15px 둥근 모서리(눈)"
+   }
+  },
+  {
+   "t0": 5.733,
+   "t1": 10.267,
+   "speaker": "불명",
+   "text": "두 개를 맞추는 순간 끊어진 산맥이 하나로 이어짐",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 둥근 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1313,
+    1359
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 9.28,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +55.5dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "산맥 무늬 반지 두 개를 맞춤",
+   "fit": 9,
+   "cut_at": [
+    6.833
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 15px",
+    "radius": "약 15px 둥근 모서리(눈)"
+   }
+  },
+  {
+   "t0": 10.267,
+   "t1": 12.633,
+   "speaker": "불명",
+   "text": "빛을 비추자 숨겨진 I ❤ YOU가 나타남",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 둥근 상자 검정 글, ❤ 이모지 낀 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1360
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "반지에 빛을 비추자 벽에 I ♥ YOU 빛글씨",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 15px",
+    "radius": "약 15px 둥근 모서리(눈)"
+   }
+  },
+  {
+   "t0": 0.2,
+   "t1": 5.733,
+   "speaker": "불명",
+   "text": "🥉 3위 | 두 개가 하나가 되는 인터로킹 링",
+   "layer": "채널(위 순위 알약)",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 알약 순위 표지)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    439,
+    482
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [
+    {
+     "word": "3위",
+     "hex": "#16FFEC"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "반지 두 개",
+   "fit": 9,
+   "cut_at": [
+    0.967,
+    2.133,
+    3.767,
+    4.6,
+    4.7
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "black",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "메달 이모지(동)는 글자 일부 — 스티커로 세지 않음",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 18px",
+    "radius": "알약(높이 절반, 눈)"
+   }
+  },
+  {
+   "t0": 5.733,
+   "t1": 10.267,
+   "speaker": "불명",
+   "text": "🥈 2위 | 산맥이 이어지는 인터로킹 커플링",
+   "layer": "채널(위 순위 알약)",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 알약 순위 표지)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    439,
+    482
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "산맥 무늬 반지",
+   "fit": 9,
+   "cut_at": [
+    6.833
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "'2위' 는 흰색(3위만 청록 강조 — 일관 안 됨, colk 실측 채도 픽셀 0)",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 18px",
+    "radius": "알약(높이 절반, 눈)"
+   }
+  },
+  {
+   "t0": 10.267,
+   "t1": 12.633,
+   "speaker": "불명",
+   "text": "🥇 1위 | 빛으로 고백하는 반지",
+   "layer": "채널(위 순위 알약)",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 알약 순위 표지)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    439,
+    482
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "반지와 빛글씨",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 18px",
+    "radius": "알약(높이 절반, 눈)"
+   }
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.2
+  ],
+  [
+   12.633,
+   14.134
+  ]
+ ],
+ "beats": "훅(0~0.17 1위 미리보기 'I ♥ YOU' + 제목 '1위는 반칙임', 자막 없음) → 검정 1프레임 → 3위(0.2~5.73) → 2위(5.73~10.27) → 1위 공개(10.27~12.63 '빛을 비추자 숨겨진 I ❤ YOU가 나타남') → 끝(12.63~14.13 틀 없이 전체화면 빛글씨, 자막 없음, CTA 없음)",
+ "narr_share": "나레 줄 0/6, 나레 0초/14.134초",
+ "notes": [
+  "순위형(3→2→1) — 위 알약 = 순위 표지, 아래 상자 = 설명 한 줄. 두 층이 같은 프레임에 바뀐다(5.733·10.267, 컷과 같은 프레임).",
+  "말 없음: 스피치매틱스 한국어 단어 0 · 제미나이 받아쓰기 빈 답. 1차 judge 는 '여 TTS 나레' 라 했으나 스펙트럼(work/spec4.jpg 1행)은 음 높이가 계단처럼 이어지는 피아노 배경음 — 말소리 띠(음절 끊김) 없음 → 자막+배경음으로 판정(신호·눈, 귀 확인 아님).",
+  "끝 1.5초 틀 사라짐(ZdeZ 와 같은 장치) — 12.633 컷과 함께 제목·흰 바탕이 없어지고 마지막 샷 전체화면.",
+  "효과음 판단은 sfx_events 신호표만(귀 없음)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "1위 제품 미리보기(반지 두 개 + 벽에 비친 'I ♥ YOU' 빛글씨) 위에 제목 2줄만 — 0.167 검정 1프레임 뒤 3위부터 시작",
+  "face_frac": 0.0,
+  "text": "요즘 커플링 수준ㄷㄷ / 1위는 반칙임"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "상시 고정 2줄(끝 1.5초 제외)",
+ "sound_detail": "말 없음 · 피아노 배경음(신호)"
+}

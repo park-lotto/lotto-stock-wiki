@@ -40,7 +40,7 @@ def main(engine: str) -> int:
                 except ImportError:
                     BANNED_VOICES = {}
                 out = {"banned": sorted(BANNED_VOICES)}
-            elif op == "look":   # 꾸민 모양 검사 = 엔진 판 scene_style(칼카피 틀 customFrame 을 설명서 규칙으로 따로 검사한다 — 렌더러와 같은 판)
+            elif op == "look":   # 꾸민 모양 검사 = 엔진 판 scene_style(프리셋 틀 customFrame 을 설명서 규칙으로 따로 검사한다 — 렌더러와 같은 판)
                 from shopping_shorts import scene_style as SS
                 try:
                     out = {"snapshot": SS.validate_snapshot(req.get("snapshot"))}

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PC 세팅 점검 — 집 PC·회사 PC 어디서든 칼카피·숏템 MCP 일을 시작하기 전에 한 번(사장님 10-29 '집 PC·회사 PC 모두 동일하게').
+"""PC 세팅 점검 — 집 PC·회사 PC 어디서든 프리셋·숏템 MCP 일을 시작하기 전에 한 번(사장님 10-29 '집 PC·회사 PC 모두 동일하게').
 
   PYTHONUTF8=1 py tools/calcopy/pc_check.py            # ✓/✗ 목록 — ✗ 가 있으면 rc=1
   PYTHONUTF8=1 py tools/calcopy/pc_check.py --pull     # 트랙이 원격보다 뒤면 먼저 받는다(git pull)

@@ -1,0 +1,141 @@
+{
+ "music_bed": false,
+ "segments": [
+  {
+   "start": 150.0,
+   "end": 151.5,
+   "speaker": "S1",
+   "text": "the urban war god.",
+   "kind": "speech"
+  },
+  {
+   "start": 151.73,
+   "end": 155.49,
+   "speaker": "S1",
+   "text": "And the idea is you're using this for upper body conditioning.",
+   "kind": "speech"
+  },
+  {
+   "start": 155.7,
+   "end": 156.8,
+   "speaker": "S1",
+   "text": "And there's multiple ways you can use it.",
+   "kind": "speech"
+  },
+  {
+   "start": 156.8,
+   "end": 158.71,
+   "speaker": "S1",
+   "text": "You put your hands on these handles.",
+   "kind": "speech"
+  },
+  {
+   "start": 159.07,
+   "end": 160.59,
+   "speaker": "S1",
+   "text": "This itself weighs 8 lb.",
+   "kind": "speech"
+  },
+  {
+   "start": 160.87,
+   "end": 162.33,
+   "speaker": "S1",
+   "text": "And you literally just cycle it.",
+   "kind": "speech"
+  },
+  {
+   "start": 162.63,
+   "end": 166.48,
+   "speaker": "S1",
+   "text": "So sit here, you can go as fast as you want.",
+   "kind": "speech"
+  },
+  {
+   "start": 167.06,
+   "end": 168.52,
+   "speaker": "S1",
+   "text": "You can do it out front,",
+   "kind": "speech"
+  },
+  {
+   "start": 169.34,
+   "end": 170.35,
+   "speaker": "S1",
+   "text": "you can do it up above.",
+   "kind": "speech"
+  },
+  {
+   "start": 170.85,
+   "end": 176.54,
+   "speaker": "S1",
+   "text": "Obviously, it works different muscles like if you're here, it's a little bit easier on your shoulders, maybe some front delt.",
+   "kind": "speech"
+  },
+  {
+   "start": 176.54,
+   "end": 178.53,
+   "speaker": "S1",
+   "text": "But if you go up higher,",
+   "kind": "speech"
+  },
+  {
+   "start": 178.98,
+   "end": 184.4,
+   "speaker": "S1",
+   "text": "it's more difficult or you can go down low, and I feel like I can really get some speed going there.",
+   "kind": "speech"
+  },
+  {
+   "start": 185.15,
+   "end": 187.58,
+   "speaker": "S1",
+   "text": "And he talked about using it in interval training.",
+   "kind": "speech"
+  },
+  {
+   "start": 187.58,
+   "end": 192.84,
+   "speaker": "S1",
+   "text": "So he'd use it very similar to say you'd use an air bike where you're just going all out for a certain period of time.",
+   "kind": "speech"
+  },
+  {
+   "start": 193.14,
+   "end": 199.77,
+   "speaker": "S1",
+   "text": "Say it's like, you know, 30 seconds on, 30 seconds off, 40 seconds on, 20 seconds off or 20 seconds all out, 40 seconds off, something like that.",
+   "kind": "speech"
+  },
+  {
+   "start": 199.95,
+   "end": 201.52,
+   "speaker": "S1",
+   "text": "There is nothing, I just want to say this,",
+   "kind": "speech"
+  },
+  {
+   "start": 202.29,
+   "end": 207.06,
+   "speaker": "S1",
+   "text": "there's really nothing for a home gym that is like this.",
+   "kind": "speech"
+  },
+  {
+   "start": 207.44,
+   "end": 210.1,
+   "speaker": "S1",
+   "text": "Like there are those bike cycles that you can use with your hands.",
+   "kind": "speech"
+  },
+  {
+   "start": 210.31,
+   "end": 213.38,
+   "speaker": "S1",
+   "text": "But this is really a tool that I think"
+  }
+ ],
+ "error": false,
+ "_model": "gemini-flash-lite-latest",
+ "_src": "C:/Users/CH/AppData/Local/Temp/c0.m4a",
+ "_offset": 150.0
+}

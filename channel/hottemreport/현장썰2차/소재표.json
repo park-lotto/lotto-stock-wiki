@@ -1,0 +1,646 @@
+{
+ "_about": "숏템리폿 현장썰 2차 소재표 — 사장님 지정 생활 후보 9편(핫템리포트 벤치, 10-22). 관제 097. 숫자는 실측(yt-dlp 메타·ffprobe·무료 제미나이 받아쓰기, 버텍스 안 씀). 쿠팡은 구글 렌즈(렌즈쿠팡.py) + 서버 파트너스 API(편당 1~2 검색어, 60초 간격)만 — 쿠팡 사이트는 안 열었다.",
+ "status": "9편 조사 끝(2026-10-23 00시). 통과 1(I'M WATER) · 원음 약함 7 · 탈락 1(접이식 욕조)",
+ "rule_note": "사장님 10-22 변경: 쿠팡은 '정확한 이름 → 같은 제품 → 없으면 비슷(무엇이 같은지)'. 탈락은 비슷한 것도 없을 때만. 분류 겹침 규칙은 이번엔 뺌. 원본 소재는 C:/숏템_칼카피/hottemreport/현장썰2차_<번호>_<제품영어>/src/ (통과분만)",
+ "passed": [
+  {
+   "key": "IMWater",
+   "product": "im Water(아이엠 워터) — Franke(@frankeinvents)의 '세계 최초 입는 생수'. 라벨 'PEEL CORNER'를 뜯으면 늘어나는 끈이 돼 크로스로 멘다",
+   "name_source": "원본 0~4초 병 라벨 'im' 로고·7~9초 'PEEL CORNER' 띠, 벤치 설명란 'I'M WATER… 가수 겸 발명가 Franke', 렌즈 hits imwater.com·@imwaterx 'The worlds first wearable water'",
+   "bench": {
+    "id": "HzTJX_C12x8",
+    "views": 821950,
+    "title": "대기업도 겁낸 미국 괴짜 가수의 생수",
+    "style": "나레만 — Franke 원본 + 길거리 시연·반응 클립 몽타주"
+   },
+   "same_as_bench": "예(프레임 대조): 벤치 2~6초 남자가 병을 들고 라벨을 가리키는 장면·14~16초 사슴 머리 박제 방 장면이 원본과 같은 장면",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.tiktok.com/@frankeinvents/video/7635303314745232670",
+     "platform": "틱톡",
+     "channel": "@frankeinvents",
+     "views": 8600000,
+     "likes": 1200000,
+     "upload": "2026-05-02",
+     "duration_s": 55.7,
+     "res": "720x1280(틱톡 최고 1280 — 1080 없음)",
+     "music": "없음(music_bed false)",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰2차_01_IMWater/src/frankeinvents_7635303314745232670.mp4",
+     "asr": "channel/hottemreport/현장썰2차/asr/IMWater_7635303314745232670.json",
+     "source_audio": [
+      {
+       "t": [
+        0.0,
+        2.5
+       ],
+       "text": "This is the product that almost got me thrown in jail.",
+       "use": "★첫 원음(훅)"
+      },
+      {
+       "t": [
+        4.7,
+        9.1
+       ],
+       "text": "What about this little sticker here that says \"Peel Corner\"?"
+      },
+      {
+       "t": [
+        9.1,
+        14.6
+       ],
+       "text": "Peel corner. Whoa! Whoa! Whoa! Whoa!",
+       "use": "★감탄(라벨이 끈으로 풀림)"
+      },
+      {
+       "t": [
+        14.6,
+        22.0
+       ],
+       "text": "You are witnessing history because this is the world's first wearable water.",
+       "use": "★증거"
+      },
+      {
+       "t": [
+        22.0,
+        23.2
+       ],
+       "text": "Let's go!"
+      },
+      {
+       "t": [
+        23.2,
+        33.9
+       ],
+       "text": "It stretches to fit any sized human being ever made. No, seriously, any size.",
+       "use": "늘어남 시연"
+      },
+      {
+       "t": [
+        33.9,
+        42.5
+       ],
+       "text": "…I got two gallons on me",
+       "use": "몸에 여러 병 — 웃음 포인트"
+      },
+      {
+       "t": [
+        50.8,
+        55.2
+       ],
+       "text": "you will be hydrated!",
+       "use": "끝 원음"
+      }
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초부터 병을 카메라 앞에 들고 있음",
+     "overlay": "0~3초 위 흰 띠 'Revealing my greatest invention' + 전 구간 아래 노란 영어 자막 번인(우리 자막 띠로 덮어야 함)",
+     "crop": "9:16 그대로, 720p → 1080 출력 시 1.5배 확대"
+    }
+   ],
+   "coupang": {
+    "verdict": "비슷",
+    "items": [
+     {
+      "productId": "7218702309",
+      "name": "물병스트랩 물통 목걸이 홀더 음료수 생수 끈 걸이 6종세트",
+      "price": 11000
+     },
+     {
+      "productId": "9555984058",
+      "name": "한뜰리에 물병 보냉백 패트병 주머니 생수 스트랩 가방끈 커버",
+      "price": 6860,
+      "rocket": true
+     },
+     {
+      "productId": "9771020961",
+      "name": "아웃도어 생수병 카라비너스트랩 물병스트랩",
+      "price": 1890
+     }
+    ],
+    "queries": [
+     "im water 생수",
+     "스트랩 생수"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_IMWater.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_IMWater.json",
+    "lens_hits": [
+     "imwater.com im Water(3장)",
+     "틱톡 Water Bottle With Built In Carry Strap(3장)",
+     "쿠팡 링크 2개는 일반 생수(다른 제품)"
+    ],
+    "interest_link": "im Water 자체는 쿠팡에 없음. 비슷 = 생수병에 끼워 크로스로 메는 물병 스트랩 — '생수를 손 안 쓰고 메고 다닌다'는 이어지지만 '라벨을 뜯으면 끈'이라는 놀라움은 없다(약한 비슷)"
+   },
+   "screen_material": {
+    "count": "4+",
+    "note": "렌즈에 같은 제품 다른 사람 영상: 유튜브 쇼츠 Gj6AiR9Xvw4(4만)·L455fq1DbNg·1p6Y6Jh7cAc, 인스타 국내 소개 게시물 3개+, 틱톡 @imwaterx 공식"
+   },
+   "adapt": "0초 '감옥 갈 뻔한 생수' 훅(원음 'almost got me thrown in jail') → 라벨 뜯기 'Whoa!' 4연발 → 'world's first wearable water' → 여러 병 메고 'two gallons on me' → 쿠팡 물병 스트랩으로 '우리도 이렇게 멘다' 연결",
+   "risk": "720p·아래 노란 자막 번인·쿠팡은 비슷(라벨 끈 아님)이라 판매 연결이 약함. 벤치의 '대기업이 막았다'는 원본의 연출(가짜 대기업 장난) — 사실처럼 말하지 말 것",
+   "verdict": "통과",
+   "downloaded_mb": 10.5,
+   "no": 1,
+   "slug": "현장썰2차_01_IMWater"
+  }
+ ],
+ "weak_audio": [
+  {
+   "key": "BurnMachine",
+   "product": "번머신(Spinning Burn Rotator Machine) — 고리 두 개 손잡이를 돌리는 상체 지구력 운동기구, 약 3.7kg(8lb)/12lb. 브랜드 없는 범용 꼴(FIITY·EXURA·HOTWAVE 등 같은 꼴 여럿)",
+   "bench": {
+    "id": "KFheIZe0DGQ",
+    "views": 790701,
+    "title": "1분도 못 버티는 괴물 운동의 정체",
+    "style": "나레만 — 여러 사람 클립 몽타주(30클립 안팎)"
+   },
+   "coupang": {
+    "verdict": "같음(같은 꼴 범용품)",
+    "items": [
+     {
+      "productId": "8564541840",
+      "name": "주닉스 번머신 권투 트레이닝 완력 손목강화 헬스기구",
+      "price": 39000,
+      "rocket": true
+     }
+    ],
+    "also_lens": [
+     "8423863766 복싱 번머신(3장)",
+     "9135754495 번머신 권투 복싱 손목(2장)",
+     "7778988058 카토 번머신",
+     "9184941765 번 머신 로테이터 8-15파운드"
+    ],
+    "queries": [
+     "번머신"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_BurnMachine.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_BoxingSpinner.json",
+    "lens_hits": [
+     "쿠팡 복싱 번머신 8423863766(3장)",
+     "쿠팡 주닉스 번머신 8564541840(2장)",
+     "알리 Spinning Rotator Burn Machine(3장)",
+     "아마존 Rotator Burn Machine 12LB"
+    ],
+    "source_of_hint": "사장님 휴대폰 쿠팡 렌즈 '번머신'(10-22) + PC 구글 렌즈 + API 1위 일치",
+    "interest_link": "같은 꼴이라 '돌리기만 하는데 팔이 터진다'가 그대로 보인다. 쿠팡 이미지 눈 대조는 안 함(쿠팡 주소 안 열기)"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/watch?v=r9DDu3PEUo4",
+     "channel": "Garage Gym Reviews",
+     "views": 174833,
+     "duration_s": 470,
+     "res": "3840x2160 가로",
+     "upload": "2022-09-02",
+     "note": "리뷰 해설 위주. 감탄은 5:27~5:35 'Wow. Wow. Wow… What? Are you serious?'(손잡이 오돌토돌 발견 — 제품 흥미와 무관). 매트 프레이저 '비밀 무기' 이야기는 훅감",
+     "asr": "channel/hottemreport/현장썰2차/asr/BurnMachine_r9DDu3PEUo4_150s·210s·270s.json (2:30~5:45 받아쓰기 — 해설뿐)"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=Jh5Kab0JLO4",
+     "channel": "Taras Shelestyuk(복서)",
+     "views": 59260,
+     "duration_s": 103,
+     "res": "3840x2160 가로",
+     "note": "설명뿐, 감탄 없음"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=XnMmHOoTrlo",
+     "channel": "Buyer's Edge",
+     "views": 170720,
+     "note": "다른 제품(유압 암 트레이너) — 해당 없음"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "쿠팡 같은 꼴은 확인됐으나 원음 감탄 원본을 못 찾음 — 벤치 클립들은 틱톡·인스타 추정, 유튜브 상위는 리뷰 해설뿐(1차 MKBHD 탈락과 같은 꼴)",
+   "tried": "구글 렌즈 영상 찾기 9장(사람 장면은 운동복·연예 짤만 걸림), ytsearch 6개 검색어(burn machine·rotator·fiity 등), 웹검색 3회, 유튜브 후보 3편 자동자막 확인 · 페이블 지시로 프레임 6장 바꿔 렌즈 다시(옷·신발 쇼핑만 걸림) · 틱톡 태그 목록은 yt-dlp 가 못 읽음 · GGR 구간 받아쓰기 뒤 받은 파일 지움",
+   "downloaded_mb": 0,
+   "name_source": "벤치 2~8초 '수갑처럼 생긴'·설명란 '복서들이 상체 지구력 훈련에 쓰는 운동기구 3.7kg', 렌즈 hits 쿠팡 '번머신'·알리 'Spinning Rotator Burn Machine', 사장님 휴대폰 쿠팡 렌즈 '번머신'(10-22)"
+  },
+  {
+   "key": "UmbrellaMagnet",
+   "product": "Choito(초이토, 일본 REALIZE) 우산 자석 스트랩 — 우산 끝에 끼운 자석을 차 지붕에 붙여 양손 자유. 일본 680엔대, 누적 5만 개+(BCN 2022)",
+   "bench": {
+    "id": "2uVnjUu-RLE",
+    "views": 780221,
+    "title": "비 맞기 싫던 일본 천재의 발명품",
+    "style": "나레만 — 일본 SNS 클립 모음(엄마·아기 승차 장면 등)"
+   },
+   "coupang": {
+    "verdict": "같음",
+    "items": [
+     {
+      "productId": "9730303003",
+      "name": "Choito 초이토 차량용 우산 마그넷 홀더 자석 스트랩 액세서리",
+      "price": 23200
+     },
+     {
+      "productId": "9783647687",
+      "name": "초이토 리뉴얼 우산 고정 편리템",
+      "price": 18010
+     },
+     {
+      "productId": "9534640969",
+      "name": "[Skater] 우산 자석 스트랩(네코토)·비슷",
+      "price": 4620
+     },
+     {
+      "productId": "9518504873",
+      "name": "DECOLE KASA PITA 마그넷·비슷",
+      "price": 4620
+     }
+    ],
+    "queries": [
+     "우산 자석 스트랩",
+     "초이토 우산"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_UmbrellaMagnet.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_UmbrellaMagnet.json",
+    "lens_hits": [
+     "렌즈는 실패 — 우산꽂이·우산 일반만(쿠팡 링크 5개 모두 다른 제품)",
+     "벤치 7초 태그 글자 'Choito'로 웹검색 → REALIZE Choito 확인 → API 로 같은 이름 상품 확인"
+    ],
+    "interest_link": "같은 제품이라 '차에 톡 대면 우산이 붙는다'가 그대로 보인다"
+   },
+   "src_candidates": [
+    {
+     "note": "벤치 클립은 일본 SNS(엄마·아기 승차) — 렌즈 영상 찾기 3장 실패(옷 쇼핑 인스타만). 유튜브 'choito 傘' 상위는 일본 차량용품 소개 긴 영상(카미타케 13만 539초 등) — 사람 감탄 원음 아님"
+    },
+    {
+     "note": "렌즈 영상 찾기 2차 5장: 국내 인스타 릴스(DbHQh6FTKVH '우산고정자석')·유튜브 쇼츠 p2tLFZ-ZkM0(국내 판매 홍보) — 모두 국내 판매자 홍보, 감탄 원음 아님"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "쿠팡 같은 제품은 있으나 원음 감탄 원본을 못 찾음(1차 10-18에도 같은 이유로 탈락). 일본 원본은 음악·설명형으로 추정(확인 못 함)",
+   "tried": "구글 렌즈 제품 4장+영상 3장, 웹검색 1회, ytsearch 3개 검색어, 파트너스 API 검색어 2개",
+   "downloaded_mb": 0,
+   "name_source": "벤치 7초 손에 든 태그 글자 'Choito' → 웹검색 REALIZE Choito(BCN 2022)"
+  },
+  {
+   "key": "GTRAlarm",
+   "product": "GT-R(닛산 R35) 슈퍼카 모형 알람시계 — 알람 때 엔진 콜드스타트 소리·헤드라이트·배기구 미스트, 문·보닛·트렁크 열림, 리모컨 키. 판매 채널 CarWakee 등(브랜드 여럿)",
+   "name_source": "벤치 설명란 'R35 GT-R… 알람시계', 렌즈 hits 'GTR Creative Alarm Clock'(Nikola Toy)·'GTR Car Alarm Clock with Engine Sound & Light Mist'·CarWakee",
+   "bench": {
+    "id": "MfksaA4Pl8M",
+    "views": 237493,
+    "title": "아내한테 등짝 터진 알람의 정체",
+    "style": "나레만 — 판매자 홍보 클립 몽타주(침대 남자·부부 침대 장면 등)"
+   },
+   "coupang": {
+    "verdict": "같음",
+    "items": [
+     {
+      "productId": "9780363559",
+      "name": "GTR 슈퍼카 자동차 모형 알람시계 미스트 분사 스포츠카 다이캐스트",
+      "price": 94000
+     },
+     {
+      "productId": "9614688177",
+      "name": "슈퍼카 자동차 충전식 알람 시계(렌즈 2장)"
+     },
+     {
+      "productId": "9393807804",
+      "name": "슈퍼카 자동차 알람 사운드 시계 Hypercar(렌즈 2장)"
+     }
+    ],
+    "queries": [
+     "GTR 자동차 알람시계"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_GTRAlarm.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_GTRAlarm.json",
+    "interest_link": "같은 꼴(흰 GT-R·미스트·엔진음) — 쿠팡 이미지 눈 대조는 안 함"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/shorts/8hp2uY15vuw",
+     "channel": "CarWakee",
+     "views": 11107910,
+     "likes": 56068,
+     "duration_s": 8.1,
+     "res": "1080x1920",
+     "upload": "2026-07-28",
+     "asr": "0.0-2.8 'Let's go! Let's go! Becky! Becky!'(음악 깔림)",
+     "file": "받았다가 지움(원음 약함 — 통과분만 남긴다)",
+     "note": "벤치 27~35초 부부 침대 장면과 같은 장면. 단 코스트코 경주 장면 등 AI 생성 광고로 보임(눈 판단, 확인 못 함) · 8초로 짧음 · 번인 'CAR aholic don't walk RUN to Cotsco'"
+    },
+    {
+     "url": "https://www.tiktok.com/@nikolamodel8/video/7646059328675269918",
+     "views": 701500,
+     "duration_s": 20,
+     "note": "음악·효과음만(받아쓰기 확인, 지움)"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/bD-oRbeD5_g",
+     "views": 3975553,
+     "note": "CarWakee AI 광고, '3,2,1 Grand Prix!'+음악(지움)"
+    },
+    {
+     "url": "https://www.tiktok.com/@carwake/video/7664658437120347423",
+     "note": "'Waking up to that cold start sound' — 틱톡이 이 IP를 막아 메타 못 읽음"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "쿠팡 같은 꼴 있음. 원본은 판매자 광고(음악+짧은 외침)뿐이고 최다 조회 편은 AI 생성으로 보임 — 사람 감탄 현장 원음이 없다",
+   "tried": "구글 렌즈 제품 4장+영상 5장, CarWakee 쇼츠 37편 목록 조회, 후보 4편 받아쓰기, 파트너스 API 1번",
+   "downloaded_mb": 0
+  },
+  {
+   "key": "WalkingPad",
+   "product": "워킹패드(책상 아래 접이식 무동력·전동 걷기 러닝머신) — 브랜드 여럿인 범용 꼴. 벤치 화면에 상표는 안 읽힘(1초 시트 확인)",
+   "name_source": "벤치 설명란 '걷기운동·운동기구', 렌즈 hits 워킹패드·Walking Pad Treadmill(OLIXIS·Rythkore·Trail Vibe 등)",
+   "bench": {
+    "id": "Rpfk8Yn0Y-c",
+    "views": 313069,
+    "title": "요즘 미국에서 난리 난 운동",
+    "style": "나레만 — 사무실·집안일·먹방·강아지·부부 넷플 등 남의 클립 20여 개 몽타주"
+   },
+   "coupang": {
+    "verdict": "같은 꼴(범용)",
+    "items": [
+     {
+      "productId": "8888660787",
+      "name": "트레일바이버 워킹 패드 러닝머신 12% 오토 경사(렌즈)"
+     },
+     {
+      "productId": "9616436847",
+      "name": "멜킨스포츠 나들이온 오리진 워킹패드",
+      "price": 266000,
+      "rocket": true
+     },
+     {
+      "productId": "9333635312",
+      "name": "가란스포츠 무동력 워킹패드 OTM-1",
+      "price": 164300
+     }
+    ],
+    "queries": [
+     "워킹패드"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_WalkingPad.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_WalkingPad.json",
+    "interest_link": "같은 꼴 — '넷플 보면서·일하면서 걷는다'가 그대로 보인다"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/shorts/NT_9EcCgr7U",
+     "channel": "SimpleGhar Telugu",
+     "views": 9130360,
+     "duration_s": 75,
+     "note": "텔루구어 가족 촌극 광고(받아쓰기 확인) — 영어 감탄 아님, 음악 깔림"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/Uuw-7RAk-EE",
+     "channel": "Home Fitness Code",
+     "views": 10515570,
+     "duration_s": 24,
+     "note": "제품 광고 나레+음악 — 사람 감탄 없음"
+    },
+    {
+     "url": "https://www.tiktok.com/@kailarecommends/video/7515230029740068126",
+     "views": 27200,
+     "duration_s": 66,
+     "res": "1080x1920",
+     "note": "Trail Vibe 리뷰(렌즈가 벤치 장면에서 잡음) — 조회 약함, 받아쓰기 안 함"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=6Jcd5XV4VL8",
+     "channel": "Business Insider",
+     "views": 463285,
+     "duration_s": 122,
+     "note": "'We Tried A Treadmill Desk' — 가로·취재형(안 받아봄)"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "쿠팡 같은 꼴은 많음. 벤치가 20여 개 클립 몽타주라 단일 원본이 없고, 찾은 상위 원본은 광고 나레·텔루구어 촌극뿐",
+   "tried": "구글 렌즈 제품 4장+영상 5장, ytsearch 6개·쇼츠 필터 검색 3개, 후보 2편 오디오만 받아 받아쓰기(받은 오디오는 지움), 파트너스 API 1번",
+   "downloaded_mb": 0
+  },
+  {
+   "key": "PhotonMatrix",
+   "product": "Photon Matrix 레이저 모기 퇴치기(라이다로 모기를 찾아 펄스 레이저로 격추, 6m 범위) — photonmatrixlab.com",
+   "name_source": "벤치 설명란 'Photon Matrix', 벤치 22초 화면 워터마크 'Photon Matrix'·29~35초 'Matrix', 렌즈 hits photonmatrixlab.com",
+   "bench": {
+    "id": "xAWwAWmb2fE",
+    "views": 232466,
+    "title": "쿠팡에서 파는 모기 잡는 미사일 정체",
+    "style": "나레만 — 공식 홍보 영상·발표회 클립 몽타주"
+   },
+   "coupang": {
+    "verdict": "비슷(같은 제품인지 확인 못 함)",
+    "items": [
+     {
+      "productId": "9579462940",
+      "name": "퀴브 레이저모기퇴치기 야외 퇴치기 모기레이저",
+      "price": 94300
+     }
+    ],
+    "queries": [
+     "레이저 모기 퇴치기"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_PhotonMatrix.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_PhotonMatrix.json",
+    "lens_hits": [
+     "photonmatrixlab.com(1장)",
+     "bikmantech.com Photon Matrix 소개(1장)",
+     "쿠팡 링크 0개"
+    ],
+    "interest_link": "이름상 같은 기능(레이저로 모기 퇴치) — 쿠팡 상품 사진·라이다 유무는 쿠팡 주소를 안 열어 확인 못 함"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/watch?v=Ta0f0oB4I-Q",
+     "channel": "Photon Matrix(공식)",
+     "views": 969331,
+     "duration_s": 189,
+     "note": "홍보 나레+음악(앞 60초 받아쓰기: 'This is a genuine laser mosquito zapper…')"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=T16AAuU7MFk",
+     "channel": "Photon Matrix(공식)",
+     "views": 201618,
+     "duration_s": 42,
+     "note": "말소리 없음(받아쓰기 0줄)"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=ptni8cFKvVM",
+     "channel": "iTech-Tale",
+     "views": 137082,
+     "duration_s": 242,
+     "note": "소개 영상(안 받아봄)"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "원본이 공식 홍보(나레·음악)뿐 — 사람 감탄 현장 원음 못 찾음. 벤치가 말한 '틱톡 7천만 뷰' 원본은 못 찾음. 쿠팡은 비슷한 레이저 퇴치기 1개",
+   "tried": "구글 렌즈 4장, ytsearch 3개, 공식 2편 오디오만 받아쓰기(지움), 파트너스 API 1번",
+   "downloaded_mb": 0
+  },
+  {
+   "key": "LEDEyes",
+   "product": "차량 앞유리 LED 눈 패널(Devil Eyes / 데빌아이 — 앱으로 눈 모양 고르는 플렉시블 LED 매트릭스). 브랜드 여럿(Miootly·Gelrova·Blazexel 등)",
+   "name_source": "벤치 5~7초 남자가 앱 화면과 패널을 들고 보여 줌, 렌즈 hits 'Devil Eyes Semi Truck'·'Car Eye Lights Scrolling Led Car Sign for Devils Eye'",
+   "bench": {
+    "id": "BWCbhtMe1UY",
+    "views": 31881,
+    "title": "미국 도로에서 보이는 트랜스포머 정체",
+    "style": "나레만 — 트럭·승용차 LED 눈 클립 몽타주"
+   },
+   "coupang": {
+    "verdict": "같은 꼴",
+    "items": [
+     {
+      "productId": "8748878465",
+      "name": "눈모양 LED 조명 앞유리 대형차 트럭 램프 자동차 튜닝(렌즈)"
+     },
+     {
+      "productId": "8394285652",
+      "name": "자동차 눈모양 LED 디스플레이 대형 트럭 눈(렌즈)"
+     },
+     {
+      "productId": "8648144048",
+      "name": "자동차 눈모양 LED 대형트럭 조명(렌즈)"
+     }
+    ],
+    "queries": [
+     "차량용 LED 데빌아이 전광판(API 결과엔 눈 패널 없음 — 전광판·무드등만)"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_LEDEyes.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_LEDEyes.json",
+    "interest_link": "렌즈가 잡은 쿠팡 상품이 '앞유리 눈모양 LED'로 같은 꼴 — 이름만 봤고 쿠팡 사진은 안 열어 봄"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/watch?v=Wmi10NzBxVo",
+     "channel": "Midwest Princess",
+     "views": 90763,
+     "duration_s": 199,
+     "note": "DIY 설치 리뷰(안 받아봄)"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/_UPP4OeeewE",
+     "channel": "Miootly",
+     "views": 98934,
+     "duration_s": 13,
+     "note": "판매자 데모(안 받아봄)"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "벤치 16초 '완전 멋진데!!' 남자 원본을 렌즈 5장으로 못 찾음. 찾은 건 판매자 데모·DIY 리뷰뿐. 벤치 조회도 3만으로 가장 약함",
+   "tried": "구글 렌즈 제품 4장+영상 5장, 쇼츠 검색 3개, 파트너스 API 1번",
+   "downloaded_mb": 0
+  },
+  {
+   "key": "HeatIt",
+   "product": "heat it(히트잇, 독일 kamedi) — 휴대폰 USB-C에 꽂아 모기 물린 곳에 약 50도 열을 몇 초 대는 가려움 완화기. TIME 2025 최고의 발명품(벤치 설명란)",
+   "name_source": "벤치 설명란 '히트잇', 벤치 31~33초 상자 'heat it', 렌즈 hits heat-it.co.kr·kurly '히트잇'",
+   "bench": {
+    "id": "oMD24mfVU1w",
+    "views": 27582,
+    "title": "타임지 선정 최고의 모기 발명품",
+    "style": "나레만 — 공식 홍보·창업자 인터뷰·사용 클립 몽타주"
+   },
+   "coupang": {
+    "verdict": "같음",
+    "items": [
+     {
+      "productId": "8966058737",
+      "name": "히트잇 모기물린 가려움 솔루션 / 식약처 인증 의료기기 / 독일(렌즈 4장)"
+     },
+     {
+      "productId": "8982611191",
+      "name": "히트잇 모기물린 가려움 솔루션/의료기기(렌즈 4장)"
+     },
+     {
+      "productId": "7370743315",
+      "name": "HEAT IT 모기 가려움 완화기 안드로이드 C타입(렌즈 3장)"
+     }
+    ],
+    "queries": [
+     "히트잇 모기(API 결과엔 히트잇 없음 — 차양·패치만)"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_HeatIt.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_HeatIt.json",
+    "interest_link": "같은 제품(렌즈 4장에서 쿠팡 '히트잇' 상품이 겹침). 파트너스 API 검색에는 안 나옴 — 렌즈 근거"
+   },
+   "src_candidates": [
+    {
+     "url": "https://www.youtube.com/watch?v=erMTLJn0sL8",
+     "channel": "Outdoor Empire",
+     "views": 116549,
+     "duration_s": 697,
+     "res": "3840x2160 가로",
+     "upload": "2024-08-10",
+     "note": "리뷰+실사용 시험. 자동자막: 01:48 'gone after just one application' · 06:10 'really hot' · 06:13 'it feels very hot' · 07:09 'it burns a little' — 가벼운 반응(받아쓰기는 구간 받기 실패로 못 함)"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=rYEEHTWuano",
+     "channel": "Fieldtester",
+     "views": 2111,
+     "note": "조회 약함"
+    },
+    {
+     "url": "https://www.instagram.com/reel/DQIeE9qCbIk/",
+     "channel": "outdoorempirecom",
+     "note": "'Your phone can heal your mosquito bites 😳' 릴스 — 360x640 만 읽힘(로그인 없이), 조회 못 읽음"
+    }
+   ],
+   "verdict": "원음 약함",
+   "why": "쿠팡 같은 제품 있음. 원음은 리뷰어 가로 영상의 'it feels very hot' 정도 — 감탄 현장 원음은 못 찾음. 벤치 조회 2.8만으로 약함",
+   "tried": "구글 렌즈 제품 4장+영상 5장, ytsearch 3개, 후보 3편 메타·1편 자동자막, 파트너스 API 1번",
+   "downloaded_mb": 0
+  }
+ ],
+ "dropped": [
+  {
+   "key": "FoldingBathtub",
+   "product": "LIXIL bathtope(바스토프) — 샤워부스 벽 고리에 거는 패브릭 해먹 욕조. 리클실 욕실 시스템 일부(TBS 보도 '60만엔 욕실'), 일반 소비자 단품 판매 아님(확인: 유튜브 TBS·테레토 WBS 제목)",
+   "bench": {
+    "id": "4Z9JYCjBeH4",
+    "views": 781621,
+    "title": "일본 대기업이 해결한 욕실 난제",
+    "style": "나레만 — LIXIL 홍보 영상·설치 장면 모음"
+   },
+   "coupang": {
+    "verdict": "없음",
+    "items": [
+     {
+      "productId": "9601933206",
+      "name": "가정용 욕실 패브릭 접이식 분리 야외 해먹 천욕조(비슷)",
+      "price": 3954500
+     }
+    ],
+    "queries": [
+     "해먹 욕조",
+     "패브릭 욕조 걸이"
+    ],
+    "api_json": "channel/hottemreport/현장썰2차/쿠팡_FoldingBathtub.json",
+    "lens_json": "channel/hottemreport/현장썰2차/렌즈_2차_FoldingBathtub.json",
+    "lens_hits": [
+     "11번가 LIXIL 패브릭 욕조(3장)",
+     "threads 바스토프(Bathtope)(2장)",
+     "틱톡 국내 '해먹 욕조' 링크 장사 영상 여럿",
+     "쿠팡 링크 4개는 모두 플라스틱 접이식 욕조(다른 제품)"
+    ],
+    "interest_link": "API 의 비슷한 해먹 천욕조는 가격 3,954,500원(정상 판매 아님) — 판매 연결 불가"
+   },
+   "verdict": "탈락",
+   "why": "쿠팡에 같은 제품 없음·비슷한 것은 비정상 가격. 원본도 LIXIL 홍보·일본 뉴스(사람 감탄 원음 아님)",
+   "tried": "구글 렌즈 4장, ytsearch 3개(LIXIL 공식 C9MtYxEfspA 2.3만·TBS FROlS6m33Y0 13.9만 — 설명형), 파트너스 API 검색어 2개",
+   "downloaded_mb": 0,
+   "name_source": "벤치 20~21초 천 욕조 라벨 'bathtope', 렌즈 hits threads '바스토프(Bathtope)'·11번가 'LIXIL 패브릭 욕조'"
+  }
+ ],
+ "excluded_overlap": "10-21 다른 세션 05~10편(아이언맨 헬멧·주걱·전기자전거·구명팔찌·유리컵)과 9편은 겹치지 않음(제품 다름 — 레이저 모기 퇴치기는 1차 '가짜 잠자리'와 같은 모기 소재지만 다른 제품)",
+ "coupang_api_calls": {
+  "count": 9,
+  "times": [
+   "23:04 IMWater(검색어2)",
+   "23:06 번머신(1)",
+   "23:15 우산(2)",
+   "23:18 욕조(2)",
+   "23:20 워킹패드(1)",
+   "23:47 GTR(1)",
+   "23:49 Photon(1)",
+   "23:55 LED눈(1)",
+   "23:56 히트잇(1)"
+  ],
+  "note": "모두 ok=True, 제한·오류 없음. 호출 9번(검색어 12개)"
+ }
+}

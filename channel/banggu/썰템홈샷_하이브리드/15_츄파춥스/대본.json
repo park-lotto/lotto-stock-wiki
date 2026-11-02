@@ -1,0 +1,157 @@
+{
+ "topic": "츄파춥스 × 로고를 살바도르 달리가 그렸다 — 1958 엔릭 베르나트 '포크로 사탕 먹듯' 막대 사탕 · 첫 이름 GOL(축구 골) → 안 먹혀 CHUPS → Chupa Chups · 1969 달리가 신문지에 로고 바탕을 그림 · 1995 미르 우주정거장 러시아 우주인이 가져감(전부 Chupa Chups 영국 공식 연혁) · 뒤 체험: 쿠팡 츄파춥스 파고다캡 50개(9774031587, 같은 제품)",
+ "brand": "Chupa Chups",
+ "scene_query": "Chupa Chups Salvador Dali logo",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "cu",
+  "why": "편의점마다 꽂힌 츄파춥스 — 그 꽃 모양 로고를 화가 살바도르 달리가 그렸다(회사 공식 연혁 1969 + 디스커버리 UK·모회사 영상). 훅 장면 = 디스커버리 UK 공식: 빨간 츄파춥스 → 달리 얼굴과 로고가 한 화면 — '달리가 사탕 로고를?'"
+ },
+ "hook": [
+  "츄파춥스 꽃 로고,",
+  "달리가 그렸다?"
+ ],
+ "post": "츄파춥스 로고는 화가 살바도르 달리가 그린 것",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "cu": {
+   "text": "Chupa Chups 영국 공식 누리집 History(2026-10-28 확인): 1958 'The Great Idea' — Enric Bernat: a product that 'would be like eating a sweet with a fork' · 1960 'First name of Chupa Chups was… GOL?' — the sweet looks like a football and your open mouth is a football net · it didn't stick, changed to CHUPS · 1963 jingle → final name Chupa Chups · 1969 'Salvador Dali shaped the Chupa Chups brand' — sketched what would become the basis of the Chupa Chups logo on a piece of newspaper · 1995 'Chupa Chups visited outer space' — Russian astronauts at the MIR station brought Chupa Chups",
+   "url": "https://www.chupachups.co.uk/history"
+  },
+  "dc": {
+   "text": "Discovery UK 공식 유튜브 'What Binds Chupa-Chups Lollipops and Salvador Dalí Together?'(HV7sEjKLbHc) — 달리와 츄파춥스 로고",
+   "url": "https://www.youtube.com/watch?v=HV7sEjKLbHc"
+  },
+  "pv": {
+   "text": "Perfetti Van Melle(츄파춥스 모회사) 라이선스 공식 유튜브 'Chupa Chups History'(XOwUJxwaIkg) — 1958·달리·로고·우주",
+   "url": "https://www.youtube.com/watch?v=XOwUJxwaIkg"
+  },
+  "mo": {
+   "text": "MoMA 'The Persistence of Memory'(Salvador Dalí, 1931) — 녹아내리는 시계 그림",
+   "url": "https://www.moma.org/collection/works/79018"
+  },
+  "p1": {
+   "text": "쿠팡 9774031587 '츄파춥스 파고다캡, 50개, 11g' — 파트너스 API 2026-10-28, 상품 사진 열어 츄파춥스 꽃 로고 통·뚜껑 위 사탕 탑 확인",
+   "url": "https://www.coupang.com/vp/products/9774031587"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(달리+로고 = 질문)",
+    "seg": "A",
+    "text": "편의점마다 꽂혀 있는 츄파춥스, 그 꽃 모양 로고를 살바도르 달리가 그렸다는데",
+    "facts": [
+     "cu",
+     "dc"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history",
+     "https://www.youtube.com/watch?v=HV7sEjKLbHc"
+    ]
+   },
+   {
+    "fn": "누구?",
+    "seg": "A",
+    "text": "녹아내리는 시계 그림으로 유명한, 바로 그 콧수염 화가 맞습니다",
+    "facts": [
+     "mo"
+    ],
+    "sources": [
+     "https://www.moma.org/collection/works/79018"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "원래는 스페인 사탕 회사 사장이, 포크로 먹듯이 사탕에 막대를 꽂아 본 게 시작이고",
+    "facts": [
+     "cu",
+     "pv"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history"
+    ]
+   },
+   {
+    "fn": "덤(이름)",
+    "seg": "A",
+    "text": "이름도 두 번이나 바꾼 끝에, 지금의 츄파춥스가 됐고",
+    "facts": [
+     "cu"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history"
+    ]
+   },
+   {
+    "fn": "계기",
+    "seg": "A",
+    "text": "그러다 사장이 달리를 찾아가서, 로고를 부탁했더니",
+    "facts": [
+     "cu",
+     "dc"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history",
+     "https://www.youtube.com/watch?v=HV7sEjKLbHc"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "신문지 위에 쓱쓱 그려 준 게, 지금 그 로고의 시작이었다는 얘기",
+    "facts": [
+     "cu",
+     "pv"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history"
+    ]
+   },
+   {
+    "fn": "쐐기(우주)",
+    "seg": "A",
+    "text": "심지어 러시아 우주인들은, 우주정거장까지 이걸 챙겨 갔다고",
+    "facts": [
+     "cu",
+     "pv"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도, 쿠팡에서 츄파춥스를 한 통 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9774031587"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "비닐 끝을 살짝 비틀어 당기면, 포장이 쏙 벗겨지고",
+    "facts": [],
+    "sources": []
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "사탕 하나 살 때마다, 달리 작품까지 같이 받아 온 셈이죠",
+    "facts": [
+     "cu"
+    ],
+    "sources": [
+     "https://www.chupachups.co.uk/history"
+    ]
+   }
+  ]
+ }
+}

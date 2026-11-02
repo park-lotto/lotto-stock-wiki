@@ -1,0 +1,181 @@
+{
+ "_note": "숏템리폿 4차 15 정수기 하이브리드 — 앞 = 숏템리폿 현장썰 @sharpafedc 피클 국물 원음형 박창수판(15_WaterFilter/front), 뒤 = 쿠팡 9743941495 '닌자하이드라센스TM 지능형 정수 시스템'(같은 제품). 뒤 화면 = 같은 제품(HydraSense) 틱톡 4계정 — 컷마다 다른 사람·장면, 박힌 글자는 crop 밖. 효능(오염물질 99%·미세플라스틱)·금액은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "닌자하이드라센스TM 지능형 정수 시스템(쿠팡 9743941495) — 물통에 부으면 꼭지에서 걸러진 물이 나오는 카운터탑 정수기, 원형 터치 화면",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/15_WaterFilter/front/render/final.mp4",
+  "cut": 13.47,
+  "why": "원음 O2 'high quality H2O' 끝(앞 완성본 13.51) 직전 — 소스 컷 13.6(=앞 13.483)에서 다음 장면(제품 들어 보임)이 시작하므로 그 앞 13.47 에서 자름(0.1초 단위 프레임 확인)",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '닌자 하이드라센스'(10-27 12:11, 1회 3검색어, ok): 9743941495 '닌자하이드라센스TM 지능형 정수 시스템' — 4차/coupang_1.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_9743941495.jpg): 세로 줄무늬 남색 몸통·은색 원형 터치 화면 꼭지·왼쪽 투명 물통 — 벤치 0~9초 초록 티 남자 기계·sh·logan 기계와 같은 모양(색만 다름)",
+  "s_oz": "@sharpafedc 32.70~35.8 'You can select pre-set ounces that you'd like to pour or just hold the button down until you're done' + 화면 다이얼 16→22→24 · @carliejimenez2 11.6~14.9 화면 숫자 34→8 줄며 물이 나옴",
+  "j_base": "@joseph.maine 25.3~28.2 'the base is easily removable so you can fit your large tumbler or large pitcher' + 화면 받침 빼고 텀블러 2개",
+  "l_cold": "@loganreviewed 16.1~23.8 'Take your base add ice put your water in tap your info button and scroll to recirculate water And that's going to quickly cool down all the water in the tank' + 화면 'Recirculate water' 메뉴·얼음 든 물통",
+  "n_brand": "sharkninja.com 'Ninja® HydraSense Countertop Water Filter' · homecrux.com 'Ninja Launches Its First HydraSense Countertop Water Purifier'(렌즈 결과 제목, 4차_닌자정수기 2장) · 닌자 = 에어프라이어(Ninja Foodi·Air Fryer)로 알려진 SharkNinja 주방가전 브랜드"
+ },
+ "흥미이음": {
+  "원본흥미": "피클 국물·콜라를 물통에 부어도 꼭지에서는 맑은 물이 나와 마셔 보고 '고급 생수 같다'",
+  "뒤흥미": "쿠팡의 바로 그 제품(닌자 하이드라센스) — 같은 물통·꼭지·원형 화면, 영상마다 다른 사람이 붓고 따르고 마심",
+  "판정": "같음",
+  "근거": "같은 제품: 파트너스 API 상품명 '닌자하이드라센스TM 지능형 정수 시스템' + 대표 이미지 모양 대조(줄무늬 몸통·원형 화면 꼭지·투명 물통). 렌즈 3장 HydraSense(sharkninja·target WF1001)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/15_WaterFilter/front/frame_render.json",
+  "title": "피클 국물 부어도\n생수 나오는 정수기"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "고조",
+  "B6": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같은 정수기가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "똑같은 정수기가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "똑같은"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 에어프라이어로 유명한 미국 브랜드 닌자에서 처음 낸 정수기더라고요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "에어프라이어로 유명한",
+    "미국 브랜드 닌자에서",
+    "처음 낸 정수기더라고요"
+   ],
+   "emph": [
+    "처음"
+   ],
+   "facts": [
+    "n_brand"
+   ],
+   "point": "권위"
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 화면에서 원하는 양만 고르면 딱 그만큼만 알아서 나와요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "화면에서",
+    "원하는 양만 고르면",
+    "딱 그만큼만",
+    "알아서 나와요"
+   ],
+   "emph": [
+    "딱 그만큼만"
+   ],
+   "facts": [
+    "s_oz"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "받침을 빼면 큰 텀블러도 꼭지 밑에 바로 들어가고요.",
+   "caps": [
+    "받침을 빼면",
+    "큰 텀블러도",
+    "꼭지 밑에 바로 들어가고요"
+   ],
+   "emph": [
+    "큰 텀블러"
+   ],
+   "facts": [
+    "j_base"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 물통에 얼음 넣고 순환 버튼만 누르면, 금방 시원한 물이 돼요.",
+   "caps": [
+    "심지어",
+    "물통에 얼음 넣고",
+    "순환 버튼만 누르면",
+    "금방 시원한 물이 돼요"
+   ],
+   "emph": [
+    "시원한"
+   ],
+   "facts": [
+    "l_cold"
+   ]
+  },
+  {
+   "id": "B6",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "집에 놀러 온 친구들도, 다들 뭐든 부어 보자고 난리예요.",
+   "caps": [
+    "집에 놀러 온 친구들도",
+    "다들 뭐든",
+    "부어 보자고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}

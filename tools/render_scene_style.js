@@ -3,8 +3,10 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
 const materialize=page=>page.evaluate(()=>{
   document.querySelectorAll('.scene-decoration,.precision-text,.precision-patch,.scene-brand-ink,.cap-u').forEach(el=>{
     const animations=el.getAnimations();if(!animations.length)return;
-    const style=getComputedStyle(el),values={};
-    for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
+    const style=getComputedStyle(el),values={},keys=new Set(['transform','translate','rotate','scale','opacity','filter','clipPath']);
+    // 그 밖에 움직이는 속성(글자 번쩍 color·줄 번짐 textShadow — 관제 235)도 굳힌다 — 안 굳히면 cancel 과 함께 사라진다
+    animations.forEach(a=>{try{a.effect.getKeyframes().forEach(f=>Object.keys(f).forEach(k=>{if(!['offset','computedOffset','easing','composite'].includes(k))keys.add(k)}))}catch(e){}});
+    for(const key of keys)values[key]=style[key];
     animations.forEach(a=>a.cancel());Object.assign(el.style,values);
   });
 });
@@ -19,6 +21,10 @@ const twoFrames=page=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=
     await page.addStyleTag({content:`body *{visibility:hidden!important}#a-live-preview,#a-live-preview *{visibility:visible!important}#a-live-preview{position:fixed!important;left:0!important;top:0!important;width:1080px!important;height:1920px!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;z-index:99999!important}.precision-base,.precision-media,.scene-media-clip,.precision-badge{display:none!important}html,body{background:transparent!important}`});
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),request);
     await page.addStyleTag({content:'.scene-decoration{outline:none!important}.scene-decoration-toolbar,.precision-source-cleanup{display:none!important}'});
+    // 자막팩 글꼴(화자·줄 변형 글꼴 포함)을 먼저 받아 둔다 — 처음 쓰이는 장면에서야 받으면 그 장면은 대체 글꼴로 폭을 재 작게 맞춰진다
+    //   (관제 235 실측: 썸네일 한 장만 찍을 때 나레 글꼴 Scene1369 긴 줄이 전체 렌더보다 작게 나왔다)
+    await page.evaluate(async key=>{const pk=(window.CAPTION_PACKS||{})[key];if(!pk)return;const fams=new Set([pk.font,pk.emph?.font,...Object.values(pk.speakers||{}).map(v=>v.font),...Object.values(pk.variants||{}).map(v=>v.font)].filter(Boolean));
+      await Promise.all([...fams].map(f=>document.fonts.load(`40px "${f}"`).catch(()=>null)));},request.snapshot.captionPack||'');
     await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
     const layers=[];
     const only=Array.isArray(request.only)?new Set(request.only.map(Number)):null;   // 썸네일 핀: 한 장면만(2026-09-23)

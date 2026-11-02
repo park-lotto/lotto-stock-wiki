@@ -28,4 +28,8 @@ def search(queries: list[str]) -> dict:
         return {q: {"ok": False, "need": "chrome", "notice": "회원 파트너스 키 없음 — 크롬 검색", "items": []} for q in queries}
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from shopping_shorts import coupang_partners as cp
-    return {q: cp.search_products(q, limit=10, access_key=ak, secret_key=sk) for q in queries}
+    got = {q: cp.search_products(q, limit=10, access_key=ak, secret_key=sk) for q in queries}
+    if queries and not any((v or {}).get("ok") for v in got.values()):      # 키가 죽었거나 막혔다 — 빈손으로 끝내지 않고 크롬 길로(사장님 11-02 "키 있으면 우선")
+        print("[coupang] 키 검색 전부 실패 — 크롬 검색으로", file=sys.stderr, flush=True)
+        return {q: {"ok": False, "need": "chrome", "notice": "파트너스 키 검색 실패 — 크롬 검색", "items": []} for q in queries}
+    return got

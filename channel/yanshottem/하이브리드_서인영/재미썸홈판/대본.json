@@ -1,0 +1,269 @@
+{
+ "_note": "얜샷템 하이브리드 서인영 코코부 이중 거즈면 잠옷 — 재미썸홈판(2026-10-18). 원음(개과천선 서인영 T1LXgkOKhJ4 3조각) → F1 박창수 한마디 → 재미썸홈 t11 틀. 목소리 박창수(필재 금지). 금액 말 없음. 근거는 근거.md.",
+ "slug": "서인영거즈잠옷",
+ "title": "서인영이 집에서 매일 입는\n거즈 잠옷의 정체",
+ "source_label": "출처 : 개과천선 서인영",
+ "body_title": "서인영이 제일 많이 입는 잠옷",
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "tempo": null,
+  "note": "사장님 10-18 '필재 쓰지 마 — 박창수로 똑같이'"
+ },
+ "cps_target": 8.32,
+ "orig": [
+  {
+   "id": "P1",
+   "span": [
+    122.13,
+    127.32
+   ]
+  }
+ ],
+ "orig_caps": [
+  [
+   122.13,
+   "이게 약간"
+  ],
+  [
+   123.65,
+   "아기들 거즈면 재질이거든"
+  ],
+  [
+   125.33,
+   "그래서 나는 이거"
+  ],
+  [
+   126.0,
+   "피부에 닿는 거"
+  ],
+  [
+   126.63,
+   "중요시 여긴다 그랬잖아"
+  ]
+ ],
+ "lines": [
+  {
+   "slot": "f1",
+   "text": "신상녀 서인영이 집에서 제일 많이 입는다는 잠옷의 정체.",
+   "tts": "신상녀 방송인 서인영 씨가 집에서 제일 많이 입는다는 잠옷의 정체.",
+   "facts": [
+    "f1",
+    "f2"
+   ],
+   "point": "잉",
+   "answer_at": 2
+  },
+  {
+   "slot": "bait",
+   "text": "아기들 거즈면 재질이라는 그 잠옷, 나도 바로 따라 사 봤는데,",
+   "tts": "아기들 거즈면 재질이라는 그 잠옷, 나도 바로 따라 사 봤는데,",
+   "facts": [
+    "f2"
+   ],
+   "point": "잉",
+   "answer_at": 2
+  },
+  {
+   "slot": "reveal",
+   "text": "이건 바로 코코부 순면 이중 거즈 잠옷.",
+   "tts": "이건 바로 코코부 순면 이중 거즈 잠옷.",
+   "facts": [
+    "f3"
+   ]
+  },
+  {
+   "slot": "limit",
+   "text": "이게 말도 안 되는 게 얇은 거즈 두 겹이라 갓 빤 아기 손수건처럼 보들보들하다는 거.",
+   "tts": "이게 말도 안 되는 게 얇은 거즈 두 겹이라 갓 빤 아기 손수건처럼 보들보들하다는 거.",
+   "facts": [
+    "f3",
+    "f4"
+   ],
+   "point": "와우"
+  },
+  {
+   "slot": "more",
+   "text": "심지어 덥고 습한 일본에서 아기 옷으로 사랑받는 천인데,",
+   "tts": "심지어 덥고 습한 일본에서 아기 옷으로 사랑받는 천인데,",
+   "facts": [
+    "f5"
+   ],
+   "point": "와우"
+  },
+  {
+   "slot": "more",
+   "text": "미국 수면재단에서도 잠옷은 바람 잘 통하는 면으로 고르라고 한다더라.",
+   "tts": "미국 수면재단에서도 잠옷은 바람 잘 통하는 면으로 고르라고 한다더라.",
+   "facts": [
+    "f6"
+   ],
+   "point": "권위"
+  },
+  {
+   "slot": "twist",
+   "text": "근데 진짜 충격적인 포인트는 쇼핑 좋아하던 서인영이 피부 하나 보고 골랐다는 거.",
+   "tts": "근데 진짜 충격적인 포인트는 쇼핑 좋아하던 서인영 씨가 피부 하나 보고 골랐다는 거.",
+   "facts": [
+    "f9",
+    "f8"
+   ],
+   "point": "와우"
+  },
+  {
+   "slot": "land",
+   "text": "그래서 요즘엔 서인영 영상마다 잠옷 문의가 난리라고.",
+   "tts": "그래서 요즘엔 서인영 씨 영상마다 잠옷 문의가 난리라고.",
+   "facts": [
+    "f7"
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "caption": "신상녀 서인영이",
+   "line": 0
+  },
+  {
+   "caption": "집에서 제일 많이",
+   "line": 0
+  },
+  {
+   "caption": "입는다는 잠옷의 정체",
+   "line": 0
+  },
+  {
+   "caption": "아기들 거즈면",
+   "line": 1
+  },
+  {
+   "caption": "재질이라는 그 잠옷",
+   "line": 1
+  },
+  {
+   "caption": "나도 바로",
+   "line": 1
+  },
+  {
+   "caption": "따라 사 봤는데",
+   "line": 1
+  },
+  {
+   "caption": "이건 바로",
+   "line": 2
+  },
+  {
+   "caption": "코코부 순면",
+   "line": 2
+  },
+  {
+   "caption": "이중 거즈 잠옷",
+   "line": 2
+  },
+  {
+   "caption": "이게 말도 안 되는 게",
+   "line": 3
+  },
+  {
+   "caption": "얇은 거즈 두 겹이라",
+   "line": 3
+  },
+  {
+   "caption": "갓 빤 아기 손수건처럼",
+   "line": 3
+  },
+  {
+   "caption": "보들보들하다는 거",
+   "line": 3
+  },
+  {
+   "caption": "심지어 덥고 습한",
+   "line": 4
+  },
+  {
+   "caption": "일본에서 아기 옷으로",
+   "line": 4
+  },
+  {
+   "caption": "사랑받는 천인데",
+   "line": 4
+  },
+  {
+   "caption": "미국 수면재단에서도",
+   "line": 5
+  },
+  {
+   "caption": "잠옷은 바람 잘 통하는",
+   "line": 5
+  },
+  {
+   "caption": "면으로 고르라고",
+   "line": 5
+  },
+  {
+   "caption": "한다더라",
+   "line": 5
+  },
+  {
+   "caption": "근데 진짜 충격적인",
+   "line": 6
+  },
+  {
+   "caption": "포인트는 쇼핑 좋아하던",
+   "line": 6
+  },
+  {
+   "caption": "서인영이 피부 하나 보고",
+   "line": 6
+  },
+  {
+   "caption": "골랐다는 거",
+   "line": 6
+  },
+  {
+   "caption": "그래서 요즘엔",
+   "line": 7
+  },
+  {
+   "caption": "서인영 영상마다",
+   "line": 7
+  },
+  {
+   "caption": "잠옷 문의가 난리라고",
+   "line": 7
+  }
+ ],
+ "render": {
+  "end_pad": 0.6,
+  "gap_o_f1": 0.12,
+  "duck_db": -10.0,
+  "target_lufs": -14.0,
+  "voice_af": "highpass=f=90,acompressor=threshold=0.03:ratio=2:attack=10:release=150:makeup=1",
+  "silence_d": 0.08
+ },
+ "bgm": {
+  "id": "sweets"
+ },
+ "frame_a": "channel/mantem/frame_얜샷템.json",
+ "speed_note": "잇썸홈판과 같은 박창수 속도: Typecast 기본 tempo(None) · cps_target 8.32",
+ "facts": {
+  "f1": "'신상녀' = 서인영 별명(신상품에 열광하는 모습, MBC 우리 결혼했어요) — weekly.khan.co.kr/article/17955 · hankyung.com/amp/2009090224147",
+  "f2": "개과천선 서인영 T1LXgkOKhJ4 11:42~11:45 본인 '이게 약간 아기들 거즈면 재질이거든' · 12:16~12:19 '내가 제일 많이 입는 게 여기 거야. 코코부야'",
+  "f3": "컬리 '[코코부] 순면 이중거즈면 프릴 잠옷 세트' 소재 면100% · 쿠팡 '코코부 순면100 이중 거즈면 요루면 여성 잠옷 세트'(9251410285) · 원본 화면 목 라벨 'cocoboo'",
+  "f4": "이중 거즈 = 아주 얇은 면 거즈 두 겹을 이어 붙인 천 — croftmill.co.uk/collections/double-gauze",
+  "f5": "cestdujoly.be 'so often used for baby and toddler clothing … popular so quickly in Asia and Japan, where many regions have a hot, humid climate'",
+  "f6": "Sleep Foundation sleepfoundation.org/best-cooling-pajamas 'Cooling pajamas should be breathable' · 'Cotton … breathable fabrics. Polyester … is not as breathable.'",
+  "f7": "셀럽초이스 7VyJpt4cIJg '영상마다 댓글에 \"잠옷 어디 거냐\"고 댓글 폭주' · 바비인영 JSawaGYijXM '잠옷 문의 너무 많아서 가져옴'",
+  "f8": "개과천선 서인영 T1LXgkOKhJ4 11:45~11:48 본인 '그래서 나는 이거 피부에 닿는 거 중요시 여긴다 그랬잖아'",
+  "f9": "서인영 '전성기 수입 100억 … 쇼핑으로 다 날렸다' — heraldk.com/article/2026041815362650670(헤럴드, 2026-04-18) · 신상녀 별명(f1)"
+ },
+ "cta": "없음 — points.json cta.required=false(사장님 10-18)",
+ "price_rule": "금액 말 없음(사장님 지시)",
+ "quote_rule": "효능은 권위자 말 인용만(~한다더라) · 질병 이름 금지",
+ "tts_tempo": {
+  "all": 1.25,
+  "last": 1.143,
+  "_note": "10-18: 새 TTS 6.56자/초 → 자동 1.27(브리프 상한 1.25 넘음) → 1.25 고정(잇썸홈판 8.32 대비 −3% 안)"
+ },
+ "orig_note": "10-18 최종: 원음 = 한 장면 이어진 말 하나(원본 702.13~707.32). 처음 넣었던 '내가 제일 많이 입는 게 여기 거야'(736.22)·'코코부야'(738.83)는 장면이 달라 창 받아쓰기 2모델이 화자 2로 갈랐다(화자 나눠 받아쓰기: 장면 바뀌는 자리에서 B). 이어진 한 구간은 2모델 모두 화자 1."
+}

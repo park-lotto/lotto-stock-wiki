@@ -1,0 +1,51 @@
+{
+ "slug": "ggultemlab",
+ "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "I6S4yyxBOus",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\I6S4yyxBOus.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_I6S4yyxBOus",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\I6S4yyxBOus\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\I6S4yyxBOus.json"
+  },
+  {
+   "id": "cO66RnH3CE4",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\cO66RnH3CE4.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_cO66RnH3CE4",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\cO66RnH3CE4\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\cO66RnH3CE4.json"
+  },
+  {
+   "id": "-61x15OUMh0",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\-61x15OUMh0.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_-61x15OUMh0",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\-61x15OUMh0\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\-61x15OUMh0.json"
+  },
+  {
+   "id": "ULOCXRKmZq8",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\ULOCXRKmZq8.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_ULOCXRKmZq8",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\ULOCXRKmZq8\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\ULOCXRKmZq8.json"
+  },
+  {
+   "id": "9h-qBve-udc",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\9h-qBve-udc.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_9h-qBve-udc",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\9h-qBve-udc\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\9h-qBve-udc.json"
+  },
+  {
+   "id": "e0BJzVGXd_0",
+   "mp4": "C:\\숏템_칼카피\\ggultemlab\\src\\e0BJzVGXd_0.mp4",
+   "frames": "C:\\숏템_칼카피\\ggultemlab\\kal\\frames_e0BJzVGXd_0",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\뜯기\\e0BJzVGXd_0\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ggultemlab\\줄판독\\e0BJzVGXd_0.json"
+  }
+ ],
+ "workers": 3,
+ "per_worker": 2
+}

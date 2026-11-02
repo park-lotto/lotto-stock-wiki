@@ -1,0 +1,52 @@
+{
+ "id": "jaML-7tULak",
+ "views": 29000,
+ "title": "카페 알바의 뜻밖의 재능!!",
+ "style": "웃긴 원본 그대로+자막",
+ "style_why": "원본 한 테이크, 위아래 자막",
+ "topic": "행인 앞에서 소리치는 카페 알바(금융치료 드립)",
+ "known_target": 1,
+ "surprise": 4,
+ "fun": 6,
+ "story": 2,
+ "gain": 0,
+ "hook": {
+  "text": "금융치료면 당신도 가능?",
+  "why": "자막 드립"
+ },
+ "beats": [
+  {
+   "t0": 0,
+   "t1": 12.6,
+   "fn": "기타",
+   "text": "촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉촉"
+  }
+ ],
+ "script": "",
+ "tone": {
+  "endings": [],
+  "honorific": "없음"
+ },
+ "voice": "나레 없음(원본 외침)",
+ "frame": "흰 배경, 위 'TinyDose 편집지식' 로고, 굵은 검정 제목 1줄, 가운데 레터박스된 원본 영상, 아래 굵은 검정 자막 1줄(다른 채널 틀 - 재업 추정)",
+ "cuts": [
+  {
+   "t0": 0,
+   "t1": 12.6,
+   "media": "영상",
+   "motion": "없음",
+   "color": "원색",
+   "overlay": "원본"
+  }
+ ],
+ "edit_summary": {
+  "photo_ratio": 0.0,
+  "ai_image_ratio": 0.0,
+  "zoom_ratio": 0.0,
+  "bw_count": 0,
+  "cut_len_median": 12.6,
+  "memes": 0
+ },
+ "why_viral": "2.9만: 맥락 없는 해외 웃짤, 핫템 정체성 없음",
+ "note": "컷 경계·확대는 0.5초 시트 기준 추정"
+}

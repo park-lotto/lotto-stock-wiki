@@ -1,0 +1,163 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "rGFXQlS9Cp4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    44,
+    30,
+    24
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 690,
+   "w": 1080,
+   "h": 1130,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 690,
+   "w": 48,
+   "h": 1130,
+   "rgb": [
+    44,
+    30,
+    24
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 1032,
+   "y": 690,
+   "w": 48,
+   "h": 1130,
+   "rgb": [
+    44,
+    30,
+    24
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 70,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 64,
+   "line_h": 76,
+   "rgb": [
+    255,
+    246,
+    224
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "맛템썰템",
+   "glow": {
+    "px": 28,
+    "rgb": [
+     240,
+     200,
+     120
+    ]
+   }
+  },
+  {
+   "kind": "band",
+   "x": 480,
+   "y": 170,
+   "w": 120,
+   "h": 3,
+   "rgb": [
+    240,
+    200,
+    120
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 250,
+   "w": 960,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 118,
+   "line_h": 140,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     240,
+     200,
+     120
+    ]
+   ],
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "한국인이 비벼버린\n두바이 스프레드"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 580,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 40,
+   "line_h": 47,
+   "rgb": [
+    222,
+    205,
+    180
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드"
+  }
+ ],
+ "_note": "맛템썰템 E 훅 카드: 에스프레소 바탕·네온 채널명·흰 큰 제목(둘째 줄 크림골드)·둥근 그림 창"
+}

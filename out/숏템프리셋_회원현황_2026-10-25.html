@@ -1,0 +1,93 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>숏템프리셋 회원 현황</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1b1f24;--sub:#5b6470;--line:#e3e6ea;--ok:#127a3a;--okbg:#e5f5ea;--mid:#9a5b00;--midbg:#fdf1dc;--no:#b3261e;--nobg:#fde7e5;--acc:#2f5bea}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1b1e23;--ink:#e8eaed;--sub:#9aa3ad;--line:#2c3138;--ok:#6fd38f;--okbg:#14301e;--mid:#f0b54d;--midbg:#33270f;--no:#ff8a80;--nobg:#3a1714;--acc:#7c9bff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 60px}h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px}
+.sub{color:var(--sub);font-size:13px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:16px 0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.box b{font-size:26px;display:block}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:900px}th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+th{background:var(--bg);color:var(--sub);font-weight:600;white-space:nowrap}
+.g{font-size:12px;color:var(--acc);font-weight:700;background:var(--bg)}
+.t{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.ok{background:var(--okbg);color:var(--ok)}.mid{background:var(--midbg);color:var(--mid)}.no{background:var(--nobg);color:var(--no)}
+ul{margin:6px 0;padding-left:20px}
+</style></head><body><main>
+<h1>숏템프리셋 — 회원이 지금 되는 것 / 업데이트 후</h1>
+<div class="sub">2026-10-25 · 근거: 엔진 트랙 <code>channel/*/preset</code> 폴더 목록 · <code>preset_card.py check --all</code> 판정(오늘 실행) · 서버 팩 10-20 23:46 판(어제 확인) · git 기록(10-20 이후 프리셋 변경은 main 0건)</div>
+
+<div class="sum">
+ <div class="box"><span class="sub">회원이 지금 고를 수 있는 프리셋</span><b>16개</b><span class="sub">10-20 판 그대로 · 그 뒤 손질 미반영</span></div>
+ <div class="box"><span class="sub">업데이트 후 '판 설정 완료(L1)'</span><b>9개</b><span class="sub">실제 렌더·관문·눈검수는 아직</span></div>
+ <div class="box"><span class="sub">업데이트 후 '완전 통과(회원 실측까지)'</span><b>0개</b><span class="sub">한 편도 끝까지 검증 안 함</span></div>
+ <div class="box"><span class="sub">회원 프리셋 자체가 없는 것</span><b>7개</b><span class="sub">잇템로그 · 트롯파파 · 뜨거운사람들 · 숏비타민c · 레시피변형 · 여행 2</span></div>
+</div>
+
+<h2>읽는 법</h2>
+<ul>
+ <li><span class="t ok">됨</span> 회원 프리셋이 있고 지금 만들 수 있다(10-20 판 품질)</li>
+ <li><span class="t mid">L1</span> 업데이트하면 새 규칙(실측값)으로 판 설정까지 끝난 상태 — 실제 한 편 렌더·품질관문·페이블 눈검수·사장님 판정·회원 실측이 남음</li>
+ <li><span class="t no">L0</span> 업데이트해도 판 설정에 아직 안 잰 칸이 있음 · <span class="t no">없음</span> 회원 프리셋 폴더 자체가 없음</li>
+</ul>
+
+<h2>프리셋별 표</h2>
+<div class="tw"><table>
+<tr><th>형식</th><th>벤치 (우리 채널)</th><th>회원 지금</th><th>회원 틀</th><th>업데이트 후</th><th>업데이트 후에도 안 되는 것</th></tr>
+
+<tr><td colspan="6" class="g">① 쇼핑형</td></tr>
+<tr><td>인스타스토리형</td><td>두유노홈디노 (잇썸홈)</td><td><span class="t ok">됨</span></td><td>전체화면_가운데자막</td><td><span class="t no">L0</span></td><td>판이 공통 렌더러로 안 옮겨짐 · 손 상수 10칸 · 원음→나레 잇는 칸 미측정</td></tr>
+<tr><td>썰쇼핑형</td><td>이븐쇼핑 (재미썸홈)</td><td><span class="t ok">됨</span></td><td>숏템템플릿</td><td><span class="t no">L0</span></td><td>같은 이유(손 상수 16칸) · 규칙 칸 1개 미측정</td></tr>
+<tr><td>썰커뮤니티형</td><td>방구석 (썰템홈샷)</td><td><span class="t ok">됨</span></td><td>게시글형</td><td><span class="t mid">L1</span></td><td>렌더·관문·눈검수·사장님·회원실측</td></tr>
+<tr><td>썰커뮤니티형</td><td>맛있는친구들 (맛템썰템)</td><td><span class="t ok">됨</span></td><td>게시글형</td><td><span class="t mid">L1</span></td><td>같음</td></tr>
+<tr><td>썰커뮤니티형</td><td>재밌쇼 (썰템쇼)</td><td><span class="t ok">됨</span></td><td>썰템쇼_화자썰</td><td><span class="t no">L0</span></td><td>규칙 칸 2개 미측정 · 조회수 줄 넣을지(사장님 결정)</td></tr>
+
+<tr><td colspan="6" class="g">② 해외원본</td></tr>
+<tr><td>나레+원음</td><td>핫템리포트 (숏템리폿)</td><td><span class="t ok">됨</span></td><td>검정띠</td><td><span class="t mid">L1</span></td><td>렌더·관문·눈검수·사장님·회원실측</td></tr>
+<tr><td>나레+원음</td><td>샤크탱크</td><td><span class="t ok">됨</span></td><td>샤크탱크_검정띠2줄</td><td><span class="t no">L0</span></td><td>규칙 칸 1개 미측정</td></tr>
+<tr><td>나레+원음</td><td>잇템로그</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>회원 프리셋 폴더를 새로 만들어야 함 · 13편 견본은 완성 직전에서 멈춤 · 회원 화면 이름 미정</td></tr>
+<tr><td>나레</td><td>썰풀다 나레편</td><td><span class="t ok">됨</span></td><td>A_흰바탕창 등 4틀</td><td><span class="t no">L0</span></td><td>편 수 부족(자막만 갈래 표본 부족)</td></tr>
+<tr><td>자막+배경음</td><td>신박</td><td><span class="t ok">됨</span></td><td>연회색틀_둥근창_창아래자막</td><td><span class="t no">L0</span></td><td>규칙 칸 1개 미측정</td></tr>
+<tr><td>자막+배경음</td><td>숏비타민c</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">보류</span></td><td>벤치 영상이 사라짐 — D 외장 연결 또는 다른 벤치(사장님 결정)</td></tr>
+
+<tr><td colspan="6" class="g">③ 연예인쇼핑형</td></tr>
+<tr><td>나레+원음</td><td>만템</td><td><span class="t ok">됨</span></td><td>얜샷템</td><td><span class="t mid">L1</span></td><td>렌더·관문·눈검수·사장님·회원실측</td></tr>
+<tr><td>나레+원음</td><td>아이템홈</td><td><span class="t ok">됨</span></td><td>검정띠2줄</td><td><span class="t mid">L1</span></td><td>같음 · 브랜드 이름 미정</td></tr>
+<tr><td>나레+원음</td><td>안나픽</td><td><span class="t ok">됨</span></td><td>검정띠2줄_출처</td><td><span class="t mid">L1</span></td><td>같음 · 브랜드 이름 미정</td></tr>
+<tr><td>후기형</td><td>키치잇</td><td><span class="t ok">됨</span></td><td>검정창_노랑박스제목</td><td><span class="t mid">L1</span></td><td>렌더·관문·눈검수·사장님·회원실측</td></tr>
+<tr><td>대화형</td><td>꿀템노트</td><td><span class="t ok">됨</span></td><td>검정2줄_분홍파랑_출처</td><td><span class="t mid">L1</span></td><td>같음</td></tr>
+<tr><td>체험형</td><td>스타픽룸</td><td><span class="t ok">됨</span></td><td>검정틀_금색로고_타이핑나레</td><td><span class="t mid">L1</span></td><td>같음</td></tr>
+<tr><td>가격공개형</td><td>트롯파파</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>회원 프리셋 없음 · 규칙 칸 1개 미측정 · 가격 카드 넣을지(사장님 결정)</td></tr>
+
+<tr><td colspan="6" class="g">④ 연예인레시피형</td></tr>
+<tr><td>레시피 원음형</td><td>굿레터</td><td><span class="t ok">됨</span></td><td>검정틀_3색팝자막 등 2틀</td><td><span class="t no">L0</span></td><td>규칙 칸 1개 미측정</td></tr>
+<tr><td>레시피 체험형</td><td>스타픽룸 변형</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>판독부터(줄판독 0편)</td></tr>
+
+<tr><td colspan="6" class="g">⑤ 여행쇼츠형 (엔진 따로 · 미병합)</td></tr>
+<tr><td>숙소 따라걷기형</td><td>스테이브로 고급온천</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>판독·판 설정·자막팩 전부</td></tr>
+<tr><td>숙소 체험먼저형</td><td>스테이브로 촌캉스</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>같음</td></tr>
+
+<tr><td colspan="6" class="g">⑥ 인물형</td></tr>
+<tr><td>인물썰형</td><td>뜨거운사람들</td><td><span class="t no">없음</span></td><td>—</td><td><span class="t no">L0</span></td><td>회원 프리셋 없음 · 규칙 칸 2개 미측정 · 브랜드 이름 미정</td></tr>
+</table></div>
+
+<h2>업데이트를 '다 하면' 생기는 일 · 안 생기는 일</h2>
+<div class="box">
+<b style="font-size:16px">생기는 것</b>
+<ul>
+ <li>회원 16개 프리셋이 10-20 판 → 오늘까지 손본 판 설정(실측값 자막·위치·효과음·배경음·말속도)으로 바뀜</li>
+ <li>L1 9개는 벤치를 잰 규칙대로 렌더됨 — 사장님 PC 와 같은 규칙</li>
+</ul>
+<b style="font-size:16px">안 생기는 것 (아직 비어 있음)</b>
+<ul>
+ <li>'통과' 판정: 9개 모두 실제 한 편 렌더 → 품질관문 → 페이블 눈검수 → 사장님 판정 → 회원 실측 대조를 안 거침. 규칙은 같아도 <b>결과가 좋은지는 미확인</b></li>
+ <li>회원 연결 길: 회원 지시서(중간에 멈춤) · 회원 꾸미기 수정(미착수) · 설치본 1.0.11(미착수) — 이게 있어야 새 판이 회원 PC 에서 돈다</li>
+ <li>잇템로그·트롯파파·뜨거운사람들 등 7개는 회원 프리셋 자체를 새로 만들어야 함</li>
+ <li>낙서·말풍선 스티커 7종은 편집기 쪽 수리 전까지 안 그려짐</li>
+</ul>
+</div>
+<div class="sub" style="margin-top:12px">확인 안 한 것: 서버 팩 16개가 위 16개 폴더와 1:1 인지는 어제 기록 기준(오늘 서버 대조 안 함) · 회원 PC 에서 실제로 한 편 돌려 본 결과 없음</div>
+</main></body></html>

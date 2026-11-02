@@ -1,0 +1,1135 @@
+{
+ "topic": "샤크탱크 STORMBAG — 물에 담그면 부푸는 모래 없는 모래주머니, 투자자 넷이 같은 조건으로 붙은 편(벤치 그대로 칼카피, 방송 원음 위주)",
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "why": "벤치 나레 4편 f0 중앙 116.4Hz(남) — 지훈 견본 129.0Hz 1.79반음, 후보 중 가장 가까움(plan/voice_measure.json)"
+ },
+ "brand": "샥탬스토리",
+ "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.467,
+  "views": 12470000,
+  "lufs": -7.8,
+  "tp": 1.0,
+  "cut_median": 1.27,
+  "first_cut": 0.57,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "title_bands": [
+   [
+    211,
+    304
+   ],
+   [
+    318,
+    407
+   ]
+  ]
+ },
+ "titles": {
+  "hook": "홍수를 막을 수 있는\n역대급 모래 주머니?!",
+  "rule": "벤치 그대로(사장님 10-18 ③) — 1줄 노랑 [211,304] / 2줄 흰 [318,407], 끝 '?!'. 벤치에 로고 없음 → 로고 넣지 않음(페이블 10-18). 기록만, 구현은 페이블 OK 뒤"
+ },
+ "facts": {
+  "f1": {
+   "text": "8UW 66.8~67.75 'What?'(받아쓰기 2모델 r3 67.25~67.75 일치) · 67.23 컷부터 투자자(남·남색 셔츠) 화면",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=66"
+  },
+  "f2": {
+   "text": "제품사 3s0 60.0~64.7 'fill this wheelbarrow with a little bit of water and submerge the StormBags' + 132.9~140.6 수레 물 속 자루 화면 · 8UW 53.9~57.6 창업자 'You can see the time-lapse right there' · 52.42~53.40 'Pretty cool'(2모델)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=50"
+  },
+  "f3": {
+   "text": "8UW 62.7~66.8 창업자 'in three to five minutes, it weighs a whopping 30 pounds' · 제품사 3s0 45.3~50.1 'absorb between four and five gallons' · stormbag.co 블로그 'absorbs roughly four gallons of fresh water in three to five minutes'(4갤런=15.1L)",
+   "url": "https://stormbag.co/blogs/stormbag-flood-protection-blog/stormbag-on-shark-tank-the-sandless-sandbag-that-won-a-200k-deal"
+  },
+  "f4": {
+   "text": "8UW 12.8~17.6 창업자 'when a flood is on the way, the last thing you want to be doing is shoveling sand' · 30.0~37.7 'build a wall like this with no shoveling and no sand'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=12"
+  },
+  "f5": {
+   "text": "8UW 17.95~23.85 원음(r6 2모델) 'Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.'(r1 2모델 일치, 1명)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=17"
+  },
+  "f6": {
+   "text": "제품사 3s0 3.8~11.1 'the last thing that you want to be doing is shoveling sand. Traditional sandbags require back-breaking labor' + 3s0 18~24초 삽질 화면",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU"
+  },
+  "f7": {
+   "text": "8UW 45.25~50.00 원음 'almost takes no labor to deploy, all you simply do is add water.'(r2 2모델 일치, 1명)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=45"
+  },
+  "f8": {
+   "text": "8UW 62.7~66.8 '30 pounds'(=13.6kg → '13킬로그램 넘는') · 8UW 30.0~37.7 'build a wall like this' · 3s0 50.1~54.6 '1-lb bag into a fully usable 35-lb sandbag'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=62"
+  },
+  "f9": {
+   "text": "8UW 110.65~112.30 원음 'Is there any way to get it back?'(r4 2모델 일치 — 112.10 은 'back' 잘림, 112.30 에서 자름, 뒤 'or is it a one-time deal' 제외)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=110"
+  },
+  "f10": {
+   "text": "8UW 113.3~118.5 창업자 'if you have it out in the sun … it will dehydrate again flat' · 121.5 'Three times.' (★벤치 '2~3주 내로 건조'는 원본상 화분 물주기 주기(364.5~367.4) — 우리는 안 씀)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=113"
+  },
+  "f11": {
+   "text": "8UW 85.95~87.05 원음 'That's pretty cool.'(r1 2모델 일치) · 85.89~87.39 투자자(남·남색 셔츠) 화면",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=85"
+  },
+  "f12": {
+   "text": "8UW 243.15~244.15 투자자 'You making any money?' · 원음 259.90~261.25 '…and we did $90,000,'(r5 2모델) · 261.6~263.6 'but we have so far done absolutely zero marketing'(r2·r3 2모델 — 나레 N7 근거, 화면이 듣는 투자자라 원음으로는 안 씀)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=240"
+  },
+  "f13": {
+   "text": "8UW 264.6~269.8 창업자 'there's a huge untapped potential to make millions'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=264"
+  },
+  "f14": {
+   "text": "원음 464.06~466.85 '…the 200,000, but for 30%'(r6 2모델) · 8UW 410.9~426.8 투자자 2명(화면 띠 'Daymond & Daniel's offer: $200k for a 40% stake' 7:08~7:14) '$200,000 for 40%' · 463.0~466.6 투자자(여) '$200,000, but for 30%'(화면 띠 'Lori & Mark's offer: $200k for a 30% stake' 7:48~7:50)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=410"
+  },
+  "f15": {
+   "text": "원음 550.60~552.62 'We'll do thirty also'(r7) · 8UW 550.6~553.1 투자자 'We'll do 30 also' · 다른 투자자 'We'll do 30, we'll match it' → 투자자 4명이 같은 30% 조건(553.2 'now they're equal' · 화면 띠 'Daymond & Daniel's revised offer: $200k for a 30% stake' 9:14~9:18)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=550"
+  },
+  "f16": {
+   "text": "8UW 577.80~579.05 'Lori, Mark, you got a deal.'(r5 2모델)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"
+  },
+  "f17": {
+   "text": "화면 띠 'Seeking $200k for a 10% stake'(1:16~1:24·5:10) + 8UW 5.9~12.0 'seeking 200,000 … for 10%' · 화면 띠 'Lori & Mark's offer: $200k for a 30% stake'(7:48) · 577.8~579.9 'Lori, Mark, you got a deal.' + 584~588 무대 포옹 — 방송 안에서 확인된 결과만(방송 뒤 계약·판매는 출처 상충·회사 단독이라 안 씀)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "fn": "0초 결말 반응",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     67.25,
+     67.75
+    ],
+    "en": "What?",
+    "who": "투자자(남·남색 셔츠) — 이름 불명(화면 글자 없음)",
+    "caps": [
+     "뭐라고?!"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "est_sec": 0.5,
+    "t_final": [
+     0.0,
+     0.5
+    ],
+    "emph": [
+     {
+      "cap": "뭐라고?!",
+      "span": "뭐라고?!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "fn": "시연",
+    "kind": "tts",
+    "text": "이 자루를 물에 담가 두면",
+    "tts": "이 자루를 물에 담가 두면",
+    "caps": [
+     "이 자루를",
+     "물에 담가 두면"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 1.41,
+    "t_final": [
+     0.58,
+     1.99
+    ],
+    "emph": [
+     {
+      "cap": "이 자루를",
+      "span": "이 자루를",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물에 담가 두면",
+      "span": "담가 두면",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "시연(숫자)",
+    "kind": "tts",
+    "text": "3~5분이면 물 15리터쯤 먹고, 빵빵하게 부푼다는데",
+    "tts": "삼에서 오 분이면 물 십오 리터쯤 먹고, 빵빵하게 부푼다는데",
+    "caps": [
+     "3~5분이면",
+     "물 15리터쯤 먹고",
+     "빵빵하게 부푼다는데"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "est_sec": 3.38,
+    "t_final": [
+     2.07,
+     5.45
+    ],
+    "emph": [
+     {
+      "cap": "3~5분이면",
+      "span": "3~5분이면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물 15리터쯤 먹고",
+      "span": "15리터쯤",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "빵빵하게 부푼다는데",
+      "span": "부푼다는데",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "기존 불편(대체)",
+    "kind": "tts",
+    "text": "홍수 때마다 쌓던 모래주머니, 대신 쓰려고 만든 거라고",
+    "tts": "홍수 때마다 쌓던 모래주머니, 대신 쓰려고 만든 거라고",
+    "caps": [
+     "홍수 때마다 쌓던",
+     "모래주머니 대신",
+     "쓰려고 만든 거라고"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "est_sec": 3.1,
+    "t_final": [
+     5.53,
+     8.63
+    ],
+    "emph": [
+     {
+      "cap": "홍수 때마다 쌓던",
+      "span": "때마다 쌓던",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래주머니 대신",
+      "span": "모래주머니 대신",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쓰려고 만든 거라고",
+      "span": "만든 거라고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "fn": "기존 불편",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     17.95,
+     23.85
+    ],
+    "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
+    "who": "창업자(남) — 방송 원본도 이 시각엔 모래주머니 자료화면(말하는 사람 안 나옴)",
+    "caps": [
+     "기존 모래주머니는",
+     "허리가 끊어지고",
+     "모래만 수천 파운드죠"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "est_sec": 5.9,
+    "t_final": [
+     8.71,
+     14.61
+    ],
+    "emph": [
+     {
+      "cap": "기존 모래주머니는",
+      "span": "모래주머니는",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "허리가 끊어지고",
+      "span": "허리가 끊어지고",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래만 수천 파운드죠",
+      "span": "수천 파운드죠",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "기존 불편→차이",
+    "kind": "tts",
+    "text": "하나하나 들어 옮겨 쌓던 모래주머니랑은 다르게",
+    "tts": "하나하나 들어 옮겨 쌓던 모래주머니랑은 다르게",
+    "caps": [
+     "하나하나 들어 옮겨 쌓던",
+     "모래주머니랑은 다르게"
+    ],
+    "facts": [
+     "f6"
+    ],
+    "est_sec": 2.82,
+    "t_final": [
+     14.69,
+     17.51
+    ],
+    "emph": [
+     {
+      "cap": "하나하나 들어 옮겨 쌓던",
+      "span": "들어 옮겨 쌓던",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래주머니랑은 다르게",
+      "span": "다르게",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "fn": "해결",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     45.25,
+     50.0
+    ],
+    "en": "Almost takes no labor to deploy, all you simply do is add water.",
+    "who": "창업자(남·자루 든 사람)",
+    "caps": [
+     "설치할 때",
+     "힘이 거의 안 들고",
+     "그냥 물만 부으면 돼요"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 4.75,
+    "t_final": [
+     17.59,
+     22.34
+    ],
+    "emph": [
+     {
+      "cap": "설치할 때",
+      "span": "설치할 때",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "힘이 거의 안 들고",
+      "span": "거의 안 들고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그냥 물만 부으면 돼요",
+      "span": "부으면 돼요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "숫자(무게)",
+    "kind": "tts",
+    "text": "물길에 놓기만 하면, 13킬로그램 넘는 둑이 된다고",
+    "tts": "물길에 놓기만 하면, 십삼 킬로그램 넘는 둑이 된다고",
+    "caps": [
+     "물길에 놓기만 하면",
+     "13kg 넘는 둑이",
+     "된다고"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 2.96,
+    "t_final": [
+     22.42,
+     25.38
+    ],
+    "emph": [
+     {
+      "cap": "물길에 놓기만 하면",
+      "span": "놓기만 하면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "13kg 넘는 둑이",
+      "span": "13kg",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "된다고",
+      "span": "된다고",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "fn": "질문(재사용)",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     110.65,
+     112.3
+    ],
+    "en": "Is there any way to get it back?",
+    "who": "투자자(남·민머리·검정 정장)",
+    "caps": [
+     "다시 되돌릴 수 있어요?"
+    ],
+    "facts": [
+     "f9"
+    ],
+    "est_sec": 1.65,
+    "t_final": [
+     25.46,
+     27.11
+    ],
+    "emph": [
+     {
+      "cap": "다시 되돌릴 수 있어요?",
+      "span": "다시 되돌릴 수 있어요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "fn": "재사용",
+    "kind": "tts",
+    "text": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
+    "tts": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
+    "caps": [
+     "햇볕에 두면",
+     "다시 납작하게 마르고",
+     "세 번까지 다시 쓴다고"
+    ],
+    "facts": [
+     "f10"
+    ],
+    "est_sec": 3.24,
+    "t_final": [
+     27.19,
+     30.43
+    ],
+    "emph": [
+     {
+      "cap": "햇볕에 두면",
+      "span": "햇볕에 두면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다시 납작하게 마르고",
+      "span": "납작하게 마르고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "세 번까지 다시 쓴다고",
+      "span": "세 번까지",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "fn": "반응",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     85.95,
+     87.05
+    ],
+    "en": "That's pretty cool.",
+    "who": "투자자(남·남색 셔츠)",
+    "caps": [
+     "그거 꽤 괜찮네요"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 1.1,
+    "t_final": [
+     30.51,
+     31.61
+    ],
+    "emph": [
+     {
+      "cap": "그거 꽤 괜찮네요",
+      "span": "그거 꽤 괜찮네요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "fn": "숫자 질문",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     243.15,
+     244.15
+    ],
+    "en": "You making any money?",
+    "who": "투자자(남·민머리·검정 정장)",
+    "caps": [
+     "돈은 좀 벌고 있어요?"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 1.0,
+    "t_final": [
+     31.69,
+     32.69
+    ],
+    "emph": [
+     {
+      "cap": "돈은 좀 벌고 있어요?",
+      "span": "돈은 좀 벌고 있어요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O8",
+    "fn": "숫자(매출)",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     259.9,
+     261.25
+    ],
+    "en": "…and we did $90,000,",
+    "who": "창업자(남) — 무대 와이드에 두 창업자, 입 모양으로 누구인지는 불명",
+    "caps": [
+     "9만 달러 벌었어요"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 1.35,
+    "t_final": [
+     32.77,
+     34.12
+    ],
+    "emph": [
+     {
+      "cap": "9만 달러 벌었어요",
+      "span": "9만 달러",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "fn": "자신감",
+    "kind": "tts",
+    "text": "광고는 아직 한 번도 안 했다며, 제대로만 하면 수백만 달러도 노린다고 자신하는데",
+    "tts": "광고는 아직 한 번도 안 했다며, 제대로만 하면 수백만 달러도 노린다고 자신하는데",
+    "caps": [
+     "광고는 아직",
+     "한 번도 안 했다며",
+     "제대로만 하면",
+     "수백만 달러도 노린다고",
+     "자신하는데"
+    ],
+    "facts": [
+     "f12",
+     "f13"
+    ],
+    "est_sec": 4.65,
+    "t_final": [
+     34.2,
+     38.85
+    ],
+    "emph": [
+     {
+      "cap": "광고는 아직",
+      "span": "광고는 아직",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 번도 안 했다며",
+      "span": "한 번도",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "제대로만 하면",
+      "span": "제대로만 하면",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "수백만 달러도 노린다고",
+      "span": "수백만 달러도",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "자신하는데",
+      "span": "자신하는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "fn": "지분 제안",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     464.06,
+     466.85
+    ],
+    "en": "…the $200,000, but for 30%.",
+    "who": "투자자(여·연두 옷) — 화면에 말하는 본인",
+    "caps": [
+     "20만 달러 드릴게요",
+     "대신 지분은 30%로요"
+    ],
+    "facts": [
+     "f14"
+    ],
+    "est_sec": 2.79,
+    "t_final": [
+     38.93,
+     41.72
+    ],
+    "emph": [
+     {
+      "cap": "20만 달러 드릴게요",
+      "span": "20만 달러",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "대신 지분은 30%로요",
+      "span": "30%로요",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O10",
+    "fn": "지분 경쟁",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     550.6,
+     552.62
+    ],
+    "en": "We'll do 30 also.",
+    "who": "투자자(남·남색 재킷) — 화면에 말하는 본인",
+    "caps": [
+     "우리도 30%로 할게요!"
+    ],
+    "facts": [
+     "f15"
+    ],
+    "est_sec": 2.02,
+    "t_final": [
+     41.8,
+     43.82
+    ],
+    "emph": [
+     {
+      "cap": "우리도 30%로 할게요!",
+      "span": "우리도 30%로 할게요!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N8",
+    "fn": "지분 경쟁",
+    "kind": "tts",
+    "text": "처음 두 명도 30%로 내리면서, 네 명이 한판 붙었는데",
+    "tts": "처음 두 명도 삼십 퍼센트로 내리면서, 네 명이 한판 붙었는데",
+    "caps": [
+     "처음 두 명도",
+     "30%로 내리면서",
+     "네 명이 한판 붙었는데"
+    ],
+    "facts": [
+     "f14",
+     "f15"
+    ],
+    "est_sec": 3.38,
+    "t_final": [
+     43.9,
+     47.28
+    ],
+    "emph": [
+     {
+      "cap": "처음 두 명도",
+      "span": "처음 두 명도",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "30%로 내리면서",
+      "span": "30%로",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "네 명이 한판 붙었는데",
+      "span": "네 명이",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "O11",
+    "fn": "결정",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     577.8,
+     579.05
+    ],
+    "en": "Lori, Mark, you got a deal.",
+    "who": "창업자(남) — 화면 창업자 클로즈업, 둘 중 누구 말인지는 불명",
+    "caps": [
+     "로리, 마크!",
+     "두 분이랑 할게요"
+    ],
+    "facts": [
+     "f16"
+    ],
+    "est_sec": 1.25,
+    "t_final": [
+     47.36,
+     48.61
+    ],
+    "emph": [
+     {
+      "cap": "로리, 마크!",
+      "span": "로리, 마크!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 분이랑 할게요",
+      "span": "두 분이랑",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "N9",
+    "fn": "방송 안 결과(성사)",
+    "kind": "tts",
+    "text": "10%만 주려다, 결국 30%에 두 투자자와 손잡았다고",
+    "tts": "십 퍼센트만 주려다, 결국 삼십 퍼센트에 두 투자자와 손잡았다고",
+    "caps": [
+     "10%만 주려다",
+     "결국 30%에",
+     "두 투자자와 손잡았다고"
+    ],
+    "facts": [
+     "f17"
+    ],
+    "est_sec": 3.66,
+    "t_final": [
+     48.69,
+     52.35
+    ],
+    "emph": [
+     {
+      "cap": "10%만 주려다",
+      "span": "10%만 주려다",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "결국 30%에",
+      "span": "결국 30%에",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 투자자와 손잡았다고",
+      "span": "두 투자자와",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   }
+  ],
+  "est_total_sec": 52.35,
+  "cps_target": 7.1,
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     67.25,
+     67.75
+    ],
+    "en": "What?",
+    "ko_caps": [
+     "뭐라고?!"
+    ],
+    "who": "투자자(남·남색 셔츠) — 이름 불명(화면 글자 없음)"
+   },
+   {
+    "id": "O3",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     17.95,
+     23.85
+    ],
+    "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
+    "ko_caps": [
+     "기존 모래주머니는",
+     "허리가 끊어지고",
+     "모래만 수천 파운드죠"
+    ],
+    "who": "창업자(남) — 방송 원본도 이 시각엔 모래주머니 자료화면(말하는 사람 안 나옴)"
+   },
+   {
+    "id": "O4",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     45.25,
+     50.0
+    ],
+    "en": "Almost takes no labor to deploy, all you simply do is add water.",
+    "ko_caps": [
+     "설치할 때",
+     "힘이 거의 안 들고",
+     "그냥 물만 부으면 돼요"
+    ],
+    "who": "창업자(남·자루 든 사람)"
+   },
+   {
+    "id": "O5",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     110.65,
+     112.3
+    ],
+    "en": "Is there any way to get it back?",
+    "ko_caps": [
+     "다시 되돌릴 수 있어요?"
+    ],
+    "who": "투자자(남·민머리·검정 정장)"
+   },
+   {
+    "id": "O6",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     85.95,
+     87.05
+    ],
+    "en": "That's pretty cool.",
+    "ko_caps": [
+     "그거 꽤 괜찮네요"
+    ],
+    "who": "투자자(남·남색 셔츠)"
+   },
+   {
+    "id": "O7",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     243.15,
+     244.15
+    ],
+    "en": "You making any money?",
+    "ko_caps": [
+     "돈은 좀 벌고 있어요?"
+    ],
+    "who": "투자자(남·민머리·검정 정장)"
+   },
+   {
+    "id": "O8",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     259.9,
+     261.25
+    ],
+    "en": "…and we did $90,000,",
+    "ko_caps": [
+     "9만 달러 벌었어요"
+    ],
+    "who": "창업자(남) — 무대 와이드에 두 창업자, 입 모양으로 누구인지는 불명"
+   },
+   {
+    "id": "O9",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     464.06,
+     466.85
+    ],
+    "en": "…the $200,000, but for 30%.",
+    "ko_caps": [
+     "20만 달러 드릴게요",
+     "대신 지분은 30%로요"
+    ],
+    "who": "투자자(여·연두 옷) — 화면에 말하는 본인"
+   },
+   {
+    "id": "O10",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     550.6,
+     552.62
+    ],
+    "en": "We'll do 30 also.",
+    "ko_caps": [
+     "우리도 30%로 할게요!"
+    ],
+    "who": "투자자(남·남색 재킷) — 화면에 말하는 본인"
+   },
+   {
+    "id": "O11",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     577.8,
+     579.05
+    ],
+    "en": "Lori, Mark, you got a deal.",
+    "ko_caps": [
+     "로리, 마크!",
+     "두 분이랑 할게요"
+    ],
+    "who": "창업자(남) — 화면 창업자 클로즈업, 둘 중 누구 말인지는 불명"
+   }
+  ],
+  "check": {
+   "copy3": [],
+   "max_cap_chars": 13
+  }
+ },
+ "effects_record": [
+  {
+   "at": "O1",
+   "fx": "빨간 원(투자자 얼굴 — 벤치와 같은 자리·같은 0초)",
+   "bench": "0.0~0.6초"
+  },
+  {
+   "at": "O3",
+   "fx": "빨간 점선 원(삽질 장면)",
+   "bench": "9.1~11.9초"
+  },
+  {
+   "at": "O3 둘째 조각",
+   "fx": "분홍 위 화살표",
+   "bench": "11.9~14.2초"
+  },
+  {
+   "at": "O9",
+   "fx": "날개 돈다발 이모지",
+   "bench": "38.6~41.1초"
+  },
+  {
+   "at": "자막",
+   "fx": "흰 글자+검정 테두리, 핵심어 형광(민트·초록·빨강·분홍)",
+   "bench": "전 구간"
+  }
+ ],
+ "notes": [
+  "TTS·렌더 전. 효과·제목 띠는 기록만(구현 안 함).",
+  "벤치 나레 연속 3어절 일치 0 — check_copy() 로 잰다(대본.json check.copy3).",
+  "페이블 10-18 판정: 정부 인증·방송 뒤 계약/재고 줄 뺌(출처 상충·회사 단독), 끝은 방송 안 결과로 닫음. 로고 넣지 않음(벤치에 없음)."
+ ]
+}

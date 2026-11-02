@@ -1,0 +1,299 @@
+{
+ "id": "iiBUscncqIk",
+ "dur": 14.791,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "비싼 싱크대 절대 지키는 보호필름",
+   "colors": [
+    {
+     "word": "비싼 싱크대 절대 지키는 보호필름",
+     "hex": "#EACE18"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": null,
+  "title_y": [
+   [
+    292,
+    342
+   ]
+  ],
+  "title_box": {
+   "x": [
+    101,
+    978
+   ],
+   "y": [
+    265,
+    375
+   ],
+   "hex": "#000000"
+  },
+  "title_note": "1.5초부터 끝까지 상단 고정 제목띠(이 편만의 꼴 — 나레 없는 음악형)",
+  "bg_hex": null,
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "ad_label": null,
+  "watermark": {
+   "text": "Home_Design_Note",
+   "x": [
+    340,
+    740
+   ],
+   "y": [
+    150,
+    185
+   ],
+   "alpha": "약 1.0(불투명 흰 고딕, 눈)",
+   "basis": "눈(top5.png)"
+  }
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.5,
+   "speaker": "불명",
+   "text": "#두유노 싱크대 보호필름?? 아직도 휴대폰에만 보호필름 붙이시나요??",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "훅 글판(굵은 고딕 3줄 왼쪽 정렬, 첫 줄 흰·아래 2줄 노랑, 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1240,
+    1510
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 6(눈)",
+    "hex": "#000000"
+   },
+   "x": "왼쪽(x≈ 70~ 690)",
+   "align": "left",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "굵은 고딕(Gmarket Sans Bold 계열로 보임, 미확정)",
+    "basis": "눈(확대 크롭)"
+   },
+   "size_px": "약 60~70(줄 잉크 높이 80~90 — px 행)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": "약 0~10(줄 간격 80px 피치, px 행)",
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [
+    {
+     "word": "아직도 휴대폰에만",
+     "hex": "#ECCE18"
+    },
+    {
+     "word": "보호필름 붙이시나요??",
+     "hex": "#ECCF18"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    1.067
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "남자가 싱크대 위로 보호필름을 펼쳐 덮음(창가 주방)",
+   "fit": 8,
+   "motion": "zoom_out",
+   "motion_signal": {
+    "div": -0.63,
+    "tr": 0.34,
+    "sd": 3.8
+   },
+   "transition": "none(첫 프레임)",
+   "exit": "cut(1.5 컷과 함께 사라짐)",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "나레 없음(받아쓰기 0 — 음악만). 이 글판은 0초부터 떠 있어 표지 겸 훅. 1.067 컷이 글판 안에 있음"
+  },
+  {
+   "t0": 1.5,
+   "t1": 14.791,
+   "speaker": "불명",
+   "text": "비싼 싱크대 절대 지키는 보호필름",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상단 고정 제목띠(검정 둥근 박스 + 노랑 굵은 고딕, 끝까지 유지)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    292,
+    342
+   ],
+   "fill_hex": "#EACE18",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "굵은 고딕(Gmarket Sans Bold 계열로 보임, 미확정)",
+    "basis": "눈(확대 크롭)"
+   },
+   "size_px": "약 50(잉크 높이 51px — px)",
+   "letter_gap_px": "약 2(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#000000",
+    "alpha": "약 0.95(눈 — 뒤 배경 안 비침)",
+    "pad": "좌우 약 37px(박스 x101~978 / 글 x138~944, px)",
+    "radius": "약 50(알약 모양, 눈)",
+    "y": [
+     265,
+     375
+    ]
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    1.933,
+    3.467,
+    5.667,
+    7.0,
+    7.767,
+    8.467,
+    10.133,
+    11.733,
+    12.767
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "보호필름 시공 전 과정: 물 뿌리기·밀대로 밀기·칼로 가장자리 재단·모서리 감기·완성 싱크대",
+   "fit": 8,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.12,
+    "tr": 0.67,
+    "sd": 6.6
+   },
+   "transition": "cut",
+   "exit": "끝(영상 끝까지)",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "한 줄이 13.3초 — 자막 교체 없이 시공 시연 컷만 넘어감(컷 9개). 1.5 컷과 동시에 instant 등장(30fps 띠 1.47→1.50)"
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅 글판(0~1.5 '#두유노 싱크대 보호필름?? / 아직도 휴대폰에만 보호필름 붙이시나요??') → 본문(1.5~14.8 상단 제목띠 고정 '비싼 싱크대 절대 지키는 보호필름' + 시공 시연 컷 9개, 나레·자막 교체 없음) → 끝(완성 싱크대, CTA 없음)",
+ "narr_share": "나레 줄 0/2, 나레 0초/14.791초",
+ "notes": [
+  "나레 0: 받아쓰기(스피치매틱스) 결과 비어 있음 — 음악만 깔린 시연형. 채널 기본(나레+손글씨 자막)과 다른 꼴이라 규칙 집계에서 분모가 작다(2줄).",
+  "효과음: sfx_events 후보 19개가 약 0.95초 간격으로 반복 — 음악 박자(하이햇)로 판단해 효과음으로 안 셈(sfx=null). 귀 미확인.",
+  "컷 1.067·1.5 는 30fps 시트(t1.jpg)로 눈 확인해 추가(측정 문턱 밑)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 글판(3줄) + 보호필름 펼치는 남자 + 상단 워터마크 — 표지 전용 프레임 아님(0~1.5 유지)",
+  "face_frac": "약 0.1(옆얼굴 위쪽, 눈)",
+  "text": "#두유노 싱크대 보호필름?? 아직도 휴대폰에만 보호필름 붙이시나요??"
+ },
+ "cuts_measured": [
+  1.067,
+  1.5,
+  1.933,
+  3.467,
+  5.667,
+  7.0,
+  7.767,
+  8.467,
+  10.133,
+  11.733,
+  12.767
+ ],
+ "sfx_candidates": [
+  {
+   "t": 1.71,
+   "kind": "broad",
+   "db": 27.0
+  },
+  {
+   "t": 2.68,
+   "kind": "broad",
+   "db": 23.1
+  },
+  {
+   "t": 3.63,
+   "kind": "broad",
+   "db": 23.4
+  },
+  {
+   "t": 4.62,
+   "kind": "broad",
+   "db": 24.5
+  },
+  {
+   "t": 5.58,
+   "kind": "broad",
+   "db": 25.8
+  },
+  {
+   "t": 6.55,
+   "kind": "broad",
+   "db": 24.5
+  },
+  {
+   "t": 7.51,
+   "kind": "broad",
+   "db": 22.0
+  },
+  {
+   "t": 8.49,
+   "kind": "broad",
+   "db": 23.0
+  },
+  {
+   "t": 9.45,
+   "kind": "broad",
+   "db": 26.9
+  },
+  {
+   "t": 10.43,
+   "kind": "broad",
+   "db": 24.0
+  },
+  {
+   "t": 11.38,
+   "kind": "broad",
+   "db": 23.0
+  },
+  {
+   "t": 12.35,
+   "kind": "broad",
+   "db": 25.4
+  },
+  {
+   "t": 13.33,
+   "kind": "broad",
+   "db": 24.3
+  }
+ ],
+ "_made_by": "오푸스 실행자 줄판독(눈: 0.1초 자막띠·2fps 시트·원본 프레임 / 픽셀: 30fps 잉크·장면차·광류·채움 hex / 신호: sfx_events.detect) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "scratchpad hdn/measure.py·seg.py·strip.py·px.py·build.py — 그림 C:/숏템_칼카피/homedesignnote/work/lr_<id>/"
+}

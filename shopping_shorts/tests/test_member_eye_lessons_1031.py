@@ -32,7 +32,7 @@ def test_flow_rejects_ok_with_cut_title():
 
 
 def test_no_sheet_does_not_pass_silently(monkeypatch):
-    monkeypatch.setattr(F, "EYE_REVIEW", False)
+    monkeypatch.setattr(F, "EYE_REVIEW", False)      # 이 시험은 시트 길 — 눈 2단이 켜진 지금은 꺼서 본다
     st = {"version": "x", "log": [], "tries": {}}
     with pytest.raises(F._Stop):
         F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": []}}, {}, {})
@@ -40,7 +40,7 @@ def test_no_sheet_does_not_pass_silently(monkeypatch):
 
 
 def test_sheet_ask_requires_proof_and_carries_lessons(monkeypatch):
-    monkeypatch.setattr(F, "EYE_REVIEW", False)
+    monkeypatch.setattr(F, "EYE_REVIEW", False)      # 이 시험은 시트 길 — 눈 2단이 켜진 지금은 꺼서 본다
     st = {"version": "x", "log": [], "tries": {}, "script": {"S": {"title_lines": [["제목"]], "lines": []}}}
     r = F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["x/eye/시트_1초.jpg"]}}, {}, {})
     rv = r["review"][0]
@@ -54,7 +54,7 @@ def test_every_stage_guide_file_ships_with_the_server():
 
 def test_lessons_file_stays_small_and_every_stage_exists():
     d = json.loads(F.LESSONS_FILE.read_text(encoding="utf-8"))
-    d.pop("by_style", None)        # 판별 경험은 따로
+    d.pop("by_style", None)       # 판 전용 경험 = 별도 칸
     assert set(d) == {"script", "material", "plan", "final"}
     assert all(0 < len(v) <= 15 for v in d.values())
     assert all(F._lessons(k) for k in d)
@@ -67,8 +67,15 @@ def test_eye_left_after_limit_still_finishes_with_notice():
     assert st["look_left"] == ["7초 밋밋함"] and "7초 밋밋함" in st["notice"]
 
 
-def test_gate_fail_at_limit_is_not_delivered():
-    """자동 검사 ×는 완성으로 안 넘어간다 — 기준을 낮추는 길이 아니다."""
+def test_ad_mark_fail_at_limit_is_not_delivered():
+    """11-02 검사는 권고지만 광고 표시 누락은 금지선이다 — 완성으로 안 넘어간다."""
     st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": False, "rows": [{"group": "표식", "what": "광고", "ok": False}]}, "look": {"ok": False, "problems": []}}
     with pytest.raises(F._Stop):
         F.ph_check_judge(st, {}, {}, {})
+
+
+def test_vmake_sdk_whole_folder_ships_and_upload_dep_listed():
+    from tools.claude_portal import engine_bundle as B
+    d = B.data_extra(ROOT)
+    assert "shopping_shorts/vmake_sdk/core/client.py" in d
+    assert "alibabacloud-oss-v2==" in (ROOT / "installer/common/requirements-engine-py312-win.txt").read_text(encoding="utf-8")

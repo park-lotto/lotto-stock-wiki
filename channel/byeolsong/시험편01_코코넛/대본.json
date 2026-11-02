@@ -1,0 +1,76 @@
+{
+ "slug": "byeolsong_t01_coconut",
+ "title_lines": [
+  [
+   [
+    "코코넛 껍질",
+    null
+   ]
+  ],
+  [
+   [
+    "이렇게 벗김 ㅋㅋ",
+    null
+   ]
+  ]
+ ],
+ "source_label": "KnifeCoconut",
+ "bgm": {
+  "id": "byeolsong_ref",
+  "ss": 5.6
+ },
+ "facts": [
+  "원본 = YouTube @KnifeCoconut IBgu5UCSIlM 'Very cool coconut scraper' 조회 154,230,256(2026-10-27 yt-dlp) — 손도끼로 코코넛 겉껍질을 벗기는 한 샷 13.6초"
+ ],
+ "lines": [
+  {
+   "id": "C1",
+   "kind": "sub",
+   "dur": 3.4,
+   "caps": [
+    {
+     "text": "코코넛 원래 이렇게 생긴 거였어?",
+     "likes": "9.8천",
+     "ago": "2주 전",
+     "s0": 0.27
+    }
+   ]
+  },
+  {
+   "id": "C2",
+   "kind": "sub",
+   "dur": 3.4,
+   "caps": [
+    {
+     "text": "도끼 몇 번에 껍질이 통째로 벗겨지네 ㄷㄷ;;",
+     "likes": "4.1천",
+     "ago": "1주 전"
+    }
+   ]
+  },
+  {
+   "id": "C3",
+   "kind": "sub",
+   "dur": 3.4,
+   "caps": [
+    {
+     "text": "깎는 게 아니라 그냥 옷을 벗기는 중 ㅋㅋㅋㅋ",
+     "likes": "1.2만",
+     "ago": "3주 전"
+    }
+   ]
+  },
+  {
+   "id": "C4",
+   "kind": "sub",
+   "dur": 3.23,
+   "caps": [
+    {
+     "text": "난 왜 이걸 끝까지 보고 있지",
+     "likes": "6.3천",
+     "ago": "5일 전"
+    }
+   ]
+  }
+ ]
+}

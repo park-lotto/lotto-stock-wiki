@@ -1,0 +1,12 @@
+{
+ "slug": "yummyknow",
+ "roles": [
+  "상황(훅 질문+무슨 일)",
+  "반응(사람들 반응)",
+  "진짜 이유(전언 ~다는데)",
+  "반전",
+  "댓글 반응(마무리)"
+ ],
+ "mode": "narration",
+ "note": "프리셋 manifest.roles 로 옮길 값(manifest 주인 preset_save 가 저장)"
+}

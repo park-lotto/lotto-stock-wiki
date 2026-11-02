@@ -1,0 +1,1061 @@
+{
+ "id": "RWS43GF1A_U",
+ "dur": 25.217,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "미국 MZ가 환장하는",
+   "colors": [
+    {
+     "word": "미국 MZ가 환장하는",
+     "hex": "#F8FB11"
+    }
+   ],
+   "outline": "검정(띠와 같은 색 — 띠 위라 외곽 구분 불가)"
+  },
+  {
+   "text": "전기 자전거",
+   "colors": [
+    {
+     "word": "전기 자전거",
+     "hex": "#E8081E"
+    }
+   ],
+   "outline": "짙은 외곽(눈)",
+   "note": "1줄보다 큼"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   559,
+   1080,
+   1361
+  ],
+  "caption_band": [
+   1417,
+   1493
+  ],
+  "title_y": [
+   [
+    291,
+    391
+   ],
+   [
+    419,
+    550
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": null,
+  "logo_y": [
+   170,
+   224
+  ],
+  "watermark": null,
+  "source_hex": null,
+  "channel_name": {
+   "text": "핫템리포트",
+   "y": [
+    170,
+    224
+   ],
+   "x": [
+    410,
+    669
+   ],
+   "fill_hex": "#F7FFF5",
+   "glow": {
+    "hex": "#011F00~초록 번짐(띠 위 y60~140 평균)",
+    "sec": null
+   }
+  },
+  "note": "검정 띠(y0~559) + 초록 번짐 채널명 + 노랑/빨강 2줄 제목 + 창 y559~1920 꽉 채움(크롭, 레터박스 없음) · 5~7초 원본은 창 아래 검정(원본 비율)"
+ },
+ "lines": [
+  {
+   "t0": 0.067,
+   "t1": 1.367,
+   "speaker": "나레",
+   "text": "미국에서 난리난",
+   "layer": "핫템리포트",
+   "role": "훅",
+   "enter": "pop(주황 불꽃 글로우로 크게 등장 → 0.13~0.43 불씨 흩어지며 작아져 흰 기본 글자로)",
+   "enter_ms": 370,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FCFAFA",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": {
+    "hex": "주황 #FF6A2A 계열(눈)",
+    "sec": 0.37
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 전기자전거 주행",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.367,
+   "t1": 2.267,
+   "speaker": "나레",
+   "text": "전기 자전거가 있는데요",
+   "layer": "핫템리포트",
+   "role": "훅",
+   "enter": "glitch(RGB 분리 — 1.37~1.47)",
+   "enter_ms": 100,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FEFDFE",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 전기자전거 주행",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.267,
+   "t1": 3.467,
+   "speaker": "나레",
+   "text": "래퍼들이 자기 차 컬러에",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "흰 BMW 옆 흰 전기자전거",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.467,
+   "t1": 4.3,
+   "speaker": "나레",
+   "text": "맞춰 제작하면서",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "차와 같은 색 자전거",
+   "fit": 8,
+   "cut_at": [
+    3.733
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.3,
+   "t1": 5.367,
+   "speaker": "나레",
+   "text": "유명해졌는데",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FDFCFE",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "연두 차 옆 연두 바퀴 자전거",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.367,
+   "t1": 6.633,
+   "speaker": "나레",
+   "text": "특히 R&B 팝스타",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "typing(낱말씩 말에 맞춰 — 5.40~6.43)",
+   "enter_ms": 1030,
+   "variant": "기본(흰)",
+   "type_cps": 7.8,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FCFCFC",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "금색 바퀴 자전거에 앉은 남자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.633,
+   "t1": 7.8,
+   "speaker": "나레",
+   "text": "크리스 브라운이 타면서",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "fade(회색 반투명→흰 — 6.63~6.90)",
+   "enter_ms": 270,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1492
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "밤 도로 파란 자전거 주행",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.8,
+   "t1": 8.833,
+   "speaker": "나레",
+   "text": "바이럴이 제대로",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "파란 조명 속 자전거",
+   "fit": 6,
+   "cut_at": [
+    8.2
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.833,
+   "t1": 9.633,
+   "speaker": "나레",
+   "text": "터졌는데요",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1490
+   ],
+   "fill_hex": "#FEFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "파란 조명 속 자전거",
+   "fit": 6,
+   "cut_at": [
+    9.533
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.633,
+   "t1": 10.467,
+   "speaker": "나레",
+   "text": "겉은 클래식한",
+   "layer": "핫템리포트",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1492
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "올드스쿨 모양 자전거 주행",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.467,
+   "t1": 11.367,
+   "speaker": "나레",
+   "text": "올드스쿨인데",
+   "layer": "핫템리포트",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1492
+   ],
+   "fill_hex": "#FFFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "올드스쿨 모양 자전거 주행",
+   "fit": 8,
+   "cut_at": [
+    11.267
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.367,
+   "t1": 12.067,
+   "speaker": "나레",
+   "text": "속은 완전",
+   "layer": "핫템리포트",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 자전거 주행",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.067,
+   "t1": 13.033,
+   "speaker": "나레",
+   "text": "전기 바이크라는 게",
+   "layer": "핫템리포트",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1490
+   ],
+   "fill_hex": "#FDFCFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "자전거 탄 남자 주행",
+   "fit": 7,
+   "cut_at": [
+    12.933
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.033,
+   "t1": 14.067,
+   "speaker": "나레",
+   "text": "반전 포인트인데다",
+   "layer": "핫템리포트",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FEFCFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "연두 바퀴 자전거 주행",
+   "fit": 6,
+   "cut_at": [
+    13.767
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.067,
+   "t1": 15.533,
+   "speaker": "나레",
+   "text": "스펙도 놀라운 게",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1492
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "앞바퀴 들고 윌리하는 라이더",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.533,
+   "t1": 16.8,
+   "speaker": "나레",
+   "text": "1500W 모터로 최고",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1420,
+    1486
+   ],
+   "fill_hex": "#FDFDFE",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "연두 바퀴 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 18.467,
+   "speaker": "나레",
+   "text": "최고 시속 97km에",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1489
+   ],
+   "fill_hex": "#FEFCFE",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "연두 바퀴 자전거 주행",
+   "fit": 8,
+   "cut_at": [
+    18.3
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.467,
+   "t1": 19.367,
+   "speaker": "나레",
+   "text": "완충하면 최대",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1492
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "흰 자전거 주행",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 19.367,
+   "t1": 21.233,
+   "speaker": "나레",
+   "text": "160km까지 간다는데",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1490
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "흰 자전거 주행",
+   "fit": 7,
+   "cut_at": [
+    21.133
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.233,
+   "t1": 21.933,
+   "speaker": "나레",
+   "text": "무채색 일색인",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FEFCFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "어두운 배경 주황 바퀴 자전거",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.933,
+   "t1": 22.633,
+   "speaker": "나레",
+   "text": "한국 도로에서",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1491
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "어두운 배경 주황 바퀴 자전거",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.633,
+   "t1": 23.9,
+   "speaker": "나레",
+   "text": "이거 타고 다니면",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1490
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 자전거 주행",
+   "fit": 8,
+   "cut_at": [
+    22.8
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.9,
+   "t1": 24.167,
+   "speaker": "나레",
+   "text": "제대로",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1419,
+    1489
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 자전거 주행",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.167,
+   "t1": 25.2,
+   "speaker": "나레",
+   "text": "시선 강탈이겠네요",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1418,
+    1491
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "주황 바퀴 자전거 주행",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.067
+  ]
+ ],
+ "beats": "훅 나레(0.07~2.27 '미국에서 난리난'(불꽃 pop)/'전기 자전거가 있는데요'(글리치)) → 다리(2.27~5.37 래퍼 차 색 맞춤) → 증거(5.37~9.63 '특히 R&B 팝스타'(낱말 타이핑)/'크리스 브라운이 타면서'(페이드)/바이럴) → 반전(9.63~14.07 겉은 클래식·속은 전기) → 공개 스펙(14.07~21.23 1500W·97km·160km) → 끝(21.23~25.2 '한국 도로에서 이거 타고 다니면 제대로 시선 강탈이겠네요', CTA 없음)",
+ "narr_share": "나레 줄 24/24, 나레 25.1초/25.217초",
+ "notes": [
+  "나레만 있는 편(원음 자막 0줄) — 원본 소리는 음악·주행음뿐(받아쓰기 전부 한국어 나레).",
+  "등장 효과 4줄 = 훅 2줄(불꽃 pop·글리치) + 증거 앞 2줄(타이핑·페이드). 나머지 20줄 instant.",
+  "효과음: 채널 신호표 후보 0(고립 0.8 미만 솟음 10.54·17.11초는 후보 아님) — 귀 확인 못 함.",
+  "제목 'MZ' 만 영문 — 원본 영상 제목은 영어(The E-Bike Gen Z Americans Are Obsessed With)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "주황 바퀴 전기자전거 탄 검정 헬멧 라이더 옆모습(자막 없음 — 첫 줄 0.07초)",
+  "face_frac": "0(헬멧 — 얼굴 안 보임)",
+  "text": "미국 MZ가 환장하는 / 전기 자전거(고정 제목만)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·sfx_events 신호) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "scratchpad capseg.py/cutdet.py/px.py/segsheet.py — 결과 C:/숏템_칼카피/hottemreport/work/lr6/"
+}

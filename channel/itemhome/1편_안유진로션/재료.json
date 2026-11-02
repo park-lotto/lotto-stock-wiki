@@ -1,0 +1,638 @@
+{
+ "_note": "아이템홈 1편(벤치 MfptnwqlGKs) 재료 계획 — TTS·렌더 전. 원본 = IVE 브이로그 8o3M3DmY05E(1080p) + eos Products 공식 광고 2편(1080p). 창 1080x1440(frame_MfptnwqlGKs). 시각은 말속도 8.0자/초 추정 — TTS 뒤 줄 끝을 받아쓰기로 재서 다시 맞춘다. 원음 컷은 audio_src/audio_ss 로 컷마다 원본 소리(쉼 잘라 붙임). narr_video 는 자막 페이지 시작에서만 컷을 바꾸므로 TTS 뒤 이 컷 목록을 페이지별 shots[].cuts 로 묶는다.",
+ "cand_dir": "C:/숏템_칼카피/itemhome/1편_안유진로션/src",
+ "narration": "타입캐스트 여성 나레(문정 tc_68f9c6a72f0f04a417bb136f 후보) — 원본 나레 여성·차분한 해요체(벤치 귀 확인), 말속도 원본 7.6자/초(채널 중앙 8.0)",
+ "sources": {
+  "8o3M3DmY05E": {
+   "채널": "IVE",
+   "제목": "[IVE LOG] 강아지 가방 최초(?) 공개 in WORLD TOUR | 윶 LOG",
+   "업로드": "2026-09-17",
+   "해상도": "1920x1080 24fps",
+   "길이": 613.4
+  },
+  "HOGLbtiiFZE": {
+   "채널": "eos Products",
+   "제목": "That OG Vanilla",
+   "업로드": "2026-06-15",
+   "해상도": "1920x1080",
+   "길이": 15.07
+  },
+  "85AU_3DohFs": {
+   "채널": "eos Products",
+   "제목": "Vanilla Cashmere Trifecta",
+   "업로드": "2026-02-18",
+   "해상도": "1920x1080",
+   "길이": 6.06
+  },
+  "LMndcumptpo": {
+   "채널": "eos Products",
+   "제목": "10/10, No Notes",
+   "업로드": "2025-02-10",
+   "해상도": "1920x1080",
+   "길이": 30.09,
+   "쓰임": "받음·안 씀(팔 근접이 어둡고 Y79·로션이 안 보임) — 벤치 출처 2025.02.10 같은 날 4편 중 하나(DNnFj5yySM4·rPG0-LzEOKU·8zs6Pu4U9QU 도 그날)"
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "N1",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 99.9,
+   "dur": 0.95,
+   "src_span": [
+    99.9,
+    100.85
+   ],
+   "t_final": [
+    0.0,
+    0.95
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    470,
+    90,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "검은 후드 안유진이 빨간 TYLENOL 상자를 카메라 앞에 내밂(대기실)",
+   "why": "'투어 중에 안유진이' — 화면 자막 '[투어 기간 동안만 사용할 약 구입 완료]'(왼쪽 위 y50~90)는 y90부터 잘라 뺌",
+   "mute": true,
+   "Y": 102
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 128.0,
+   "dur": 0.95,
+   "src_span": [
+    128.0,
+    128.95
+   ],
+   "t_final": [
+    0.95,
+    1.9
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    560,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "작은 타이레놀 통을 얼굴 옆에 들고 말함(2:08)",
+   "why": "'미국 타겟에서 산 게' — 본인 말 2:08.3 '그래서 이 타이레놀 요걸 샀고요'(아래 자막 y≈960 밖)",
+   "mute": true,
+   "Y": 111
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "src": "eos_85AU_3DohFs.mp4",
+   "url": "https://www.youtube.com/watch?v=85AU_3DohFs",
+   "src_date": "eos Products 유튜브 2026.02.18",
+   "ss": 3.0,
+   "dur": 0.85,
+   "src_span": [
+    3.0,
+    3.85
+   ],
+   "t_final": [
+    1.9,
+    2.75
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    190,
+    60,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "보라 바탕 eos 펌프병(제품만 — 오른쪽 칸 'moisturize'·팔은 x≥960 밖)",
+   "why": "'타이레놀만이'",
+   "mute": true,
+   "Y": 145
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 0.3,
+   "dur": 0.87,
+   "src_span": [
+    0.3,
+    1.17
+   ],
+   "t_final": [
+    2.75,
+    3.62
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    130,
+    110,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "보라 바탕 eos 뚜껑 병(안유진 것과 같은 병)",
+   "why": "'아니었다고 해요' — 로션으로 넘김",
+   "mute": true,
+   "Y": 161
+  },
+  {
+   "i": 4,
+   "line": "O1",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 568.2,
+   "dur": 1.05,
+   "src_span": [
+    568.2,
+    569.25
+   ],
+   "t_final": [
+    3.62,
+    4.67
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "호텔 침대, 보라색 eos 병을 얼굴 옆에 든 안유진",
+   "why": "원음 “이게 제가 엄청” 568.20~569.25",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 568.2,
+   "Y": 151
+  },
+  {
+   "i": 5,
+   "line": "O1",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 7.05,
+   "dur": 0.9,
+   "src_span": [
+    7.05,
+    7.95
+   ],
+   "t_final": [
+    4.67,
+    5.57
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    640,
+    110,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "eos 광고 — 병을 눌러 펌프로 짜는 근접(제품, 글자 없는 7.05~8.25)",
+   "why": "원음 “SNS에서 많이 본”(소리 IVE 570.15~, 쉼 0.9초 잘라 냄)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 570.15,
+   "Y": 78
+  },
+  {
+   "i": 6,
+   "line": "O1",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 571.05,
+   "dur": 1.45,
+   "src_span": [
+    571.05,
+    572.5
+   ],
+   "t_final": [
+    5.57,
+    7.02
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "병을 기울여 든 채 말함",
+   "why": "원음 “…아이거든요” ~572.50 (3판: 뒤 '바닐라 캐시미어 향' 572.7~573.8 은 받아쓰기 4회 모두 못 알아들어 뺌)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 571.05,
+   "Y": 166
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 536.3,
+   "dur": 0.95,
+   "src_span": [
+    536.3,
+    537.25
+   ],
+   "t_final": [
+    7.02,
+    7.97
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    370,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "대기실에서 양손 흔들며 마무리 인사(가방 소개 끝)",
+   "why": "'가방 공개를 마친 뒤' — 8:58 '[왓츠 인 마이 백 종료]' 직전 장면",
+   "mute": true,
+   "Y": 108
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 590.9,
+   "dur": 1.1,
+   "src_span": [
+    590.9,
+    592.0
+   ],
+   "t_final": [
+    7.97,
+    9.07
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "호텔 흰 침대에 누운 얼굴",
+   "why": "'호텔 방에서' — 9:19.7 '[호텔 도착]' 뒤 같은 호텔 침대",
+   "mute": true,
+   "Y": 150
+  },
+  {
+   "i": 9,
+   "line": "N2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 566.05,
+   "dur": 0.95,
+   "src_span": [
+    566.05,
+    567.0
+   ],
+   "t_final": [
+    9.07,
+    10.02
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    300,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "호텔에서 보라색 eos 병을 카메라 쪽으로 듦(9:25.5 '이 바디로션이 있습니다' 장면, 소리 없음)",
+   "why": "'하나 더 소개한' — 병을 처음 꺼내는 순간. 566.0 원본 편집 확대(점프 줌 검사 걸림) 뒤 566.05부터",
+   "mute": true,
+   "Y": 144
+  },
+  {
+   "i": 10,
+   "line": "N2",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 1.3,
+   "dur": 1.0,
+   "src_span": [
+    1.3,
+    2.3
+   ],
+   "t_final": [
+    10.02,
+    11.02
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    130,
+    110,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "보라 바탕 eos shea better 24H Moisture vanilla cashmere 병",
+   "why": "'이오에스 바닐라' — 오른쪽 글자(x≥890) 밖, 2.45초 바닐라 콩 전환 전",
+   "mute": true,
+   "Y": 168
+  },
+  {
+   "i": 11,
+   "line": "N2",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 13.6,
+   "dur": 0.38,
+   "src_span": [
+    13.6,
+    13.98
+   ],
+   "t_final": [
+    11.02,
+    11.4
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    130,
+    110,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "같은 병 정면(제품만, 오른쪽 'dessert for your skin' 밖)",
+   "why": "'캐시미어 로션이에요'",
+   "mute": true,
+   "Y": 166
+  },
+  {
+   "i": 12,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 574.8,
+   "dur": 0.95,
+   "src_span": [
+    574.8,
+    575.75
+   ],
+   "t_final": [
+    11.4,
+    12.35
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "병을 얼굴 옆에 세워 들고 말함",
+   "why": "원음 “근데 이게 뭔가” 574.80~",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 574.8,
+   "Y": 154
+  },
+  {
+   "i": 13,
+   "line": "O2",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 12.6,
+   "dur": 0.9,
+   "src_span": [
+    12.6,
+    13.5
+   ],
+   "t_final": [
+    12.35,
+    13.25
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    130,
+    110,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "eos 광고 — 같은 병 정면(제품만, 오른쪽 'dessert for your skin' 밖)",
+   "why": "원음 “바닐라 향이 처음엔”(소리 IVE 575.75~)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 575.75,
+   "Y": 167
+  },
+  {
+   "i": 14,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 576.65,
+   "dur": 0.85,
+   "src_span": [
+    576.65,
+    577.5
+   ],
+   "t_final": [
+    13.25,
+    14.1
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "병 든 얼굴",
+   "why": "원음 계속",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 576.65,
+   "Y": 144
+  },
+  {
+   "i": 15,
+   "line": "O2",
+   "src": "eos_85AU_3DohFs.mp4",
+   "url": "https://www.youtube.com/watch?v=85AU_3DohFs",
+   "src_date": "eos Products 유튜브 2026.02.18",
+   "ss": 5.0,
+   "dur": 0.8,
+   "src_span": [
+    5.0,
+    5.8
+   ],
+   "t_final": [
+    14.1,
+    14.9
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    900,
+    220,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "eos 광고 — 로션 펌프병·바닐라 캐시미어 미스트(제품만, 위 'layer on the vanilla' 글자 y<220 밖)",
+   "why": "원음 “좀 과한가”(소리 IVE 577.50~)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 577.5,
+   "Y": 174
+  },
+  {
+   "i": 16,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 578.3,
+   "dur": 0.8,
+   "src_span": [
+    578.3,
+    579.1
+   ],
+   "t_final": [
+    14.9,
+    15.7
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "얼굴(눈 감았다 뜸)",
+   "why": "원음 “싶다가도” ~579.10",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 578.3,
+   "Y": 140
+  },
+  {
+   "i": 17,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 579.65,
+   "dur": 2.62,
+   "src_span": [
+    579.65,
+    582.27
+   ],
+   "t_final": [
+    15.7,
+    18.32
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "병 들고 입 모양 보이는 얼굴(끝 컷 밝음)",
+   "why": "원음 “계속 바르다 보면 묘하게 중독되는 그런 향” 579.65~582.27(쉼 0.55초 잘라 냄)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 579.65,
+   "Y": 138
+  }
+ ],
+ "gaps": {
+  "hottem_audio_gaps": "0:3.4,end:6.92",
+  "note": "3판: 줄0 뒤 O1 · 줄1 뒤 O2(끝). 2판 O3(타겟에서 샀어요) 원본 −36.5 LUFS 웅얼거림이라 뺌 → 나레 3번 줄도 뺌(TTS 재호출 없이 잘라 씀)"
+ },
+ "source_audio": {
+  "keep": true,
+  "note": "원음 = 안유진 본인 말만(받아쓰기 2회 이상, 근거.md §2). IVE 편집 BGM 이 원음 밑에 깔려 있음 — 원음 구간 우리 BGM 은 덕킹."
+ },
+ "caption_effects": {
+  "now": "나레 = 프리셋 나레_굵은체 · 원음 = caption_events emph 흰색 “따옴표”",
+  "planned": "원음_따옴표 하위 스타일(기울인 가는 고딕) · 강조어 부분 노랑 — 엔진 요청"
+ },
+ "check": {
+  "total": 18.32,
+  "bench": 21.84,
+  "ratio": 0.839,
+  "n_shots": 18,
+  "shot_median": 0.95,
+  "bench_cut_median": 0.87,
+  "max_scale": 1.67,
+  "orig_share": 0.563,
+  "orig_share_rule": [
+   0.46,
+   0.65
+  ],
+  "cap_max_chars": 9,
+  "narr_cps_est": 8.0,
+  "sources_used": [
+   "IVE 유튜브 2026.09.17",
+   "eos Products 유튜브 2026.02.18",
+   "eos Products 유튜브 2026.06.15"
+  ]
+ }
+}

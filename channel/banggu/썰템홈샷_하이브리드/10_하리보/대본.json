@@ -1,0 +1,50 @@
+{
+ "topic": "하리보 × 이름이 사실은 만든 사람 이름 + 동네 이름의 줄임말 — HAns RIegel BOnn → 1920 본의 작은 부엌, 설탕 한 포대·구리 냄비 → 첫 직원 아내가 자전거로 배달 → 1922 춤추는 곰 → 지금의 골드베렌 → 뒤 체험: 쿠팡 하리보 골드베렌(9219172184)",
+ "brand": "HARIBO",
+ "scene_query": "하리보 골드베렌",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "f1",
+  "why": "누구나 아는 하리보인데 이름이 만든 사람 이름(한스 리겔)과 동네 이름(본)의 앞 글자 — HARIBO 공식 역사 페이지 'HARIBO (HAns RIegel BOnn)'. 훅 장면 = 하리보 공식 광고 속 골드베렌·HARIBO 로고 — 장면 자체가 '하리보가 무슨 뜻?' 질문."
+ },
+ "hook": [
+  "하리보,",
+  "사람 이름이었다?"
+ ],
+ "post": "하리보는 만든 사람 이름과 동네 이름을 합친 말",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "f1": {
+   "text": "HARIBO 공식 역사 페이지: Hans Riegel founds HARIBO (HAns RIegel BOnn) on 13 December 1920 — with nothing more than a sack of sugar, a marble slab, a stool, a stove, a copper pot and a rolling pin",
+   "url": "https://www.haribo.com/en/about-us/history"
+  },
+  "f2": {
+   "text": "HARIBO 공식 역사 페이지: 1921 His wife Gertrud becomes the new company's first employee · 1923 Up until that point, his wife Gertrud has delivered the daily production by bicycle",
+   "url": "https://www.haribo.com/en/about-us/history"
+  },
+  "f3": {
+   "text": "HARIBO 공식 역사 페이지: 1922 Hans Riegel invents the DANCING BEAR, a gummi bear that would one day become world-famous as the iconic HARIBO Goldbear",
+   "url": "https://www.haribo.com/en/about-us/history"
+  },
+  "p1": {
+   "text": "쿠팡 9219172184 '하리보 골드베렌 젤리'(1.285kg · 93개입, 로켓) — 파트너스 API 2026-10-27",
+   "url": "https://www.coupang.com/vp/products/9219172184"
+  }
+ },
+ "final": {
+  "lines": [
+   {"fn": "잉 훅(HARIBO = 질문)", "seg": "A", "text": "하리보라는 이름, 사실은 만든 사람 이름을 줄인 거라는데", "facts": ["f1"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "공개", "seg": "A", "text": "한스 리겔이라는 이름에, 살던 도시 이름까지, 앞 글자만 따서 하리보", "facts": ["f1"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "몰랐던 배경", "seg": "A", "text": "시작은 작은 부엌이었는데, 설탕 한 포대랑 구리 냄비가 거의 전부였다고", "facts": ["f1"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "비하인드", "seg": "A", "text": "첫 직원은 아내였고, 그날 만든 사탕을 자전거로 직접 배달했고", "facts": ["f2"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "덤", "seg": "A", "text": "그러다 곰 모양 젤리를 만들었는데, 이름이 무려 춤추는 곰이었다고", "facts": ["f3"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "쐐기", "seg": "A", "text": "그 곰이 바로 우리가 아는, 하리보 골드베렌이 됐다는 얘기", "facts": ["f3"], "sources": ["https://www.haribo.com/en/about-us/history"]},
+   {"fn": "B 연결", "seg": "B", "text": "듣다 보니 괜히 당겨서, 쿠팡에서 골드베렌을 한 통 주문했는데", "facts": ["p1"], "sources": ["https://www.coupang.com/vp/products/9219172184"]},
+   {"fn": "B 좋은 점(식감)", "seg": "B", "text": "말랑하면서도 탄력이 있어서, 씹을수록 쫀득하고", "facts": [], "sources": []},
+   {"fn": "B 좋은 점(색깔)", "seg": "B", "text": "색깔마다 맛이 달라서, 골라 먹다 보면 손이 안 멈추더라고요", "facts": [], "sources": []},
+   {"fn": "B 끝(훅 되받기)", "seg": "B", "text": "부엌 냄비 하나로 시작한 곰이, 백 년 넘게 춤을 추고 있네요", "facts": ["f3"], "sources": []}
+  ]
+ }
+}

@@ -1,0 +1,897 @@
+{
+ "_note": "샥탬스토리 27편 Just the Cheese 재료 계획. 창 1080x1052(벤치 s920FioMSvY, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(EI9C5IHWdYk_audio.m4a).",
+ "sources": {
+  "EI9C5IHWdYk": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "The Sharks Offer Entrepreneur Cheesy Deals for Just The Cheese | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 30fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 708.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(96~101·338~341·378~381·586~589·600~605·614~617·626~634·640~645초) 안 씀 · 492~497 시즌 카드·688초 뒤 끝 화면 안 씀 · 무대·포장 'JUST THE CHEESE' 글 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "치즈만 구워서",
+  "line2": "과자를 만든다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 168.77,
+   "audio_dur": 1.2,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    162.56,
+    163.76
+   ],
+   "ss": 162.56,
+   "dur": 1.2,
+   "t_final_est": [
+    0.0,
+    1.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    265,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 손에 든 구운 치즈 바(원본 샷 162.53~166.57 첫 1.2초, 얼굴 없음 — 소리 = 투자자 원음 'Really good.' cover, 말한 사람은 다음 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 169.97,
+   "audio_dur": 1.92,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    169.97,
+    171.89
+   ],
+   "ss": 169.97,
+   "dur": 1.92,
+   "t_final_est": [
+    1.2,
+    3.12
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    472,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "치즈 바를 먹으며 말하는 투자자 본인(원본 샷 168.57~171.91 — 소리 = 이 줄 원음 이어서, 화면초 169.97 = 소리초 169.97)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "z109.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=z109",
+   "src_orig_span": [
+    109.45,
+    111.601
+   ],
+   "ss": 0.0,
+   "dur": 2.151,
+   "t_final_est": [
+    3.12,
+    5.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 창업자와 제품 간판(원본 샷 109.41~111.85 을 천천히 다가가는 사본 z109.mp4, 제품 브랜드, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    111.9,
+    114.352
+   ],
+   "ss": 111.9,
+   "dur": 2.452,
+   "t_final_est": [
+    5.27,
+    7.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    376,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자(샷 111.85~114.61, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 114.63,
+   "audio_dur": 1.2,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    114.63,
+    115.83
+   ],
+   "ss": 114.63,
+   "dur": 1.2,
+   "t_final_est": [
+    7.72,
+    8.92
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "듣고 있는 투자자(원본 샷 114.61~115.85 — 소리 = 창업자 원음 그 시각)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 115.87,
+   "audio_dur": 2.08,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    115.87,
+    117.95
+   ],
+   "ss": 115.87,
+   "dur": 2.08,
+   "t_final_est": [
+    8.92,
+    11.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(샷 115.85~117.98)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O2",
+   "kind": "원음",
+   "src": "z118.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 118.01,
+   "audio_dur": 1.48,
+   "url": "https://www.youtube.com/watch?v=z118",
+   "src_orig_span": [
+    118.01,
+    119.49
+   ],
+   "ss": 0.01,
+   "dur": 1.48,
+   "t_final_est": [
+    11.0,
+    12.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 창업자 본인(샷 117.98~121.55 를 천천히 다가가는 사본 z118.mp4 — 소리 = 원음 그 시각)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    134.2,
+    135.701
+   ],
+   "ss": 134.2,
+   "dur": 1.501,
+   "t_final_est": [
+    12.48,
+    13.98
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "쿠키 틀에 치즈를 넣는 손(원본 샷 134.17~136.04, 손만, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    136.08,
+    138.181
+   ],
+   "ss": 136.08,
+   "dur": 2.101,
+   "t_final_est": [
+    13.98,
+    16.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "오븐에 넣는 창업자(샷 136.04~140.94, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 143.49,
+   "audio_dur": 1.84,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    143.49,
+    145.33
+   ],
+   "ss": 143.49,
+   "dur": 1.84,
+   "t_final_est": [
+    16.09,
+    17.93
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "오븐에서 꺼낸 판 위 구운 치즈 바(원본 샷 142.84~145.71 — 이 말을 할 때 방송 화면 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    179.0,
+    181.186
+   ],
+   "ss": 179.0,
+   "dur": 2.186,
+   "t_final_est": [
+    17.93,
+    20.11
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "치즈 바를 먹어 보는 샤크들(원본 샷 178.98~181.21, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N3",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    181.25,
+    183.181
+   ],
+   "ss": 181.25,
+   "dur": 1.931,
+   "t_final_est": [
+    20.11,
+    22.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    390,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "치즈 바를 씹어 보는 투자자(샷 181.21~183.18, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    193.93,
+    195.526
+   ],
+   "ss": 193.93,
+   "dur": 1.596,
+   "t_final_est": [
+    22.04,
+    23.64
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "질문을 듣는 창업자(원본 샷 193.89~195.63, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N4",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    195.66,
+    198.087
+   ],
+   "ss": 195.66,
+   "dur": 2.427,
+   "t_final_est": [
+    23.64,
+    26.07
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "'아무나 할 수 있잖아' 묻는 투자자(샷 195.63~198.26, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "O4",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 203.32,
+   "audio_dur": 1.97,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    203.32,
+    205.29
+   ],
+   "ss": 203.32,
+   "dur": 1.97,
+   "t_final_est": [
+    26.07,
+    28.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 투자자 본인(원본 샷 203.30~207.17)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "N5",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    460.4,
+    461.89
+   ],
+   "ss": 460.4,
+   "dur": 1.49,
+   "t_final_est": [
+    28.04,
+    29.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 투자자(원본 샷 460.33~463.10, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N5",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    469.1,
+    470.415
+   ],
+   "ss": 469.1,
+   "dur": 1.315,
+   "t_final_est": [
+    29.52,
+    30.84
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    147,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "샤크들 자리 전경(샷 469.07~473.57, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "O5",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 482.86,
+   "audio_dur": 1.56,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    482.86,
+    484.42
+   ],
+   "ss": 482.86,
+   "dur": 1.56,
+   "t_final_est": [
+    30.84,
+    32.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    341,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 투자자 본인(원본 샷 481.25~484.42)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "N6",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    507.1,
+    509.882
+   ],
+   "ss": 507.1,
+   "dur": 2.782,
+   "t_final_est": [
+    32.4,
+    35.18
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "평생 로열티를 말하는 투자자(원본 샷 507.07~513.61, 띠 없음, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "N6",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    672.95,
+    674.524
+   ],
+   "ss": 672.95,
+   "dur": 1.574,
+   "t_final_est": [
+    35.18,
+    36.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대에서 걸어 나가는 창업자(샷 672.91~676.64, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "O6",
+   "kind": "원음",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": false,
+   "audio_src": "EI9C5IHWdYk_audio.m4a",
+   "audio_ss": 684.15,
+   "audio_dur": 3.2,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    684.15,
+    687.35
+   ],
+   "ss": 684.15,
+   "dur": 3.2,
+   "t_final_est": [
+    36.76,
+    39.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    107,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(원본 샷 683.32~687.65)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "N7",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    430.2,
+    432.605
+   ],
+   "ss": 430.2,
+   "dur": 2.405,
+   "t_final_est": [
+    39.96,
+    42.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "Just the Cheese 포장 세 개(원본 샷 430.16~432.60, 제품 브랜드, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 22,
+   "line": "N7",
+   "kind": "나레",
+   "src": "EI9C5IHWdYk.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk",
+   "src_orig_span": [
+    446.0,
+    448.456
+   ],
+   "ss": 446.0,
+   "dur": 2.456,
+   "t_final_est": [
+    42.36,
+    44.82
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "포장 세 개 근접(샷 445.61~448.45, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/27편_JustTheCheese/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    423,
+    979,
+    656,
+    1203
+   ],
+   "target_what": "투자자 손에 든 구운 치즈 바 — 162.7초 원본 프레임 눈 측정(창 크롭 [266,0,1109,1080] 안 x 434~674·y 560~790, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    540,
+    1091
+   ],
+   "size": 371,
+   "face_clear": true,
+   "target_box": [
+    423,
+    979,
+    656,
+    1203
+   ],
+   "target_path": [
+    [
+     0.0,
+     423.0,
+     979.0,
+     656.0,
+     1203.0
+    ],
+    [
+     0.067,
+     422.0,
+     979.7,
+     655.0,
+     1203.7
+    ],
+    [
+     0.133,
+     420.7,
+     980.0,
+     653.7,
+     1204.0
+    ],
+    [
+     0.2,
+     421.0,
+     980.3,
+     654.0,
+     1204.3
+    ],
+    [
+     0.267,
+     422.3,
+     981.0,
+     655.3,
+     1205.0
+    ],
+    [
+     0.333,
+     424.0,
+     979.0,
+     660.0,
+     1206.0
+    ],
+    [
+     0.4,
+     424.0,
+     974.0,
+     666.0,
+     1207.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     540,
+     1091
+    ],
+    [
+     0.067,
+     538,
+     1092
+    ],
+    [
+     0.133,
+     537,
+     1092
+    ],
+    [
+     0.2,
+     538,
+     1092
+    ],
+    [
+     0.267,
+     539,
+     1093
+    ],
+    [
+     0.333,
+     542,
+     1092
+    ],
+    [
+     0.4,
+     545,
+     1090
+    ]
+   ],
+   "track_conf": 0.915,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.915 · 원 371px = 물건 반대각선 168×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 9.0 해답"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "시식"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "N7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "후일담"
+  }
+ ]
+}

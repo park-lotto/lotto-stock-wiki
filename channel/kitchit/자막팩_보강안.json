@@ -1,0 +1,118 @@
+{
+ "_note": "키치잇 자막을 자막팩(shopping_shorts/static/caption-motions.js) 한 벌로 — 2026-10-18 관제 097. 'pack' = CAPTION_PACKS 에 그대로 넣을 꼴(키 kitchit). 'new_motions' = CAPTION_MOTIONS 에 새로 넣을 등장 효과, 'new_word_fx' = CAPTION_WORD_FX 새 방식, 'new_keys' = 계약에 없는 새 키(구현 필요). 수치 근거 = channel/kitchit/스타일분석.md §1(픽셀 실측). 공용 코드는 이 파일로 고치지 않았다(구현 = 지휘자 자막팩 쪽).",
+ "pack": {
+  "kitchit": {
+   "label": "키치잇 연예인템",
+   "desc": "흰 굵은 둥근 글 + 두꺼운 검정 외곽선 + 흰 바깥 테두리 · 낱말 하나만 5색 돌림 · 톡 튀어 넘쳤다 안착",
+   "font": "Jalnan2",
+   "size": 100,
+   "_size_note": "1080 폭 화면에서 글자 크기 73px(잉크 높이 70)이 되게 — 팩 size(%)의 기준 크기가 다르면 그에 맞춰 환산. TmonMonsori 는 대안(BRa 편이 더 닮음)",
+   "look": "none",
+   "text": {
+    "color": "#FFFFFF",
+    "style": {
+     "WebkitTextStroke": "0.20em #151618",
+     "paintOrder": "stroke fill",
+     "strokeLinejoin": "round",
+     "textShadow": "0.115em 0 0 #FFF,-0.115em 0 0 #FFF,0 0.115em 0 #FFF,0 -0.115em 0 #FFF,0.081em 0.081em 0 #FFF,-0.081em 0.081em 0 #FFF,0.081em -0.081em 0 #FFF,-0.081em -0.081em 0 #FFF",
+     "_style_note": "검정 외곽선 바깥 두께 0.10em(획 0.20em 의 반이 글자 밖) + 그 바깥 흰 테두리 0.03em(그림자 8방향 반지름 0.115em ≈ 0.10+0.015) — 두 겹. 그림자·흐림 없음. CSS 로 두 겹이 안 깔끔하면 new_keys.text_ring 으로 구현"
+    }
+   },
+   "wordFx": {
+    "style": "color",
+    "color": "#FEDD00",
+    "grow": "",
+    "cycle": ["#FEDD00", "#00FD0B", "#65FEFB", "#FD6B7B", "#BDB4FC"],
+    "pick": "one_per_caption",
+    "_note": "낱말 강조 = 말하는 낱말 따라가기가 아니라 덩어리마다 핵심 낱말 '하나'만 색(대본이 고른 낱말, 없으면 강조 없음). 색은 덩어리마다 cycle 을 차례로 — cycle·pick 은 새 키(new_keys.word_cycle)"
+   },
+   "slots": {
+    "first": "kitchitPop",
+    "body": ["kitchitPop", "none", "none"],
+    "price": "kitchitPop",
+    "problem": "kitchitPop",
+    "reveal": "kitchitPop",
+    "end": "kitchitPop",
+    "emph": "kitchitPop",
+    "orig_typing": "kitchitTyping",
+    "_note": "body 규칙 = '한 줄(나레 한 문장·원음 한 조각)의 첫 덩어리만 팝, 같은 줄 다음 덩어리는 바로 바뀜(컷과 같이)'(Cs-Ka 2.3초·BRa '최화정이' 실측). 기존 칸 체계엔 '줄 안 몇 번째 덩어리'가 없어 body 3개 돌림으로는 정확히 안 맞는다 → new_keys.line_first_pop. orig_typing 은 새 칸(원음 구간 중 대본이 표시한 덩어리)"
+   },
+   "emph": {
+    "font": "Jalnan2",
+    "size": 120,
+    "color": "#FFFFFF",
+    "style": {
+     "WebkitTextStroke": "0.20em #151618",
+     "paintOrder": "stroke fill"
+    }
+   },
+   "stickers": {
+    "heart": {"what": "분홍 하트 #E8195E, 글자 크기의 0.55배", "where": "강조 낱말(타이핑이면 마지막 글자) 바로 아래 가운데", "enter": "kitchitPop 과 같은 곡선 0.3초", "move": "타이핑이면 마지막 글자를 따라 오른쪽으로 이동, 다 치면 사라짐", "bench": "BRa 8.0~9.9초 '쫀쫀~해서'·'엄마 드려야겠네'·'너~무 좋아'"},
+    "gem": {"what": "하늘 파랑 다이아 💎(면 4~6개, 흰 하이라이트), 글자 크기의 1.5배", "where": "강조 낱말 바로 옆(왼쪽 또는 오른쪽), 세로 가운데 맞춤", "enter": "팝 0.3초", "move": "흰 반짝임 띠가 왼쪽 위→오른쪽 아래로 0.4초마다 쓸고 지나감(30fps 실측 3~4프레임 간격으로 띠 위치 바뀜)", "bench": "BRa 15.9~17.0초 '부내나'·19.5~20.0초 '부내까지 나면'"},
+    "spark_lines": {"what": "흰 짧은 선 3개 '\\ | /'(검정 테두리)", "where": "낱말 오른쪽 위 45°", "enter": "번쩍(0→1, 2프레임)", "move": "없음", "bench": "Cs-Ka 9.9초 '이렇게 똑같다니까'"},
+    "circle_arrow": {"what": "빨간 원(#FF1E1E, 굵기 약 8px) + 빨간 화살표", "where": "자막이 아니라 영상 속 제품 둘레(좌표는 장면마다)", "enter": "원은 0.2초 그려짐, 화살표는 왼쪽 위에서 들어옴", "move": "없음", "bench": "Cs-Ka 0.47~1.2초 가방"},
+    "kk_doodle": {"what": "'ㅋㅋㅋ' 흰 손글씨 + 초록 짧은 선", "where": "자막 왼쪽 위", "enter": "번쩍", "bench": "_Wa 12.5초 '오 마이 갓!'"}
+   }
+  }
+ },
+ "new_motions": {
+  "kitchitPop": {
+   "label": "톡 튀어 넘쳤다 안착(키치잇)",
+   "origin": true,
+   "ms": 433,
+   "easing": "linear",
+   "frames": [
+    {"opacity": 1, "scale": "0", "offset": 0.0},
+    {"opacity": 1, "scale": "0.22", "offset": 0.077},
+    {"opacity": 1, "scale": "0.42", "offset": 0.154},
+    {"opacity": 1, "scale": "0.59", "offset": 0.231},
+    {"opacity": 1, "scale": "0.75", "offset": 0.308},
+    {"opacity": 1, "scale": "0.88", "offset": 0.385},
+    {"opacity": 1, "scale": "0.97", "offset": 0.462},
+    {"opacity": 1, "scale": "1.05", "offset": 0.538},
+    {"opacity": 1, "scale": "1.09", "offset": 0.615},
+    {"opacity": 1, "scale": "1.09", "offset": 0.692},
+    {"opacity": 1, "scale": "1.05", "offset": 0.769},
+    {"opacity": 1, "scale": "1.02", "offset": 0.846},
+    {"opacity": 1, "scale": "1.007", "offset": 0.923},
+    {"opacity": 1, "scale": "1", "offset": 1.0}
+   ],
+   "pack": true,
+   "_measured": "Cs-Ka_S8nDM 0.000~0.433초 '1년 내내' 초록 잉크 폭 61/115/163/205/241/268/289/299/300/289/281/277/275px(30fps 13프레임, 끝 275=100%). 기존 'pop'(0→1.3→0.92→1.04, 480ms)은 넘침이 크고 되튐이 있어 다르다. 세로 자리가 1~7px 위로 올라가며 커짐(가운데 기준 확대)"
+  },
+  "kitchitTyping": {
+   "label": "말 맞춰 한 글자씩(키치잇 원음)",
+   "unit": "char",
+   "stagger": 100,
+   "spread": 1600,
+   "ms": 1,
+   "easing": "steps(1,end)",
+   "frames": [{"opacity": 0}, {"opacity": 1}],
+   "pack": true,
+   "_measured": "BRa5Iv4A3Y8 8.0~8.9초(10fps): '쫀'→'쫀쫀'→'쫀쫀~'→'쫀쫀~해'→'쫀쫀~해서' 0.1초마다 한 글자. 새로 나온 글자는 첫 프레임 분홍(#FD6B7B)으로 번쩍한 뒤 제 색(강조면 연보라 #BDB4FC, 아니면 흰). 기존 'typing'(85ms, 자리 고정)과 다른 점 = ①글자 간격을 말 속도(받아쓰기 글자 시각)에 맞춤 ②자리 이동 ③하트 스티커가 마지막 글자 아래를 따라감 → new_keys.typing_follow_speech·caption_anchor·sticker"
+  }
+ },
+ "new_word_fx": {
+  "colorCycle": {
+   "label": "낱말 하나 색(돌림)",
+   "_spec": "덩어리마다 대본이 정한 낱말 하나만 채움색 변경(외곽선·흰 테두리는 그대로). 색 = cycle 배열을 덩어리 순서대로(편 전체 누적). 그려짐 효과 없음(draw 0), 커짐 없음."
+  }
+ },
+ "new_keys": {
+  "word_cycle": "wordFx.cycle(색 배열) + wordFx.pick='one_per_caption' — 지금 계약은 wordFx.color 한 색·말하는 낱말 따라가기만 있다",
+  "line_first_pop": "slots 판단에 '대본 한 줄의 첫 덩어리' 칸이 필요 — captionSlot(precision20-ui.js)이 줄 경계(대본 줄 id)를 알아야 함. 나머지 덩어리는 등장 없음(none)",
+  "text_ring": "외곽선 두 겹(안 검정 0.10em·바깥 흰 0.03em) — CSS text-shadow 8방향으로 근사 가능하나 렌더(puppeteer)·캡컷 정지 그림에서 같은 두께인지 check_motions ⑥ 으로 잴 것",
+  "typing_follow_speech": "원음 타이핑 글자 간격을 받아쓰기 글자 시각으로(없으면 stagger 100ms 고정)",
+  "caption_anchor": "덩어리마다 자리 바꾸기(x,y) — BRa 타이핑 구간은 창 왼쪽 위 y≈1260 으로 이동. 대본/자막표 행에 anchor 를 주면 그 자리",
+  "sticker": "덩어리 행에 sticker(heart|gem|spark_lines|circle_arrow|kk_doodle)와 자리 기준 낱말 — 그림 자산 + 움직임은 위 pack.kitchit.stickers 사양",
+  "first_char_flash": "타이핑 새 글자 첫 프레임 분홍 번쩍"
+ },
+ "existing_keys_used": {
+  "font": "Jalnan2(편집기 등록 글꼴 — to_frame.font_faces 확인)",
+  "look": "none(상자 없음)",
+  "text.color": "#FFFFFF",
+  "text.style": "WebkitTextStroke·paintOrder·textShadow(계약 그대로 em 단위)",
+  "wordFx.style": "color(있는 방식) — 단 한 색",
+  "emph": "있는 칸(영상 위 강조) — 키치잇은 쓰지 않음(8편 0회)"
+ }
+}

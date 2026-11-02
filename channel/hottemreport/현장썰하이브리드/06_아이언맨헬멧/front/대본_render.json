@@ -1,0 +1,443 @@
+{
+ "topic": "AI 주작 의심 받은 음성 인식 아이언맨 헬멧(MK5) — 말 한마디에 얼굴 가리개가 열린다",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "OE-11wb7vdY(핫템리포트 480만, 'AI 주작 논란 터진 아이언맨 헬멧')",
+ "bench_note": "앞 나레 줄 = 칼카피_OE11 대본 1~2줄 그대로(박창수로 다시 읽힘). 칼카피판 재료(유튜브 Ix5o·8ys8·cYMA)는 10-21 이 PC 유튜브 봇 확인으로 다시 못 받음(11:2x·11:33·11:43 세 번 'Sign in to confirm you're not a bot') → 벤치 원본 꼴(해외 틱톡 실착 원음)인 같은 제품 틱톡 @otty_dubai 한 편으로 다시 짰다.",
+ "sources": {
+  "main": {
+   "file": "tt_otty_dubai_7668805836940086535.mp4",
+   "who": "틱톡 @otty_dubai",
+   "url": "https://www.tiktok.com/@otty_dubai/video/7668805836940086535",
+   "views": 5455,
+   "dur": 67.6,
+   "res": "576x1024"
+  }
+ },
+ "titles": {
+  "hook": "AI 주작 논란 터진\n아이언맨 헬멧"
+ },
+ "facts": {
+  "f1": {
+   "text": "0.00~3.48 'Watch this, this is my new, most realistic Iron Man helmet.'(faster_whisper small) · 화면: 책상 위 은색·빨강 MK5 헬멧 옆 남자",
+   "kind": "본인 말"
+  },
+  "f2": {
+   "text": "15.56~18.36 'Jarvis, open the mask.'(faster_whisper small, 화면 자막 'Open the mask' 17.5초) → 19.5~21초 헬멧 얼굴 판이 모터로 열림",
+   "kind": "화면+본인 말"
+  },
+  "f3": {
+   "text": "37~41초·48~52초 헬멧을 쓴 채 얼굴 판이 열렸다 닫힘(시트 눈 확인) — 머리에 쓰는 물건",
+   "kind": "화면"
+  },
+  "o1": {
+   "text": "칼카피_OE11 대본 f1(판매 페이지: 음성 명령으로 여러 판 얼굴 가리개가 모터로 열림)·f2(AutoKing 화면 글자 OPEN THE MASK/CLOSE THE MASK)",
+   "kind": "앞 칼카피판 근거"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "N2",
+   "O1",
+   "N3",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "이게 AI 영상이 아니라고요 진짜로 파는 아이언맨 헬멧이에요 말 한마디면 얼굴 가리개가 착착 열리고 닫히는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "ot",
+    "span": [
+     0.0,
+     3.48
+    ],
+    "en": "Watch this, this is my new, most realistic Iron Man helmet.",
+    "caps": [
+     "이거 봐!",
+     "제일 진짜 같은 아이언맨 헬멧이야!"
+    ],
+    "check": "faster_whisper small 0.00~3.48 · 화면 자막 'Watch this!'·'Most realistic Iron Man helmet' 일치"
+   },
+   {
+    "id": "O2",
+    "src": "ot",
+    "span": [
+     15.58,
+     19.9
+    ],
+    "en": "Jarvis, open the mask. [motor]",
+    "caps": [
+     "자비스, 마스크 열어!"
+    ],
+    "check": "faster_whisper 15.56~18.36 'Dervis, open the mask' · 화면 자막 'Jarvis'·'Sir'·'Open the mask' 16.5~17.5 · 19.5초 얼굴 판 열림"
+   }
+  ],
+  "dropped": {
+   "벤치의 '오토바이·자전거 헬멧으로도'": "판매처 설명은 코스프레·전시용(칼카피_OE11 f4) — 안 씀",
+   "가격·전화번호": "원본 화면 아래 판매 전화번호 띠는 crop 밖"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "이게 AI 영상이",
+   "kind": "나레"
+  },
+  {
+   "t0": 0.889,
+   "text": "아니라고요?",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.824,
+   "text": "진짜로 파는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.461,
+   "text": "아이언맨 헬멧이에요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.857,
+   "text": "이거 봐!",
+   "kind": "원음"
+  },
+  {
+   "t0": 4.471,
+   "text": "제일 진짜 같은 아이언맨 헬멧이야!",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.587,
+   "text": "말 한마디면",
+   "kind": "나레"
+  },
+  {
+   "t0": 8.151,
+   "text": "얼굴 가리개가 착착",
+   "kind": "나레"
+  },
+  {
+   "t0": 9.054,
+   "text": "열리고 닫히는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.52,
+   "text": "자비스, 마스크 열어!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "이게 AI 영상이",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 0.889,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아니라고요?",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.889,
+   "dur": 0.935,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜로 파는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.824,
+   "dur": 0.637,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아이언맨 헬멧이에요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.461,
+   "dur": 1.396,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이거 봐!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.857,
+   "dur": 0.614,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "제일 진짜 같은 아이언맨 헬멧이야!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.471,
+   "dur": 3.116,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "말 한마디면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 7.587,
+   "dur": 0.564,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "얼굴 가리개가 착착",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 8.151,
+   "dur": 0.903,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "열리고 닫히는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.054,
+   "dur": 1.466,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "자비스, 마스크 열어!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 10.52,
+   "dur": 4.92,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.857,
+    7.337
+   ],
+   [
+    10.52,
+    14.84
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 1.524
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 1.824,
+    "n1": 3.607
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.857,
+    "a1": 7.337,
+    "audio_ss": 0.0,
+    "src": "ot"
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "n0": 7.587,
+    "n1": 10.27
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 10.52,
+    "a1": 14.84,
+    "audio_ss": 15.58,
+    "src": "ot"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "ot",
+    "ss": 37.1,
+    "vs": 0.0,
+    "src_crop": [
+     0,
+     0,
+     576,
+     660
+    ],
+    "why": "첫 프레임 = 제품: 머리에 쓴 헬멧 얼굴 판이 열림(37.5~40.2)",
+    "ve": 1.824,
+    "src_end": 38.924
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "ot",
+    "ss": 48.0,
+    "vs": 1.824,
+    "src_crop": [
+     0,
+     0,
+     576,
+     660
+    ],
+    "why": "쓴 채 얼굴 판이 다시 열림(48~52)",
+    "ve": 3.857,
+    "src_end": 50.033
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "ot",
+    "ss": 0.0,
+    "vs": 3.857,
+    "src_crop": [
+     0,
+     0,
+     576,
+     660
+    ],
+    "why": "책상 위 헬멧 옆 남자 'Watch this… most realistic Iron Man helmet'",
+    "ve": 7.354,
+    "src_end": 3.497,
+    "guard": "원본 컷 3.53 앞에서 끊음(−0.233초)"
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "N3",
+     "O2"
+    ],
+    "src": "ot",
+    "ss": 12.414,
+    "vs": 7.354,
+    "src_crop": [
+     0,
+     0,
+     576,
+     660
+    ],
+    "why": "'Jarvis, open the mask' → 얼굴 판 열림 시작",
+    "ve": 15.44,
+    "src_end": 20.5
+   }
+  ],
+  "dur": 15.44,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰하이브리드\\06_아이언맨헬멧\\front\\render\\narr_N1.wav",
+    "dur": 1.524,
+    "tempo": 0.869,
+    "chars": 12,
+    "speech": 1.524,
+    "cps": 7.87,
+    "segs": [
+     [
+      0.0,
+      1.524
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰하이브리드\\06_아이언맨헬멧\\front\\render\\narr_N2.wav",
+    "dur": 1.783,
+    "tempo": 0.856,
+    "chars": 14,
+    "speech": 1.783,
+    "cps": 7.85,
+    "segs": [
+     [
+      0.0,
+      1.783
+     ]
+    ]
+   },
+   {
+    "id": "N3",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰하이브리드\\06_아이언맨헬멧\\front\\render\\narr_N3.wav",
+    "dur": 2.683,
+    "tempo": 0.877,
+    "chars": 21,
+    "speech": 2.553,
+    "cps": 8.23,
+    "segs": [
+     [
+      0.0,
+      1.555
+     ],
+     [
+      1.738,
+      2.553
+     ]
+    ]
+   }
+  ]
+ }
+}

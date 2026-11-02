@@ -1,0 +1,154 @@
+{
+ "n_docs": 10,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 150,
+    "n_docs": 10,
+    "docs": [
+     "7b1j3LptlCo",
+     "BFTGKYRPXeU",
+     "JlgdcIk9Gd0",
+     "NXBepjjp6BY",
+     "QReZRnEVz0o",
+     "VlJMP0sNwhY",
+     "hNRxwfSjXxY",
+     "oSytU7q_N7Y",
+     "pjhCRN0BwaQ",
+     "tv-hFwrvEc4"
+    ],
+    "members": [
+     "#FFFFFF",
+     "#FDFDFD",
+     "#FDFCFD",
+     "#FDFDFE",
+     "#FEFDFE",
+     "#FFFDFF",
+     "#FEFDFD",
+     "#FEFCFD",
+     "#FDFCFE"
+    ]
+   }
+  ],
+  "강조": [],
+  "외곽선": [
+   {
+    "hex": "#000000",
+    "n_lines": 122,
+    "n_docs": 8,
+    "docs": [
+     "BFTGKYRPXeU",
+     "NXBepjjp6BY",
+     "QReZRnEVz0o",
+     "VlJMP0sNwhY",
+     "hNRxwfSjXxY",
+     "oSytU7q_N7Y",
+     "pjhCRN0BwaQ",
+     "tv-hFwrvEc4"
+    ],
+    "members": [
+     "#000000"
+    ]
+   },
+   {
+    "hex": "#19191F",
+    "n_lines": 16,
+    "n_docs": 1,
+    "docs": [
+     "JlgdcIk9Gd0"
+    ],
+    "members": [
+     "#19191F"
+    ]
+   },
+   {
+    "hex": "#0C0F19",
+    "n_lines": 12,
+    "n_docs": 1,
+    "docs": [
+     "7b1j3LptlCo"
+    ],
+    "members": [
+     "#0C0F19"
+    ]
+   }
+  ],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 30,
+    "n_docs": 10,
+    "docs": [
+     "7b1j3LptlCo",
+     "BFTGKYRPXeU",
+     "JlgdcIk9Gd0",
+     "NXBepjjp6BY",
+     "QReZRnEVz0o",
+     "VlJMP0sNwhY",
+     "hNRxwfSjXxY",
+     "oSytU7q_N7Y",
+     "pjhCRN0BwaQ",
+     "tv-hFwrvEc4"
+    ],
+    "members": [
+     "#FFFFFF",
+     "#FFFEFD",
+     "#FEFDFD"
+    ]
+   },
+   {
+    "hex": "#FF1700",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "QReZRnEVz0o",
+     "tv-hFwrvEc4"
+    ],
+    "members": [
+     "#FF1700"
+    ]
+   }
+  ],
+  "스티커": [
+   {
+    "hex": "#F83124",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "BFTGKYRPXeU"
+    ],
+    "members": [
+     "#F83124"
+    ]
+   }
+  ],
+  "출처": [
+   {
+    "hex": "#FAF277",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "BFTGKYRPXeU"
+    ],
+    "members": [
+     "#FAF277"
+    ]
+   },
+   {
+    "hex": "#FDFAD6",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "JlgdcIk9Gd0",
+     "tv-hFwrvEc4"
+    ],
+    "members": [
+     "#FDFAD6",
+     "#FFFBD2"
+    ]
+   }
+  ]
+ }
+}

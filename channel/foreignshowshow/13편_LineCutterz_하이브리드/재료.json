@@ -1,0 +1,197 @@
+{
+ "_note": "샥탬스토리 하이브리드 13편 Line Cutterz 뒤 재료 — 같은 회사(Line Cutterz) 지퍼형 커터 영상만(쿠팡 9694028180 LINE CUTTERZ 세라믹 블레이드 낚싯줄 커터 지퍼형과 같은 꼴) + B2 방송 투자 장면. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/13편_LineCutterz/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "wvu00XGhfJ4": {
+   "채널": "Line Cutterz(판매사 공식)",
+   "제목": "Line Cutterz NEW ceramic blade peel & stick flat mount and zipper pull",
+   "해상도": "1920x1080",
+   "남의 글자": "62~64 끝 로고 화면만 — 안 씀"
+  },
+  "os4Rtrpd0Ok": {
+   "채널": "Line Cutterz(판매사 공식 업로드, PRG Fish Gear 리뷰어)",
+   "제목": "Line Cutterz Patented Zipper Pull Fishing Line Cutter",
+   "해상도": "1920x1080",
+   "남의 글자": "셔츠 'PRG FISH GEAR' 로고(리뷰어 가게) · 30~33 다이와 합사 실패 상표 — 그 구간 안 씀"
+  },
+  "Qy7wUkIrrQ4": {
+   "채널": "CNBC Ambition(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "CNBC 로고 y≥1035 — 크롭 h990 으로 뺌"
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "B1",
+   "src": "wvu00XGhfJ4.mp4",
+   "ss": 24.4,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식 영상(wvu00XGhfJ4, 1080p): 목걸이 줄에 Line Cutterz 지퍼형 커터를 단 낚시꾼(샷 24.3~26.6)"
+  },
+  {
+   "i": 1,
+   "line": "B1",
+   "src": "os4Rtrpd0Ok.mp4",
+   "ss": 8.0,
+   "dur": 2.4,
+   "src_crop": [
+    595,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(os4Rtrpd0Ok, 1080p): 가방 지퍼에 단 검은 지퍼형 커터에 줄을 걸어 끊음"
+  },
+  {
+   "i": 2,
+   "line": "B2",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "ss": 204.2,
+   "dur": 1.2,
+   "src_crop": [
+    112,
+    0,
+    1016,
+    990
+   ],
+   "mute": true,
+   "ours": "방송(Qy7wUkIrrQ4 204.2): 분홍 옷 투자자 'I think it's genius' 순간(소리 끔)"
+  },
+  {
+   "i": 3,
+   "line": "B2",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "ss": 152.85,
+   "dur": 1.35,
+   "src_crop": [
+    452,
+    0,
+    1016,
+    990
+   ],
+   "mute": true,
+   "ours": "방송: 창업자 정면 근접(원본 샷 152.82~154.22, 소리 끔)"
+  },
+  {
+   "i": 4,
+   "line": "B2",
+   "src": "os4Rtrpd0Ok.mp4",
+   "ss": 0.5,
+   "dur": 1.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 낚시점에서 지퍼형 커터를 소개하려는 리뷰어(테이크 시작)"
+  },
+  {
+   "i": 5,
+   "line": "B3",
+   "src": "os4Rtrpd0Ok.mp4",
+   "ss": 17.6,
+   "dur": 2.0,
+   "src_crop": [
+    595,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 가방에 단 지퍼형 커터 홈에 줄을 걸어 당김(같은 테이크)"
+  },
+  {
+   "i": 6,
+   "line": "B3",
+   "src": "wvu00XGhfJ4.mp4",
+   "ss": 29.7,
+   "dur": 2.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식 영상: 지퍼형 커터 홈에 줄을 걸어 끊는 손 근접"
+  },
+  {
+   "i": 7,
+   "line": "B4",
+   "src": "os4Rtrpd0Ok.mp4",
+   "ss": 36.2,
+   "dur": 3.4,
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 두 손으로 합사 줄을 지퍼형 커터 홈에 대고 끊음"
+  },
+  {
+   "i": 8,
+   "line": "B4",
+   "src": "wvu00XGhfJ4.mp4",
+   "ss": 40.4,
+   "dur": 2.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식 영상: 루어 줄을 지퍼형 커터로 끊는 손"
+  },
+  {
+   "i": 9,
+   "line": "B5",
+   "src": "os4Rtrpd0Ok.mp4",
+   "ss": 230.5,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 낚시점에서 웃으며 카메라에 말하는 리뷰어"
+  },
+  {
+   "i": 10,
+   "line": "B5",
+   "src": "wvu00XGhfJ4.mp4",
+   "ss": 48.2,
+   "dur": 2.4,
+   "src_crop": [
+    145,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식 영상: 'LINE CUTTERZ' 모자의 프로 낚시꾼이 보트에서 웃으며 줄을 다룸"
+  }
+ ],
+ "effects": []
+}

@@ -1,0 +1,773 @@
+{
+ "id": "6iW_aMG_-L0",
+ "dur": 19.83,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "패들 없어도 쌉가능!",
+   "colors": [
+    {
+     "word": "패들 없어도 쌉가능!",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "이 생존법 개꿀임",
+   "colors": [
+    {
+     "word": "이 생존법 개꿀임",
+     "hex": "#EBCE1B"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   460,
+   1080,
+   1920
+  ],
+  "bg_hex": "#000000",
+  "caption_band": [
+   1320,
+   1410
+  ],
+  "title_y": [
+   [
+    171,
+    287
+   ],
+   [
+    319,
+    449
+   ]
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": null,
+  "note": "틀 B(위 검정 띠 0~460 + 제목 2줄 흰/노랑 기울임 + 아래 창 끝까지). 15.4~17.8 흑백 구간에는 제목 노랑 줄도 회색으로 바뀜(화면 전체에 흑백 처리)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.933,
+   "speaker": "나레",
+   "text": "카약이 전복되고",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1401
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속에 뒤집힌 카약에 거꾸로 앉은 남자",
+   "fit": 9,
+   "cut_at": [
+    0.867
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.933,
+   "t1": 2.333,
+   "speaker": "나레",
+   "text": "패들까지 떠내려간다면",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1415
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 1.35,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +19.0dB(유성 0.25·고립 0.6) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "카약 앞머리·노 든 남자(물 위로 나오는 액션캠)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.333,
+   "t1": 3.133,
+   "speaker": "나레",
+   "text": "많은 분들이",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "다시 물속 뒤집힌 카약",
+   "fit": 5,
+   "cut_at": [
+    2.567
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.133,
+   "t1": 3.933,
+   "speaker": "나레",
+   "text": "당황하실 텐데요",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속 → 휙 흔들림 뒤 물 위 카약에 앉은 남자",
+   "fit": 5,
+   "cut_at": [
+    3.333
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.933,
+   "t1": 4.767,
+   "speaker": "나레",
+   "text": "하지만 침착함이",
+   "layer": null,
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물 위 카약의 남자가 손을 듦",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.767,
+   "t1": 5.6,
+   "speaker": "나레",
+   "text": "가장 중요합니다",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "카약이 기울며 뒤집히기 시작",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.867,
+   "t1": 6.867,
+   "speaker": "나레",
+   "text": "물에 빠진 즉시",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1401
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속 흐린 거품",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.933,
+   "t1": 7.733,
+   "speaker": "나레",
+   "text": "보트에 고정된",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1401
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속에 거꾸로 앉은 남자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.733,
+   "t1": 8.9,
+   "speaker": "나레",
+   "text": "보조 패들을 잡으세요",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#F6F6FB",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "보조 패들",
+     "hex": "#7EBAE7"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속 남자가 허리 옆 짧은 패들을 꺼냄",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.9,
+   "t1": 10.167,
+   "speaker": "나레",
+   "text": "침착하게 조립하는 것이",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속에서 짧은 패들 두 개를 들어 맞춤",
+   "fit": 9,
+   "cut_at": [
+    10.067
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.167,
+   "t1": 10.733,
+   "speaker": "나레",
+   "text": "핵심입니다",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FDFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 10.29,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +19.5dB(유성 0.15·고립 0.8) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "흔들린 뒤 조립된 패들을 쥔 남자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "zoomblur",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.2,
+   "t1": 13.433,
+   "speaker": "나레",
+   "text": "이제 몸통을 살짝 돌려",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속 남자가 패들을 옆으로 뻗음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.433,
+   "t1": 14.4,
+   "speaker": "나레",
+   "text": "오른손으로 패들",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "패들 젓기 시작·카메라가 크게 돎",
+   "fit": 7,
+   "cut_at": [
+    13.5
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.4,
+   "t1": 15.4,
+   "speaker": "나레",
+   "text": "힘껏 저어주는데요",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1402
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물속에서 패들을 힘껏 저음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.667,
+   "t1": 18.8,
+   "speaker": "나레",
+   "text": "빠른 동작으로 카약이",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1401
+   ],
+   "fill_hex": "#FDFEFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "카약",
+     "hex": "#EACF1F"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흑백 → 17.8 컬러: 물 위로 올라온 카약과 남자",
+   "fit": 9,
+   "cut_at": [
+    17.8
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.833,
+   "t1": 19.7,
+   "speaker": "나레",
+   "text": "제자리로 돌아옵니다",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 기울인 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1415
+   ],
+   "fill_hex": "#FEFEFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(파란 👍 좋아요 손 + 'Like' 글씨 쓰기)",
+     "t_in": 18.1,
+     "t_out": 19.83,
+     "x": 450,
+     "y": 510,
+     "w": 190,
+     "h": 250,
+     "anim": "pop(18.1 작게 → 18.3 다 큼) 후 아래 'Like' 글자가 써짐, 남자 머리 위 제자리"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "노을 물 위 카약의 남자 + 머리 위 좋아요 손",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   5.6,
+   5.867
+  ],
+  [
+   6.867,
+   6.933
+  ],
+  [
+   10.733,
+   12.2
+  ],
+  [
+   15.4,
+   17.667
+  ],
+  [
+   18.8,
+   18.833
+  ],
+  [
+   19.7,
+   19.83
+  ]
+ ],
+ "beats": "훅(0~2.33 '카약이 전복되고 / 패들까지 떠내려간다면') → 질문(2.33~3.93 '많은 분들이 당황하실 텐데요') → 이음(3.93 '하지만 침착함이') → 본문(4.77~10.73 '가장 중요합니다 / 물에 빠진 즉시 보트에 고정된 / 보조 패들을 잡으세요 / 침착하게 조립하는 것이 핵심입니다') → 쉼(10.73~12.2 자막 없음) → 본문·고조(12.2~15.4 몸통 돌려 오른손으로 힘껏 젓기) → 흑백 2.3초 자막 없음(물속→물 위로 돌아오는 장면) → 끝(17.67~19.7 '빠른 동작으로 카약이 제자리로 돌아옵니다' + 좋아요 손, CTA 대신 좋아요 그림)",
+ "narr_share": "나레 줄 16/16, 나레 15.6초/19.83초",
+ "notes": [
+  "존댓말 나레 1명(스피치매틱스 10-15 35낱말이 자막과 낱말 단위로 맞음 — 소리 '보조 패드를', 화면 '보조 패들을'만 다름).",
+  "원본 = 액션캠(고프로류) 물속·물 위 영상 이어붙임. 전환으로 보이는 0.867·2.567 하얀 프레임·13.5 검은 소용돌이·16.6 하얀 번짐은 카메라가 물 밖으로 나오거나 도는 원본 노출/움직임과 섞여 있다 — 줄 시작과 겹치는 전환은 없다. cutdet v2 의 7.033 zoomblur 는 같은 샷 안(30fps 띠 work2/fr/6i_cA.jpg 5행) — 컷 아님으로 뺐고 5.733 은 물속 흐린 새 샷으로 cut.",
+  "15.4~17.8 흑백 처리(제목 노랑 줄까지 회색) — 편집 효과. 이 2.3초 동안 자막·나레 없음(소리는 물소리).",
+  "강조색 2줄: 하늘색 #7EBAE7('보조 패들'), 노랑 #EACF1F('카약') — 픽셀 k-means.",
+  "끝 18.1~ 파란 👍 좋아요 손이 팝 등장 후 'Like' 글자가 써짐 — 채널이 얹은 그림(대상 짚기 아님, 좋아요 유도)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "물속 뒤집힌 카약에 앉은 붉은 구명조끼 남자(액션캠, 아래에서 올려다봄) + 제목 2줄 + 첫 자막이 0초부터",
+  "face_frac": 0.02,
+  "text": "패들 없어도 쌉가능! / 이 생존법 개꿀임 / 카약이 전복되고"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "상시 고정 2줄",
+ "sound_detail": "한국어 존댓말 나레 1명(스피치매틱스 10-15) + 물소리·배경음"
+}

@@ -1,0 +1,1177 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.478
+   ],
+   "O1": [
+    3.578,
+    6.578
+   ],
+   "N2": [
+    6.678,
+    7.837
+   ],
+   "O2": [
+    7.937,
+    12.377
+   ],
+   "O3": [
+    12.477,
+    16.217
+   ],
+   "N3": [
+    16.317,
+    18.491
+   ],
+   "N4": [
+    18.591,
+    21.924
+   ],
+   "N5": [
+    22.024,
+    24.488
+   ],
+   "N6": [
+    24.588,
+    27.921
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "동안으로 유명한",
+    "t0": 0.0,
+    "t1": 1.0,
+    "key": "동안으로",
+    "show": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "안문숙이 샴푸 대신",
+    "t0": 1.0,
+    "t1": 2.143,
+    "key": "안문숙이",
+    "show": [
+     1.0,
+     2.143
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "비누 하나만 쓴다네요?",
+    "t0": 2.143,
+    "t1": 3.478,
+    "key": "비누",
+    "show": [
+     2.143,
+     3.578
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "요거 하나만 갖고 가면",
+    "t0": 3.578,
+    "t1": 4.508,
+    "show": [
+     3.578,
+     4.508
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "끝나요",
+    "t0": 4.508,
+    "t1": 5.228,
+    "key": "끝나요",
+    "show": [
+     4.508,
+     5.228
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "저는 샴푸 필요 없어요",
+    "t0": 5.228,
+    "t1": 6.578,
+    "key": "샴푸",
+    "show": [
+     5.228,
+     6.678
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 비누길래?",
+    "t0": 6.678,
+    "t1": 7.837,
+    "key": "비누길래?",
+    "show": [
+     6.678,
+     7.937
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "한국에서 만든 도브 비누하고",
+    "t0": 7.937,
+    "t1": 9.767,
+    "show": [
+     7.937,
+     9.767
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "미국에서 만든 도브하고",
+    "t0": 9.767,
+    "t1": 11.087,
+    "key": "미국에서",
+    "show": [
+     9.767,
+     11.087
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "성분 자체가 다르대",
+    "t0": 11.087,
+    "t1": 12.377,
+    "key": "다르대",
+    "show": [
+     11.087,
+     12.477
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "와 이게 뭐냐",
+    "t0": 12.477,
+    "t1": 13.837,
+    "key": "뭐냐",
+    "show": [
+     12.477,
+     13.837
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 신세계를",
+    "t0": 13.837,
+    "t1": 15.637,
+    "key": "신세계를",
+    "show": [
+     13.837,
+     15.637
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "맛본 거야",
+    "t0": 15.637,
+    "t1": 16.217,
+    "show": [
+     15.637,
+     16.317
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 16.317,
+    "t1": 17.174,
+    "key": "보자마자",
+    "show": [
+     16.317,
+     17.174
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 17.174,
+    "t1": 18.491,
+    "key": "따라",
+    "show": [
+     17.174,
+     18.591
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "보습 크림이 1/4이라",
+    "t0": 18.591,
+    "t1": 19.877,
+    "key": "1/4이라",
+    "show": [
+     18.591,
+     19.877
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "로션 바른 듯",
+    "t0": 19.877,
+    "t1": 20.591,
+    "key": "로션",
+    "show": [
+     19.877,
+     20.591
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "촉촉하더라고요",
+    "t0": 20.591,
+    "t1": 21.924,
+    "key": "촉촉하더라고요",
+    "show": [
+     20.591,
+     22.024
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "미국에서 70년 가까이",
+    "t0": 22.024,
+    "t1": 23.453,
+    "key": "70년",
+    "show": [
+     22.024,
+     23.453
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "팔려 온 비누래요",
+    "t0": 23.453,
+    "t1": 24.488,
+    "key": "비누래요",
+    "show": [
+     23.453,
+     24.588
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 요즘",
+    "t0": 24.588,
+    "t1": 25.302,
+    "key": "요즘",
+    "show": [
+     24.588,
+     25.302
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "비누로 머리 감는",
+    "t0": 25.302,
+    "t1": 26.302,
+    "key": "비누로",
+    "show": [
+     25.302,
+     26.302
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "사람들 사이에서",
+    "t0": 26.302,
+    "t1": 27.302,
+    "key": "사이에서",
+    "show": [
+     26.302,
+     27.302
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "대세래요",
+    "t0": 27.302,
+    "t1": 27.921,
+    "key": "대세래요",
+    "show": [
+     27.302,
+     28.267
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "ss": 37.0,
+    "crop": [
+     500,
+     0,
+     900,
+     900
+    ],
+    "see": "안문숙 근접 얼굴(안경·검정 터틀넥)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.789,
+    "dur": 1.789,
+    "over": 0.0
+   },
+   {
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "ss": 23.0,
+    "crop": [
+     520,
+     0,
+     900,
+     900
+    ],
+    "see": "안문숙 근접, 손에 도브 상자",
+    "line": "N1",
+    "t0": 1.789,
+    "kind": "tts",
+    "t1": 3.578,
+    "dur": 1.789,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     430,
+     290,
+     560,
+     560
+    ],
+    "see": "안문숙 상자 들고 '샴푸 필요 없어요'(넓은 샷에서 안문숙만, 입 맞음)",
+    "line": "O1",
+    "ss": 123.8,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "t0": 3.578,
+    "kind": "orig",
+    "t1": 6.678,
+    "dur": 3.1,
+    "over": 0.0
+   },
+   {
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "ss": 100.6,
+    "crop": [
+     640,
+     0,
+     900,
+     900
+    ],
+    "see": "안문숙이 도브 상자를 얼굴 옆에 들어 보임",
+    "line": "N2",
+    "t0": 6.678,
+    "kind": "tts",
+    "t1": 7.937,
+    "dur": 1.259,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     440,
+     290,
+     560,
+     560
+    ],
+    "see": "안문숙 '미국에서 만든 도브'(넓은 샷에서 안문숙만, 붙임 글 위로 크롭 밖)",
+    "line": "O2",
+    "ss": 63.66,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "t0": 7.937,
+    "kind": "orig",
+    "t1": 12.477,
+    "dur": 4.54,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     460,
+     0,
+     900,
+     900
+    ],
+    "see": "안문숙 근접 '완전 신세계'(입 맞음)",
+    "line": "O3",
+    "ss": 83.42,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "t0": 12.477,
+    "kind": "orig",
+    "t1": 16.317,
+    "dur": 3.84,
+    "over": 0.0
+   },
+   {
+    "src": "b/eXjxbtnC2Tw.mp4",
+    "ss": 0.3,
+    "crop": [
+     390,
+     0,
+     1080,
+     1080
+    ],
+    "see": "같은 상자(sensitive·MOISTURIZING CREAM)를 두 손으로 여는 언박싱",
+    "line": "N3",
+    "t0": 16.317,
+    "kind": "tts",
+    "t1": 18.591,
+    "dur": 2.274,
+    "over": 0.0
+   },
+   {
+    "src": "b/DANmrksbGOk.mp4",
+    "ss": 2.3,
+    "crop": [
+     140,
+     0,
+     720,
+     720
+    ],
+    "see": "상자 아래 '1/4 DE CRÈME HYDRATANTE' 글자 근접",
+    "line": "N4",
+    "t0": 18.591,
+    "kind": "tts",
+    "t1": 20.151,
+    "dur": 1.56,
+    "over": 0.0
+   },
+   {
+    "src": "b/Vyy70hANz2U.mp4",
+    "ss": 53.0,
+    "crop": [
+     420,
+     0,
+     1080,
+     1080
+    ],
+    "w": 1.2,
+    "see": "공식 화면 '1/4 moisturizing cream' 크림이 비누를 감쌈",
+    "line": "N4",
+    "t0": 20.151,
+    "kind": "tts",
+    "t1": 22.024,
+    "dur": 1.873,
+    "over": 0.0
+   },
+   {
+    "src": "b/Vyy70hANz2U.mp4",
+    "ss": 80.5,
+    "crop": [
+     420,
+     0,
+     1080,
+     1080
+    ],
+    "see": "같은 제품 상자 옆 거품(공식 화면)",
+    "line": "N5",
+    "t0": 22.024,
+    "kind": "tts",
+    "t1": 24.588,
+    "dur": 2.564,
+    "over": 0.0
+   },
+   {
+    "src": "b/DANmrksbGOk.mp4",
+    "ss": 21.0,
+    "crop": [
+     280,
+     0,
+     720,
+     720
+    ],
+    "see": "비누 비둘기 각인 근접",
+    "line": "N6",
+    "t0": 24.588,
+    "kind": "tts",
+    "t1": 26.187,
+    "dur": 1.599,
+    "over": 0.0
+   },
+   {
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "ss": 55.4,
+    "crop": [
+     560,
+     0,
+     900,
+     900
+    ],
+    "w": 1.3,
+    "see": "안문숙이 도브 상자 들고 말함(끝)",
+    "line": "N6",
+    "t0": 26.187,
+    "kind": "tts",
+    "t1": 28.2667,
+    "dur": 2.08,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "span": [
+     123.8,
+     126.8
+    ],
+    "t0": 3.578,
+    "t1": 6.578
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "span": [
+     63.66,
+     68.1
+    ],
+    "t0": 7.937,
+    "t1": 12.377
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "IFK6oZw2peA_395_545.mp4",
+    "span": [
+     83.42,
+     87.16
+    ],
+    "t0": 12.477,
+    "t1": 16.217
+   }
+  ],
+  "end": 28.2667
+ },
+ "placement": {
+  "reference": "Cs-Ka_S8nDM",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "동안으로 유명한",
+    "t0": 0.0,
+    "t1": 1.0,
+    "key": "동안으로",
+    "show": [
+     0.0,
+     1.0
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "동안으로"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "안문숙이 샴푸 대신",
+    "t0": 1.0,
+    "t1": 2.143,
+    "key": "안문숙이",
+    "show": [
+     1.0,
+     2.143
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "안문숙이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "비누 하나만 쓴다네요?",
+    "t0": 2.143,
+    "t1": 3.478,
+    "key": "비누",
+    "show": [
+     2.143,
+     3.578
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "비누"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "요거 하나만 갖고 가면",
+    "t0": 3.578,
+    "t1": 4.508,
+    "show": [
+     3.578,
+     4.508
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "끝나요",
+    "t0": 4.508,
+    "t1": 5.228,
+    "key": "끝나요",
+    "show": [
+     4.508,
+     5.228
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "끝나요"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "저는 샴푸 필요 없어요",
+    "t0": 5.228,
+    "t1": 6.578,
+    "key": "샴푸",
+    "show": [
+     5.228,
+     6.678
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "샴푸"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 비누길래?",
+    "t0": 6.678,
+    "t1": 7.837,
+    "key": "비누길래?",
+    "show": [
+     6.678,
+     7.937
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "비누길래?"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "한국에서 만든 도브 비누하고",
+    "t0": 7.937,
+    "t1": 9.767,
+    "show": [
+     7.937,
+     9.767
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "미국에서 만든 도브하고",
+    "t0": 9.767,
+    "t1": 11.087,
+    "key": "미국에서",
+    "show": [
+     9.767,
+     11.087
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "성분 자체가 다르대",
+    "t0": 11.087,
+    "t1": 12.377,
+    "key": "다르대",
+    "show": [
+     11.087,
+     12.477
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "다르대"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "와 이게 뭐냐",
+    "t0": 12.477,
+    "t1": 13.837,
+    "key": "뭐냐",
+    "show": [
+     12.477,
+     13.837
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "뭐냐"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 신세계를",
+    "t0": 13.837,
+    "t1": 15.637,
+    "key": "신세계를",
+    "show": [
+     13.837,
+     15.637
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [
+     {
+      "kind": "spark_lines",
+      "word": "신세계를"
+     }
+    ],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "신세계를"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "맛본 거야",
+    "t0": 15.637,
+    "t1": 16.217,
+    "show": [
+     15.637,
+     16.317
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 16.317,
+    "t1": 17.174,
+    "key": "보자마자",
+    "show": [
+     16.317,
+     17.174
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "보자마자"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 17.174,
+    "t1": 18.491,
+    "key": "따라",
+    "show": [
+     17.174,
+     18.591
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "보습 크림이 1/4이라",
+    "t0": 18.591,
+    "t1": 19.877,
+    "key": "1/4이라",
+    "show": [
+     18.591,
+     19.877
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "1/4이라"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "로션 바른 듯",
+    "t0": 19.877,
+    "t1": 20.591,
+    "key": "로션",
+    "show": [
+     19.877,
+     20.591
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "로션"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "촉촉하더라고요",
+    "t0": 20.591,
+    "t1": 21.924,
+    "key": "촉촉하더라고요",
+    "show": [
+     20.591,
+     22.024
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "촉촉하더라고요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "미국에서 70년 가까이",
+    "t0": 22.024,
+    "t1": 23.453,
+    "key": "70년",
+    "show": [
+     22.024,
+     23.453
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "70년"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "팔려 온 비누래요",
+    "t0": 23.453,
+    "t1": 24.488,
+    "key": "비누래요",
+    "show": [
+     23.453,
+     24.588
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "비누래요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 요즘",
+    "t0": 24.588,
+    "t1": 25.302,
+    "key": "요즘",
+    "show": [
+     24.588,
+     25.302
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "요즘"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "비누로 머리 감는",
+    "t0": 25.302,
+    "t1": 26.302,
+    "key": "비누로",
+    "show": [
+     25.302,
+     26.302
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "비누로"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "사람들 사이에서",
+    "t0": 26.302,
+    "t1": 27.302,
+    "key": "사이에서",
+    "show": [
+     26.302,
+     27.302
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "사이에서"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "대세래요",
+    "t0": 27.302,
+    "t1": 27.921,
+    "key": "대세래요",
+    "show": [
+     27.302,
+     28.267
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "대세래요"
+     }
+    ],
+    "variant": "pop"
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = Cs-Ka_S8nDM",
+   "스티커 spark_lines → O3「완전 신세계를」",
+   "효과음 0발(본보기 0) []",
+   "등장 {'pop': 18, 'cut': 6} · 강조 20/24"
+  ]
+ }
+}

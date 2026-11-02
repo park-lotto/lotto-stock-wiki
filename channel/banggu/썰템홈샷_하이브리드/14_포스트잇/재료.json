@@ -1,0 +1,99 @@
+{
+ "_note": "14 포스트잇 — 앞 = NBC News Learn 공식 'Chance Discoveries: Post-it Notes' bvalMbOdseU(메모 붙은 벽·3M 본사·실험실·접착 기계·찬송가 재연·매장 진열·생산 라인 — 인물 인터뷰·이름표·'low-tack'·'DRAMATIZATION' 글자는 쓰지 않거나 자르기 밖) · 뒤 = 쿠팡 93449675 상품 사진 + Post-it 공식 광고 tBfzm8CJ9SM(손으로 메모 쓰기)·LahR7QfWWfU(노트북 화면에 메모 붙이는 손)·lZSdNmVr9X8(메모로 만든 문어) — 광고 끝 글자·제품 상자 구간은 안 씀.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/14_포스트잇/src",
+ "shots": [
+  {"src": "bvalMbOdseU.mp4", "ss": 26.05, "fit": "cover", "full": true,
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 25.97, "dur": 1.94, "fit": "cover", "src_crop": [700, 0, 1022, 1080]},
+    {"src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chipmunk.mp4", "ss": 0.0, "dur": 1.8, "fit": "cover", "src_crop": [60, 0, 227, 240], "kind": "짤"}
+   ],
+   "ours": "NBC: 포스트잇이 빽빽이 붙은 사무실 벽 → 고개 홱 돌리는 다람쥐 짤",
+   "why": "훅 = 다들 붙여 쓰는 포스트잇 = '이게 실패작?'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 88.0, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 88.0, "dur": 2.0, "fit": "cover", "src_crop": [1000, 0, 818, 1080]},
+    {"src": "bvalMbOdseU.mp4", "ss": 58.1, "dur": 1.38, "fit": "cover", "src_crop": [500, 0, 818, 1080]}
+   ],
+   "ours": "NBC: '3M' 간판이 선 3M 본사 건물 → 실험실 깔때기에 액체 붓기",
+   "why": "'알고 보니 쓰리엠 연구원 하나가, 아주 센 접착제를'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 74.6, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 74.6, "dur": 1.35, "fit": "cover", "src_crop": [500, 0, 818, 1080]},
+    {"src": "bvalMbOdseU.mp4", "ss": 63.6, "dur": 1.95, "fit": "cover", "src_crop": [700, 0, 818, 1080]}
+   ],
+   "ours": "NBC: 접착력을 재는 실험 기계(글자 뜨기 전) → 실험실 플라스크",
+   "why": "'붙였다 떼면 그냥 떨어지는, 힘없는 풀'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 55.2, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 55.2, "dur": 2.4, "fit": "cover", "src_crop": [550, 0, 818, 1080]},
+    {"src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_dawson.mp4", "ss": 0.1, "dur": 1.63, "fit": "cover", "src_crop": [70, 0, 182, 240], "kind": "짤"}
+   ],
+   "ours": "NBC: 줄지어 선 실험실 유리병 → 우는 도슨 짤",
+   "why": "'몇 년을 알리고 다녀도, 아무도 쓸 데를 못 찾았고'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 124.3, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 124.3, "dur": 2.3, "fit": "cover", "src_crop": [760, 0, 636, 840]}
+   ],
+   "ours": "NBC 재연: 찬송가 책을 펼쳐 든 손('DRAMATIZATION' 글자는 자르기 밖)",
+   "why": "'교회 성가대에서 노래하던 동료가'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 139.0, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 139.0, "dur": 2.0, "fit": "cover", "src_crop": [300, 0, 818, 1080]}
+   ],
+   "ours": "NBC 재연: 찬송가 책장 사이 노란 쪽지",
+   "why": "'찬송가 책갈피가 자꾸 빠지니까'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 142.25, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 142.25, "dur": 3.59, "fit": "cover", "src_crop": [300, 0, 818, 1080]}
+   ],
+   "ours": "NBC 재연: 노란 메모를 찬송가 책장에 꾹 붙이는 손",
+   "why": "'그 풀을 종이에 발라서 끼워 본 게, 지금의 포스트잇'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 153.7, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 153.7, "dur": 1.43, "fit": "cover", "src_crop": [550, 0, 818, 1080]},
+    {"src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ronswanson.mp4", "ss": 0.0, "dur": 1.8, "fit": "cover", "src_crop": [560, 0, 545, 720], "kind": "짤"}
+   ],
+   "ours": "NBC: 매장 진열대의 포스트잇 → 컴퓨터를 쓰레기통에 던지는 론 스완슨 짤",
+   "why": "'처음엔 반응이 시원찮아서 접을 뻔하다가'"},
+  {"src": "bvalMbOdseU.mp4", "ss": 155.05, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 155.05, "dur": 1.43, "fit": "cover", "src_crop": [550, 0, 818, 1080]}
+   ],
+   "ours": "NBC: 생산 라인을 줄지어 나오는 포스트잇 묶음",
+   "why": "'공짜로 쫙 뿌리고 나서야 터졌다고'"},
+  {"src": "coupang.jpg", "ss": 0, "fit": "cover",
+   "cuts": [
+    {"src": "coupang.jpg", "ss": 0, "dur": 2.49, "fit": "cover", "src_crop": [70, 60, 460, 600], "move": "in"}
+   ],
+   "ours": "쿠팡 93449675 3M 포스트잇 큐브 CT-654 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 쓰리엠 포스트잇 큐브' — 같은 제품"},
+  {"src": "bvalMbOdseU.mp4", "ss": 15.2, "fit": "cover",
+   "cuts": [
+    {"src": "bvalMbOdseU.mp4", "ss": 15.2, "dur": 1.02, "fit": "cover", "src_crop": [500, 0, 818, 1080]}
+   ],
+   "ours": "NBC: 포스트잇 큐브 한 덩이(제품 근접)",
+   "why": "'큐브를 샀는데'"},
+  {"src": "tBfzm8CJ9SM.mp4", "ss": 0.1, "fit": "cover",
+   "cuts": [
+    {"src": "tBfzm8CJ9SM.mp4", "ss": 0.1, "dur": 1.55, "fit": "cover", "src_crop": [500, 0, 818, 1080]},
+    {"src": "LahR7QfWWfU.mp4", "ss": 5.0, "dur": 1.89, "fit": "cover", "src_crop": [700, 0, 818, 1080]}
+   ],
+   "ours": "Post-it 공식: 책상 위 메모지에 펜으로 적는 손 → 노트북 화면에 메모를 붙이는 손",
+   "why": "'할 일을 적어서 노트북에 붙여 두니까'"},
+  {"src": "lZSdNmVr9X8.mp4", "ss": 2.8, "fit": "cover",
+   "cuts": [
+    {"src": "lZSdNmVr9X8.mp4", "ss": 2.8, "dur": 2.2, "fit": "cover", "src_crop": [550, 0, 818, 1080]},
+    {"src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_jameson.mp4", "ss": 0.1, "dur": 1.62, "fit": "cover", "src_crop": [330, 80, 424, 560], "kind": "짤"}
+   ],
+   "ours": "Post-it 공식: 책상을 뒤덮은 파란 메모 문어 → 박장대소하는 제임슨 짤",
+   "why": "'전 세계 책상을 점령해 버린 셈이죠'"}
+ ],
+ "sfx": [
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3", "line": 0, "dt": 0.0, "db": -2, "why": "훅 시작 휙"},
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3", "line": 0, "dt": 1.94, "db": -3, "why": "다람쥐 짤 두둥"},
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3", "line": 3, "dt": 2.4, "db": -4, "why": "도슨 짤"},
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3", "line": 6, "dt": 1.43, "db": -3, "why": "론 스완슨 짤"},
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3", "line": 7, "dt": 0.0, "db": -2, "why": "뒤 체험 첫 줄 뽀옹"},
+  {"file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3", "line": 9, "dt": 2.2, "db": -3, "why": "제임슨 짤 띵"}
+ ]
+}

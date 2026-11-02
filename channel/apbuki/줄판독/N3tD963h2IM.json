@@ -1,0 +1,423 @@
+{
+ "id": "N3tD963h2IM",
+ "dur": 42.49,
+ "title_card": "100년째 씹어먹는 / 콜라의 정체 (1줄 흰·2줄 하늘색, 0~1.5초)",
+ "post_title": "100년째 씹어먹는 콜라의 정체",
+ "frame": {
+  "header": "노란 머리띠(y0~236) 왼쪽 햄버거 메뉴 + 가운데 검정 '앞북이' 로고 + 북채 든 둥근 마스코트(채널 캐릭터, 북=앞북이 말장난) · 아래 흰 바탕 게시글형: 게시글 제목(검정 굵은 고딕) · 메타 줄 'ㅅㄱ | 18:13'(회색) · 회색 구분선 · 자막(검정 굵은 고딕 가운데) · 그림 칸 · 아래 흰 여백",
+  "layout_y": "1080x1920 기준: 머리띠 0~236 / 게시글 제목 330~380 / 메타 430 / 구분선 455 / 자막 칸 490~640(1줄이면 545~600, 2줄 누적이면 2줄) / 그림 칸 x45~1038 · y668~1663 / 1664~1920 흰 여백. 훅 카드(0~1.4~1.7초): 머리띠 어둡게 + 검정 띠에 2줄 큰 제목(외곽선) + 흰 띠에 게시글 제목 + 그 아래 그림 전폭",
+  "ai_notice": null,
+  "ai_notice_check": "없음 — 2fps 전 프레임 하단(y1700~1900) 최소 밝기 252 이상(완전 흰색), 그림 칸·머리띠 안에도 'AI' 문구 육안 미발견"
+ },
+ "caption_style": "검정 굵은 고딕 1줄 가운데, 약 0.5~1.8초마다 교체(문장을 2~4조각으로 쪼갬). N3·zn 일부 줄은 2줄 누적(1줄 뜨고 0.4~1.0초 뒤 2줄째)",
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.5,
+   "caption": "(훅 카드) 100년째 씹어먹는 / 콜라의 정체",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "땅콩 든 컵에 콜라 붓기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.5,
+   "t1": 3.0,
+   "caption": "미국에서 올라온 / 괴식 레시피 하나가",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "검은 화면 → 트윗 캡처(@PulpoNewman, 땅콩 넣은 코카콜라 병 사진), 빨간 화살표가 병 가리킴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(2.3초에 2줄째) · 빨간 화살표"
+  },
+  {
+   "t0": 3.0,
+   "t1": 4.2,
+   "caption": "일본 SNS를 뒤흔들며",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "휴대폰 속 영상과 함께 나오는 여성(틱톡 캡처형)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.2,
+   "t1": 6.0,
+   "caption": "사람들이 콜라를 / 씹어먹기 시작했다는데",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "문신 여성이 땅콩 콜라 마시고 씹기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(4.9초)"
+  },
+  {
+   "t0": 6.0,
+   "t1": 6.5,
+   "caption": "그 정체는",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "콜라 잔과 땅콩 통 든 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.5,
+   "t1": 8.3,
+   "caption": "콜라병에 소금 땅콩을 / 통째로 쏟아버린",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "잔에 땅콩 쏟기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(7.6초)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 8.9,
+   "caption": "파머스 코크",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "콜라에 땅콩 떨어지는 클로즈업",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.9,
+   "t1": 10.5,
+   "caption": "사람들 : 엥? / 콜라에 대체 땅콩을 왜 넣는건데?",
+   "kind": "화자대사",
+   "screen": "제품영상",
+   "screen_desc": "땅콩 든 콜라병 클로즈업",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.5,
+   "t1": 12.2,
+   "caption": "미국 남부 농부들 : 엥? / 그걸 이제 알았다고? 푸하하!",
+   "kind": "화자대사",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "밭에서 땅콩 콜라병 들고 크게 웃는 농부 2인",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 농부 2인",
+    "feeling": "비웃음·폭소",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 영상(웃으며 몸 젖힘·카메라 이동)",
+    "evidence": "같은 남성 농부 2인(밀짚모자·멜빵바지)이 목화밭·헛간 배경 황금빛 역광 장면에 반복, 실사보다 매끈한 질감·영화 포스터식 조명, 100년 전 재연인데 컬러 고화질, 인물이 움직임(AI 영상)"
+   },
+   "effect": "2줄 누적(10.8초)"
+  },
+  {
+   "t0": 12.2,
+   "t1": 13.2,
+   "caption": "알고보니 이 조합은",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "땅콩 가득 콜라병 입구 클로즈업, 배경 녹색 보케",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(추정)",
+    "evidence": "배경 보케가 지나치게 균일, 병 속 땅콩·액체 흐름이 매끈(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.2,
+   "t1": 15.2,
+   "caption": "100년전 미국 남부 농부들이 / 일하다 만들어낸",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "빨간 민소매 노인이 땅콩 콜라병 들고 마심(실사 UGC)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "한 줄씩 교체(13.2·14.4)"
+  },
+  {
+   "t0": 15.2,
+   "t1": 15.9,
+   "caption": "노동간식 이었다는 거",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 노인",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.9,
+   "t1": 17.3,
+   "caption": "농사일로 / 손에 흙이 묻었지만",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "흙 묻은 두 손 펼쳐 보는 농부, 옆 땅콩 봉투·콜라병",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 농부",
+    "feeling": "곤란·난감",
+    "prop": "흙 묻은 손"
+   },
+   "ai": {
+    "kind": "AI 영상(손가락 움직임)",
+    "evidence": "같은 남성 농부 2인(밀짚모자·멜빵바지)이 목화밭·헛간 배경 황금빛 역광 장면에 반복, 실사보다 매끈한 질감·영화 포스터식 조명, 100년 전 재연인데 컬러 고화질, 인물이 움직임(AI 영상), 흙 묻은 손가락 모양 매끈"
+   },
+   "effect": "2줄 누적(16.4초)"
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.3,
+   "caption": "씻을 곳이 마땅치 않자",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 농부 손 내려다봄(카메라 뒤로)",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 농부",
+    "feeling": "고민",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 영상",
+    "evidence": "같은 남성 농부 2인(밀짚모자·멜빵바지)이 목화밭·헛간 배경 황금빛 역광 장면에 반복, 실사보다 매끈한 질감·영화 포스터식 조명, 100년 전 재연인데 컬러 고화질, 인물이 움직임(AI 영상)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 18.3,
+   "t1": 20.6,
+   "caption": "미국 남부 농부들 : 손으로 못 집으면 / 콜라병에 넣어버리자!",
+   "kind": "화자대사",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "한 농부가 손가락으로 가리키고 다른 농부가 봉투째 땅콩을 콜라병에 부음",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 농부 2인",
+    "feeling": "아이디어·득의",
+    "prop": "가리키는 손가락"
+   },
+   "ai": {
+    "kind": "AI 영상(땅콩 쏟아지는 동작)",
+    "evidence": "같은 남성 농부 2인(밀짚모자·멜빵바지)이 목화밭·헛간 배경 황금빛 역광 장면에 반복, 실사보다 매끈한 질감·영화 포스터식 조명, 100년 전 재연인데 컬러 고화질, 인물이 움직임(AI 영상)"
+   },
+   "effect": "2줄 누적(19.3초)"
+  },
+  {
+   "t0": 20.6,
+   "t1": 22.0,
+   "caption": "라며 소금 땅콩을 / 병 안에 쏟아",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "페트 콜라병 입구에 땅콩 넣기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(21.5초)"
+  },
+  {
+   "t0": 22.0,
+   "t1": 23.1,
+   "caption": "한 손으로 / 음료와 간식을",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "차 앞 남성이 땅콩 든 코카콜라 병 들고 말함",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(22.4초)"
+  },
+  {
+   "t0": 23.1,
+   "t1": 24.1,
+   "caption": "동시에 해결해버렸는데",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 남성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.1,
+   "t1": 25.0,
+   "caption": "단순히 편해서만",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리잔에 콜라 붓기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.0,
+   "t1": 26.3,
+   "caption": "100년이나 살아남은 건 아니었고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "잔에 땅콩 봉지 털어 넣기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.3,
+   "t1": 27.7,
+   "caption": "차가운 콜라를 한 모금 마시면",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "남성 2인 땅콩 콜라 페트 들고 마심",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.7,
+   "t1": 29.1,
+   "caption": "소금 땅콩이 입안으로 따라 들어와",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "병째 들이켜기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.1,
+   "t1": 31.0,
+   "caption": "땅콩의 짠맛이 / 콜라의 단맛을 눌러주고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "차 안 안경 여성 맛보는 표정",
+   "infographic": null,
+   "emotion": {
+    "who": "실사 리뷰어",
+    "feeling": "오묘·감탄",
+    "prop": null
+   },
+   "ai": null,
+   "effect": "2줄 누적(29.9초)"
+  },
+  {
+   "t0": 31.0,
+   "t1": 32.8,
+   "caption": "톡 쏘는 탄산뒤로 / 고소한 땅콩까지 씹히며",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 스푼으로 떠먹고 손 흔듦",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(31.8초)"
+  },
+  {
+   "t0": 32.8,
+   "t1": 33.9,
+   "caption": "미친 단짠 조합을 완성해",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 입 가리고 웃음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 33.9,
+   "t1": 36.0,
+   "caption": "고된 노동 뒤 / 허기와 피로까지 달래줬다는 거",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "일본 성 앞 빨간 점퍼 남성이 콜라 마시고 찡그림",
+   "infographic": null,
+   "emotion": {
+    "who": "실사 인물",
+    "feeling": "짜릿함(찡그림)",
+    "prop": null
+   },
+   "ai": null,
+   "effect": "2줄 누적(34.7초)"
+  },
+  {
+   "t0": 36.0,
+   "t1": 37.0,
+   "caption": "이 맛을 제대로 내려면",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "빈 유리잔에 땅콩 쏟기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 37.0,
+   "t1": 39.6,
+   "caption": "짭짤하게 볶은 소금 땅콩과 / 차가운 병 콜라가 정석이라니",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "땅콩 가득 잔 → 코카콜라 병 따기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(38.4초)"
+  },
+  {
+   "t0": 39.6,
+   "t1": 40.6,
+   "caption": "오늘 쌓인 피로는",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "남성 2인 땅콩 콜라 페트 들고 웃음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 40.6,
+   "t1": 42.4,
+   "caption": "100년된 미국맛으로 / 한번 풀어볼까ㅋㅋ",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 2인 마시기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "2줄 누적(41.3초)"
+  }
+ ],
+ "structure": "훅 카드 → 근거 캡처(트윗+화살표) → 유행(일본 SNS) → 정체(파머스 코크) → 화자대사 '사람들 : 엥?' → 반전 화자대사 '농부들 : 푸하하' → 기원 재연(AI 농부: 흙 묻은 손→아이디어) → 맛 원리(단짠·탄산) → 노동 피로 → 권유형 ㅋㅋ 마무리",
+ "ratios": {
+  "infographic_sec": 0.0,
+  "character_sec": 6.4,
+  "ai_image_sec": 7.4,
+  "real_video_sec": 33.6,
+  "meme_sec": 0.0
+ },
+ "measure": "10fps 자막 칸(y500~640) 픽셀차>6 으로 줄 경계, 줄마다 시작·중간·끝 3프레임 육안 판독, AI 구간은 두 시각 프레임 대조로 줌/영상 구분(2026-10-18)"
+}

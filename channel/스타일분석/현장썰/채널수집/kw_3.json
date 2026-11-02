@@ -1,0 +1,820 @@
+{
+ "note": "키워드 검색(yt-dlp ytsearch)으로는 같은 결의 한국 현장썰 채널을 못 찾음. 씨앗 제품 검색 결과는 추천순위 top10 스팸 리뷰·브랜드 공식 채널뿐. 샤크탱크(foreignshowshow 8편)는 지시로 제외, 주걱 씨앗은 0건.",
+ "seeds_covered": [
+  "Q9w-kd3AIdE",
+  "tLuDcq_3zW4",
+  "a06yYTgpa_c",
+  "IRFN5B_2LMo",
+  "OE-11wb7vdY",
+  "ZqVgAg99gRI",
+  "Mp6LPm9qbLo"
+ ],
+ "product_note": "seeds.json product 필드가 U+FFFD로 깨져 있어 yt-dlp 제목·설명으로 제품을 정함",
+ "seeds": [
+  {
+   "id": "Q9w-kd3AIdE",
+   "product": "청담동 미용실 단백질 헤어팩",
+   "queries": [
+    "청담동 헤어팩 연예인",
+    "단백질 헤어팩 꿀조합",
+    "청담동 미용실 연예인 단백질 팩",
+    "극손상모 복구 헤어팩 꿀조합"
+   ],
+   "hits": [
+    {
+     "video_id": "3T5fkNms-_A",
+     "channel": "한주간인기상품",
+     "channel_id": "UC70I6OttY-_KCOOyvillEzA",
+     "views": 3,
+     "title": "극손상모 탈출! 헤어팩/앰플 꿀조합! (바디브/파이모아/모레모/토리든/디플셀)"
+    },
+    {
+     "video_id": "vgHH-1tk6jM",
+     "channel": "쇼핑인사이드",
+     "channel_id": "UCbFs69YftBv5b4uYN3mY0Lw",
+     "views": 7,
+     "title": "헤어팩 트리트먼트 꿀조합! 제이, 미샤, 보타미안, 엘라스틴, 메디올 솔직 리뷰"
+    },
+    {
+     "video_id": "H1clBmiUkzk",
+     "channel": "할인연구소",
+     "channel_id": "UCyj1KkA6iOzGvMbF7oIgAJA",
+     "views": 100,
+     "title": "이거 진짜 강추 헤어팩 상품 추천순위 top10"
+    },
+    {
+     "video_id": "tkcLvzNnuUw",
+     "channel": "한주간인기상품",
+     "channel_id": "UC70I6OttY-_KCOOyvillEzA",
+     "views": 16,
+     "title": "극손상 모발 샴푸트리트먼트 꿀조합! 찰랑이는 머릿결 후기!"
+    },
+    {
+     "video_id": "O1OYVs3d2OM",
+     "channel": "오늘의쇼핑",
+     "channel_id": "UCfTWC9oNnsneg7p8O3NzImw",
+     "views": 2,
+     "title": "향기+광채 폭발! 하라즈 바디로션  헤어팩 후기 + 꿀조합템 공개"
+    },
+    {
+     "video_id": "aqeiUQPVzQY",
+     "channel": "고고싱",
+     "channel_id": "UCsVzwJ_xoDr1XDWT3k0Z3-g",
+     "views": 220,
+     "title": "2023년 가성비 대박 헤어트리트먼트 평점 후기 추천순위 TOP10"
+    },
+    {
+     "video_id": "g5IWeRLLwac",
+     "channel": "도와드려요!",
+     "channel_id": "UC0BZcD_RGc0z3MnvlKp-4Jg",
+     "views": 93,
+     "title": "지금 사야 할 트리트먼트! 2023년 추천 Top10!"
+    },
+    {
+     "video_id": "PqAarGucjZY",
+     "channel": "온다다시 ENTENRTAINMENT",
+     "channel_id": "UCeXC-pP9L8wRgO58CGmub0w",
+     "views": 82,
+     "title": "[온다다시] 헤어트리트먼트 머릿결개선 트리트먼트추천 IPTV"
+    },
+    {
+     "video_id": "ulsy3PJuAv0",
+     "channel": "제니하우스 JENNYHOUSE",
+     "channel_id": "UCByVUxizWGftTroUva8z8RA",
+     "views": 309,
+     "title": "헤어트리트먼트 추천 제니하우스 뉴본헤어트리트먼트 셀프헤어케어 !"
+    },
+    {
+     "video_id": "R585rRzAxqg",
+     "channel": "즐거운쇼핑생활",
+     "channel_id": "UCLLpPXtAi9k29kpEpvMcCxQ",
+     "views": 174,
+     "title": "이거 강력추천 가성비 최고 헤어팩 비교 추천판매순위 top10"
+    },
+    {
+     "video_id": "THW5zZlzdoM",
+     "channel": "이희 IHEE",
+     "channel_id": "UCGWPq8FnrOCP3mLUx8bmDSw",
+     "views": 118,
+     "title": "[이희] 여배우 1분 트리트먼트 퀸즈골드 트리트먼트"
+    },
+    {
+     "video_id": "6l0ubuwccCM",
+     "channel": "마유다Mayuda",
+     "channel_id": "UClV-tgLWMx61i7697P4SkSg",
+     "views": 3559,
+     "title": "머릿결좋아지는 헤어팩추천~!! 환불보장!!"
+    },
+    {
+     "video_id": "eVM1OvDxv8Q",
+     "channel": "제니하우스코스메틱",
+     "channel_id": "UC9hvFWpAPdlJuGRadnSxz3Q",
+     "views": 151,
+     "title": "리벡 스타일 리페어 트리트먼트 임상"
+    },
+    {
+     "video_id": "G7ixP0YxWKM",
+     "channel": "dualsystemforms",
+     "channel_id": "UCI9DozB5QmIoOqJcqbpwweQ",
+     "views": 83,
+     "title": "셀프헤어홈케어 하기좋은 헤어팩 추천! 볼트아르간오일 헤어팩"
+    },
+    {
+     "video_id": "9AbR3i-gvvI",
+     "channel": "어바웃쇼핑",
+     "channel_id": "UC6Ve4mB8Cvi3F4rlt3w4gaw",
+     "views": 317,
+     "title": "극손상헤어팩 추천 판매순위 Top10 || 가격 평점 후기 비교"
+    }
+   ]
+  },
+  {
+   "id": "tLuDcq_3zW4",
+   "product": "맥 립스틱 러스터글래스",
+   "queries": [
+    "맥 립스틱 보정 논란",
+    "맥 러스터글래스 거미베어",
+    "맥 립스틱 대반전",
+    "MAC Lustreglass lipstick"
+   ],
+   "hits": [
+    {
+     "video_id": "T3AcLKghnq8",
+     "channel": "리뷰달인!",
+     "channel_id": "UCB7bN6hy56H-nEMTH9DtUNg",
+     "views": 3535,
+     "title": "2023년 진짜! 인기있는! 맥립스틱! 베스트 TOP10! 가격 평점 리뷰 후기 총정리!!"
+    },
+    {
+     "video_id": "JOppJq1ALCc",
+     "channel": "MAC Cosmetics",
+     "channel_id": "UC9EwwCBwzWhGGlNJujnnnRA",
+     "views": 6801,
+     "title": "MAC Cosmetics Lustreglass 2026 Campaign"
+    },
+    {
+     "video_id": "jdGPhtITyfo",
+     "channel": "Lipstick Swatch",
+     "channel_id": "UCC2dVAVO4K1YLjuLqcpXwGQ",
+     "views": 25592,
+     "title": "Swatch MAC Lustreglass Lipstick #PDA549"
+    },
+    {
+     "video_id": "eWtPOz6oBEs",
+     "channel": "Lipstick Swatch",
+     "channel_id": "UCC2dVAVO4K1YLjuLqcpXwGQ",
+     "views": 23692,
+     "title": "Swatch MAC Lustreglass Lipstick #BusinessCasual544"
+    },
+    {
+     "video_id": "hd8aI5GB_Yc",
+     "channel": "MAC Cosmetics",
+     "channel_id": "UC9EwwCBwzWhGGlNJujnnnRA",
+     "views": 3772,
+     "title": "ELLA from MEOVV Wears MAC Lustreglass"
+    },
+    {
+     "video_id": "xER5QUJe5o8",
+     "channel": "M.A.C Việt Nam ",
+     "channel_id": "UCyHm690OnFlO6mSZmNjxfkg",
+     "views": 265962,
+     "title": "M•A•C LUSTREGLASS: NÂNG NIU SẮC MÔI - NÂNG TẦM KHÍ CHẤT 💋"
+    },
+    {
+     "video_id": "izrnWg2IqTo",
+     "channel": "M•A•C Cosmetics Korea / 맥 코리아",
+     "channel_id": "UC1_FyBIyq-JvgBtMpfwe5sg",
+     "views": 319319,
+     "title": "M.A.C LUSTREGLASS 빛을 머금은 미러 글로우"
+    },
+    {
+     "video_id": "vh-Al5OYKaU",
+     "channel": "M•A•C Cosmetics Korea / 맥 코리아",
+     "channel_id": "UC1_FyBIyq-JvgBtMpfwe5sg",
+     "views": 648526,
+     "title": "NEW LUSTREGLASS STAINGLASS LIP TINT"
+    },
+    {
+     "video_id": "8yoihaUtNw0",
+     "channel": "Lipstick Swatch",
+     "channel_id": "UCC2dVAVO4K1YLjuLqcpXwGQ",
+     "views": 16628,
+     "title": "Mac Lustreglass Sheer-Shine Lipstick #543PoshPit #544BusinessCasual #549PDA"
+    },
+    {
+     "video_id": "58EZAwM7Bds",
+     "channel": "MAC Cosmetics",
+     "channel_id": "UC9EwwCBwzWhGGlNJujnnnRA",
+     "views": 4866,
+     "title": "How to Get Tini Stoessel's Perfect Lip Combo | MAC Cosmetics"
+    }
+   ]
+  },
+  {
+   "id": "a06yYTgpa_c",
+   "product": "세로 듀얼 모니터(유튜버 장비)",
+   "queries": [
+    "월 천 유튜버 모니터",
+    "세로 듀얼모니터 유튜버",
+    "위아래 쌓는 모니터 터치",
+    "stacked vertical dual monitor touchscreen"
+   ],
+   "hits": [
+    {
+     "video_id": "iCNKrS1OLaA",
+     "channel": "UC7사는게낙",
+     "channel_id": "UC7p8tD0lXxWhg70xTWP_5lA",
+     "views": 145,
+     "title": "Ditch your dual monitors for this: LarmTek 49-inch DQHD 240Hz Ultrawide Gaming Monitor, $1,550 of..."
+    },
+    {
+     "video_id": "JtNluur0jnY",
+     "channel": "꿀퓨터",
+     "channel_id": "UCXYUf49mDaKS6Xz48tloHyA",
+     "views": 133,
+     "title": "Stop debating two monitors! ⚡ LG UltraGear 32GX870B: 4K 240Hz, 480Hz mode, and $320 off on this 3..."
+    },
+    {
+     "video_id": "o5t7MkWQPks",
+     "channel": "1분후기",
+     "channel_id": "UC9XacL7FMv3iLnwiJbb-YBw",
+     "views": 428,
+     "title": "모니터케이블 단자 안 맞을 때? 코드웨이 DP to HDMI 2m 실제 후기 (★4.8)"
+    },
+    {
+     "video_id": "Os1f64Bg-gw",
+     "channel": "우리동네는고수가작업한다 1인시공 캡틴홍",
+     "channel_id": "UCtRow20kqMkJxYIJ8Z8gR9A",
+     "views": 1067,
+     "title": "[안드로이드킹덤 캡틴홍] BMW X6 E71 신형 스타일 모니터 교체 안드로이드올인원 시공."
+    },
+    {
+     "video_id": "w5v6FqqU6VI",
+     "channel": "패스애드",
+     "channel_id": "UCWdITyRFjyVBnCtjyNy_GpA",
+     "views": 2709,
+     "title": "피벗 없이 듀얼모니터 세로화면 모드 설정 만들기 방법"
+    },
+    {
+     "video_id": "pIMdoqwnPeo",
+     "channel": "어바웃쇼핑",
+     "channel_id": "UC6Ve4mB8Cvi3F4rlt3w4gaw",
+     "views": 473,
+     "title": "[광고]세로모니터 추천 판매순위 Top10 || 가격 평점 후기 비교"
+    },
+    {
+     "video_id": "5Jpv7301dk8",
+     "channel": "SOTSU",
+     "channel_id": "UCGgF1cwEVExIHPntDQx0dlQ",
+     "views": 30439,
+     "title": "How to stack the SOTSU FlipAction Elite 16” on top of the MacBook Pro 16 as a secondary monitor?"
+    },
+    {
+     "video_id": "8oxp6T27QXM",
+     "channel": "Orgoth Reviews",
+     "channel_id": "UCZfzxFFgNzhWebT6_Npta7A",
+     "views": 53,
+     "title": "Stacked monitors, no desk space, That fold shut- The Geminos"
+    },
+    {
+     "video_id": "IWYEEYEfJVg",
+     "channel": "NexTek",
+     "channel_id": "UCuwHxb-m-Hx38GZlo73JrUQ",
+     "views": 44,
+     "title": "UPERFECT 15.6 Portable Dual Stacked Monitor Turn Your Laptop Into a Triple Screen Productivity Setup"
+    },
+    {
+     "video_id": "m17caupatiA",
+     "channel": "ALOGIC",
+     "channel_id": "UCdLwxBqsjosclXsSa-fAMsQ",
+     "views": 712,
+     "title": "Dual 34” Ultrawides Without Destroying Your Desk Space | Elevate Dual Vertical Monitor Stand"
+    },
+    {
+     "video_id": "KZbIrpQ4L7Y",
+     "channel": "GeChic",
+     "channel_id": "UC9FhxSUflWfmJpkd2U7KsyQ",
+     "views": 374,
+     "title": "Get Rid of Soreness! Let's Work on Stacked Dual Monitor with M161H Portable Monitor!｜GeChic"
+    },
+    {
+     "video_id": "tbEA430JagY",
+     "channel": "ALOGIC",
+     "channel_id": "UCdLwxBqsjosclXsSa-fAMsQ",
+     "views": 249,
+     "title": "BIG Monitor Setup. TINY Desk Footprint. | Elevate Dual Vertical Monitor Stand for 34\" Edge Monitors"
+    },
+    {
+     "video_id": "udSc2rsRBC8",
+     "channel": "Acer",
+     "channel_id": "UCEMyzN5qerPhb-epGMeiwFw",
+     "views": 19917,
+     "title": "Acer Portable Monitors | Portable. Practical. Productive. | Acer"
+    },
+    {
+     "video_id": "ZqP9MarS-KY",
+     "channel": "Xinshengli Technology ",
+     "channel_id": "UCqla0PiC2Kg9sSLAMzdhZsg",
+     "views": 4,
+     "title": "This Vertical Dual-Screen Portable Monitor Will Change Your Workflow!"
+    },
+    {
+     "video_id": "CPFlKyE1a8A",
+     "channel": "InnLead",
+     "channel_id": "UCQBWcjMUVaaCTzKtx3bIDzA",
+     "views": 3071,
+     "title": "DUOONE Portable Stack Touchscreen Monitor. Stacked screens. Stacked monitors."
+    },
+    {
+     "video_id": "sgpGC4wIJFc",
+     "channel": "GeChic",
+     "channel_id": "UC9FhxSUflWfmJpkd2U7KsyQ",
+     "views": 6828,
+     "title": "Lifting Stand Creates Stacked Displays for a Laptop- 16.1\" M161H Portable Monitor｜GeChic"
+    }
+   ]
+  },
+  {
+   "id": "IRFN5B_2LMo",
+   "product": "미니 포르쉐 911 어린이 전기차(3000W 드리프트)",
+   "queries": [
+    "미국 아빠들 난리 미니 포르쉐 911",
+    "미니 포르쉐 911 전기차 정체",
+    "3000W 어린이 전기차 포르쉐 드리프트",
+    "kids electric Porsche 911 3000W drift"
+   ],
+   "hits": [
+    {
+     "video_id": "SnIOq_iWcVQ",
+     "channel": "김주용의 라라클래식TV",
+     "channel_id": "UC4hohVdBh5xGQ6YhI-Mp2LA",
+     "views": 1152,
+     "title": "라라클래식 마이크로레이서, 사륜형 이륜차 인증준비를 위한 테스트 시험중. 클래식카 스타일의 극소형 전기차 시대를 열어갑니다."
+    },
+    {
+     "video_id": "jTq78yQzyB0",
+     "channel": "김호일 휴먼TV",
+     "channel_id": "UCVW6dXYcfGVQrBQw9WdBClg",
+     "views": 409,
+     "title": "차박사 김필수 교수 특강3, 개조전기차 미국은 되고 한국은 안돼 #convert_into_an -electronic car #전기차"
+    },
+    {
+     "video_id": "Baqpil4pZ94",
+     "channel": "Shuri의 전기차세상(여행,음식,전기차)",
+     "channel_id": "UCVLJ56o0rhkhb9iiW8cnJyA",
+     "views": 997,
+     "title": "폭스바겐  Beatle이 전기차로 부활?"
+    },
+    {
+     "video_id": "rhXmBj0XsPc",
+     "channel": "Rides & Toys",
+     "channel_id": "UCfldm5Nx5csAId6GUBsw4qg",
+     "views": 191069,
+     "title": "Porsche Super Sport XL 30mph"
+    }
+   ]
+  },
+  {
+   "id": "OE-11wb7vdY",
+   "product": "아이언맨 헬멧(음성 명령 페이스플레이트)",
+   "queries": [
+    "AI 주작 논란 아이언맨 헬멧",
+    "아이언맨 헬멧 음성 명령",
+    "아이언맨 헬멧 LED 자동 열림",
+    "Iron Man helmet voice command faceplate"
+   ],
+   "hits": [
+    {
+     "video_id": "L26pDI3hahM",
+     "channel": "남자,아지트",
+     "channel_id": "UCTiXFxf5WbK85myFoHFumTg",
+     "views": 422,
+     "title": "오토킹 아이언맨 헬멧 1대1 MK5 마스크 영어 음성 가면"
+    },
+    {
+     "video_id": "cYMA_0i3-ds",
+     "channel": "TechOverFlow",
+     "channel_id": "UCFHPdU02XZFBfvdemTcogcA",
+     "views": 10565,
+     "title": "MK5 아이언맨 헬멧의 음성 제어 - #jarvis #marvel #ironman"
+    },
+    {
+     "video_id": "dfAqbwPLelc",
+     "channel": "TechOverFlow",
+     "channel_id": "UCFHPdU02XZFBfvdemTcogcA",
+     "views": 520,
+     "title": "아이언맨 헬멧: 쓰고 벗기 간편한 방법"
+    },
+    {
+     "video_id": "QozMl3-DgXU",
+     "channel": "Joetoys Zhu",
+     "channel_id": "UCoR3LIEALSMdfegAyz_Gbxg",
+     "views": 287511,
+     "title": "Iron Man MK50 helmet is now open for pre-order"
+    },
+    {
+     "video_id": "qKlbOCfBAHE",
+     "channel": "TWC TOY Collections",
+     "channel_id": "UCJFB0dd2VmbMyQp4z5NkE-w",
+     "views": 649,
+     "title": "iron man tech in real life?! voice-controlled helmet test"
+    },
+    {
+     "video_id": "MOS0Ad9mbEA",
+     "channel": "Since 2005_ Korea Figure Gallery Limited",
+     "channel_id": "UCDq7XgxA73CRwwXNXyKn-DA",
+     "views": 1316,
+     "title": "Killerbody KB20060 Wearable Helmet Voice Control Brushed Mask 1:1 Iron Man MK7"
+    },
+    {
+     "video_id": "n_91QsgWBIU",
+     "channel": "Joetoys Zhu",
+     "channel_id": "UCoR3LIEALSMdfegAyz_Gbxg",
+     "views": 4406,
+     "title": "The electric iron man helmet mk6"
+    },
+    {
+     "video_id": "r6auWtfkqjs",
+     "channel": "Cyber Craft - cosplay helmets & suits replicas",
+     "channel_id": "UCIA7yfxUpTD6lvmNMCcmUnQ",
+     "views": 7445,
+     "title": "Electronics of two IronMan Helmets (Classic and Black)"
+    },
+    {
+     "video_id": "rI0MKQGPBrI",
+     "channel": "Must have",
+     "channel_id": "UC3F2Ar0lwY_SR27OOXvMBiw",
+     "views": 15,
+     "title": "Iron man helmet  Voice Control - link to buy in the description - #ironman  #ironmanhelmet #marvel"
+    },
+    {
+     "video_id": "QLHLjTD7PxQ",
+     "channel": "Joetoys Zhu",
+     "channel_id": "UCoR3LIEALSMdfegAyz_Gbxg",
+     "views": 40596,
+     "title": "Iron Man MK5 Helmet The New Edition"
+    },
+    {
+     "video_id": "utROK_C99As",
+     "channel": "HEAVENNATURE TOY COLLECTOR",
+     "channel_id": "UCaMiPxUliy6_DDDNIKk_Krw",
+     "views": 6336,
+     "title": "Iron Man Mark VII Voice Control  Touch Sensor Remote Control Motorise Helmet"
+    },
+    {
+     "video_id": "FPZo0mc2w_w",
+     "channel": "kghobby online store",
+     "channel_id": "UC1u6y-KR9bqKRQeHp5Ji2QA",
+     "views": 2146,
+     "title": "Killerbody Iron Man Mark 7 1:1 Wearable Helmet Voice Control Brushed Mask"
+    },
+    {
+     "video_id": "q2sqiwozP0g",
+     "channel": "Joetoys Zhu",
+     "channel_id": "UCoR3LIEALSMdfegAyz_Gbxg",
+     "views": 11231,
+     "title": "The clooest  audiovisual experince by iron man helmets"
+    }
+   ]
+  },
+  {
+   "id": "ZqVgAg99gRI",
+   "product": "주걱(테무 의심 해명, 2600만뷰)",
+   "queries": [
+    "2600만 뷰 주걱 영상",
+    "테무 주걱 의심 해명",
+    "2년 개발 주걱 테무",
+    "rice paddle spatula Temu accusation 26 million views"
+   ],
+   "hits": []
+  },
+  {
+   "id": "Mp6LPm9qbLo",
+   "product": "대용량 물병 Manna Titan",
+   "queries": [
+    "대용량 물병 딸 검사 아빠",
+    "MannaTitan 물병",
+    "Manna Titan water bottle",
+    "대용량 물병 해외반응"
+   ],
+   "hits": [
+    {
+     "video_id": "_iX0QF0hB58",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 19898,
+     "title": "Manna Hydration 3L & 4L Titan Stainless Steel Water Jug"
+    },
+    {
+     "video_id": "-5TvZjQWafs",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 21422,
+     "title": "Manna Titan One Gallon"
+    },
+    {
+     "video_id": "miqgxASmEL8",
+     "channel": "Logomark Inc",
+     "channel_id": "UCUDfCO4mF5Xr4D7GWpjuk_w",
+     "views": 5139,
+     "title": "CM2044 Manna™ TITAN 4L/1G Bottle"
+    },
+    {
+     "video_id": "ioDNktSCgnM",
+     "channel": "4imprint",
+     "channel_id": "UCpjR-hOpB3oHddQX_IYr3GQ",
+     "views": 8524,
+     "title": "Manna Titan Vacuum Bottle 1 Gallon - Custom Vacuum Bottle by 4imprint"
+    },
+    {
+     "video_id": "FdMTxJMfwnE",
+     "channel": "Cain Brands Reviews",
+     "channel_id": "UCPSQSNSbx6gTV_m4V1DN5IA",
+     "views": 398,
+     "title": "Manna Titan Jug Review: The Best Insulated Water Solution?"
+    },
+    {
+     "video_id": "xPz2iD2P6Ac",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 696,
+     "title": "Manna Hydration Stack Growler 2021"
+    },
+    {
+     "video_id": "J9U4RL5R0vM",
+     "channel": "Logomark Inc",
+     "channel_id": "UCUDfCO4mF5Xr4D7GWpjuk_w",
+     "views": 457,
+     "title": "CM2014™ Manna RETRO Bottle"
+    },
+    {
+     "video_id": "DqenoFPEPMc",
+     "channel": "AnyPromo.com",
+     "channel_id": "UCYjHV_kcRXEOvOlgd9LXJ1Q",
+     "views": 60,
+     "title": "Promo Product Review: Manna™ 4L/1G Titan Steel Bottle| AnyPromo 763930"
+    },
+    {
+     "video_id": "yBT-DZnZ5Wc",
+     "channel": "Logomark Inc",
+     "channel_id": "UCUDfCO4mF5Xr4D7GWpjuk_w",
+     "views": 349,
+     "title": "CM2027 Manna™ ASCEND Bottle"
+    },
+    {
+     "video_id": "LK38wwLSXSI",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 2751,
+     "title": "Manna Hydration Stack Growler"
+    },
+    {
+     "video_id": "uMQU74zZCJM",
+     "channel": "Logomark Inc",
+     "channel_id": "UCUDfCO4mF5Xr4D7GWpjuk_w",
+     "views": 2763,
+     "title": "CM1007 Manna™ BOULDER Mug"
+    },
+    {
+     "video_id": "iZ1tEtE5Ed4",
+     "channel": "Logomark Inc",
+     "channel_id": "UCUDfCO4mF5Xr4D7GWpjuk_w",
+     "views": 384,
+     "title": "CM4000 Manna™ RANGER Bottle"
+    },
+    {
+     "video_id": "5_7wjozxghc",
+     "channel": "AnyPromo.com",
+     "channel_id": "UCYjHV_kcRXEOvOlgd9LXJ1Q",
+     "views": 79,
+     "title": "Promo Product Review: Manna™ 64 oz Ranger Steel Bottle| AnyPromo 752779"
+    },
+    {
+     "video_id": "tVf1v3DQYMA",
+     "channel": "Manna Water瑪哪天然蘇打礦泉水",
+     "channel_id": "UCO_GXH_4EH1PsoIvDi2Tqxw",
+     "views": 304,
+     "title": "Manna Soda Water Best Water To Drink"
+    },
+    {
+     "video_id": "-T45aZHgV7w",
+     "channel": "AnyPromo.com",
+     "channel_id": "UCYjHV_kcRXEOvOlgd9LXJ1Q",
+     "views": 21,
+     "title": "Promo Product Review: Manna™ 64 oz Stack Growler| AnyPromo 752780"
+    },
+    {
+     "video_id": "S_0T25DGVHM",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 989,
+     "title": "Manna Hydration Carafe Serve 50oz"
+    },
+    {
+     "video_id": "hLoG8tbZF_k",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 2026,
+     "title": "Manna Hydration Helix Lid"
+    },
+    {
+     "video_id": "VrPsbUIioRc",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 1431,
+     "title": "Manna Hydration 40oz. Basin Mug"
+    },
+    {
+     "video_id": "gjij59byVq4",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 605,
+     "title": "Manna Hydration Stemless Wine Cups"
+    },
+    {
+     "video_id": "O0EEZTGAXzs",
+     "channel": "Spyzon Latest News",
+     "channel_id": "UCb-ZcJukIJZOP4eIQ3tNQeg",
+     "views": 37,
+     "title": "yeti water bottle with straw,manna water bottle,hydrapeak,klean - Full Series Link in Description"
+    },
+    {
+     "video_id": "2YQvJ0NFrwU",
+     "channel": "JARED JOYCE",
+     "channel_id": "UCy-7xCVcdKupx8GicDNcE9w",
+     "views": 263,
+     "title": "The TITAN Water Bottle: US Patent 8,297,462 (in 60 seconds)"
+    },
+    {
+     "video_id": "vsZXr0q_hs0",
+     "channel": "Manna Water瑪哪天然蘇打礦泉水",
+     "channel_id": "UCO_GXH_4EH1PsoIvDi2Tqxw",
+     "views": 494,
+     "title": "MANNA Natural Soda Mineral Water｜pH 8.4 Natural and Pure"
+    },
+    {
+     "video_id": "W2bgC7r0ySQ",
+     "channel": "Manna Hydration",
+     "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+     "views": 2985,
+     "title": "Manna Hydration Nomad 17oz. Stainless Steel Food Jar"
+    },
+    {
+     "video_id": "GD_ajlIMD4c",
+     "channel": "KBS News",
+     "channel_id": "UCcQTRi69dsVYHN3exePtZ1A",
+     "views": 719,
+     "title": "프랑스, 환경 생각하는 ‘휴대용 물병’ 인기 / KBS뉴스(News)"
+    },
+    {
+     "video_id": "U8EIifrxCVI",
+     "channel": "MBCNEWS",
+     "channel_id": "UCF4Wxdo3inmxP-Y59wXDsFw",
+     "views": 1258206,
+     "title": "[이슈톡] 테슬라 속이기…물병·오렌지로 충분 (2021.04.22/뉴스투데이/MBC)"
+    },
+    {
+     "video_id": "cV4oTcygZlY",
+     "channel": "에어쇼핑",
+     "channel_id": "UC52UU8yM3a7A68eXmtsRHvQ",
+     "views": 1078,
+     "title": "Top 10 Water Dispenser Bottle Recommendations"
+    }
+   ]
+  }
+ ],
+ "channels": [
+  {
+   "name": "굥아님의 리뷰세상",
+   "channel_id": "UC9FNiG45LYQPBKn3cukVGvA",
+   "url": "https://www.youtube.com/channel/UC9FNiG45LYQPBKn3cukVGvA",
+   "lang": "ko",
+   "same_kind": false,
+   "same_kind_reason": "한국 채널이나 치이카와 굿즈 리뷰(제목 영어 번역형). 해외 원본 재편집·제품 썰 아님 - 결이 다름(제목만으로 판단)",
+   "found_by_seeds": [
+    "rhetorical-generic-query"
+   ],
+   "median_views": 51500.0,
+   "max_views": 676000,
+   "n": 30
+  },
+  {
+   "name": "남자,아지트",
+   "channel_id": "UCTiXFxf5WbK85myFoHFumTg",
+   "url": "https://www.youtube.com/channel/UCTiXFxf5WbK85myFoHFumTg",
+   "lang": "ko",
+   "same_kind": false,
+   "same_kind_reason": "한국 채널, 공동구매/상품 소개 숏츠 조회 중앙 290 - 현장썰 결 아님(제목만으로 판단)",
+   "found_by_seeds": [
+    "OE-11wb7vdY"
+   ],
+   "median_views": 290.5,
+   "max_views": 3700,
+   "n": 30
+  },
+  {
+   "name": "TechOverFlow",
+   "channel_id": "UCFHPdU02XZFBfvdemTcogcA",
+   "url": "https://www.youtube.com/channel/UCFHPdU02XZFBfvdemTcogcA",
+   "lang": "en(일부 ko)",
+   "same_kind": false,
+   "same_kind_reason": "최근 쇼츠는 영어 Gmail 팁, 아이언맨 헬멧 한국어 제목 2편은 있으나 결 다름",
+   "found_by_seeds": [
+    "OE-11wb7vdY"
+   ],
+   "median_views": 2650.0,
+   "max_views": 117000,
+   "n": 30
+  },
+  {
+   "name": "Joetoys Zhu",
+   "channel_id": "UCoR3LIEALSMdfegAyz_Gbxg",
+   "url": "https://www.youtube.com/channel/UCoR3LIEALSMdfegAyz_Gbxg",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "아이언맨 헬멧 제조사 원본 영상 후보(영어 제목, 같은 제품)",
+   "found_by_seeds": [
+    "OE-11wb7vdY"
+   ],
+   "median_views": 10500.0,
+   "max_views": 88000,
+   "n": 30,
+   "role": "foreign_original_candidate"
+  },
+  {
+   "name": "Manna Hydration",
+   "channel_id": "UCmOuPL0C6GU4dvIGfr3FfVA",
+   "url": "https://www.youtube.com/channel/UCmOuPL0C6GU4dvIGfr3FfVA",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "Manna Titan 브랜드 공식 채널 = 원본 후보",
+   "found_by_seeds": [
+    "Mp6LPm9qbLo"
+   ],
+   "median_views": 1000,
+   "max_views": 23000,
+   "n": 25,
+   "role": "foreign_original_candidate"
+  },
+  {
+   "name": "MAC Cosmetics",
+   "channel_id": "UC9EwwCBwzWhGGlNJujnnnRA",
+   "url": "https://www.youtube.com/channel/UC9EwwCBwzWhGGlNJujnnnRA",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "MAC 공식 Lustreglass 캠페인",
+   "found_by_seeds": [
+    "tLuDcq_3zW4"
+   ],
+   "median_views": null,
+   "max_views": null,
+   "n": null,
+   "role": "foreign_original_candidate"
+  },
+  {
+   "name": "Lipstick Swatch",
+   "channel_id": "UCC2dVAVO4K1YLjuLqcpXwGQ",
+   "url": "https://www.youtube.com/channel/UCC2dVAVO4K1YLjuLqcpXwGQ",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "Lustreglass 발색 영상(조회 2만대)",
+   "found_by_seeds": [
+    "tLuDcq_3zW4"
+   ],
+   "median_views": null,
+   "max_views": null,
+   "n": null,
+   "role": "foreign_original_candidate"
+  },
+  {
+   "name": "Rides & Toys",
+   "channel_id": "UCfldm5Nx5csAId6GUBsw4qg",
+   "url": "https://www.youtube.com/channel/UCfldm5Nx5csAId6GUBsw4qg",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "Porsche kids ride-on 61초 191k, 쇼츠 탭 측정 0건",
+   "found_by_seeds": [
+    "IRFN5B_2LMo"
+   ],
+   "median_views": null,
+   "max_views": null,
+   "n": 0,
+   "role": "foreign_original_candidate"
+  },
+  {
+   "name": "SOTSU",
+   "channel_id": "UCGgF1cwEVExIHPntDQx0dlQ",
+   "url": "https://www.youtube.com/channel/UCGgF1cwEVExIHPntDQx0dlQ",
+   "lang": "en",
+   "same_kind": false,
+   "same_kind_reason": "스택형 모니터 제품 영상 30k",
+   "found_by_seeds": [
+    "a06yYTgpa_c"
+   ],
+   "median_views": null,
+   "max_views": null,
+   "n": null,
+   "role": "foreign_original_candidate"
+  }
+ ]
+}

@@ -1,0 +1,318 @@
+{
+ "_note": "샥탬스토리 하이브리드 31편 Moki Doorstep — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 투자자 '와… 이런 걸 생각해 내다니 똑똑하네!'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 Moki Doorstep 은 없음 → 비슷한 접이식 차 문 고리 걸이 발판(다른 회사) — B1 '똑같은 건 없고 비슷한 게'로 숨기지 않음. 강도·하중(안전성) 말 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "접이식 자동차 도어 래치 후크 스텝(쿠팡 6752807298 '하이브-유통 접이식 자동차 도어 래치 후크 스텝 미니 풋 페달 사다리 지프 SUV' — 방송 제품 Moki Doorstep 과 다른 회사의 비슷한 문 고리 걸이 발판)",
+ "same_product": false,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "차 문 고리(스트라이커)에 거는 것만으로 차 지붕에 올라서는 발판 — 앞 O3 투자자 '와… 이런 걸 생각해 내다니 똑똑하네!'로 끝남",
+  "뒤흥미": "비슷한 접이식 발판을 차 문 고리에 걸고, 밟고 올라서고, 접어서 넣는 손·발 시점(HGzfXsFkj50·YY_zIc6Wk2I) — 원본이 신기했던 '문 고리에 걸어 밟는다'가 그대로 보임",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 'moki door step' → Moki 없음(비슷한 도어스텝만) · '차량용 도어스텝 래치 발판' → 6752807298(검정 접이식 래치 후크 스텝, 사진 C:/숏템_칼카피/foreignshowshow/31편_소재/img/cp_6752807298.jpg)·9739877067 '루프탑 도어스텝 차량용 사이드 발판 래치 후크 겸용' — 결과 C:/숏템_칼카피/foreignshowshow/31편_소재/쿠팡API_31a.json·쿠팡API_31b.json"
+ },
+ "hybrid": {
+  "front_doc": "../31편_MokiDoorstep",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/31편_MokiDoorstep/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/31편_MokiDoorstep/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/31편_MokiDoorstep/work",
+  "cut_after": "O3",
+  "cut_why": "O3 투자자 원음 '와… 이런 걸 생각해 내다니 똑똑하네!' 끝 — 그 '문 고리 발판'을 뒤 체험(쿠팡에서 비슷한 발판을 사서 써 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~30편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "지붕이 안 닿는 아내",
+  "line2": "남편이 만든 발판?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~30편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 발판이 궁금해서 쿠팡에서 찾아봤더니, 똑같은 건 없고 비슷한 게 있더라고요.",
+    "tts": "근데 저 발판이 궁금해서, 쿠팡에서 찾아봤더니, 똑같은 건 없고, 비슷한 게 있더라고요.",
+    "caps": [
+     "근데 저 발판이 궁금해서",
+     "쿠팡에서 찾아봤더니",
+     "똑같은 건 없고",
+     "비슷한 게 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "비슷한 게 있더라고요"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 발판이 궁금해서",
+      "span": "발판이 궁금해서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에서 찾아봤더니",
+      "span": "찾아봤더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없고",
+      "span": "건 없고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 게 있더라고요",
+      "span": "있더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②공개(와우1)",
+    "text": "이게 말도 안 되는 게, 차 문을 열고 문고리에 착 걸기만 하면 끝이에요.",
+    "tts": "이게 말도 안 되는 게, 차 문을 열고, 문고리에 착 걸기만 하면, 끝이에요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "차 문을 열고",
+     "문고리에 착 걸기만 하면",
+     "끝이에요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차 문을 열고",
+      "span": "차 문을 열고",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "문고리에 착 걸기만 하면",
+      "span": "걸기만 하면",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "끝이에요",
+      "span": "끝이에요",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2)",
+    "text": "진짜 핵심은 이건데, 발판을 밟고 올라서면 차 지붕까지 손이 닿아요.",
+    "tts": "진짜 핵심은 이건데, 발판을 밟고 올라서면, 차 지붕까지 손이 닿아요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "발판을 밟고 올라서면",
+     "차 지붕까지 손이 닿아요"
+    ],
+    "facts": [
+     "c2",
+     "c3"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "발판을 밟고 올라서면",
+      "span": "밟고 올라서면",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차 지붕까지 손이 닿아요",
+      "span": "손이 닿아요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 다 쓰고 나면 반으로 접어서 차 안에 넣어 두면 돼요.",
+    "tts": "심지어 이게 대박인 게, 다 쓰고 나면, 반으로 접어서, 차 안에 넣어 두면 돼요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "다 쓰고 나면",
+     "반으로 접어서",
+     "차 안에 넣어 두면 돼요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다 쓰고 나면",
+      "span": "다 쓰고 나면",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "반으로 접어서",
+      "span": "반으로 접어서",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차 안에 넣어 두면 돼요",
+      "span": "넣어 두면 돼요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 아내가 지붕 세차를 혼자 다 해 버려서, 제가 할 일이 없어졌어요.",
+    "tts": "요즘은 아내가, 지붕 세차를 혼자 다 해 버려서, 제가 할 일이 없어졌어요.",
+    "caps": [
+     "요즘은 아내가",
+     "지붕 세차를 혼자 다 해 버려서",
+     "제가 할 일이 없어졌어요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 아내가",
+      "span": "요즘은 아내가",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지붕 세차를 혼자 다 해 버려서",
+      "span": "혼자 다 해 버려서",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "제가 할 일이 없어졌어요",
+      "span": "없어졌어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) 'moki door step' → Moki Doorstep 없음(비슷한 차량용 도어스텝 6092977573·6581211089 등) · '차량용 도어스텝 래치 발판' → 6752807298 '하이브-유통 접이식 자동차 도어 래치 후크 스텝 미니 풋 페달 사다리 지프 SUV'(→ B1 '똑같은 건 없고 비슷한 게') · 결과 C:/숏템_칼카피/foreignshowshow/31편_소재/쿠팡API_31a.json·쿠팡API_31b.json",
+  "c2": "쿠팡 상품명 '접이식 자동차 도어 래치 후크 스텝'(→ '문고리에 걸기만'·'반으로 접어서') · 화면 = Deepak John 'Hyundai Venue Accessories- Car Door Latch Hook Step' https://www.youtube.com/watch?v=HGzfXsFkj50 (손에 든 발판 0~6.6초·문 고리에 거는 손 8~11초·지붕 16~18초·밟는 발 19~20.5초, 사람 얼굴 없음) · ONE F '멀티 루프 도어스텝' https://www.youtube.com/watch?v=YY_zIc6Wk2I (거는 손 0.5~4.9초·밟고 올라서는 다리 5.4~9.9초·접는 손 16~24초)",
+  "c3": "쿠팡 같은 상품군 9739877067 '자동차 세차용품 루프탑 도어스텝 차량용 사이드 발판 래치 후크 겸용'(→ '차 지붕까지') · 원본 방송 73.61~77.13 'This gives you that quick and easy step up to the top of your car.' https://www.youtube.com/watch?v=cMYX4FfMT1A&t=73s",
+  "창작": "B5 '아내가 지붕 세차를 혼자 다 해 버려서 제가 할 일이 없어졌어요' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

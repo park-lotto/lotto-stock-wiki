@@ -1,0 +1,24 @@
+{
+ "src": "v_stwtJyFQyKg.mp4",
+ "ss": 17.0,
+ "to": 26.0,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 1.38,
+   "text": "And dance.",
+   "ko": "그리고 춤을 춰요.",
+   "abs_start": 17.0,
+   "abs_end": 18.38
+  },
+  {
+   "start": 1.38,
+   "end": 8.52,
+   "text": "[music] 從此海闊天空 懷抱大海交流",
+   "ko": "[음악] 이제부터 넓은 세상으로 나가 바다를 품고 교류해요",
+   "abs_start": 18.38,
+   "abs_end": 25.52
+  }
+ ]
+}

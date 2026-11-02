@@ -1,0 +1,64 @@
+{
+ "lines": [
+  {
+   "i": 0,
+   "kind": "video",
+   "src": "cand2/00/v_PB3Y5RuhpZs.mp4",
+   "zoom": false,
+   "sfx": "003_쿵_소리.wav",
+   "meme": "놀람",
+   "start": 0.5
+  },
+  {
+   "i": 1,
+   "kind": "video",
+   "src": "cand/01/v_m-xz-FHAFvU.mp4",
+   "start": 0.5,
+   "sfx": "004_뿅.wav"
+  },
+  {
+   "i": 2,
+   "kind": "video",
+   "src": "cand/02/v_RdYC9dkfH9E.mp4",
+   "start": 0.3
+  },
+  {
+   "i": 3,
+   "kind": "video",
+   "src": "cand2/03/v_CTXegFn_oh8.mp4",
+   "zoom": false,
+   "sfx": "002_딩_소리.wav",
+   "start": 0.8
+  },
+  {
+   "i": 4,
+   "kind": "video",
+   "src": "cand2/00/v_99CkR2mXNls.mp4",
+   "start": 2.0,
+   "bw": true,
+   "sfx": "003_쿵_소리.wav",
+   "meme": "분노_짜증"
+  },
+  {
+   "i": 5,
+   "kind": "photo",
+   "src": "ai/05.png",
+   "zoom": true
+  },
+  {
+   "i": 6,
+   "kind": "video",
+   "src": "cand2/06/v_klmcJoeGG2k.mp4",
+   "zoom": false,
+   "sfx": "004_뿅.wav",
+   "start": 2.5
+  },
+  {
+   "i": 7,
+   "kind": "video",
+   "src": "cand2/07/v_nzkdBANeZ9o.mp4",
+   "start": 0.5,
+   "meme": "웃음"
+  }
+ ]
+}

@@ -1,0 +1,520 @@
+{
+ "id": "Ou1E8OlhEjk",
+ "dur": 37.51,
+ "title_card": "회사도 포기한 / 디저트를 살린 덕후 (1줄 흰·2줄 노랑, 0~1.5초)",
+ "post_title": "회사도 포기한 디저트를 살린 덕후",
+ "frame": {
+  "header": "노란 머리띠(y0~236) 왼쪽 햄버거 메뉴 + 가운데 검정 '앞북이' 로고 + 북채 든 둥근 마스코트(채널 캐릭터, 북=앞북이 말장난) · 아래 흰 바탕 게시글형: 게시글 제목(검정 굵은 고딕) · 메타 줄 'ㅅㄱ | 18:13'(회색) · 회색 구분선 · 자막(검정 굵은 고딕 가운데) · 그림 칸 · 아래 흰 여백",
+  "layout_y": "1080x1920 기준: 머리띠 0~236 / 게시글 제목 330~380 / 메타 430 / 구분선 455 / 자막 칸 490~640(1줄이면 545~600, 2줄 누적이면 2줄) / 그림 칸 x45~1038 · y668~1663 / 1664~1920 흰 여백. 훅 카드(0~1.4~1.7초): 머리띠 어둡게 + 검정 띠에 2줄 큰 제목(외곽선) + 흰 띠에 게시글 제목 + 그 아래 그림 전폭",
+  "ai_notice": null,
+  "ai_notice_check": "없음 — 2fps 전 프레임 하단(y1700~1900) 최소 밝기 252 이상(완전 흰색), 그림 칸·머리띠 안에도 'AI' 문구 육안 미발견"
+ },
+ "caption_style": "검정 굵은 고딕 1줄 가운데, 약 0.5~1.8초마다 교체(문장을 2~4조각으로 쪼갬). N3·zn 일부 줄은 2줄 누적(1줄 뜨고 0.4~1.0초 뒤 2줄째)",
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.5,
+   "caption": "(훅 카드) 회사도 포기한 / 디저트를 살린 덕후",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "수플레 치즈케이크를 포크로 떠내는 클로즈업(전폭)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.5,
+   "t1": 2.8,
+   "caption": "일본에서는 케이크를 치즈처럼",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "보라색 원형 Q·B·B 치즈디저트 통을 열어 6조각 보여줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.8,
+   "t1": 4.0,
+   "caption": "한 조각씩 까먹는 디저트가",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "조각 포장을 하나씩 집어 뜯는 손",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.0,
+   "t1": 5.1,
+   "caption": "치즈 매대를 점령했다는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "'チーズ売り場' 간판 노란 매대 앞 여성(뿌연 하이키 조명)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(정지 이미지→영상) 장면 재연",
+    "evidence": "간판·FROZEN FOODS 글자가 과하게 깨끗, 뿌연 하이키 조명, 진열 통 무늬 균일 반복, 인물이 매대에 손 뻗는 동작이 프레임 간 이어짐(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 5.1,
+   "t1": 6.2,
+   "caption": "이게 말도 안 되는 게",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 여성이 매대 앞에 쪼그려 앉아 손 뻗음",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상 장면 재연",
+    "evidence": "위 장면 이어짐, 매대 칸 무늬 균일(추정)"
+   },
+   "effect": "전환어 줄"
+  },
+  {
+   "t0": 6.2,
+   "t1": 7.0,
+   "caption": "치즈케이크 덕후였던",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "바스크 치즈케이크 겉면을 손가락으로 만짐(실사)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.0,
+   "t1": 8.1,
+   "caption": "이 개발자는 대학생 때",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "바스크 치즈케이크에 칼 넣는 클로즈업(실사)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.1,
+   "t1": 9.2,
+   "caption": "우연히 먹은 한 치즈 회사의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "마트 냉장 매대 앞에서 케이크 통 들고 웃는 단발 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공(개발자 대학생 시절)",
+    "feeling": "기쁨·설렘",
+    "prop": "줌블러 진입"
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌인",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": "방사 줌블러 전환"
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.0,
+   "caption": "치즈케이크에 반해",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 장면 확대, 가장자리 노랑·주황 집중선 번쩍",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "반함(환한 미소)",
+    "prop": "노랑·주황 집중선"
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌인",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": "노랑·주황 집중선 오버레이"
+  },
+  {
+   "t0": 10.0,
+   "t1": 11.3,
+   "caption": "그 회사 개발직에 지원했고",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "책상에서 펜으로 지원서 쓰는 같은 여성, 옆에 치즈케이크",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "미소·의욕",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 천천히 줌",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 11.3,
+   "t1": 12.3,
+   "caption": "최종 면접에 직접 만든",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "볼에 반죽 붓는 클로즈업(실사 추정)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.3,
+   "t1": 13.0,
+   "caption": "케이크를 들고 가",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "정장 여성이 회의실 면접관 앞에 케이크 내밀기",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공·면접관",
+    "feeling": "미소 / 면접관 호기심",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감, 면접관 중년 남성 얼굴도 같은 질감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.0,
+   "t1": 13.9,
+   "caption": "합격까지 해버렸다는 거",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "면접관들이 케이크 맛보며 감탄",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 면접관",
+    "feeling": "감탄·만족",
+    "prop": "노랑·주황 집중선"
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": "노랑·주황 집중선"
+  },
+  {
+   "t0": 13.9,
+   "t1": 15.0,
+   "caption": "입사 후 자신이 개발한",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "흰 가운 입고 연구실에서 케이크 통 들여다봄",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "뿌듯함",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌인(14.0→14.9 같은 자세 확대만)",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 15.0,
+   "t1": 15.9,
+   "caption": "치즈케이크까지 출시하며",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 장면 클로즈업",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "뿌듯함",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 15.9,
+   "t1": 16.9,
+   "caption": "진짜 성덕이 됐지만",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 인물 분홍 보정 + 반짝이 빛망울",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "행복",
+    "prop": "분홍 빛망울·반짝이"
+   },
+   "ai": {
+    "kind": "AI 정지 이미지",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": "분홍 글로우·반짝이 파티클"
+  },
+  {
+   "t0": 16.9,
+   "t1": 17.9,
+   "caption": "고작 반년 만에 회사는",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "연구실 책상에 서류 놓는 상사 손, 주인공 앉아 있음",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "불안(전조)",
+    "prop": null
+   },
+   "ai": {
+    "kind": "AI 정지 이미지 + 줌",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 17.9,
+   "t1": 19.1,
+   "caption": "디저트 사업을 접게 되는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 장면에 RGB 글리치(색 어긋남)",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 주인공",
+    "feeling": "충격·위기",
+    "prop": "RGB 글리치"
+   },
+   "ai": {
+    "kind": "AI 정지 이미지",
+    "evidence": "같은 얼굴(단발 일본 여성 20대)이 마트·책상·면접장·연구실 장면에 반복 등장, 실사보다 매끈한 피부·균일한 소프트 조명, 배경 인물·케이크가 정돈된 스톡풍 구도, 정지 화면에 줌만 들어감"
+   },
+   "effect": "RGB 글리치"
+  },
+  {
+   "t0": 19.1,
+   "t1": 19.9,
+   "caption": "진짜는 여기서부터",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "그림 칸 검정 화면(자막만)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "검은 화면 = 반전 신호"
+  },
+  {
+   "t0": 19.9,
+   "t1": 21.0,
+   "caption": "케이크를 만들 수 없다면",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "회색 접시 위 치즈 디저트 조각을 스푼으로 떠냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.0,
+   "t1": 22.4,
+   "caption": "치즈를 케이크처럼 만들면 된다며",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 조각 스푼 떠냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.4,
+   "t1": 23.2,
+   "caption": "새 설비 하나 없이",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "치즈디저트 통 탑 앞에서 여러 맛 통 교체",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.2,
+   "t1": 24.6,
+   "caption": "1년 반 동안 110가지 배합을",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "통을 하나씩 바꿔 보여줌(바나나·딸기)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.6,
+   "t1": 25.7,
+   "caption": "시험하고 또 시험한 끝에",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "여러 통을 휙휙 넘기는 모션블러 컷",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.8,
+   "caption": "포장할 만큼 단단하면서도",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "딸기·바닐라 통 6조각 + 흰 반짝이 별",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "반짝이 별 스티커"
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.9,
+   "caption": "입안에서는 부드럽게 녹는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "분홍 접시 위 조각을 금색 스푼으로 떠냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.9,
+   "t1": 29.6,
+   "caption": "한입 디저트를 완성해버렸다는 거",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 접시",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.6,
+   "t1": 30.7,
+   "caption": "진한 크림치즈 풍미에",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "컵 속 크림치즈 스푼 휘젓기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 30.7,
+   "t1": 31.9,
+   "caption": "바닐라부터 과일맛까지 더해",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "크림치즈에 주황 과일소스 섞기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 31.9,
+   "t1": 32.9,
+   "caption": "2초에 한 통씩 팔리며",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "딸기 맛 Q·B·B 치즈디저트 통 들고 보여줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.9,
+   "t1": 34.0,
+   "caption": "일본의 치즈 디저트 시장",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "보라 통 조각 포장 뜯기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.0,
+   "t1": 34.8,
+   "caption": "1위가 되어버렸는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "블루베리 조각 꺼내 들기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.8,
+   "t1": 36.1,
+   "caption": "치즈덕후의 영혼이 깃든 맛이면",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "초코 코팅 조각 한입 베어 문 것 들기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.1,
+   "t1": 36.6,
+   "caption": "안 먹어봐도",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 조각",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.6,
+   "t1": 37.5,
+   "caption": "맛있는 거 아니냐고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 조각 돌려 보여줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드 → 제품 정체(일본 치즈 매대 점령) → '이게 말도 안 되는 게' → 개발자 사연 재연(AI 주인공 9컷: 반함→지원→면접 합격→출시→성덕) → 위기(사업 접음, 글리치) → '진짜는 여기서부터'(검은 화면) → 해결(치즈를 케이크처럼·110가지 배합) → 성과(2초에 한 통·1위) → 반문 마무리",
+ "ratios": {
+  "infographic_sec": 0.0,
+  "character_sec": 12.2,
+  "ai_image_sec": 12.2,
+  "real_video_sec": 24.5,
+  "meme_sec": 0.0
+ },
+ "measure": "10fps 자막 칸(y500~640) 픽셀차>6 으로 줄 경계, 줄마다 시작·중간·끝 3프레임 육안 판독, AI 구간은 두 시각 프레임 대조로 줌/영상 구분(2026-10-18)"
+}

@@ -1,0 +1,532 @@
+{
+ "topic": "Wad-Free(와드프리) — 침대 시트 네 귀퉁이에 끼우는 클립으로 세탁기·건조기 안에서 시트가 돌돌 말리는 걸 막는 제품. 케빈 '난 다 벗고 자는데 이집트 면이 상하냐' 질문 → 로리·케빈 경쟁 → 창업자가 케빈 선택",
+ "product": "Wad-Free for Bed Sheets(와드프리)",
+ "bench": {
+  "id": "eQ8jfp6lU7M",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "The clip that keeps your bedding from tangling (화면 제목: 비싼 이불도 절대 / 안 말리게 하는 클립)",
+  "dur": 52.574,
+  "views": 462000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.3,
+  "_cut_median_how": "0.5초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '8억 정도 벌었어요'·'3억 투자할게요'·'13억 회수할 때까지'(금액) → 금액 없이 지분 경쟁·결정만",
+  "벤치 0초 케빈 얼굴 원 → R3 물건 원(케빈 손의 시트·클립)"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "난 잘 때 다 벗고 자요"
+    ],
+    "cap_at": [
+     126.45
+    ],
+    "span": [
+     126.45,
+     127.97
+    ],
+    "orig_en": "I sleep naked",
+    "text": "난 잘 때 다 벗고 자요",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 케빈 손에 든 시트와 와드프리 클립) — 벤치 0~1.5 케빈 얼굴 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "난 잘 때 다 벗고 자요",
+      "span": "벗고 자요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "묻지도 않은",
+     "잠버릇까지 털어놓은",
+     "이 투자자"
+    ],
+    "text": "묻지도 않은 잠버릇까지 털어놓은 이 투자자",
+    "tts": "묻지도 않은 잠버릇까지 털어놓은 이 투자자",
+    "fx": "빨강 번쩍 — 벤치 1.6('내게 아무도 안 물어본 습관을')",
+    "emph": [
+     {
+      "cap": "묻지도 않은",
+      "span": "묻지도 않은",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잠버릇까지 털어놓은",
+      "span": "털어놓은",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강이 로버트 손(살색) 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 투자자",
+      "span": "이 투자자",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(질문)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "이 클립에 꽉 끼우면",
+     "내 비싼 이집트 면 이불",
+     "상하는 거 아니에요?"
+    ],
+    "cap_at": [
+     140.73,
+     142.25,
+     144.01
+    ],
+    "span": [
+     140.73,
+     145.81
+    ],
+    "orig_en": "Is this going to damage my fine Egyptian cotton when I'm jamming it up into this clip?",
+    "text": "이 클립에 꽉 끼우면 내 비싼 이집트 면 이불 상하는 거 아니에요?",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 6.0('이게 나의 비싼 이불을')",
+    "emph": [
+     {
+      "cap": "이 클립에 꽉 끼우면",
+      "span": "꽉 끼우면",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "내 비싼 이집트 면 이불",
+      "span": "이집트 면 이불",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍이 손 근접(살색) 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "상하는 거 아니에요?",
+      "span": "상하는 거 아니에요?",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "반전(질문 뜻)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "근데 이 질문",
+     "사실 제품이 안전한지",
+     "떠보려던 거였는데"
+    ],
+    "text": "근데 이 질문, 사실 제품이 안전한지 떠보려던 거였는데",
+    "tts": "근데 이 질문, 사실 제품이 안전한지 떠보려던 거였는데",
+    "emph": [
+     {
+      "cap": "근데 이 질문",
+      "span": "근데 이 질문",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "사실 제품이 안전한지",
+      "span": "제품이 안전한지",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "떠보려던 거였는데",
+      "span": "거였는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강이 케빈 손(살색) 근처(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(창업자)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "제대로만 쓰시면",
+     "시트 절대 안 상해요"
+    ],
+    "cap_at": [
+     146.01,
+     148.93
+    ],
+    "span": [
+     146.01,
+     150.33
+    ],
+    "orig_en": "This is not going to damage your sheets if you use it properly.",
+    "text": "제대로만 쓰시면 시트 절대 안 상해요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 18.0 '제대로만 끼우면'",
+    "emph": [
+     {
+      "cap": "제대로만 쓰시면",
+      "span": "제대로만 쓰시면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "시트 절대 안 상해요",
+      "span": "안 상해요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황이 손(살색)·흰 클립 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(원리)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "세탁기 안에서 이불이",
+     "돌돌 말려 덜 빨리고",
+     "안 마르는 걸",
+     "막아 준다는 이 물건"
+    ],
+    "text": "세탁기 안에서 이불이 돌돌 말려 덜 빨리고 안 마르는 걸 막아 준다는 이 물건",
+    "tts": "세탁기 안에서 이불이 돌돌 말려 덜 빨리고 안 마르는 걸 막아 준다는 이 물건",
+    "fx": "초록 번쩍 — 벤치 20.0 제품 소개",
+    "emph": [
+     {
+      "cap": "세탁기 안에서 이불이",
+      "span": "안에서 이불이",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "돌돌 말려 덜 빨리고",
+      "span": "덜 빨리고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 마르는 걸",
+      "span": "안 마르는 걸",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "막아 준다는 이 물건",
+      "span": "준다는 이 물건",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "해답(시연)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "건조기로 옮겨도",
+     "하나도 안 엉켜요"
+    ],
+    "cap_at": [
+     88.71,
+     90.23
+    ],
+    "span": [
+     88.71,
+     93.19
+    ],
+    "orig_en": "Then you transfer it to the dryer where it runs wad free.",
+    "text": "건조기로 옮겨도 하나도 안 엉켜요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "건조기로 옮겨도",
+      "span": "건조기로 옮겨도",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "하나도 안 엉켜요",
+      "span": "안 엉켜요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "지분 경쟁",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "결국 로리와 케빈이",
+     "서로 데려가겠다고",
+     "맞붙었는데"
+    ],
+    "text": "결국 로리와 케빈이 서로 데려가겠다고 맞붙었는데",
+    "tts": "결국 로리와 케빈이 서로 데려가겠다고 맞붙었는데",
+    "fx": "빨강 번쩍 — 벤치 39.0 지분 경쟁",
+    "emph": [
+     {
+      "cap": "결국 로리와 케빈이",
+      "span": "로리와 케빈이",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "서로 데려가겠다고",
+      "span": "데려가겠다고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "맞붙었는데",
+      "span": "맞붙었는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "로리, 정말 좋지만",
+     "미스터 원더풀,",
+     "당신 제안 받을게요"
+    ],
+    "cap_at": [
+     547.62,
+     550.06,
+     551.66
+    ],
+    "span": [
+     547.62,
+     552.82
+    ],
+    "orig_en": "Lori, I love you, but Mr. Wonderful, I'm going to take your deal.",
+    "text": "로리, 정말 좋지만 미스터 원더풀, 당신 제안 받을게요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 49.0 '거래할게요'",
+    "emph": [
+     {
+      "cap": "로리, 정말 좋지만",
+      "span": "정말 좋지만",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "미스터 원더풀,",
+      "span": "미스터 원더풀,",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "당신 제안 받을게요",
+      "span": "받을게요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "결국 지분을",
+     "덜 가져가겠다는",
+     "케빈 손을 잡았다는데"
+    ],
+    "text": "결국 지분을 덜 가져가겠다는 케빈 손을 잡았다는데",
+    "tts": "결국 지분을 덜 가져가겠다는 케빈 손을 잡았다는데",
+    "emph": [
+     {
+      "cap": "결국 지분을",
+      "span": "결국 지분을",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "덜 가져가겠다는",
+      "span": "덜 가져가겠다는",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "케빈 손을 잡았다는데",
+      "span": "잡았다는데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "이불 돌돌 말림",
+  "line2": "클립 하나로 끝?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '비싼 이불도 절대 / 안 말리게 하는 클립'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 123.85~128.25 'Now here's what I'm concerned about. I sleep naked'(스피치매틱스 enhanced 영어, 케빈 오리어리 — 화면 124.6~127.9 케빈이 시트·클립을 들고 말함) · 129~133 데이먼드·로버트 웃음",
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 133.21~137.45 'And I buy the most expensive Egyptian cotton' · 140.73~145.81 'Is this going to damage my fine Egyptian cotton when I'm jamming it up into this clip?'",
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 146.01~150.33 'This is not going to damage your sheets if you use it properly.' — '안전한지 떠보려던 질문'은 벤치 해석을 우리 말로(질문 뒤 창업자가 안전성 답)",
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 21.80~54.80 'tornado wad… burrito wad, where one sheet wraps itself around everything else… nothing inside dries' · 62.83~93.19 'Wad-Free for bed sheets… attaches to the four corners… Then you transfer it to the dryer where it runs wad free.' · 화면 98~103 포장",
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 306.63~310.46 케빈 10% 제안 · 377.56~383.40 로리 25% 제안 · 474.27~478.39 케빈 'drop my equity take to 5%' · 536.62 로리 'The lowest I'll go is 20' · 547.62~552.82 'Lori, I love you, but Mr. Wonderful, I'm going to take your deal.' · 562 포옹 — 금액은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

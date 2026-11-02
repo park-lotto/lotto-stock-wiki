@@ -1,0 +1,212 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "rGFXQlS9Cp4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    247,
+    243,
+    238
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 510,
+   "w": 1080,
+   "h": 1300,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 510,
+   "w": 48,
+   "h": 1300,
+   "rgb": [
+    247,
+    243,
+    238
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 1032,
+   "y": 510,
+   "w": 48,
+   "h": 1300,
+   "rgb": [
+    247,
+    243,
+    238
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 210,
+   "rgb": [
+    44,
+    30,
+    24
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 52,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 72,
+   "line_h": 85,
+   "rgb": [
+    255,
+    246,
+    224
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "맛템썰템",
+   "glow": {
+    "px": 28,
+    "rgb": [
+     240,
+     200,
+     120
+    ]
+   }
+  },
+  {
+   "kind": "band",
+   "x": 480,
+   "y": 170,
+   "w": 120,
+   "h": 3,
+   "rgb": [
+    240,
+    200,
+    120
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 48,
+   "y": 250,
+   "w": 984,
+   "h": 220,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "radius": 28
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 278,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 30,
+   "line_h": 35,
+   "rgb": [
+    170,
+    120,
+    60
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "맛템썰템 · 11.6만 읽음"
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 326,
+   "w": 920,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 58,
+   "line_h": 70,
+   "rgb": [
+    44,
+    30,
+    24
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "하루 만에 품절된 CU 리센느\n빵, 제일 많이 산 사람"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1620,
+   "w": 900,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Bold",
+   "size": 60,
+   "line_h": 82,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": {
+    "rgb": [
+     44,
+     30,
+     24
+    ],
+    "pad": 22,
+    "radius": 22
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "valign": "top"
+  }
+ ],
+ "_note": "맛템썰템 E 에스프레소·크림골드(사장님 선택 10-17): 에스프레소 헤더·네온 채널명·흰 제목 카드·큰 둥근 그림 칸·그림 아래 자막 박스"
+}

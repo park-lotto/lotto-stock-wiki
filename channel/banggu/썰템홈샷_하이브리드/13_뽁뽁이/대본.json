@@ -1,0 +1,50 @@
+{
+ "topic": "뽁뽁이(버블랩) × 원래는 벽지로 만든 것 — 1957 미국 엔지니어 두 명(필딩·샤반)이 무늬 벽지를 만들려고 샤워 커튼 두 장을 열로 붙임 → 공기 방울이 갇힘 → 벽지는 안 팔림 → 온실 단열재로도 실패 → IBM 새 컴퓨터(1401) 포장재로 성공 → 한국에선 겨울마다 창문에 단열 뽁뽁이 → 뒤 체험: 쿠팡 뽁순이 3중 단열 에어캡(34357682, 비슷한 제품 — 원조 Sealed Air 버블랩은 쿠팡에 업소용 디스펜서 상자뿐)",
+ "brand": "Sealed Air",
+ "scene_query": "bubble wrap popping",
+ "product_mode": "similar",
+ "ing": {
+  "line": 0,
+  "fact": "sm",
+  "why": "택배 올 때마다 누구나 터뜨리는 뽁뽁이 — 원래는 1957년 '무늬 벽지'로 만든 것(스미스소니언 매거진 2019, 멘탈플로스 2012 일치). 훅 장면 = 뽁뽁이를 손으로 터뜨리는 장면 — '이게 원래 뭐였지?'"
+ },
+ "hook": [
+  "택배 뽁뽁이,",
+  "원래 벽지였다?"
+ ],
+ "post": "뽁뽁이는 원래 벽에 바르는 벽지로 만든 것",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "sm": {
+   "text": "Smithsonian Magazine 2019-01-23 (David Kindy) 'The Accidental Invention of Bubble Wrap': Alfred Fielding and Marc Chavannes were trying to create a textured wallpaper in 1957 · fed two pieces of plastic shower curtain through a heat-sealing machine (air bubbles trapped) · tested in greenhouses but proved ineffective · IBM needed a way of protecting its new computer (1401) during transit → packaging success",
+   "url": "https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/"
+  },
+  "mf": {
+   "text": "Mental Floss 2012-11-16 'Happy Bubble Wrap Appreciation Day!': engineer Al Fielding and Swiss inventor Marc Chavannes were trying to create a textured wallpaper · sealed two shower curtains together · tried to market it as greenhouse insulation · October 5, 1959 IBM announced the 1401 → IBM used Bubble Wrap to ship it",
+   "url": "https://www.mentalfloss.com/history/bubble-wrap-was-originally-supposed-be-wallpaper"
+  },
+  "ss": {
+   "text": "삼성반도체 뉴스룸 2014-11-17 「겨울철 난방비 절약법」: 최근 방한용품으로 일명 '단열 뽁뽁이'가 큰 인기 · 창문과 유리문에 덧대어 붙인다",
+   "url": "https://news.samsungsemiconductor.com/kr/?p=21519"
+  },
+  "p1": {
+   "text": "쿠팡 34357682 '뽁순이 3중 뽁뽁이 단열에어캡' — 파트너스 API 2026-10-28. 원조 브랜드(Sealed Air BUBBLE WRAP) 같은 제품은 쿠팡 9777408114 '버블 랩 디스펜서 카톤'(업소용 큰 상자)뿐이라 창문용 비슷한 제품으로 — 대본에서 '원조 브랜드는 아니지만'으로 밝힘",
+   "url": "https://www.coupang.com/vp/products/34357682"
+  }
+ },
+ "final": {
+  "lines": [
+   {"fn": "잉 훅(뽁뽁이 = 질문)", "seg": "A", "text": "택배 오면 다들 하나씩 터뜨려 보는, 그 뽁뽁이 비닐이 원래는 벽지로 만든 거라는데", "facts": ["sm", "mf"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://www.mentalfloss.com/history/bubble-wrap-was-originally-supposed-be-wallpaper"]},
+   {"fn": "몰랐던 배경", "seg": "A", "text": "오십년대 미국에서 기술자 두 명이, 무늬 있는 벽지를 만들어 보겠다고", "facts": ["sm", "mf"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/"]},
+   {"fn": "탄생", "seg": "A", "text": "샤워 커튼 두 장을 열로 붙였더니, 사이사이 공기 방울이 갇혀 버린 거죠", "facts": ["sm", "mf"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://www.mentalfloss.com/history/bubble-wrap-was-originally-supposed-be-wallpaper"]},
+   {"fn": "실패", "seg": "A", "text": "근데 벽지로는 안 팔렸고, 온실 단열재로 써 봐도 실패", "facts": ["sm", "mf"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://www.mentalfloss.com/history/bubble-wrap-was-originally-supposed-be-wallpaper"]},
+   {"fn": "공개", "seg": "A", "text": "그러다 아이비엠이 새 컴퓨터를 실어 나를 포장재로 쓰면서, 대박이 났다는 얘기", "facts": ["sm", "mf"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://www.mentalfloss.com/history/bubble-wrap-was-originally-supposed-be-wallpaper"]},
+   {"fn": "반전(한국)", "seg": "A", "text": "근데 온실에서 실패한 그 단열을, 한국에선 겨울마다 창문에 붙이고 있다는 거", "facts": ["sm", "ss"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://news.samsungsemiconductor.com/kr/?p=21519"]},
+   {"fn": "B 연결", "seg": "B", "text": "그래서 저도 쿠팡에서, 원조 브랜드는 아니지만 창문용 단열 에어캡을 샀는데", "facts": ["p1"], "sources": ["https://www.coupang.com/vp/products/34357682"]},
+   {"fn": "B 좋은 점(붙이기)", "seg": "B", "text": "유리에 물만 뿌려서 붙였더니, 창가 찬 기운이 확 덜해서", "facts": [], "sources": []},
+   {"fn": "B 좋은 점(웃음)", "seg": "B", "text": "터뜨리고 싶은 손가락을, 참는 게 제일 힘드네요", "facts": [], "sources": []},
+   {"fn": "B 끝(되받기)", "seg": "B", "text": "벽지로 망한 발명품이, 이제는 겨울마다 다들 찾는 물건이 된 거죠", "facts": ["sm", "ss"], "sources": ["https://www.smithsonianmag.com/innovation/accidental-invention-bubble-wrap-180971325/", "https://news.samsungsemiconductor.com/kr/?p=21519"]}
+  ]
+ }
+}

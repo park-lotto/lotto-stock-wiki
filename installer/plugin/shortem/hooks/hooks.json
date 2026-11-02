@@ -1,0 +1,37 @@
+{
+ "hooks": {
+  "SessionStart": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "shell": "powershell",
+      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/guide.js\" 1"
+     },
+     {
+      "type": "command",
+      "shell": "powershell",
+      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/guide.js\" 2"
+     },
+     {
+      "type": "command",
+      "shell": "powershell",
+      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/guide.js\" 3"
+     }
+    ]
+   }
+  ],
+  "UserPromptSubmit": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "shell": "powershell",
+      "timeout": 10,
+      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/live.js\""
+     }
+    ]
+   }
+  ]
+ }
+}

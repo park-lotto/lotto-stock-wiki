@@ -1,0 +1,179 @@
+{
+ "topic": "PLAUD NotePin(목걸이·클립형 AI 녹음기) — 등록금을 날리고 세 번 실패한 창업자가, 10년 넘게 그대로였던 녹음기 시장을 보고 남의 녹음기 후기 5천 개를 읽은 뒤 만든 브랜드",
+ "product": {
+  "name": "PLAUD NotePin 플라우드 노트핀 AI 녹음기",
+  "coupang": "8776908105",
+  "model": "NotePin(1세대, 2024 출시) — 노트핀 S(8599860954) 아님"
+ },
+ "angle": "방구석 NtPQ51ztIto = 유학생·가격·112개 언어·투두리스트(제품 기능 나열). 우리 = 만든 사람의 실패담(등록금·세 번 실패) → 녹음기 시장이 10년 그대로 → 남의 후기 5천 개 → 노트핀 → 뒤 체험(누르면 녹음·말한 사람 구분·착용) → 사회 반응(사용자 200만)",
+ "ing": {
+  "line": 0,
+  "fact": "f1",
+  "why": "누구나 아는 'AI 녹음기'를 만든 사람이, 첫 창업에 부모님이 준비한 대학원 등록금을 다 쓰고 세 번 연속 실패했다는 비하인드(36kr 2025-09-08) — 제품 소개가 아니라 사람 이야기로 '잉? 진짜?'"
+ },
+ "facts": {
+  "f1": {
+   "text": "36kr 2025-09-08(원문 직면AI 毕安娣): '在烧光了父母给准备的研究生学费后，许高的首次创业宣告失败' · '在Plaud前已经有三段不算成功的创业经验' · 첫 창업 = 해외 대학 선택·지원을 돕는 사이트",
+   "url": "https://www.36kr.com/p/3454958882560392"
+  },
+  "f2": {
+   "text": "Z Potentials 인터뷰(Plaud CEO 许高 Nathan Xu): 2019년 소니·올림푸스·필립스 녹음기가 10년 넘게 새로 나온 게 없었다 · 뛰어들기 전에 AI 아닌 녹음기 사용자 후기 5,000개 넘게 읽었다(본인 말)",
+   "url": "https://zpotentials.substack.com/p/z-potentials-plaudai-ceo-xu-gao-a"
+  },
+  "f3": {
+   "text": "36kr 같은 기사: 같은 해(2024) Plaud 가 가슴에 다는 브로치형 미니 AI 녹음기 Note Pin 을 냈다('记忆胶囊')",
+   "url": "https://www.36kr.com/p/3454958882560392"
+  },
+  "f4": {
+   "text": "PLAUD 공식 NotePin 페이지(회사 주장): Transcribe in 112 languages · Speaker labels(누가 말했는지) · summaries·mind maps 내보내기 · One long-press to record · can be worn as a necklace, wristband, clip, or pin · 심장박동기 사용자는 가슴 착용 피하라(자석)",
+   "url": "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+  },
+  "f5": {
+   "text": "PLAUD 글로벌 NotePin 페이지(회사 주장): 112 languages · necklace, wristband, clip, or pin · One long-press to record · 16.6 g",
+   "url": "https://global.plaud.ai/pages/notepin"
+  },
+  "f6": {
+   "text": "ASCII.jp 2026-05-08 PLAUD株式会社 발표: 'Plaud」シリーズの全世界累計ユーザー数が、2026年4月末時点で200万人を突破'",
+   "url": "https://ascii.jp/elem/000/004/400/4400446/"
+  },
+  "f7": {
+   "text": "쿠팡 상품 8776908105 'PLAUD NotePin 플라우드 노트핀 AI 녹음기'(파트너스 API 확인, 부모 세션) — 화면 B 컷은 같은 1세대 NotePin 리뷰 영상",
+   "url": "https://www.coupang.com/vp/products/8776908105"
+  }
+ },
+ "hook": [
+  "등록금 날리고 세 번 망한 사장이",
+  "만든 목걸이 녹음기"
+ ],
+ "post": "세 번 망한 사장이 만든 목걸이 녹음기",
+ "tempo": null,
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(사람 비하인드)",
+    "seg": "A",
+    "text": "부모님이 모아 둔 대학원 등록금을, 첫 창업으로 몽땅 날린 사람이 있었는데",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://www.36kr.com/p/3454958882560392"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(실패 반복)",
+    "seg": "A",
+    "text": "그 뒤로도 두 번을 더 접어서, 세 번 내리 실패했다고 함",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://www.36kr.com/p/3454958882560392"
+    ]
+   },
+   {
+    "fn": "전환(눈여겨본 것)",
+    "seg": "A",
+    "text": "그런 그가 눈여겨본 게, 의외로 녹음기였는데",
+    "facts": [
+     "f2"
+    ],
+    "sources": [
+     "https://zpotentials.substack.com/p/z-potentials-plaudai-ceo-xu-gao-a"
+    ]
+   },
+   {
+    "fn": "기존의 한계(전언)",
+    "seg": "A",
+    "text": "그가 보기엔, 녹음기가 십 년 넘게 거의 그대로였다는 거",
+    "facts": [
+     "f2"
+    ],
+    "sources": [
+     "https://zpotentials.substack.com/p/z-potentials-plaudai-ceo-xu-gao-a"
+    ]
+   },
+   {
+    "fn": "비하인드(후기 5천 개)",
+    "seg": "A",
+    "text": "그래서 남의 녹음기 후기를, 오천 개 넘게 읽었다고 함",
+    "facts": [
+     "f2"
+    ],
+    "sources": [
+     "https://zpotentials.substack.com/p/z-potentials-plaudai-ceo-xu-gao-a"
+    ]
+   },
+   {
+    "fn": "해결(제품 공개)",
+    "seg": "A",
+    "text": "그렇게 만든 브랜드가 플라우드, 목에 거는 이 녹음기가 노트핀이라고",
+    "facts": [
+     "f3",
+     "f4"
+    ],
+    "sources": [
+     "https://www.36kr.com/p/3454958882560392",
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "덤 한 가지(회사 설명 전언)",
+    "seg": "A",
+    "text": "녹음만 하면 알아서 글로 정리하고, 요약까지 해 준다는 설명",
+    "facts": [
+     "f4"
+    ],
+    "sources": [
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "B 연결어",
+    "seg": "B",
+    "text": "이 얘기 듣고, 저도 쿠팡에서 하나 들여 봤는데",
+    "facts": [
+     "f7"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/8776908105"
+    ]
+   },
+   {
+    "fn": "B 좋은 점 ①",
+    "seg": "B",
+    "text": "꾹 누르면 녹음되고, 누가 한 말인지도 나눠서 보여 주더라고요",
+    "facts": [
+     "f4"
+    ],
+    "sources": [
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "B 좋은 점 ②",
+    "seg": "B",
+    "text": "목에 걸거나 손목에 차면 돼서, 회의 때 손이 자유로워요",
+    "facts": [
+     "f4",
+     "f5"
+    ],
+    "sources": [
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker",
+     "https://global.plaud.ai/pages/notepin"
+    ]
+   },
+   {
+    "fn": "B 끝 = 사회 반응",
+    "seg": "B",
+    "text": "이 시리즈 쓰는 사람이 전 세계 이백만 명이라는데, 왜인지 알겠더라고요",
+    "facts": [
+     "f6"
+    ],
+    "sources": [
+     "https://ascii.jp/elem/000/004/400/4400446/"
+    ]
+   }
+  ]
+ }
+}

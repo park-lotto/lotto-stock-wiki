@@ -1,0 +1,428 @@
+{
+ "topic": "SEESE 무선 터보 제트 송풍기(21V) — 처음 켜 보는 JACK of all TRADES Dre 'Oh, yeah. You hear that? It's actually moving my hand'·'This little thing is crazy'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "WI84l4MVPYA",
+ "bench_note": "벤치 '미국에서 차 사면 받는 선물 1위 정체'(4.0만, 핫템리포트 48위, 설명란 '틱톡샵 … 그 송풍기 … 세차 후 물기 제거부터 낙엽 청소') — 화면 속 제품 = SEESE 초록 터보 송풍기. 원음형 = 유튜브 JACK of all TRADES Dre 'SEESE Cordless Turbo Blower Review (Tik-Tok) JOATD' LF8YsFaoDYw(3천, 1920x1080, 자동 더빙 여럿 — 원어 140-19 en-US original) 40~455초 사본(전체본 삭제, 사본 시각 = 원래 −40). 화면 보조 = Diesel Legiance 'SEESE 21V Turbo Jet Blower Review' jFkOt4RIt3s(2.5만, 원어 140-12) 195~257초 사본(손 시점 컷만 — 마지막 얼굴 구간 안 씀). 벤치의 '선물 1위'·'32만 개'는 출처가 없어 안 씀.",
+ "sources": {
+  "dr": {
+   "file": "dr.mp4",
+   "who": "유튜브 JACK of all TRADES Dre LF8YsFaoDYw 40~455초 사본(원어 140-19) — 고정 카메라 앞 손·차, 얼굴은 사본 296초 근처만(안 씀)",
+   "views": 3035,
+   "dur": 415.3,
+   "res": "1920x1080"
+  },
+  "dz": {
+   "file": "dz.mp4",
+   "who": "유튜브 Diesel Legiance jFkOt4RIt3s 195~257초 사본(원어 140-12) — 손 시점(톱밥·눈), 19~33초 세로 영상 검은 띠·58초 뒤 얼굴 구간 안 씀",
+   "views": 25444,
+   "dur": 62.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "손이 밀려나는\n송풍기"
+ },
+ "facts": {
+  "f1": {
+   "text": "Dre 원본(사본 스피치매틱스) 19.08~21.60 'it's like very, very light. Very light.' · 26.32~29.08 'what is a tornado going to come out of this thing or something?' · 쿠팡 9778907774 'SEESE 터보 송풍기 600 CFM 무선 휴대용 … 21V'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "Dre 원본 화면 사본 163~167 물 뿌린 보닛 물기를 송풍기로 밀어냄 · 369.41~371.09 'Check it out. Rims dry.' · 벤치 설명란 '세차 후 물기 제거'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "Dre 원본 42.16~47.60 'Oh, yeah. You hear that? It's actually moving my hand.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Dre 원본 405.77~406.65 'This little thing is crazy.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "손에 쏙 들어오는데 태풍 같은 바람을 쏜다는 송풍기가 있는데요 근데 세차한 차에 대고 쏘면 물기가 한 방에 싹 밀려난다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "dr",
+    "span": [
+     42.08,
+     48.05
+    ],
+    "en": "Oh, yeah. You hear that? It's actually moving my hand.",
+    "caps": [
+     "오, 그래! 이 소리 들려요?",
+     "손이 밀려요!"
+    ],
+    "check": "앞 sounds 39.48~40.04 · Oh 42.16 · hand 47.60~48.00 · 다음 That's 52.24 · 원본 한 샷(37.03~119.73) 안 — 송풍기 든 손 · 자막: 43.5~46.5 는 송풍기 소리뿐이라 앞 칸을 길게(98 #182 ⑤ 꼴)"
+   },
+   {
+    "id": "O2",
+    "src": "dr",
+    "span": [
+     405.7,
+     407.55
+    ],
+    "en": "This little thing is crazy.",
+    "caps": [
+     "이 쪼끄만 게",
+     "진짜 미쳤어요!"
+    ],
+    "check": "앞 crazy 401.41~401.93(4초 무음 뒤) · This 405.77 · crazy 406.65~407.41 · 다음 All 410.41 · 원본 한 샷(346.73~끝) 안 — 손에 든 송풍기 근접"
+   }
+  ],
+  "dropped": {
+   "벤치 '미국에서 차 사면 받는 선물 1위'·'틱톡샵 32만 개'": "1차 출처 못 찾음 — 안 씀",
+   "100만 rpm·풍속 숫자": "판매처 숫자가 판마다 다름 — 안 씀",
+   "가격": "금액 금지",
+   "BMW 차": "앞 그릴·로고가 보이는 화면 피함(보닛 오른쪽·손 근접만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "손에 쏙 들어오는데",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.022,
+   "text": "태풍 같은 바람을 쏜다는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.299,
+   "text": "송풍기가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.571,
+   "text": "오, 그래! 이 소리 들려요?",
+   "kind": "원음"
+  },
+  {
+   "t0": 6.623,
+   "text": "손이 밀려요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 9.791,
+   "text": "근데 세차한 차에 대고 쏘면",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.145,
+   "text": "물기가 한 방에",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.03,
+   "text": "싹 밀려난다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.265,
+   "text": "이 쪼끄만 게",
+   "kind": "원음"
+  },
+  {
+   "t0": 13.832,
+   "text": "진짜 미쳤어요!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "손에 쏙 들어오는데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.022,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "태풍 같은 바람을 쏜다는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.022,
+   "dur": 1.277,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "송풍기가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.299,
+   "dur": 1.272,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "오, 그래! 이 소리 들려요?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.571,
+   "dur": 3.052,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "손이 밀려요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 6.623,
+   "dur": 3.168,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 세차한 차에 대고 쏘면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.791,
+   "dur": 1.354,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "물기가 한 방에",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.145,
+   "dur": 0.885,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "싹 밀려난다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.03,
+   "dur": 1.235,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이 쪼끄만 게",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.265,
+   "dur": 0.567,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 미쳤어요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.832,
+   "dur": 1.883,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.571,
+    9.541
+   ],
+   [
+    13.265,
+    15.115
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.321
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.571,
+    "a1": 9.541,
+    "audio_ss": 42.08,
+    "src": "dr"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 9.791,
+    "n1": 13.015
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 13.265,
+    "a1": 15.115,
+    "audio_ss": 405.7,
+    "src": "dr"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "dr",
+    "ss": 14.0,
+    "vs": 0.0,
+    "src_crop": [
+     531,
+     0,
+     857,
+     1080
+    ],
+    "why": "dr 0~37.03 한 샷 — 상자에서 송풍기를 꺼내는 손(얼굴 없음)",
+    "ve": 3.541,
+    "src_end": 17.541
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "dr",
+    "ss": 42.05,
+    "vs": 3.541,
+    "src_crop": [
+     610,
+     0,
+     857,
+     1080
+    ],
+    "why": "송풍기를 켠 손 + 'You hear that? It's actually moving my hand'(37.03~119.73 한 샷) — 보닛 BMW 원형 로고(소스 x≈537)는 crop 왼쪽 밖, 그릴 작은 M 표식은 첫 1초만 손 옆에 작게",
+    "ve": 9.791,
+    "src_end": 48.3
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "dr",
+    "ss": 163.4,
+    "vs": 9.791,
+    "src_crop": [
+     1063,
+     0,
+     857,
+     1080
+    ],
+    "why": "dr 119.73~201.33 한 샷 — 보닛 물기를 송풍기로 밀어냄, 그릴·로고는 crop 왼쪽 밖",
+    "ve": 13.235,
+    "src_end": 166.844
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "dr",
+    "ss": 405.67,
+    "vs": 13.235,
+    "src_crop": [
+     180,
+     0,
+     857,
+     1080
+    ],
+    "why": "손에 든 송풍기 근접 + 'This little thing is crazy'(346.73~ 한 샷) — 바퀴 가운데 BMW 로고(소스 x≈1106)는 crop 오른쪽 밖",
+    "ve": 15.715,
+    "src_end": 408.15
+   }
+  ],
+  "dur": 15.715,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\28_SeeseBlower\\front\\render\\narr_N1.wav",
+    "dur": 3.321,
+    "tempo": 0.848,
+    "chars": 26,
+    "speech": 3.321,
+    "cps": 7.83,
+    "segs": [
+     [
+      0.0,
+      3.321
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\28_SeeseBlower\\front\\render\\narr_N2.wav",
+    "dur": 3.224,
+    "tempo": 0.887,
+    "chars": 25,
+    "speech": 3.224,
+    "cps": 7.75,
+    "segs": [
+     [
+      0.0,
+      1.398
+     ],
+     [
+      1.544,
+      3.224
+     ]
+    ]
+   }
+  ]
+ }
+}

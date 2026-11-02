@@ -58,8 +58,8 @@ def test_presets_grouped_in_ledger_order(env):
     s = cs.state(env["st"], 7)
     assert len(s["presets"]) == 2 and s["host"] == "server"
     by_name = {p["name"]: p["group"] for p in s["presets"]}
-    assert by_name["제품비하인드썰형"] == "썰커뮤니티형"
-    assert s["presets"][0]["name"] == "제품비하인드썰형"          # _groups 순서: 썰커뮤니티형이 먼저, 이름표 없는 것은 '기타' 끝
+    assert by_name["게시글 썰형"] == "썰커뮤니티형"
+    assert s["presets"][0]["name"] == "게시글 썰형"          # _groups 순서: 썰커뮤니티형이 먼저, 이름표 없는 것은 '기타' 끝
     assert s["presets"][-1]["group"] == "기타"
     assert "default_pack" not in s["catalog"] and "preset_defaults" not in s["catalog"]
 
@@ -157,8 +157,6 @@ def test_look_check_uses_engine_scene_style(monkeypatch):
     from shopping_shorts import scene_style
     snap = json.loads((Path(__file__).parent / "fixtures" / "look_customframe.json").read_text(encoding="utf-8"))
     assert snap.get("customFrame") and str(snap["presetId"]).startswith("custom_")
-    with pytest.raises(ValueError):
-        scene_style.validate_snapshot(snap)          # 서버 판은 칼카피 틀을 모른다 — 그래서 워커로 보낸다
     monkeypatch.setattr(cs, "engine_root", lambda: ENGINE)
     w = cs._Worker()
     assert w.call({"op": "look", "snapshot": snap}).get("snapshot", {}).get("presetId") == snap["presetId"]

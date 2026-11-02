@@ -1,0 +1,582 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판_v2) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog_v2",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.686,
+   "text": "한국 파데로",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 0.686,
+   "t1": 1.499,
+   "text": "온몸 타투를 가린",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 1.499,
+   "t1": 2.449,
+   "text": "외국인이 있는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 2.449,
+   "t1": 3.215,
+   "text": "몇 겹이나 드는지",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 3.215,
+   "t1": 3.935,
+   "text": "한번 보자",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 3.935,
+   "t1": 4.481,
+   "text": "일단 한 겹",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 4.481,
+   "t1": 5.347,
+   "text": "쓱 발라 보더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 5.347,
+   "t1": 6.081,
+   "text": "좋아… 안 되네",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 6.081,
+   "t1": 6.859,
+   "text": "바로 두 겹째",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 6.859,
+   "t1": 7.624,
+   "text": "시도해 보는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 7.624,
+   "t1": 9.002,
+   "text": "이게 두 겹이야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 9.002,
+   "t1": 10.202,
+   "text": "내 모습 보니까",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 10.202,
+   "t1": 11.193,
+   "text": "너무 이상해",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 11.193,
+   "t1": 12.144,
+   "text": "세 겹을 바르자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 12.144,
+   "t1": 12.747,
+   "text": "타투가 사라져",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 12.747,
+   "t1": 13.437,
+   "text": "버렸는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O4",
+   "t0": 13.437,
+   "t1": 14.771,
+   "text": "이게 세 겹이야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O4",
+   "t0": 14.771,
+   "t1": 15.321,
+   "text": "나 지금",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O4",
+   "t0": 15.321,
+   "t1": 16.291,
+   "text": "마네킹 같아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 16.291,
+   "t1": 16.942,
+   "text": "다른 제품으로",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 16.942,
+   "t1": 18.296,
+   "text": "타투를 가린 외국인은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 18.296,
+   "t1": 18.673,
+   "text": "엄마한테",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 18.673,
+   "t1": 19.526,
+   "text": "보여 줬다는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O5",
+   "t0": 19.526,
+   "t1": 21.013,
+   "text": "엄마 반응 보자",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O5",
+   "t0": 21.013,
+   "t1": 22.053,
+   "text": "너 너무 심심해 보여",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O5",
+   "t0": 22.053,
+   "t1": 23.093,
+   "text": "타투 있는 게 더 좋아?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 23.093,
+   "t1": 23.923,
+   "text": "그 말에 바로",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 23.923,
+   "t1": 25.06,
+   "text": "지워 버렸다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 25.06,
+   "t1": 26.011,
+   "text": "얼굴엔 한 겹",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 26.011,
+   "t1": 26.348,
+   "text": "타투엔",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 26.348,
+   "t1": 27.135,
+   "text": "세 겹이라고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 27.135,
+   "t1": 27.805,
+   "text": "아~ 나도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 27.805,
+   "t1": 28.402,
+   "text": "얼굴에 한 겹만",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 28.402,
+   "t1": 29.667,
+   "text": "올려 봐야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 2.749,
+   "role": "body",
+   "why": "body",
+   "kind": "pop"
+  }
+ ],
+ "flashes": [],
+ "transitions": [],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = SbWTqCnleC8",
+  "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+  "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+  "꾸밈 자리 본문 목표 3 중 0개 — key 덩어리·화자 상한 {'narr': 7, 'orig': 3} 모자람",
+  "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3} → 목표 {'훅': 2, '본문': 3, '끝': 0} · 우리 {'훅': 3} (+강조 [])",
+  "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(narr) targets: 목표 0.18×22=4 · 상한 5 · 1차 3 → 3",
+  "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(orig) targets: 목표 0.056×12=1 · 상한 1 · 1차 0 → 0",
+  "전환 [] (판 cuts.transition.kinds 비율 {'zoomblur': 0.02}, 컷 경계 20·붙일 수 있는 2(≥1.2초))",
+  "효과음 targets: 목표 0.051발/초 × 28.96초 = 1발 · 상한 2(상위 편 최대 0.067)",
+  "효과음 1발(본보기 줄판독 10발 · 역할 {'body': 1} · 편차 +0.30초) [(2.749, 'pop', 'body')]",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(narr) targets: 목표 0.18×22=4 · 상한 5 · 1차 3 → 3",
+  "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(orig) targets: 목표 0.056×12=1 · 상한 1 · 1차 0 → 0",
+  "꾸밈 없음 31/34 ≥ 판 plain_share 0.854×34=29",
+  "등장 {'cut': 34} · 강조 0/34",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "SbWTqCnleC8",
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 8
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 14
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 5
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {},
+    "vs": {}
+   },
+   "sfx": {
+    "bench": 2,
+    "ours": 1,
+    "kinds": {
+     "pop": 1
+    },
+    "roles": {
+     "bench_expect": {
+      "hook": 0.1,
+      "body": 0.9
+     },
+     "ours": {
+      "body": 1
+     }
+    }
+   },
+   "transitions": {
+    "bench_expect": {},
+    "ours": {},
+    "cut_bounds": 20,
+    "plan": {
+     "src": "판 cuts.transition.kinds",
+     "share": {
+      "zoomblur": 0.016
+     },
+     "cut_bounds": 20,
+     "want_raw": {
+      "zoomblur": 0.32
+     },
+     "want": 0,
+     "eligible": 2,
+     "picked": {},
+     "min_cut": 1.2
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   },
+   "targets": {
+    "fx_rate_narr": {
+     "goal": 0.18,
+     "cap": 0.231,
+     "n_goal": 4,
+     "lo": 3,
+     "hi": 5,
+     "n_first": 3,
+     "dur": 22,
+     "n": 3,
+     "ours": 0.136,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density"
+    },
+    "fx_rate_orig": {
+     "goal": 0.056,
+     "cap": 0.111,
+     "n_goal": 1,
+     "lo": 0,
+     "hi": 1,
+     "n_first": 1,
+     "dur": 12,
+     "n": 0,
+     "ours": 0.0,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density"
+    },
+    "sfx_rate": {
+     "goal": 0.051,
+     "cap": 0.067,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density",
+     "n_goal": 1,
+     "lo": 1,
+     "hi": 2,
+     "n_first": 1,
+     "dur": 28.96,
+     "n": 1,
+     "ours": 0.035
+    }
+   }
+  },
+  "bad": []
+ }
+}

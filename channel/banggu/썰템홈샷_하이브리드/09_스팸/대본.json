@@ -1,0 +1,50 @@
+{
+ "topic": "스팸 × 이름의 진짜 뜻은 회사 옛 임원 몇 명만 안다 — 1937년 이름 공모 → 뽑힌 사람은 부사장의 동생 → '스파이스드 햄' 설만 돌고 회사는 정답을 안 밝힘 → 지금도 공식 홈페이지에 비밀 → 미국에선 값싼 통조림, 한국에선 명절 선물 → 뒤 체험: 쿠팡 스팸 클래식 200g(8244032757)",
+ "brand": "CJ제일제당",
+ "scene_query": "스팸",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "f1",
+  "why": "누구나 먹는 스팸인데 이름 뜻은 회사도 공식으로 밝힌 적이 없다 — SPAM 공식 FAQ '진짜 답은 호멜 푸드 옛 임원 몇 명만 안다'(spam.com). 덤 = 1937년 이름 공모에서 뽑힌 사람이 호멜 부사장의 동생(호멜 공식 뉴스룸). 훅 장면 = 공식 광고 속 SPAM 캔 로고 근접 — 장면 자체가 '스팸이 무슨 뜻?' 질문. 남의 영상(세상의모든지식 150만·Tasting History 251만·AnswersVideo 55만)은 전쟁·하와이·밥도둑 축, 이름 뜻은 '스파이스드 햄'으로 단정하거나 안 다룸. 댓글 반응은 '흰쌀밥에 스팸'(1100·713)·'싸구려가 우리나라에선 고급'(130)·'스팸메일이 이 스팸'(110) — 밥·선물 축을 B 와 5줄에"
+ },
+ "hook": [
+  "스팸의 진짜 뜻,",
+  "회사도 비밀이다?"
+ ],
+ "post": "스팸 이름의 진짜 뜻은 옛 임원 몇 명만 안다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "f1": {
+   "text": "SPAM 공식 FAQ 'What does the SPAM® brand name mean?': 'The significance of the SPAM® brand name has long been a subject of speculation. One popular belief says it is derived from the words spiced ham. The real answer is known by only a small circle of former Hormel Foods executives.'",
+   "url": "https://www.spam.com/faq"
+  },
+  "h1": {
+   "text": "호멜 푸드 공식 뉴스룸 2018-04-03 「SPAM: The Wonder Food」: 1937년 이름 공모 · 호멜 부사장의 동생 켄 다이뇨(Ken Daigneau)가 'SPAM' 을 내 뽑힘 · 진짜 뜻은 옛 임원 몇 명만 앎",
+   "url": "https://hormelfoods.com/newsroom/news/spam-the-wonder-food"
+  },
+  "r1": {
+   "text": "SEMOJI 「당신이 몰랐던 스팸(SPAM)의 역사」(150만): 한국에선 명절 고급 선물 세트, 원산지에선 싼 통조림 취급 · 댓글 '싸구려가 우리나라에서는 고급이 되는 기적'(130)",
+   "url": "https://www.youtube.com/watch?v=X5_yhKzJmnQ"
+  },
+  "p1": {
+   "text": "쿠팡 8244032757 '스팸 클래식, 200g, 8개'(로켓) — 파트너스 API 2026-10-27",
+   "url": "https://www.coupang.com/vp/products/8244032757"
+  }
+ },
+ "final": {
+  "lines": [
+   {"fn": "잉 훅(SPAM 로고 = 질문)", "seg": "A", "text": "스팸의 진짜 뜻, 만든 회사에서도 옛 임원 몇 명만 알고 있다는데", "facts": ["f1", "h1"], "sources": ["https://www.spam.com/faq", "https://hormelfoods.com/newsroom/news/spam-the-wonder-food"]},
+   {"fn": "몰랐던 배경", "seg": "A", "text": "처음 이 통조림이 나왔을 땐, 이름이 없어서 공모를 했다고", "facts": ["h1"], "sources": ["https://hormelfoods.com/newsroom/news/spam-the-wonder-food"]},
+   {"fn": "비하인드(공개)", "seg": "A", "text": "근데 뽑힌 사람이, 하필 회사 부사장의 친동생이었고", "facts": ["h1"], "sources": ["https://hormelfoods.com/newsroom/news/spam-the-wonder-food"]},
+   {"fn": "한계(추측)", "seg": "A", "text": "스파이스드 햄을 줄였다는 말이 돌았지만, 회사는 정답을 끝내 안 밝혔고", "facts": ["f1"], "sources": ["https://www.spam.com/faq"]},
+   {"fn": "덤(지금도)", "seg": "A", "text": "지금도 공식 홈페이지에, 진짜 뜻은 몇 사람만 안다고 적어 놨다고", "facts": ["f1"], "sources": ["https://www.spam.com/faq"]},
+   {"fn": "쐐기(반응)", "seg": "A", "text": "미국에선 값싼 통조림인데, 우리나라에선 명절 선물 단골이 됐다는 얘기", "facts": ["r1"], "sources": ["https://www.youtube.com/watch?v=X5_yhKzJmnQ"]},
+   {"fn": "B 연결", "seg": "B", "text": "이 얘기 듣고 저도, 쿠팡에서 스팸 클래식을 한 묶음 시켜 봤는데", "facts": ["p1"], "sources": ["https://www.coupang.com/vp/products/8244032757"]},
+   {"fn": "B 좋은 점(굽기)", "seg": "B", "text": "도톰하게 썰어서 노릇하게 구우니까, 겉은 바삭하고 속은 촉촉해서", "facts": [], "sources": []},
+   {"fn": "B 좋은 점(밥)", "seg": "B", "text": "흰쌀밥에 한 점 올리니까, 밥 한 공기가 그냥 사라지더라고요", "facts": [], "sources": []},
+   {"fn": "B 끝(훅 되받기)", "seg": "B", "text": "뜻은 몇 사람만 알아도, 맛은 온 국민이 다 아는 이름이네요", "facts": [], "sources": []}
+  ]
+ }
+}

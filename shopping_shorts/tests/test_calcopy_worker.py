@@ -383,3 +383,80 @@ def test_세번_실패하면_stalled_사람이_unstall(env):
     r = cl.post(f"/api/admin/calcopy/topics/{tid}/unstall", json={"by": "시험", "note": "쿠키 갈았음"})
     assert r.status_code == 200 and r.json()["topic"]["stalled"] is False
     assert _worker(cl, tmp, find_every=0).tick()["result"] == "advanced"
+
+
+# ── KPI(시간당 후보·통과율) — 판정 주인 worker_ledger.kpi ─────────────────────
+def test_KPI_답을_아는_장부줄로_통과율과_시간당(tmp_path):
+    from tools.calcopy.engine import worker_ledger as L
+    now = time.time()
+    rows = [{"t": now, "worker": "w", "kind": "ok", "n": 1, "note": "bench #1"},
+            {"t": now, "worker": "w", "kind": "ok", "n": 1, "note": "bench #2"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "#3 bench: 벤치 포인트 0"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "#2 script: 대본 검사 미통과: {...}"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "find: 찾기 멈춤: LimitHit"},
+            {"t": now, "worker": "w", "kind": "topic", "n": 3, "note": "찾기 3"},
+            {"t": now, "worker": "w", "kind": "gemini", "n": 4, "note": "x"},
+            {"t": now, "worker": "w", "kind": "pause", "n": 1, "note": "제미나이 429"},
+            {"t": now, "worker": "w", "kind": "limit", "n": 1, "note": "한도"}]
+    k = L.kpi(2, rows=rows)
+    assert k["steps"]["bench"] == {"ok": 2, "fail": 1, "rate": 0.667}
+    assert k["steps"]["script"] == {"ok": 0, "fail": 1, "rate": 0.0}
+    assert k["steps"]["find"]["fail"] == 1
+    assert k["topics_per_hour"] == 1.5 and k["gemini_per_hour"] == 2.0
+    assert k["pause_429"] == 1 and k["limit_hits"] == 1
+    assert k["pass_rate"] == 0.4 and k["script_pass_rate"] == 0.0
+
+
+def test_장부켠_워커는_단계통과와_실패를_장부에_남긴다(env):
+    cl, clk, tmp = env
+    from tools.calcopy.engine import worker_ledger as L
+    _add(cl, "신라면 공장")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"score": WS.StepError("근거 있는 점수 3개 < 5")}), find_every=0, ledger=True)
+    assert w.tick()["result"] == "advanced"           # bench
+    assert w.tick()["result"] == "error"              # score 실패
+    k = L.kpi(1)
+    assert k["steps"]["bench"]["ok"] == 1 and k["steps"]["score"] == {"ok": 0, "fail": 1, "rate": 0.0}
+
+
+def test_한도에_걸린_실패는_소재_실패횟수에_안센다(env):
+    """10-16 실측: 시간당 제미나이 한도(LimitHit)로 script 가 3번 멈추자 소재가 stalled — 소재 탓이 아닌데 사람이 풀어야 했다."""
+    cl, clk, tmp = env
+    from tools.calcopy.engine.worker_ledger import LimitHit
+    tid = _add(cl, "신라면 공장")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"bench": LimitHit("한도: gemini 시간당 10(w) — 지금 10 + rewrite1 1")}), find_every=0)
+    for _ in range(4):
+        assert w.tick()["result"] == "error"
+        clk.tick(minutes=31)
+    t = _topic(cl, tid)["topic"]
+    assert t["error_count"] == 0 and not t["stalled"] and "LimitHit" in t["last_error"]
+    w2 = _worker(cl, tmp, steps=MockSteps(tmp, fail={"bench": WS.StepError("벤치 포인트 0")}), find_every=0, name="w2")
+    for _ in range(3):
+        assert w2.tick()["result"] == "error"
+        clk.tick(minutes=31)
+    t = _topic(cl, tid)["topic"]
+    assert t["error_count"] == 3 and t["stalled"]           # 진짜 실패는 그대로 센다
+
+
+def test_PC_기동지연이면_그라운드는_건너뛰고_실패로_안센다(env):
+    """10-16 실측: CPU 100% 에서 python -c 28초·yt-dlp 탐지 90~240초 → 유튜브 '시간 초과'로 bench 가 실패해 소재가 stalled 로 썩었다."""
+    cl, clk, tmp = env
+    tid = _add(cl, "신라면 공장")
+    steps = MockSteps(tmp)
+    w = _worker(cl, tmp, steps=steps, find_every=0, probe=lambda: 28.0)
+    for _ in range(4):
+        r = w.tick()
+        assert r["result"] == "idle" and "host_slow" in r["reasons"][0]
+    t = _topic(cl, tid)["topic"]
+    assert steps.calls == [] and t["error_count"] == 0 and not t["stalled"] and t["state"] == "found"
+    w.probe = lambda: 0.3                              # 풀리면 바로 돈다
+    assert w.tick()["result"] == "advanced" and steps.calls == [("bench", tid)]
+
+
+def test_host_slow_판정():
+    from tools.calcopy.engine import worker as W2
+    assert W2.host_slow(lambda: 0.4) is None
+    assert "28.0초" in W2.host_slow(lambda: 28.0)
+
+    def boom():
+        raise TimeoutError("300초")
+    assert "재기 실패" in W2.host_slow(boom)

@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 23 자동 교반 머그 하이브리드 — 앞 = 숏템리폿 현장썰 PureWow Kate 원음형 박창수판(23_Mug/front), 뒤 = 쿠팡 9794442724 '400ml 자동 교반 커피 컵 믹싱 머그 유리 방수 단백질 파우더'(비슷한 제품 — Kate 컵과 같은 꼴: 유리 몸통·나무 뚜껑·나무 손잡이·뚜껑 거품기. 같은 상품인지는 확인 못 함 → 대본 B1 '똑같은 건 못 찾았는데 똑같이 생긴 컵'으로 밝힘). 뒤 화면 = 같은 꼴 컵 Housy Hub 손 개봉 + Kate 영상 다른 장면(손·컵만) + 쿠팡 대표 사진(move). 금액·효능·남의 상표·판매처(아마존)는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "자동 교반 유리 머그(나무 뚜껑·나무 손잡이·뚜껑 거품기) — 쿠팡 9794442724(비슷한 제품, 같은 꼴)",
+ "product_mode": "alt",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/23_Mug/front/render/final.mp4",
+  "cut": 15.83,
+  "why": "원음 O2 'mixed it perfectly' 끝(앞 15.531) 뒤 0.3초 — 같은 한 샷(pw 97.60~99.37 섞인 컵 근접) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 04:0x, '유리 자동 교반 머그컵'): 9794442724 '400ml 자동 교반 커피 컵 믹싱 머그 유리 방수 단백질 파우더' — 23_cand/coupang_b.json · 대표 사진(look/cp_9794442724.jpg) 유리 몸통·나무 뚜껑·나무 손잡이 = Kate 컵(원본 9.36~12.68 'glass mug with kind of fake wood patterning')과 같은 꼴. 같은 상품인지 확인할 상표·품번은 못 찾음 → 비슷한 제품",
+  "o_battery": "PureWow 원본(스피치매틱스 en) 16.24~23.20 'To put in batteries … twist the top of the mug. Then just place in triple A batteries' · 27.76~29.32 'The mug comes with the stirrer on'",
+  "o_handle": "같은 원본 29.56~32.96 'but you can also place the stir in the handle of the cup'",
+  "o_powder": "같은 원본 107.44~117.28 'perfect if you're a big matcha person. If you do kind of powdered or instant coffee, um, if you like hot chocolate'"
+ },
+ "흥미이음": {
+  "원본흥미": "Kate 가 버튼을 누르자 컵이 알아서 저어 'Oh, it's so cute' · 마셔 보고 'So good. Wow … mixed it perfectly'",
+  "뒤흥미": "쿠팡의 똑같이 생긴 자동 교반 유리 머그 — 뚜껑 거품기가 돌고 다 쓰면 거품기를 손잡이에 넣는 장면",
+  "판정": "같음",
+  "근거": "같은 꼴: 쿠팡 대표 사진(유리·나무 뚜껑·나무 손잡이) = Kate 컵 = Housy Hub 개봉 컵(뚜껑 거품기·손잡이 마개) — 원본이 신기했던 '버튼 하나로 알아서 젓는다'가 그대로 보인다"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/23_Mug/front/frame_render.json",
+  "title": "버튼만 누르면\n알아서 젓는 컵"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·흰 바탕 개봉 위 — 노랑 대신 하늘"
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "알아서"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 바탕·대리석 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "쏙"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "대리석·흰 바탕 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "한 번이면"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "우유 흰 컵·대리석 위 — 하늘"
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리예요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 바탕 위 — 분홍 기본 대신 하늘"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같은 건 못 찾았는데 똑같이 생긴 컵이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "똑같은 건 못 찾았는데",
+    "똑같이 생긴 컵이 진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 뚜껑에 건전지만 넣으면 거품기가 알아서 돌아간대요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "뚜껑에 건전지만 넣으면",
+    "거품기가",
+    "알아서 돌아간대요"
+   ],
+   "emph": [
+    "알아서"
+   ],
+   "facts": [
+    "o_battery"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 다 쓴 거품기는 손잡이에 쏙 넣어 둔대요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "다 쓴 거품기는",
+    "손잡이에",
+    "쏙 넣어 둔대요"
+   ],
+   "emph": [
+    "쏙"
+   ],
+   "facts": [
+    "o_handle"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 코코아도, 커피 가루도, 말차도 버튼 한 번이면 끝이래요.",
+   "caps": [
+    "심지어 코코아도",
+    "커피 가루도",
+    "말차도",
+    "버튼 한 번이면 끝이래요"
+   ],
+   "emph": [
+    "한 번이면"
+   ],
+   "facts": [
+    "o_powder"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "사무실에서 버튼 하나 눌렀더니, 다들 그 컵 뭐냐고 난리예요.",
+   "caps": [
+    "사무실에서",
+    "버튼 하나 눌렀더니",
+    "다들 그 컵 뭐냐고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}

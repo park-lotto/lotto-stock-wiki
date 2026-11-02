@@ -1,0 +1,409 @@
+{
+ "_note": "샥탬스토리 하이브리드 11편 Copper Cow — 앞 0~15.61초(O1~O4) = 칼카피 그대로(끝 원음 '다 내려지면 코퍼카우 크리머 추가!'), 뒤 = 같은 옷(지훈·샥탬 프리셋 제목·BGM sweets 이어서) 1인칭 체험 나레, 잇썸홈판(두유노홈디노 결) 존댓말. CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Copper Cow Coffee 베트남식 푸어오버(핸드드립) 싱글 서빙 팩 — 쿠팡 9763054355(5개, 필터 포함, 리뷰 0) · 같은 줄 9334089856(24p)·9779140180(8포). 방송 제품과 같은 브랜드·같은 걸이식 드립백",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "끝"
+ },
+ "흥미이음": {
+  "원본흥미": "커피 머신 없이 드립백을 컵에 걸고 뜨거운 물만 부으면 베트남 커피가 컵으로 바로 내려진다(앞 N1·O3·N3)",
+  "뒤흥미": "같은 Copper Cow 드립백을 일반인 리뷰어들이 집에서 머그컵·유리병에 걸고 물을 부어 내리는 장면이 리뷰 영상에 그대로 보임(V2Nmxho7d2w 유리병에 건 필터, CHLhwkvrPmM 머그컵에 건 필터, 1Kc_JqSL-_s 유리 서버에 건 필터)",
+  "판정": "같음",
+  "근거": "같은 브랜드 같은 꼴 제품(렌즈 3장 결과 amazon·walmart·heb 'Copper Cow Coffee Pour Over' · 쿠팡 검색 '코퍼카우'·'Copper Cow coffee' → 9763054355 '코퍼 카우 커피 베트남식 핸드드립 … 싱글 서빙 필터 포함') + 리뷰 영상 3편에서 걸고 붓는 장면 눈 확인(screen/*_sheet.jpg)"
+ },
+ "hybrid": {
+  "front_doc": "../11편_CopperCow",
+  "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_11편_CopperCow.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/11편_CopperCow/work/render/render_info.json",
+  "cut_after": "O4",
+  "cut_why": "O4 원음 '다 내려지면 코퍼카우 크리머 추가!'(15.614) — 시연이 끝나는 반응 자리, 다음 N5(투자자 줄 선 얘기) 전. '근데 저 영상 보고 진짜 내려지나'로 잇는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "하이브리드 3~6편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "매출 400만 달러",
+  "line2": "컵에 거는 커피?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(사장님 10-19 지훈 확정)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 9.49,
+  "cps_note": "6편 하이브리드와 같은 목표(지훈 tempo 1.0 실측 cps_out 9.49) — 11편 앞 render_info narr.target_cps 로 바꿀지는 페이블 판단",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "공개(이음+잉?)",
+    "text": "근데 저 영상 보고 진짜 내려지나 궁금해서 쿠팡에서 똑같은 걸 바로 샀거든요",
+    "tts": "근데 저 영상 보고 진짜 내려지나 궁금해서 쿠팡에서 똑같은 걸 바로 샀거든요",
+    "caps": [
+     "근데 저 영상 보고",
+     "진짜 내려지나",
+     "궁금해서",
+     "쿠팡에서",
+     "똑같은 걸",
+     "바로 샀거든요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph_words": [
+     "진짜 내려지나",
+     "똑같은 걸"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 영상 보고",
+      "span": "영상 보고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 내려지나",
+      "span": "진짜 내려지나",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서",
+      "span": "궁금해서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에서",
+      "span": "쿠팡에서",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 걸",
+      "span": "똑같은 걸",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바로 샀거든요",
+      "span": "바로 샀거든요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게 베트남 원두로 미국 캘리포니아에서 만든 커피더라고요",
+    "tts": "이게 말도 안 되는 게 베트남 원두로 미국 캘리포니아에서 만든 커피더라고요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "베트남 원두로",
+     "미국 캘리포니아에서",
+     "만든 커피더라고요"
+    ],
+    "facts": [
+     "f_box"
+    ],
+    "emph_words": [
+     "베트남 원두"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "베트남 원두로",
+      "span": "베트남 원두로",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "미국 캘리포니아에서",
+      "span": "캘리포니아에서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만든 커피더라고요",
+      "span": "커피더라고요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데 컵에 걸고 뜨거운 물만 부으니까 카페 드립처럼 떨어지더라고요",
+    "tts": "진짜 핵심은 이건데 컵에 걸고 뜨거운 물만 부으니까 카페 드립처럼 떨어지더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "컵에 걸고",
+     "뜨거운 물만",
+     "부으니까",
+     "카페 드립처럼",
+     "떨어지더라고요"
+    ],
+    "facts": [
+     "f3",
+     "f4",
+     "v1"
+    ],
+    "emph_words": [
+     "뜨거운 물만",
+     "카페 드립처럼"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "컵에 걸고",
+      "span": "컵에 걸고",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뜨거운 물만",
+      "span": "뜨거운 물만",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "부으니까",
+      "span": "부으니까",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "카페 드립처럼",
+      "span": "카페 드립처럼",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "떨어지더라고요",
+      "span": "떨어지더라고요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 필터까지 생분해되는 거라 다 쓰고 버려도 마음이 편하더라고요",
+    "tts": "심지어 이게 대박인 게 필터까지 생분해되는 거라 다 쓰고 버려도 마음이 편하더라고요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "필터까지",
+     "생분해되는 거라",
+     "다 쓰고 버려도",
+     "마음이 편하더라고요"
+    ],
+    "facts": [
+     "f_bio"
+    ],
+    "emph_words": [
+     "생분해"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "필터까지",
+      "span": "필터까지",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "생분해되는 거라",
+      "span": "생분해되는 거라",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다 쓰고 버려도",
+      "span": "버려도",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "마음이 편하더라고요",
+      "span": "편하더라고요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "캠핑 가서 내려 줬더니 보는 사람마다 신기하다고 난리였어요",
+    "tts": "캠핑 가서 내려 줬더니 보는 사람마다 신기하다고 난리였어요",
+    "caps": [
+     "캠핑 가서",
+     "내려 줬더니",
+     "보는 사람마다",
+     "신기하다고",
+     "난리였어요"
+    ],
+    "facts": [],
+    "emph_words": [
+     "난리"
+    ],
+    "emph": [
+     {
+      "cap": "캠핑 가서",
+      "span": "캠핑 가서",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "내려 줬더니",
+      "span": "내려 줬더니",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보는 사람마다",
+      "span": "보는 사람마다",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "신기하다고",
+      "span": "신기하다고",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리였어요",
+      "span": "난리였어요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "len_note": "글자 154자(공백 뺌) — 잇썸홈판 120~165 안. 지훈 9.49자/초면 약 16~18초 + 쉼"
+ },
+ "facts": {
+  "c1": "쿠팡 검색(2026-10-19 이 PC 회선) '코퍼카우'·'Copper Cow coffee' → 9763054355 '코퍼 카우 커피 베트남식 핸드드립 베리지 팩 5개 싱글 서빙 필터 포함 클래식 블랙 2개 추로 1개 바닐라 솔티드 카라멜 1개'(45,990원, 리뷰 0)·9334089856 'Copper Cow Coffee Premium Pour Over Single-Serve Vietnamese Coffee Pouches (24 p…'·9779140180 '베트남산 푸어오버 다크 로스트 바닐라 원두 8포'. 상품 페이지는 이날 403(요청 몰림)이라 검색 결과까지. C:/숏템_칼카피/foreignshowshow/하이브리드/쿠팡검색_8-12_2026-10-19.json. 렌즈 3장(방송 프레임) = amazon·walmart·heb·ebay 'Copper Cow Coffee Pour Over' (channel/hottemreport/현장썰하이브리드/렌즈_샥탬11_CopperCow.json)",
+  "f_box": "포장 글자: Box Peel 언박싱 Pbt3hLQ5Z28 1.0초 상자 'VIETNAMESE COFFEE · PRODUCT OF CALIFORNIA'(렌즈 원본 lens_src/11_c.jpg) + JerryLiuFilms MzRqks61yPg ~200초 봉지 뒷면 'COPPER COW COFFEE … LOS ANGELES, CA'(screen/MzRqks61yPg_sheet.jpg) — '베트남 원두·캘리포니아에서 만듦'은 포장 표기 그대로",
+  "f3": "앞 편 근거 f3: 창업자 원음 'Gently hang it over your cup, and then tear off the top'(Ij6BNYohK2o 70.28~74.02)",
+  "f4": "앞 편 근거 f4: 원음 'pour hot water … drips directly into the cup'(74.28~81.80)",
+  "v1": "리뷰 영상에 같은 동작이 보임 — V2Nmxho7d2w(유리병), CHLhwkvrPmM(머그컵), 1Kc_JqSL-_s(유리 서버). '카페 드립처럼'은 체감 비유 = 창작",
+  "f_bio": "앞 편 근거.md 3.5~28.5 행: 창업자 원음 'grab your biodegradable filter'(Ij6BNYohK2o 63.22~69.60, 칼카피에선 뺀 대목) — 회사 주장. '버려도 마음이 편하다'는 감상 = 창작",
+  "B5": "창작(사회 반응 — 캠핑·주변 반응은 화자 설정)"
+ }
+}

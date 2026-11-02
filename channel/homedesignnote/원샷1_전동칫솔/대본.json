@@ -1,0 +1,298 @@
+{
+ "채널": "잇썸홈",
+ "channel": "homedesignnote",
+ "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+ "topic": "GearOra M23 (GearOra Portable Retractable Sterilizing Sonic Electric Toothbrush, 품번 GTM23BA, 블랙)",
+ "목소리": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.32,
+ "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)",
+ "from": "원샷링크딸깍 엔진(script_engine v1 · 대본 설명서 경로) · C:\\calcopy_link\\work\\hdn_toothbrush\\대본.json",
+ "lines": [
+  {
+   "i": 0,
+   "text": "출장 갈 때 축축한 칫솔 챙기기 불편했던 직장인이 통 안에 살균기를 쏙 숨겨버렸대요.",
+   "role": "계기",
+   "point": "",
+   "shot_query": [
+    "packing wet toothbrush business trip GearOra M23",
+    "office worker packing GearOra M23 travel toothbrush",
+    "GearOra M23 toothbrush case built in UV sterilizer",
+    "GearOra M23 retractable sterilizing toothbrush case close"
+   ],
+   "shots": [
+    {
+     "piece": "출장 갈 때 축축한 칫솔",
+     "query": "packing wet toothbrush business trip GearOra M23",
+     "kind": "제품"
+    },
+    {
+     "piece": "챙기기 불편했던 직장인이",
+     "query": "office worker packing GearOra M23 travel toothbrush",
+     "kind": "제품"
+    },
+    {
+     "piece": "통 안에 살균기를 쏙",
+     "query": "GearOra M23 toothbrush case built in UV sterilizer",
+     "kind": "제품"
+    },
+    {
+     "piece": "숨겨버렸대요",
+     "query": "GearOra M23 retractable sterilizing toothbrush case close",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "출장 갈 때 축축한 칫솔 챙기기 불편했던 직장인이 통 안에 살균기를 쏙 숨겨버렸대요."
+  },
+  {
+   "i": 1,
+   "text": "근데 이 조그만 칫솔이 1992년 세상에 처음 나온 음파칫솔보다 더 빨리 떤다는데,",
+   "role": "사회반응",
+   "point": "잉",
+   "shot_query": [
+    "GearOra M23 compact portable toothbrush close up",
+    "GearOra M23 sonic electric toothbrush product shot",
+    "GearOra M23 high speed sonic electric toothbrush vibration",
+    "GearOra M23 sonic vibration test in water"
+   ],
+   "shots": [
+    {
+     "piece": "근데 이 조그만 칫솔이",
+     "query": "GearOra M23 compact portable toothbrush close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "1992년 세상에 처음",
+     "query": "GearOra M23 sonic electric toothbrush product shot",
+     "kind": "제품"
+    },
+    {
+     "piece": "나온 음파칫솔보다 더",
+     "query": "GearOra M23 high speed sonic electric toothbrush vibration",
+     "kind": "제품"
+    },
+    {
+     "piece": "빨리 떤다는데",
+     "query": "GearOra M23 sonic vibration test in water",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "근데 이 조그만 칫솔이 1992년 세상에 처음 나온 음파칫솔보다 더 빨리 떤다는데,"
+  },
+  {
+   "i": 2,
+   "text": "진짜 핵심은 이건데, 그때 분당 3만 1천 번이던 진동을 분당 4만 번까지 올렸다고 하더라고요.",
+   "role": "원리스펙",
+   "point": "와우",
+   "shot_query": [
+    "GearOra M23 electric toothbrush key features review",
+    "GearOra M23 sonic toothbrush motor power",
+    "GearOra M23 sonic frequency demonstration",
+    "GearOra M23 40000 vpm high frequency sonic toothbrush",
+    "GearOra M23 powerful vibration brushing demo"
+   ],
+   "shots": [
+    {
+     "piece": "진짜 핵심은 이건데",
+     "query": "GearOra M23 electric toothbrush key features review",
+     "kind": "제품"
+    },
+    {
+     "piece": "그때 분당",
+     "query": "GearOra M23 sonic toothbrush motor power",
+     "kind": "제품"
+    },
+    {
+     "piece": "3만 1천 번이던",
+     "query": "GearOra M23 sonic frequency demonstration",
+     "kind": "제품"
+    },
+    {
+     "piece": "진동을 분당 4만 번까지",
+     "query": "GearOra M23 40000 vpm high frequency sonic toothbrush",
+     "kind": "제품"
+    },
+    {
+     "piece": "올렸다고 하더라고요",
+     "query": "GearOra M23 powerful vibration brushing demo",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "진짜 핵심은 이건데, 그때 분당 3만 1천 번이던 진동을 분당 4만 번까지 올렸다고 하더라고요."
+  },
+  {
+   "i": 3,
+   "text": "심지어 더 미친 포인트는, 130그램짜리라 반으로 접으면 주머니에 쏙 들어가요.",
+   "role": "원리스펙",
+   "point": "와우",
+   "shot_query": [
+    "GearOra M23 lightweight travel electric toothbrush review",
+    "GearOra M23 130g folding retractable design",
+    "GearOra M23 folding toothbrush put in pocket",
+    "GearOra M23 compact portable toothbrush pocket size"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 더 미친 포인트는",
+     "query": "GearOra M23 lightweight travel electric toothbrush review",
+     "kind": "제품"
+    },
+    {
+     "piece": "130그램짜리라 반으로",
+     "query": "GearOra M23 130g folding retractable design",
+     "kind": "제품"
+    },
+    {
+     "piece": "접으면 주머니에 쏙",
+     "query": "GearOra M23 folding toothbrush put in pocket",
+     "kind": "제품"
+    },
+    {
+     "piece": "들어가요",
+     "query": "GearOra M23 compact portable toothbrush pocket size",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "심지어 더 미친 포인트는, 130그램짜리라 반으로 접으면 주머니에 쏙 들어가요."
+  },
+  {
+   "i": 4,
+   "text": "근데 진짜 충격적인 건, 케이스에 꽂아두기만 하면 자외선으로 칫솔모 세균을 99.99퍼센트 날려준대요.",
+   "role": "원리스펙",
+   "point": "와우",
+   "shot_query": [
+    "GearOra M23 toothbrush UV sterilizer case light",
+    "inserting GearOra M23 toothbrush into sterilizing case",
+    "GearOra M23 UV-C LED sterilization bristle disinfection",
+    "GearOra M23 99.9 percent UV sterilizer efficacy",
+    "GearOra M23 UV sterilizer case glowing LED"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜 충격적인 건",
+     "query": "GearOra M23 toothbrush UV sterilizer case light",
+     "kind": "제품"
+    },
+    {
+     "piece": "케이스에 꽂아두기만 하면",
+     "query": "inserting GearOra M23 toothbrush into sterilizing case",
+     "kind": "제품"
+    },
+    {
+     "piece": "자외선으로 칫솔모 세균을",
+     "query": "GearOra M23 UV-C LED sterilization bristle disinfection",
+     "kind": "제품"
+    },
+    {
+     "piece": "99.99퍼센트",
+     "query": "GearOra M23 99.9 percent UV sterilizer efficacy",
+     "kind": "제품"
+    },
+    {
+     "piece": "날려준대요",
+     "query": "GearOra M23 UV sterilizer case glowing LED",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "근데 진짜 충격적인 건, 케이스에 꽂아두기만 하면 자외선으로 칫솔모 세균을 99.99퍼센트 날려준대요."
+  },
+  {
+   "i": 5,
+   "text": "양치하고 혀로 쓸어보면 스케일링 받은 것처럼 매끈해요.",
+   "role": "체감비유",
+   "point": "",
+   "shot_query": [
+    "brushing teeth with GearOra M23 sonic toothbrush",
+    "GearOra M23 deep dental cleaning experience",
+    "smooth clean teeth close up GearOra M23 review"
+   ],
+   "shots": [
+    {
+     "piece": "양치하고 혀로 쓸어보면",
+     "query": "brushing teeth with GearOra M23 sonic toothbrush",
+     "kind": "제품"
+    },
+    {
+     "piece": "스케일링 받은 것처럼",
+     "query": "GearOra M23 deep dental cleaning experience",
+     "kind": "제품"
+    },
+    {
+     "piece": "매끈해요",
+     "query": "smooth clean teeth close up GearOra M23 review",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "양치하고 혀로 쓸어보면 스케일링 받은 것처럼 매끈해요."
+  },
+  {
+   "i": 6,
+   "text": "요즘 출장 잦은 직장인들 사이에서 치과를 통째로 들고 다닌다고 난리래요.",
+   "role": "사회반응",
+   "point": "",
+   "shot_query": [
+    "business traveler using GearOra M23 portable toothbrush",
+    "GearOra M23 dental clinic quality portable toothbrush",
+    "carrying GearOra M23 travel kit in pouch bag"
+   ],
+   "shots": [
+    {
+     "piece": "요즘 출장 잦은 직장인들",
+     "query": "business traveler using GearOra M23 portable toothbrush",
+     "kind": "제품"
+    },
+    {
+     "piece": "사이에서 치과를 통째로",
+     "query": "GearOra M23 dental clinic quality portable toothbrush",
+     "kind": "제품"
+    },
+    {
+     "piece": "들고 다닌다고 난리래요",
+     "query": "carrying GearOra M23 travel kit in pouch bag",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "요즘 출장 잦은 직장인들 사이에서 치과를 통째로 들고 다닌다고 난리래요."
+  }
+ ],
+ "chars": 246,
+ "est_sec": 29.57,
+ "facts": {
+  "f1": "GearOra 공식몰 기준 M23은 분당 40,000회 음파(Sonic 40,000 VPM) 진동을 내세운다(브랜드 주장). (https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html)",
+  "f2": "공식몰 표기: 하루 2분씩 2번 쓰면 완충 1회로 최대 15일, 충전은 USB-C 2~3시간. (아마존 상세는 '30일 배터리'로 표기가 달라 상충 — 공식몰 수치 사용) (https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html)",
+  "f3": "공식몰은 밀폐형 UVC/UVA 살균 챔버가 칫솔모의 세균·바이러스 99.99%를 없앤다고 주장한다(브랜드 주장, 독립 검증 미확인). (https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html)",
+  "f4": "방수 등급 IPX7, 모드 3개, 2분 타이머에 30초마다 구역 이동 알림. (https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html)",
+  "f5": "칫솔모는 항균 그래핀 소재라고 소개된다(아마존 영국 UV 모델 목록 기준). (https://www.amazon.co.uk/GearOra-Retractable-Rechargeable-ToothBrushes-Antibacterial/dp/B0DT3Y3KJ7)",
+  "f6": "미국 공식몰 가격 89.99달러(정가 99달러 표기), 2개 이상 구매 시 10% 추가 할인. 가격은 조사 시점 기준. (https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html)",
+  "f7": "M23 일반 모델(미국 아마존 목록)은 알루미늄 몸체, 무게 4.6온스(약 130g), 접이식 여행 크기, IPX7, USB-C로 소개된다. UV 케이스는 모델별로 달라 변형마다 확인 필요. (https://www.amazon.ca/GearOra-M23-Retractable-Ultra-Light-Rechargeable/dp/B0GD547GCG)",
+  "f8": "세계 최초 전동칫솔로 꼽히는 Broxodent는 1954년 스위스의 필리프-기 우그(Philippe-Guy Woog) 박사가 발명했고, 콘센트에 직접 꽂아 쓰는 방식이었다. 처음엔 손이 불편한 사람과 교정 환자용이었다. (https://en.wikipedia.org/wiki/Electric_toothbrush)",
+  "f9": "그보다 앞선 전동칫솔 특허도 있다: 토믈린슨 모즐리(Tomlinson Moseley)의 Motodent는 1937년 12월 13일 출원, 1940년 4월 9일 등록. (https://en.wikipedia.org/wiki/Electric_toothbrush)",
+  "f10": "1990년대 초 UL·CSA가 욕실용 가정 전압(콘센트 직결) 제품 인증을 중단해, 전동칫솔이 12·16·24V 저전압 변압기 방식으로 바뀌었다. (https://en.wikipedia.org/wiki/Electric_toothbrush)",
+  "f11": "음파칫솔의 시작: 워싱턴대 연구진이 음향 에너지가 구강 세균의 치아 부착력을 약하게 만든다는 걸 발견했고, 1987년 기업가 데이비드 줄리아니가 워싱턴대 교수 둘과 GEMTech를 세워 개발 — 1992년 세계 최초 음파칫솔 Sonicare Advance(분당 31,000회 칫솔질)가 나왔다. (https://dentistry.co.uk/2022/11/24/sonicaring-for-30-years/)",
+  "f12": "그 회사는 1995년 Optiva로 이름을 바꿨고, 2000년 10월 필립스가 인수, 2003년 '필립스 소니케어'로 브랜드가 바뀌었다. (https://en.wikipedia.org/wiki/Sonicare)",
+  "f13": "최초의 초음파칫솔은 1992년 미국 특허를 받고 같은 해 FDA가 가정용 일상 사용을 승인했다(처음 이름 Ultima, 나중 Ultrasonex). (https://en.wikipedia.org/wiki/Electric_toothbrush)"
+ },
+ "title_lines": [],
+ "sfx": 0,
+ "search_seed": [
+  "GearOra toothbrush",
+  "GearOra electric toothbrush review",
+  "GearOra UV travel toothbrush",
+  "GearOra M23 retractable electric toothbrush UV sterilizer review",
+  "GearOra travel toothbrush unboxing"
+ ],
+ "meme": 0
+}

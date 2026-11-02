@@ -1,4 +1,4 @@
-// 편집 화면(장면꾸미기 UI 그대로, 숨김 없음)에서 칼카피 틀 설명서 스냅샷을 열어 미리보기 칸만 찍는다 — check_spec_downstream.py 가 부른다.
+// 편집 화면(장면꾸미기 UI 그대로, 숨김 없음)에서 프리셋 틀 설명서 스냅샷을 열어 미리보기 칸만 찍는다 — check_spec_downstream.py 가 부른다.
 // 입력: render_scene_style.js 와 같은 요청 json({snapshot, context, output}). 출력: editor.png · editor-snapshot.json(편집기가 다시 저장하는 값)
 const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppeteer=require('puppeteer');
 (async()=>{

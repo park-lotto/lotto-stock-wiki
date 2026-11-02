@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 20:33:23",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\30_prank_o_1028_2033.mp4",
+  "md5": "4e0f08da80f5bcd6fd0eede0275c35ff",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\30편_PrankO\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]

@@ -1,0 +1,944 @@
+{
+ "id": "pCQgnWUY10o",
+ "dur": 45.41,
+ "title_card": "한국에 극대노한 / 프랑스 회사",
+ "post_title": "한국에 극대노한 프랑스 회사",
+ "frame": {
+  "header": "노란 머리띠(연노랑) 가운데 '펀박스' 로고(웃는 선물상자 캐릭터+빨간 글자)·오른쪽 돋보기 → 흰 바탕 게시글 제목 1줄(검정 얇은 고딕) → 오른쪽 메타 '펀박스 | 18:00'(회색 작은 글자) → 주황빨강 가로줄",
+  "layout_y": "1080x1920 기준: 머리띠 0~180 · 제목 190~310 · 메타 330~390 · 가로줄 ~405 · 자막 칸 430~620(검정 굵은 고딕 가운데, 최대 2줄 누적) · 그림 칸 640~1500(가로 꽉 또는 가운데, 비율대로 높이 가변, 아래 흰 여백) · AI 고지 1840~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 맨 아래 가운데(y≈1840~1880) 회색 굵은 글자, 훅 카드 끝난 뒤부터 끝까지 상시(훅 카드 구간엔 없음)",
+  "hook_card": "0~1.8초: 틀 위에 어두운 덮개 + 큰 2줄 제목(흰 글자 + 둘째 줄 색 글자, 검은 테두리) + 흰 띠에 제목 한 줄, 아래 영상. 끝나면 덮개 걷히며 본 틀",
+  "caption_style": "누적형 2줄: 1줄 뜨고 0.5~1.3초 뒤 2줄째 덧붙음 → 다음 줄에서 둘 다 지우고 새 1줄. 글꼴: 둥근 굵은 고딕"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.8,
+   "caption": "한국에 극대노한 프랑스 회사(훅 카드)",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "냄비 속 초코무스 스푼으로 뜨는 영상(훅)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.5,
+   "caption": "디저트 하나로",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 비즈니스센터 외관 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.5,
+   "t1": 3.5,
+   "caption": "북미 코스트코 매출을",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 비즈니스센터 외관 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.5,
+   "t1": 4.3,
+   "caption": "씹어먹은 프랑스의",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 창고 안 걸으며 찍은 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.3,
+   "t1": 5.4,
+   "caption": "한 명품 디저트 회사가",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리컵 초코무스 떠먹는 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.4,
+   "t1": 5.9,
+   "caption": "한국 매대를",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리컵 초코무스 떠먹는 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.9,
+   "t1": 6.9,
+   "caption": "뒤흔들었다고 하는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리컵 초코무스 떠먹는 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.9,
+   "t1": 7.9,
+   "caption": "국내 진출을 조사하던",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "회의실에서 지도·서류 보는 외국인 직원들",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "대본 맞춤 연출, 서류 글자 뭉개짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 7.9,
+   "t1": 8.7,
+   "caption": "프랑스 본사는",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "명동 거리에서 'KOREAN MARKET ANALYSIS 한국 시장 분석 CONFIDENTIAL' 서류 든 외국인 남성",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "서류 표지 영문+한글이 대본 맞춤으로 박힘, 간판 '명동집' 식 단순 한글"
+   },
+   "effect": null
+  },
+  {
+   "t0": 8.7,
+   "t1": 9.2,
+   "caption": "한국 시장의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "편의점 과자 진열대 앞 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "포장 한글 뭉개짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.1,
+   "caption": "식물성 유지로 만든",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "길바닥 '식물성 유지' 초콜릿 봉지 줍는 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "포장에 대본 단어 '식물성 유지' 박힘, '…콜릿' 깨진 글자"
+   },
+   "effect": null
+  },
+  {
+   "t0": 10.1,
+   "t1": 10.7,
+   "caption": "짭조름한",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "시장에서 초콜릿 쪼개 보며 찡그린 여성(줌인)",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물(프랑스 직원)",
+    "feeling": "실망·불쾌",
+    "prop": "부러진 초콜릿"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 10.7,
+   "t1": 11.9,
+   "caption": "가짜 초콜릿만 가득하다는",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "시장에서 초콜릿 쪼개 보며 찡그린 여성(줌인)",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물(프랑스 직원)",
+    "feeling": "실망·불쾌",
+    "prop": "부러진 초콜릿"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 11.9,
+   "t1": 13.1,
+   "caption": "황당한 사실을 발견했고",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "파리 거리 초콜릿 들고 기자들에 둘러싸인 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물",
+    "feeling": "황당",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.1,
+   "t1": 13.8,
+   "caption": "제대로 된 진짜",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "기자 플래시 속 초콜릿 조각 노려보는 중년 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물(대표)",
+    "feeling": "결연·분노",
+    "prop": "카메라·마이크"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.6,
+   "caption": "맛을 보여주겠다며",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "기자 플래시 속 초콜릿 조각 노려보는 중년 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물(대표)",
+    "feeling": "결연·분노",
+    "prop": "카메라·마이크"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 14.6,
+   "t1": 15.9,
+   "caption": "호기롭게 도전장을 내밀었으나",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "14.6~15.3 검은 장갑 손이 밀랍 봉인 편지 내밀기 / 15.3~15.9 'FORMAL CHALLENGE' 밀랍 봉인 봉투를 탁자에 놓음",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 소품 재연",
+    "evidence": "봉투 글자 장식체"
+   },
+   "effect": null
+  },
+  {
+   "t0": 15.9,
+   "t1": 16.9,
+   "caption": "현지 유통업자들은",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "회의실 한국 중년 남성들 심드렁",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물(유통업자)",
+    "feeling": "시큰둥",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 16.9,
+   "t1": 17.8,
+   "caption": "가격이 너무 비싸",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "'PRICE LIST ₩5,800,000' 빨간 동그라미 서류 가리키는 남성",
+   "infographic": {
+    "type": "그림 속 가격 강조",
+    "motion": "정지",
+    "value": "₩5,800,000 빨간 원"
+   },
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "가격표 글자·빨간 원이 그림에 직접 그려짐(대본 맞춤)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 17.8,
+   "t1": 19.2,
+   "caption": "한국에선 무조건 망한다며",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "박람회장 팔짱 낀 한국 남성 비웃음",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물",
+    "feeling": "비웃음·무시",
+    "prop": "팔짱"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 19.2,
+   "t1": 20.4,
+   "caption": "대놓고 비웃기 일수였음",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "입 가리고 웃는 남성들",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사 인물들",
+    "feeling": "조롱",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연",
+    "evidence": "실사풍인데 인물·소품이 컷마다 대본 단어에 맞춰 연출됨, 매끈한 렌더 질감, 옛 시대 장면이 고화질"
+   },
+   "effect": null
+  },
+  {
+   "t0": 20.4,
+   "t1": 21.6,
+   "caption": "독기가 오른 프랑스인들은",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "설계도 둘러싼 화난 얼굴 5명(이라스토야풍)",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 직원들",
+    "feeling": "독기·분노",
+    "prop": "설계도"
+   },
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "단독 인물 컷은 이라스토야 원본과 구분 안 됨 — 같은 편 다른 컷이 AI 확정이라 AI로 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 21.6,
+   "t1": 22.6,
+   "caption": "진짜 초콜릿을 아낌없이",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "21.6~22.3 'CHOCOLATE DARK 72%' 판초콜릿 일러스트 / 22.3~22.6 요리사가 초콜릿을 강판에 갈아 넣음(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "일러스트 정물",
+    "evidence": "포장 영문이 대본 맞춤"
+   },
+   "effect": null
+  },
+  {
+   "t0": 22.6,
+   "t1": 23.3,
+   "caption": "때려박은 뒤",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "요리사가 초콜릿을 강판에 갈아 넣음(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "단독 인물 컷은 이라스토야 원본과 구분 안 됨 — 같은 편 다른 컷이 AI 확정이라 AI로 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.1,
+   "caption": "오직 한국만을 위한",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "'FOR KOREA ONLY 한국 전용' 태블릿 든 남성(이라스토야풍)",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 인물",
+    "feeling": "뿌듯",
+    "prop": "태블릿"
+   },
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "이라스토야풍 그림체인데 원작에 없는 상황·글자(일본어 '砂糖の量に驚愕!'·영문 'FREE DRINKS'·'Nutrition Facts Sugar Content 40%+'·'ASIA OBESITY RATE #1 CULPRIT')가 대본에 맞춰 그려져 있음 → 이라스토야 스타일로 AI 생성; 'FOR KOREA ONLY'"
+   },
+   "effect": null
+  },
+  {
+   "t0": 24.1,
+   "t1": 25.7,
+   "caption": "대용량 커스텀 제품을 찍어냈고",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "24.1~25.0 컨베이어 컵 + 일본어 팻말 'デザート容器搬送中 充填待ち'(이라스토야풍) / 25.0~25.7 로봇팔이 'CHOCOLATE MOUSSE AUTHENTIC TASTE' 통에 초코 붓기, 지켜보는 두 사람",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 장면 일러스트",
+    "evidence": "한국 이야기인데 일본어 팻말 = 이라스토야풍 프롬프트로 AI가 일본어를 섞음"
+   },
+   "effect": null
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.8,
+   "caption": "특유의 몽글몽글한 식감을",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "유리컵 초코무스+스푼 일러스트",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "일러스트 정물",
+    "evidence": "같은 그림체"
+   },
+   "effect": null
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.8,
+   "caption": "완벽하게 보존하기 위해",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "계기판 다이얼 조정하는 연구원(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "단독 인물 컷은 이라스토야 원본과 구분 안 됨 — 같은 편 다른 컷이 AI 확정이라 AI로 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 27.8,
+   "t1": 28.7,
+   "caption": "플라스틱 대신 단단하고",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "유리컵 들고 비교하는 여성(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "단독 인물 컷은 이라스토야 원본과 구분 안 됨 — 같은 편 다른 컷이 AI 확정이라 AI로 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 28.7,
+   "t1": 29.1,
+   "caption": "고급스러운",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "유리컵 쥔 손 일러스트",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "일러스트 정물",
+    "evidence": "같은 그림체"
+   },
+   "effect": null
+  },
+  {
+   "t0": 29.1,
+   "t1": 29.9,
+   "caption": "전용 유리 케이스에",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "'工場' 팻말 공장에서 유리병 든 여성(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "일본어 '工場' 팻말"
+   },
+   "effect": null
+  },
+  {
+   "t0": 29.9,
+   "t1": 30.4,
+   "caption": "무스를 담아",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "노즐이 유리컵에 무스 채움 일러스트",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "일러스트 정물",
+    "evidence": "같은 그림체"
+   },
+   "effect": null
+  },
+  {
+   "t0": 30.4,
+   "t1": 31.5,
+   "caption": "한국 코스트코 매대에",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "코스트코 창고에 '커클랜드 시그니처' 박스 쌓는 직원 둘(이라스토야풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 장면 일러스트",
+    "evidence": "박스 한글 '커클랜드 시그니처' 뭉개짐·반복, COSTCO 앞치마"
+   },
+   "effect": null
+  },
+  {
+   "t0": 31.5,
+   "t1": 32.3,
+   "caption": "냅다 던져버리는",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "무스 컵 진열하며 씩 웃는 여성(이라스토야풍)",
+   "infographic": null,
+   "emotion": {
+    "who": "이라스토야풍 직원",
+    "feeling": "자신만만",
+    "prop": null
+   },
+   "ai": {
+    "kind": "이라스토야풍 캐릭터",
+    "evidence": "단독 인물 컷은 이라스토야 원본과 구분 안 됨 — 같은 편 다른 컷이 AI 확정이라 AI로 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 32.3,
+   "t1": 33.1,
+   "caption": "승부수를 던짐",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "진열대 무스 + 'フランスチョコレートムース'·'コストコ限定' 일본어 가격표, 웃는 직원",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "이라스토야풍 장면 일러스트",
+    "evidence": "일본어 가격표"
+   },
+   "effect": null
+  },
+  {
+   "t0": 33.1,
+   "t1": 34.0,
+   "caption": "진짜 맛을 모른다며",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "'delici BELGIAN CHOCOLATE MOUSSE' 포장과 유리컵 무스 손 영상(위에서 보기)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.0,
+   "t1": 34.8,
+   "caption": "한국을 차별해",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "'delici BELGIAN CHOCOLATE MOUSSE' 포장과 유리컵 무스 손 영상(위에서 보기)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.8,
+   "t1": 35.9,
+   "caption": "대용량으로 장난질을 치던",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "'delici BELGIAN CHOCOLATE MOUSSE' 포장과 유리컵 무스 손 영상(위에서 보기)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.9,
+   "t1": 37.0,
+   "caption": "이 건방진 디저트는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "'delici BELGIAN CHOCOLATE MOUSSE' 포장과 유리컵 무스 손 영상(위에서 보기)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 37.0,
+   "t1": 37.5,
+   "caption": "사실 평범한",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 외관 영상 재사용",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 37.5,
+   "t1": 38.4,
+   "caption": "수입 과자가 아니라",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 외관 영상 재사용",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 38.4,
+   "t1": 39.7,
+   "caption": "코스트코 품절 대란템",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 창고 안 영상 재사용",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 39.7,
+   "t1": 41.2,
+   "caption": "바로 프랑스 초코무스임",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "커클랜드 초콜릿 무스 디저트 매대 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 41.2,
+   "t1": 42.7,
+   "caption": "실제로 사온 과자는 다 먹고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "커클랜드 초콜릿 무스 디저트 매대 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 42.7,
+   "t1": 43.7,
+   "caption": "껍데기 유리컵만 쟁여두는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "빈 유리컵에 요거트·그래놀라·딸기 담는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 43.7,
+   "t1": 44.8,
+   "caption": "주부들의 숨겨진 리빙",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "빈 유리컵에 요거트·그래놀라·딸기 담는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 44.8,
+   "t1": 45.41,
+   "caption": "가구가 된 셈임ㅋㅋ",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "빈 유리컵에 요거트·그래놀라·딸기 담는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드(감정 제목 '극대노') → 실적 과시(북미 코스트코) → 진출 조사(AI 재연) → 발견(가짜 초콜릿) → 도전장 → 현지 비웃음 → 독기·한국 전용 제품 개발(이라스토야풍 AI 공정도) → 코스트코 투입 → 정체 공개('바로 프랑스 초코무스임') → 반전 농담(유리컵이 리빙 가구ㅋㅋ)",
+ "ratios": {
+  "infographic_sec": 0.9,
+  "character_sec": 10.0,
+  "ai_image_sec": 26.2,
+  "real_video_sec": 19.2,
+  "meme_sec": 0,
+  "note": "구간(초) 합. 캐릭터 초는 AI 생성 이라스토야풍 인물 포함(겹침 허용). real_video = 실제 촬영 영상(제품·인물·매장·광고 CF)."
+ },
+ "segments": [
+  {
+   "t0": 0.0,
+   "t1": 1.8,
+   "screen": "제품영상",
+   "desc": "냄비 속 초코무스 스푼으로 뜨는 영상(훅)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 3.5,
+   "screen": "제품영상",
+   "desc": "코스트코 비즈니스센터 외관 영상"
+  },
+  {
+   "t0": 3.5,
+   "t1": 4.3,
+   "screen": "제품영상",
+   "desc": "코스트코 창고 안 걸으며 찍은 영상"
+  },
+  {
+   "t0": 4.3,
+   "t1": 6.9,
+   "screen": "제품영상",
+   "desc": "유리컵 초코무스 떠먹는 손 영상"
+  },
+  {
+   "t0": 6.9,
+   "t1": 7.9,
+   "screen": "AI생성이미지(추정)",
+   "desc": "회의실에서 지도·서류 보는 외국인 직원들"
+  },
+  {
+   "t0": 7.9,
+   "t1": 8.7,
+   "screen": "AI생성이미지(추정)",
+   "desc": "명동 거리에서 'KOREAN MARKET ANALYSIS 한국 시장 분석 CONFIDENTIAL' 서류 든 외국인 남성"
+  },
+  {
+   "t0": 8.7,
+   "t1": 9.2,
+   "screen": "AI생성이미지(추정)",
+   "desc": "편의점 과자 진열대 앞 여성"
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.1,
+   "screen": "AI생성이미지(추정)",
+   "desc": "길바닥 '식물성 유지' 초콜릿 봉지 줍는 여성"
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.9,
+   "screen": "AI생성이미지(추정)",
+   "desc": "시장에서 초콜릿 쪼개 보며 찡그린 여성(줌인)"
+  },
+  {
+   "t0": 11.9,
+   "t1": 13.1,
+   "screen": "AI생성이미지(추정)",
+   "desc": "파리 거리 초콜릿 들고 기자들에 둘러싸인 여성"
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.6,
+   "screen": "AI생성이미지(추정)",
+   "desc": "기자 플래시 속 초콜릿 조각 노려보는 중년 여성"
+  },
+  {
+   "t0": 14.6,
+   "t1": 15.3,
+   "screen": "AI생성이미지(추정)",
+   "desc": "검은 장갑 손이 밀랍 봉인 편지 내밀기"
+  },
+  {
+   "t0": 15.3,
+   "t1": 15.9,
+   "screen": "AI생성이미지(추정)",
+   "desc": "'FORMAL CHALLENGE' 밀랍 봉인 봉투를 탁자에 놓음"
+  },
+  {
+   "t0": 15.9,
+   "t1": 16.9,
+   "screen": "AI생성이미지(추정)",
+   "desc": "회의실 한국 중년 남성들 심드렁"
+  },
+  {
+   "t0": 16.9,
+   "t1": 17.8,
+   "screen": "AI생성이미지(추정)",
+   "desc": "'PRICE LIST ₩5,800,000' 빨간 동그라미 서류 가리키는 남성"
+  },
+  {
+   "t0": 17.8,
+   "t1": 19.2,
+   "screen": "AI생성이미지(추정)",
+   "desc": "박람회장 팔짱 낀 한국 남성 비웃음"
+  },
+  {
+   "t0": 19.2,
+   "t1": 20.4,
+   "screen": "AI생성이미지(추정)",
+   "desc": "입 가리고 웃는 남성들"
+  },
+  {
+   "t0": 20.4,
+   "t1": 21.6,
+   "screen": "AI생성이미지(추정)",
+   "desc": "설계도 둘러싼 화난 얼굴 5명(이라스토야풍)"
+  },
+  {
+   "t0": 21.6,
+   "t1": 22.3,
+   "screen": "AI생성이미지(추정)",
+   "desc": "'CHOCOLATE DARK 72%' 판초콜릿 일러스트"
+  },
+  {
+   "t0": 22.3,
+   "t1": 23.3,
+   "screen": "AI생성이미지(추정)",
+   "desc": "요리사가 초콜릿을 강판에 갈아 넣음(이라스토야풍)"
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.1,
+   "screen": "AI생성이미지(추정)",
+   "desc": "'FOR KOREA ONLY 한국 전용' 태블릿 든 남성(이라스토야풍)"
+  },
+  {
+   "t0": 24.1,
+   "t1": 25.0,
+   "screen": "AI생성이미지(추정)",
+   "desc": "컨베이어 컵 + 일본어 팻말 'デザート容器搬送中 充填待ち'(이라스토야풍)"
+  },
+  {
+   "t0": 25.0,
+   "t1": 25.7,
+   "screen": "AI생성이미지(추정)",
+   "desc": "로봇팔이 'CHOCOLATE MOUSSE AUTHENTIC TASTE' 통에 초코 붓기, 지켜보는 두 사람"
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.8,
+   "screen": "AI생성이미지(추정)",
+   "desc": "유리컵 초코무스+스푼 일러스트"
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.8,
+   "screen": "AI생성이미지(추정)",
+   "desc": "계기판 다이얼 조정하는 연구원(이라스토야풍)"
+  },
+  {
+   "t0": 27.8,
+   "t1": 28.7,
+   "screen": "AI생성이미지(추정)",
+   "desc": "유리컵 들고 비교하는 여성(이라스토야풍)"
+  },
+  {
+   "t0": 28.7,
+   "t1": 29.1,
+   "screen": "AI생성이미지(추정)",
+   "desc": "유리컵 쥔 손 일러스트"
+  },
+  {
+   "t0": 29.1,
+   "t1": 29.9,
+   "screen": "AI생성이미지(추정)",
+   "desc": "'工場' 팻말 공장에서 유리병 든 여성(이라스토야풍)"
+  },
+  {
+   "t0": 29.9,
+   "t1": 30.4,
+   "screen": "AI생성이미지(추정)",
+   "desc": "노즐이 유리컵에 무스 채움 일러스트"
+  },
+  {
+   "t0": 30.4,
+   "t1": 31.5,
+   "screen": "AI생성이미지(추정)",
+   "desc": "코스트코 창고에 '커클랜드 시그니처' 박스 쌓는 직원 둘(이라스토야풍)"
+  },
+  {
+   "t0": 31.5,
+   "t1": 32.3,
+   "screen": "AI생성이미지(추정)",
+   "desc": "무스 컵 진열하며 씩 웃는 여성(이라스토야풍)"
+  },
+  {
+   "t0": 32.3,
+   "t1": 33.1,
+   "screen": "AI생성이미지(추정)",
+   "desc": "진열대 무스 + 'フランスチョコレートムース'·'コストコ限定' 일본어 가격표, 웃는 직원"
+  },
+  {
+   "t0": 33.1,
+   "t1": 37.0,
+   "screen": "제품영상",
+   "desc": "'delici BELGIAN CHOCOLATE MOUSSE' 포장과 유리컵 무스 손 영상(위에서 보기)"
+  },
+  {
+   "t0": 37.0,
+   "t1": 38.4,
+   "screen": "제품영상",
+   "desc": "코스트코 외관 영상 재사용"
+  },
+  {
+   "t0": 38.4,
+   "t1": 39.7,
+   "screen": "제품영상",
+   "desc": "코스트코 창고 안 영상 재사용"
+  },
+  {
+   "t0": 39.7,
+   "t1": 42.7,
+   "screen": "제품영상",
+   "desc": "커클랜드 초콜릿 무스 디저트 매대 영상"
+  },
+  {
+   "t0": 42.7,
+   "t1": 45.41,
+   "screen": "제품영상",
+   "desc": "빈 유리컵에 요거트·그래놀라·딸기 담는 영상"
+  }
+ ]
+}

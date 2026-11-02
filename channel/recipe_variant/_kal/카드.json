@@ -1,0 +1,458 @@
+{
+ "slug": "recipe_variant",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "스타픽룸 변형(base 스타픽룸판, 겉모양만 다름)",
+ "brand": null,
+ "brand_note": "연예인레시피(이름 미정)",
+ "format": "연예인레시피형",
+ "subformat": "레시피 체험형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/calcopy/hybrid/styles/연예인레시피판.json",
+  "style_error": null,
+  "renderer": "bench",
+  "entry": "tools/calcopy/hybrid/run.py <키> render --version 연예인레시피판",
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "caption_pack": "recipe",
+  "voice": "미나",
+  "bgm": "otsukare_summer"
+ },
+ "sample": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": false,
+  "sfx_events": false,
+  "tteutgi": 0,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": "1줄 = 연예인 본인 말 인용·훅 구절(주황 hi = 핵심 낱말) / 2줄 = '이름의 [민트 hi 요리]'",
+   "confidence": "판"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm×",
+   "confidence": "미측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm× sfx×",
+   "confidence": "미측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme× pointer×",
+   "confidence": "미측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "스타픽룸 변형(base 스타픽룸판, 겉모양만 다름)",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "×",
+  "scene_fit": "×",
+  "bgm": "×",
+  "sfx": "×",
+  "meme": "×",
+  "sticker": "×",
+  "pointer": "×",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json caption.pack",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A1"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json cuts",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A5"
+  },
+  {
+   "element": "bgm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json bgm.db_below_voice",
+   "engine_support": "△",
+   "engine_gap": "A4"
+  },
+  {
+   "element": "sfx",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "meme",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "pointer",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "render_bench thumb.stamp_video(판 칸 없음)",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json cps_target",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-recipe_variant",
+   "engine_cell": "연예인레시피판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "레시피형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "style_analysis": false,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": "tools/calcopy/hybrid/styles/연예인레시피판.json",
+  "style_file_exists": true,
+  "renderer": "bench",
+  "caption_pack": "recipe",
+  "caption_pack_ok": true,
+  "counted_n": 8,
+  "no_why": [
+   "frame.bg",
+   "frame.credit.center",
+   "frame.credit.px",
+   "frame.logo.px",
+   "frame.logo.rgba",
+   "frame.logo.stroke",
+   "frame.logo.x",
+   "frame.logo.y",
+   "frame.title.0.center",
+   "frame.title.0.max_w",
+   "frame.title.0.px",
+   "frame.title.0.shear",
+   "frame.title.1.center",
+   "frame.title.1.max_w",
+   "frame.title.1.px",
+   "frame.title.1.shear",
+   "frame.watermark.alpha",
+   "frame.watermark.cy",
+   "frame.watermark.px",
+   "frame.watermark.x1",
+   "frame.window",
+   "placement.rules.stickers.object_pop.x",
+   "placement.rules.stickers.object_pop.y"
+  ],
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "unmeasured": 15,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "레시피형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
+  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
+  "tools/calcopy/hybrid/styles/스타픽룸판.json": "998d56e7f511",
+  "tools/calcopy/hybrid/styles/연예인레시피판.json": "326d19c47dc8"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독≥6",
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "스타일분석",
+   "팔레트",
+   "sfx_events",
+   "숫자칸 why",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측"
+  ],
+  "rule_unmeasured": 15,
+  "measure_tasks": [
+   "06-recipe_variant"
+  ],
+  "complete": false
+ }
+}

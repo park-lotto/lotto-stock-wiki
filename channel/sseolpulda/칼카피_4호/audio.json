@@ -1,0 +1,23 @@
+{
+ "tts": "C:/숏템_칼카피/sseolpulda/칼카피_4호/narr_문정_t0866.wav",
+ "bgm": "here_with_me",
+ "bgm_ratio": 0.15,
+ "target_lufs": -17.9,
+ "sfx": [
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_10.mp3",
+   7.587,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_28.mp3",
+   12.812,
+   -3.0
+  ]
+ ],
+ "final": {
+  "I": -17.6,
+  "LRA": 2.4,
+  "TP": -0.9
+ }
+}

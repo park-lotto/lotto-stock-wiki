@@ -1,0 +1,367 @@
+{
+ "_note": "샥탬스토리 하이브리드 14편 The Comfy — 앞 0~O3 끝(13.67초) = 칼카피 그대로(끝 원음 '그저 따뜻하고 포근하고 싶죠'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡 같은 제품(The Comfy Original). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "더 컴피 오리지널(쿠팡 9774389207 '입는 담요 후드 망토 더 컴피 오리지널 | 오버사이즈 극세사 셰르파 웨어러블 상어 탱크에서 볼 수 있는…' — 방송 제품과 같은 The Comfy Original, 회색) · 같은 브랜드 다른 판매처 9766361162 'THE COMFY 오리지널 샤크 탱크…'·9781878968·9575920757",
+ "same_product": true,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "담요인데 옷처럼 입는다 — 혹평받던 그 담요(앞 O3 '그저 따뜻하고 포근하고 싶죠'로 끝남)",
+  "뒤흥미": "같은 제품 리뷰 영상에서 뒤집어쓰자 몸 전체가 덮이고(ISf 40~42), 셰르파 안감·큰 앞주머니가 보임(xvY 99~101·122~124)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-27 '더컴피'·'The Comfy 입는담요'(C:/숏템_칼카피/foreignshowshow/13편_소재/쿠팡API_14c.json) · 상품 사진 img/comfy_cmp.jpg(회색 9774389207 = 방송 회색 컴피와 같은 꼴) · 리뷰 영상 시트 C:/숏템_칼카피/foreignshowshow/14편_TheComfy/sheet/{ISf,xvY}.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../14편_TheComfy",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/14편_TheComfy/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/14편_TheComfy/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/14편_TheComfy/work",
+  "cut_after": "O3",
+  "cut_why": "O3 창업자 원음 '밖은 춥고 궂은 날씨잖아요 / 그저 따뜻하고 포근하고 싶죠' 끝 — 그 바람을 뒤 체험('뒤집어쓰기만 하면 포근하게 감싸요')이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~13편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "샤크들이 비웃은",
+  "line2": "입는 담요의 반전?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "앞 14편 완성본 나레 실측 cps_out 7.84(render_info narr)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 담요가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 컴피가 그대로 있더라고요.",
+    "tts": "근데 저 담요가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 컴피가 그대로 있더라고요.",
+    "caps": [
+     "근데 저 담요가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "방송에 나온",
+     "그 컴피가",
+     "그대로 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph_words": [
+     "그 컴피가"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 담요가",
+      "span": "담요가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "방송에 나온",
+      "span": "방송에 나온",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 컴피가",
+      "span": "그 컴피가",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그대로 있더라고요",
+      "span": "있더라고요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게, 샤크탱크 투자자 5명 중 3명이 빠졌던 이 담요를 바바라는 자기 최고 투자로 꼽았거든요.",
+    "tts": "이게 말도 안 되는 게, 샤크탱크 투자자 다섯 명 중 세 명이 빠졌던 이 담요를 바바라는 자기 최고 투자로 꼽았거든요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "샤크탱크 투자자",
+     "5명 중 3명이 빠졌던",
+     "이 담요를 바바라는",
+     "자기 최고 투자로 꼽았거든요"
+    ],
+    "facts": [
+     "f4",
+     "f2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크탱크 투자자",
+      "span": "샤크탱크 투자자",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "5명 중 3명이 빠졌던",
+      "span": "5명 중 3명이",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 담요를 바바라는",
+      "span": "바바라는",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자기 최고 투자로 꼽았거든요",
+      "span": "투자로 꼽았거든요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 뒤집어쓰기만 하면 안쪽 셰르파가 이불처럼 몸 전체를 감싸요.",
+    "tts": "진짜 핵심은 이건데, 뒤집어쓰기만 하면 안쪽 셰르파가 이불처럼 몸 전체를 감싸요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "뒤집어쓰기만 하면",
+     "안쪽 셰르파가",
+     "이불처럼",
+     "몸 전체를 감싸요"
+    ],
+    "facts": [
+     "f6",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뒤집어쓰기만 하면",
+      "span": "하면",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안쪽 셰르파가",
+      "span": "안쪽 셰르파가",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이불처럼",
+      "span": "이불처럼",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "몸 전체를 감싸요",
+      "span": "전체를 감싸요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 앞주머니가 커서 휴대폰이랑 태블릿까지 쏙 들어가요.",
+    "tts": "심지어 이게 대박인 게, 앞주머니가 커서 휴대폰이랑 태블릿까지 쏙 들어가요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "앞주머니가 커서",
+     "휴대폰이랑 태블릿까지",
+     "쏙 들어가요"
+    ],
+    "facts": [
+     "f6"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "앞주머니가 커서",
+      "span": "앞주머니가 커서",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "휴대폰이랑 태블릿까지",
+      "span": "태블릿까지",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쏙 들어가요",
+      "span": "쏙 들어가요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "집에서 입고 있으니까, 식구들이 자기 것도 사 달라고 난리예요.",
+    "tts": "집에서 입고 있으니까, 식구들이 자기 것도 사 달라고 난리예요.",
+    "caps": [
+     "집에서 입고 있으니까",
+     "식구들이",
+     "자기 것도 사 달라고",
+     "난리예요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "집에서 입고 있으니까",
+      "span": "입고 있으니까",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "식구들이",
+      "span": "식구들이",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자기 것도 사 달라고",
+      "span": "사 달라고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-27) '더컴피' → 9774389207·9766361162·9781878968·9575920757·9337378964(키즈) 전부 'The Comfy Original/샤크 탱크' 표기 · 'The Comfy 입는담요' → 9656333829. 결과 C:/숏템_칼카피/foreignshowshow/13편_소재/쿠팡API_14c.json",
+  "c2": "리뷰 xvY0IH_YQRw 99~102초 셰르파 안감 근접 · ISf6BtA7kXk 40~42초 모자까지 덮어씀",
+  "f4": "Yahoo Finance(2023 팟캐스트 바바라 본인 발언) 'Her Best Shark Tank Investment … And Nobody Wanted It' https://finance.yahoo.com/news/barbara-corcoran-reveals-her-best-131202826.html — 금액은 대본에 안 씀",
+  "f6": "원본 IK_JDKOLP8g 109.83~115.83 'soft microfiber on the outside and an even more luxurious Sherpa on the inside' · 116.11~123.70 'The pocket is large enough to fit a phone or even a tablet'",
+  "창작": "B3 '이불처럼 몸 전체를 감싸요'(체감 비유)·B5 '식구들이 자기 것도 사 달라고 난리' = 화자 감상·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)",
+  "f2": "원본 IK_JDKOLP8g 381.65 금발 투자자 'I'm out' · 428.20 정장 투자자 'for those reasons, I'm out' · 620.81 대머리 투자자 'I'm out' — 다섯 중 셋이 빠지고 둘(로버트·바바라)이 제안"
+ }
+}

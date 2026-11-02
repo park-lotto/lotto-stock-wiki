@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import { api, ApiError } from './api.js';
 import { Lease } from './lease.js';
 import { audit } from './audit.js';
+import { mineById, myRoot } from './my_presets.js';
 
 const MARK = '.rented';
 let current = null;                                       // 지금 빌린 것(PC 1대 · 작업 하나)
@@ -15,7 +16,8 @@ let current = null;                                       // 지금 빌린 것(P
 export function channelDir(engineRoot) { return path.join(engineRoot, 'channel'); }
 // 기술 꾸러미(사장님 10-21 '프리셋처럼 편마다 빌려주기') — 집 PC 제작 라인 코드가 풀리는 자리. 설치본에는 없다(engine_bundle FORBIDDEN).
 //   풀 때 자리마다 표식(.rented) — 표식 없는 자리(개발 PC 의 진짜 코드)는 지우지 않는다
-export const TECH_DIRS = ['tools/calcopy/hybrid', 'tools/calcopy/yanshot'];
+// 빌리는 기술 자리 = 판 설정 폴더만 — 실행기·렌더 코드(hybrid/*.py·yanshot)는 설치본 엔진 묶음에 있어 같은 자리를 덮으면 '진짜 코드' 막음에 걸린다(10-29)
+export const TECH_DIRS = ['tools/calcopy/hybrid/styles'];
 const ALLOWED = ['channel/', ...TECH_DIRS.map(d => d + '/')];
 const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
 function wipe(engineRoot) {
@@ -100,22 +102,24 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
       const me = current;
       return { presetPath: me.presetPath, release: kind === 'make' ? () => release(me, engineRoot) : async () => {} };
     }
-    if (current.kind === 'ui' && kind === 'make') await release(current, engineRoot);   // 미리보기는 제작에 자리를 내준다
+    if (current.kind === 'ui') await release(current, engineRoot);   // 미리보기는 제작·다른 프리셋 미리보기에 자리를 내준다(10-30 실측: 다른 프리셋을 누르면 409 로 첫 프리셋만 남았다)
     else throw new ApiError(409, { code: 'busy', msg: kind === 'ui' ? '제작 중에는 다른 프리셋 미리보기를 잠시 못 합니다' : '앞 작업이 끝난 뒤 다시 부르세요' });
   }
   sweep(engineRoot);
   const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-  const lease = new Lease(jobId, { stepName: stepName || (() => '소재') });
-  await lease.acquire();
+  const mine = presetId ? mineById(presetId) : null;     // 내 벤치마킹 프리셋(관제 304) — 이 PC 에 있으니 서버를 안 부른다. 쓰고 지우는 꼴은 같다
+  const lease = mine ? null : new Lease(jobId, { stepName: stepName || (() => '소재') });
+  if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
   try {
-    const r = await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
+    const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
     fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(path.join(root, MARK), jobId);
-    unpack(openPack(r), root);
+    if (mine) fs.cpSync(path.join(myRoot(), mine.slug), path.join(root, mine.slug), { recursive: true });
+    else unpack(openPack(r), root);
     audit('preset_rent', { job: jobId, result: 'ok' });
-    me.presetPath = r.preset_path;
+    me.presetPath = mine ? `channel/${mine.slug}/preset/${mine.style}` : r.preset_path;
   } catch (e) {
     await release(me, engineRoot);
     throw e;
@@ -135,7 +139,7 @@ async function release(me, engineRoot) {
   current = null;
   clearTimeout(me.idle);
   wipe(engineRoot);                                       // 프리셋(channel) + 기술 꾸러미(hybrid·yanshot) — 표식 있는 자리만
-  await me.lease.release();
+  if (me.lease) await me.lease.release();
   audit('preset_return', { job: me.jobId, result: 'ok' });
 }
 

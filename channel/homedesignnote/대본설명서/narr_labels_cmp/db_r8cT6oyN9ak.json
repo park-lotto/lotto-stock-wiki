@@ -1,0 +1,45 @@
+{
+ "id": "db_r8cT6oyN9ak",
+ "sentences": [
+  "아이스크림이 왜 휘어?",
+  "It's so wiggly!",
+  "트롤리에서 나온 아이스바인데 얼렸는데도 말랑함",
+  "Oh, the texture is weird.",
+  "I don't like the texture.",
+  "여기도 한 입 먹더니 It's not bad.",
+  "다른 맛도 확인해보는데 Honestly, it might be my new favorite type of popsicle, but 110% by these again.",
+  "입은 먹는데 뇌는 헤이죠.",
+  "Whoa."
+ ],
+ "tags": [
+  [
+   "감상"
+  ],
+  [
+   "감상"
+  ],
+  [
+   "원리스펙"
+  ],
+  [
+   "감상"
+  ],
+  [
+   "감상"
+  ],
+  [
+   "사회반응"
+  ],
+  [
+   "극단행동",
+   "감상"
+  ],
+  [
+   "체감비유"
+  ],
+  [
+   "감상"
+  ]
+ ],
+ "_model": "gemini-3.5-flash"
+}

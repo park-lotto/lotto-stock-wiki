@@ -84,10 +84,50 @@ export async function syncFromServer({ force = false } = {}) {
   catch (e) { return { ok: false, why: (e && e.code) || 'network' }; }
   const got = (r && r.settings) || null;
   if (!got || typeof got.channels !== 'object') return { ok: false, why: 'bad_reply' };
-  // 꾸민 모양(looks)은 웹 화면에서만 정한다 — 서버 것을 그대로 받는다(합치기 없음, 주인 = 서버 claude_studio.save_look)
+  // 꾸민 모양(looks) = 이 PC 저장(saveLook, 사장님 11-01 '로컬로') + 웹에서 꾸민 프리셋은 받아 온다
   const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels,
-    looks: (got.looks && typeof got.looks === 'object') ? got.looks : (s.looks || {}) };
+    looks: { ...((got.looks && typeof got.looks === 'object') ? got.looks : {}), ...(s.looks || {}) } };   // 이 PC 에서 꾸민 것이 먼저
   if (JSON.stringify(next) !== JSON.stringify(s)) writeSettings(next);
+  return { ok: true };
+}
+
+// 완성본 고치기 지시함(이 PC) — Claude 는 shortem_inbox 로 읽고 처리한다
+export function addRequest(target, text) {
+  const t = String(text || '').trim().slice(0, 4000);
+  if (!t || !target || typeof target !== 'object') return { ok: false, error: '지시 내용을 받지 못했습니다' };
+  const s = readSettings();
+  const q = { id: `l_${Date.now().toString(36)}`, at: Date.now(), state: '대기', target, text: t };
+  s.requests = [...(s.requests || []), q].slice(-100);
+  writeSettings(s);
+  return { ok: true, request: q };
+}
+export function setRequest(id, state, note) {
+  const s = readSettings();
+  const q = (s.requests || []).find(x => x.id === id);
+  if (!q) return null;
+  q.state = state; q.note = String(note || '').slice(0, 1000);
+  writeSettings(s);
+  return q;
+}
+
+// 그림 로고 저장 — packs 옆 logos/<pid>.png (렌더는 styles.member_frame 이 같은 자리를 읽는다)
+export function saveLogo(pid, dataUrl) {
+  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
+  if (!PID_RE.test(String(pid || '')) || !m) return { ok: false, error: 'PNG 그림만 올릴 수 있습니다' };
+  writeFileIn(homeDir(), path.join('logos', `${pid}.png`), Buffer.from(m[1], 'base64'));
+  return { ok: true, file: `${pid}.png` };
+}
+
+// 꾸민 모양 저장 — 검사는 엔진 한 곳(워커 'look' = scene_style.validate_snapshot), 서버 save_look 과 같은 검사
+const LOOK_MAX = 400000;
+export async function saveLook(pid, snapshot) {
+  if (!PID_RE.test(String(pid || '')) || !snapshot || typeof snapshot !== 'object') return { ok: false, error: '꾸민 모양을 받지 못했습니다' };
+  if (JSON.stringify(snapshot).length > LOOK_MAX) return { ok: false, error: '꾸민 모양이 너무 큽니다' };
+  const r = await engineTool('look', { snapshot });
+  if (r.error || r.invalid) return { ok: false, error: r.invalid || r.error };
+  const s = readSettings();
+  s.looks = { ...(s.looks || {}), [pid]: { snapshot: r.snapshot, updated: Date.now() } };
+  writeSettings(s);
   return { ok: true };
 }
 
@@ -97,6 +137,6 @@ export async function packFile(pid) {
   const rel = path.join('packs', `${pid}.json`);
   const st = readSettings();
   const web = { look: ((st.looks || {})[pid] || {}).snapshot || null };   // 엔진이 읽는 웹 설정(꾸민 모양) — 팩 검사 밖 칸. 감정은 팩 tts.emotion
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), web }));
+  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), member: (st.channels[pid] || {}).pack || {}, web }));   // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
   return path.join(homeDir(), rel);
 }

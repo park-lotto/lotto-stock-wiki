@@ -1,0 +1,938 @@
+{
+ "id": "pjhCRN0BwaQ",
+ "dur": 20.9,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정이 경호원과 있을 때",
+   "box": "빨강 띠 #FB0000 y246~385",
+   "colors": [
+    {
+     "word": "장윤정이 경호원과 있을 때",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "outline": "검정 ~10px + 검정 번짐 그림자",
+   "ink_y": [
+    273,
+    359
+   ],
+   "font": "붓끝 굵은 제목체(배민 도현·Black Han Sans 계열 추정, 눈)"
+  },
+  {
+   "text": "신은 아디다스 신발 가격이",
+   "box": "없음(검정 바탕)",
+   "colors": [
+    {
+     "word": "신은 아디다스 신발 가격이",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    413,
+    498
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   533,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   1183,
+   1264
+  ],
+  "title_y": [
+   [
+    273,
+    359
+   ],
+   [
+    413,
+    498
+   ]
+  ],
+  "title_band": {
+   "y": [
+    246,
+    385
+   ],
+   "hex": "#FB0000"
+  },
+  "top_black": [
+   0,
+   245
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": {
+   "text": null,
+   "alpha": null,
+   "note": "원본 크기 프레임(1·10·20.6초)에서 로고·워터마크·출처 줄 없음"
+  },
+  "corner_icon": null,
+  "bg_hex": "#000000"
+ },
+ "frame0": {
+  "what": "얼굴",
+  "face_frac": 0.04,
+  "text": "제목 2줄 + 검정 바탕 누끼(장윤정 앉은 전신+경호원 반신) + 빨간 곡선 화살표가 장윤정 신발을 가리킴, 자막 없음"
+ },
+ "name_evidence": [
+  "장윤정 = 제목 1줄 '장윤정이 경호원과 있을 때'(0~20.9초) · 자막 '장윤정이 본인이'·'이때 장윤정은'"
+ ],
+ "lines": [
+  {
+   "t0": 4.233,
+   "t1": 5.267,
+   "speaker": "나레",
+   "text": "장윤정이 본인이",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [
+    4.233
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 497,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정(가운데)과 경호원 둘이 회색 스튜디오 의자에 앉음",
+   "motion": "pan",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 5.267,
+   "t1": 7.133,
+   "speaker": "나레",
+   "text": "대동하는 경호원들과 함께",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 793,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 경호원 둘(검정·흰 셔츠) 사이 장윤정",
+   "motion": "pan",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 7.133,
+   "t1": 8.0,
+   "speaker": "나레",
+   "text": "멋있게 영상을",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [
+    7.133
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 430,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정과 경호원 둘(선글라스) 나란히 선 상반신",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.767,
+   "speaker": "나레",
+   "text": "촬영했는데요",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 402,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 8.767,
+   "t1": 9.833,
+   "speaker": "나레",
+   "text": "이때 장윤정은",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [
+    8.767
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 430,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정 단독 앉은 근접, 아디다스 줄무늬 양말·흰 신발 보임(세로 패닝)",
+   "motion": "pan",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 9.833,
+   "t1": 10.933,
+   "speaker": "나레",
+   "text": "아디다스 양말에",
+   "layer": "울지마트로트",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 497,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 화면 아래 아디다스 삼선 양말",
+   "motion": "pan",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 10.933,
+   "t1": 12.467,
+   "speaker": "나레",
+   "text": "아디다스 신발을 매치하는",
+   "layer": "울지마트로트",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 8,
+   "cut_at": [
+    10.933
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 793,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정 서 있는 전신 — 청셔츠·청바지·흰 아디다스 신발",
+   "motion": "pan",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 12.467,
+   "t1": 13.867,
+   "speaker": "나레",
+   "text": "센스를 보여줬는데",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 564,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 전신 서서 미소",
+   "motion": "pan",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 13.867,
+   "t1": 15.267,
+   "speaker": "나레",
+   "text": "밑창이 핑크색인게",
+   "layer": "울지마트로트",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 8,
+   "cut_at": [
+    13.867
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 564,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정 분홍 의자에 앉아 웃음, 신발 핑크 밑창 보임",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 15.267,
+   "t1": 15.767,
+   "speaker": "나레",
+   "text": "포인트인",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 268,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 15.767,
+   "t1": 17.2,
+   "speaker": "나레",
+   "text": "해당 신발의 가격은?",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 659,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 앉아 웃음",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 17.2,
+   "t1": 18.633,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 4,
+   "cut_at": [
+    17.2
+   ],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 592,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "장윤정 휴대폰(검정) 들고 크게 웃음",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 18.633,
+   "t1": 20.2,
+   "speaker": "나레",
+   "text": "두 번 누르면 공개됩니다",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "y": [
+    1183,
+    1264
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 754,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 20.2,
+   "t1": 20.9,
+   "speaker": "나레",
+   "text": "아디다스 삼바로즈\n발렌타인데이 버전\n119,000원",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "가격 카드(같은 자막 모양 여러 줄, 창 가운데 쪽으로 올라옴)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 10,
+   "cut_at": [
+    20.2
+   ],
+   "y": [
+    1085,
+    1355
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 564,
+   "letter_gap_px": 5,
+   "line_gap_px": 20,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "흰 바탕 아디다스 삼바로즈(핑크 밑창) 제품 사진(정지)",
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "눈",
+   "notes": "가격 공개 카드 = 채널 자막과 같은 모양 3줄(제품명 2줄+가격), 줄 잉크 약 [1085,1160]·[1182,1260]·[1278,1355](20px 격자 눈 대조) — 줄 간격 ~20px·피치 ~98px. 나레는 vtt '입니다'(19.96~)만 겹침"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   4.233
+  ]
+ ],
+ "hook": {
+  "t": [
+   0.0,
+   4.233
+  ],
+  "what": "검정 바탕 누끼(배경 지운) 장윤정+경호원 zoom_in 1.08 · 자막 없이 나레가 제목 읽기(vtt 0.08~4.2 '…경호원들과 있을 때 신고 있던 아디다스 신발 가격이')",
+  "sticker": [
+   {
+    "what": "빨간원+화살표",
+    "detail": "빨간 곡선 화살표(위에서 왼쪽 아래로 휘어 신발 끝을 가리킴), 원 없음",
+    "hex": "#DD0101",
+    "t_in": 0.0,
+    "t_out": 4.233,
+    "x": 658,
+    "y": 1544,
+    "w": 142,
+    "h": 243,
+    "anim": "0프레임부터 완성(그리기 없음) · zoom_in 을 따라 신발과 함께 이동(0초 x658,y1544 → 4.1초 x785,y1466) · 컷 4.233에 사라짐"
+   }
+  ]
+ },
+ "beats": "훅(0~4.23 누끼+빨간 화살표가 신발, 나레가 제목 읽기) → 사연(4.23~8.77 장윤정이 경호원과 영상 촬영) → 증거(8.77~15.77 아디다스 양말+신발 매치·핑크 밑창) → 질문(15.77~17.2 해당 신발의 가격은?) → 톡톡 두 번 누르면 공개(17.2~20.2) → 공개 카드(20.2~20.9 '아디다스 삼바로즈 발렌타인데이 버전 119,000원' 제품 사진)",
+ "narr_share": "나레 줄 14/14(마지막 카드는 vtt '입니다'만 겹침) · 나레 초 약 20.0/20.9(vtt 0.08~20.0, 훅 4.2초는 자막 없이 나레)",
+ "price_reveal": {
+  "t": 20.2,
+  "form": "자막 모양 3줄 카드(제품명 2줄+가격), 배경=흰 바탕 제품 사진 정지",
+  "text": "아디다스 삼바로즈 / 발렌타인데이 버전 / 119,000원"
+ },
+ "notes": [
+  "훅 누끼+빨간 화살표는 지휘자 관찰(oSy·hNR)과 같은 꼴 — 길이 4.233초, 화살표 등장 애니메이션 없음(0프레임 완성), 신발을 따라 움직임",
+  "창은 y533~1920(아래 끝까지 영상) — 뼈대 window 1387·브리프 '창 아래 검정 빈칸'과 다름",
+  "오른쪽 아래 빨강·흰 화살표 아이콘 없음(10초 원본 크롭 확인)",
+  "자막 y1183~1264 고정, 강조색·스티커 0, 전 줄 컷 등장(0프레임 완성)",
+  "15.267~15.767 '포인트인' 0.5초 줄",
+  "목소리 들을 수 없어 성별·TTS 여부 미확인(vtt 오인식 '장인정'·'미창이' → 기계음 추정은 신호 수준)",
+  "효과음 미측정 → 전 줄 sfx null",
+  "가격 카드 줄 y 는 20px 격자 눈 대조(배경이 흰 제품이라 픽셀 분리 실패)"
+ ],
+ "_made_by": "줄판독 워커(눈+cv2 픽셀) 2026-10-23"
+}

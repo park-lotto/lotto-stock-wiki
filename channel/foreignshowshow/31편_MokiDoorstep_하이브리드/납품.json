@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-29 00:20:56",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\31_moki_doorstep_1029_0020.mp4",
+  "md5": "36943dec5fa5de191c3cb2d843f054e0",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\31편_MokiDoorstep\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]

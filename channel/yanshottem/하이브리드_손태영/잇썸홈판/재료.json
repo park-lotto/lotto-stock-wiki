@@ -1,0 +1,250 @@
+{
+ "_note": "crop=[x,y,w,h] 원본 1920×1080. 손태영 원본은 편집 자막이 y≥700 → A 창 크롭 h=700(자막 밖). B = 제품만(브랜드 미국 광고 kVQeX2EEy7Q·영국 광고 EHk6MQCqEwo·원본 안 제품 인서트·코스트코 매대). max = scdet 샷 경계까지.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_손태영/src",
+ "A": {
+  "H": [
+   {
+    "src": "1VKx4f262GM.mp4",
+    "ss": 407.0,
+    "crop": [
+     552,
+     0,
+     700,
+     700
+    ],
+    "max": 14.0,
+    "see": "창가 욕실, 카메라 보고 말하는 손태영 얼굴 크게(0초 눈 뜬 프레임 확인 · 408.8 원본 자체 점프컷 1번 포함, 편집 자막 크롭 밖)"
+   }
+  ],
+  "O": [
+   {
+    "at": 0.0,
+    "src": "1VKx4f262GM.mp4",
+    "ss": 414.68,
+    "crop": [
+     550,
+     0,
+     700,
+     700
+    ],
+    "see": "손태영 얼굴 — 입 모양 맞음(O1, 414.65 원본 점프컷 뒤부터)"
+   },
+   {
+    "at": 2.77,
+    "src": "1VKx4f262GM.mp4",
+    "ss": 425.4,
+    "crop": [
+     380,
+     0,
+     700,
+     700
+    ],
+    "see": "병을 든 손태영 얼굴(O2)"
+   },
+   {
+    "at": 4.37,
+    "src": "1VKx4f262GM.mp4",
+    "ss": 433.95,
+    "crop": [
+     420,
+     0,
+     700,
+     700
+    ],
+    "see": "볼을 두드리며 말하는 손태영(O3, 원본 '(보들보들)' 자막 433.9 끝난 뒤)"
+   },
+   {
+    "at": 5.87,
+    "src": "1VKx4f262GM.mp4",
+    "ss": 479.95,
+    "crop": [
+     570,
+     0,
+     700,
+     700
+    ],
+    "see": "손짓하며 말하는 손태영(O5, 화면 0.1초 늦게 — 479.91 인서트 컷 피함)"
+   }
+  ],
+  "face": "손태영 본인만"
+ },
+ "B": [
+  {
+   "line": "B1",
+   "toks": [
+    0,
+    2
+   ],
+   "src": "prod/EHk6MQCqEwo.mp4",
+   "ss": 47.9,
+   "max": 5.0,
+   "crop": [
+    693,
+    0,
+    534,
+    950
+   ],
+   "see": "금가루가 솟아오르는 유리 육각 병(브랜드 영상)",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "prod/EHk6MQCqEwo.mp4",
+   "ss": 23.8,
+   "max": 1.99,
+   "crop": [
+    897,
+    0,
+    607,
+    1080
+   ],
+   "see": "금가루 위 유리 육각 병(브랜드 영상)",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "prod/kVQeX2EEy7Q.mp4",
+   "ss": 5.5,
+   "max": 2.4,
+   "crop": [
+    657,
+    0,
+    607,
+    1080
+   ],
+   "see": "스패출러로 금가루 크림을 뜨는 근접",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "prod/kVQeX2EEy7Q.mp4",
+   "ss": 19.38,
+   "max": 1.7,
+   "crop": [
+    747,
+    0,
+    506,
+    900
+   ],
+   "see": "손등에 윤기 나게 펴진 크림",
+   "face": "없음",
+   "text": "없음(아래 글 크롭 밖)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "prod/kVQeX2EEy7Q.mp4",
+   "ss": 21.12,
+   "max": 1.85,
+   "crop": [
+    657,
+    0,
+    607,
+    1080
+   ],
+   "see": "탁자 위 육각 병",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    0,
+    2
+   ],
+   "src": "1VKx4f262GM.mp4",
+   "ss": 246.8,
+   "max": 2.65,
+   "crop": [
+    0,
+    0,
+    478,
+    850
+   ],
+   "see": "미국 코스트코 매대의 GINSENG GOLD SILK 상자들",
+   "face": "없음",
+   "text": "상자 글자(제품)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "prod/EHk6MQCqEwo.mp4",
+   "ss": 8.9,
+   "max": 1.85,
+   "crop": [
+    684,
+    0,
+    551,
+    980
+   ],
+   "see": "안개 속 유리 육각 병",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "prod/EHk6MQCqEwo.mp4",
+   "ss": 54.2,
+   "max": 3.1,
+   "crop": [
+    693,
+    0,
+    534,
+    950
+   ],
+   "see": "금가루 모래 위 병",
+   "face": "없음",
+   "text": "없음"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "1VKx4f262GM.mp4",
+   "ss": 465.3,
+   "max": 2.95,
+   "crop": [
+    925,
+    0,
+    461,
+    820
+   ],
+   "see": "뚜껑 연 병 속 금가루 크림(원본 인서트, 밝은 끝 컷)",
+   "face": "없음",
+   "text": "없음(아래 자막 크롭 밖)"
+  }
+ ],
+ "src_urls": {
+  "1VKx4f262GM.mp4": "https://www.youtube.com/watch?v=1VKx4f262GM (Mrs.뉴저지 손태영, 1080p)",
+  "prod/kVQeX2EEy7Q.mp4": "https://www.youtube.com/watch?v=kVQeX2EEy7Q (Nature Republic US 'Ginseng Gold Silk Watery Cream', 1080p)",
+  "prod/EHk6MQCqEwo.mp4": "https://www.youtube.com/watch?v=EHk6MQCqEwo (Nature Republic UK 'Ginseng Royal Silk Watery Cream', 1080p)"
+ },
+ "audio_rule": "B 재료 원음 전부 끔. A 원음 = 손태영 말만(서버 2모델 단독 받아쓰기 화자 1)."
+}

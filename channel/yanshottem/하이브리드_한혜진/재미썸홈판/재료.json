@@ -1,0 +1,176 @@
+{
+ "_note": "A = 원음 밑 화면(원음 이어 붙인 초 at). F1 = 필재 한마디 밑 화면(한혜진 얼굴, 썸네일 규칙). B crop=[x,y,h](창 1080×1407 비율). 워터마크·자막 띠는 크롭 밖.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_한혜진/src",
+ "src_main": "CDs2bsZG_2Q_1150_1200.mp4",
+ "A": [
+  {
+   "at": 0.0,
+   "src": "CDs2bsZG_2Q_1150_1200.mp4",
+   "ss": 17.88,
+   "crop": [
+    670,
+    0,
+    620,
+    620
+   ],
+   "see": "한혜진 근접 — '되게 오랜 기간 동안 그냥 아침은' 입 맞음"
+  },
+  {
+   "at": 2.45,
+   "src": "CDs2bsZG_2Q_1150_1200.mp4",
+   "ss": 21.36,
+   "crop": [
+    670,
+    0,
+    620,
+    620
+   ],
+   "see": "한혜진 근접 — '오나오' 입 맞음"
+  },
+  {
+   "at": 3.39,
+   "src": "GUToiiFxo2w_40_125.mp4",
+   "ss": 56.3,
+   "crop": [
+    1000,
+    0,
+    880,
+    880
+   ],
+   "see": "한혜진 브이로그 오나오 그릇(그래놀라·블루베리·사과)"
+  },
+  {
+   "at": 4.46,
+   "src": "GUToiiFxo2w_40_125.mp4",
+   "ss": 28.0,
+   "max": 2.7,
+   "crop": [
+    656,
+    120,
+    607,
+    607
+   ],
+   "see": "한혜진 브이로그 — 오트밀에 요거트 넣고 섞는 손(오나오 만들기, 세로 화면 안)"
+  }
+ ],
+ "F1": [
+  {
+   "src": "CDs2bsZG_2Q_1298_1312.mp4",
+   "ss": 5.5,
+   "max": 4.81,
+   "crop": [
+    670,
+    0,
+    620,
+    620
+   ],
+   "see": "한혜진 근접(나래식 1303.5~, 빨강 카디건) — 눈 뜸·정면, 한 컷",
+   "from_piece": 0
+  }
+ ],
+ "B": [
+  {
+   "src": "granola/s6B2_a2HCqo.mp4",
+   "ss": 1.0,
+   "crop": [
+    440,
+    200,
+    1240
+   ],
+   "kind": "제품",
+   "pieces": [
+    4,
+    5
+   ],
+   "seen": "코스트코 진열대 퀘이커 심플리 그래놀라 봉지를 손으로 집음"
+  },
+  {
+   "src": "granola/MF1cy9WBJsY.mp4",
+   "ss": 11.2,
+   "crop": [
+    130,
+    420,
+    1060
+   ],
+   "kind": "제품",
+   "pieces": [
+    6,
+    7,
+    8
+   ],
+   "seen": "요거트 컵 위로 SIMPLY DELICIOUS 봉지에서 그래놀라 붓기"
+  },
+  {
+   "src": "granola/cNAPcWj1GV0.mp4",
+   "ss": 17.2,
+   "crop": [
+    2,
+    440,
+    1400
+   ],
+   "kind": "제품",
+   "pieces": [
+    9,
+    10,
+    11
+   ],
+   "seen": "봉지 뒷면 숟가락 위 그래놀라·아몬드·건포도 그림"
+  },
+  {
+   "src": "granola/ibE9qV529wU.mp4",
+   "ss": 22.5,
+   "crop": [
+    520,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "pieces": [
+    12,
+    13,
+    14
+   ],
+   "seen": "봉지를 열어 그래놀라 덩어리가 보임"
+  },
+  {
+   "src": "granola/s6B2_a2HCqo.mp4",
+   "ss": 8.0,
+   "crop": [
+    440,
+    200,
+    1240
+   ],
+   "kind": "제품",
+   "pieces": [
+    15,
+    16,
+    17
+   ],
+   "seen": "코스트코 매대 SIMPLY GRANOLA 박스 진열"
+  },
+  {
+   "src": "granola/cNAPcWj1GV0.mp4",
+   "ss": 0.2,
+   "crop": [
+    2,
+    440,
+    1400
+   ],
+   "kind": "제품",
+   "pieces": [
+    18,
+    19
+   ],
+   "seen": "QUAKER SIMPLY GRANOLA 앞면 근접(끝 컷)"
+  }
+ ],
+ "src_urls": {
+  "CDs2bsZG_2Q_1150_1200.mp4": "https://www.youtube.com/watch?v=CDs2bsZG_2Q 1150~1200초(나래식 EP.59, HLS 1080p 구간)",
+  "CDs2bsZG_2Q_1298_1312.mp4": "https://www.youtube.com/watch?v=CDs2bsZG_2Q 1298~1312초",
+  "GUToiiFxo2w_40_125.mp4": "https://www.youtube.com/watch?v=GUToiiFxo2w 40~125초(Hyejin Han 본인 채널 EP.01)",
+  "granola/s6B2_a2HCqo.mp4": "https://youtu.be/s6B2_a2HCqo (코스트코 매대 쇼츠, 1440²)",
+  "granola/ibE9qV529wU.mp4": "https://youtu.be/ibE9qV529wU (Quaker Simply Granola … Review, 1080p)",
+  "granola/cNAPcWj1GV0.mp4": "https://youtu.be/cNAPcWj1GV0 (코스트코 퀘이커 심플리 그래놀라 쇼츠, 1080×1920)",
+  "granola/MF1cy9WBJsY.mp4": "https://youtu.be/MF1cy9WBJsY (코스트코 추천템 - 퀘이커 심플리 그래놀라 쇼츠, 1080×1920)"
+ }
+}

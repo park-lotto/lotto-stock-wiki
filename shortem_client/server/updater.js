@@ -9,9 +9,31 @@ import { ENGINE_VERSION } from './license.js';
 import { toolsDir, devMode } from './tools_paths.js';
 import { readZip } from './preset_rent.js';
 import { audit } from './audit.js';
+import { activeRuns } from './engine_bridge.js';
 
 const OK_PATH = /^(server|engine)\/[^\0]+$|^app_version\.json$/;
 export const installDir = () => path.resolve(toolsDir(), '..');
+
+// 멈춘 편을 다시 시도할 때 — 받아 둔 새 판의 engine/ 만 지금 자리에 덮는다. server/ 는 돌고 있으니 다음 켤 때 연결기가 바꾼다.
+//   돌던 편이 없을 때만 부른다(retryFlow 자리). 실패해도 다시 시도는 막지 않는다 — 옛 엔진으로 이어 간다.
+export function applyPendingEngine(home = installDir()) {
+  const pend = path.join(home, '_update', 'pending.json');
+  const mark = path.join(home, '_update', 'engine_now.json');
+  let v;
+  try { v = JSON.parse(fs.readFileSync(pend, 'utf8')).version; } catch { return { applied: false, why: 'no_pending' }; }
+  try { if (JSON.parse(fs.readFileSync(mark, 'utf8')).version === v) return { applied: false, why: 'already', version: v }; } catch { /* 처음 */ }
+  const src = path.join(home, '_update', v, 'engine');
+  if (!fs.existsSync(path.join(src, 'tools', 'calcopy', 'make.py'))) return { applied: false, why: 'no_engine' };
+  fs.cpSync(src, path.join(home, 'engine'), { recursive: true, force: true });
+  fs.writeFileSync(mark, JSON.stringify({ version: v, at: Date.now() }));
+  audit('engine_now', { result: v });
+  return { applied: true, version: v };
+}
+
+export async function retryUpdate() {
+  try { await checkUpdate(); return applyPendingEngine(); }
+  catch (e) { audit('engine_now_fail', { result: String(e && e.message || e).slice(0, 80) }); return { applied: false, why: 'fail' }; }
+}
 
 export async function checkUpdate({ force = false } = {}) {
   if (devMode() && !force) return { skipped: 'dev' };
@@ -38,5 +60,20 @@ export async function checkUpdate({ force = false } = {}) {
   fs.writeFileSync(pend + '.tmp', JSON.stringify({ version: r.version, dir: r.version, at: Date.now() }));
   fs.renameSync(pend + '.tmp', pend);
   audit('update_ready', { result: r.version });
+  applyDownloaded(dir, home, activeRuns().length);
   return { update: true, ready: true, version: r.version };
+}
+
+// 받자마자 엔진을 새 판으로(관제 298, 사장님 '두 번 켜기 없애기'). 엔진은 편마다 새로 뜨는 파이썬이라 다시 켜지 않아도 다음 실행부터 새 판이다.
+//   복사라 묶음은 남고, 다음에 켤 때 연결기가 server 까지 통째로 바꾼다. 만드는 중이면 건드리지 않는다(다음 켤 때).
+export function applyDownloaded(dir, home, running) {   // 관제 304 합치기에서 이름이 겹쳐 프로그램이 안 뜨던 것(같은 이름 export 두 개)을 가른다
+  if (running) return false;
+  try {
+    fs.cpSync(path.join(dir, 'engine'), path.join(home, 'engine'), { recursive: true, force: true });
+    audit('update_engine_now', { result: path.basename(dir) });
+    return true;
+  } catch (e) {
+    audit('update_fail', { result: 'engine_now ' + String(e && e.message || e).slice(0, 70) });
+    return false;
+  }
 }

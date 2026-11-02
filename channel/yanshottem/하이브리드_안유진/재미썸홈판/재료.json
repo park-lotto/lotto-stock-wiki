@@ -1,0 +1,422 @@
+{
+ "A": [
+  {
+   "id": "O1a",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 568.2,
+   "dur": 1.05,
+   "crop_xywh": [
+    760,
+    0,
+    800,
+    800
+   ],
+   "zoom": 1.35,
+   "audio": "원음(본인 말)"
+  },
+  {
+   "id": "O1b",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 570.17,
+   "dur": 2.35,
+   "crop_xywh": [
+    300,
+    0,
+    820,
+    820
+   ],
+   "zoom": 1.32,
+   "audio": "원음(본인 말)"
+  },
+  {
+   "id": "O2a",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 576.22,
+   "dur": 2.86,
+   "crop_xywh": [
+    300,
+    0,
+    900,
+    900
+   ],
+   "zoom": 1.2,
+   "audio": "원음(본인 말)"
+  },
+  {
+   "id": "O2b",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 579.66,
+   "dur": 2.81,
+   "crop_xywh": [
+    330,
+    40,
+    820,
+    820
+   ],
+   "zoom": 1.32,
+   "audio": "원음(본인 말)"
+  },
+  {
+   "id": "F1",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 591.1,
+   "crop_xywh": [
+    560,
+    0,
+    880,
+    880
+   ],
+   "zoom": 1.23,
+   "audio": "무음(나레)"
+  },
+  {
+   "id": "F1b",
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 586.0,
+   "crop_xywh": [
+    480,
+    0,
+    880,
+    880
+   ],
+   "zoom": 1.23,
+   "audio": "무음(나레)"
+  }
+ ],
+ "B": [
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 0.1,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 0.10000000000000142,
+   "t1": 0.8480000000000008,
+   "pieces": [
+    3
+   ],
+   "seen": "바닐라 캐시미어 병을 들고 얘기하는 여성(eos 공식 UGC)",
+   "frames": 22,
+   "dur": 0.733,
+   "src_end": 0.833,
+   "t0_final": 13.3,
+   "t1_final": 14.048
+  },
+  {
+   "src": "rv/DA9gTpGjyJE.mp4",
+   "ss": 164.2,
+   "crop": [
+    960,
+    260,
+    1180
+   ],
+   "kind": "제품",
+   "t0": 0.8480000000000008,
+   "t1": 2.0360000000000014,
+   "pieces": [
+    4
+   ],
+   "seen": "탁자 위 같은 병(펌프)",
+   "frames": 36,
+   "dur": 1.2,
+   "src_end": 165.4,
+   "t0_final": 14.048,
+   "t1_final": 15.236
+  },
+  {
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 6.43,
+   "crop": [
+    440,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 2.0360000000000014,
+   "t1": 2.8919999999999995,
+   "pieces": [
+    5
+   ],
+   "seen": "펌프를 눌러 손바닥에 흰 로션",
+   "frames": 26,
+   "dur": 0.867,
+   "src_end": 7.297,
+   "t0_final": 15.236,
+   "t1_final": 16.092
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 19.8,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 2.8919999999999995,
+   "t1": 4.067,
+   "pieces": [
+    6,
+    7
+   ],
+   "seen": "팔꿈치에 로션을 문질러 펴 바름",
+   "frames": 35,
+   "dur": 1.167,
+   "src_end": 20.967,
+   "t0_final": 16.092,
+   "t1_final": 17.267
+  },
+  {
+   "src": "rv/05DTFG-e_CU.mp4",
+   "ss": 218.3,
+   "crop": [
+    800,
+    0,
+    1440
+   ],
+   "kind": "제품",
+   "t0": 4.067,
+   "t1": 5.66,
+   "pieces": [
+    8,
+    9
+   ],
+   "seen": "손가락에 묻은 로션을 문질러 펴 바름(제형)",
+   "frames": 48,
+   "dur": 1.6,
+   "src_end": 219.9,
+   "t0_final": 17.267,
+   "t1_final": 18.86
+  },
+  {
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 7.6,
+   "crop": [
+    600,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 5.66,
+   "t1": 7.359000000000002,
+   "pieces": [
+    10,
+    11
+   ],
+   "seen": "로션 바른 손을 코에 대고 향 맡기",
+   "frames": 51,
+   "dur": 1.7,
+   "src_end": 9.3,
+   "t0_final": 18.86,
+   "t1_final": 20.559
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 7.1,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 7.359000000000002,
+   "t1": 8.079,
+   "pieces": [
+    12
+   ],
+   "seen": "병을 든 채 눈 감고 웃음",
+   "frames": 21,
+   "dur": 0.7,
+   "src_end": 7.8,
+   "t0_final": 20.559,
+   "t1_final": 21.279
+  },
+  {
+   "src": "eos/eos_HOGLbtiiFZE.mp4",
+   "ss": 10.97,
+   "crop": [
+    650,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 8.079,
+   "t1": 9.065000000000001,
+   "pieces": [
+    13
+   ],
+   "seen": "로션 바른 뒤 어깨를 드러내고 웃음(eos 공식, 글자 없는 샷)",
+   "frames": 30,
+   "dur": 1.0,
+   "src_end": 11.97,
+   "t0_final": 21.279,
+   "t1_final": 22.265
+  },
+  {
+   "src": "eos/eos_HOGLbtiiFZE.mp4",
+   "ss": 12.95,
+   "crop": [
+    60,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 9.065000000000001,
+   "t1": 10.487000000000002,
+   "pieces": [
+    14,
+    15
+   ],
+   "seen": "eos 공식 병 정면(오른쪽 'dessert for your skin' 글자 밖)",
+   "frames": 43,
+   "dur": 1.433,
+   "src_end": 14.383,
+   "t0_final": 22.265,
+   "t1_final": 23.687
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 21.7,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 10.487000000000002,
+   "t1": 12.275000000000002,
+   "pieces": [
+    16,
+    17
+   ],
+   "seen": "바닐라 캐시미어 병을 들고 얘기하는 여성(원본 컷 21.60 뒤)",
+   "frames": 53,
+   "dur": 1.767,
+   "src_end": 23.467,
+   "t0_final": 23.687,
+   "t1_final": 25.475
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 25.1,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 12.275000000000002,
+   "t1": 13.879000000000001,
+   "pieces": [
+    18,
+    19
+   ],
+   "seen": "선반에 줄지은 24H 바디로션들 — 맨 앞 바닐라 캐시미어",
+   "frames": 48,
+   "dur": 1.6,
+   "src_end": 26.7,
+   "t0_final": 25.475,
+   "t1_final": 27.079
+  },
+  {
+   "src": "rv/DA9gTpGjyJE.mp4",
+   "ss": 168.5,
+   "crop": [
+    960,
+    260,
+    1180
+   ],
+   "kind": "제품",
+   "t0": 13.879000000000001,
+   "t1": 15.733,
+   "pieces": [
+    20,
+    21
+   ],
+   "seen": "탁자 위 같은 병(다른 각도, 앞 컷 165.2 와 3초+ 떨어짐)",
+   "frames": 56,
+   "dur": 1.867,
+   "src_end": 170.367,
+   "t0_final": 27.079,
+   "t1_final": 28.933
+  },
+  {
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 595.2,
+   "crop": [
+    620,
+    0,
+    880
+   ],
+   "kind": "원본",
+   "t0": 15.733,
+   "t1": 17.382,
+   "pieces": [
+    22,
+    23
+   ],
+   "seen": "침대에서 머리를 넘기며 말하는 안유진(원본 컷 594.33 뒤, 아래 '[나른나른]' 자막 y≈900 밖, 소리 없음)",
+   "frames": 49,
+   "dur": 1.633,
+   "src_end": 596.833,
+   "t0_final": 28.933,
+   "t1_final": 30.582
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 15.0,
+   "crop": [
+    0,
+    170,
+    930
+   ],
+   "kind": "제품",
+   "t0": 17.382,
+   "t1": 18.157,
+   "pieces": [
+    24
+   ],
+   "seen": "병 근접('vanilla cashmere' 라벨)",
+   "frames": 24,
+   "dur": 0.8,
+   "src_end": 15.8,
+   "t0_final": 30.582,
+   "t1_final": 31.357
+  },
+  {
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 1.5,
+   "crop": [
+    250,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 18.157,
+   "t1": 20.179,
+   "pieces": [
+    25,
+    26
+   ],
+   "seen": "병을 들어 보임(끝 컷)",
+   "frames": 60,
+   "dur": 2.0,
+   "src_end": 3.5,
+   "t0_final": 31.357,
+   "t1_final": 33.379
+  }
+ ],
+ "src_urls": {
+  "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4": "https://youtu.be/8o3M3DmY05E (IVE '[IVE LOG] 강아지 가방 최초(?) 공개 in WORLD TOUR | 윶 LOG' 2026-09-17, 1080p)",
+  "eos/eos_JugmExyy4Qg.mp4": "eos Products JugmExyy4Qg 'the eos body lotion you NEED!' 720×1270 — 화면 글자 없음",
+  "rv/OBp8bB4AEvo.mp4": "TerraTested OBp8bB4AEvo 'I was seriously surprised by this EOS body lotion.' 1080p",
+  "eos/eos_HOGLbtiiFZE.mp4": "eos Products HOGLbtiiFZE 'That OG Vanilla' 1080p",
+  "rv/05DTFG-e_CU.mp4": "That vivian 05DTFG-e_CU 'EOS vanilla cashmere Body Lotion Review' 1440p",
+  "rv/DA9gTpGjyJE.mp4": "Khan Product Reviews DA9gTpGjyJE 'EOS Vanilla Cashmere Lotion Review' 1440p",
+  "eos/eos_85AU_3DohFs.mp4": "eos Products 85AU_3DohFs 'Vanilla Cashmere Trifecta' 1080p"
+ },
+ "audio_rule": "B 재료 원음 전부 끔(-an). A 원음 = 안유진 말만(O1a·O1b·O2a·O2b, IVE 편집 BGM 은 원음 밑에 같이 깔림 — 사람 말 아님)."
+}

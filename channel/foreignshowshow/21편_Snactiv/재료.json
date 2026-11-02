@@ -1,0 +1,821 @@
+{
+ "_note": "샥탬스토리 21편 Snactiv 재료 계획. 창 1080x1052(벤치 jo1QTw7GCWs, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(nlVhx46TQFg_audio.m4a).",
+ "sources": {
+  "nlVhx46TQFg": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "Kevin Vs Kevin In A Deal For Snactiv | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 519.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(126~134·287~292·324~334·356~359·384~389·402초) 안 씀 · 489초 뒤 끝 화면 안 씀 · 티셔츠·상자 'SNACTIV' = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "손가락에 끼우는",
+  "line2": "젓가락이 있다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 174.98,
+   "audio_dur": 1.4,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    104.25,
+    105.65
+   ],
+   "ss": 104.25,
+   "dur": 1.4,
+   "t_final_est": [
+    0.0,
+    1.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "진열대 위 스낵티브 상자 세 개 — 가운데 빨간 스낵티브 상자(원본 샷 104.20~105.77, 사람 없음 · 소리 = 투자자 원음 'You might be my next husband.' cover, 말한 사람은 화면 밖 · 107초 노트북 컷은 물건이 입으로 가 얼굴 겹침 거절)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    32.2,
+    34.104
+   ],
+   "ss": 32.2,
+   "dur": 1.904,
+   "t_final_est": [
+    1.4,
+    3.3
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    490,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "노트북 앞에서 맨손으로 과자를 집어 먹는 창업자(원본 샷 31.60~36.10, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    38.4,
+    40.23
+   ],
+   "ss": 38.4,
+   "dur": 1.83,
+   "t_final_est": [
+    3.3,
+    5.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    208,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "과자 묻은 손으로 노트북을 만지는 창업자(샷 37.80~42.44, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 46.76,
+   "audio_dur": 1.12,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    46.76,
+    47.88
+   ],
+   "ss": 46.76,
+   "dur": 1.12,
+   "t_final_est": [
+    5.13,
+    6.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    582,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "동료 창업자가 과자 묻은 손을 보고 질색(원본 샷 44.04~47.91, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 47.94,
+   "audio_dur": 0.7,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    47.94,
+    48.64
+   ],
+   "ss": 47.94,
+   "dur": 0.7,
+   "t_final_est": [
+    6.25,
+    6.95
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    66,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자 — 이어서 말함(샷 47.91~48.82, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    89.55,
+    91.642
+   ],
+   "ss": 89.55,
+   "dur": 2.092,
+   "t_final_est": [
+    6.95,
+    9.05
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자가 손가락에 낀 스낵티브를 들어 보임(원본 샷 89.46~91.86, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    92.0,
+    93.58
+   ],
+   "ss": 92.0,
+   "dur": 1.58,
+   "t_final_est": [
+    9.05,
+    10.63
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "손가락에 낀 흰·검정 스낵티브 근접(샷 91.86~93.76, 얼굴은 크롭 밖, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 105.57,
+   "audio_dur": 3.65,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    113.15,
+    116.8
+   ],
+   "ss": 113.15,
+   "dur": 3.65,
+   "t_final_est": [
+    10.63,
+    14.28
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    662,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "스낵티브 낀 채 과자를 먹고 노트북을 치는 창업자(원본 샷 113.08~116.88 — 소리 = 다른 창업자 원음 cover, 같은 시연)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 109.22,
+   "audio_dur": 1.39,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    118.2,
+    119.59
+   ],
+   "ss": 118.2,
+   "dur": 1.39,
+   "t_final_est": [
+    14.28,
+    15.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "스낵티브로 과자를 집는 창업자(샷 118.18~120.29, 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    98.0,
+    99.388
+   ],
+   "ss": 98.0,
+   "dur": 1.388,
+   "t_final_est": [
+    15.67,
+    17.05
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 탁자에서 스낵티브를 시연하는 두 창업자(원본 샷 97.86~101.53, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    23.05,
+    25.479
+   ],
+   "ss": 23.05,
+   "dur": 2.429,
+   "t_final_est": [
+    17.05,
+    19.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    119,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대에 선 두 창업자(샷 22.99~27.36, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 145.5,
+   "audio_dur": 1.52,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    144.1,
+    145.62
+   ],
+   "ss": 144.1,
+   "dur": 1.52,
+   "t_final_est": [
+    19.48,
+    21.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    325,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자가 스낵티브로 과자를 집음 — 손 근접(원본 샷 144.08~146.65, 말하는 본인 손 · 소리 = 이 줄 원음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O5",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 147.02,
+   "audio_dur": 0.98,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    147.02,
+    148.0
+   ],
+   "ss": 147.02,
+   "dur": 0.98,
+   "t_final_est": [
+    21.0,
+    21.98
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    612,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "게스트 샤크가 웃으며 말함(원본 샷 146.65~148.01, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "N4",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    241.0,
+    243.626
+   ],
+   "ss": 241.0,
+   "dur": 2.626,
+   "t_final_est": [
+    21.98,
+    24.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    457,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "해외 판매 계획을 말하는 창업자(원본 샷 240.94~246.05, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N4",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    246.1,
+    247.326
+   ],
+   "ss": 246.1,
+   "dur": 1.226,
+   "t_final_est": [
+    24.61,
+    25.84
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    421,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 — 듣는 투자자(샷 246.05~247.58, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "N5",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    339.35,
+    341.285
+   ],
+   "ss": 339.35,
+   "dur": 1.935,
+   "t_final_est": [
+    25.84,
+    27.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    567,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "게스트 샤크가 제안을 말함(원본 샷 339.31~342.94, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N5",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    367.15,
+    368.131
+   ],
+   "ss": 367.15,
+   "dur": 0.981,
+   "t_final_est": [
+    27.77,
+    28.75
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    433,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 말함(샷 367.10~369.00 — 359.9 샷은 제안 띠라 뺌, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "O6",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 412.45,
+   "audio_dur": 0.88,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    412.45,
+    413.33
+   ],
+   "ss": 412.45,
+   "dur": 0.88,
+   "t_final_est": [
+    28.75,
+    29.63
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자가 제안을 받음(원본 샷 411.41~413.55, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O7",
+   "kind": "원음",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": false,
+   "audio_src": "nlVhx46TQFg_audio.m4a",
+   "audio_ss": 485.05,
+   "audio_dur": 1.2,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    485.05,
+    486.25
+   ],
+   "ss": 485.05,
+   "dur": 1.2,
+   "t_final_est": [
+    29.63,
+    30.83
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    446,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 웃으며 말함(원본 샷 483.68~486.72, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "N6",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    441.0,
+    443.213
+   ],
+   "ss": 441.0,
+   "dur": 2.213,
+   "t_final_est": [
+    30.83,
+    33.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    654,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤에서 기뻐하는 두 창업자(원본 샷 440.61~447.98, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "N6",
+   "kind": "나레",
+   "src": "nlVhx46TQFg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg",
+   "src_orig_span": [
+    448.25,
+    449.909
+   ],
+   "ss": 448.25,
+   "dur": 1.659,
+   "t_final_est": [
+    33.04,
+    34.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤 인터뷰하는 두 창업자(샷 448.21~457.12, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/21편_Snactiv/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    376,
+    535,
+    619,
+    1106
+   ],
+   "target_what": "진열대 가운데 빨간 스낵티브 상자 — 104.4초 원본 프레임 눈 측정(창 크롭 [406,0,1108,1080] 안 x 386~636·y 104~690, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    498,
+    820
+   ],
+   "size": 693,
+   "face_clear": true,
+   "target_box": [
+    376,
+    535,
+    619,
+    1106
+   ],
+   "target_path": [
+    [
+     0.0,
+     376.0,
+     535.0,
+     619.0,
+     1106.0
+    ],
+    [
+     0.067,
+     376.3,
+     534.7,
+     619.3,
+     1105.7
+    ],
+    [
+     0.133,
+     376.7,
+     534.3,
+     619.7,
+     1105.3
+    ],
+    [
+     0.2,
+     377.0,
+     533.7,
+     620.0,
+     1104.7
+    ],
+    [
+     0.267,
+     375.7,
+     530.3,
+     622.0,
+     1109.0
+    ],
+    [
+     0.333,
+     374.3,
+     526.3,
+     624.0,
+     1112.7
+    ],
+    [
+     0.4,
+     373.0,
+     522.0,
+     626.0,
+     1116.0
+    ]
+   ],
+   "track_conf": 0.876,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.876 · 원 693px = 물건 반대각선 323×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 4.5 '게임하면서 과자를 먹고 싶은데'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 8.0 '이걸 중지와 약지 사이에'"
+  },
+  {
+   "line": "O3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 10.5 '완벽하게 자유로워 집니다'"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 13.0 '이걸 끼고서도'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "O6",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 42.0 '거래할게요'"
+  }
+ ]
+}

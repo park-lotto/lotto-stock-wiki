@@ -1,0 +1,16 @@
+{
+ "src": "v_stwtJyFQyKg.mp4",
+ "ss": 12.0,
+ "to": 15.5,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.87,
+   "text": "[gasp]",
+   "ko": "[숨을 헐떡임]",
+   "abs_start": 12.0,
+   "abs_end": 14.87
+  }
+ ]
+}

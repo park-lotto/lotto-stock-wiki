@@ -1,0 +1,343 @@
+{
+ "made_by": "quality_gate.plan_frames_check",
+ "min_sim": 0.97,
+ "rows": [
+  {
+   "k": 0,
+   "line": "N1",
+   "src": "mp_ig.mp4",
+   "ss": 71.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9974,
+    0.9975,
+    0.9976
+   ],
+   "why": null
+  },
+  {
+   "k": 1,
+   "line": "N1",
+   "src": "mp_ig.mp4",
+   "ss": 3.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9974,
+   "sims": [
+    0.9973,
+    0.9975,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 2,
+   "line": "O1",
+   "src": "mp_ig.mp4",
+   "ss": 32.714,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9973,
+    0.9973,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 3,
+   "line": "N2",
+   "src": "mp_ig.mp4",
+   "ss": 25.562,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.997,
+   "sims": [
+    0.9972,
+    0.997,
+    0.9969
+   ],
+   "why": null
+  },
+  {
+   "k": 4,
+   "line": "N2",
+   "src": "mp_ig.mp4",
+   "ss": 41.333,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9973,
+    0.9972,
+    0.9973
+   ],
+   "why": null
+  },
+  {
+   "k": 5,
+   "line": "O2",
+   "src": "mp_ig.mp4",
+   "ss": 37.767,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9974,
+   "sims": [
+    0.9974,
+    0.9974,
+    0.9973
+   ],
+   "why": null
+  },
+  {
+   "k": 6,
+   "line": "N3",
+   "src": "mp_ig.mp4",
+   "ss": 46.1,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9974,
+    0.9976,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 7,
+   "line": "N3",
+   "src": "mp_ig.mp4",
+   "ss": 21.108,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9973,
+    0.9973,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 8,
+   "line": "O3",
+   "src": "mp_ig.mp4",
+   "ss": 50.622,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9975,
+    0.9973,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 9,
+   "line": "N4",
+   "src": "mp_ig.mp4",
+   "ss": 55.433,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9975,
+    0.9974,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 10,
+   "line": "N4",
+   "src": "mp_ig.mp4",
+   "ss": 56.967,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.9972,
+    0.9972,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 11,
+   "line": "O4",
+   "src": "mp_ig.mp4",
+   "ss": 58.146,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.9972,
+    0.9972,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 12,
+   "line": "N5",
+   "src": "nw.mp4",
+   "ss": 20.2,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9972,
+    0.9973,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 13,
+   "line": "N5",
+   "src": "nw.mp4",
+   "ss": 22.033,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9973,
+    0.9975,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 14,
+   "line": "N5",
+   "src": "nw.mp4",
+   "ss": 23.133,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9976,
+    0.9975,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 15,
+   "line": "O5",
+   "src": "nw.mp4",
+   "ss": 24.633,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.9971,
+    0.9975,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 16,
+   "line": "N6",
+   "src": "nw.mp4",
+   "ss": 29.95,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9973,
+    0.9972,
+    0.9973
+   ],
+   "why": null
+  },
+  {
+   "k": 17,
+   "line": "N6",
+   "src": "nw.mp4",
+   "ss": 31.72,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9974,
+   "sims": [
+    0.9974,
+    0.9974,
+    0.9973
+   ],
+   "why": null
+  },
+  {
+   "k": 18,
+   "line": "N7",
+   "src": "mp_ig.mp4",
+   "ss": 16.2,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9971,
+    0.9973,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 19,
+   "line": "N7",
+   "src": "mp_ig.mp4",
+   "ss": 66.7,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9975,
+   "sims": [
+    0.9975,
+    0.9975,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 20,
+   "line": "N8",
+   "src": "mp_ig.mp4",
+   "ss": 9.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9973,
+   "sims": [
+    0.9971,
+    0.9973,
+    0.9973
+   ],
+   "why": null
+  }
+ ],
+ "screen": "base.mp4(자막 전 완성 화면)"
+}

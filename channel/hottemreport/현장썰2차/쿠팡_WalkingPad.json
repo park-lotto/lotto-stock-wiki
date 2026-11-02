@@ -1,0 +1,120 @@
+{
+ "워킹패드": {
+  "search_url": "https://www.coupang.com/np/search?q=%EC%9B%8C%ED%82%B9%ED%8C%A8%EB%93%9C",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8859610183",
+    "name": "엑사이더 접이식 런닝머신, EW504, 화이트",
+    "url": "https://www.coupang.com/vp/products/8859610183",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8859610183&itemId=25834337380&vendorItemId=93690745094&traceid=V0-153-60bfb089c132beb1&clickBeacon=b2260790-ce23-11f1-9732-acd65fb42348%7E3&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=1&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/MWN_IrIjDwr16MJIMQBfMMVHBwKUvn23TK6fcPmUGkZl48G1o-lTrChZTFkotxNbDmia0LEcPCCKGbCrEvAYUkHEjI01JPSByX-LWrAZfnsm4mpffcS6SW-WoyGIksW8LAh5JoZYEqQ7u-RAy47HgnZAd6a2Dv6GRI0oR7JS3-hzHbTE0b96b0b7VP7O0ks5eOdVMPcpCxN4B3ANqBXhXv07bbJJLkWfkpVY7XkzVXu61dCzgvyGGrGwSBgyQEYTWLkzb6bCrUZwiJKiTKlFGEZoAsxb-NEp3xSuTma3J5MLKAwfsg1AP5fRA39EAiEQRk6WefmxbyZZs-d0N0YHsZKd-9-AEGnchkgjedBHQXgrKDr2kWyTIy9kfgzP4fhoI7YtJvQOqSiYIO49dL5OXboG8bjP5mEmMPozqLXPQS_qyiWhSwMMESWIB-GuwbaM_Y9xVlOP7zl8SmC7wp7-XNQeskbSZ0WZizBIP_62qMIaNYPrEeYfIWIn23LCtwHzHGRP52ZgHIbs",
+    "price": "298,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9037671646",
+    "name": "덱소나 가정용 트레드밀 런닝머신 접이식 워킹패드 무동력 실내러닝 인클라인, DX PRO [블루]",
+    "url": "https://www.coupang.com/vp/products/9037671646",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9037671646&itemId=26515219781&vendorItemId=93489662065&traceid=V0-153-e0ecb4fec39422b7&clickBeacon=b2260790-ce23-11f1-ad83-58a975b51eed%7E3&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=1&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/JRZUJ1BVnkU5JLwcJcChPfFsZCBIdf8hxwrQPUCSxrmGhQ2GE3Po-CsHD8OzdiI__RNYgoiVvxY89C2gmbqzMVFjxVJEXKbbefduz_eArwLAcOIOWH7aPELBmZBNoc3oKjilqWQMPFnV6gK1__6FmdcK4diA7UFMtfwGuqgHJgje8zZGPgWmIw5J3TI8h5Cz9SdF4_aqJr9mgpGGYzpH6cJxJZUoNWx9RQ2zE842Xtw4WtexC48JzO5D8IzvBakIaVCDb_lnyaDQJItxAqdG9GeeCzD38qtOTcapw7Vb7T-4jpf93lUdG0Faq1P5paxKeL6nxw1lIzv0VYXJoNuUN_vFi7ypXR9mZ-_O-7PNG16ugPbn-3QPOBni_p6ppgbyCgGKA8FVXz8VABiS3hCHCa_tp0BqE1WrULEZj4fHkMUIuf1OV4v3inMa-NkSY8Ps4HaQhQ4e0QaURmv1JsqSSJ0iLoyfSwL6efoIX2qzuvNH1gj5k5a-qYuKWI7OyuFFRNpn2mpJyAi568x6AzjcRaXpwD1-uAo=",
+    "price": "159,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9333635312",
+    "name": "가란스포츠 무동력 워킹패드 접이식 워킹머신, 화이트, OTM-1",
+    "url": "https://www.coupang.com/vp/products/9333635312",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9333635312&itemId=27675195585&vendorItemId=94657648453&traceid=V0-153-060bcd947582d44c&clickBeacon=b2260790-ce23-11f1-bd07-2f67ea9af330%7E3&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=1&slot=3",
+    "image": "https://ads-partners.coupang.com/image1/w1OgLSx6v-Nkha5Sw-4cju7pMtavlX0szemALKaRGzy2sasaDE-f_8ZIWMoHKWJR3q6a22NwpM4lN1vzcI6YMLSKk4T8WJyoCsJLN-cVnI8Ll_wknV4OFVdorKJHbWCadrTHIyFVc-HNx0JRr78MAuuFXMU9jEaxTuo94Agj6HL4QqdrVABTnqSzaPN3KRGb3aYoiZmq0YkLb10Ox2IlNE24-zPi_w2_qiQivM-_-QkaQy7pQAGkEHns9-lH5ndHgHnT8oX3E4UccJJyrq6IdJGa4pIVehaq0YM9Y2DuSvNvNfxaAFr8BN0spHPvQ4tyYR3BwChz_46CGqSx7x19aylgO4E6MI3PA3VvSFIVtVFMgAc8kwa879ky5iIrx-XPM7vtL2AC1ajZBcxl1fTd6tA4nKMpe-OA5nlGdRHU_9Um9BSY-6Fsepwl_2IqRx95EXEklKSkQ6aPmGdOGqAp9ZSX_8d-rs1qiJtQWjrB8aEQIMHn1NIZCdL512KrhGbOru59cZIsRbf886s_xQHQWo87ibsCpJ-PbQ==",
+    "price": "164,300원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9333635312",
+    "name": "가란스포츠 무동력 워킹패드 접이식 워킹머신, 화이트, OTM-4",
+    "url": "https://www.coupang.com/vp/products/9333635312",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9333635312&itemId=27675195584&vendorItemId=94657648455&traceid=V0-153-060bcd947582d44c&clickBeacon=b2260790-ce23-11f1-a901-52caa76c427d%7E3&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=1&slot=4",
+    "image": "https://ads-partners.coupang.com/image1/XpDO__85VnaGy9ksXt9wPS3_u5p5u1LLv43x7p4mSv0hEQJ_9xbVnbsGgCLX6W0qkiZjk7H3Fko8s8vxcY_-gxIEiPFJZeFgw1ZZhbsGFNKEfWxgnkLzG0FzqiGN4MJFo5xBY1rxb8opsZBUEiq6f0FRIRjIpClzkcnWXOqD3YoEPotdz_IkCg5ezyf6acdFNDU90sVbwttZf57djjOYr97T8u4ljN-FWQhCzfwwA2V32oaArkC98JLXFyIwgBdhgoKj3bFAQsiSGARDhA2rtlruw-UJ6UCHaO6_bc0-q4VGsxSwiwPDJAXfYS2DaTyvf2SUuamuRtkLPk_TZeroWCJXuEF4nVigGdoYjKTO90aDEJEEg0yChJh4jh30XhsdHPR0jLX2Cdk9IHVuh9jkyjUbQmk9JH8-Y5WMAzQ5kr3tlEHAYIKlQlA-OtMOrecxdhiTzISHMnDp84pDdk4k-TvBaRLY7lCOk1KnZA-qpoK8E2O2y_LwVL0kRXMct9dTaS6WVKYHiDk_zExoM_pD9OccF8j-ewhb",
+    "price": "185,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9684793745",
+    "name": "맥스코어 가정용 런닝머신 접이식 워킹패드 워킹머신 실내 미니 헬스 홈트 홈러닝 러닝 기계, 화이트, X3",
+    "url": "https://www.coupang.com/vp/products/9684793745",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9684793745&itemId=28962161197&vendorItemId=95892268562&traceid=V0-153-7ecdd1648fe310f9&clickBeacon=b2260790-ce23-11f1-aeaf-628b6d517971%7E3&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=1&slot=5",
+    "image": "https://ads-partners.coupang.com/image1/-PgE-Rf2_fp7R_ba-Ky5ogmwJ2TxrU4beS-Om91cOfGuxLGzhVYYGnlonMKrQT0YT2uM8QFDnhBDPNJFeVRh-dhMvYRUaFNfo69pFCVDTRC4m09rIU4iHtz0PYYTocKZDCcE-P40zYlgNjYtNIuIqGbxSE2-Nk0OMLWhaqEUSUJfcRZPkI8yaMooaRmAa3bw4eSljrw8ZjdAihRJhmQn8eiquBEGQLuLKCcZB9St8aLw2afE5Ym86SRwXuEP6rIgO9t3-OM2qQKXJeoUzG4lhLQvUeVikeyrLFgNuE3q9kxvJpnKY_bgX8WUgTYtTBP4-el_zJh23VA2xMbckbKxE_Y01av3wxRs09E7cPyBX_GfxcU6haTMI-zpANZJ0lMJr_IYVv_fUBAo_RJTlrd_6hpAe7fD9q_F0j9dln8B1iamnijVayfuaTTFh85aU5KpZE0_1oR_MwgvbhWaGUmF--HCaAbLcuEo0UNkAthBx-L3Ki14SfTUDaIs9tAtsiit2mTWJed1eZYYoNBFlxtbYTfkhN7EiriLxg==",
+    "price": "342,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9616436847",
+    "name": "멜킨스포츠 나들이온 오리진 워킹패드 고객직접설치",
+    "url": "https://www.coupang.com/vp/products/9616436847",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9616436847&itemId=28713843167&vendorItemId=95654529044&traceid=V0-153-193afb074e92632e&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=0&slot=6",
+    "image": "https://ads-partners.coupang.com/image1/ROkH2rKau84ID9VXRN_RPbTgMvZh4EyBbpZkXOZzDHdBdqeE-mZmHAnh1YWmjF-3HLXqzSMWBb6nDshbna6-fm2osh5UPjBq6A8qmmw57q1nwfc6y9qOVji0BI36PXyKDJ7UJc80124xjyVaVBNZu5CAKMellAceXbUrpFoCd67ETPPrDoypFBii6khvVLwCHZedUfxZT-JGSz3aqQbG6WCciAzQMScBjxwLFOIvlZn5NkQBjEmrQk8hMwj3CqFq0I9vpmPDpnTIEKXCQhfGNr83QYSYfVnprFMh7jTxEw-KiT44iattpgT7rEaFD4XR2e4rGM0k420t4Nh4LIVmvPDdNQSe3IDyYnzrxYlFeUddQP6kmWBO7D9WW87zG41sh33cMfYUV4C20K29QPVeOylYk-R8mjCLHrnV7aIXj9IL5VtbdFnufguywM-jNjaLv0ewyTKlb6e_Dlvchg_jC-_TxyUhclLOr28oM_2l7IIjeOpFLCJ8p4lu9BTk0r5FWnpPInWRAEMMDzd65gWWOnIkiPg=",
+    "price": "266,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9021556523",
+    "name": "스포틀러 애슬레틱 워킹머신",
+    "url": "https://www.coupang.com/vp/products/9021556523",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9021556523&itemId=27830759352&vendorItemId=94992962073&traceid=V0-153-3fee8fdc532a132c&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=0&slot=7",
+    "image": "https://ads-partners.coupang.com/image1/q0BZpRnIRlXmob0pqymjNJDy6AQQ4HYFObm64fA7mVXfDM-OPyXPAu-hCaZqhWdR4GrFgnzIsKH-x9DIWQaVHOPD6JBC6ISVzlMxKVXazrg1ZIniqFg80ghnY_3kuunL_lmSiR8UeJ1mpSdcBZh04-T9rgxNpvzDL_2Yblb873ZYGCMtYj5MGsAZMFDZODHMNEuvJilliYeHfIkRt_VFi2wJATF_omJ-QvsGrNVVodk4l-qaCAdfnq3X8-MftDuwmZ2pRQCsAvYqgfL-g7HcndyTs5GVeZ89DbDmA2x5bqkNJ7jhhHGg16AhVbip2fKkgL2SB1CB27F6INXymDFaMWS55EiwPXMpxLG1zKWn915B_EAS4k30JzdHkaEIt1sP2LOff-63ayDzvjjG7HKb74t_c3zlvIW72Whs6qMJdcWVM0FPUE6tTeIB8LXG0oW1HYNvv4XAEZpTBhh6axRmaJXv0VAw-DmA1lTKo-U0sXVo-E3wyo1rtgFPNfPF3ULixSlrrIBFXV6vmjI=",
+    "price": "279,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "7366337236",
+    "name": "킹스미스 워킹패드 C2 홈트 실내 운동기구 가정용 워킹머신 저소음 접이식 런닝머신",
+    "url": "https://www.coupang.com/vp/products/7366337236",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=7366337236&itemId=18990544655&vendorItemId=85653989575&traceid=V0-153-361fc3b23d61f235&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=0&slot=8",
+    "image": "https://ads-partners.coupang.com/image1/82yO2zxiR--8XKCw8wHmGLVXX5SS8LZ-4tsv4AqTRqWdO7OyTbhpRnfot1rVsDjNLljUW_o7XGDU0PfGW_qR7HskikytG8pdTnojcYLbEmE2UzxbeTGXQZNU_pUMwEzNYE5EgIXnSXabvW3KspoM57EJBf-_Xd6m5k4Im0EtjbWuCzhAnZEMZ_1w35iSPbgRhoDcU-j2apsW22cfAd_PDuthMPP12imkzfLp71OY5bLVBRegnuxJKr9PvpwgzD5L2xJ-BrWdD1Ig3cjOTN45Cs7SfBxzyla3fUrNjeh0E_m3E7MuGCAN5Kx1rOTSMPOaBj7zZ7Uy_bzEk_atzfdQVyGkpXeoHHXZL5ooJO77JM5az-kDSmP629y9HAr1OmzNzqCtPuhCFNGASs9heaXijao-LSRUUllEXS5kZ2TCO_uTdGjgZ9mtfBbV1YDHf1W7MRdpwWPCoiV_to9tHdLCNdQKwuIsUKG_EGnQAhq4S2jMokhSfBJ-HZ6p70jnSP1DBiNhF-kXoWW83Sn6qXXqhQApZY_-OXB59SOwIfYKPjt9jg==",
+    "price": "385,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "6340544709",
+    "name": "두스룬  접이식 워킹머신 접이식 런닝머싱  가정용",
+    "url": "https://www.coupang.com/vp/products/6340544709",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=6340544709&itemId=13299487185&vendorItemId=91421905549&traceid=V0-153-a49940086f7f6542&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=0&slot=9",
+    "image": "https://ads-partners.coupang.com/image1/tLq8Jk-OO9OXv9jdtD5aBmejlYQikSEzdg35H1aSsxtMMrmoHs0mTvNTIJAGmt93Gt6Dc-_TUyeRf_qV4lJGikk4Lv9d-Kt3-IP4FJiHFZNdQqnbLkHU974HJb4KZOY174CeTDOSjDfEmviObgX9bMLMnLbAZL1Lhu5zdzE6ZVrEwdUssDfyhiVnbLDbjtcgVadrYIzs8yzdabWSUYgIeFHyPxRSiWFc5WUDfXmd0b6oMMRyLwScEOYPB8J_jK1N64kk4mco2gtyY-Q4Q01duWcy1NsnvFqD43rlPiA5L7QJ-cdI9JHWPAEWmBc_5_2Mmcha9NXXk86Z0rMYy8jZq2ISXxPtLMy-1gt4sy4zJo0daBAbl670r9tdotpXfpUX-hZMiV8CsGw44WA2LakiNeJCIjR3dcH19JkYrB9-6nAiBSUxFOChfit5g8Dcvz3Oi2Qxh3Vb2onIbANHSHsGyNYnr3Y4ROvNp4Dyp75eHORbqc1cl5RVJwo1cAdyJMi_GKJO5zBhWraXGUH4IIKxwtMj8VMLAl7oeWtsrY-7hZw2ww==",
+    "price": "187,160원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9616436847",
+    "name": "멜킨스포츠 나들이온 오리진 워킹패드 고객직접설치",
+    "url": "https://www.coupang.com/vp/products/9616436847",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9616436847&itemId=28713843164&vendorItemId=95654529036&traceid=V0-153-193afb074e92632e&requestid=20261022232013276111142118&token=31850C%7CMIXED&pt=0&slot=10",
+    "image": "https://ads-partners.coupang.com/image1/kQhnd_65-e6eNo4NkfeApq_PKFgkp5xOPwf3GW-LHK6KAx0L8HENbHr7Y888yKVnC98iWoV88hxJVIHVtYls_5ADtnqTE7yBODWaidw1buOhT1xwQSWovLAMC-Md06bl6uBQOqEz7LIA4flHU8GaWHHf4IWJM3klAuoKhhKJTDpBQa8kGFHehzdG8D7P7GNX1bJqgDpBhJm581cp-Rkcom0ZodXbdgHYwT46IHCpWvQGHS8GGUb8RzKWbX9Dpw2zdoDNvBBuDRmkJHsNXoT0w99slfBjn-klLcC4Fs8bYgfnOehNCMTp36KvZ9aEm841KIFWxhjMfu61GeZIKJUQRh2PUqk2vPdAcfe-NcVJqEDzVKSOWE-H5-_kvu44ozyHnEJmKSK6TjfmmORXB-BkL7f1cMf-of1gcN67eDANbYVXX-4KHz5y0N3l5vzSHHW1QmNV0fKR5p1mJUw4jylEKd3H-V9fPqnvSoaztD4kZrAnWysSH8cPG7m1ybPPFdvwzjhBpk85zS27Qzax86teRYw5-Ym2Qw==",
+    "price": "266,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   }
+  ]
+ }
+}

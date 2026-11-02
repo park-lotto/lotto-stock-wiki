@@ -1,0 +1,260 @@
+{
+ "_note": "make_render.py 3판 — 자막 페이지 2개 × shots[].cuts",
+ "cand_dir": "C:/숏템_칼카피/itemhome/1편_안유진로션/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "ss": 99.9,
+   "src_crop": [
+    470,
+    90,
+    645,
+    860
+   ],
+   "cuts": [
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 99.9,
+     "src_crop": [
+      470,
+      90,
+      645,
+      860
+     ],
+     "dur": 0.972,
+     "plan_i": 0
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 128.0,
+     "src_crop": [
+      560,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.972,
+     "plan_i": 1
+    },
+    {
+     "src": "eos_85AU_3DohFs.mp4",
+     "ss": 3.0,
+     "src_crop": [
+      190,
+      60,
+      645,
+      860
+     ],
+     "dur": 0.87,
+     "plan_i": 2
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 0.3,
+     "src_crop": [
+      130,
+      110,
+      645,
+      860
+     ],
+     "dur": 0.89,
+     "plan_i": 3
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 568.2,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.05,
+     "plan_i": 4
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 7.05,
+     "src_crop": [
+      640,
+      110,
+      645,
+      860
+     ],
+     "dur": 0.9,
+     "plan_i": 5
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 571.05,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.52,
+     "plan_i": 6
+    }
+   ],
+   "t_final": [
+    0.0,
+    7.174
+   ]
+  },
+  {
+   "i": 1,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "ss": 536.3,
+   "src_crop": [
+    370,
+    0,
+    645,
+    860
+   ],
+   "cuts": [
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 536.3,
+     "src_crop": [
+      370,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.948,
+     "plan_i": 7
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 590.9,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.593,
+     "plan_i": 8
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 566.05,
+     "src_crop": [
+      300,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.712,
+     "plan_i": 9
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 1.3,
+     "src_crop": [
+      130,
+      110,
+      645,
+      860
+     ],
+     "dur": 0.83,
+     "plan_i": 10
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 13.6,
+     "src_crop": [
+      130,
+      110,
+      645,
+      860
+     ],
+     "dur": 1.266,
+     "plan_i": 11
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 574.8,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.95,
+     "plan_i": 12
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 12.6,
+     "src_crop": [
+      130,
+      110,
+      645,
+      860
+     ],
+     "dur": 0.9,
+     "plan_i": 13
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 576.65,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.85,
+     "plan_i": 14
+    },
+    {
+     "src": "eos_85AU_3DohFs.mp4",
+     "ss": 5.0,
+     "src_crop": [
+      900,
+      220,
+      645,
+      860
+     ],
+     "dur": 0.8,
+     "plan_i": 15
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 578.3,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.8,
+     "plan_i": 16
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 579.65,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 3.077,
+     "plan_i": 17
+    }
+   ],
+   "t_final": [
+    7.174,
+    18.9
+   ]
+  }
+ ]
+}

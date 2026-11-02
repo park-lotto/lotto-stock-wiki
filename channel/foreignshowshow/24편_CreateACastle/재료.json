@@ -1,0 +1,854 @@
+{
+ "_note": "샥탬스토리 24편 Create A Castle 재료 계획. 창 1080x1052(벤치 YCosCkpODLc, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(WIcEFgXDVsY_audio.m4a).",
+ "sources": {
+  "WIcEFgXDVsY": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "The Sharks Fight For A Deal With Create A Castle | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 30fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 644.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(103~111·340~342·440~442·476~490·540~542초) 안 씀 · 591초 뒤 제작진 이름·끝 화면 안 씀 · 160초 'LIFEGUARD FIRST AID' 간판 안 씀 · 무대 뒤 'CREATE A CASTLE' 글 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "틀 하나로 이런",
+  "line2": "모래성이 된다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 117.98,
+   "audio_dur": 1.48,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    41.25,
+    42.73
+   ],
+   "ss": 41.25,
+   "dur": 1.48,
+   "t_final_est": [
+    0.0,
+    1.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 모래성 탑 근접(원본 샷 40.74~43.31, 사람 없음 — 소리 = 투자자 원음 'You can build that entire castle.' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    30.2,
+    32.23
+   ],
+   "ss": 30.2,
+   "dur": 2.03,
+   "t_final_est": [
+    1.48,
+    3.51
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 큰 모래성과 두 창업자(원본 샷 ~24~33.27, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    34.0,
+    35.82
+   ],
+   "ss": 34.0,
+   "dur": 1.82,
+   "t_final_est": [
+    3.51,
+    5.33
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    196,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "나란히 선 두 창업자(샷 33.27~39.51, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 47.8,
+   "audio_dur": 1.76,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    47.98,
+    49.74
+   ],
+   "ss": 47.98,
+   "dur": 1.76,
+   "t_final_est": [
+    5.33,
+    7.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    580,
+    146,
+    760,
+    740
+   ],
+   "scale": 1.422,
+   "ours": "무대 화면 속 초록 양동이를 뒤집는 손(원본 샷 47.95~51.42, 화면 안쪽만 자름 — 소리 = 창업자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    63.0,
+    66.33
+   ],
+   "ss": 63.0,
+   "dur": 3.33,
+   "t_final_est": [
+    7.09,
+    10.42
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 쪽짜리 파란 틀을 버클로 채우고 푸는 손(원본 샷 62.60~67.43, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N3",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    80.95,
+    83.321
+   ],
+   "ss": 80.95,
+   "dur": 2.371,
+   "t_final_est": [
+    10.42,
+    12.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    696,
+    155,
+    708,
+    690
+   ],
+   "scale": 1.525,
+   "ours": "무대 화면 속 해변 시연 — 파란 틀에 모래를 다지는 손(원본 샷 80.88~84.92, 화면 안쪽만, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N3",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    84.97,
+    85.809
+   ],
+   "ss": 84.97,
+   "dur": 0.839,
+   "t_final_est": [
+    12.79,
+    13.63
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    780,
+    170,
+    719,
+    700
+   ],
+   "scale": 1.503,
+   "ours": "틀을 열자 선 모래 탑(샷 84.92~86.39, 화면 안쪽만, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 121.06,
+   "audio_dur": 1.48,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    120.65,
+    122.13
+   ],
+   "ss": 120.65,
+   "dur": 1.48,
+   "t_final_est": [
+    13.63,
+    15.11
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "모래성 근접(원본 샷 120.59~122.32 — 소리 = 창업자 원음 cover, 말하는 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "N4",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    123.22,
+    123.888
+   ],
+   "ss": 123.22,
+   "dur": 0.668,
+   "t_final_est": [
+    15.11,
+    15.78
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    536,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "놀라는 투자자(원본 샷 123.19~124.09, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N4",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    147.4,
+    148.832
+   ],
+   "ss": 147.4,
+   "dur": 1.432,
+   "t_final_est": [
+    15.78,
+    17.21
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    210,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "'눈에서도 된다'며 말하는 창업자(샷 147.35~149.22, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N4",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    155.75,
+    156.981
+   ],
+   "ss": 155.75,
+   "dur": 1.231,
+   "t_final_est": [
+    17.21,
+    18.44
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    399,
+    110,
+    862,
+    840
+   ],
+   "scale": 1.252,
+   "ours": "무대 화면 속 눈밭에서 초록 틀을 채우는 손(샷 155.69~157.32, 화면 안쪽만, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 161.3,
+   "audio_dur": 1.04,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    157.36,
+    158.4
+   ],
+   "ss": 157.36,
+   "dur": 1.04,
+   "t_final_est": [
+    18.44,
+    19.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    449,
+    110,
+    862,
+    840
+   ],
+   "scale": 1.252,
+   "ours": "무대 화면 속 눈으로 쌓은 탑(샷 157.32~159.46, 화면 안쪽만 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "N5",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    324.1,
+    325.55
+   ],
+   "ss": 324.1,
+   "dur": 1.45,
+   "t_final_est": [
+    19.48,
+    20.93
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    508,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 투자자(원본 샷 324.02~330.96, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    349.0,
+    350.5
+   ],
+   "ss": 349.0,
+   "dur": 1.5,
+   "t_final_est": [
+    20.93,
+    22.43
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    319,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빠지겠다고 말하는 다른 투자자(샷 348.68~352.22, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N6",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    432.05,
+    433.126
+   ],
+   "ss": 432.05,
+   "dur": 1.076,
+   "t_final_est": [
+    22.43,
+    23.51
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    332,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "제안하는 투자자(원본 샷 431.96~434.13, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "N6",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    454.0,
+    455.614
+   ],
+   "ss": 454.0,
+   "dur": 1.614,
+   "t_final_est": [
+    23.51,
+    25.12
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "다른 제안을 내미는 투자자(샷 453.79~, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "O5",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 448.99,
+   "audio_dur": 1.13,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    448.99,
+    450.12
+   ],
+   "ss": 448.99,
+   "dur": 1.13,
+   "t_final_est": [
+    25.12,
+    26.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 두 창업자(원본 샷 448.35~450.15 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "O5",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 450.12,
+   "audio_dur": 0.88,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    450.18,
+    451.06
+   ],
+   "ss": 450.18,
+   "dur": 0.88,
+   "t_final_est": [
+    26.25,
+    27.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    282,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "'잠깐'을 외치는 투자자 본인(샷 450.15~451.08, 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O6",
+   "kind": "원음",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": false,
+   "audio_src": "WIcEFgXDVsY_audio.m4a",
+   "audio_ss": 573.17,
+   "audio_dur": 1.28,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    573.17,
+    574.45
+   ],
+   "ss": 573.17,
+   "dur": 1.28,
+   "t_final_est": [
+    27.13,
+    28.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    152,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자와 끌어안는 창업자(원본 샷 572.14~576.18, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "N7",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    581.0,
+    582.427
+   ],
+   "ss": 581.0,
+   "dur": 1.427,
+   "t_final_est": [
+    28.41,
+    29.84
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤로 걸어 나오는 두 창업자(원본 샷 580.75~583.55, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "N7",
+   "kind": "나레",
+   "src": "WIcEFgXDVsY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY",
+   "src_orig_span": [
+    584.0,
+    585.783
+   ],
+   "ss": 584.0,
+   "dur": 1.783,
+   "t_final_est": [
+    29.84,
+    31.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    3,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤 인터뷰하는 두 창업자(샷 583.72~593.66 중 제작진 이름 뜨기 전, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/24편_CreateACastle/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    442,
+    502,
+    637,
+    824
+   ],
+   "target_what": "모래성 꼭대기 탑(창문·고깔) — 42.0초 원본 프레임 눈 측정(창 크롭 [426,0,1108,1080] 안 x 454~654·y 70~400, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품으로 만든 성) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    540,
+    663
+   ],
+   "size": 414,
+   "face_clear": true,
+   "target_box": [
+    442,
+    502,
+    637,
+    824
+   ],
+   "target_path": [
+    [
+     0.0,
+     442.0,
+     502.0,
+     637.0,
+     824.0
+    ],
+    [
+     0.067,
+     444.0,
+     503.0,
+     636.3,
+     820.7
+    ],
+    [
+     0.133,
+     445.7,
+     504.0,
+     635.3,
+     817.3
+    ],
+    [
+     0.2,
+     447.0,
+     505.0,
+     634.0,
+     814.0
+    ],
+    [
+     0.267,
+     446.0,
+     503.3,
+     633.0,
+     812.3
+    ],
+    [
+     0.333,
+     447.0,
+     504.7,
+     631.7,
+     809.7
+    ],
+    [
+     0.4,
+     450.0,
+     509.0,
+     630.0,
+     806.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     540,
+     663
+    ],
+    [
+     0.067,
+     540,
+     662
+    ],
+    [
+     0.133,
+     540,
+     661
+    ],
+    [
+     0.2,
+     540,
+     660
+    ],
+    [
+     0.267,
+     540,
+     658
+    ],
+    [
+     0.333,
+     539,
+     657
+    ],
+    [
+     0.4,
+     540,
+     658
+    ]
+   ],
+   "track_conf": 0.984,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.984 · 원 414px = 물건 반대각선 188×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 8.0 해답"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 10.0 '몇 시간 걸리던 작업을'"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 38.0 '겨울에 눈으로도'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "O6",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "성사"
+  }
+ ]
+}

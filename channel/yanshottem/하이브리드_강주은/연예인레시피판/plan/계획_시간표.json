@@ -1,0 +1,1240 @@
+{
+ "timeline": {
+  "lines": {
+   "O1": [
+    0.0,
+    6.13
+   ],
+   "N1": [
+    6.33,
+    10.678
+   ],
+   "B1": [
+    10.878,
+    13.487
+   ],
+   "B2": [
+    13.687,
+    17.31
+   ],
+   "B3": [
+    17.51,
+    20.553
+   ],
+   "B4": [
+    20.753,
+    24.666
+   ],
+   "B5": [
+    24.866,
+    28.489
+   ],
+   "B6": [
+    28.689,
+    31.588
+   ],
+   "O2": [
+    31.788,
+    33.618
+   ]
+  },
+  "rows": [
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이 맛 자체가 달라",
+    "t0": 0.0,
+    "t1": 2.17,
+    "show": [
+     0.0,
+     2.17
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "계산이 반 가격이",
+    "t0": 2.17,
+    "t1": 3.82,
+    "key": "반 가격",
+    "show": [
+     2.17,
+     3.82
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "되니까",
+    "t0": 3.82,
+    "t1": 4.6,
+    "show": [
+     3.82,
+     4.6
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 3,
+    "speaker": "orig",
+    "text": "너무 마음이 좋고",
+    "t0": 4.6,
+    "t1": 6.13,
+    "show": [
+     4.6,
+     6.33
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "캐나다에서 자란 강주은이",
+    "t0": 6.33,
+    "t1": 7.901,
+    "show": [
+     6.33,
+     7.901
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "집에서 반값에 굽는",
+    "t0": 7.901,
+    "t1": 9.044,
+    "show": [
+     7.901,
+     9.044
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "티본스테이크가 있다는데..?",
+    "t0": 9.044,
+    "t1": 10.678,
+    "key": "티본스테이크",
+    "show": [
+     9.044,
+     10.878
+    ]
+   },
+   {
+    "line": "B1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 이거 보고",
+    "t0": 10.878,
+    "t1": 11.735,
+    "show": [
+     10.878,
+     11.735
+    ]
+   },
+   {
+    "line": "B1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "주말에 바로",
+    "t0": 11.735,
+    "t1": 12.449,
+    "show": [
+     11.735,
+     12.449
+    ]
+   },
+   {
+    "line": "B1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 해 봤는데요",
+    "t0": 12.449,
+    "t1": 13.487,
+    "show": [
+     12.449,
+     13.687
+    ]
+   },
+   {
+    "line": "B2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 진짜 놀라운 건",
+    "t0": 13.687,
+    "t1": 14.83,
+    "show": [
+     13.687,
+     14.83
+    ]
+   },
+   {
+    "line": "B2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "팬에선 겉면만 1분씩",
+    "t0": 14.83,
+    "t1": 16.116,
+    "key": "1분씩",
+    "show": [
+     14.83,
+     16.116
+    ]
+   },
+   {
+    "line": "B2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "굽고 끝이더라고요",
+    "t0": 16.116,
+    "t1": 17.31,
+    "show": [
+     16.116,
+     17.51
+    ]
+   },
+   {
+    "line": "B3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "나머지는",
+    "t0": 17.51,
+    "t1": 18.081,
+    "show": [
+     17.51,
+     18.081
+    ]
+   },
+   {
+    "line": "B3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "200도 오븐에 딱 10분",
+    "t0": 18.081,
+    "t1": 19.653,
+    "key": "10분",
+    "show": [
+     18.081,
+     19.653
+    ]
+   },
+   {
+    "line": "B3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다 익더라고요",
+    "t0": 19.653,
+    "t1": 20.553,
+    "show": [
+     19.653,
+     20.753
+    ]
+   },
+   {
+    "line": "B4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 미국 농무부는",
+    "t0": 20.753,
+    "t1": 22.039,
+    "show": [
+     20.753,
+     22.039
+    ]
+   },
+   {
+    "line": "B4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "안심이 큰 티본만",
+    "t0": 22.039,
+    "t1": 23.039,
+    "key": "안심",
+    "show": [
+     22.039,
+     23.039
+    ]
+   },
+   {
+    "line": "B4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "포터하우스라고 부른대요",
+    "t0": 23.039,
+    "t1": 24.666,
+    "show": [
+     23.039,
+     24.866
+    ]
+   },
+   {
+    "line": "B5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "썰어 보니까 속이",
+    "t0": 24.866,
+    "t1": 25.866,
+    "show": [
+     24.866,
+     25.866
+    ]
+   },
+   {
+    "line": "B5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꼭 레스토랑 스테이크처럼",
+    "t0": 25.866,
+    "t1": 27.437,
+    "show": [
+     25.866,
+     27.437
+    ]
+   },
+   {
+    "line": "B5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "핑크빛이었어요",
+    "t0": 27.437,
+    "t1": 28.489,
+    "key": "핑크빛",
+    "show": [
+     27.437,
+     28.689
+    ]
+   },
+   {
+    "line": "B6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "요즘 요리 똥손들",
+    "t0": 28.689,
+    "t1": 29.689,
+    "show": [
+     28.689,
+     29.689
+    ]
+   },
+   {
+    "line": "B6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "사이에서",
+    "t0": 29.689,
+    "t1": 30.26,
+    "show": [
+     29.689,
+     30.26
+    ]
+   },
+   {
+    "line": "B6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "이 레시피가 난리래요",
+    "t0": 30.26,
+    "t1": 31.588,
+    "show": [
+     30.26,
+     31.788
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "그래도 잘 만들 수",
+    "t0": 31.788,
+    "t1": 32.958,
+    "show": [
+     31.788,
+     32.958
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "있다고요",
+    "t0": 32.958,
+    "t1": 33.618,
+    "show": [
+     32.958,
+     34.133
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "at": 0.0,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 980.38,
+    "crop": [
+     370,
+     0,
+     800,
+     784
+    ],
+    "see": "강주은 얼굴 근접(앞치마) — '이 맛 자체가 달라' 입 맞음(0초 = 연예인 얼굴), 샷 979.98~",
+    "line": "O1",
+    "t0": 0.0,
+    "kind": "orig",
+    "t1": 2.17,
+    "dur": 2.17,
+    "over": 0.0
+   },
+   {
+    "at": 2.17,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 975.97,
+    "crop": [
+     860,
+     170,
+     520,
+     510
+    ],
+    "see": "강주은 상반신(주방 넓은 샷을 좁게 크롭) — '계산이 반 가격이 되니까…' 입 맞음, 샷 끝 979.98",
+    "line": "O1",
+    "t0": 2.17,
+    "kind": "orig",
+    "t1": 6.33,
+    "dur": 4.16,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     0
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 141.0,
+    "max": 7.8,
+    "crop": [
+     620,
+     40,
+     800,
+     784
+    ],
+    "see": "강주은이 드라이에이징 티본 봉지 들고 말함(샷 140.34~148.85)",
+    "line": "N1",
+    "t0": 6.33,
+    "kind": "tts",
+    "t1": 8.604,
+    "dur": 2.274,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     1,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 866.0,
+    "max": 11.0,
+    "crop": [
+     560,
+     0,
+     800,
+     784
+    ],
+    "see": "강주은 얼굴 근접 — 스테이크 한입 먹고 음미",
+    "line": "N1",
+    "t0": 8.604,
+    "kind": "tts",
+    "t1": 10.878,
+    "dur": 2.274,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 245.0,
+    "max": 6.4,
+    "crop": [
+     100,
+     0,
+     800,
+     784
+    ],
+    "see": "장갑 낀 손이 날 티본을 팬에 눌러 올림(샷 ~251.42)",
+    "line": "B1",
+    "t0": 10.878,
+    "kind": "tts",
+    "t1": 13.687,
+    "dur": 2.809,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     1
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 264.5,
+    "max": 6.7,
+    "crop": [
+     700,
+     0,
+     800,
+     784
+    ],
+    "see": "팬 위 티본을 집게로 뒤집음(샷 264.26~271.27)",
+    "line": "B2",
+    "t0": 13.687,
+    "kind": "tts",
+    "t1": 15.599,
+    "dur": 1.912,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     2,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 288.3,
+    "max": 2.8,
+    "crop": [
+     150,
+     0,
+     800,
+     784
+    ],
+    "see": "겉면만 시어링한 티본(도마, 샷 288.09~291.12)",
+    "line": "B2",
+    "t0": 15.599,
+    "kind": "tts",
+    "t1": 17.51,
+    "dur": 1.911,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     1
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 325.5,
+    "max": 7.8,
+    "crop": [
+     560,
+     0,
+     800,
+     784
+    ],
+    "see": "오븐 랙에 티본 올림(샷 325.26~333.4)",
+    "line": "B3",
+    "t0": 17.51,
+    "kind": "tts",
+    "t1": 19.132,
+    "dur": 1.622,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     2,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 497.0,
+    "max": 7.0,
+    "crop": [
+     700,
+     0,
+     800,
+     784
+    ],
+    "see": "오븐에서 꺼낸 다 익은 티본(도마)",
+    "line": "B3",
+    "t0": 19.132,
+    "kind": "tts",
+    "t1": 20.753,
+    "dur": 1.621,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     1
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 706.8,
+    "max": 6.2,
+    "crop": [
+     560,
+     0,
+     800,
+     784
+    ],
+    "see": "레스팅 끝난 티본 두 덩이 — T자 뼈 양쪽 고기(샷 706.47~713.08)",
+    "line": "B4",
+    "t0": 20.753,
+    "kind": "tts",
+    "t1": 22.809,
+    "dur": 2.056,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     2,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 722.2,
+    "max": 10.5,
+    "crop": [
+     560,
+     0,
+     800,
+     784
+    ],
+    "see": "칼로 뼈 선 따라 안심·등심 발라냄(샷 721.85~732.97)",
+    "line": "B4",
+    "t0": 22.809,
+    "kind": "tts",
+    "t1": 24.866,
+    "dur": 2.057,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 736.1,
+    "max": 7.5,
+    "crop": [
+     100,
+     0,
+     800,
+     784
+    ],
+    "see": "썬 단면 — 속이 핑크빛(샷 735.9~743.68)",
+    "line": "B5",
+    "t0": 24.866,
+    "kind": "tts",
+    "t1": 28.689,
+    "dur": 3.823,
+    "over": 0.0
+   },
+   {
+    "toks": [
+     0,
+     2
+    ],
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 813.1,
+    "max": 5.9,
+    "crop": [
+     560,
+     150,
+     800,
+     784
+    ],
+    "see": "접시에 담은 티본·곁들임(플레이팅, 샷 812.91~819.08)",
+    "line": "B6",
+    "t0": 28.689,
+    "kind": "tts",
+    "t1": 31.788,
+    "dur": 3.099,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "ss": 1018.39,
+    "crop": [
+     560,
+     0,
+     760,
+     745
+    ],
+    "see": "강주은 미디엄 — '그래도 잘 만들 수 있다고요' 입 맞음(끝 = 연예인), 이모지(x<300·x>1420) 크롭 밖",
+    "line": "O2",
+    "t0": 31.788,
+    "kind": "orig",
+    "t1": 34.1333,
+    "dur": 2.345,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "span": [
+     980.38,
+     982.55
+    ],
+    "t0": 0.0,
+    "t1": 2.17
+   },
+   {
+    "line": "O1",
+    "k": 1,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "span": [
+     975.97,
+     979.93
+    ],
+    "t0": 2.17,
+    "t1": 6.13
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "u-DAJ7gkE3Q.mp4",
+    "span": [
+     1018.39,
+     1020.22
+    ],
+    "t0": 31.788,
+    "t1": 33.618
+   }
+  ],
+  "end": 34.1333
+ },
+ "placement": {
+  "reference": "r5XN6Eilfxs",
+  "rows": [
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이 맛 자체가 달라",
+    "t0": 0.0,
+    "t1": 2.17,
+    "show": [
+     0.0,
+     2.17
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "계산이 반 가격이",
+    "t0": 2.17,
+    "t1": 3.82,
+    "key": "반 가격",
+    "show": [
+     2.17,
+     3.82
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "되니까",
+    "t0": 3.82,
+    "t1": 4.6,
+    "show": [
+     3.82,
+     4.6
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 3,
+    "speaker": "orig",
+    "text": "너무 마음이 좋고",
+    "t0": 4.6,
+    "t1": 6.13,
+    "show": [
+     4.6,
+     6.33
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "캐나다에서 자란 강주은이",
+    "t0": 6.33,
+    "t1": 7.901,
+    "show": [
+     6.33,
+     7.901
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "집에서 반값에 굽는",
+    "t0": 7.901,
+    "t1": 9.044,
+    "show": [
+     7.901,
+     9.044
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "티본스테이크가 있다는데..?",
+    "t0": 9.044,
+    "t1": 10.678,
+    "key": "티본스테이크",
+    "show": [
+     9.044,
+     10.878
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 이거 보고",
+    "t0": 10.878,
+    "t1": 11.735,
+    "show": [
+     10.878,
+     11.735
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "주말에 바로",
+    "t0": 11.735,
+    "t1": 12.449,
+    "show": [
+     11.735,
+     12.449
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 해 봤는데요",
+    "t0": 12.449,
+    "t1": 13.487,
+    "show": [
+     12.449,
+     13.687
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 진짜 놀라운 건",
+    "t0": 13.687,
+    "t1": 14.83,
+    "show": [
+     13.687,
+     14.83
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "팬에선 겉면만 1분씩",
+    "t0": 14.83,
+    "t1": 16.116,
+    "key": "1분씩",
+    "show": [
+     14.83,
+     16.116
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "굽고 끝이더라고요",
+    "t0": 16.116,
+    "t1": 17.31,
+    "show": [
+     16.116,
+     17.51
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "나머지는",
+    "t0": 17.51,
+    "t1": 18.081,
+    "show": [
+     17.51,
+     18.081
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "B3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "200도 오븐에 딱 10분",
+    "t0": 18.081,
+    "t1": 19.653,
+    "key": "10분",
+    "show": [
+     18.081,
+     19.653
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다 익더라고요",
+    "t0": 19.653,
+    "t1": 20.553,
+    "show": [
+     19.653,
+     20.753
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 미국 농무부는",
+    "t0": 20.753,
+    "t1": 22.039,
+    "show": [
+     20.753,
+     22.039
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "안심이 큰 티본만",
+    "t0": 22.039,
+    "t1": 23.039,
+    "key": "안심",
+    "show": [
+     22.039,
+     23.039
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "포터하우스라고 부른대요",
+    "t0": 23.039,
+    "t1": 24.666,
+    "show": [
+     23.039,
+     24.866
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "썰어 보니까 속이",
+    "t0": 24.866,
+    "t1": 25.866,
+    "show": [
+     24.866,
+     25.866
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꼭 레스토랑 스테이크처럼",
+    "t0": 25.866,
+    "t1": 27.437,
+    "show": [
+     25.866,
+     27.437
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "핑크빛이었어요",
+    "t0": 27.437,
+    "t1": 28.489,
+    "key": "핑크빛",
+    "show": [
+     27.437,
+     28.689
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "요즘 요리 똥손들",
+    "t0": 28.689,
+    "t1": 29.689,
+    "show": [
+     28.689,
+     29.689
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "사이에서",
+    "t0": 29.689,
+    "t1": 30.26,
+    "show": [
+     29.689,
+     30.26
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "B6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "이 레시피가 난리래요",
+    "t0": 30.26,
+    "t1": 31.588,
+    "show": [
+     30.26,
+     31.788
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "typing",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "그래도 잘 만들 수",
+    "t0": 31.788,
+    "t1": 32.958,
+    "show": [
+     31.788,
+     32.958
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "있다고요",
+    "t0": 32.958,
+    "t1": 33.618,
+    "show": [
+     32.958,
+     34.133
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 2.17,
+    "kind": "pop",
+    "why": "cap"
+   },
+   {
+    "t": 3.82,
+    "kind": "pop",
+    "why": "cap"
+   },
+   {
+    "t": 4.6,
+    "kind": "pop",
+    "why": "cap"
+   }
+  ],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = r5XN6Eilfxs",
+   "효과음 3발(본보기 3) [(2.17, 'cap'), (3.82, 'cap'), (4.6, 'cap')]",
+   "등장 {'cut': 16, 'typing': 11} · 강조 0/27"
+  ]
+ }
+}

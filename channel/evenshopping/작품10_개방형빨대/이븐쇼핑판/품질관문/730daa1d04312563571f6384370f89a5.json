@@ -1,0 +1,359 @@
+{
+ "style": "이븐쇼핑판",
+ "ok": false,
+ "gate": "quality_gate:v2(2026-10-25 표준 §11)",
+ "mode": "full",
+ "sec": 476.5,
+ "rows": [
+  {
+   "group": "규격",
+   "what": "길이",
+   "ok": true,
+   "value": "28.60초 (판 25~30)",
+   "src": "판 length · ffprobe",
+   "sec": 0.1
+  },
+  {
+   "group": "규격",
+   "what": "화면=시간표",
+   "ok": true,
+   "value": "28.600 vs 28.6",
+   "src": "timeline.end",
+   "sec": 0.0
+  },
+  {
+   "group": "규격",
+   "what": "음량",
+   "ok": true,
+   "value": "-14.0 LUFS (목표 -14.0)",
+   "src": "ebur128",
+   "sec": 1.1
+  },
+  {
+   "group": "규격",
+   "what": "최고점",
+   "ok": true,
+   "value": "-1.4 dBFS (≤ -1.5+0.5)",
+   "src": "ebur128 peak",
+   "sec": 0.0
+  },
+  {
+   "group": "규격",
+   "what": "1080×1920·30fps",
+   "ok": true,
+   "value": "1080×1920 · 30.0fps",
+   "src": "ffprobe",
+   "sec": 0.2
+  },
+  {
+   "group": "화면",
+   "what": "0초·첫 줄 얼굴",
+   "ok": true,
+   "value": "해당 없음(판 thumb_card_face false — 연예인 판 아님)",
+   "src": "thumb.face_check",
+   "sec": 0.0
+  },
+  {
+   "group": "화면",
+   "what": "컷 조각 프레임 = 계획",
+   "ok": true,
+   "value": "전부 같음",
+   "src": "parts/c*.mp4",
+   "sec": 10.4
+  },
+  {
+   "group": "화면",
+   "what": "화면 멈춤 없음",
+   "ok": true,
+   "value": "0건",
+   "src": "창 안 프레임 차",
+   "sec": 1.4
+  },
+  {
+   "group": "화면",
+   "what": "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
+   "ok": true,
+   "value": "0건",
+   "src": "render_bench.shot_starts",
+   "sec": 6.1
+  },
+  {
+   "group": "화면",
+   "what": "B9 첫·끝 컷 Y≥60",
+   "ok": true,
+   "value": "114 · 169 (≥60)",
+   "src": "checks._ymean",
+   "sec": 3.0
+  },
+  {
+   "group": "재료",
+   "what": "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))",
+   "ok": true,
+   "value": "0 (소스 길이 {Q5VrYhJVmo0:51.1, kkBUsht0dfI:23.7, qVGVD9u0Fxc:670.5, Hgx86Jz4B6U:103.3, G5oZTlpfPCA:153.6, DQbJeNnu7MQ:58.3, Un8dhJ_rgGc:45.0, 7xzvgnv2WjI:25.9})",
+   "src": "quality_gate.reuse_violations_bench",
+   "sec": 6.7
+  },
+  {
+   "group": "재료",
+   "what": "B16 A-B-A 끼움(나레 컷)",
+   "ok": true,
+   "value": "0",
+   "src": "checks.aba_violations",
+   "sec": 0.0
+  },
+  {
+   "group": "재료",
+   "what": "B16' 되감김·점프줌",
+   "ok": true,
+   "value": "컷 106 · 되감김 0 [] · 점프줌 1(드묾)",
+   "src": "engine/check_seams.check",
+   "sec": 56.2
+  },
+  {
+   "group": "판 리듬",
+   "what": "컷 길이 중앙(판 rhythm.cut_median ±30%)",
+   "ok": true,
+   "value": "완성본 컷 중앙 1.23초 vs 판 1.12(±30%, kal_analyze.media_of 같은 자) · 컷 19",
+   "src": "kal_analyze.media_of",
+   "sec": 149.9
+  },
+  {
+   "group": "판 리듬",
+   "what": "훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)",
+   "ok": true,
+   "value": "0.1~3초 컷 경계 3 [0.767, 1.967, 3.0] (판 ≥1)",
+   "src": "kal_analyze.media_of cut_at",
+   "sec": 0.0
+  },
+  {
+   "group": "판 리듬",
+   "what": "꾸밈 없는 덩어리 비율(판 rhythm.plain_share)",
+   "ok": true,
+   "value": "꾸밈 없는 덩어리 1.0 vs 판 0.973±0.06(자막표 rows · placement.plain_share)",
+   "src": "placement.plain_share",
+   "sec": 0.0
+  },
+  {
+   "group": "판 리듬",
+   "what": "쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max)",
+   "ok": true,
+   "value": "쿠팡·상품 그림 컷 비중 0.0 (판 ≤0.0, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)",
+   "src": "render_bench.photo_share",
+   "sec": 0.0
+  },
+  {
+   "group": "자막·효과",
+   "what": "배치(본보기 벤치 편 대조)",
+   "ok": true,
+   "value": "본보기 Y2YXuAE4J00 · 칸 최대 차 0.0",
+   "src": "자막표.check = placement.check_place",
+   "sec": 0.0
+  },
+  {
+   "group": "자막·효과",
+   "what": "B14 효과음 과다(≤ 벤치 p90)",
+   "ok": true,
+   "value": "우리 3발/28.6초 = 0.105/초 · 벤치 p90 0.115/초(편별 [0.083, 0.116, 0.076, 0.076, 0.109, 0.115])",
+   "src": "자막표.sfx · 줄판독 sfx",
+   "sec": 0.0
+  },
+  {
+   "group": "소리",
+   "what": "줄별 말속도 ±35%(렌더 기록)",
+   "ok": true,
+   "value": "렌더 기록 평균 8.32자/초 ±35% · N1:8.17 N2:8.03 N3:8.37 N4:8.34 N5:8.27 N6:8.14 N7:8.25 N8:9.03",
+   "src": "render_info.line_cps · render_itssum.CPS_LINE_TOL",
+   "sec": 0.0
+  },
+  {
+   "group": "소리",
+   "what": "B18 줄 사이 간격 = 판 timing(±1프레임+0.02)",
+   "ok": true,
+   "value": "경계 N1→N2:0.08→0.11 N2→N3:0.08→0.11 N3→N4:0.08→0.11 N4→N5:0.08→0.11 N5→N6:0.08→0.11 N6→N7:0.08→0.11 N7→N8:0.08→0.11 (허용 ±0.053)",
+   "src": "timeline.lines(판 timing) · checks.pauses_between(voice.wav)",
+   "sec": 0.9
+  },
+  {
+   "group": "소리",
+   "what": "B18a 줄 안 문장부호 쉼",
+   "ok": true,
+   "value": "N2,0.23 N4,0.23 N5,0.23 N6,0.23 N7,0.23 (쉼표 0.22·마침표 0.3, −0.02/+0.03)",
+   "src": "판 speech.pause_comma/period(없으면 0.22/0.30) · voice.wav 무음",
+   "sec": 1.3
+  },
+  {
+   "group": "소리",
+   "what": "나레 받아쓰기 ↔ 대본",
+   "ok": true,
+   "value": "나레 8줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.079 (스피치매틱스 낱말 시각) · N1:0.0↔0.0 N2:2.038↔1.98 N3:6.851↔6.81 N4:8.962↔8.91 N5:12.998↔12.93 N6:16.827↔16.77 N7:20.839↔20.76 N8:25.403↔25.35",
+   "src": "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM",
+   "sec": 0.0
+  },
+  {
+   "group": "대본",
+   "what": "script_audit",
+   "ok": true,
+   "value": "규칙 5개 · 미달 0",
+   "src": "hybrid/script_audit.audit",
+   "sec": 0.3
+  },
+  {
+   "group": "썸네일",
+   "what": "썸네일 맨 앞 2프레임",
+   "ok": true,
+   "value": "안 C · 프레임 0·1·2 차 [0.4, 0.4, 82.1]",
+   "src": "썸네일.json · 완성본 0~2프레임",
+   "sec": 2.9
+  },
+  {
+   "group": "썸네일",
+   "what": "thumb_rule.check(3안 규칙)",
+   "ok": true,
+   "value": "통과",
+   "src": "hybrid/thumb_rule.check",
+   "sec": 0.0
+  },
+  {
+   "group": "썸네일",
+   "what": "광고 표시(ad_mark)",
+   "ok": true,
+   "value": "완성본 comment = 'ad_mark:v1'",
+   "src": "engine/ad_mark 표식",
+   "sec": 0.7
+  },
+  {
+   "group": "1차 자",
+   "what": "재현일치도(match_table)",
+   "ok": false,
+   "value": "1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓17 ✗1 미측정0 · 필수 16칸 중 미달 ['fx.pos'] · 벤치 6편",
+   "src": "kal_analyze.match_from_render → 재현일치도.json",
+   "sec": 172.8
+  },
+  {
+   "group": "장면↔대사",
+   "what": "완성본 컷 = 계획 프레임(창 대조 ≥0.97)",
+   "ok": true,
+   "value": "24컷 중 같음 24 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.991)",
+   "src": "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ render_bench.plan_frames_gray 계획 그림)",
+   "sec": 62.5
+  },
+  {
+   "group": "장면↔대사",
+   "what": "계획 점수(루브릭)",
+   "ok": true,
+   "value": "계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)",
+   "src": "<doc>/장면대사_계획.json(material_fit) · channel/<slug>/_kal/상위편_목표.json",
+   "sec": 0.0,
+   "ref": true
+  },
+  {
+   "group": "표식",
+   "what": "render_info 표식(판 sha·렌더러 sig·reference)",
+   "ok": true,
+   "value": "style_sha a2df3dbf50eb · renderer_sig render_bench@187135980036 · reference Y2YXuAE4J00",
+   "src": "render_info.json",
+   "sec": 0.0
+  }
+ ],
+ "n": 31,
+ "n_ok": 30,
+ "n_bad": 1,
+ "n_unmeasured": 0,
+ "placement": {
+  "ok": true,
+  "reference": "Y2YXuAE4J00",
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 8
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 21
+   },
+   "stickers": {
+    "bench": {
+     "other": 2,
+     "circle_arrow": 1
+    },
+    "ours": {},
+    "vs": {
+     "circle_arrow": "0/1(판 규칙 없음 — 안 그림)",
+     "other": "0/2(판 규칙 없음 — 안 그림)"
+    }
+   },
+   "sfx": {
+    "bench": 3,
+    "ours": 3,
+    "kinds": {
+     "ding": 3
+    },
+    "roles": {
+     "bench_expect": {
+      "body": 1.0,
+      "reveal": 1.0,
+      "end": 1.0
+     },
+     "ours": {
+      "body": 1,
+      "reveal": 1,
+      "end": 1
+     }
+    }
+   },
+   "transitions": {
+    "bench_expect": {},
+    "ours": {},
+    "cut_bounds": 23,
+    "plan": {
+     "src": null,
+     "want_raw": {},
+     "want": null,
+     "picked": {},
+     "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ },
+ "log": [
+  "본보기 벤치 편 = Y2YXuAE4J00",
+  "효과음 3발(본보기 줄판독 3발 · 역할 {'body': 1, 'reveal': 1, 'end': 1} · 편차 +0.03초) [(2.071, 'ding', 'body'), (7.961, 'ding', 'reveal'), (25.436, 'ding', 'end')]",
+  "꾸밈 없음 29/29 ≥ 판 plain_share 0.973×29=28",
+  "등장 {'cut': 29} · 강조 0/29",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "match": {
+  "verdict": "미달",
+  "file": "channel\\evenshopping\\작품10_개방형빨대\\이븐쇼핑판\\재현일치도.json"
+ },
+ "gates": {
+  "upgrade": null
+ },
+ "fit": {
+  "min_sim": 0.97,
+  "n": 24,
+  "file": "channel\\evenshopping\\작품10_개방형빨대\\이븐쇼핑판\\장면대사.json"
+ },
+ "eye_pack_dir": "C:\\숏템_칼카피\\evenshopping\\작품10_개방형빨대\\이븐쇼핑판\\eye",
+ "final_md5": "730daa1d04312563571f6384370f89a5"
+}

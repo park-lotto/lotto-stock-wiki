@@ -1,0 +1,232 @@
+{
+ "topic": "모자에 다는 가짜 잠자리(모기 퇴치 장식) — 낚시꾼 아빠(@prepperpress)가 직접 달고 시험, 다른 사용자(@mack.topa)도 숲길 시험",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": {
+  "id": "PIHCaioKSp4",
+  "channel": "핫템리포트",
+  "dur": 35.25,
+  "lufs": -14.1,
+  "note": "같은 원본. 벤치 나레('초등학생이 20억'·'모기가 잠자리로 착각해 피함')는 확인 안 됨 → 안 씀. 우리는 원음 현장썰로 각색"
+ },
+ "sources": {
+  "main": {
+   "file": "prepperpress_7504767860275727658.mp4",
+   "who": "틱톡 @prepperpress",
+   "views": 2200000,
+   "dur": 50.74,
+   "res": "1080x1920"
+  },
+  "sub": {
+   "file": "mack.topa_7505881760635407621.mp4",
+   "who": "틱톡 @mack.topa",
+   "views": 1700000,
+   "dur": 45.07,
+   "res": "1080x1920"
+  }
+ },
+ "titles": {
+  "hook": "모기가 진짜 안 온다는\n가짜 잠자리"
+ },
+ "facts": {
+  "f1": {
+   "text": "pp 0~5초 셀카: 모자 위에 파란 가짜 잠자리(철사) · 30.4~34.95 'These come in a three pack. I keep one on my hat, I keep one on my pack. My son wears one.'",
+   "kind": "원본 화면+본인 말"
+  },
+  "f2": {
+   "text": "pp 5.15~11.85 'everyone's wondering whether it works, whether it keeps the bugs away. Said I didn't know, I said I'd try it.' · 5~19초 낚시하는 화면",
+   "kind": "본인 말+화면"
+  },
+  "f3": {
+   "text": "pp 15.38~20.1 'People in the comments from the last video, many of them swore by it.' · 20.1~30.38 'Dragonflies are carnivorous insects… Dragonflies eat mosquitoes, flies, gnats…' + 종이(Dragon Flies — Mosquitoes, one of their favorite)",
+   "kind": "본인 말+화면"
+  },
+  "f4": {
+   "text": "mt 0~8초 'I'm going to test to see if this works for mosquitoes, since the mosquitoes were everywhere' · 화면 글자 'testing if a fake dragonfly stops mosquitoes' · 숲길·풀밭을 걷는 화면",
+   "kind": "본인 말+화면"
+  },
+  "f5": {
+   "text": "pp 36.7~42.5 'Look at my son wearing one. He's the one that told me about them in the first place.'",
+   "kind": "본인 말"
+  },
+  "f6": {
+   "text": "pp 42.5~44.29 'Last year, they were all the rage. TikTok sold out.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2",
+   "N3",
+   "N4a",
+   "N4",
+   "O3",
+   "N5",
+   "N6",
+   "O4"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품 범주+~있는데요)",
+    "text": "모기 쫓는다고 모자에 다는, 가짜 잠자리가 있는데요.",
+    "caps": [
+     "모기 쫓는다고 모자에 다는",
+     "가짜 잠자리가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거1",
+    "text": "다들 효과 있냐고 묻길래, 직접 달고 낚시를 해 봤대요.",
+    "caps": [
+     "다들 효과 있냐고 묻길래",
+     "직접 달고 낚시를 해 봤대요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "이유(전언)",
+    "text": "효과 봤다는 댓글도 많았는데, 모기를 잡아먹는 게 잠자리라서 그렇대요.",
+    "caps": [
+     "효과 봤다는 댓글도",
+     "많았는데",
+     "모기를 잡아먹는 게",
+     "잠자리라서 그렇대요"
+    ],
+    "facts": [
+     "f3"
+    ]
+   },
+   {
+    "id": "N4a",
+    "fn": "장점(인기 — 원본 화자 말)",
+    "text": "작년엔 틱톡에서 품절까지 났었는데요.",
+    "caps": [
+     "작년엔 틱톡에서",
+     "품절까지 났었는데요"
+    ],
+    "facts": [
+     "f6"
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "불러냄 → 원음 증거2(다른 사람)",
+    "text": "다른 사람도 모기가 득실대는 숲길에서, 직접 시험해 봤더니.",
+    "caps": [
+     "다른 사람도 모기가",
+     "득실대는 숲길에서",
+     "직접 시험해 봤더니"
+    ],
+    "facts": [
+     "f4"
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "장점 몰아치기",
+    "text": "세 개가 한 묶음이라, 모자랑 가방에 하나씩 달고, 아들도 하나 달았대요.",
+    "caps": [
+     "세 개가 한 묶음이라",
+     "모자랑 가방에 하나씩 달고",
+     "아들도 하나 달았대요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N6",
+    "fn": "끝 전언(~다고 하네요)",
+    "text": "처음 이걸 알려준 것도, 바로 아들이었다고 하네요.",
+    "caps": [
+     "처음 이걸 알려준 것도",
+     "바로 아들이었다고 하네요"
+    ],
+    "facts": [
+     "f5"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "pp",
+    "span": [
+     2.12,
+     4.82
+    ],
+    "en": "What's that idiot doing still wearing a dragonfly on his hat?",
+    "caps": [
+     "아직도 모자에 잠자리 단",
+     "저 바보는 뭐야?!"
+    ],
+    "check": "받아쓰기 2.1~4.85 단독: 'What's that idiot doing still wearing a dragonfly on his hat?' · 소리 −15~−20dB"
+   },
+   {
+    "id": "O2",
+    "src": "pp",
+    "span": [
+     11.72,
+     15.5
+    ],
+    "en": "Again, bugs were out earlier, now they're gone. So does it work?",
+    "caps": [
+     "아까는 벌레 많았는데",
+     "지금은 싹 사라졌어!",
+     "이거 진짜 되는 거야?"
+    ],
+    "check": "받아쓰기 11.7~15.5 단독 일치 · 말 끝 15.48(무음 검출)"
+   },
+   {
+    "id": "O3",
+    "src": "mt",
+    "span": [
+     14.25,
+     16.6
+    ],
+    "en": "I see a bunch of mosquitoes, but they're not coming near me.",
+    "caps": [
+     "모기 엄청 많은데",
+     "나한텐 안 와!!"
+    ],
+    "check": "받아쓰기 14.2~16.6 단독 = '…not coming near me.'(16.05 로 자르면 'not' 에서 끊김, 17.25 면 'Oh, there's one' 섞임)"
+   },
+   {
+    "id": "O4",
+    "src": "pp",
+    "span": [
+     36.78,
+     38.45
+    ],
+    "en": "Look at my son wearing one.",
+    "caps": [
+     "우리 아들 좀 봐ㅋㅋ",
+     "아들도 달고 있어!"
+    ],
+    "check": "받아쓰기 36.75~38.45 단독 'Look at my son wearing one.'"
+   }
+  ],
+  "dropped": {
+   "It's working (mt 34.2~35.2)": "원본 소리 −44~−54dB(그녀 말 −23~−30 보다 20dB 작음) — 검수 B17 '원본 −35dB 이하 웅얼거림 금지'에 걸려 끝 원음을 O4 로 바꿈",
+   "I don't believe this (pp 35.3~36.7)": "단독 받아쓰기가 'No, I don't I don't know if he's…' 로 흔들림 — 알아들림 불확실해 뺌",
+   "3개입 16달러·틱톡 품절·사라는 말": "금액 언급 금지·구매 유도 0(현장썰 6편 0/6)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 필재 tc_68257f68bc6e3c161ab5078d · tools/calcopy/engine/tts_pause.py(쉼표 0.22·마침표 0.30) 통째 1회",
+  "speed": 1.24,
+  "target_cps": 7.8,
+  "tts_note": "1차 TTS 받아쓰기(무료 제미나이 3회)에서 '댓글에서도→태클에서도'·'모기 많은→보기만 한'·'세 개 한 세트라→00:00센터가'·'애초에 이걸→이거를' 로 들려 2차에서 말 바꿈"
+ }
+}

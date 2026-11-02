@@ -297,16 +297,31 @@ PRESET_DOCS = (
 RESULT_STATES = ("통과", "사장님 확인 대기", "자동 검사만", "검수 중")
 
 
-def result_state(judge: str) -> str:
-    """결과물 장부의 판정 글(judge) → 상태 4칸 중 하나. 사람 판정 전·확인 대기를 '통과'로 세지 않는다."""
-    j = str(judge or "")
-    if "자동 검사" in j:
-        return "자동 검사만"
-    if "후보" in j or "사장님" in j or "확인 전" in j or "재확인" in j:
-        return "사장님 확인 대기"
-    if "통과" in j:
-        return "통과"
-    return "검수 중"
+def result_state(judge: str, fine: bool = False) -> str:
+    """결과물 장부의 판정 글(judge) → 상태 4칸 중 하나. 사람 판정 전·확인 대기를 '통과'로 세지 않는다.
+
+    판정 글 읽기의 주인은 이 함수 하나다(표준 tools/calcopy/칼카피_공통규칙표준.md §11 ⑧ — preset_card 도 이걸 부른다).
+    ① judge 앞머리 토큰이 있으면 그것만 본다: [사장님승인]·[페이블통과] → 통과 · [자동검사만] → 자동 검사만 · [확인대기] → 사장님 확인 대기.
+    ② 토큰이 없으면 옛 글 규칙 — 단 '사장님 승인'·'컨펌' 은 통과(10-25 잇템로그 승인 8편이 '확인 대기'로 뜬 사고).
+    fine=True 면 통과를 '사장님 승인'·'페이블 통과'로 갈라 돌려준다(L3 사장님 판정 = preset_card.facts owner_pass).
+    """
+    j = str(judge or "").lstrip()
+    tokens = {"[사장님승인]": "사장님 승인", "[페이블통과]": "페이블 통과", "[자동검사만]": "자동 검사만", "[확인대기]": "사장님 확인 대기"}
+    st = next((v for t, v in tokens.items() if j.startswith(t)), None)
+    if st is None:
+        if "자동 검사" in j:
+            st = "자동 검사만"
+        elif "사장님 승인" in j or "컨펌" in j:
+            st = "사장님 승인"
+        elif "후보" in j or "사장님" in j or "확인 전" in j or "재확인" in j:
+            st = "사장님 확인 대기"
+        elif "통과" in j:
+            st = "페이블 통과" if "페이블" in j else "통과"
+        else:
+            st = "검수 중"
+    if fine:
+        return st
+    return "통과" if st in ("사장님 승인", "페이블 통과") else st
 
 
 def preset_home(root: Path | None = None) -> dict:

@@ -3,7 +3,7 @@
 작업 폴더(git worktree): `C:\Users\CH\Desktop\로또의 주식\.tracks\칼카피숏템엔진` · 관제 097 · 보고는 한국어.
 
 ## 먼저 읽는다
-`channel/칼카피_시작.md`(특히 §12·상시 순찰·제미나이 키) · `tools/calcopy/hybrid/run.py` 머리 docstring · `tools/calcopy/hybrid/briefs/{research,screen_pick,script,review}.md` ·
+`channel/production_start.md`(특히 §12·상시 순찰·제미나이 키) · `tools/calcopy/hybrid/run.py` 머리 docstring · `tools/calcopy/hybrid/briefs/{research,screen_pick,script,review}.md` ·
 `tools/calcopy/검수_매뉴얼.md` · 정본 예시 `channel/yanshottem/하이브리드_한혜진/2판/`(가장 최신 결 — 대본·재료·근거 꼴을 그대로 따른다).
 
 ## 흐름 (run.py 단계)
