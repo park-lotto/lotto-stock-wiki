@@ -1646,6 +1646,25 @@ def _plan_reuse(W, v, T) -> list:
     return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
 
 
+class _Alive:
+    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 살아 있는 동안 30초마다 progress. 계획·렌더가 같이 쓴다.
+    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측)."""
+    def __init__(self, W, what):
+        import threading
+        self.W, self.what, self.stop = W, what, threading.Event()
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        while not self.stop.wait(30):
+            progress(self.W, self.what)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.stop.set()
+
+
 def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
@@ -1656,17 +1675,9 @@ def _c_plan(W, d):
     try:
         # 계획 안 관문(장면 경계·컷 내용 — 긴 원본 프레임 읽기)은 로그 없이 수 분 걸린다(10-26 524초 원본: 로그 끝 뒤 180초+ 무음으로 꺼짐).
         #   같은 프로세스 안 계산이라 무음 = 멈춤이 아니다 → 계산이 살아 있는 동안 30초마다 진행 신호. 끝없는 계산은 예산(plan 600초)이 끊는다.
-        import threading
-        alive = threading.Event()
-
-        def _beat():
-            while not alive.wait(30):
-                progress(W, "장면 맞추기")
-        threading.Thread(target=_beat, daemon=True).start()
-        try:
+        with _Alive(W, "장면 맞추기"):
             res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기", phase_rows))
-        finally:
-            alive.set()      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
+        pass      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
@@ -1703,7 +1714,8 @@ def _c_render(W, d):
     if miss:
         return {"ok": False, "error": miss}
     try:
-        info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
+        with _Alive(W, "영상 만들기"):
+            info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
     except render_bench.ThumbGone as e:      # 고른 썸네일 장면이 없어졌다 — 다시 묻는 길로(flow ph_render_got)
         return {"ok": False, "thumb_gone": True, "error": str(e)[:300]}
     except StageError as e:

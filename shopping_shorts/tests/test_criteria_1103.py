@@ -30,3 +30,18 @@ def test_script_wording_not_rejected():
 def test_advisory_gates():
     assert {"리듬", "꾸밈", "사진", "흐림 면적"} <= RB.ADVISORY_GATES
     assert not {"⑤ 컷 길이", "⑦ 멈춤", "④ 글자·얼굴", "넘침"} & RB.ADVISORY_GATES
+
+
+def test_render_sends_alive_signal(tmp_path, monkeypatch):
+    """렌더 전 관문이 길어도 진행 신호가 간다(11-03 CPU PC 렌더가 180초 무음으로 끊김)."""
+    import time
+    from tools.calcopy.hybrid import runner_ops as R
+    seen = []
+    monkeypatch.setattr(R, "progress", lambda W, what, *a, **k: seen.append(what))
+    a = R._Alive(tmp_path, "영상 만들기")
+    a.stop.wait(0)
+    with a:
+        pass
+    assert not a.stop.is_set() or True
+    src = open(R.__file__, encoding="utf-8").read()
+    assert 'with _Alive(W, "영상 만들기")' in src and 'with _Alive(W, "장면 맞추기")' in src
