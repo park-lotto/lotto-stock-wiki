@@ -132,7 +132,8 @@ test('UserPromptSubmit 훅 — 저장된 미전달 메시지를 맥락으로 넣
 
 test('hooks.json 에 UserPromptSubmit 이 등록돼 있고 시작 훅은 그대로다', () => {
   const h = JSON.parse(fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'hooks.json'), 'utf8')).hooks;
-  assert.equal(h.SessionStart[0].hooks.length, 3);
+  assert.equal(h.SessionStart[0].hooks.length, 4);
+  for (const w of [h.SessionStart[0].hooks[3], h.Stop[0].hooks[0]]) { assert.equal(w.asyncRewake, true); assert.match(w.command, /hooks\/wake\.js/); }
   const c = h.UserPromptSubmit[0].hooks[0];
   assert.equal(c.type, 'command');
   assert.match(c.command, /hooks\/live\.js/);
@@ -171,4 +172,27 @@ test('왕복 — 진짜 MCP 프로세스: shortem_message → 관리자 답장 �
     const again = await client.callTool({ name: 'shortem_job', arguments: { action: 'list' } });
     assert.ok(!(body(again).hints || []).some(h => h.startsWith(TEAM_HINT)), '한 번만');
   } finally { await client.close(); }
+});
+
+test('쉬는 Claude 깨우기: 새 메시지면 종료 코드 2 로 글을 내고 번호를 남기며, 새 감시가 뜨면 옛 감시는 끝난다', async () => {
+  const { spawn } = await import('node:child_process');
+  const os = await import('node:os');
+  const wake = path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'wake.js');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wake-'));
+  const env = { ...process.env, SHORTEM_HOME: home, SHORTEM_WAKE_POLL_MS: '40' };
+  const run = () => {
+    const p = spawn(process.execPath, [wake], { env, stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', d => { err += d; });
+    return new Promise(res => p.on('exit', code => res({ code, err })));
+  };
+  const first = run();
+  await new Promise(r => setTimeout(r, 300));
+  const second = run();
+  assert.equal((await first).code, 0);
+  fs.writeFileSync(path.join(home, 'live_inbox.json'), JSON.stringify([{ id: 7, text: '다시 시도해 주세요' }]));
+  const r = await second;
+  assert.equal(r.code, 2);
+  assert.match(r.err, /다시 시도해 주세요/);
+  assert.equal(fs.readFileSync(path.join(home, 'live_seen.txt'), 'utf8').trim(), '7');
 });
