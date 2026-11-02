@@ -43,6 +43,15 @@ try { $current = (Get-Content (Join-Path $homeDir 'install.json') -Raw -Encoding
 if ($current -eq $info.version -and (Test-Path $node)) {
     Say "이미 최신입니다($current)"
 } else {
+    # 막 푼 파일은 백신이 검사하느라 잠깐 잡고 있다 — 기다렸다 다시, 끝내 막히면 파일을 옮긴다(11-02 새 PC 실사고)
+    function Move-Folder($from, $to) {
+        for ($i = 1; $i -le 40; $i++) {
+            try { [IO.Directory]::Move($from, $to); return }
+            catch { if ($i -eq 1) { Say '보안 프로그램 검사가 끝나길 기다리는 중(최대 2분)' }; Start-Sleep -Seconds 3 }
+        }
+        & robocopy.exe $from $to /E /MOVE /R:5 /W:3 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { Die "설치 폴더를 옮기지 못했습니다(robocopy $LASTEXITCODE). 컴퓨터를 다시 켠 뒤 다시 실행해 주세요" }
+    }
     $drive = (Get-Item $parent).PSDrive
     $needGb = [math]::Ceiling(([double]$info.size) * 4 / 1GB)
     if ($drive.Free -lt ([double]$info.size) * 4) { Die "디스크 여유가 부족합니다. ${needGb}GB 이상 비워 주세요" }
@@ -50,10 +59,13 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     Say "내려받는 중(약 ${gb}GB, 끊겨도 이어 받습니다)"
     $zip = Join-Path $parent 'Shortem.download.part'
     $url = if ($info.url -like "http*") { $info.url } else { "$base/" + ([string]$info.url).TrimStart("/") }
-    & curl.exe -# -fL --retry 5 --retry-delay 5 -C - -o $zip $url
-    if ($LASTEXITCODE -ne 0) {
-        Remove-Item $zip -Force -ErrorAction SilentlyContinue
-        Die "내려받기 실패(curl $LASTEXITCODE). 다시 시도해 주세요"
+    $have = (Test-Path $zip) -and ((Get-Item $zip).Length -eq [int64]$info.size) -and ((Get-FileHash $zip -Algorithm SHA256).Hash.ToLower() -eq $info.sha256)
+    if (-not $have) {     # 다시 실행하면 이미 받은 파일을 그대로 쓴다
+        & curl.exe -# -fL --retry 5 --retry-delay 5 -C - -o $zip $url
+        if ($LASTEXITCODE -ne 0) {
+            Remove-Item $zip -Force -ErrorAction SilentlyContinue
+            Die "내려받기 실패(curl $LASTEXITCODE). 다시 시도해 주세요"
+        }
     }
     Say '받은 파일 확인 중'
     if ((Get-FileHash $zip -Algorithm SHA256).Hash.ToLower() -ne $info.sha256) {
@@ -68,8 +80,8 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     if ($LASTEXITCODE -ne 0) { Die "풀기 실패(tar $LASTEXITCODE)" }
     if (-not (Test-Path (Join-Path $fresh 'tools\tools.manifest.json')) -or -not (Test-Path (Join-Path $fresh 'server\index.js'))) { Die '풀린 묶음이 덜 찼습니다' }
     $old = $null
-    if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Rename-Item $homeDir $old }
-    Rename-Item $fresh $homeDir
+    if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Move-Folder $homeDir $old }
+    Move-Folder $fresh $homeDir
     & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version
     if ($LASTEXITCODE -ne 0) {
         Remove-Item $homeDir -Recurse -Force
