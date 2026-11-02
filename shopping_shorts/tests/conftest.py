@@ -84,6 +84,14 @@ def pytest_collection_modifyitems(config, items):
     if not os.environ.get("GATE_XDIST_N") or os.environ.get("GATE_REAL_MEDIA") == "1":
         return
     skip = pytest.mark.skip(reason="병합 관문: 집 PC 실제 영상 시험 제외(GATE_REAL_MEDIA=1 이면 돈다)")
+    # 경로가 파일 맨 위 상수에 있으면 함수 본문 검사로 못 잡는다(11-02 관문이 같은 영상에서 다시 멈춤) — 파일 단위로 뺀다(합성 영상만 쓰는 readline 은 위 규칙)
+    real_files = set()
+    for f in {str(i.fspath) for i in items}:
+        try:
+            if "숏템_칼카피" in open(f, encoding="utf-8").read() and not f.endswith(("test_readline_tools.py", "conftest.py")):
+                real_files.add(f)
+        except OSError:
+            pass
     for it in items:
         reasons = " ".join(str(m.kwargs.get("reason", "")) for m in it.iter_markers("skipif"))
         try:
@@ -92,5 +100,5 @@ def pytest_collection_modifyitems(config, items):
             src = ""
         # test_readline_tools 재현 시험은 도우미 안에서 실제 영상을 통째로 읽는다(11-02 관문 ffmpeg 멈춤 1시간 40분) — 합성 영상(synth) 시험만 돈다
         real_band = str(it.fspath).endswith("test_readline_tools.py") and "synth" not in getattr(it, "fixturenames", ())
-        if real_band or "숏템_칼카피" in src or "집 PC" in reasons or "원본 없음" in reasons:
+        if real_band or str(it.fspath) in real_files or "숏템_칼카피" in src or "집 PC" in reasons or "원본 없음" in reasons:
             it.add_marker(skip)
