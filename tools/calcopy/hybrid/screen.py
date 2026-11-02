@@ -138,7 +138,7 @@ def screen_one(sd: Path, vid: str, keywords: list[str], log=print) -> dict:
     url = f"https://www.youtube.com/watch?v={vid}"
     info = sd / f"{vid}.info.json"
     if not info.exists():                                       # 메타와 자막을 따로(자막 429 가 메타까지 막지 않게)
-        r = _ytdlp(["--skip-download", "--write-info-json", "-o", str(sd / vid), url])
+        r = _ytdlp(["--skip-download", "--ignore-no-formats-error", "--write-info-json", "-o", str(sd / vid), url])
         if not info.exists():
             return {"id": vid, "error": "메타 못 받음: " + r.stderr[-200:]}
     YF.fetch_subs(url, sd / vid, log=log)                      # 자막은 최선 노력(429 면 자막 없이 간다)

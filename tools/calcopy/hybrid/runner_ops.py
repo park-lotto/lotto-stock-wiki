@@ -109,7 +109,7 @@ def yt_probe(url: str) -> str:
     """준비 확인용 실제 받기 시험 — 받기와 **같은 함수(yt)** 로 그 영상 정보만 한 번 읽는다(내려받지 않음). 성공 = "", 실패 = 이유 한 줄.
     뿌리(98 #157·#158·#159·10-27): 파일·쿠키 이름 검사는 '있는데 못 쓰는' 경우(인코딩·계정 막힘·프로필 다름)를 매번 놓쳤다."""
     try:
-        r = yt(["--simulate", "--skip-download", "--no-playlist", "--print", "id", url], timeout=90)
+        r = yt(["--simulate", "--skip-download", "--ignore-no-formats-error", "--no-playlist", "--print", "id", url], timeout=90)
     except CacheMiss as e:
         return str(e)
     except subprocess.TimeoutExpired:
@@ -783,7 +783,7 @@ def _origin_words(W: Path, vid: str) -> tuple[list, str]:
         return [], ""
     vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
     if not vtt:
-        r = yt(["--skip-download", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
+        r = yt(["--skip-download", "--ignore-no-formats-error", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
         if _blocked(r):
             return [], "blocked"
         vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
