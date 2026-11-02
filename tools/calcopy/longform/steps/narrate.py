@@ -9,8 +9,8 @@ def opt(name, default):
     return args[args.index(name) + 1] if name in args else default
 VOICE = opt("--voice", "Piljae"); TEMPO = float(opt("--tempo", "1.2"))
 ONLY = set(int(x) for x in opt("--only", "").split(",") if x)
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(HERE, "steps"))
 from textglue import glue
 from numread import say as yomi
 import keys
@@ -40,7 +40,7 @@ _kept = {x["text"]: x["tts"] for x in json.load(open(_lp, encoding="utf-8")) if 
 for l in lines:   # 손으로 바꾼 tts 칸(숫자한글읽기)은 같은 문장이면 그대로 둔다
     if l["type"] == "line": l["tts"] = _kept.get(l["text"]) or yomi(l["text"])
 json.dump(lines, open(os.path.join(OUT, "lines.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-if "--parse-only" in args:  # 일레븐랩스(tts_r7.py)로 녹음할 때: 문장 목록만 만들고 끝
+if "--parse-only" in args:
     print(f"문장 목록만 만듦: {os.path.join(OUT, 'lines.json')}"); sys.exit(0)
 left = [(l["i"], l["tts"]) for l in lines if l["type"] == "line" and re.search(r"[0-9%~/A-Za-z]", l["tts"])]
 if left:  # 숫자·기호는 숫자한글읽기_지침.md 대로 tts 칸을 한글로 먼저 바꿔야 한다
@@ -49,7 +49,7 @@ if left:  # 숫자·기호는 숫자한글읽기_지침.md 대로 tts 칸을 한
 
 # 3) TTS
 key = keys.get("typecast")
-vid = {v["voice_name"]: v["voice_id"] for v in json.load(open(os.path.join(HERE, "typecast_voices_v2.json"), encoding="utf-8"))}[VOICE]
+vid = {v["voice_name"]: v["voice_id"] for v in json.load(open(os.path.join(HERE, "voices.json"), encoding="utf-8"))}[VOICE]
 def tts(l):
     raw = os.path.join(OUT, "raw", f"{l['i']:03d}.wav")
     if os.path.exists(raw) and not ONLY: return l["i"], "skip"

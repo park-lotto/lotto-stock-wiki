@@ -1,7 +1,7 @@
 # 배경음 내려받기 (Kevin MacLeod · incompetech.com · CC BY 4.0) → media/bgm/
 # 사용: python -X utf8 get_bgm.py    
 import os, urllib.request, urllib.parse
-HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "media", "bgm"); os.makedirs(OUT, exist_ok=True)
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); OUT = os.path.join(HERE, "media", "bgm"); os.makedirs(OUT, exist_ok=True)
 SONGS = ["Bass Walker", "Thinking Music", "Local Forecast", "Pamgaea"]
 for name in SONGS:
     path = os.path.join(OUT, name.replace(" ", "_") + ".mp3")

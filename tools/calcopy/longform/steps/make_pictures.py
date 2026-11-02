@@ -1,6 +1,6 @@
 # shots.py 의 AI 장면·실사 대체 그림 → assets/img/sNNN.png
 # 사용: 작업 폴더에서 python -X utf8 <경로>/gen_images.py [동시개수]
-# 고객 제미나이 키를 쓴다. LONGFORM_VERTEX=<프로젝트> 면 그 버텍스 프로젝트로 만든다(gcloud 로그인 필요).
+# 고객 제미나이 키를 쓴다. SHORCL_VERTEX=<프로젝트> 면 그 버텍스 프로젝트로 만든다(gcloud 로그인 필요).
 import concurrent.futures as cf, importlib.util, os, sys, time, warnings
 warnings.filterwarnings("ignore")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -9,21 +9,21 @@ import keys
 from google import genai
 from google.genai import types
 
-WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
-OUT = os.path.join(WORK, "assets", "img"); os.makedirs(OUT, exist_ok=True)
+WORK = os.path.abspath(os.environ.get("SHORCL_WORK") or os.getcwd())
+OUT = os.path.join(WORK, "material", "img"); os.makedirs(OUT, exist_ok=True)
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 2
-MODEL = os.environ.get("LONGFORM_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
-VERTEX = os.environ.get("LONGFORM_VERTEX", "")
+MODEL = os.environ.get("SHORCL_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
+VERTEX = os.environ.get("SHORCL_VERTEX", "")
 STYLE = " Photorealistic documentary photograph, natural lighting, slightly desaturated. No text, no letters, no logos, no watermarks."
-spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "shots.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
+spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "장면표.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
 
 jobs = []
 for s in sh.S:
     if "img" in s: continue  # 다른 샷 그림을 다시 쓴다
-    if os.path.exists(os.path.join(WORK, "assets", "stock", f"s{s['s'][0]:03d}.mp4")): continue  # 실사를 받은 칸은 그리지 않는다
+    if os.path.exists(os.path.join(WORK, "material", "video", f"s{s['s'][0]:03d}.mp4")): continue  # 실사를 받은 칸은 그리지 않는다
     p = s.get("prompt") or s.get("ai") or s.get("bg_ai")
     if p: jobs.append((f"s{s['s'][0]:03d}", p))
-if os.environ.get("LONGFORM_IMAGE_REVERSE"): jobs.reverse()   # 다른 모델로 뒤에서부터 같이 채울 때
+if os.environ.get("SHORCL_IMAGE_REVERSE"): jobs.reverse()   # 다른 모델로 뒤에서부터 같이 채울 때
 client = genai.Client(vertexai=True, project=VERTEX, location="global") if VERTEX else genai.Client(api_key=keys.get("gemini"))
 
 

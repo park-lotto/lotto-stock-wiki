@@ -3,18 +3,18 @@ import glob, importlib.util, json, os, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-HERE = os.path.dirname(os.path.abspath(__file__))
-WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
-BUILD = os.path.join(WORK, "build"); os.makedirs(BUILD, exist_ok=True)
-spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "shots.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
-LINES = {x["i"]: x["text"] for x in json.load(open(os.path.join(WORK, "narr", "lines.json"), encoding="utf-8")) if x["type"] == "line"}
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORK = os.path.abspath(os.environ.get("SHORCL_WORK") or os.getcwd())
+BUILD = os.path.join(WORK, "_work"); os.makedirs(BUILD, exist_ok=True)
+spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "장면표.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
+LINES = {x["i"]: x["text"] for x in json.load(open(os.path.join(WORK, "voice", "lines.json"), encoding="utf-8")) if x["type"] == "line"}
 NO_ASSET = ("bar", "typo", "vs", "table", "pct", "cycle", "rating", "ladder")
 TW, TH, COLS, PER = 384, 216, 5, 40
 font = ImageFont.truetype(os.path.join(HERE, "fonts", "Pretendard-Bold.otf"), 18)
 
 
-def png(n): return os.path.join(WORK, "assets", "img", f"s{n:03d}.png")
-def mp4(n): return os.path.join(WORK, "assets", "stock", f"s{n:03d}.mp4")
+def png(n): return os.path.join(WORK, "material", "img", f"s{n:03d}.png")
+def mp4(n): return os.path.join(WORK, "material", "video", f"s{n:03d}.mp4")
 
 
 def thumb(s):

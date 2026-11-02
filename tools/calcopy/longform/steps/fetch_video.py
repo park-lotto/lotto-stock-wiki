@@ -1,11 +1,9 @@
-# 실사 영상 받기 — shots.py 의 stock 샷(q)과 배경(bg_q)을 assets/stock/sNNN.mp4 로 저장
-# 순서: Pixabay(키는 keys.py) → Wikimedia Commons(키 불필요, CC BY 류는 설명란 표기 필수)
-# Pexels 는 2026-11 새 키 발급이 중단돼 뺐다. 출처는 assets/stock/credits.md 에 쌓인다.
-# 사용: 작업 폴더에서 python -X utf8 <경로>/stock.py [--force]   (LONGFORM_WORK 로 작업 폴더 지정 가능)
+# 실사 영상 받기 — 장면표의 stock 샷(q)을 material/video/sNNN.mp4 로 저장. Pixabay 먼저, 없으면 Wikimedia.
+# 사용: 작업 폴더에서 python -X utf8 <경로>/fetch_video.py [--force]
 import importlib.util, json, os, re, subprocess, sys, urllib.parse, urllib.request
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
-OUT = os.path.join(WORK, "assets", "stock"); os.makedirs(OUT, exist_ok=True)
+WORK = os.path.abspath(os.environ.get("SHORCL_WORK") or os.getcwd())
+OUT = os.path.join(WORK, "material", "video"); os.makedirs(OUT, exist_ok=True)
 UA = "Mozilla/5.0 (shorcl-longform)"
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import keys
@@ -70,7 +68,7 @@ def is_chroma(path):
 
 
 def main():
-    spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "shots.py"))
+    spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "장면표.py"))
     sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
     if not PIXABAY: print("[경고] Pixabay 키 없음 — Wikimedia 만 찾는다", flush=True)
     miss = []

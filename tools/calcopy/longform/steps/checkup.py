@@ -4,11 +4,11 @@
 import hashlib, importlib.util, json, os, shutil, subprocess, sys, urllib.error, urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-HERE = os.path.dirname(os.path.abspath(__file__))
-WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORK = os.path.abspath(os.environ.get("SHORCL_WORK") or os.getcwd())
 MIN_GB = 10
 PY_MODS = ["PIL", "numpy", "scipy"]
-sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "steps"))
 import keys
 
 
@@ -78,7 +78,7 @@ def ck_gemini():
     mark = os.path.expanduser("~/.shortem/image_ok_" + hashlib.sha256(k.encode()).hexdigest()[:12])
     if os.path.exists(mark): return True, "그림 만들기 확인됨", ""
     if "--no-paid" in sys.argv: return False, "그림 만들기 확인 전입니다(약 50원)", "--no-paid 없이 다시 실행해 주세요"
-    model = os.environ.get("LONGFORM_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
+    model = os.environ.get("SHORCL_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
     body = {"contents": [{"parts": [{"text": "A quiet street, photo"}]}], "generationConfig": {"responseModalities": ["IMAGE"]}}
     req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", data=json.dumps(body).encode(),
                                  headers={"x-goog-api-key": k, "Content-Type": "application/json"}, method="POST")
