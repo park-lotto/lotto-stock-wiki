@@ -31,6 +31,7 @@ import { anyFlowBusy } from './flow_driver.js';
 import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
 import { holdSession, holdNow } from './session.js';
 import { syncGuide } from './guide_sync.js';
+import { syncPlugin } from './plugin_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -374,6 +375,11 @@ async function main() {
   try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  syncGuide();          // 회원이 설치를 다시 하지 않게 — 지침·플러그인은 켤 때 스스로 맞춘다
+  setTimeout(() => {
+    try { syncPlugin({ version: ENGINE_VERSION, installRoot: process.env.SHORTEM_INSTALL, report: t => audit('plugin_sync', { result: t.slice(0, 70) }) }); }
+    catch (e) { audit('plugin_sync', { result: String((e && e.message) || e).slice(0, 70) }); }
+  }, 5000).unref();
   holdSession({ onBeat: async () => { const s = flowStall(); if (s) await reportLive(s); await pullLive(); } });   // 신호마다 멈춤 알리기·숏클 팀 메시지 받기(관제 304)
   // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
   setTimeout(() => { retryUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();

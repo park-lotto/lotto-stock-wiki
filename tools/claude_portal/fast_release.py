@@ -36,6 +36,10 @@ def target(path: str) -> str | None:
     """저장소 파일 → 설치본 자리. '' = 고객에게 안 가는 파일, None = 자동 업데이트로 못 가는 파일."""
     if path.startswith("shortem_client/server/"):
         return "server/" + path[len("shortem_client/server/"):]
+    if path.startswith("installer/plugin/"):      # 훅·스킬 = 켤 때 plugin_sync 가 갱신한다
+        return "server/plugin_update/" + path[len("installer/plugin/"):]
+    if path == "installer/common/MEMBER_GUIDE.md":
+        return "server/guide/MEMBER_GUIDE.md"
     if path.startswith(("shortem_client/test/", "handoff/", "wiki/", "관제/", "tools/claude_portal/")):
         return ""
     if path.startswith(("tools/calcopy/", "shopping_shorts/", "channel/")):

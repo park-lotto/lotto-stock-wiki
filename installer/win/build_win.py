@@ -275,6 +275,8 @@ def build_server(stage: Path, client: Path, report: dict) -> None:
         return
     ignore = shutil.ignore_patterns("node_modules", ".git", "test", "tests", "__tests__", "*.test.js", "*.log", ".env*")
     shutil.copytree(client / "server", srv, ignore=ignore)
+    if (ROOT / "plugin").is_dir():      # 플러그인도 자동 업데이트로(plugin_sync.js) — 설치를 다시 하지 않는다
+        shutil.copytree(ROOT / "plugin", srv / "plugin_update", dirs_exist_ok=True)
     put_guide(srv)                      # 회원 지침 — 켤 때 자동 업데이트(server 묶음)로 같이 바뀐다 → 플러그인 시작 훅이 이것을 먼저 읽는다
     # package.json 이 server 안에 있으면 거기, 아니면 shortem_client 루트 것을 설치 폴더 루트에 둔다(위로 올라가며 찾는다)
     if (client / "server" / "package.json").exists():
