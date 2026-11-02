@@ -71,7 +71,7 @@ def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tu
             exe = claude_exe()
             if not exe:
                 return None, "claude 실행 파일 없음"       # 렌더를 멈추지 않는다 — 부르는 쪽이 눈 판정 없이 간다
-            p = subprocess.run([exe, "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
+            p = subprocess.run([exe, "-p", "--settings", '{"disableAllHooks":true}', "--model", model, "--output-format", "text", "--allowedTools", "Read"],   # 회원 훅이 헤드리스를 붙잡아 420초까지 무응답(11-02 회원 실측, 끄면 5~6초)
                                input=full, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                timeout=TIMEOUT, cwd=str(d), stdin=None)
         except subprocess.TimeoutExpired:
