@@ -203,7 +203,7 @@ export async function benchWait(sid) {
   return shaped(id, await waitFlow(id, waitMs()));
 }
 
-export const BENCH_TEXT = "채널 벤치마킹(고급반) — 고객이 준 채널의 조회수 높은 쇼츠를 이 PC 에서 받아 화면 틀을 뜯어 내 프리셋으로 저장합니다. step='start'(channel=유튜브 채널 주소 또는 videos=영상 주소 목록, name=프리셋 이름, n=쓸 편 수 1~5) → 응답의 need 가 'ai' 면 shortem_ai 로 답한 뒤 step='wait'(sid) → need='done' 이면 저장 끝, 응답의 next 로 제작합니다. 기본반이면 fail 의 이유·할 일을 그대로 전합니다.";
+export const BENCH_TEXT = "채널 벤치마킹(고급반) — 고객이 준 채널의 조회수 높은 쇼츠를 이 PC 에서 받아 화면·대본·편집·소리를 분석하고, 시험 편을 벤치와 맞춘 뒤 내 프리셋으로 저장합니다(명령 /벤치마킹 — 순서는 플러그인 commands/벤치마킹.md). step='start'(channel=유튜브 채널 주소 또는 videos=영상 주소 목록, name=프리셋 이름, n=쓸 편 수 1~5) → 응답의 need 가 'ai' 면 shortem_ai 로 답한 뒤(시험 영상 과제는 과제 글대로 shortem_make 로 만들어 sid 를 답한다) step='wait'(sid) → need='done' 이면 저장 끝, 응답의 next 로 제작합니다. 기본반이면 fail 의 이유·할 일을 그대로 전합니다.";
 
 export function registerBenchmark(server, reply) {
   server.registerTool('shortem_benchmark', {

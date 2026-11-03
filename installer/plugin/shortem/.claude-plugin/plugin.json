@@ -2,7 +2,7 @@
   "name": "shortem",
   "displayName": "숏템",
   "version": "1.0.0",
-  "description": "숏템 채널 프리셋으로 내 PC에서 숏폼을 만드는 명령 모음(/shortem:setup · /shortem:make). 숏템 설치팩이 먼저 깔려 있어야 합니다.",
+  "description": "숏템 채널 프리셋으로 내 PC에서 숏폼을 만드는 명령 모음(/shortem:setup · /shortem:make · /벤치마킹). 숏템 설치팩이 먼저 깔려 있어야 합니다.",
   "author": {
     "name": "숏템메이커",
     "url": "https://shoppingshorts.duckdns.org"
