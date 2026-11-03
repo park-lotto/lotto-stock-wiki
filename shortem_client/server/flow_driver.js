@@ -287,14 +287,14 @@ export function recleanFlow(sid) {
   return f;
 }
 
-export async function startFlow({ preset, video, product }) {
+export async function startFlow({ preset, video, product, topic }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
   const ending = [...flows.values()].filter(g => g.cancelled && g.busy);      // 막 멈춘 편 — 빌림을 다 돌려준 뒤 시작한다(#2027)
   if (ending.length) await Promise.race([Promise.all(ending.map(g => settled(g.sid))), new Promise(r => setTimeout(r, 15000).unref())]);
   await refreshCookies();
-  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
+  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}), ...(topic ? { topic: String(topic).slice(0, 300) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다(topic 이 있으면 그 주제로 — 받는 형식만)
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
   flows.set(f.sid, f);
   await absorb(f, res);

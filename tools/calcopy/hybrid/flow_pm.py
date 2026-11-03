@@ -84,6 +84,16 @@ PC 제작 순서(01 소재)를 그대로 따른다:
 "research_words": ["근거 찾을 낱말(브랜드·제조사·사건 이름)"]}}"""
 
 
+def p_bench(st, m, rp, u):
+    """소재 영상이 있으면 공용 받기, 주제 시작(#3207 — 쿠팡 제품+주제)이면 받을 것 없이 바로 소재 판독."""
+    if st.get("ref"):
+        return F().ph_bench(st, m, rp, u)
+    st["bench"], st["bench_lines"] = {}, []
+    ask = TOPIC.format(guide=_doc(GUIDE / "01_topic.md", 4000)) + "\n\n소재 영상 없음 — 회원이 준 주제: " + st["given_topic"] + \
+        ("\n회원이 정한 제품: " + st["given"] if st.get("given") else "")
+    return {"review": [F()._rv("pm_topic", ask, [], need=("topic", "product", "queries", "research_words"))], "then": "p_topic_got"}
+
+
 def p_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
@@ -349,7 +359,7 @@ def p_eye_got(st, m, rp, u):
     return _rows_ask(st, "\n\n★완성본 확인에서 걸린 것(걸린 행만 고친다):\n- " + "\n- ".join(probs)[:4000], st.get("pm_crop_sheets") or [])
 
 
-PHASES = {"bench_got": p_bench_got, "p_topic_got": p_topic_got, "p_research_got": p_research_got, "material_dl": p_material_dl,
+PHASES = {"bench": p_bench, "bench_got": p_bench_got, "p_topic_got": p_topic_got, "p_research_got": p_research_got, "material_dl": p_material_dl,
           "p_script": p_script, "p_script_got": p_script_got, "p_memes_got": p_memes_got, "p_rows": p_rows, "p_rows_got": p_rows_got,
           "p_plan_got": p_plan_got, "p_make_got": p_make_got, "p_eye_got": p_eye_got}
 PHASE_STAGE = {"p_topic_got": "bench", "p_research_got": "research", "material_dl": "material", "p_script": "script", "p_script_got": "script",

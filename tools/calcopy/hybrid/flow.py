@@ -444,7 +444,18 @@ def source_url_problem(url: str) -> str:
     return "영상 한 편 주소를 주세요 — 유튜브 쇼츠·틱톡 영상(…/@아이디/video/숫자)·인스타 릴스(…/reel/코드)"
 
 
-def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None = None) -> dict:
+TOPIC_FMTS = ("PC제작형",)
+
+
+def takes_topic(version: str) -> bool:
+    """소재 영상 없이 주제만으로 시작할 수 있는 판인가 — 형식이 정한다(PC제작형 = PC 담당처럼 주제 → 근거 조사, #3207)."""
+    try:
+        return flow_format_of(version)[0] in TOPIC_FMTS
+    except Exception:  # noqa: BLE001 — 장부에 없는 판은 못 한다
+        return False
+
+
+def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None = None, topic: str = "") -> dict:
     """product = 고객이 정한 쿠팡 제품(이름·상품 주소) — 원본에 제품이 화면으로 안 나올 때 쓴다(사장님 10-23 '실제 올린 채널의 상품을 참고').
     fmt = 형식(서버가 넘기면 그대로 — 단 프리셋 장부와 다르면 거절). 없으면 channel/프리셋.json 에서(flow_format_of). 못 정하면 FormatError."""
     f0, slug = flow_format_of(version)
@@ -453,6 +464,10 @@ def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None =
     st = {"started_at": time.time(), "sid": sid, "ref": ref, "version": version, "fmt": f0, "slug": slug, "phase": "setup", "tries": {}, "log": []}
     if str(product or "").strip():
         st["given"] = str(product).strip()[:200]
+    if str(topic or "").strip():
+        if f0 not in TOPIC_FMTS:
+            raise FormatError(f"형식 {f0} 는 주제만으로 시작하지 않습니다")
+        st["given_topic"] = str(topic).strip()[:300]
     return st
 
 

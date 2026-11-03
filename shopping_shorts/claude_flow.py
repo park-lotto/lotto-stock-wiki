@@ -221,20 +221,26 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, n=300, offset=offset, used=used, seed=cid))   # 창고 전체를 고객이 고른다(사장님 10-31)
             return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
         auto = None
-        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
+        topic = "" if url else str((body.get("source") or {}).get("topic") or "").strip()[:300]
+        if topic and not (hasattr(flow, "takes_topic") and flow.takes_topic(line["version"])):
+            # 주제 시작을 못 하는 형식 — 회원 앱이 이 거절('단계 진행')을 보고 옛 길로 간다(make_flow.js)
+            raise CP.PortalError("bad_request", "이 프리셋은 주제만으로 단계 진행을 시작하지 않습니다")
+        if not topic and not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
             auto = flow.pick_source(line["version"], made, **_pool_kw(flow.pick_source, used=used, seed=cid))
             if not auto:
                 raise CP.PortalError("bad_request", "이 프리셋의 소재 창고(벤치 채널)에 아직 안 만든 영상이 없어요 — 영상 주소를 주세요")
             url = auto["url"]
-        why = flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
-            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요")   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
+        why = "" if topic else (flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
+            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요"))   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
         if why:
             raise CP.PortalError("bad_request", why)
         sid = uuid.uuid4().hex[:12]
         # 고객이 정한 쿠팡 제품(이름·주소) — 원본에 제품이 말로만 나올 때 쓴다(사장님 10-23)
         product = str((body.get("source") or {}).get("product") or "")[:200]
         # 제품을 정했을 때만 넘긴다 — 엔진이 이 인자를 모르는 옛판이어도 정하지 않은 편은 그대로 돈다
-        st, seq = (flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
+        # 주제 시작(#3207) = 소재 영상 없이 회원이 준 주제·제품으로(PC제작형: 소재 판독 → 근거 조사부터)
+        st, seq = (flow.start("", line["version"], sid, product, topic=topic) if topic else
+                   flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
         st["made_refs"] = made[:200]          # 둘째 소재(pick_alt_source)도 이 회원이 만든 것을 뺀다
         st["pool_used"], st["pool_seed"] = dict(sorted(used.items(), key=lambda x: -x[1])[:200]), cid   # 다음 소재·둘째 소재도 같은 순서
         if auto:

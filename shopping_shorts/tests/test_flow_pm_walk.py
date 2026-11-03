@@ -82,3 +82,23 @@ def test_script_rejected_then_fixed():
     st = _start()
     st, out = _to_rows(st)
     assert st["tries"].get("pm_script", 0) == 0           # PC 본보기 대본은 한 번에 통과
+
+
+def test_topic_start_without_video_goes_to_research():
+    """#3207 — 쿠팡 제품 + 주제(영상 주소 없음)로 시작하면 받기 없이 소재 판독 → 근거 조사(옛 remake 길로 안 간다)."""
+    assert F.takes_topic("썰템쇼판") and not F.takes_topic("잇썸홈판")
+    st = F.start("", "썰템쇼판", "pmtopic0001", "https://www.coupang.com/vp/products/1", topic="미국 베이글 시즈닝 반입금지")
+    assert st["given_topic"] and st["fmt"] == "PC제작형"
+    out = _go(st)
+    assert out["do"][0]["cmd"] == "env"
+    out = _go(st, {"env": {"missing": []}})
+    assert out["review"][0]["id"] == "pm_topic" and "반입금지" in out["review"][0]["ask"] and "coupang" in out["review"][0]["ask"]
+    assert not any(d.get("cmd") == "bench" for d in out.get("do") or [])
+    out = _go(st, rp={"pm_topic": {"topic": "t", "product": "에브리띵 베이글 시즈닝", "queries": ["q"], "research_words": ["w"]}})
+    assert out["review"][0]["id"] == "pm_research"
+
+
+def test_topic_start_refused_for_other_formats():
+    import pytest
+    with pytest.raises(F.FormatError):
+        F.start("", "잇썸홈판", "pmtopic0002", topic="x")
