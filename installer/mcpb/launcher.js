@@ -304,9 +304,25 @@ function runFallback(reason, home) {
 
 // 켤 때 자동 업데이트 — 바꾸기 쪽(관제 234 5판). 받기는 서버(server/updater.js)가 지난번에 <설치>/_update/<판>/ 에 풀어 두었다.
 //   서버를 띄우기 전에 server·engine 을 새 판으로 바꾼다. 하나라도 실패하면 되돌리고 그대로 예전 판으로 뜬다.
+// 만드는 중엔 서버가 표시를 pending.hold.json 으로 숨긴다(preset_rent.holdPending) — 뜻은 '돌고 있는 제작 중엔 바꾸지 마라'.
+//   제작 잠금(rent.lock) 주인이 죽었으면 지금 도는 제작은 없으니 표시를 되살린다. 제작 중에 창을 닫으면 숨김이 남아 앱 판이 영영 안 바뀌던 것(#1507).
+//   supervisor.unhidePending 과 같은 판단(launcher 는 업데이트 묶음에 없어 두 벌).
+function unhidePending(up) {
+  const pend = path.join(up, 'pending.json'), hold = path.join(up, 'pending.hold.json');
+  if (fs.existsSync(pend) || !fs.existsSync(hold)) return;
+  let o = null;
+  try {
+    const t = fs.readFileSync(path.join(process.env.SHORTEM_HOME || path.join(os.homedir(), '.shortem'), 'rent.lock'), 'utf8');
+    o = t.trim().startsWith('{') ? JSON.parse(t) : { pid: Number(t) };   // 옛 잠금 = pid 숫자만
+  } catch (_) { /* 잠금 없음 = 아무도 안 만든다 */ }
+  if (o && o.pid) { try { process.kill(o.pid, 0); return; } catch (_) { /* 주인 죽음 */ } }
+  try { fs.renameSync(hold, pend); } catch (_) { /* 다른 창이 먼저 되살렸다 */ }
+}
+
 function applyPending(home) {
   const up = path.join(home, '_update');
   const pend = path.join(up, 'pending.json');
+  unhidePending(up);
   let p;
   try { p = JSON.parse(fs.readFileSync(pend, 'utf8')); } catch (_) { return null; }
   if (!/^\d+\.\d+\.\d+$/.test(String(p.version)) || p.dir !== p.version) { try { fs.unlinkSync(pend); } catch (_) {} return null; }
@@ -350,7 +366,7 @@ function applyPending(home) {
 
 function main() {
   const home = installHome();
-  if (!process.argv.includes('--where') && fs.existsSync(path.join(home, '_update', 'pending.json'))) applyPending(home);
+  if (!process.argv.includes('--where') && fs.existsSync(path.join(home, '_update'))) applyPending(home);   // 표시가 숨어 있어도(pending.hold.json) 본다
   if (process.argv.includes('--where')) {
     process.stdout.write(JSON.stringify({ home, node: nodeExe(home), problem: problem(home) }) + '\n');
     return;

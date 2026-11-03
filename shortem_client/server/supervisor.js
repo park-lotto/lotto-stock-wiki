@@ -2,14 +2,31 @@
 //   자식이 '새 판 받음·돌던 일 없음'을 알리면(swap) 요청이 없을 때만 자식을 내리고 server·engine 을 바꿔 다시 띄운다. Claude 쪽 연결은 끊기지 않는다.
 //   이 파일은 node 기본 부품만 쓴다.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn, execFile } from 'node:child_process';
 
 export const SWAP_EXIT = 75;
 const IDLE_MS = Number(process.env.SHORTEM_SWAP_IDLE_MS || 5 * 60 * 1000);   // 마지막 요청 뒤 이만큼 조용할 때만 바꾼다
 
+// 만드는 중엔 표시가 pending.hold.json 으로 숨는다(preset_rent.holdPending) — 뜻은 '돌고 있는 제작 중엔 바꾸지 마라'.
+//   제작 잠금(rent.lock) 주인이 죽었으면 도는 제작이 없으니 표시를 되살린다(#1507 제작 중 창 닫기로 숨김이 남아 앱 판이 안 바뀜).
+//   연결기 launcher.unhidePending 과 같은 판단 — 연결기는 업데이트 묶음에 없어 두 벌이다.
+export function unhidePending(up) {
+  const pend = path.join(up, 'pending.json'), hold = path.join(up, 'pending.hold.json');
+  if (fs.existsSync(pend) || !fs.existsSync(hold)) return;
+  let o = null;
+  try {
+    const t = fs.readFileSync(path.join(process.env.SHORTEM_HOME || path.join(os.homedir(), '.shortem'), 'rent.lock'), 'utf8');
+    o = t.trim().startsWith('{') ? JSON.parse(t) : { pid: Number(t) };   // 옛 잠금 = pid 숫자만
+  } catch { /* 잠금 없음 = 아무도 안 만든다 */ }
+  if (o && o.pid) { try { process.kill(o.pid, 0); return; } catch { /* 주인 죽음 */ } }
+  try { fs.renameSync(hold, pend); } catch { /* 다른 창이 먼저 되살렸다 */ }
+}
+
 export function applyUpdate(home) {            // 실패하면 되돌리고 옛 판으로 계속
   const up = path.join(home, '_update'), pend = path.join(up, 'pending.json');
+  unhidePending(up);
   let p;
   try { p = JSON.parse(fs.readFileSync(pend, 'utf8')); } catch { return null; }
   if (!/^\d+\.\d+\.\d+$/.test(String(p.version)) || p.dir !== p.version) { try { fs.unlinkSync(pend); } catch { /* 없음 */ } return null; }

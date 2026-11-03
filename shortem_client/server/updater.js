@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { api, download } from './api.js';
 import { ENGINE_VERSION } from './license.js';
 import { toolsDir, devMode } from './tools_paths.js';
-import { readZip, renting } from './preset_rent.js';
+import { readZip, renting, holdPending } from './preset_rent.js';
 import { audit } from './audit.js';
 import { activeRuns } from './engine_bridge.js';
 
@@ -79,6 +79,8 @@ export async function checkUpdate({ force = false } = {}) {
   if (devMode() && !force) return { skipped: 'dev' };
   const home = installDir();
   if (!fs.existsSync(path.join(home, 'tools', 'tools.manifest.json')) && !force) return { skipped: 'not_installed' };
+  // 숨김은 '도는 제작 중엔 바꾸지 마라' — 아무도 안 만들면 되살린다. 제작 중 창을 닫으면 숨김이 남고, 켤 때는 제작을 빌릴 때만 sweep 이 풀었다가 바로 다시 숨겨 앱 판이 안 바뀌었다(#1507)
+  if (!renting()) holdPending(false);
   const left = adoptModels(home);
   // ENGINE_VERSION 은 이 프로그램이 뜰 때의 판 — 켜진 사이 다른 연결기가 판을 바꿨으면(프로그램 둘) 그 값을 보내 같은 판을 또 받았다. 설치 폴더 판이 진짜다
   const r = await api.update(readJson(path.join(home, 'app_version.json'))?.version || ENGINE_VERSION);
