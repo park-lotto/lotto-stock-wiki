@@ -263,6 +263,8 @@ ROWS = """너는 PC 제작 담당과 같은 재료 담당이다. 자막 조각�
 {memes}
 ★박힌 글자(남의 자막·로고·워터마크)는 src_crop [x, y, w, h](원본 px)로 잘라 칸 밖으로 뺀다 — 흐림 없음. 칸 비율 = {win} · 확대 2.3배 이하.
 ★제품·사람 얼굴이 칸 가운데 오게 src_crop 을 잡는다(crop_x 만 주면 가로 자리만).
+★대본 줄이 브랜드·제품·사람을 말하면 그 컷 화면에 바로 그것이 나와야 한다(다른 브랜드 병 금지 — 원본에 없으면 그 줄은 제품이 안 보이는 장면·짤로).
+★한 컷 안에서 원본 장면이 바뀌지 않게(ss~ss+길이가 한 장면 안) — 원본 시트로 장면 경계를 확인한다.
 답: {{"재료": {{"shots": [{{"src": "src_….mp4", "ss": 12.4, "kind": "제품영상", "seen": "무엇이 보이나", "src_crop": [x, y, w, h]}}, {{"cont": true}}, {{"src": "meme:…", "ss": 0, "kind": "짤", "seen": "…"}}]}}}}"""
 
 
@@ -311,15 +313,44 @@ def p_plan_got(st, m, rp, u):
     crop = (m.get("crop") or {}).get("sheets") or []
     st["pm_crop_sheets"] = crop
     probs = r.get("problems") or ([r["error"]] if r.get("error") else []) or ([r.get("note")] if r.get("ok") is False else [])
-    if not probs:                       # 계획 통과(ok None) — 렌더 한 번
-        st["log"].append("계획 통과 → 완성")
-        return {"do": [{"id": "pm", "cmd": "pm", "mode": "make", "preset": _rel_preset(st)}], "then": "p_make_got"}
+    if not probs:                       # 계획 통과(ok None) — 렌더 전에 구워질 칸을 눈으로(렌더 한 번 — 사장님 11-02 '뒤로 안 감')
+        st["pm_plan_sheets"] = [x for x in r.get("sheets") or [] if "접촉" in x] or (r.get("sheets") or [])[:1]
+        return _plan_eye_ask(st)
+    return _plan_fix(st, probs, crop + (r.get("sheets") or [])[:2])
+
+
+def _plan_fix(st, probs, imgs):
     st["tries"]["pm_plan"] = st["tries"].get("pm_plan", 0) + 1
     if st["tries"]["pm_plan"] > PLAN_MAX:
         raise F()._Stop("장면을 규칙에 맞추지 못했어요", "다시 시도해 주시면 장면 맞추기부터 이어 갈게요", retry="p_rows", detail="; ".join(map(str, probs))[:400])
     st["log"].append(f"계획 관문 {len(probs)}건 → 그 행만 고치기")
     return _rows_ask(st, "\n\n★지금 재료.json(이것을 고쳐 다시 — 걸린 행만 바꾼다):\n" + json.dumps(st["pm_rows"], ensure_ascii=False)[:6000] +
-                     "\n\n★계획 관문에 걸린 것(자를 칸 시트 = 빨간 상자가 구워질 칸):\n- " + "\n- ".join(map(str, probs))[:4000], crop + (r.get("sheets") or [])[:2])
+                     "\n\n★계획 관문에 걸린 것(자를 칸 시트 = 빨간 상자가 구워질 칸):\n- " + "\n- ".join(map(str, probs))[:4000], imgs)
+
+
+PLAN_EYE = """너는 PC 제작 담당처럼 렌더 전에 계획 접촉 시트(컷마다 구워질 칸의 시작·가운데·끝 3장 + 그 컷의 대본 줄)를 눈으로 확인한다.
+컷마다 본다(증거 = 그 컷 3장에서 본 것):
+① 컷 안에서 원본 장면이 바뀌거나 반투명하게 겹친다(3장이 서로 다른 장면) ② 칸 가장자리(특히 아래·위)에 남의 박힌 글자·자막 띠·로고가 조금이라도 걸린다
+③ 대본 줄이 말하는 대상(브랜드·제품·사람)과 화면 대상이 다르다 ④ 제품이 칸 가장자리로 밀렸다 ⑤ 같은 원본 장면이 짤 하나를 사이에 두고 다시 나온다(A-B-A)
+대본: {lines}
+답: {{"ok": true/false, "cuts": [{{"no": 컷번호, "seen": "3장에서 본 것"}}], "problems": ["#컷번호 무엇(①~⑤)"]}} — cuts 는 시트의 모든 컷."""
+
+
+def _plan_eye_ask(st):
+    lines = " / ".join(str(l.get("text")) for l in st["pm_script"]["lines"])
+    return {"review": [F()._rv("pm_plan_eye", PLAN_EYE.format(lines=lines), [F()._img(x) for x in st.get("pm_plan_sheets") or []][:2],
+                               need=("ok", "cuts", "problems"))], "then": "p_plan_eye_got"}
+
+
+def p_plan_eye_got(st, m, rp, u):
+    a = F()._reply(rp, "pm_plan_eye", ("ok", "cuts", "problems"))
+    probs = [str(x) for x in a.get("problems") or []]
+    if a.get("ok") is True and not probs and len(a.get("cuts") or []) >= 3:
+        st["log"].append("계획 통과 + 렌더 전 눈 확인 통과 → 완성(렌더 한 번)")
+        return {"do": [{"id": "pm", "cmd": "pm", "mode": "make", "preset": _rel_preset(st)}], "then": "p_make_got"}
+    if len(a.get("cuts") or []) < 3 and not probs:
+        probs = ["렌더 전 눈 확인 증거 부족(컷마다 본 것을 적는다)"]
+    return _plan_fix(st, ["렌더 전 눈 확인: " + x for x in probs], (st.get("pm_crop_sheets") or []) + (st.get("pm_plan_sheets") or [])[:1])
 
 
 # ── 완성·확인 ─────────────────────────────────────────────────────────────
@@ -361,6 +392,6 @@ def p_eye_got(st, m, rp, u):
 
 PHASES = {"bench": p_bench, "bench_got": p_bench_got, "p_topic_got": p_topic_got, "p_research_got": p_research_got, "material_dl": p_material_dl,
           "p_script": p_script, "p_script_got": p_script_got, "p_memes_got": p_memes_got, "p_rows": p_rows, "p_rows_got": p_rows_got,
-          "p_plan_got": p_plan_got, "p_make_got": p_make_got, "p_eye_got": p_eye_got}
+          "p_plan_got": p_plan_got, "p_plan_eye_got": p_plan_eye_got, "p_make_got": p_make_got, "p_eye_got": p_eye_got}
 PHASE_STAGE = {"p_topic_got": "bench", "p_research_got": "research", "material_dl": "material", "p_script": "script", "p_script_got": "script",
-               "p_memes_got": "sign", "p_rows": "plan", "p_rows_got": "plan", "p_plan_got": "plan", "p_make_got": "render", "p_eye_got": "check"}
+               "p_memes_got": "sign", "p_rows": "plan", "p_rows_got": "plan", "p_plan_got": "plan", "p_plan_eye_got": "plan", "p_make_got": "render", "p_eye_got": "check"}

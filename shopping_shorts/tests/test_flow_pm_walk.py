@@ -69,7 +69,15 @@ def test_walk_to_done():
     out = _go(st, {"save_pm": {}, "crop": {"sheets": ["doc/pm/plan/자를칸/자를칸_1.jpg"]}, "pm": {"ok": False, "problems": ["④ 컷 3 남의 글자"]}})
     assert out["review"][0]["id"] == "pm_rows" and "④ 컷 3 남의 글자" in out["review"][0]["ask"]
     out = _go(st, rp={"pm_rows": {"재료": R}})
-    out = _go(st, {"save_pm": {}, "crop": {"sheets": []}, "pm": {"ok": None, "note": "계획 검사 통과"}})
+    out = _go(st, {"save_pm": {}, "crop": {"sheets": []}, "pm": {"ok": None, "note": "계획 검사 통과", "sheets": ["doc/pm/plan/계획_시트_자동.jpg", "doc/pm/plan/계획_접촉시트.jpg"]}})
+    # 렌더 전 눈 확인(계획 접촉 시트) — 걸리면 재료만 다시, 렌더는 안 한다
+    assert out["review"][0]["id"] == "pm_plan_eye" and "A-B-A" in out["review"][0]["ask"]
+    out = _go(st, rp={"pm_plan_eye": {"ok": False, "cuts": [{"no": 1}], "problems": ["#11 ① 진열대→손 장면 바뀜"]}})
+    assert out["review"][0]["id"] == "pm_rows" and "#11 ① 진열대→손 장면 바뀜" in out["review"][0]["ask"]
+    out = _go(st, rp={"pm_rows": {"재료": R}})
+    out = _go(st, {"save_pm": {}, "crop": {"sheets": []}, "pm": {"ok": None, "sheets": ["doc/pm/plan/계획_접촉시트.jpg"]}})
+    assert out["review"][0]["id"] == "pm_plan_eye"
+    out = _go(st, rp={"pm_plan_eye": {"ok": True, "cuts": [{"no": 0}, {"no": 1}, {"no": 2}], "problems": []}})
     assert out["do"] == [{"id": "pm", "cmd": "pm", "mode": "make", "preset": "channel/humorshowshow/preset/썰템쇼_화자썰"}]
     out = _go(st, {"pm": {"ok": True, "final": "C:/W/pm/make/final.mp4", "rows": [{"B": "B1", "항목": "길이", "값": 28, "ok": True}],
                           "sheets": ["pm/make/sheet_1s.jpg"]}})
