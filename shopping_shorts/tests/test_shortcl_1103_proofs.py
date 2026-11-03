@@ -134,3 +134,23 @@ def test_14_erase_gate_counts_text_under_blur(tmp_path):
         got[name] = erase
     assert got["plain"] == [0], got          # 글자 인식이 이 글자를 잡는다(못 잡으면 아래 비교가 아무것도 안 잰다)
     assert got["blurred"] == [0], got
+
+
+def test_318_server_leaves_shot_cap_to_render(tmp_path):
+    """관제 318 '컷 길이·장면 경계 3번 연속'(#2976 외 6명): 서버 fill_shot_max 가 거친 샷 표로 max 를 채우면
+    렌더 shot_cap(관문과 같은 경계 shot_starts — max 가 비었을 때만 돈다)이 막히고 회원이 줄인 max 를 다시 늘린다.
+    → 서버는 max 를 쓰지 않고, 회원이 직접 적은 max 는 그대로 둔다. 렌더는 비어 있는 max 에 관문 경계 한도를 붙인다."""
+    from tools.calcopy.hybrid import rules as RU
+    from tools.calcopy.hybrid import render_bench as RB
+    shots = {"o": [{"i": 0, "a": 0.0, "b": 20.0, "who": "main", "cx": 0.5}]}       # 거친 샷 표: 0~20초 한 샷
+    M = {"cuts": {"N1": [{"src": "o.mp4", "ss": 5.6}], "N2": [{"src": "o.mp4", "ss": 1.0, "max": 1.5}]}}
+    RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 9 / 16)
+    assert "max" not in M["cuts"]["N1"][0]                 # 수리 전: 14.4(샷 표 끝까지)
+    assert M["cuts"]["N2"][0]["max"] == 1.5                # 회원이 적은 한도는 그대로(수리 전: 19.0 으로 늘림)
+    # 렌더 쪽: 비어 있는 max 에 shot_starts(관문 경계)로 한도 — 0~3·3~10 두 샷 영상
+    v = tmp_path / "o.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=320x180:d=3:r=30", "-f", "lavfi", "-i",
+                    "color=c=white:s=320x180:d=7:r=30", "-filter_complex", "[0][1]concat=n=2:v=1", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(v)], check=True)
+    c = {"src": "o.mp4", "ss": 1.0}
+    RB.shot_cap(c, v)
+    assert c.get("max_auto") and c["max"] is not None and abs(c["max"] - 2.0) < 0.1, c
