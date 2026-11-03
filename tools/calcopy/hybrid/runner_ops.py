@@ -2484,6 +2484,60 @@ def c_bm_fix(W, d):
     return {"fixed": fx["path"]}
 
 
+def _skel_path(W: Path, slug: str, vid: str) -> Path:
+    return _inside(W, f"channel/{slug}/줄판독_뼈대/{vid}.json")
+
+
+def c_bm_skel(W, d):
+    """벤치 편마다 줄판독 뼈대(주인 = kal_analyze.skeleton — 기계값만, 눈 칸 null). 뜯기.json 옆 .vtt 가 있으면 받아쓰기로 붙인다."""
+    from tools.calcopy.engine import kal_analyze as K
+    docs, failed = {}, []
+    for vid in d.get("ids") or []:
+        try:
+            tj = _inside(W, f"channel/{d['slug']}/뜯기/{vid}/뜯기.json")
+            vtt = next(iter(sorted((W / "src").glob(f"{vid}*.vtt"))), None) if (W / "src").is_dir() else None
+            doc = K.skeleton(str(vid), jload(tj), str(vtt) if vtt else None)
+            jsave(_skel_path(W, d["slug"], vid), doc)
+            docs[vid] = {"dur": doc.get("dur"), "lines": [{"i": i, "t0": l["t0"], "t1": l["t1"], "text": l["text"]} for i, l in enumerate(doc["lines"])]}
+        except (OSError, ValueError, KeyError) as e:      # 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
+            failed.append({"video": vid, "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"docs": docs, "failed": failed}
+
+
+def c_bm_fill(W, d):
+    """뼈대 + 서버가 고른 눈 칸 → 줄판독. 검사 = kal_analyze.check_doc. 통과한 편만 channel/<slug>/줄판독/<id>.json 에 둔다(대조가 읽는 곳)."""
+    from tools.calcopy.engine import kal_analyze as K
+    out_dir = _inside(W, f"channel/{d['slug']}/줄판독")
+    ok, bad = [], {}
+    for vid, fx in (d.get("fills") or {}).items():
+        dst = out_dir / f"{vid}.json"
+        try:
+            doc = jload(_skel_path(W, d["slug"], vid))
+        except (OSError, ValueError) as e:
+            bad[vid] = [f"뼈대 없음: {type(e).__name__}: {str(e)[:120]}"]
+            continue
+        lines = doc.get("lines") or []
+        for row in fx.get("lines") or []:
+            i = row.get("i")
+            if isinstance(i, int) and 0 <= i < len(lines):
+                lines[i].update({k: v for k, v in row.items() if k != "i"})
+        doc.update({k: v for k, v in (fx.get("doc") or {}).items() if k in ("beats", "narr_share", "title_lines", "source_label", "notes", "name_evidence")})
+        need_line = ("speaker", "layer", "enter")      # check_doc 이 null 을 거절하는 눈 칸 — 남으면 _todo 에 남는다
+        doc["_todo"] = sorted({k for l in lines for k in need_line if l.get(k) is None} | {k for k in ("beats", "narr_share") if doc.get(k) is None})
+        doc["_unread"] = sorted({k for l in lines for k in ("sfx", "scene", "role", "fit", "fill_hex") if l.get(k) is None})   # 비어도 검사는 넘지만 판독 안 된 칸(정직하게 남긴다)
+        doc["_made_by"] = "kal_analyze.skeleton + 벤치마킹 판독(agy 판독표·오푸스 확정, flow_bench.EYE_SLOTS)"
+        errs = K.check_doc(doc)["errors"]
+        if errs:
+            bad[vid] = errs[:8]
+            if dst.exists():
+                dst.unlink()           # 지난 통과본이 남아 대조에 섞이지 않게
+            continue
+        jsave(dst, doc)
+        ok.append(vid)
+    return {"ok": ok, "bad": bad, "dir": out_dir.resolve().relative_to(W.resolve()).as_posix()}
+
+
+CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill})
 CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
 
 
@@ -2524,7 +2578,8 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
-             "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}

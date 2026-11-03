@@ -130,7 +130,7 @@ def test_two_frames_keeps_biggest():
     st = {"fmt": "벤치마킹", "phase": "bm_tear_got", "log": [], "tries": {}, "bm": {"slug": "s", "videos": [_vid("a"), _vid("b"), _vid("c")]}}
     r = _go(st, {"bm_tear": {"presets": [{"style": "틀", "sources": ["a", "b"]}, {"style": "틀2", "sources": ["c"]}], "failed": []}})
     assert st["bm"]["style"] == "틀" and st["bm"]["other_styles"] == ["틀2"]
-    assert [d["id"] for d in r["do"]] == ["read_a", "read_b"] and r["do"][0]["video"] == "src/a_360.mp4"
+    assert [d["cmd"] for d in r["do"]] == ["bm_skel"] and r["do"][0]["ids"] == ["a", "b"]       # 줄판독 뼈대 먼저(관리자 Ruling 8) — 판독은 그 줄로
 
 
 def test_fix_command_registered_and_missing_slot_errors(tmp_path):
@@ -141,3 +141,94 @@ def test_fix_command_registered_and_missing_slot_errors(tmp_path):
     (p / "manifest.json").write_text("{}", encoding="utf-8")
     out = R.run_do(tmp_path, [{"id": "f", "cmd": "bm_fix", "slug": "s", "style": "틀", "fix": {"path": "nope", "value": 1, "why": "t"}}])
     assert "error" in out["f"]       # 없는 자리는 조용히 넘기지 않고 오류
+
+
+# ── 줄판독(bm_measure — 관리자 Ruling 8: 뼈대 = kal_analyze.skeleton, 눈 칸 = bm_read 결과, check_doc 통과만 대조에) ──
+def _skel(n=2):
+    return {"lines": [{"i": i, "t0": i * 1.0, "t1": i * 1.0 + 0.9, "text": f"줄{i}"} for i in range(n)], "dur": 3.0}
+
+
+def _eye(n=2, speaker="나레"):
+    return [{"i": i, "speaker": speaker, "layer": "채널", "enter": "instant", "sfx": None, "scene": "제품", "t0": 99, "text": "바꿈"} for i in range(n)]
+
+
+def test_skel_then_reads_carry_lines():
+    st = _st("bm_skel_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"])
+    r = _go(st, {"skel": {"docs": {"a": _skel(), "b": _skel()}, "failed": []}})
+    assert [d["id"] for d in r["do"]] == ["read_a", "read_b"] and r["do"][0]["video"] == "src/a_360.mp4"
+    assert "줄1" in r["do"][0]["ask"] and "lines" in r["do"][0]["schema"]["properties"]
+
+
+def test_skel_none_stops():
+    st = _st("bm_skel_got", videos=[_vid("a")], keep=["a"])
+    r = _go(st, {"skel": {"docs": {}, "failed": [{"video": "a", "why": "뜯기 없음"}]}})
+    assert r["status"] == "stop" and r["why"] and r["fix"]
+
+
+def test_read_then_fill_takes_only_eye_slots():
+    st = _st("bm_read_got", videos=[_vid("a")], keep=["a"], skel={"a": 2})
+    r = _go(st, {"read_a": {"answer": {"voice": "여", "lines": _eye()}}})
+    assert r["review"][0]["id"] == "bm_read" and "lines" in r["review"][0]["need"] and r["review"][0]["model"] == "opus"
+    r = _go(st, rp={"bm_read": {"rules": {"자막": "노랑"}, "per_video": {"a": {"story_order": ["훅", "공개"]}}, "lines": {"a": _eye()}}})
+    assert r["status"] == "execute" and r["do"][0]["cmd"] == "bm_fill"
+    f = r["do"][0]["fills"]["a"]
+    assert all("t0" not in l and "text" not in l for l in f["lines"])       # 기계값(시각·글)은 뼈대 그대로 — 눈 칸만 채운다
+    assert f["doc"]["narr_share"] == 1.0 and f["doc"]["beats"] == ["훅", "공개"]
+    assert st["bm"]["rules"]["rules"] == {"자막": "노랑"}
+
+
+def test_failed_check_doc_not_used_and_rereads_then_stops():
+    st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, skel_lines={"a": _skel()["lines"], "b": _skel()["lines"]})
+    r = _go(st, {"fill": {"ok": [], "bad": {"a": ["줄0 speaker 미기입"], "b": ["줄1 enter 미기입"]}, "dir": "channel/s/줄판독"}})
+    assert r["status"] == "execute" and sorted(d["id"] for d in r["do"]) == ["read_a", "read_b"]      # 한 번 다시 읽기
+    assert "speaker 미기입" in r["do"][0]["ask"] and not st["bm"].get("line_reads")
+    st["phase"] = "bm_measure_got"
+    r = _go(st, {"fill": {"ok": [], "bad": {"a": ["줄0 speaker 미기입"], "b": ["줄1 enter 미기입"]}, "dir": "channel/s/줄판독"}})
+    assert r["status"] == "stop" and r["why"] and r["fix"] and not st["bm"].get("line_reads")
+
+
+def test_partial_pass_keeps_only_passed_docs():
+    st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, reread=1)
+    r = _go(st, {"fill": {"ok": ["a"], "bad": {"b": ["줄1 enter 미기입"]}, "dir": "channel/s/줄판독"}})
+    assert st["bm"]["line_reads"] == ["channel/s/줄판독/a.json"] and any("b" in x for x in st["log"])
+    assert r["do"][0]["cmd"] == "render_trial" and r["do"][0]["line_reads"] == ["channel/s/줄판독/a.json"]
+
+
+def test_flow_read_measure_trial_order():
+    st = _st("bm_tear_got", videos=[_vid("a")])
+    _go(st, {"bm_tear": {"presets": [{"style": "틀", "sources": ["a"]}], "failed": []}})
+    assert st["phase"] == "bm_skel_got"
+    _go(st, {"skel": {"docs": {"a": _skel()}, "failed": []}})
+    assert st["phase"] == "bm_read_got"
+    _go(st, {"read_a": {"answer": {"lines": _eye()}}})
+    assert st["phase"] == "bm_measure"
+    _go(st, rp={"bm_read": {"rules": {}, "per_video": {}, "lines": {"a": _eye()}}})
+    assert st["phase"] == "bm_measure_got"
+    r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
+    assert st["phase"] == "bm_trial_got" and r["do"][0]["cmd"] == "render_trial"
+
+
+# ── 실행기: 뼈대·채우기(판단 없음 — 뼈대 = kal_analyze.skeleton, 검사 = kal_analyze.check_doc) ──
+def _tear_file(W, vid="a"):
+    d = W / "channel" / "s" / "뜯기" / vid
+    d.mkdir(parents=True)
+    J = {"probe": {"duration": 3.0, "fps": 30, "w": 1080, "h": 1920}, "layout": {"window": [0, 0, 1080, 1920], "caption_band": [1200, 1400]},
+         "captions": {"items": [{"t0": 0.0, "t1": 0.9, "text": ["첫", "줄"], "top_y": 1250}, {"t0": 1.0, "t1": 1.9, "text": "둘째 줄", "top_y": 1250}]},
+         "cuts": {"times": [1.0]}}
+    (d / "뜯기.json").write_text(json.dumps(J, ensure_ascii=False), encoding="utf-8")
+
+
+def test_skel_and_fill_commands(tmp_path):
+    from tools.calcopy.engine import kal_analyze as K
+    assert {"bm_skel", "bm_fill"} <= set(R.CMDS) and {"bm_skel", "bm_fill"} <= set(R.CMD_LABEL)
+    _tear_file(tmp_path)
+    out = R.run_do(tmp_path, [{"id": "skel", "cmd": "bm_skel", "slug": "s", "ids": ["a", "zz"]}])["skel"]
+    assert [l["text"] for l in out["docs"]["a"]["lines"]] == ["첫 줄", "둘째 줄"] and out["failed"][0]["video"] == "zz"
+    good = {"lines": [{"i": i, "speaker": "나레", "layer": "채널", "enter": "instant", "sfx": None, "scene": "제품"} for i in range(2)],
+            "doc": {"beats": ["훅"], "narr_share": 1.0}}
+    bad = {"lines": [{"i": 0, "speaker": "나레", "layer": "채널", "enter": "instant"}], "doc": {"beats": ["훅"], "narr_share": 1.0}}   # 줄1 눈 칸 비움
+    res = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": {"a": good}}])["fill"]
+    p = tmp_path / "channel" / "s" / "줄판독" / "a.json"
+    assert res["ok"] == ["a"] and p.is_file() and not K.check_doc(json.loads(p.read_text(encoding="utf-8")))["errors"]
+    res = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": {"a": bad}}])["fill"]
+    assert res["ok"] == [] and res["bad"]["a"] and not p.exists()           # 못 넘은 판독은 남기지 않는다(대조에 안 쓰임)

@@ -16,10 +16,19 @@ ASKS = {   # 질문별 모델 — 페이블은 두 곳만(D6), 소넷·하이쿠
 READ_SCHEMA = {"type": "object", "properties": {"caption_pos": {"type": "string"}, "caption_color": {"type": "string"}, "cut_feel": {"type": "string"},
                "voice": {"type": "string"}, "sfx": {"type": "string"}, "tone": {"type": "string"}, "story_order": {"type": "array", "items": {"type": "string"}}}}
 # 컷 수·시각은 프로그램(kal_analyze.media_of)만 잰다 — 판독표에 컷 수 칸을 두지 않는다(결정 5)
+# 줄판독 눈 칸(관리자 Ruling 8) — 뼈대(kal_analyze.skeleton)는 시각·글·컷 시각 같은 기계값만 채우고 이 칸들은 비운다.
+#   어느 칸을 판독으로 채우나 = 이 표 한 곳. 시각(t0·t1)·글(text)·컷(cut_at)은 뼈대 그대로(판독이 적어 와도 버린다).
+EYE_SLOTS = ("speaker", "layer", "enter", "sfx", "scene", "emph", "sticker", "role", "fit", "fill_hex")
+LINE_SCHEMA = {"type": "object", "properties": {"i": {"type": "integer"}, "speaker": {"type": "string"}, "layer": {"type": "string"},
+               "enter": {"type": "string"}, "sfx": {"type": ["string", "null"]}, "scene": {"type": "string"}}}
+READ_SCHEMA["properties"]["lines"] = {"type": "array", "items": LINE_SCHEMA}
+LINE_VOCAB = ("줄마다 칸: speaker = 나레 | 원음:<이름> | 제3자 | 불명 (이름은 화면 글자에 보일 때만, 아니면 불명) · layer = 채널(벤치 채널 자막) | 원본박힘(원본 영상에 박힌 글) · "
+              "enter = instant | append | typing | pop | glitch | wipe | slide | rainbow | fade | shake | 기타 (꾸밈 없으면 instant) · sfx = 그 줄에 나는 효과음(없으면 null) · scene = 그 줄 화면 한마디")
+REREAD_MAX = 1       # check_doc 를 못 넘은 줄판독을 다시 읽는 횟수 — 넘으면 통과한 편만 쓰고, 0편이면 멈춘다
 
 STAGES = [("setup", "준비 확인"), ("bm_fetch", "벤치 영상 받기"), ("bm_tear", "영상 뜯기"), ("bm_read", "영상 보기"), ("bm_trial", "시험 영상 만들기"),
           ("bm_pan", "판볶이"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
-PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_read_got": "bm_read", "bm_trial": "bm_read",
+PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_trial": "bm_read",
                "bm_trial_got": "bm_trial", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
                "bm_verdict": "bm_confirm", "bm_verdict_got": "bm_confirm", "bm_brief": "bm_make", "bm_done": "done"}
 
@@ -61,11 +70,39 @@ def bm_tear_got(st, m, rp, u):
         raise F._Stop("프리셋을 만들 수 있는 영상이 없어요", "세로 쇼츠 영상 주소를 직접 골라 주세요", detail=json.dumps(t.get("failed"), ensure_ascii=False)[:400])
     b = st["bm"]
     b["style"], b["other_styles"] = ps[0]["style"], [p["style"] for p in ps[1:]]      # 편 수가 많은 틀 하나로 간다 — 나머지는 결과에 적는다
-    keep = set(ps[0]["sources"])
-    do = [{"id": f"read_{v['id']}", "cmd": "agy_read", "video": v["v360"],
-           "ask": "이 쇼츠의 자막 자리·색, 컷 느낌, 목소리, 효과음, 말투, 이야기 순서를 칸에 맞춰 적어라", "schema": READ_SCHEMA}
-          for v in b["videos"] if v["id"] in keep]
-    return {"do": do, "then": "bm_read_got"}
+    b["keep"] = [v["id"] for v in b["videos"] if v["id"] in set(ps[0]["sources"])]
+    return {"do": [{"id": "skel", "cmd": "bm_skel", "slug": b["slug"], "ids": b["keep"]}], "then": "bm_skel_got"}
+
+
+def _read_do(b: dict, ids: list, errs: dict | None = None) -> list:
+    """agy 한 번에 편 전체 칸 + 뼈대 줄마다 눈 칸(Ruling 8 — 판독을 두 번 돌리지 않는다)."""
+    out = []
+    for v in b["videos"]:
+        if v["id"] not in ids:
+            continue
+        lines = (b.get("skel_lines") or {}).get(v["id"]) or []
+        ask = ("이 쇼츠의 자막 자리·색, 컷 느낌, 목소리, 효과음, 말투, 이야기 순서를 칸에 맞춰 적어라. "
+               "그리고 아래 자막 줄(i·시각·글)마다 눈 칸을 lines 에 적어라.\n" + LINE_VOCAB + "\n" + json.dumps(lines, ensure_ascii=False)[:6000])
+        if errs and errs.get(v["id"]):
+            ask += "\n지난 판독에서 빠진 칸: " + " / ".join(map(str, errs[v["id"]]))[:1500]
+        out.append({"id": f"read_{v['id']}", "cmd": "agy_read", "video": v["v360"], "ask": ask, "schema": READ_SCHEMA,
+                    **({"try": int(b.get("reread") or 0)} if errs else {})})
+    return out
+
+
+def bm_skel_got(st, m, rp, u):
+    F = _F()
+    k = m.get("skel") or {}
+    docs = k.get("docs") or {}
+    b = st["bm"]
+    if not docs:
+        raise F._Stop("벤치 영상의 자막 줄을 나누지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_tear_got", auto=True,
+                      detail=json.dumps(k.get("failed"), ensure_ascii=False, default=str)[:400])
+    b["skel"] = {vid: len(d.get("lines") or []) for vid, d in docs.items()}
+    b["skel_lines"] = {vid: d.get("lines") or [] for vid, d in docs.items()}
+    if k.get("failed"):
+        st["log"].append("줄판독 뼈대 못 만든 편: " + json.dumps(k["failed"], ensure_ascii=False, default=str)[:300])
+    return {"do": _read_do(b, list(docs)), "then": "bm_read_got"}
 
 
 def bm_read_got(st, m, rp, u):
@@ -77,13 +114,61 @@ def bm_read_got(st, m, rp, u):
     st["bm"]["reads"] = rows
     ask = ("벤치 편마다 agy 가 적은 표다. 모든 편에 같은 칸(=채널 규칙)과 편마다 다른 칸(=소재)을 갈라라. "
            "agy 가 적은 값이 서로 다른데 프로그램 숫자(뜯기.json)로 확인할 수 있는 칸은 숫자를 믿어라.\n" + json.dumps(rows, ensure_ascii=False)[:12000])
-    return {"review": [F._rv("bm_read", ask, model=ASKS["bm_read"]["model"], need=("rules", "per_video"))], "then": "bm_trial"}
+    ask += ("\n\n줄판독 눈 칸도 확정해라 — lines = {편 id: [{i, speaker, layer, enter, sfx, scene}, …]}. agy 가 적은 줄 값을 보고 틀린 것만 고친다. "
+            "이름(원음:<이름>)은 화면 글자에 보일 때만, 아니면 불명. 시각·글은 적지 마라(프로그램 값).\n" + LINE_VOCAB)
+    return {"review": [F._rv("bm_read", ask, model=ASKS["bm_read"]["model"], need=("rules", "per_video", "lines"))], "then": "bm_measure"}
+
+
+def _fill_of(vid: str, rows: list, per: dict) -> dict:
+    """(판단 주인) 오푸스가 확정한 줄 눈 칸 → 뼈대에 넣을 값. EYE_SLOTS 밖 칸(시각·글)은 버린다. beats = 이야기 순서, narr_share = 나레 줄 비율."""
+    lines = [{"i": int(l["i"]), **{k: l[k] for k in EYE_SLOTS if k in l}} for l in rows if isinstance(l, dict) and isinstance(l.get("i"), int)]
+    sp = [str(l.get("speaker") or "") for l in lines]
+    story = (per.get(vid) or {}).get("story_order") if isinstance(per.get(vid), dict) else None
+    return {"lines": lines, "doc": {"beats": list(story) if isinstance(story, list) else [],
+                                    "narr_share": round(sum(x.startswith("나레") for x in sp) / len(sp), 3) if sp else None}}
+
+
+def bm_measure(st, m, rp, u):
+    """줄판독 채우기 — 뼈대(bm_skel) + 눈 칸(bm_read 오푸스 확정) → 실행기가 넣고 kal_analyze.check_doc 으로 검사(bm_fill)."""
+    F = _F()
+    b = st["bm"]
+    r = F._reply(rp, "bm_read", ("rules", "per_video", "lines"))
+    b.setdefault("rules", {k: r[k] for k in ("rules", "per_video")})      # 다시 읽기(못 넘은 편만)의 답이 처음 규칙을 덮지 않게
+    per, rows = r.get("per_video") or {}, r.get("lines") or {}
+    fills = {vid: _fill_of(vid, rows.get(vid) or [], per) for vid in b.get("skel") or {} if vid in rows}
+    if not fills:
+        raise F._Stop("벤치 영상 판독이 비었어요", "잠시 뒤 다시 해 주세요", retry="bm_read_got", auto=True, detail="오푸스 답 lines 에 편이 없음")
+    return {"do": [{"id": "fill", "cmd": "bm_fill", "slug": b["slug"], "fills": fills}], "then": "bm_measure_got"}
+
+
+def bm_measure_got(st, m, rp, u):
+    """check_doc 를 넘은 줄판독만 대조(bm_match)에 쓴다. 못 넘은 편은 REREAD_MAX 번 다시 읽고, 그래도 0편이면 멈춘다(조용히 넘어가지 않음)."""
+    F = _F()
+    b = st["bm"]
+    f = m.get("fill") or {}
+    d = str(f.get("dir") or f"channel/{b['slug']}/줄판독")
+    bad = f.get("bad") or {}
+    ok = [x for x in (b.get("line_ok") or []) if x not in bad]
+    ok += [x for x in f.get("ok") or [] if x not in ok]
+    b["line_ok"] = ok
+    if bad and int(b.get("reread") or 0) < REREAD_MAX:
+        b["reread"] = int(b.get("reread") or 0) + 1
+        st["log"].append(f"줄판독 검사 못 넘음 → 다시 읽기: {json.dumps(bad, ensure_ascii=False)[:300]}")
+        return {"do": _read_do(b, list(bad), bad), "then": "bm_read_got"}
+    if not ok:
+        raise F._Stop("벤치 영상 판독을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_tear_got", ask_member=True,   # 영상 보기(agy) 몫 — 회원 Claude 과제로 넘기지 않는다
+                      detail="줄판독 check_doc 불합격: " + json.dumps(bad, ensure_ascii=False)[:400])
+    if bad:
+        st["log"].append(f"줄판독 검사 못 넘은 편은 대조에서 뺌: {sorted(bad)}")
+    b["line_reads"] = [f"{d}/{x}.json" for x in ok]
+    return {"goto": "bm_trial"}
 
 
 def bm_trial(st, m, rp, u):
-    F = _F()
-    st["bm"]["rules"] = F._reply(rp, "bm_read", ("rules", "per_video"))
-    return {"do": [{"id": "trial", "cmd": "render_trial", "slug": st["bm"]["slug"], "style": st["bm"]["style"]}], "then": "bm_trial_got"}
+    # ★render_trial 실행기 명령은 아직 없다 — 새 프리셋(channel/<slug>/preset/<틀>)을 회원 제작 흐름의 판(styles)·장부(flow_format)로
+    #   잇는 다리 결정 대기(관제 319 과제 6 NEEDS_CONTEXT, task-6-report '시험 편·대조 메우기'). 지금은 실행기가 '허용되지 않은 명령' 오류를 낸다.
+    b = st["bm"]
+    return {"do": [{"id": "trial", "cmd": "render_trial", "slug": b["slug"], "style": b["style"], "line_reads": b.get("line_reads") or []}], "then": "bm_trial_got"}
 
 
 def _compare_do(st):
@@ -201,6 +286,6 @@ def bm_done(st, m, rp, u):
     return {"done": {"preset": {"slug": b["slug"], "style": b["style"], "name": b["name"], "zip": br["zip"], "other_styles": b.get("other_styles") or []}}}
 
 
-PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch_got": bm_fetch_got, "bm_tear_got": bm_tear_got, "bm_read_got": bm_read_got,
-          "bm_trial": bm_trial, "bm_trial_got": bm_trial_got, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,
+PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch_got": bm_fetch_got, "bm_tear_got": bm_tear_got, "bm_skel_got": bm_skel_got, "bm_read_got": bm_read_got,
+          "bm_measure": bm_measure, "bm_measure_got": bm_measure_got, "bm_trial": bm_trial, "bm_trial_got": bm_trial_got, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,
           "bm_verdict": bm_verdict, "bm_verdict_got": bm_verdict_got, "bm_brief": bm_brief, "bm_done": bm_done}
