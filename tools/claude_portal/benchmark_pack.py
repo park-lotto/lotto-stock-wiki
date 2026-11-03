@@ -28,10 +28,13 @@ import engine_bundle as EB  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCH_TRACES = ROOT / "installer" / "common" / "engine_traces" / "benchmark"
-ENTRY = ("tools/calcopy/engine/bench_member.py",)
+# 2판(관제 319): 실행기 bm_* 명령이 함수 안에서 부르는 agy·agy_check·preset_brief 도 입구로 — 추적이 안 본 갈래가 빠지지 않게(preset_brief 는 기본 묶음에 없다)
+ENTRY = ("tools/calcopy/engine/bench_member.py", "tools/calcopy/engine/preset_brief.py", "tools/calcopy/engine/agy.py", "tools/calcopy/engine/agy_check.py")
 # 고급반에게 푸는 파일 — engine_bundle.FORBIDDEN 에 걸려 있던 것 중 추적에 잡힌 만드는 기술만.
 RELEASED = ("tools/calcopy/engine/bench_member.py", "tools/calcopy/engine/analyze.py", "tools/calcopy/engine/to_frame.py", "tools/calcopy/engine/to_frame_multi.py",
-            "tools/calcopy/engine/preset_save.py", "tools/calcopy/engine/fontmatch.py")
+            "tools/calcopy/engine/preset_save.py", "tools/calcopy/engine/fontmatch.py",
+            "tools/calcopy/engine/agy.py", "tools/calcopy/engine/agy_check.py", "tools/calcopy/engine/preset_brief.py")
+# hybrid/flow_bench.py(서버 지시서)·hybrid/jev_gate.py(Jev 판단) 는 서버 전용 — 위 목록에 절대 넣지 않는다(hybrid/* 금지 규칙이 막는다)
 # 추적에 잡혀도 묶음에 안 넣는 것 — 설치본에 이미 있거나(글꼴·화면 파일) 추적 도구 자신. 회원 PC 는 설치본 것을 그대로 쓴다.
 SKIP = ("shopping_shorts/static/fonts/*", "shopping_shorts/channel_presets/*", "out/*", "tools/claude_portal/*")
 ZIP_NAME = "benchmark_pack.zip"
