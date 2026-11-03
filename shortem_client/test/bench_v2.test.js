@@ -155,3 +155,28 @@ test('시험 편을 만드는 동안(회원 과제 대기)은 회원 Claude 답 
   assert.doesNotMatch(s2.text, /회원 Claude 답을/);
   cancelFlow(S5);
 });
+
+test('옮기기 — Windows 에서 파일이 열려 rename 이 EPERM·EBUSY 로 실패하면 복사 뒤 원본 삭제로 물러서고, 원본을 못 지우면 경보 한 줄', async () => {
+  const { moveDir } = await import('../server/flow_driver.js');
+  const base = path.join(flowRoot(), '_mv');
+  const mk = n => { const s = path.join(base, n); fs.mkdirSync(path.join(s, 'd'), { recursive: true }); fs.writeFileSync(path.join(s, 'final.mp4'), 'v'); fs.writeFileSync(path.join(s, 'd', 'x.json'), '{}'); return s; };
+  const keepRen = fs.renameSync, keepRm = fs.rmSync;
+  const warns = [];
+  try {
+    const s1 = mk('s1');
+    fs.renameSync = (a, b) => { if (a === s1) { const e = new Error('busy'); e.code = 'EPERM'; throw e; } return keepRen(a, b); };
+    assert.equal(moveDir(s1, path.join(base, 'd1'), t => warns.push(t)), 'copy');
+    assert.ok(fs.existsSync(path.join(base, 'd1', 'd', 'x.json')));
+    assert.equal(fs.existsSync(s1), false, '원본은 지운다');
+    assert.equal(warns.length, 0);
+    const s2 = mk('s2');
+    fs.renameSync = (a, b) => { if (a === s2) { const e = new Error('busy'); e.code = 'EBUSY'; throw e; } return keepRen(a, b); };
+    fs.rmSync = (p, o) => { if (p === s2) { const e = new Error('locked'); e.code = 'EBUSY'; throw e; } return keepRm(p, o); };
+    assert.equal(moveDir(s2, path.join(base, 'd2'), t => warns.push(t)), 'copy', '복사가 끝났으면 성공');
+    assert.ok(fs.existsSync(path.join(base, 'd2', 'final.mp4')));
+    assert.equal(warns.length, 1, '원본을 못 지우면 조용히 넘기지 않는다');
+    assert.match(warns[0], /원본/);
+    fs.renameSync = () => { const e = new Error('no'); e.code = 'ENOENT'; throw e; };
+    assert.throws(() => moveDir(path.join(base, 'none'), path.join(base, 'd3'), t => warns.push(t)), /no/, '그 밖의 실패는 그대로 던진다');
+  } finally { fs.renameSync = keepRen; fs.rmSync = keepRm; }
+});

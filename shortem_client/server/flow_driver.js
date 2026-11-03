@@ -45,6 +45,8 @@ export function loadFlow(sid) {
   } catch { return null; }
 }
 export const isFlowSid = sid => !!loadFlow(sid);
+// 메모리의 끝나지 않은 벤치 흐름이 쥔 임시 시험본 slug — 켤 때 되살림(benchmark.recoverBench)이 이것은 되살리지 않는다
+export const liveBenchSlugs = () => [...flows.values()].filter(f => f.bench && !f.bench.ended && !flowEnded(f) && f.bench.trial_slug).map(f => f.bench.trial_slug);
 export const anyFlowBusy = () => [...flows.values()].some(f => f.busy || f.status === 'execute' || f.status === 'review');   // 돌고 있는 편이 있으면 엔진을 덮지 않는다
 
 function reqId(tag) {
@@ -108,27 +110,31 @@ function trialIn(f, q, j) {
   const sid = String(j.work_dir || '').trim();
   const bad = why => ({ ...j, ok: false, work_dir: '', why });
   if (!FLOW_SID_RE.test(sid)) return bad(`시험 편 sid 꼴이 아니다(${sid.slice(0, 40)})`);
+  const leaf = `t${q.task.try || 0}_${sid}`;
+  if (fs.existsSync(path.join(W, 'trial', leaf, 'final.mp4'))) return { ...j, work_dir: `trial/${leaf}` };   // 이미 옮겼다(옮긴 뒤 꺼졌다 이어 하기) — 다시 만들게 하지 않는다(과제 8 검토 2)
   const mk = path.join(dataDir(), 'calcopy', 'make');
   let S = null;
   try { S = JSON.parse(fs.readFileSync(path.join(mk, `${sid}.json`), 'utf8')); } catch { return bad('그 sid 의 편 기록이 없다'); }
   const src = S && S.topic_id != null ? path.join(mk, sid, 'work', String(S.topic_id), '제작') : '';
   if (!src || !fs.existsSync(path.join(src, 'final.mp4'))) return bad('그 편 결과 폴더에 완성본이 없다');
-  const leaf = `t${q.task.try || 0}_${sid}`;
   try {
     const T = path.join(W, 'trial');
     fs.rmSync(T, { recursive: true, force: true });     // 지난 시도는 지운다(새 과제가 나왔다 = 서버가 지난 시도의 bm_side·bm_match 를 끝냈다) — 늘 한 벌
     fs.mkdirSync(T, { recursive: true });
-    moveDir(src, path.join(T, leaf));                   // 복사가 아니라 옮긴다 — 회원 PC 에 두 벌 쌓이지 않게(관리자 Ruling 13)
+    moveDir(src, path.join(T, leaf), t => reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: t }));   // 복사가 아니라 옮긴다 — 회원 PC 에 두 벌 쌓이지 않게(관리자 Ruling 13)
   } catch (e) { return bad('결과 폴더를 옮기지 못했다: ' + String((e && e.code) || e).slice(0, 80)); }
   return { ...j, work_dir: `trial/${leaf}` };
 }
-// 같은 드라이브면 이름만 바꾸고, 다른 드라이브(EXDEV)면 복사한 뒤 원본을 지운다(복사가 끝난 뒤에만 지운다)
-export function moveDir(src, dst) {
+// 같은 드라이브면 이름만 바꾸고, 다른 드라이브(EXDEV)·Windows 에서 파일이 열려 있음(EPERM·EBUSY)이면 복사한 뒤 원본을 지운다(복사가 끝난 뒤에만 지운다).
+//   복사는 됐는데 원본을 못 지우면 결과는 성공(판정에 쓰는 것은 옮긴 쪽) — 두 벌이 남은 것은 warn 한 줄로 알린다(조용히 삼키지 않음, 과제 8 검토 2)
+const MOVE_COPY = new Set(['EXDEV', 'EPERM', 'EBUSY']);
+export function moveDir(src, dst, warn = t => reportLive({ kind: 'error', text: t })) {
   try { fs.renameSync(src, dst); return 'rename'; }
   catch (e) {
-    if (!e || e.code !== 'EXDEV') throw e;
+    if (!e || !MOVE_COPY.has(e.code)) throw e;
     fs.cpSync(src, dst, { recursive: true });
-    fs.rmSync(src, { recursive: true, force: true });
+    try { fs.rmSync(src, { recursive: true, force: true }); }
+    catch (r) { warn(`시험 편 결과는 옮겼지만 원본 폴더를 못 지웠다(${(r && r.code) || r}) — 두 벌이 남음: ${src}`.slice(0, 300)); }
     return 'copy';
   }
 }

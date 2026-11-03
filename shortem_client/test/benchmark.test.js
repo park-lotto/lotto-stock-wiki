@@ -242,3 +242,88 @@ test('이어 부르기와 주소 검사', async () => {
   assert.match((await B.benchStart({ name: 'x' })).hints[0], /채널 주소/);
   assert.match((await B.benchStart({ videos: ['https://evil.example/a'], name: 'x' })).hints[0], /영상 주소는/);
 });
+
+// ── 과제 8 검토 고침 2회차 ──
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+test('다시 켤 때 벤치마킹 아닌 옛 제작 흐름은 메모리에 올리지 않는다 — 지금 도는 편·멈춤 경보로 안 본다', async () => {
+  const OLD = 'd1d1d1d1d1d1';
+  const t = Date.now() - 3 * 86400000;                    // 3일 전 회원 Claude 답을 기다리다 버려진 제작 흐름
+  diskFlow(OLD, { preset: '얜샷템', status: 'review', created: t, movedAt: t, asks: [] });
+  assert.equal(F_.liveFlow(), null, '앞 시험이 남긴 도는 흐름 없음');
+  await B.recoverBench();
+  assert.equal(F_.liveFlow(), null, '버려진 옛 흐름을 지금 도는 편으로 보면 새 편을 못 만든다(busy_flow)');
+  assert.equal(F_.anyFlowBusy(), false, '업데이트 바꿔 끼우기·벤치마킹 시작이 막히면 안 된다');
+  assert.equal(F_.flowStall(), null, '켤 때마다 거짓 멈춤 경보');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(F_.flowRoot(), OLD, 'flow.json'), 'utf8')).preset, '얜샷템', '그 흐름은 디스크에 그대로');
+});
+
+test('켤 때 옛 흐름을 정리하는 사이 새 벤치마킹이 시작돼도 새 것의 빌림·푼 엔진 파일은 건드리지 않는다', async () => {
+  const OLD = 'd2d2d2d2d2d2', NS = 'd3d3d3d3d3d3';
+  diskFlow(OLD, { status: 'stop', created: Date.now() - 86400000, fail: { why: '멈춤', retry_ok: false, server_stop: true }, bench: { name: '옛 틀', channel: URL_CH } });
+  let open; const gate = new Promise(r => { open = r; });
+  const keep = api.step;
+  api.step = async b => { await gate; return keep.call(api, b); };   // 새 벤치마킹을 띄우는 중(cur.sid 아직 없음)에 붙잡는다
+  fake.state.stepHandler = () => ({ code: 200, json: { ok: true, sid: NS, status: 'stop', message: '멈춤', why: '멈춤', fix: '다시', retry_ok: false, next_payload: 'n1' } });
+  try {
+    const p = B.benchStart({ channel: URL_CH, name: '새 틀' });
+    for (let i = 0; i < 200 && !(B.benchNow() && B.benchNow().leased); i++) await sleep(25);
+    assert.deepEqual(B.benchNow(), { sid: null, leased: true });
+    assert.equal(await F_.endFlow(F_.loadFlow(OLD)), true, '옛 흐름 끝 정리');
+    assert.deepEqual(B.benchNow(), { sid: null, leased: true }, '새 벤치마킹의 빌림은 그대로');
+    assert.ok(fs.existsSync(path.join(E, '.bench_rented.json')) && leftovers(), '새로 푼 엔진 파일은 그대로');
+    open();
+    await p;                                               // 새 흐름이 띄우는 사이 끝났다 — 이것은 제 것으로 정리한다
+    for (let i = 0; i < 100 && (B.benchNow() || leftovers()); i++) await sleep(50);
+    assert.equal(B.benchNow(), null);
+    assert.equal(leftovers(), false);
+  } finally { open(); api.step = keep; }
+});
+
+test('켤 때 되살림은 그 사이 시작된 흐름의 둔 벌(_keep)을 되살리지 않는다(임시 시험본이 지워지지 않게)', async () => {
+  const NS = 'd4d4d4d4d4d4';
+  const src = path.join(root, 'src_my_n');
+  fs.mkdirSync(path.join(src, 'channel', 'my_n', 'preset', '틀'), { recursive: true });
+  fs.writeFileSync(path.join(src, 'channel', 'my_n', 'preset', '틀', 'frame.json'), '"원래"');
+  const [orig] = M.addMine(src, { slug: 'my_n', name: '새 틀', presets: [{ style: '틀', sources: ['a'] }] }, '');
+  const pd = path.join(F_.flowRoot(), NS, 'job', 'channel', 'my_n', 'preset', '틀');
+  fs.mkdirSync(pd, { recursive: true });
+  fs.writeFileSync(path.join(pd, 'frame.json'), '"시험"');
+  fake.state.stepHandler = () => ({ code: 200, json: { ok: true, sid: NS, status: 'review', message: '시험 영상 만들기 중', next_payload: 'k1',
+    review: [{ id: 'bm_trial', model: 'opus', ask: 'shortem_make(step="start", preset="{preset_id}")', need: ['work_dir', 'ok'],
+      meta: { kind: 'member_task', tool: 'shortem_make', preset: { slug: 'my_n', style: '틀', dir: 'channel/my_n/preset/틀' }, source: { channel: URL_CH }, try: 0 } }] } });
+  const o = await B.benchStart({ channel: URL_CH, name: '새 틀' });
+  assert.equal(o.need, 'ai', JSON.stringify(o));
+  const away = path.join(F_.flowRoot(), '_away_' + NS);
+  fs.renameSync(path.join(F_.flowRoot(), NS), away);       // 켤 때 목록을 읽은 뒤에 시작된 흐름(디스크 목록에 없다)
+  try { await B.recoverBench(); } finally { fs.renameSync(away, path.join(F_.flowRoot(), NS)); }
+  assert.ok(fs.existsSync(path.join(M.myRoot(), '_keep', 'my_n')), '도는 흐름의 둔 벌은 그대로');
+  assert.deepEqual(M.listMine().filter(p => p.slug === 'my_n').map(p => p.name), ['새 틀 시험'], '임시 시험본이 그대로(회원 Claude 가 쓰는 중)');
+  const c = F_.cancelFlow(NS);
+  await c.ended;
+  assert.deepEqual(M.listMine().filter(p => p.slug === 'my_n').map(p => [p.id, p.name]), [[orig.id, '새 틀']], '멈추면 원래 것이 되살아난다');
+  assert.equal(B.benchNow(), null);
+});
+
+test('시험 편을 옮긴 뒤 꺼졌다 이어 해도, 옮겨 둔 완성본으로 같은 상대 경로를 서버에 준다(다시 만들게 하지 않음)', async () => {
+  const { aiRootDir } = await import('../server/engine_bridge.js');
+  const RS = 'c3c3c3c3c3c3';
+  const E3 = 'e3e3e3e3e3e3';
+  const W = path.join(F_.flowRoot(), RS, 'job');
+  fs.mkdirSync(path.join(W, 'trial', `t1_${E3}`), { recursive: true });
+  fs.writeFileSync(path.join(W, 'trial', `t1_${E3}`, 'final.mp4'), 'v');   // 옮기기는 끝났고 원본(엔진 창고 쪽)은 없다
+  const q = path.join(aiRootDir(), 'flow_' + RS, 'req3');
+  fs.mkdirSync(q, { recursive: true });
+  fs.writeFileSync(path.join(q, 'answer.json'), JSON.stringify({ work_dir: E3, ok: true }));
+  diskFlow(RS, { status: 'review', payload: 'r1', bench: { name: '이어 틀', channel: URL_CH },
+    asks: [{ rid: 'bm_trial', dir: q, need: ['work_dir', 'ok'], task: { kind: 'member_task', try: 1, slug: 'my_z', preset_id: 'p_0000000001' } }] });
+  steps.length = 0;
+  fake.state.stepHandler = body => { steps.push(body); return { code: 200, json: { ok: true, sid: RS, status: 'stop', message: '멈춤', why: '멈춤', fix: '다시', retry_ok: false, next_payload: 'r2' } }; };
+  const r = await B.recoverBench();
+  assert.equal(r.resumed, RS);
+  await B.benchWait(RS);
+  assert.deepEqual(steps.map(b => b.step), ['go']);
+  assert.deepEqual(steps[0].replies, { bm_trial: { work_dir: `trial/t1_${E3}`, ok: true } });
+  for (let i = 0; i < 100 && B.benchNow(); i++) await sleep(50);
+  assert.equal(B.benchNow(), null);
+});

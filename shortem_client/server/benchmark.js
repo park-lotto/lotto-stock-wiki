@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { api, ApiError } from './api.js';
 import { audit } from './audit.js';
 import { activeRuns, engineRoot } from './engine_bridge.js';
-import { anyFlowBusy, endFlow, flowEnded, loadFlow, setBenchHand, startBenchFlow, trialRoot, waitFlow } from './flow_driver.js';
+import { anyFlowBusy, endFlow, flowEnded, liveBenchSlugs, loadFlow, setBenchHand, startBenchFlow, trialRoot, waitFlow } from './flow_driver.js';
 import { Lease, freeDeadLeases } from './lease.js';
 import { VIDEO, YT_CHANNEL, waitMs } from './make_flow.js';
 import { addMine, dropMine, forgetKept, keptSlugs } from './my_presets.js';
@@ -21,8 +21,9 @@ import { select } from './local_settings.js';
 const MARK = '.bench_rented.json';                       // 이번에 푼 파일 목록 — 프로그램이 죽어도 다음에 켤 때 이것만 지운다(개발 PC 의 진짜 코드는 목록에 없다)
 const ROOTS = ['tools/', 'shopping_shorts/'];
 const FAIL = { tier_locked: '숏클 페이지에서 고급반으로 올리면 바로 쓸 수 있어요', not_ready: '잠시 뒤 다시 해 주세요', busy_other_device: '다른 PC 작업이 끝난 뒤 다시 해 주세요', lease_lost: '다른 작업이 끝난 뒤 다시 해 주세요', no_key: '숏템 설치를 다시 확인해 주세요' };
-let cur = null;                                          // 지금 도는 벤치마킹(한 번에 하나) — { sid, lease }. sid 가 아직 없으면(띄우는 중) 이 프로그램이 막 빌린 것
-const ours = f => !!cur && (cur.sid === f.sid || !cur.sid);
+let cur = null;                                          // 지금 도는 벤치마킹(한 번에 하나) — { sid, lease, since }. sid 가 아직 없으면(띄우는 중) 이 프로그램이 막 빌린 것
+// 이 흐름이 지금 벤치마킹인가 — sid 가 같거나, 띄우는 중(sid 없음)이면 그 시작(since) 뒤에 생긴 흐름만. 켤 때 정리하는 옛 흐름(created 가 앞)은 새 시작의 빌림을 건드리지 않는다(과제 8 검토 2)
+const ours = f => !!cur && (cur.sid ? cur.sid === f.sid : !!cur.since && (f.created || 0) >= cur.since);
 
 function wipe(root) {
   const mark = path.join(root, MARK);
@@ -96,9 +97,10 @@ async function endBench(f) {
     }
     fs.rmSync(trialRoot(f.sid), { recursive: true, force: true });   // 시험 편 결과(서버 bm_side·bm_match 가 다 읽었다 — 흐름이 끝났다)
   } finally {
-    if (ours(f)) cur = null;
-    wipe(root);
-    if (lease) await lease.release(); else await freeDeadLeases().catch(() => 0);
+    const mineNow = ours(f);
+    if (mineNow) cur = null;
+    if (mineNow || !cur) wipe(root);               // 다른 벤치마킹이 쥔 푼 파일은 그대로(그 끝 정리가 지운다)
+    if (lease) await lease.release(); else await freeDeadLeases().catch(() => 0);   // 남의 것: 주인이 죽은 장부만 돌려준다(이 프로그램의 빌림은 pid 가 살아 있어 건너뛴다)
   }
 }
 
@@ -121,6 +123,11 @@ export async function recoverBench() {
   try { names = fs.readdirSync(flowRoot()); } catch { names = []; }
   const alive = [];
   for (const sid of names) {
+    // ★디스크 flow.json 을 먼저 직접 읽어 벤치 흐름만 loadFlow 한다 — loadFlow 는 메모리 흐름 목록에 올리므로,
+    //   버려진 옛 제작 흐름까지 올리면 liveFlow·anyFlowBusy·flowStall 이 그것을 지금 도는 편으로 본다(새 편 거절·거짓 멈춤 경보, 과제 8 검토 2)
+    let disk = null;
+    try { disk = JSON.parse(fs.readFileSync(path.join(flowRoot(), sid, 'flow.json'), 'utf8')); } catch { continue; }
+    if (!disk || !disk.bench || disk.bench.ended) continue;
     const f = loadFlow(sid);
     if (!f || !f.bench || f.bench.ended) continue;
     if (flowEnded(f)) { await endFlow(f); audit('benchmark_recover', { result: 'ended', sid }); }
@@ -128,7 +135,7 @@ export async function recoverBench() {
   }
   alive.sort((a, b) => (b.created || 0) - (a.created || 0));
   if (alive.length && !cur) { cur = { sid: alive[0].sid, lease: null }; audit('benchmark_recover', { result: 'resume', sid: alive[0].sid }); }
-  const held = new Set(alive.map(f => f.bench.trial_slug).filter(Boolean));
+  const held = new Set(liveBenchSlugs());          // 메모리의 끝나지 않은 벤치 흐름 전부 — 목록을 읽은 뒤 시작된 흐름의 둔 벌도 빼지 않는다(과제 8 검토 2)
   for (const slug of keptSlugs()) {
     if (held.has(slug)) continue;
     dropMine(slug);
@@ -159,7 +166,7 @@ export async function benchStart({ channel, videos, name, n }) {
   if (activeRuns().length || anyFlowBusy() || renting()) return { fail: { where: '벤치마킹', why: '지금 만드는 편이 있습니다', fix: '끝난 뒤 다시 해 주세요', retry_ok: true } };
   const root = engineRoot();
   let lease;
-  try { sweepBench(root); lease = await rentEngine(root); cur = { sid: null, lease }; }
+  try { sweepBench(root); lease = await rentEngine(root); cur = { sid: null, lease, since: Date.now() }; }
   catch (e) { return { fail: { where: '벤치마킹', why: e instanceof ApiError ? (e.msg || e.code) : '벤치마킹을 받지 못했습니다', fix: FAIL[e.code] || '잠시 뒤 다시 해 주세요', retry_ok: e.code !== 'tier_locked' } }; }
   const label = String(name || '내 프리셋').trim().slice(0, 30) || '내 프리셋';
   let f;
