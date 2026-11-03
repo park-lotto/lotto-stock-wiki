@@ -27,7 +27,13 @@ def find() -> str | None:
 
 
 def _call(args: list[str], run, timeout: int) -> dict:
-    r = (run or subprocess.run)(args, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    """실행 실패는 예외로 올리지 않고 status 로 돌려준다(AGY_TIMEOUT / AGY_RUN_FAILED)."""
+    try:
+        r = (run or subprocess.run)(args, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return {"status": "AGY_TIMEOUT"}
+    except OSError as e:
+        return {"status": "AGY_RUN_FAILED", "exc": type(e).__name__}
     try:
         return json.loads(r.stdout or "{}")
     except ValueError:
@@ -66,6 +72,10 @@ def ask_video(video: Path, ask: str, schema: dict, run=None, timeout: int = 600)
     out = {}
     for _ in range(RETRIES + 1):
         out = _call(args, run, timeout)
+        if out.get("status") == "AGY_TIMEOUT":      # 타임아웃은 재시도 안 한다(최악 시간이 배가 된다)
+            return {"error": "agy_timeout"}
+        if out.get("status") == "AGY_RUN_FAILED":
+            return {"error": f"agy_run_failed:{out.get('exc')}"}
         ans = _json_of(out.get("response") or "") if out.get("status") == "SUCCESS" else None
         if ans is not None:
             return {"answer": ans, "sec": round(time.time() - t0, 1)}

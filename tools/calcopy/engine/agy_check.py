@@ -52,7 +52,7 @@ def main(argv=None) -> int:
                "first_caption": ans.get("first_caption"), "sec": r.get("sec"), "error": r.get("error")}
         rows.append(row); print(json.dumps(row, ensure_ascii=False))
     (out / "agy_check.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
-    return 0
+    return 1 if any(r.get("error") for r in rows) else 0
 
 
 if __name__ == "__main__":
