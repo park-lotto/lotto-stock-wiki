@@ -7,6 +7,7 @@ import path from 'node:path';
 import { spawn, execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { homeDir, ensureDir, writeFileIn } from './paths.js';
+import { toolPath } from './tools_paths.js';
 import { audit } from './audit.js';
 
 const require = createRequire(import.meta.url);
@@ -64,8 +65,18 @@ export function writeCookies(cookies) {
   // 엔진의 yt-dlp 호출이 전부 이 쿠키를 쓰게(XDG_CONFIG_HOME/yt-dlp/config — exe·파이썬 모듈 둘 다 읽는다, 10-19 실측)
   //   ★첫 줄 '# coding: utf-8' — 없으면 한국어 윈도의 yt-dlp.exe 가 이 파일을 cp949 로 읽어, 홈 경로에 한글(사용자 이름)이 있으면
   //   'Unable to parse … config' 로 모든 받기가 즉시 죽는다(98 #158, 10-26 잇템로그 회원 실측 2/13 멈춤)
-  writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), `# coding: utf-8\n--cookies "${cookiesFile().replace(/\\/g, '/')}"\n`);
+  writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), ytdlpConfig(cookiesFile(), nodeForYtdlp()));
   return Object.fromEntries(Object.entries(PLATFORMS).map(([k, pf]) => [k, loggedIn(keep, pf)]));
+}
+
+// yt-dlp 설정 한 곳 — 쿠키로 받으면 유튜브가 'n challenge' 를 내고, JS 실행기가 없으면 'The page needs to be reloaded' 로 받기가 죽는다
+//   (11-03 회원 박준영 실측: 쿠키 없음 통과·쿠키 있음 실패·숏클 node + ejs 받기면 통과). 숏클이 함께 깐 node 를 쓴다.
+export function ytdlpConfig(cookies, node) {
+  const q = p => `"${String(p).replace(/\\/g, '/')}"`;
+  return '# coding: utf-8\n' + `--cookies ${q(cookies)}\n` + (node ? `--js-runtimes node:${q(node)}\n--remote-components ejs:github\n` : '');
+}
+function nodeForYtdlp() {
+  try { return toolPath('node'); } catch { return process.execPath; }      // 설치본이 아니면 지금 도는 node
 }
 
 // 숏템 전용 프로필의 크롬 본체 찾기(CS #76) — 창을 닫아도 크롬이 뒤에 남으면 exit 이 오지 않아 waiting 이 굳고,
