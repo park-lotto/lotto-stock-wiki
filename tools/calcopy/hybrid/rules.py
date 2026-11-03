@@ -560,6 +560,38 @@ def fix_crop_units(M: dict, dims: dict) -> list[str]:
     return out
 
 
+def fit_window(M: dict, dims: dict, fit: dict | None, win: list) -> list[str]:
+    """가로 원본을 세로 창에 넣는 법(판단 주인) — 판 frame.fit 이 있으면(두유노판, 사장님 11-03 'EINo 편처럼 · 잘랐을 때 자연스러우면 된다 ·
+    너무 확대되고 가운데로 안 되어 있다'): 가로 원본 컷은 원본 **높이 전체**를 fit.aspect(가로/세로) 비율로 자르고(확대 없음 — 창 폭 1080 = 원본 높이 1080),
+    자르는 가운데 = 회원이 고른 crop 의 가운데(제품 자리, 없으면 원본 가운데) · 그 그림을 창 가운데 칸(pic)에 넣고 위아래는 판 바탕색.
+    벤치 EINo(260만): 가로 원본을 검정 바탕 가운데 창 y420~1499 / 706~1213 / 544~1375 로 비율대로. 세로 원본·사진·이미 pic 이 있는 컷은 그대로.
+    win = [x, y, w, h](판 창). 바꾼 것을 돌려준다."""
+    if not fit or fit.get("landscape") != "pic":
+        return []
+    ww, wh = int(win[2]), int(win[3])
+    if ww >= wh:
+        return []
+    asp = float(fit.get("aspect") or 1.0)
+    out = []
+    for lid, cuts in (M.get("cuts") or {}).items():
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            src = str(c.get("src") or "")
+            if c.get("pic") or src not in dims or src.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                continue
+            sw, sh = dims[src]
+            if not (sw and sh) or sw <= sh:
+                continue
+            cr = c.get("crop")
+            cx = (cr[0] + cr[2] / 2) if isinstance(cr, list) and len(cr) == 4 else sw / 2
+            cw = min(sw, int(round(sh * asp))) // 2 * 2
+            x = int(round(max(0, min(cx - cw / 2, sw - cw))))
+            ph = min(wh, int(round(ww * sh / cw))) // 2 * 2
+            c["crop"] = [x, 0, cw, sh // 2 * 2]
+            c["pic"] = [0, (wh - ph) // 2 // 2 * 2, ww, ph]
+            out.append(f"{lid} {src}: 가운데 x{int(cx)} → crop {c['crop']} · 창 {c['pic']}")
+    return out
+
+
 PRODUCT_TALK = {   # 제품을 어떻게 찾았나 → 대본이 제품을 말하는 법(사장님 10-21)
     "exact": "원본 화면의 포장과 같은 제품이다 — '○○가 쓰는 그 제품'으로 말해도 된다.",
     "named": "원본 화면엔 상표가 안 보여 포털·유튜브 글로 이름을 찾았다 — 근거 글이 가리키는 만큼만 말한다(지어 붙이지 않는다).",

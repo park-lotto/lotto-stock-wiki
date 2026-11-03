@@ -2285,6 +2285,9 @@ def _prep_material(st, S: dict, M: dict) -> dict:
     fixed = RU.fix_crop_units(M, _all_dims(st))
     if fixed:
         st["log"].append("crop 단위 바로잡음: " + "; ".join(fixed)[:300])
+    fw = RU.fit_window(M, _all_dims(st), (_style(st["version"]).get("frame") or {}).get("fit"), STY_window(st["version"]))
+    if fw:
+        st["log"].append("가로 원본 창에 넣기(판 frame.fit): " + "; ".join(fw)[:300])
     return M
 
 
@@ -2551,6 +2554,9 @@ def _take_fix(st, r: dict) -> dict | None:
     fixed = RU.fix_crop_units(M, _all_dims(st))
     if fixed:
         st["log"].append("crop 단위 바로잡음: " + "; ".join(fixed)[:300])
+    fw = RU.fit_window(M, _all_dims(st), (_style(st["version"]).get("frame") or {}).get("fit"), STY_window(st["version"]))
+    if fw:
+        st["log"].append("가로 원본 창에 넣기(판 frame.fit): " + "; ".join(fw)[:300])
     bad = RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     st["script"]["M"] = M
     st["_fix_bad"] = bad
