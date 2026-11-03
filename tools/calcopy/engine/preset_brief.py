@@ -7,6 +7,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from shopping_shorts.calcopy_frame.per_video import flat  # 칸 이름 짓기는 여기 한 곳(preset_save.variables 와 같은 이름)
+
 MARK = "<!-- manifest_sha: {} -->"
 
 
@@ -17,20 +19,9 @@ def sha(preset_dir: Path) -> str:
     return h.hexdigest()
 
 
-def _flat(d: dict, pre: str = "") -> list[tuple[str, object]]:
-    """사전은 점으로, frame.json 의 layers 목록은 manifest variables 와 같은 이름(layers[text:title].y)으로 편다."""
-    out = []
-    for k, v in (d or {}).items():
-        key = f"{pre}{k}"
-        if isinstance(v, dict):
-            out += _flat(v, key + ".")
-        elif isinstance(v, list) and v and all(isinstance(x, dict) and "kind" in x for x in v):
-            for x in v:
-                tag = f"{x['kind']}:{x['role']}" if x.get("role") else str(x["kind"])
-                out += _flat(x, f"{key}[{tag}].")
-        else:
-            out.append((key, v))
-    return out
+def _cell(v: object) -> str:
+    t = json.dumps(v, ensure_ascii=False)[:60]
+    return t.replace("|", "\\|").replace("\\n", "⏎").replace("\\r", "")
 
 
 def render(preset_dir: Path, out_dir: Path, name: str) -> dict:
@@ -42,8 +33,8 @@ def render(preset_dir: Path, out_dir: Path, name: str) -> dict:
     s = sha(preset_dir)
     lines = [MARK.format(s), f"# 내 프리셋 — {name}", "", f"쟀던 벤치 편: {len(man.get('sources') or [])}편", "",
              "| 칸 | 값 | 어떻게 |", "|---|---|---|"]
-    for k, v in _flat(frame):
-        lines.append(f"| {k} | {json.dumps(v, ensure_ascii=False)[:60]} | {'편마다 소재에 맞춰 정함' if (k in var or v == '$per_video') else '고정'} |")
+    for k, v in flat(frame).items():
+        lines.append(f"| {k} | {_cell(v)} | {'편마다 소재에 맞춰 정함' if k in var else '고정'} |")
     md = out_dir / "프리셋.md"
     md.write_text("\n".join(lines) + "\n", encoding="utf-8")
     cm = out_dir / "CLAUDE.md"
