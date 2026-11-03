@@ -17,7 +17,7 @@
 - 시험 shopping_shorts/tests/test_relay_vmake_315.py (고치기 전 코드에서 실패 확인함)
 
 ## ⏭ 남은 것
-- 쿠팡 403: 이 PC(KT 서울)에서도 막힘. .coupang_profile → .coupang_profile_blocked_20261103 로 백업. 새 프로필 1회 3건, 재시험 0건 — 원인 미확정
+- 쿠팡: 이 PC(KT 서울)도 Akamai 'Access Denied'(HTTP 200) — 상품재료 30여 건 연타 직후. 코드가 403만 차단으로 봐 '결과 없음'으로 오판·계속 두드림 → coupang_search.search 에 Access Denied 판정+30분 휴식 추가. 차단 풀리는지 다음에 재확인(.coupang_profile_blocked_20261103 백업 남음)
 - VMake SDK 'Skill version is outdated' 경고(미조치)
 - 회원 c9d6dd692fc9: 새 VMake 키 넣어도 재지우기 안 하고 흐림 완성(미조사)
 - 서버 failed 유닛: instagram-collect / instagram-discover / video-audit (미조사)
