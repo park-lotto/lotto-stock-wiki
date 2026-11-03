@@ -251,6 +251,15 @@ def synth_takes_tempo(voice_id: str, provider: str | None = None) -> bool:
     return not is_eleven(voice_id) and prov in (None, "typecast")
 
 
+# (판단 주인 — 일레븐 오류 본문 status → 회원이 할 일) 401 이라도 키가 틀린 게 아닌 경우가 있다(11-04 김미화 #4038 payment_issue · 11-03 박준영 #3698 missing_permissions).
+#   서버 숏템메이커는 app._TTS_VENDOR_RULES 가 같은 갈래를 맡는다(회원 PC 엔진은 app.py 를 부르지 않는다). 모르는 status 는 상태코드 문구 그대로.
+ELEVEN_STATUS_WHY = {
+    "payment_issue": "일레븐랩스 계정의 구독 결제가 실패(또는 미완료)해 사용이 멈췄습니다 — elevenlabs.io 에서 최근 청구서 결제를 마치거나, 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요",
+    "missing_permissions": "일레븐랩스 키는 맞지만 필요한 권한(음성 만들기 text_to_speech 등)이 꺼진 키입니다 — elevenlabs.io ▸ API Keys 에서 권한을 켠 새 키를 만들어 설정 화면에 넣으세요",
+    "detected_unusual_activity": "일레븐랩스가 무료 요금제의 비정상 사용으로 이 키를 막았습니다 — 유료 요금제로 바꾸거나 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요",
+}
+
+
 def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | None:
     """회원 PC(사장님 10-21 '미나 = 회원 본인 일레븐랩스 키'): 회원 키로 일레븐랩스를 직접 — 요청 꼴은 서버 서비스와 같다
     (shopping_shorts/tts.py synthesize_tts: POST /v1/text-to-speech/<voice>/with-timestamps · xi-api-key · {text, model_id, voice_settings}, v3 는 use_speaker_boost 뺌).
@@ -283,6 +292,7 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
                     why = ("일레븐랩스 무료 요금제는 공유 목록 목소리(미나 등)를 API 로 쓸 수 없습니다 — 설정 화면 소리 단계의 '내가 만든 목소리'"
                            "(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 목소리를 고르세요")
                 else:
+                    why = ELEVEN_STATUS_WHY.get(str(det.get('status') or ''), why)     # 키는 맞는데 계정·권한 문제(401) — 할 일을 먼저 말한다
                     why += f" — {det.get('status') or ''} {str(det.get('message') or '')[:160]}".rstrip()
         except Exception:  # noqa: BLE001 — 본문이 없으면 코드만
             pass

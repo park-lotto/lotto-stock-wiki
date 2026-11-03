@@ -11,3 +11,11 @@ test('일레븐 무료 요금제 + 공유 목록 목소리는 점검에서 막�
   await elevenUsable('k', 'BBBBBBBBBBBBBBBBBBBB', { get: mk('free', 'cloned'), presets });
   await elevenUsable('k', '', { get: mk('free', 'professional'), presets });
 });
+
+test('점검도 401 을 일레븐 상태로 갈라 말한다(#4038 payment_issue · #3698 missing_permissions)', async () => {
+  const { elevenStatusWhy } = await import('../server/selftest.js');
+  assert.match(elevenStatusWhy('payment_issue'), /결제/);
+  assert.match(elevenStatusWhy('missing_permissions'), /권한/);
+  assert.match(elevenStatusWhy('detected_unusual_activity'), /유료/);
+  assert.equal(elevenStatusWhy('invalid_api_key'), '일레븐랩스 키가 맞지 않습니다');
+});

@@ -298,7 +298,7 @@ export async function startFlow({ preset, video, product, topic }) {
   if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
   if (resolveTools().mode !== 'dev') {   // 점검 뒤 목소리·키가 바뀌었으면 목소리만 다시 본다(#3698 박준영 — 바뀐 일레븐 제한 키가 8/11 에서야 멈췄다)
     try { await recheckVoice(preset); } catch (e) {
-      if (e.why) throw new ApiError(409, { code: 'voice_recheck', msg: `${e.why} — ${e.fix || ''}` });
+      if (e.why) throw new ApiError(409, { code: 'voice_recheck', msg: e.fix ? `${e.why} — ${e.fix}` : e.why });
       process.stderr.write(`[flow] 목소리 다시 보기 실패(그대로 진행): ${e.message || e}
 `);
     }

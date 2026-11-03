@@ -137,9 +137,20 @@ export async function recheckVoice(preset, { settings = readSettings(), key = re
   if (now.provider === 'elevenlabs') await usable(key('elevenlabs'), now.voice);
   fs.writeFileSync(stampFile(), JSON.stringify({ ...d, voice: now }));
 }
+// 일레븐 401 본문 status → 회원에게 할 말. 엔진 쪽 같은 표 = tools/calcopy/engine/narr_align.ELEVEN_STATUS_WHY(문구를 바꾸면 둘 다)
+const ELEVEN_STATUS_WHY = {
+  payment_issue: '일레븐랩스 계정의 구독 결제가 실패(또는 미완료)해 사용이 멈췄습니다 — elevenlabs.io 에서 최근 청구서 결제를 마치거나, 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요',
+  missing_permissions: '일레븐랩스 키는 맞지만 필요한 권한(음성 만들기 text_to_speech 등)이 꺼진 키입니다 — elevenlabs.io ▸ API Keys 에서 권한을 켠 새 키를 만들어 설정 화면에 넣으세요',
+  detected_unusual_activity: '일레븐랩스가 무료 요금제의 비정상 사용으로 이 키를 막았습니다 — 유료 요금제로 바꾸거나 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요',
+};
+export const elevenStatusWhy = s => ELEVEN_STATUS_WHY[s] || '일레븐랩스 키가 맞지 않습니다';
 async function elevenGet(p, key) {
   const r = await fetch('https://api.elevenlabs.io' + p, { headers: { 'xi-api-key': key }, signal: AbortSignal.timeout(15000) });
-  if (r.status === 401) throw Object.assign(new Error('eleven_key'), { why: '일레븐랩스 키가 맞지 않습니다', fix: '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
+  if (r.status === 401) {
+    let st = '';
+    try { st = String(((await r.json()) || {}).detail?.status || ''); } catch { /* 본문 없음 = 키 문제로 */ }
+    throw Object.assign(new Error('eleven_key'), { why: elevenStatusWhy(st), fix: ELEVEN_STATUS_WHY[st] ? '' : '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
+  }
   if (!r.ok) return {};          // 조회 실패는 막지 않는다(제작 때 엔진이 실제로 부른다)
   return r.json();
 }
