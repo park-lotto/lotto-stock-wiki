@@ -98,6 +98,19 @@ def will_erase(version: str | None) -> bool:
     return ready(style_mode(version))["mode"] != "blur"
 
 
+def erase_why(version: str | None) -> str:
+    """계획 기록용 한 줄 — 지우나/안 지우나와 그 이유(어느 칸이 방식을 정했나). 판단은 will_erase 그대로(여기는 읽기만)."""
+    m = (os.environ.get("SHORTEM_TEXT_MODE") or "").strip().lower()
+    src = f"회원 설정 {m}" if m in ("vmake", "blur") else "회원 설정 없음 → 판 칸"
+    mode = style_mode(version)
+    if not _flow_erases(version):
+        return f"안 지움 — 이 형식에 지우기 단계 없음({src} {mode})"
+    if mode == "blur":
+        return f"안 지움(흐림) — {src} blur"
+    r = ready(mode)
+    return f"{'지움' if r['mode'] != 'blur' else '안 지움(흐림)'} — {src} {mode} · 준비 {r['mode']}{(' · ' + str(r.get('why'))) if r.get('why') else ''}"
+
+
 def _flow_erases(version: str | None) -> bool:
     e = os.environ.get("CALCOPY_ERASE")          # 회원 PC = 지시서가 계획·렌더 명령에 실어 보낸 값(runner_ops 가 그 일 동안만 둔다 — 회원 엔진엔 flow.py 가 없다)
     if e in ("0", "1"):

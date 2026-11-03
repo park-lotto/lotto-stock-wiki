@@ -4309,6 +4309,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"{'목소리 실측' if tts else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
+        log(f"[박힌 글자] {VC.erase_why(style_name)}")      # 왜 지우나/안 지우나 — 회원 설정이 실렸나(#3542: 설정이 사라져 판 칸 흐림으로 간 것을 기록만 보고 가르게)
         gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
         if M.pop("_blur_added", 0):      # 관문 ④가 넣은 흐림 칸 = 재료.json 에 — 렌더(같은 파일을 읽는다)·지문(gate_stamp)이 같은 흐림을 본다
             jsave(doc / "재료.json", M)
