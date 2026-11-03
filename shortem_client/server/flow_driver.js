@@ -15,6 +15,7 @@ import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
 import { reportLive } from './live.js';
+import { audit } from './audit.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
@@ -173,8 +174,28 @@ async function runWithPreset(f) {
 
 const PUMP_MAX = 200;
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
+// (판단 주인 — 이 편 진행 고리를 누가 돌리나) 한 PC 에 Claude 창이 여럿이면 프로그램도 여럿이다 — 같은 편을 둘이 돌리면
+//   한쪽은 프리셋 빌림이 busy, 다른 쪽은 서버가 'stale 옛 진행 상태'로 거절했다(11-03 김유선). 편마다 잠금(pid) 하나, 살아 있는 남의 잠금이면 돌지 않는다
+const pumpLock = sid => path.join(flowRoot(), sid, 'pump.lock');
+function lockPump(f) {
+  const p = pumpLock(f.sid);
+  try {
+    const o = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (o && o.pid && o.pid !== process.pid) { try { process.kill(o.pid, 0); return false; } catch { /* 주인 죽음 = 비어 있다 */ } }
+  } catch { /* 잠금 없음 */ }
+  try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify({ pid: process.pid, at: Date.now() })); } catch { /* 잠금 없이도 이 창 안 보호는 돈다 */ }
+  return true;
+}
+function unlockPump(f) {
+  try { const o = JSON.parse(fs.readFileSync(pumpLock(f.sid), 'utf8')); if (o.pid === process.pid) fs.rmSync(pumpLock(f.sid), { force: true }); } catch { /* 이미 없음 */ }
+}
 async function pump(f) {
   if (f.busy) return;
+  if (!lockPump(f)) { audit('flow_pump_skip', { result: 'other_window' }); return; }
+  try {          // 다른 창이 진행시킨 편일 수 있다 — 디스크의 최신 상태로 시작한다(옛 next_payload 로 보내지 않게)
+    const d = JSON.parse(fs.readFileSync(stFile(f.sid), 'utf8'));
+    for (const k of Object.keys(d)) if (!['busy', 'running'].includes(k)) f[k] = d[k];
+  } catch { /* 처음 편 = 메모리 그대로 */ }
   f.busy = true;
   let guard = 0;
   try {
@@ -205,7 +226,7 @@ async function pump(f) {
     f.status = 'error';
     save(f);
     reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리 멈춤: ${e instanceof ApiError ? `${e.code} ${e.msg}` : String((e && e.message) || e)}` });   // 서버는 이 편이 끊긴 걸 모른다(관제 304)
-  } finally { f.busy = false; save(f); }
+  } finally { f.busy = false; save(f); unlockPump(f); }
 }
 
 // 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
