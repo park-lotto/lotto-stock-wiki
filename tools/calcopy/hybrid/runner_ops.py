@@ -2445,7 +2445,15 @@ def c_pm(W, d):
                         desktop_dir=str(W / PM_DOC), results=str(W / PM_DOC / "results.json"))
     try:
         with _Alive(W, "영상 만들기" if make else "장면 계획"):
-            r = PM.make_one(pdir, doc, a, cfg_patch=pm_member_patch(W, doc))
+            old_edge = os.environ.get("CALCOPY_EDGE_GATE")
+            os.environ["CALCOPY_EDGE_GATE"] = "1"      # 칸 가장자리 남의 글자 판정 — PC 제작 라인만 켠다(render_bench.edge_gate_on, 사장님 11-04)
+            try:
+                r = PM.make_one(pdir, doc, a, cfg_patch=pm_member_patch(W, doc))
+            finally:
+                if old_edge is None:
+                    os.environ.pop("CALCOPY_EDGE_GATE", None)
+                else:
+                    os.environ["CALCOPY_EDGE_GATE"] = old_edge
     except PG.GateStop as e:              # 렌더 전 관문 멈춤 — 글에 관문·컷·이유가 다 있다(preset_gates._stop)
         return {"ok": False, "problems": [x.strip() for x in str(e).split(" / ") if x.strip()][:40], "error": str(e)[:1200]}
     except (ValueError, SystemExit, StageError) as e:      # 재료 행 수·자막 조각·목소리 칸 등 — 회원 Claude 가 고칠 글 그대로

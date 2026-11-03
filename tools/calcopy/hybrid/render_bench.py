@@ -1981,6 +1981,12 @@ def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], 
 EDGE_MARGIN = 0.15         # 칸 가장자리 글자 — 자를 칸을 사방 15% 넓혀 읽어 칸에 걸쳐 잘린 글줄을 온전히 본다
 
 
+def edge_gate_on() -> bool:
+    """가장자리 글자 판정을 켤까 — 지금은 PC 제작 라인(runner_ops.c_pm 이 CALCOPY_EDGE_GATE=1)만.
+    사장님 11-04: 모든 프리셋 판정이 바뀌는 것이라 다른 프리셋 몇 편으로 잘못 막기를 더 잰 뒤 켠다(베이글 실측 잘못 막기 0)."""
+    return os.environ.get("CALCOPY_EDGE_GATE") == "1"
+
+
 def edge_text_boxes(src: Path, c: dict, n: int, crop, win: tuple[int, int], ocr: dict | None = None) -> list[list[int]]:
     """(판단 주인 — 칸 가장자리에 걸친 남의 글자) 자를 칸 안만 읽으면 칸 경계에 걸쳐 잘린 글줄(윗동만 남은 자막 띠)은 얇아 문턱 밖이다
     (11-03 베이글 편 커클랜드 컷: 칸 y160~924 · 원본 자막 띠 y896~1015 — 28px 겹침이 관문을 지나 완성본에 보였다. Jev 뿌리 0.86·해결 0.80).
@@ -2290,7 +2296,9 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 _cache_save(cp, cache, {**rows, key: r})       # 컷마다 저장 — 느린 PC 는 시간 한도에 끊겨 재시도마다 처음부터 쟀다(11-02 회원 수리 채택)
                 if len(ocr) != len(ocr0):
                     _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
-            if "edge" not in r:              # 칸 가장자리에 걸친 남의 글자 — 없는 캐시에만 덧붙인다(이미 읽은 글자 캐시는 그대로)
+            if not edge_gate_on():
+                r = {**r, "edge": []}
+            elif "edge" not in r:              # 칸 가장자리에 걸친 남의 글자 — 없는 캐시에만 덧붙인다(이미 읽은 글자 캐시는 그대로)
                 r["edge"] = edge_text_boxes(src, c, n, crop, (ww, wh), ocr)
                 _cache_save(cp, cache, {**rows, key: r})
                 if len(ocr) != len(ocr0):
