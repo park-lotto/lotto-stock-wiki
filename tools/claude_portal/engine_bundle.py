@@ -211,6 +211,9 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
     # 10-30 지시서(노하우) = 서버 한 곳 — vmake_clean 이 형식 판단(flow.erases_text)을 함수 안에서 부르지만 회원 PC 는 지시서가 명령에 실은 erase(CALCOPY_ERASE)를 쓴다
     "tools/calcopy/hybrid/flow.py",
+    # 11-03 topic_find 가 함수 안에서 부르는 우리 PC 전용 갈래 — 서버 SSH 정보(_server_access, 관제 234)·커뮤니티 수집(community_mine, 보배드림 크롤)
+    #   회원 PC 소재는 서버 소재 창고가 준다(make_flow startFlow) — 이 갈래가 회원 PC 에서 돌면 그 자리에서 멈춘다(묶음 금지 꼴 tools/calcopy/community_*.py)
+    "tools/calcopy/engine/_server_access.py", "tools/calcopy/community_mine.py",
 }
 
 
