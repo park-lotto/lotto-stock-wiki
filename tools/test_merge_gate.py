@@ -201,3 +201,30 @@ def test_compare_ignores_encoding_only_differences():
     base = {"compile_ok": True, "import_ok": True, "pytest_rc": 1, "failed": ["t.py::test_한글"], "compile_out": "", "import_out": "", "pytest_out": ""}
     after = {**base, "failed": ["t.py::test_???"]}
     assert not [p for p in g.compare(base, after) if "새로" in p or "new" in p.lower()]
+
+
+def test_gate_run_times_out_and_kills_tree(monkeypatch, tmp_path):
+    """관제 318(11-04): 관문 시험이 멈추면 병합 줄 전체가 34시간 멈췄다 — 한도를 넘으면 트리를 끝내고 실패 한 줄(새 실패)을 남긴다."""
+    import subprocess as sp
+    import sys as _sys
+    import time as _t
+    from tools import merge_gate as MG
+    monkeypatch.setenv("GATE_TIMEOUT_SEC", "3")
+    mark = tmp_path / "grandchild.pid"
+    code = ("import subprocess,sys,time;"
+            "c=subprocess.Popen([sys.executable,'-c','import time;time.sleep(600)']);"
+            f"open(r'{mark}','w').write(str(c.pid));time.sleep(600)")
+    t0 = _t.time()
+    rc, out = MG._run([_sys.executable, "-c", code], tmp_path)
+    assert rc == 124 and _t.time() - t0 < 90
+    assert any(x.startswith("GATE_TIMEOUT::") for x in MG.parse_failed(out))
+    gpid = int(mark.read_text())
+    if MG.os.name == "nt":
+        alive = str(gpid) in sp.run(["tasklist", "/FI", f"PID eq {gpid}"], capture_output=True, text=True).stdout
+    else:
+        try:
+            MG.os.kill(gpid, 0)
+            alive = True
+        except OSError:
+            alive = False
+    assert not alive                                   # 손자(ffmpeg 자리)까지 끝났다
