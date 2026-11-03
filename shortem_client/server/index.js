@@ -19,7 +19,7 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest, encoderCheck } from './selftest.js';
+import { selftest, encoderCheck, pcSpec } from './selftest.js';
 import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
@@ -169,7 +169,7 @@ export function buildServer(ctx = makeCtx()) {
       { name: '자막 지우기(VMake)', ready: keyStatus('vmake').present, merit: '있으면 박힌 글자를 지웁니다. 없으면 흐림으로 가립니다' },
       { name: '버텍스 AI', ready: keyStatus('vertex_sa').present, merit: '있으면 소리째 영상 검수와 그림 만들기를 씁니다' },
     ];
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), pc: pcSpec(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
       info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };
