@@ -72,6 +72,10 @@
    "caption_enter": "frame.json caption.enter none — 판 placement.rules.enter cut 이 같은 뜻(옮김)"
   }
  },
+ "orig_text": {
+  "mode": "vmake",
+  "why": "사장님 11-03 \"원본 자막은 v메이크로 지운다 / 자르기 가리기 없다 / 고급형으로 부분만 한장으로 이어서\" — 박힌 글자는 VMake 고급형(vmake_clean.TIER=pro)으로 글자 컷 구간만 이어 붙여 한 번에(send_joined) 지운다. 잘라 피하기·흐림 가리기 쓰지 않는다"
+ },
  "caption": {
   "pack_default": {
    "narr.first": "cut",

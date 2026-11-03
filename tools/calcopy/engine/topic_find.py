@@ -96,6 +96,10 @@ def load_preset(preset: str, tteutgi: str | None = None) -> dict:
         for s in man.get("sources") or []:
             if s.get("tteutgi") and Path(s["tteutgi"]).exists():
                 tj = s["tteutgi"]; break
+            # 다른 PC 에서 저장된 절대 경로면 이 PC 저장소의 같은 편 뜯기로
+            alt = ch / "뜯기" / str(s.get("id") or "") / "뜯기.json"
+            if s.get("id") and alt.exists():
+                tj = str(alt); break
     if not tj:   # 프리셋 폴더가 없으면 조회 1위 편의 뜯기
         top = _read_json(ch / "원자료" / "top50.json") or []
         for v in top:
