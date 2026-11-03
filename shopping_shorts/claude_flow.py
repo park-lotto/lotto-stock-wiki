@@ -27,6 +27,9 @@ from shopping_shorts import claude_portal as CP
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
     phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
+# 직전 응답(편마다 하나) — 회원 PC 가 응답을 못 받고 같은 요청을 다시 보내면(네트워크·502 재시도) 그 응답을 그대로 돌려준다.
+#   없으면 서버는 seq 를 올린 뒤라 'stale' 로 거절하고, 회원 PC 는 새 payload 를 영영 못 받아 편이 죽었다(11-03 김유선 retry 마다 stale)
+_SCHEMA_LAST = """CREATE TABLE IF NOT EXISTS claude_flow_last (sid TEXT PRIMARY KEY, seq INTEGER NOT NULL, req TEXT NOT NULL, res TEXT NOT NULL)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -48,6 +51,7 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        c.execute(_SCHEMA_LAST)
         # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
         if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
             c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
@@ -70,6 +74,14 @@ def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
             out[side + "_n"] += 1
             out[side + "_stop"] += r["status"] == "stop"
     return out
+
+
+def _req_key(kind: str, body: dict) -> str:
+    """같은 요청인가 — 단계 종류·payload·measure·replies·revise 의 해시."""
+    import hashlib
+    j = json.dumps({"k": kind, "p": body.get("payload"), "m": body.get("measure"), "r": body.get("replies"), "v": body.get("revise")},
+                   ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(j.encode("utf-8")).hexdigest()
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -239,6 +251,10 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if not row:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
+            with CP._tx(store) as c:
+                last = CP._row(c, "SELECT * FROM claude_flow_last WHERE sid=?", (sid,))
+            if last and int(last["seq"]) == seq and last["req"] == _req_key(kind, body):
+                return json.loads(zlib.decompress(base64.b64decode(last["res"])).decode("utf-8"))      # 같은 요청 다시 = 같은 응답
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
     user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
     try:
@@ -258,4 +274,8 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
+    if kind not in ("start", "sources"):
+        with CP._tx(store, write=True) as c:
+            c.execute("INSERT OR REPLACE INTO claude_flow_last(sid, seq, req, res) VALUES(?,?,?,?)",
+                      (sid, seq, _req_key(kind, body), base64.b64encode(zlib.compress(json.dumps(res, ensure_ascii=False).encode("utf-8"), 6)).decode()))
     return res
