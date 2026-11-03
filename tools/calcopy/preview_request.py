@@ -107,12 +107,31 @@ def preview(req: dict) -> dict:
     return {"snapshot": snap, "context": ctx, "applied": cfg["applied"], "title": head["text"], "sfx": sfx, "detail": detail}
 
 
+def font_files() -> dict:
+    """(판단 주인 — 화면 글꼴 이름 → 렌더 글꼴 파일) 이름의 주인은 렌더러 화면의 @font-face 다. 그 src 파일과 같은 이름의 ttf/otf 가
+    fonts 폴더에 있으면 그것, 없으면 src 파일 그대로(PIL 이 woff·woff2 를 읽는다). 값 = fonts 폴더 기준 상대 경로.
+    11-03 한정수: 목록 이름(PretendardXBold)으로 파일을 찾아 88개 중 70개가 다시 만들기에서 멈췄다."""
+    fonts = ROOT / "shopping_shorts" / "static" / "fonts"
+    html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'@font-face\s*\{([^}]*)\}', html):
+        fam = re.search(r'font-family:\s*"?([A-Za-z0-9_-]+)"?;', m.group(1))
+        src = re.search(r'url\("?[^")]*?static/fonts/([^")]+)"?\)', m.group(1))
+        if not fam or not src or fam.group(1) in out:
+            continue
+        rel = src.group(1)
+        stem = pathlib.PurePosixPath(rel).stem
+        full = next((f"{stem}{e}" for e in (".otf", ".ttf") if (fonts / f"{stem}{e}").exists()), None)
+        if full or (fonts / rel).exists():
+            out[fam.group(1)] = full or rel
+    return out
+
+
 def catalog() -> dict:
     """고를 수 있는 값 — 각 주인이 아는 이름만(렌더러 @font-face · 틀 규칙 · 목소리 목록 · 곡 목록)."""
     from shopping_shorts import bgm_lib
     from shopping_shorts.calcopy_frame import schema, to_snapshot
-    html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
-    fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
+    fonts = sorted(font_files())          # 렌더 파일이 있는 이름만 고를 수 있다
     # 목소리 = 프리셋 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
     #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
     from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES, PROVIDERS, TC_EMOTIONS

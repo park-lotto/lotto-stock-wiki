@@ -198,12 +198,12 @@ def load(name: str, patch: dict | None = None, _skip_packs: bool = False) -> dic
 
 
 def member_font_file(name: str) -> str:
-    """화면 글꼴 이름 → 글꼴 파일 이름. 없으면 멈춘다(조용히 판 글꼴로 돌아가지 않는다)."""
-    fonts = DIR.parents[3] / "shopping_shorts/static/fonts"
-    hit = [p.name for p in fonts.glob(f"{name}.*") if p.suffix.lower() in (".ttf", ".otf")]
+    """화면 글꼴 이름 → 글꼴 파일(fonts 폴더 기준). 주인 = preview_request.font_files. 없으면 멈춘다(조용히 판 글꼴로 돌아가지 않는다)."""
+    from tools.calcopy.preview_request import font_files
+    hit = font_files().get(name)
     if not hit:
         raise StyleError(f"회원 제목 글꼴 '{name}' 파일이 없다")
-    return sorted(hit)[0]
+    return hit
 
 
 def member_tempo(st: dict) -> float | None:

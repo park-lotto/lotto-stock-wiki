@@ -120,3 +120,17 @@ def test_vmake_bad_key_remembered(tmp_path, monkeypatch):
     kf.write_text("new:key", encoding="utf-8")
     assert VC.ready("vmake")["mode"] == "vmake"
     assert VC.note_hard("timeout") == ""
+
+
+def test_every_catalog_font_renders():
+    """설정 화면 글꼴 목록의 모든 이름이 렌더 글꼴 파일로 이어진다(11-03 한정수 'PretendardXBold' → 다시 만들기 멈춤, 88개 중 70개)."""
+    from PIL import ImageFont
+    from tools.calcopy import preview_request as PR
+    from tools.calcopy.hybrid import styles as STY
+    from tools.calcopy.hybrid import render_bench as RB
+    names = sorted(PR.font_files())
+    assert len(names) > 50
+    for n in names:
+        f = STY.member_font_file(n)
+        assert ImageFont.truetype(str(RB.FONTS / f), 40).getlength("가나다") > 0, n
+    assert STY.member_font_file("PretendardXBold") == "Pretendard-ExtraBold.otf"
