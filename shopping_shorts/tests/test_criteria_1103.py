@@ -149,3 +149,13 @@ def test_auto_blur_lifted_when_erase_possible():
     assert M["blur"] == {"a.mp4": [[1, 2, 3, 4, 0.0, 1.0]]}
     assert "blur_auto" not in M and M["_blur_added"]
     assert RB.lift_auto_blur(M, log=lambda *_: None) == 0
+
+
+def test_blur_area_counts_overlap_once():
+    """흐림 면적은 겹친 칸을 한 번만 센다 — 같은 자리 칸이 쌓여 41~75% 로 부풀던 것(11-03 강태경 렌더 3번 멈춤)."""
+    from tools.calcopy.hybrid import render_bench as RB
+    box = [0, 0, 50, 10, 0.0, 9.0]
+    assert RB._union_area([box, box, box], (0, 0, 100, 100)) == 500
+    assert RB._union_area([[0, 0, 50, 10], [25, 0, 50, 10]], (0, 0, 100, 100)) == 750
+    assert RB._union_area([[90, 90, 50, 50]], (0, 0, 100, 100)) == 100
+    assert RB._union_area([], (0, 0, 100, 100)) == 0

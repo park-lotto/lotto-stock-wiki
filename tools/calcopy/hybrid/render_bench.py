@@ -2158,7 +2158,7 @@ def lift_auto_blur(M: dict, log=print) -> int:
             del M["blur"][src]
     if auto:
         M["_blur_added"] = M.get("_blur_added", 0) + 1      # 재료.json 에 다시 쓰게
-        log(f"[관문④] VMake 로 지울 수 있다 — 앞서 코드가 넣은 흐림 {n}칸을 걷고 다시 잰다(손으로 적은 흐림은 그대로)")
+        log(f"[관문④] 앞서 코드가 넣은 흐림 {n}칸을 걷고 지금 컷으로 다시 잰다(손으로 적은 흐림은 그대로)")
     return n
 
 
@@ -2177,8 +2177,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
         return []
-    if erase is not None and only is None:
-        lift_auto_blur(M, log)
+    if only is None:          # 코드가 넣은 흐림은 바퀴마다 새로 정한다 — 지울 수 있으면 걷고, 아니면 지금 컷에 필요한 만큼 다시 넣는다
+        lift_auto_blur(M, log)     #   (11-03 강태경: 고칠 때마다 옛 흐림이 쌓여 41~75% → 렌더 같은 원인 3번 멈춤)
     _, _, ww, wh = frame_window(st["frame"])
     anchors = face_anchors(st, doc, T, src_dir) if (st.get("thumb_card_face") and doc) else []
     if st.get("thumb_card_face") and not anchors:
@@ -3889,6 +3889,29 @@ BLUR_AREA_MAX = 0.15      # 창 넓이 중 흐림 칸 합 — 넘으면 글자�
 PHOTO_RUN_MAX = 3.0       # 사진 컷이 이어져도 되는 초(11-01 키치잇 15~19초 멈춘 듯)
 
 
+def _union_area(rects: list, clip: tuple) -> float:
+    """[x, y, w, h, …] 칸들이 clip(x, y, w, h) 안에서 실제로 덮는 넓이(겹침 한 번)."""
+    cx, cy, cw, ch = clip
+    bs = []
+    for r in rects:
+        x0, y0 = max(cx, r[0]), max(cy, r[1])
+        x1, y1 = min(cx + cw, r[0] + r[2]), min(cy + ch, r[1] + r[3])
+        if x1 > x0 and y1 > y0:
+            bs.append((x0, y0, x1, y1))
+    xs = sorted({v for b in bs for v in (b[0], b[2])})
+    area = 0.0
+    for xa, xb in zip(xs, xs[1:]):
+        iv = sorted((b[1], b[3]) for b in bs if b[0] <= xa and b[2] >= xb)
+        cov, end = 0.0, None
+        for a, b in iv:
+            if end is None or a > end:
+                cov += b - a; end = b
+            elif b > end:
+                cov += b - end; end = b
+        area += cov * (xb - xa)
+    return area
+
+
 def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -> list[str]:
     """(판단 주인 — 흐림으로 때워도 되는 컷인가) 컷이 보여 주는 원본 구간에 걸린 흐림 칸이 창을 얼마나 덮나. 넘으면 다른 구간·재료로 바꾼다.
     관문 ④ 는 흐림 안 글자를 통과로 치므로 면적은 여기서 재야 한다. 계획·렌더가 timeline_gates 로 같이 부른다."""
@@ -3904,13 +3927,8 @@ def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -
             continue
         a0 = float(c["ss"]); a1 = a0 + src_frames(c) / FPS
         x, y, w, h = cut_crop(c, src, (ww, wh))
-        ink = 0.0
-        for r in regs:
-            if len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1):
-                continue
-            ix = max(0, min(x + w, r[0] + r[2]) - max(x, r[0])); iy = max(0, min(y + h, r[1] + r[3]) - max(y, r[1]))
-            ink += ix * iy
-        share = ink / max(1, w * h)
+        live = [r for r in regs if not (len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1))]
+        share = _union_area(live, (x, y, w, h)) / max(1, w * h)      # 겹친 칸은 한 번만(예전 합계는 같은 자리 두 칸을 두 배로 셌다)
         if share > area_max:
             out.append(f"{c['line']} {c['src']}@{a0:.2f} 흐림이 화면의 {share:.0%}(상한 {area_max:.0%}) — 이 컷은 남의 글자가 적은 다른 구간이나 다른 재료로 바꾼다")
     return out
