@@ -1952,7 +1952,10 @@ def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], 
     프레임 = cut_frames(접촉 시트와 같은 열쇠 — 이미 뽑은 그림은 다시 안 뽑는다). ocr = {프레임 열쇠: text_boxes_scored 결과} 캐시(주면 읽고 채운다)."""
     ss = float(ss)
     ts, t2s = content_times(ss, n)
-    fr = cut_frames([(src, t, crop, win, regs) for t in ts + t2s])
+    # 프레임·글자 상자는 흐림 없이 한 번만 — 흐림은 상자마다 blur_cover(좌표)로 잰다(흐린 글도 검출기는 글로 본다, 표본 08).
+    #   예전엔 흐림 칸이 하나 늘 때마다 프레임 열쇠가 바뀌어 같은 원본의 모든 컷을 처음부터 다시 읽었다
+    #   (11-03 이용재: 느린 PC 에서 프레임당 ~50초, 관문 ④ 1시간+). regs 는 text_feats 의 blur 칸에만 쓴다
+    fr = cut_frames([(src, t, crop, win, None) for t in ts + t2s])
     A, B = fr[:len(ts)], fr[len(ts):]
     r = {"text": [], "face": []}
     for i, (t, a) in enumerate(zip(ts, A)):
@@ -1960,7 +1963,7 @@ def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], 
             continue
         boxes = None
         if ocr is not None:
-            ok = ocr_key(src, t, crop, win, regs)
+            ok = ocr_key(src, t, crop, win, None)
             boxes = ocr.get(ok)
             if boxes is None:
                 from shopping_shorts.channelkit import vision as V
