@@ -12,6 +12,7 @@ import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
 import { readSettings, providerOf } from './local_settings.js';
+import { engineRoot } from './engine_bridge.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
 const DEFAULT_VOICE = 'tc_68257f68bc6e3c161ab5078d';
@@ -91,10 +92,51 @@ export function voiceProvider(settings) {
   return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
 }
 
+function currentVoiceId() {
+  const s = readSettings() || {};
+  return ((((s.channels || {})[s.current] || {}).pack || {}).tts || {}).voice_id || '';
+}
+
+// 일레븐 목소리 id(프리셋 이름 또는 20자 id) → 일레븐 목소리 id. 프리셋 표 = 엔진 voice_presets.json(엔진 narr_align.eleven_direct 와 같은 표)
+export function elevenBaseId(voiceId, presets) {
+  const p = (presets || []).find(x => x.preset_id === voiceId);
+  if (p) return p.base_voice_id || '';
+  return /^[A-Za-z0-9]{20}$/.test(String(voiceId || '')) ? voiceId : '';
+}
+
+// (판단 주인 — 이 일레븐 키로 고른 목소리를 쓸 수 있나) 무료 요금제는 공유 목록(라이브러리) 목소리를 API 로 못 쓴다 — 키만 보고 통과시키면
+//   제작 중 장면 맞추기에서야 payment_required 로 멈췄다(11-03 윤상길). 돈 안 드는 조회 2번(요금제·목소리 종류)만 한다
+const ELEVEN_FREE_OK = new Set(['premade', 'cloned', 'generated']);
+export async function elevenUsable(key, voiceId, { get = elevenGet, presets = null } = {}) {
+  const rows = presets || (() => {
+    try {
+      const d = JSON.parse(fs.readFileSync(path.join(engineRoot(), 'shopping_shorts', 'assets', 'voice_presets.json'), 'utf8'));
+      return Array.isArray(d) ? d : Object.values(d)[0];
+    } catch { return []; }
+  })();
+  const base = elevenBaseId(voiceId, rows);
+  if (!base) return;
+  const sub = await get('/v1/user/subscription', key);
+  if (String(sub.tier || '').toLowerCase() !== 'free') return;
+  const v = await get(`/v1/voices/${base}`, key);
+  if (ELEVEN_FREE_OK.has(String(v.category || ''))) return;
+  throw Object.assign(new Error('eleven_free_library'), {
+    why: `일레븐랩스 무료 요금제는 고른 목소리(${voiceId})처럼 공유 목록 목소리를 쓸 수 없습니다`,
+    fix: "설정 화면 소리 단계에서 '내가 만든 목소리'(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 키를 넣으세요",
+  });
+}
+async function elevenGet(p, key) {
+  const r = await fetch('https://api.elevenlabs.io' + p, { headers: { 'xi-api-key': key }, signal: AbortSignal.timeout(15000) });
+  if (r.status === 401) throw Object.assign(new Error('eleven_key'), { why: '일레븐랩스 키가 맞지 않습니다', fix: '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
+  if (!r.ok) return {};          // 조회 실패는 막지 않는다(제작 때 엔진이 실제로 부른다)
+  return r.json();
+}
+
 async function testVoice(dir) {
   const provider = voiceProvider(readSettings());
   if (provider !== 'typecast') {   // 시험 합성은 타입캐스트 길뿐이다 — 다른 회사는 키만 보고, 실제 합성은 제작 때 엔진(voice_synth)이 한다
     if (!readKey(provider)) return { skipped: true, why: `고른 목소리(${provider}) 키 없음` };
+    if (provider === 'elevenlabs') await elevenUsable(readKey('elevenlabs'), currentVoiceId());
     return { provider, key_only: true };
   }
   if (!readKey('typecast')) return { skipped: true, why: '타입캐스트 키 없음(~/.shortem/keys/typecast)' };
@@ -140,6 +182,7 @@ export async function selftest() {
       items.push({ name, ok: !r.skipped, ...r });
     } catch (e) {
       items.push({ name, ok: false });
+      if (e.why) { fails.push({ where, why: e.why, fix: e.fix || '', retry_ok: true }); continue; }
       fails.push({ where, why: ['인터넷', '받아쓰기', '브라우저', '계정'].includes(where) ? String(e.message || name).slice(0, 160) : `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
       if (process.env.SHORTEM_DEBUG) process.stderr.write(`[selftest] ${name}: ${e.stack || e}\n${e.detail || ''}\n`);
     }
