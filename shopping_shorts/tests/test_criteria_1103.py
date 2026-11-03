@@ -136,3 +136,16 @@ def test_every_catalog_font_renders():
         f = STY.member_font_file(n)
         assert ImageFont.truetype(str(RB.FONTS / f), 40).getlength("가나다") > 0, n
     assert STY.member_font_file("PretendardXBold") == "Pretendard-ExtraBold.otf"
+
+
+def test_auto_blur_lifted_when_erase_possible():
+    """VMake 로 지울 수 있게 되면 코드가 넣은 흐림만 걷는다 — 손으로 적은 흐림은 그대로(11-03 한정수 새 키로도 지울 컷 0)."""
+    from tools.calcopy.hybrid import render_bench as RB
+    M = {"blur": {"a.mp4": [[1, 2, 3, 4, 0.0, 1.0]]}}
+    RB._auto_blur(M, "a.mp4", [10, 20, 30, 40, 2.0, 3.0])
+    RB._auto_blur(M, "b.mp4", [5, 5, 5, 5, 0.0, 1.0])
+    M.pop("_blur_added")
+    assert RB.lift_auto_blur(M, log=lambda *_: None) == 2
+    assert M["blur"] == {"a.mp4": [[1, 2, 3, 4, 0.0, 1.0]]}
+    assert "blur_auto" not in M and M["_blur_added"]
+    assert RB.lift_auto_blur(M, log=lambda *_: None) == 0

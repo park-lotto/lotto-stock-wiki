@@ -2136,6 +2136,32 @@ def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: 
     return [ax, ay, bx - ax, by - ay, round(ss, 3), round(ss + sec, 3)]
 
 
+def _auto_blur(M: dict, src: str, ent: list) -> None:
+    """관문 ④가 넣은 흐림 칸 — 재료.blur 에 넣고 blur_auto 에도 적는다(누가 넣었나). 손(Claude·회원)이 적은 칸과 갈라야
+    VMake 로 지울 수 있게 됐을 때 코드가 넣은 흐림만 걷어 낸다(11-03 한정수: 옛 키 실패 → 흐림이 재료에 남아 새 키로도 지울 컷 0)."""
+    M.setdefault("blur", {}).setdefault(src, []).append(ent)
+    M.setdefault("blur_auto", {}).setdefault(src, []).append(list(ent))
+    M["_blur_added"] = M.get("_blur_added", 0) + 1
+
+
+def lift_auto_blur(M: dict, log=print) -> int:
+    """(판단 주인 — 지울 수 있게 되면 코드가 넣은 흐림을 걷는다) 걷은 칸 수. 손으로 적은 칸은 그대로."""
+    auto = M.pop("blur_auto", None) or {}
+    n = 0
+    for src, ents in auto.items():
+        regs = (M.get("blur") or {}).get(src) or []
+        for e in ents:
+            if e in regs:
+                regs.remove(e)
+                n += 1
+        if src in (M.get("blur") or {}) and not regs:
+            del M["blur"][src]
+    if auto:
+        M["_blur_added"] = M.get("_blur_added", 0) + 1      # 재료.json 에 다시 쓰게
+        log(f"[관문④] VMake 로 지울 수 있다 — 앞서 코드가 넣은 흐림 {n}칸을 걷고 다시 잰다(손으로 적은 흐림은 그대로)")
+    return n
+
+
 def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None,
                      autoblur: bool = False, only: list | None = None) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
@@ -2151,6 +2177,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
         return []
+    if erase is not None and only is None:
+        lift_auto_blur(M, log)
     _, _, ww, wh = frame_window(st["frame"])
     anchors = face_anchors(st, doc, T, src_dir) if (st.get("thumb_card_face") and doc) else []
     if st.get("thumb_card_face") and not anchors:
@@ -2205,8 +2233,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 #   예전엔 이 숫자를 반려 글로 Claude 에게 넘겨 재료를 고치게 했다(같은 칸을 손으로 옮겨 적는 왕복). 넣은 뒤에도 글자가 남으면 그때 반려.
                 boxes = [f["box"] for x in r["text"] for f in x]
                 ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
-                M.setdefault("blur", {}).setdefault(c["src"], []).append(ent)
-                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                _auto_blur(M, c["src"], ent)
                 found.setdefault(c["src"], []).append(ent[:4])
                 fixed_k.add(k)
                 for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
@@ -2216,7 +2243,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                     if not rest or _ == AUTOBLUR_MORE:
                         break
                     e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
-                    M["blur"][c["src"]].append(e2)
+                    _auto_blur(M, c["src"], e2)
                     log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
                 log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
                 if len(ocr) != len(ocr0):      # 다시 잰 글자 검출도 컷마다 저장 — 끊겨도 재시도가 이 컷을 다시 재지 않는다(11-03 N95 회원: 같은 컷 14분 두 번)
@@ -2247,8 +2274,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                         hit.append(f["box"])
             if hit:
                 ent = blur_entry(hit, crop, (ww, wh), float(c["ss"]), n / FPS)
-                M["blur"][c["src"]].append(ent)
-                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                _auto_blur(M, c["src"], ent)
                 log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
     finally:
         if todo:
@@ -3997,7 +4023,7 @@ def plan_input_sig(S: dict, M: dict, st: dict, tts: bool, locate: bool) -> str:
     d = Path(M["cand_dir"]) if M.get("cand_dir") else None
     files = sorted(src_ident(p)[1:] + [p.name] for p in d.iterdir() if p.is_file() and p.suffix.lower() != ".json" and not p.name.startswith("_")) if d and d.is_dir() else []
     body = [{k: v for k, v in S.items() if k != "title_lines"},      # 제목은 틀·썸네일만 그린다(컷 안 정함, #1954)
-            {k: v for k, v in M.items() if k not in ("blur", "_blur_added")}, st, bool(tts), bool(locate), files, _files_sig(*sorted(Path(__file__).parent.glob("*.py")))]
+            {k: v for k, v in M.items() if k not in ("blur", "blur_auto", "_blur_added")}, st, bool(tts), bool(locate), files, _files_sig(*sorted(Path(__file__).parent.glob("*.py")))]
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
 
 
@@ -4034,7 +4060,7 @@ def _plain(x):
 
 def patch_sig(S: dict, M: dict, st: dict, look: dict | None) -> str:
     """소리·시간표·틀을 바꿀 수 있는 입력 지문 — 재료의 컷·흐림만 뺀 전부(대본·판·회원 꾸민 모양·만드는 코드). 컷 그림은 cut_fp 가 잰다."""
-    return _sha([PATCH_RULE, S, {k: v for k, v in M.items() if k not in ("cuts", "blur", "_blur_added")}, st, look, _code_sig("cut"), _code_sig("scene")])
+    return _sha([PATCH_RULE, S, {k: v for k, v in M.items() if k not in ("cuts", "blur", "blur_auto", "_blur_added")}, st, look, _code_sig("cut"), _code_sig("scene")])
 
 
 def cut_fps(T: dict, M: dict, st: dict) -> list[str]:
