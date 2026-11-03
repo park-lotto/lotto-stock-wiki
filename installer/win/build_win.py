@@ -139,7 +139,9 @@ def run(cmd: list, **kw) -> subprocess.CompletedProcess:
 
 # 고객 PC 에 필요 없는 파이썬 부분(시험 묶음·GUI·설치 도구·바이트코드 캐시). 지우면 용량이 줄고
 # NSIS 의 260자 경로 한계에 걸리던 깊은 경로(numpy/_core/tests/__pycache__/…)도 사라진다.
-PY_DROP_DIRS = {"__pycache__", "tests", "test", "idlelib", "tkinter", "turtledemo", "ensurepip", "tcl", "pip"}
+PY_DROP_DIRS = {"__pycache__", "tests", "test", "idlelib", "tkinter", "turtledemo", "tcl", "pip"}
+# ensurepip 은 남긴다(약 2MB) — 무료 자막 지우기가 이 파이썬으로 `-m venv` 를 만든다(#3558: 빼서 모든 회원 PC 에서 설치가 조용히 실패.
+#   engine.py 는 없을 때도 --without-pip + pip 휠로 깐다 — 옛 설치본도 되게)
 PY_DROP_TOP = {"Scripts"}
 
 
