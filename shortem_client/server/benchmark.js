@@ -17,6 +17,7 @@ import { ensureDir, homeDir, jail } from './paths.js';
 import { flowRoot } from './flow_driver.js';
 import { openPack, readZip, renting } from './preset_rent.js';
 import { select } from './local_settings.js';
+import { reportLive } from './live.js';
 
 const MARK = '.bench_rented.json';                       // 이번에 푼 파일 목록 — 프로그램이 죽어도 다음에 켤 때 이것만 지운다(개발 PC 의 진짜 코드는 목록에 없다)
 const ROOTS = ['tools/', 'shopping_shorts/'];
@@ -118,7 +119,16 @@ setBenchHand({ before: beforeBench, end: endBench });
 // 켤 때 한 번(index.js, sweepBench 다음) — 끝 정리 판단을 디스크 흐름 상태로 다시 세운다(과제 8 검토 1).
 //   끝났는데 정리 안 한 벤치 흐름 → 끝 정리(임시본 지우고 원래 것 되살림·완성이면 정식 저장). 아직 살아 있는 흐름 → 지금 벤치마킹으로 다시 잡는다(이어 하기 — 완성 때 endBench).
 //   주인 흐름이 없는데 둔 벌(_keep)이 남았으면 되살린다(조용히 숨겨 두지 않는다).
-export async function recoverBench() {
+//   ★index.js 는 이것을 기다리지 않고 돌린다 — 도는 일을 promise 하나로 기억해 두고 benchStart 가 시작 전에 기다린다(옛 흐름 정리·되살림과 새 벤치마킹이 같은 slug 의 _keep·시험본을 두고 겹치지 않게, 과제 8 검토 3).
+let recovering = null;
+export function recoverBench() {
+  const run = recoverBenchRun();
+  recovering = run;
+  const clear = () => { if (recovering === run) recovering = null; };
+  run.then(clear, clear);
+  return run;
+}
+async function recoverBenchRun() {
   let names = [];
   try { names = fs.readdirSync(flowRoot()); } catch { names = []; }
   const alive = [];
@@ -159,6 +169,14 @@ async function shaped(sid, s) {
 }
 
 export async function benchStart({ channel, videos, name, n }) {
+  if (recovering) {                                // 켤 때 회복이 아직 도는 중 — 끝난 뒤에 시작한다. 회복이 실패했어도 막히지 않는다(실패는 남기고 진행)
+    try { await recovering; }
+    catch (e) {
+      const why = String((e && e.message) || e).slice(0, 70);
+      audit('benchmark_recover', { result: 'failed_before_start', why });
+      reportLive({ kind: 'error', text: `벤치마킹 시작 전 되살림 실패: ${why}` });
+    }
+  }
   if (cur) return benchWait(cur.sid);
   if (channel && !YT_CHANNEL.test(channel)) return { hints: ['채널 주소는 https://www.youtube.com/@이름 또는 /channel/UC… 꼴이어야 합니다(틱톡·인스타는 영상 주소를 videos 로 주세요)'] };
   if (!channel && !(videos || []).length) return { hints: ['채널 주소(channel)나 영상 주소(videos)를 주세요'] };

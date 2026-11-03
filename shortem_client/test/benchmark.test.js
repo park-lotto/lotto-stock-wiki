@@ -327,3 +327,54 @@ test('시험 편을 옮긴 뒤 꺼졌다 이어 해도, 옮겨 둔 완성본으�
   for (let i = 0; i < 100 && B.benchNow(); i++) await sleep(50);
   assert.equal(B.benchNow(), null);
 });
+
+// ── 과제 8 검토 고침 3회차 — 켤 때 회복(await 안 함) 도중 새 벤치마킹이 끼어들지 못한다 ──
+test('회복이 임대 반납에서 멈춰 있는 동안 benchStart 는 시작하지 않고, 회복이 끝난 뒤에야 시작한다(원래 내 프리셋 보호)', async () => {
+  const { homeDir } = await import('../server/paths.js');
+  const OLD = 'd5d5d5d5d5d5', NS = 'd6d6d6d6d6d6';
+  for (const f of F_.listFlows()) { const c = F_.cancelFlow(f.sid); if (c && c.ended) await c.ended; }   // 앞 시험이 남긴 도는 흐름 정리(새 벤치마킹이 busy 로 거절되지 않게)
+  diskFlow(OLD, { status: 'stop', created: Date.now() - 86400000, fail: { why: '멈춤', retry_ok: false, server_stop: true }, bench: { name: '옛 틀', channel: URL_CH } });
+  const book = path.join(homeDir(), 'leases', 'deadbook.json');
+  fs.mkdirSync(path.dirname(book), { recursive: true });
+  fs.writeFileSync(book, JSON.stringify({ pid: 99999999, job: 'jdead', lease: 'ldead' }));   // 주인이 죽은 장부 → freeDeadLeases 가 서버에 반납을 건다
+  let open; const gate = new Promise(r => { open = r; });
+  const keepLease = api.lease, keepStep = api.step;
+  let released = 0, stepped = 0;
+  api.lease = async b => { if (b.action === 'release' && b.lease_id === 'ldead') { released++; await gate; return { ok: true }; } return keepLease.call(api, b); };
+  api.step = async b => { stepped++; return keepStep.call(api, b); };
+  fake.state.stepHandler = () => ({ code: 200, json: { ok: true, sid: NS, status: 'stop', message: '멈춤', why: '멈춤', fix: '다시', retry_ok: false, next_payload: 'n1' } });
+  try {
+    let recDone = false;
+    const rec = B.recoverBench().then(() => { recDone = true; });   // index.js 처럼 기다리지 않고 돌린다
+    for (let i = 0; i < 200 && !released; i++) await sleep(25);
+    assert.equal(released, 1, '회복이 임대 반납에서 멈춰 있다');
+    let settled = false;
+    const p = B.benchStart({ channel: URL_CH, name: '새 틀' });
+    p.then(() => { settled = true; }, () => { settled = true; });
+    await sleep(300);
+    assert.equal(settled, false, 'benchStart 는 회복이 끝날 때까지 기다린다(keepMine·dropMine 이 겹치지 않게)');
+    assert.equal(stepped, 0, '회복이 끝나기 전에는 새 벤치마킹이 서버 지시서를 받지 않는다');
+    assert.equal(B.benchNow(), null, '회복이 끝나기 전에는 빌리지도 않는다');
+    open();
+    await rec;
+    const o = await p;       // 앞 시험이 남긴 취소된 흐름(status review)이 있으면 busy 안내로 끝난다 — 여기서는 '회복 뒤에 풀렸나'만 본다
+    assert.ok(recDone, 'benchStart 는 회복이 끝난 뒤에야 풀린다');
+    assert.ok(o && (o.fail || o.need || o.sid || o.message), JSON.stringify(o));
+  } finally { open(); api.lease = keepLease; api.step = keepStep; fs.rmSync(book, { force: true }); }
+  for (let i = 0; i < 100 && (B.benchNow() || leftovers()); i++) await sleep(50);
+});
+
+test('회복이 예외를 내도 benchStart 는 영원히 막히지 않고, benchStart 가 진행한다', async () => {
+  const NS = 'd7d7d7d7d7d7';
+  const kd = path.join(M.myRoot(), '_keep', 'my_bad');
+  fs.mkdirSync(path.join(kd, 'files'), { recursive: true });
+  fs.writeFileSync(path.join(kd, 'list.json'), '{깨짐');       // dropMine 이 JSON.parse 에서 던진다
+  fake.state.stepHandler = () => ({ code: 200, json: { ok: true, sid: NS, status: 'stop', message: '멈춤', why: '멈춤', fix: '다시', retry_ok: false, next_payload: 'n1' } });
+  try {
+    const rec = B.recoverBench();
+    await assert.rejects(rec);
+    const o = await B.benchStart({ channel: URL_CH, name: '새 틀' });
+    assert.ok(o && (o.fail || o.need || o.message || o.sid), JSON.stringify(o));
+  } finally { fs.rmSync(kd, { recursive: true, force: true }); }
+  for (let i = 0; i < 100 && (B.benchNow() || leftovers()); i++) await sleep(50);
+});
