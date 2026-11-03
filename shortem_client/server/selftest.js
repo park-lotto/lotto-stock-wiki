@@ -2,6 +2,7 @@
 //   · 시험_다운로드.mp4(공개 영상 5초) + 자가점검_결과.md. ffmpeg -version 첫 줄 + -filters 의 ' ass ' 확인.
 //   실패 모양 {where, why, fix, retry_ok}.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { workDir, ensureDir, homeDir } from './paths.js';
@@ -115,6 +116,27 @@ export async function elevenUsable(key, voiceId, { get = elevenGet, presets = nu
     fix: "설정 화면 소리 단계에서 '내가 만든 목소리'(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 키를 넣으세요",
   });
 }
+// (판단 주인 — 점검 통과가 지금 목소리·키에도 맞나) #3698·#3701(11-03 박준영): 점검 통과 뒤 일레븐 키·목소리를 바꿨는데 통과 표식이 그대로라
+//   권한 제한 키가 제작 8/11 장면 맞추기에서야 멈췄다. 표식에 점검 때 목소리·키 지문(해시 앞 12자 — 키 값은 남기지 않는다)을 묶는다.
+export async function voiceStamp(settings = readSettings(), { key = readKey } = {}) {
+  const v = await engineVoice(s => !!key(s), settings);
+  if (!v) return null;
+  const provider = providerOf(v) || 'typecast';
+  const k = key(provider);
+  return { provider, voice: String(v.voice_id || ''), key: k ? crypto.createHash('sha256').update(k).digest('hex').slice(0, 12) : '' };
+}
+// 제작 시작(flow_driver.startFlow)이 부른다 — 점검 때와 목소리·키가 같으면 아무것도 안 부른다(돈·시간 0). 다르면(옛 표식 포함) 목소리 검사만 다시 하고 표식을 고친다.
+export async function recheckVoice(preset, { settings = readSettings(), key = readKey, usable = elevenUsable } = {}) {
+  let d;
+  try { d = JSON.parse(fs.readFileSync(stampFile(), 'utf8')); } catch { return; }
+  if (!d || !d.ok) return;
+  const s = { ...(settings || {}), current: /^p_[0-9a-f]{10}$/.test(String(preset || '')) ? preset : (settings || {}).current };
+  const now = await voiceStamp(s, { key });
+  if (!now || JSON.stringify(now) === JSON.stringify(d.voice || null)) return;
+  if (!key(now.provider)) throw Object.assign(new Error('voice_key'), { why: `고른 목소리(${now.provider}) 키가 없습니다`, fix: '설정 화면 키 칸에 그 목소리 회사 키를 넣으세요' });
+  if (now.provider === 'elevenlabs') await usable(key('elevenlabs'), now.voice);
+  fs.writeFileSync(stampFile(), JSON.stringify({ ...d, voice: now }));
+}
 async function elevenGet(p, key) {
   const r = await fetch('https://api.elevenlabs.io' + p, { headers: { 'xi-api-key': key }, signal: AbortSignal.timeout(15000) });
   if (r.status === 401) throw Object.assign(new Error('eleven_key'), { why: '일레븐랩스 키가 맞지 않습니다', fix: '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
@@ -185,7 +207,10 @@ export async function selftest() {
     ...(fails.length ? ['## 고칠 것', ...fails.map(f => `- [${f.where}] ${f.why} → ${f.fix}`)] : ['모든 점검을 통과했습니다.'])].join('\n');
   const report = path.join(dir, '자가점검_결과.md');
   fs.writeFileSync(report, md + '\n');
-  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
+  let voice = null;
+  try { voice = await voiceStamp(); } catch (e) { process.stderr.write(`[selftest] 목소리 지문 못 만듦: ${e.message || e}
+`); }
+  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where), voice }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
   return { items, fails, report, dir };
 }
 
