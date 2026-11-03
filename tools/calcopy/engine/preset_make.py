@@ -719,7 +719,9 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
     rsig = _renderer_sig()
     LAYER_GLOBS = ("scene-style-layer-*.png", "scene-style-motion-*.png", "scene-style-capcut-*.png", "scene-style-layers.json")
 
-    def layers_cached(timeline, snapshot, output, headcopy=None, job_id=None):
+    def layers_cached(timeline, snapshot, output, headcopy=None, job_id=None, only=None):
+        if only is not None:          # 부분 렌더(고른 장면만 — 결과 꼴이 전체 캐시와 다르다) = 캐시 없이 원래 함수 그대로
+            return orig_layers(timeline, snapshot, output, headcopy, job_id, only=only)
         snapv = SS.validate_snapshot(snapshot)
         key = sha([snapv, SS.context_for(timeline, headcopy, snapv, job_id), rsig])
         d = cache / "layers" / key
