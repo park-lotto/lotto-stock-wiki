@@ -216,3 +216,17 @@ def test_plan_look_waive_when_over_budget(monkeypatch):
     assert F.ph_plan_look(st, {}, rp, None) == {"goto": "render"} and st["waive_gate"]
     assert not F._over_budget(st_of(time.time() - 10 * 60, []))            # 예산 안 = 넘기기 칸을 안 받는다(그 뒤는 보통 고치기 길)
     assert F.HARD_PLAN_RX.search("L2 원본 규칙: 다른 채널 연예인 영상")     # 금지선은 못 넘긴다
+
+
+def test_channel_name_once_when_head_bar_has_text(tmp_path, monkeypatch):
+    """머리띠 글자 칸이 있는 틀(썰템쇼)은 채널명을 그 칸에만 — 상단 워터마크를 하나 더 넣지 않는다(11-03 김준용 두 번 찍힘)."""
+    import json as _j
+    from tools.calcopy.hybrid import styles as STY
+    p = tmp_path / "pack.json"
+    p.write_text(_j.dumps({"member": {"brand": {"channel_name": "주스픽"}}}), encoding="utf-8")
+    monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(p))
+    st = STY.member_frame({"frame": {"post": {"head_bar": {"icons": [{"kind": "text", "text": "썰", "cx": 500}, {"kind": "text", "text": "템", "cx": 580}]}}}})
+    assert st["frame"].get("watermark") is None
+    assert [i["text"] for i in st["frame"]["post"]["head_bar"]["icons"]] == ["주스픽"]
+    st = STY.member_frame({"frame": {"bg": [0, 0, 0]}})      # 채널명 자리 없는 틀 = 상단 가운데 한 번
+    assert st["frame"]["watermark"]["text"] == "주스픽"

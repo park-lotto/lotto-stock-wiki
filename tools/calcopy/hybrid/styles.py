@@ -270,7 +270,7 @@ def member_frame(st: dict) -> dict:
         if F.get("watermark"):
             head = F["watermark"]["text"].split(" ", 1)
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
-        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02)
+        if not F.get("logo") and not F.get("watermark") and not bar_text:      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02) — 머리띠 글자 칸이 있으면 그게 채널명 자리(11-03 김준용 썰템쇼 두 번 찍힘)
             F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
         name_look([F.get("logo"), F.get("watermark")] + [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"],
                   brand.get("name_scale"), brand.get("name_color"))

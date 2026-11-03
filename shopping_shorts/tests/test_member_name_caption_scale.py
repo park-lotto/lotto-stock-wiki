@@ -51,10 +51,11 @@ def test_member_frame_applies(tmp_path, monkeypatch):
     assert st["member_caption"]["scale"] == 1.5
     assert RB.snapshot(st)["captionOverride"]["scale"] == 1.5          # 자막팩 렌더러까지 간다
     F = st["frame"]
-    marks = [x for x in (F.get("logo"), F.get("watermark")) if x]
+    bar = lambda F: [i for i in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or [] if i.get("kind") == "text"]
+    marks = [x for x in (F.get("logo"), F.get("watermark")) if x] + bar(F)     # 썰템쇼 = 머리띠 글자 칸이 채널명 자리(11-03 — 상단 워터마크를 더 넣지 않는다)
     assert marks and all(x.get("color") == "#00ff00" or (x.get("rgba") or [None])[:3] == [0, 255, 0] for x in marks)
     monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(tmp_path / "none.json"))
     (tmp_path / "none.json").write_text(json.dumps({"member": {"brand": {"channel_name": "우리채널"}}}), encoding="utf-8")
     st0 = ST.load("썰템쇼판")
-    m0 = [x for x in (st0["frame"].get("logo"), st0["frame"].get("watermark")) if x]
-    assert [x.get("px") * 2 for x in m0] == [x.get("px") for x in marks]   # 안 정하면 그대로, 정하면 정확히 2배
+    m0 = [x for x in (st0["frame"].get("logo"), st0["frame"].get("watermark")) if x] + bar(st0["frame"])
+    assert [round(x.get("px") * 2) for x in m0] == [round(x.get("px")) for x in marks]   # 안 정하면 그대로, 정하면 정확히 2배
