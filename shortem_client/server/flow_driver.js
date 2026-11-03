@@ -42,7 +42,17 @@ export function loadFlow(sid) {
 export const isFlowSid = sid => !!loadFlow(sid);
 // 돌고 있는 편이 있으면 엔진을 덮지 않는다. 멈춘 편(cancelled)은 상태 칸이 그대로 남아도 돌지 않는다 — 실행기가 아직 끝나는 중(busy)만 센다
 //   (11-03 강태경: 멈춘 편의 status 가 review 로 남아 벤치마킹이 '지금 만드는 편이 있습니다'로 3번 막힘, 목록은 진행 중 0)
-export const flowBusy = f => !!f && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
+// 이 프로그램이 돌리지 않는 편(busy 아님)은 디스크가 진실이다 — 한 PC 에 Claude 창이 여럿이면 다른 창 프로그램이 같은 편을 끝내도
+//   이 창 메모리에는 옛 상태(execute)가 남는다(11-03 삼현정: 16시 완성한 편을 '실행기 일이 228분째'로 거짓 경보)
+function fresh(f) {
+  if (!f || f.busy) return f;
+  try {
+    const d = JSON.parse(fs.readFileSync(stFile(f.sid), 'utf8'));
+    for (const k of ['status', 'fail', 'cancelled', 'movedAt', 'stage', 'stallSaid']) if (k in d) f[k] = d[k]; else if (k !== 'stallSaid') delete f[k];
+  } catch { /* 파일 없음 = 메모리 그대로 */ }
+  return f;
+}
+export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
 export const anyFlowBusy = () => [...flows.values()].some(flowBusy);
 
 function reqId(tag) {
@@ -207,6 +217,7 @@ function lastMove(f) {
 }
 export function flowStall(now = Date.now()) {
   for (const f of flows.values()) {
+    fresh(f);
     if (f.cancelled || f.fail || !['execute', 'review', 'reject', 'wait_user'].includes(f.status)) continue;
     const moved = lastMove(f);
     if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
