@@ -2625,6 +2625,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         except BaseException as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다). SystemExit 도 — 판 없음(styles.path_of)이
             #   SystemExit 라 Exception 으로는 안 잡혀 스레드가 기록 없이 죽고 서버엔 빈 결과만 갔다(10-29 회원 잇템로그 '같은 원인 3번')
             out.setdefault(rid, {"error": f"{type(e).__name__}: {str(e)[:500]}"})
+            import traceback      # 어느 줄인지 runner.log 에 남긴다 — 'KeyError: ss' 한 줄로는 30곳 중 어디인지 몰랐다(11-03 회원 김미향)
+            sys.stderr.write("".join(traceback.format_exception(e))[-4000:])
         finally:
             r0 = out.get(rid)
             if isinstance(r0, dict) and not r0.get("timed_out"):
