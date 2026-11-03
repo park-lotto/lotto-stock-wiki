@@ -65,7 +65,7 @@ export function writeCookies(cookies) {
   // 엔진의 yt-dlp 호출이 전부 이 쿠키를 쓰게(XDG_CONFIG_HOME/yt-dlp/config — exe·파이썬 모듈 둘 다 읽는다, 10-19 실측)
   //   ★첫 줄 '# coding: utf-8' — 없으면 한국어 윈도의 yt-dlp.exe 가 이 파일을 cp949 로 읽어, 홈 경로에 한글(사용자 이름)이 있으면
   //   'Unable to parse … config' 로 모든 받기가 즉시 죽는다(98 #158, 10-26 잇템로그 회원 실측 2/13 멈춤)
-  writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), ytdlpConfig(cookiesFile(), nodeForYtdlp()));
+  syncYtdlpConfig();
   return Object.fromEntries(Object.entries(PLATFORMS).map(([k, pf]) => [k, loggedIn(keep, pf)]));
 }
 
@@ -74,6 +74,16 @@ export function writeCookies(cookies) {
 export function ytdlpConfig(cookies, node) {
   const q = p => `"${String(p).replace(/\\/g, '/')}"`;
   return '# coding: utf-8\n' + `--cookies ${q(cookies)}\n` + (node ? `--js-runtimes node:${q(node)}\n--remote-components ejs:github\n` : '');
+}
+// (판단 주인 — yt-dlp 설정 파일 내용) 지금 코드가 만들 내용과 다르면 다시 쓴다. 쿠키를 다시 뽑을 때만 쓰면 옛 판이 쓴 설정
+//   (--cookies 한 줄, JS 실행기 없음)이 남아 유튜브 받기가 계속 죽었다(11-03 윤상길 1.0.75 시험 다운로드 2회 실패)
+export function syncYtdlpConfig() {
+  const want = ytdlpConfig(cookiesFile(), nodeForYtdlp());
+  const f = path.join(homeDir(), 'ytdlp', 'yt-dlp', 'config');
+  let have = null;
+  try { have = fs.readFileSync(f, 'utf8'); } catch { /* 없음 = 쓴다 */ }
+  if (have !== want) writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), want);
+  return have !== want;
 }
 function nodeForYtdlp() {
   try { return toolPath('node'); } catch { return process.execPath; }      // 설치본이 아니면 지금 도는 node
@@ -187,6 +197,7 @@ export function status() {
 export function engineCookieEnv() {
   const env = {};
   if (fs.existsSync(cookiesFile())) {
+    syncYtdlpConfig();                 // 엔진·점검이 이 설정을 읽기 직전 — 옛 판이 쓴 꼴이면 지금 꼴로
     env.XDG_CONFIG_HOME = path.join(homeDir(), 'ytdlp');
     env.YTDLP_COOKIES_YOUTUBE = cookiesFile();
     env.YTDLP_COOKIES_TIKTOK = cookiesFile();
