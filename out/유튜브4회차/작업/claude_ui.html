@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Pre;src:url("fonts/Pretendard-Black.otf");font-weight:900}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1536px;height:864px;overflow:hidden;background:#faf9f5;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#1f1e1d}
+.app{display:flex;height:100%}
+.side{width:260px;background:#f3f1ea;border-right:1px solid #e6e2d6;padding:22px 16px;display:flex;flex-direction:column;gap:6px}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:30px;color:#3d3929;margin:4px 8px 22px}
+.newc{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:18px;color:#3d3929}
+.newc b{display:inline-flex;width:26px;height:26px;border-radius:50%;background:#d97757;color:#fff;align-items:center;justify-content:center;font-size:20px}
+.sec{font-size:14px;color:#8a8577;margin:20px 12px 6px}
+.item{padding:9px 12px;border-radius:8px;font-size:16.5px;color:#3d3929;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.on{background:#e8e5da}
+.main{flex:1;display:flex;flex-direction:column;position:relative}
+.top{height:64px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#5e5a4e;border-bottom:1px solid #eeebe2}
+.chat{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding-top:34px}
+.col{width:860px;display:flex;flex-direction:column;gap:22px}
+.user{align-self:flex-end;background:#f0eee6;border-radius:18px;padding:14px 20px;font-size:22px;max-width:640px;display:none}
+.bot{font-size:21px;line-height:1.65;display:none}
+.tool{border:1px solid #e3dfd2;border-radius:14px;background:#fff;padding:16px 20px;display:none}
+.tool .hd{display:flex;align-items:center;gap:10px;font-size:17px;color:#5e5a4e;margin-bottom:10px}
+.tool .hd .dot{width:10px;height:10px;border-radius:50%;background:#d97757}
+.tool .hd .sp{margin-left:auto;background:#1f1e1d;color:#fff;border-radius:6px;padding:2px 9px;font-size:14px;font-weight:700}
+.st{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(7,auto);grid-auto-flow:column;gap:6px 26px}
+.st div{font-size:18px;color:#b9b4a6;display:flex;gap:10px;align-items:center}
+.st div i{font-style:normal;width:22px;text-align:center}
+.st div.done{color:#2c2b28}.st div.done i{color:#2f9e6e}
+.st div.cur{color:#d97757;font-weight:700}
+.card{display:none;border:1px solid #e3dfd2;border-radius:14px;background:#fff;padding:14px;gap:18px;align-items:center;width:560px}
+.card img{width:120px;height:213px;object-fit:cover;border-radius:10px}
+.card .t1{font-size:21px;font-weight:700}.card .t2{font-size:16px;color:#8a8577;margin-top:6px}
+.card .pl{margin-top:14px;display:inline-block;background:#d97757;color:#fff;border-radius:8px;padding:8px 16px;font-size:17px;font-weight:700}
+.inbar{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);width:860px;background:#fff;border:1px solid #dcd7c9;border-radius:22px;box-shadow:0 4px 18px rgba(0,0,0,.05);padding:20px 22px 62px;font-size:23px;min-height:120px}
+.ph{color:#a39e90}
+.caret{display:inline-block;width:2px;height:28px;background:#1f1e1d;vertical-align:-5px;margin-left:1px}
+.send{position:absolute;right:16px;bottom:14px;width:40px;height:40px;border-radius:10px;background:#d6d1c4;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px}
+.send.on{background:#d97757}
+.tools{position:absolute;left:18px;bottom:16px;font-size:15px;color:#8a8577;border:1px solid #e3dfd2;border-radius:8px;padding:4px 10px}
+</style></head>
+<body>
+<div class="app">
+  <div class="side">
+    <div class="brand">Claude</div>
+    <div class="newc"><b>+</b>새 채팅</div>
+    <div class="sec">최근</div>
+    <div class="item on">외국인 + 한국 화장품 쇼츠</div>
+    <div class="item">썰템쇼 스타일 초코무스</div>
+    <div class="item">레고 이름 유래 쇼츠</div>
+    <div class="item">한국 선크림 백탁 쇼츠</div>
+    <div class="item">오뚜기 숨은 제품</div>
+  </div>
+  <div class="main">
+    <div class="top">외국인 + 한국 화장품 쇼츠</div>
+    <div class="chat"><div class="col">
+      <div class="user" id="u"></div>
+      <div class="bot" id="b"></div>
+      <div class="tool" id="tool">
+        <div class="hd"><span class="dot"></span>숏클 · 쇼츠 만들기<span class="sp" id="sp">×8 빠르게</span></div>
+        <div class="st" id="st"></div>
+      </div>
+      <div class="bot" id="b2"></div>
+      <div class="card" id="card"><img src="tattoo_thumb.jpg"><div><div class="t1">한국 파데로 타투 가려 본 외국인</div><div class="t2">쇼츠 · 9:16 · 완성본 + 썸네일</div><span class="pl">▶ 재생</span></div></div>
+    </div></div>
+    <div class="inbar"><span id="in"></span><span class="caret" id="caret"></span><span class="tools">⚙ 숏클 연결됨</span><div class="send" id="send">↑</div></div>
+  </div>
+</div>
+<script>
+var MSG="외국인 + 한국 화장품 쇼츠 만들어줘";
+var STAGES=["준비 확인","영상 확인","원본 영상 찾기","제품 확인","자료 조사","재료 영상 모으기","원음 정리","대본 쓰기","대본 확인","장면 맞추기","목소리·영상 만들기","완성본 검사","완성"];
+var BOT="숏클로 만들게요. 외국인이 한국 화장품을 써 보는 쇼츠 — 해외 원본 영상부터 찾겠습니다.";
+var BOT2="완성됐습니다. 쇼츠 한 편과 썸네일이 준비됐어요.";
+var T0=0.8, CH=0.17, SEND=T0+MSG.length*CH+0.45, B1=SEND+0.5, ST0=B1+1.6, STEP=0.55, DONE=ST0+STAGES.length*STEP+0.3;
+window.TL={T0:T0,CH:CH,SEND:SEND,B1:B1,ST0:ST0,STEP:STEP,DONE:DONE,LEN:MSG.length,N:STAGES.length};
+var st=document.getElementById('st');
+STAGES.forEach(function(s,i){var d=document.createElement('div');d.innerHTML='<i>○</i>'+(i+1)+'/13 '+s;st.appendChild(d);});
+function render(t){
+  var typed=t<T0?0:Math.min(MSG.length,Math.floor((t-T0)/CH)+1);
+  var sent=t>=SEND;
+  document.getElementById('in').innerHTML=sent?'<span class="ph">Claude에게 메시지 보내기</span>':(typed?MSG.slice(0,typed):'<span class="ph">Claude에게 메시지 보내기</span>');
+  document.getElementById('caret').style.visibility=(Math.floor(t*2)%2===0||(typed&&!sent&&typed<MSG.length))?'visible':'hidden';
+  document.getElementById('send').className='send'+(typed&&!sent?' on':'');
+  var u=document.getElementById('u');u.style.display=sent?'block':'none';u.textContent=MSG;
+  var b=document.getElementById('b');b.style.display=t>=B1?'block':'none';b.textContent=BOT.slice(0,Math.max(0,Math.floor((t-B1)/0.025)));
+  var tool=document.getElementById('tool');tool.style.display=t>=ST0-0.3?'block':'none';
+  [].forEach.call(st.children,function(d,i){var s0=ST0+i*STEP;
+    if(t>=s0+STEP){d.className='done';d.firstChild.textContent='✓';}
+    else if(t>=s0){d.className='cur';d.firstChild.textContent='●';}
+    else{d.className='';d.firstChild.textContent='○';}});
+  var b2=document.getElementById('b2');b2.style.display=t>=DONE?'block':'none';b2.textContent=BOT2.slice(0,Math.max(0,Math.floor((t-DONE)/0.025)));
+  document.getElementById('card').style.display=t>=DONE+1.0?'flex':'none';
+}
+window.render=render;render(0);
+</script>
+</body></html>
