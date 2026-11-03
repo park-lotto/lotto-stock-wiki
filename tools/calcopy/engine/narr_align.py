@@ -97,8 +97,80 @@ def _proc_slots() -> list:
         time.sleep(1.0)
 
 
+SPEECH_ALIGN_MIN = 0.6     # 받아쓰기로 시각을 찾은 글자 비율이 이보다 낮으면 만든 글자 시각을 믿지 않는다(옛 길 — 소리 틈 어림)
+
+
+def speech_align(text: str, mp3, log=print) -> dict | None:
+    """(글자 시각이 없는 목소리 — 피쉬·일레븐 검색 성우 등) 받아쓰기 낱말 시각(narr_verify.heard_words)으로 글자 시각을 만든다 — 꼴은 합성 align 그대로
+    (characters = 보낸 글 한 글자씩 · 시작·끝 초). 받아쓰기와 맞은 글자는 그 시각, 문장부호·띄어쓰기·못 맞춘 글자는 앞뒤 맞은 글자 사이를 고르게 나눈다.
+    자막 덩어리·줄 경계·이름 끊김이 모두 이 한 시계를 쓴다(#1625 김미향 피쉬 — 줄 경계만 받아쓰기, 자막은 글자 수 어림이라 앞 줄 끝 덩어리가 늦게 넘어감)."""
+    from tools.calcopy.engine import narr_verify as NV
+    try:
+        hyp, ts = NV.words_chars(NV.heard_words(mp3))
+    except Exception as e:  # noqa: BLE001 — 받아쓰기를 못 하면 옛 길(소리 틈 어림)
+        log(f"[tts] 받아쓰기로 글자 시각 못 만듦: {type(e).__name__}: {str(e)[:120]}")
+        return None
+    ref, owner = "", []
+    for m in re.finditer(r"\d[\d,\.]*%?|.", text, re.S):       # 숫자는 묶어 읽기(norm 이 '25'→'이십오'), 나머지는 한 글자씩
+        n = NV.norm(m.group())
+        ref += n
+        owner += [m.start()] * len(n)
+    cmap = NV.char_map(ref, hyp)
+    s, e = [None] * len(text), [None] * len(text)
+    for k, h in enumerate(cmap):
+        if h is None:
+            continue
+        i = owner[k]
+        s[i] = ts[h][0] if s[i] is None else min(s[i], ts[h][0])
+        e[i] = ts[h][1] if e[i] is None else max(e[i], ts[h][1])
+    want = [i for i, c in enumerate(text) if re.match(r"[가-힣A-Za-z0-9]", c)]
+    got = sum(1 for i in want if s[i] is not None)
+    if not want or got < len(want) * SPEECH_ALIGN_MIN:
+        log(f"[tts] 받아쓰기로 찾은 글자 {got}/{len(want)} — 글자 시각을 만들지 않는다")
+        return None
+    known = [i for i in range(len(text)) if s[i] is not None]
+    i = 0
+    while i < len(text):
+        if s[i] is not None:
+            i += 1
+            continue
+        j = i
+        while j < len(text) and s[j] is None:
+            j += 1
+        a = e[i - 1] if i > 0 else s[known[0]]
+        b = s[j] if j < len(text) else e[known[-1]]
+        step = max(0.0, b - a) / (j - i)
+        for k in range(i, j):
+            s[k], e[k] = a + step * (k - i), a + step * (k - i + 1)
+        i = j
+    log(f"[tts] 글자 시각 없음 → 받아쓰기로 만듦({got}/{len(want)}자)")
+    return {"characters": list(text), "character_start_times_seconds": [round(x, 3) for x in s],
+            "character_end_times_seconds": [round(x, 3) for x in e], "from": "speech"}
+
+
 def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print,
                  provider: str | None = None, emotion: str | None = None) -> dict | None:
+    """합성(캐시) → align|None. 목소리가 글자 시각을 안 주면 받아쓰기로 만들어(speech_align) 사이드카에 같이 둔다 — 시계 한 벌."""
+    align = _synth_cached(text, voice_id, tempo, out_mp3, model, log, provider, emotion)
+    if align is not None:
+        return align
+    out = Path(out_mp3)
+    sc = sidecar_of(out)
+    try:
+        meta = json.loads(sc.read_text(encoding="utf-8")) if sc.exists() else {}
+    except ValueError:
+        meta = {}
+    if meta.get("align_from") == "speech_failed" or not out.exists():
+        return None
+    align = speech_align(text, out, log)
+    if sc.exists():
+        meta.update({"align": align, "align_from": "speech" if align else "speech_failed"})
+        sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return align
+
+
+def _synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print,
+                  provider: str | None = None, emotion: str | None = None) -> dict | None:
     """합성 1회(캐시) → align|None. 캐시 열쇠가 다르면(글·목소리·배속 바뀜) 다시 합성하고 그 사실을 로그에 적는다.
     사이드카 없는 옛 mp3 는 '그 글로 만든 것'으로 받아들여 사이드카만 적는다(유료 재합성 금지 — 10-18 진행 중인 편들).
     provider·emotion(회원 팩 tts, 관제 266): 옛 길(old_path)이면 옛 그대로, 아니면 열쇠에 넣고 합성은 아래 _synth_member."""
