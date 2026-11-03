@@ -88,7 +88,7 @@ export function voiceProvider(settings) {
   const of = c => {
     const t = ((c || {}).pack || {}).tts || {};
     const v = String(t.voice_id || '');
-    return t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
+    return ({ fishaudio: 'fish', fish_audio: 'fish', eleven: 'elevenlabs' })[t.provider] || t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
   };
   const ch = (settings || {}).channels || {};
   return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';

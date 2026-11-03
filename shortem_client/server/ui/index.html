@@ -296,7 +296,7 @@ function render(){
   }else if(S.step==='sound'){
     // 목소리 엔진 먼저(사장님 10-25 '일레븐·타입·피쉬오디오 다 선택') → 그 엔진의 목소리. 피쉬오디오는 회원 PC 엔진에 붙이는 중
     const ENG=[['typecast','타입캐스트'],['elevenlabs','일레븐랩스'],['fishaudio','피쉬오디오']];
-    const curEng=S.eng||(cat.voices.find(v=>v.voice_id===tts.voice_id)||{}).engine||'typecast';
+    const curEng=S.eng||PROV_ENG[tts.provider]||tts.provider||(cat.voices.find(v=>v.voice_id===tts.voice_id)||{}).engine||'typecast';
     const vs=cat.voices.filter(v=>(v.engine||'typecast')===curEng);
     // 타입캐스트는 숏템처럼 열면 바로 전체 목록(빈 검색) — 추천 묶음이 따로 없다(사장님 10-25 '타입캐스트는 성우추천이 다르게 나옴')
     if(curEng==='typecast'&&S.vresEng!=='typecast'&&!S.vAuto){S.vAuto=true;setTimeout(()=>voiceSearch('typecast',''),0)}
@@ -308,7 +308,7 @@ function render(){
         <div class="chips">${ENG.map(([k,t])=>`<button class="chip${k===curEng?' on':''}" data-eng="${k}">${t}</button>`).join('')}</div></div>
       ${voicePresetBox(curEng,tts,cat)}
       ${true?`<div class="sec"><div class="sec-h"><b>성우 찾기</b><small>${curEng==='elevenlabs'?'일레븐랩스 목소리 모음(고객님 키 필요)':'숏템 성우 검색 그대로 — 이름·느낌으로 찾기'}</small></div>
-        <div class="inrow"><input type="text" id="vq" placeholder="예) 차분한 여자, 민준, 광고" value="${esc(S.vq||'')}"><button class="btn pri" id="vsearch">찾기</button>${curEng==='typecast'?'<button class="btn" id="tcmine">내가 만든 목소리</button>':''}</div>
+        <div class="inrow"><input type="text" id="vq" placeholder="예) 차분한 여자, 민준, 광고" value="${esc(S.vq||'')}"><button class="btn pri" id="vsearch">찾기</button>${curEng==='typecast'||curEng==='elevenlabs'?'<button class="btn" id="tcmine">내가 만든 목소리</button>':''}</div>
         ${S.vres&&S.vresEng===curEng&&S.vres.length?`<small style="color:var(--mute)">${S.vmine?'내가 만든 목소리':'전체 '+S.vtotal+'명 중 '+S.vres.length+'명'}</small>`:''}
         ${S.vres&&S.vresEng===curEng?`<div class="vres tall">${S.vres.length?S.vres.map(v=>voiceRow(v,curEng,tts,st)).join(''):`<small style="color:var(--mute)">${esc(S.verr||'찾은 성우가 없습니다')}</small>`}</div>`:''}</div>`:''}
       ${true?'':`<div class="sec"><div class="sec-h"><b>목소리</b>${badge('tts','voice_id')}</div>
@@ -316,7 +316,7 @@ function render(){
           :`<div class="note">${curEng==='fishaudio'?'피쉬오디오 목소리는 준비 중입니다 — 회원 PC 엔진에 연결하는 대로 여기에 목록이 뜹니다.':'이 엔진의 목소리가 아직 없습니다.'}</div>`}</div>`}
       <div class="sec"><div class="row"><b>말 빠르기</b><input type="range" id="tempo" min="0.8" max="1.8" step="0.02" value="${tts.tempo??1.36}"><output>${(tts.tempo??1.36).toFixed(2)}배</output></div></div>
       <div class="sec"><div class="sec-h"><b>배경음악</b>${badge('bgm','candidates')}</div>
-        <select id="bgm">${cat.bgm.map(b=>`<option value="${esc(b.id)}"${(bgm.candidates||[])[0]===b.id?' selected':''}>${esc(b.title)}${b.artist?' · '+esc(b.artist):''}</option>`).join('')}</select>
+        <select id="bgm"><option value=""${bgm.gain===0?' selected':''}>배경음악 없음</option>${cat.bgm.map(b=>`<option value="${esc(b.id)}"${bgm.gain!==0&&(bgm.candidates||[])[0]===b.id?' selected':''}>${esc(b.title)}${b.artist?' · '+esc(b.artist):''}</option>`).join('')}</select>
         <div class="row"><b>음악 크기</b><input type="range" id="gain" min="0" max="0.5" step="0.01" value="${bgm.gain??0.12}"><output>${Math.round((bgm.gain??0.12)*100)}%</output></div></div>
       <div class="sec done"><div class="sec-h"><b>설정 완료</b><small>여기까지가 채널 설정입니다 — 누르면 회원 PC 의 Claude 가 이 설정으로 만들기 시작합니다</small></div>
         ${S.makeSent?`<div class="note">✓ 제작을 맡겼습니다 (${esc(S.makeSent)}) — 완성본이 생기면 '완성본 고치기'가 열립니다</div>`:''}
@@ -393,13 +393,15 @@ function deliverBox(d){
 }
 // 성우 찾기 — 숏템 기존 검색 API 그대로(타입캐스트는 빈 검색어 = 숏템처럼 전체 목록에서 앞쪽, mine = 내가 만든 목소리)
 async function voiceSearch(eng,q,mine){
-  const u=mine?'/api/typecast/voices/mine':eng==='fishaudio'?'/api/fish/voices?limit=30&q='+encodeURIComponent(q):eng==='elevenlabs'?'/api/voice-library/search?language=ko&page=0&q='+encodeURIComponent(q):'/api/typecast/voices?limit=60&q='+encodeURIComponent(q);
+  const u=mine?(eng==='elevenlabs'?'/api/elevenlabs/voices/mine':'/api/typecast/voices/mine'):eng==='fishaudio'?'/api/fish/voices?limit=30&q='+encodeURIComponent(q):eng==='elevenlabs'?'/api/voice-library/search?language=ko&page=0&q='+encodeURIComponent(q):'/api/typecast/voices?limit=60&q='+encodeURIComponent(q);
   try{const r=await fetch(u).then(x=>x.json());S.vres=(r.voices||[]).map(v=>({voice_id:v.voice_id||v.id,name:v.name||v.title,gender:v.gender,age:v.age,model:v.model,emotions:v.emotions||[],tags:v.tags||v.use_cases||[],sample_url:v.sample_url||v.preview_url}));
     S.verr=r.ok?'':(r.error||'');S.vtotal=r.total||S.vres.length;S.vresEng=eng;S.vmine=!!mine}
   catch(e){S.vres=[];S.verr='성우 검색을 못 했습니다'}
   render();
 }
 // 찾은 성우 한 줄 — 추천 성우와 같은 모양(이름 · 설명 · 듣기 · 단추). 타입캐스트는 톤 대신 그 성우의 감정 단추(누르면 성우+감정을 같이 고른다)
+// 화면 엔진 이름 ↔ 팩 tts.provider(엔진 이름) 한 곳 — 화면은 fishaudio, 엔진·키 표는 fish(11-03: fishaudio 로 저장돼 '모르는 목소리 엔진'·타입캐스트 키 요구)
+const ENG_PROV={fishaudio:'fish'},PROV_ENG={fish:'fishaudio'};
 function voiceRow(v,eng,tts,st){
   const on=v.voice_id===tts.voice_id,emo=tts.emotion||'normal';
   const info=[v.model,v.emotions&&v.emotions.length?'감정 '+v.emotions.length+'종':'',v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · ');
@@ -671,9 +673,9 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.eng){S.eng=t.dataset.eng;S.vres=null;S.vresEng=null;S.vAuto=false;render();return}
   // 성우 찾기 — 숏템 기존 검색 API(서버 /api/typecast/voices · /api/fish/voices)를 그대로 부른다(서버판에서만)
   if(t.id==='vsearch'){S.vq=($('vq')||{}).value||'';t.disabled=true;t.textContent='찾는 중…';await voiceSearch(S.eng||'typecast',S.vq);return}
-  if(t.id==='tcmine'){await voiceSearch('typecast','',true);return}
+  if(t.id==='tcmine'){await voiceSearch(S.eng||'typecast','',true);return}
   if(t.dataset.play){if(S.audio)S.audio.pause();S.audio=new Audio(t.dataset.play);S.audio.play().catch(()=>state('미리듣기를 못 틀었습니다',true));return}
-  if(t.dataset.vp){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.vpv,preset_id:t.dataset.vp,name:t.dataset.vpn}}});
+  if(t.dataset.vp){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:ENG_PROV[eng]||eng,voice_id:t.dataset.vpv,preset_id:t.dataset.vp,name:t.dataset.vpn}}});
     if(!r.ok){state('이 성우는 아직 회원 PC 엔진 명단에 없습니다 — 엔진 업데이트 뒤 쓸 수 있습니다',true);return}
     await load(true);return}
   if(t.id==='makego'){const topic=(($('maketopic')||{}).value||'').trim();
@@ -685,7 +687,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.emo){const r=await api('/api/save',{preset:S.st.current,patch:{tts:{emotion:t.dataset.emo==='normal'?null:t.dataset.emo}}});if(r.ok===false){await load(true);state(saveErr(r),true);return}await load(true);return}   // 감정 = 팩 tts.emotion(엔진이 받는 한 곳, 타입캐스트만)
   if(t.dataset.pickv){const eng=S.eng||'typecast';
     // 감정 = 팩 tts.emotion — 고를 때만 싣고, 이미 있던 감정을 지울 때만 null(늘 싣으면 감정 칸을 모르는 옛 엔진 묶음이 모든 목소리를 거절한다 — 10-26 실측)
-    const tts={provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn};const emo=eng==='typecast'&&t.dataset.pemo!=='normal'&&t.dataset.pemo;   // '보통' = 감정 없음
+    const tts={provider:ENG_PROV[eng]||eng,voice_id:t.dataset.pickv,name:t.dataset.pickn};const emo=eng==='typecast'&&t.dataset.pemo!=='normal'&&t.dataset.pemo;   // '보통' = 감정 없음
     if(emo)tts.emotion=emo;else if(((S.st.pack||{}).tts||{}).emotion)tts.emotion=null;
     const r=await api('/api/save',{preset:S.st.current,patch:{tts}});
     if(!r.ok){await load(true);state(saveErr(r),true);return}   // 다시 읽은 뒤에 오류(load 가 '저장됨'으로 덮던 것 — 10-26 실측: 거절됐는데 '내 계정에 저장됨')
@@ -755,7 +757,7 @@ $('board').addEventListener('change',async e=>{
   else if(t.id==='olcolor'){const c=t.value;save({text:{caption:{outline_rgb:[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))}}})}
   else if(t.id==='tempo')save({tts:{tempo:+t.value}});
   else if(t.id==='gain')save({bgm:{gain:+t.value}});
-  else if(t.id==='bgm')save({bgm:{candidates:[t.value]}});
+  else if(t.id==='bgm')save(t.value===''?{bgm:{gain:0}}:{bgm:{candidates:[t.value],...(((S.st.pack||{}).bgm||{}).gain===0?{gain:0.12}:{})}});   // 없음 = 음악 크기 0(검사·렌더가 이미 받는 값, 11-03 회원 요청)
   else if(t.id==='emcolor'){const em=(pk().text||{}).caption||{};if(em.emphasis&&em.emphasis.style){const c=t.value;save({text:{caption:{emphasis:{words:'auto',style:em.emphasis.style,rgb:[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))}}}})}}
 });
 $('board').addEventListener('input',e=>{if(e.target.id==='asktext')S.askDraft=e.target.value});

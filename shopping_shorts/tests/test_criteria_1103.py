@@ -74,3 +74,30 @@ def test_speechmatics_failure_falls_back_to_whisper(monkeypatch, tmp_path):
     f = tmp_path / "a.wav"
     f.write_bytes(b"x")
     assert NV.heard_words(f)[0]["w"] == "가"
+
+
+def test_member_bgm_reaches_mix(tmp_path, monkeypatch):
+    """소리 단계의 배경음악 선택·'없음'이 렌더 믹스까지 간다(11-03 회원 요청 — 회원 팩 bgm 이 판에 안 들어갔다)."""
+    import json as _j
+    from tools.calcopy.hybrid import styles as STY
+    p = tmp_path / "pack.json"
+    monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(p))
+    p.write_text(_j.dumps({"member": {"bgm": {"gain": 0}}}), encoding="utf-8")
+    st = STY.member_frame({"bgm": {"id": "preset_song"}, "frame": {"title": []}})
+    assert st["member_bgm"] == {"none": True}
+    assert RB.mix_bgm_id({"bgm": {"id": "script_song"}}, st) is None
+    p.write_text(_j.dumps({"member": {"bgm": {"candidates": ["picked"], "gain": 0.12}}}), encoding="utf-8")
+    st = STY.member_frame({"bgm": {"id": "preset_song"}, "frame": {"title": []}})
+    assert st["member_bgm"] == {"id": "picked"}
+    monkeypatch.setattr(RB, "BGM_DIR", tmp_path)
+    (tmp_path / "picked.mp3").write_bytes(b"x")
+    assert RB.mix_bgm_id({}, st) == "picked"
+    assert RB.mix_bgm_id({}, dict(st, frame={"lyrics": {"x": 1}})) == "preset_song"      # 노래가 주인공인 판은 곡을 안 바꾼다
+    assert RB.mix_bgm_id({}, {"bgm": {"id": "preset_song"}}) == "preset_song"
+
+
+def test_fishaudio_name_is_fish():
+    """설정 화면 이름(fishaudio)도 엔진은 fish 로 읽는다(11-03: 피쉬 선택 저장 거절·타입캐스트 키 요구)."""
+    from tools.calcopy.engine import voices as VO
+    assert VO.provider_of({"provider": "fishaudio", "voice_id": "a" * 32}) == "fish"
+    assert not [e for e in VO.check_tts({"provider": "fishaudio", "voice_id": "0" * 32}) if "모르는 목소리 엔진" in e]

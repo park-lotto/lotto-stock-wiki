@@ -1137,6 +1137,17 @@ def lyric_plan(S: dict, st: dict, end: float) -> list[dict]:
     return out
 
 
+def mix_bgm_id(S: dict, st: dict) -> str | None:
+    """(판단 주인 — 믹스에 까는 배경음 곡) 회원이 고른 곡·'없음'이 먼저, 없으면 대본 칸 → 판 칸. 노래가 주인공인 판(가사 화면)은 곡을 바꾸지 않는다."""
+    mb = st.get("member_bgm") or {}
+    if mb and not (st.get("frame") or {}).get("lyrics"):
+        if mb.get("none"):
+            return None
+        if mb.get("id") and (BGM_DIR / f"{mb['id']}.mp3").exists():
+            return mb["id"]
+    return (S.get("bgm") or {}).get("id") or (st.get("bgm") or {}).get("id")
+
+
 def bgm_ss_for(st: dict, length: float, bgm_id: str | None = None) -> float | None:
     """(판단 주인: 노래 시작 지점 bgm.ss) 가사가 영상 길이의 판 bgm.vocal_at 비율 자리에서 처음 뜨게 — 곡 첫 가사 t0 − 비율×길이(0 아래면 0).
     판 bgm.vocal_at 이나 가사표가 없으면 None(대본 bgm.ss 를 그대로 쓴다). 흐름(flow 자막노래형)·손 대본이 같이 부른다."""
@@ -3382,7 +3393,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     else:          # 나레도 원음도 없는 편(자막 줄만) — 목소리 자리는 무음, 소리는 배경음·효과음뿐
         run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"anullsrc=r={SR}:cl=mono", "-t", f"{end:.3f}", voice])
     B = st["bgm"]
-    bid = S.get('bgm', {}).get('id') or B.get('id')
+    bid = mix_bgm_id(S, st)
     SF = st.get("sfx_files") or {}
     check_sfx(st, placed)
     narr_spans = [T["lines"][s["id"]] for s in sent]

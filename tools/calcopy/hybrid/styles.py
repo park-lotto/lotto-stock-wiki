@@ -225,6 +225,11 @@ def member_frame(st: dict) -> dict:
     if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
         st["voice"] = {**st.get("voice", {}), **tts}
         st["member_voice"] = tts
+    bgm = pack.get("bgm") or {}
+    if bgm.get("gain") == 0:          # 소리 단계 '배경음악 없음'(음악 크기 0) — 0 은 거짓값이라 or 로 읽지 않는다
+        st["member_bgm"] = {"none": True}
+    elif (bgm.get("candidates") or [None])[0]:      # 소리 단계에서 고른 곡(11-03: 회원 팩 bgm 이 판에 안 들어가 프리셋 곡만 나왔다)
+        st["member_bgm"] = {"id": bgm["candidates"][0]}
     cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy") if text.get(f"caption_{k}")}
     if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기) — 자막팩 위에 덮는다(render_bench.snapshot)
         st["member_caption"] = cap
