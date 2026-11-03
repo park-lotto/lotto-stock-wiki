@@ -1,0 +1,282 @@
+{
+ "m_hope": {
+  "iou_line": 0.928,
+  "iou_line_aligned": 0.928,
+  "aligned": false,
+  "iou_spec_raw": 0.861,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#F7D7BC",
+  "skin_dmax": 14
+ },
+ "f_tired": {
+  "iou_line": 0.884,
+  "iou_line_aligned": 0.884,
+  "aligned": false,
+  "iou_spec_raw": 0.337,
+  "extra_outside": 0.188,
+  "pass": true,
+  "skin": "#F3CDBC",
+  "skin_dmax": 4
+ },
+ "f_point_hope": {
+  "iou_line": 0.881,
+  "iou_line_aligned": 0.881,
+  "aligned": false,
+  "iou_spec_raw": 0.399,
+  "extra_outside": 0.001,
+  "pass": true,
+  "skin": "#FCDAC9",
+  "skin_dmax": 17
+ },
+ "m_point_hope": {
+  "iou_line": 0.891,
+  "iou_line_aligned": 0.891,
+  "aligned": false,
+  "iou_spec_raw": 0.897,
+  "extra_outside": 0.351,
+  "pass": true,
+  "skin": "#F1C8B7",
+  "skin_dmax": 0
+ },
+ "m_tired": {
+  "iou_line": 0.897,
+  "iou_line_aligned": 0.897,
+  "aligned": false,
+  "iou_spec_raw": 0.937,
+  "extra_outside": 0.069,
+  "pass": true,
+  "skin": "#F2CCBA",
+  "skin_dmax": 3
+ },
+ "m_frustr_head": {
+  "iou_line": 0.919,
+  "iou_line_aligned": 0.919,
+  "aligned": false,
+  "iou_spec_raw": 0.928,
+  "extra_outside": 0.149,
+  "pass": true,
+  "skin": "#F1C9B7",
+  "skin_dmax": 0
+ },
+ "m_excited": {
+  "iou_line": 0.93,
+  "iou_line_aligned": 0.93,
+  "aligned": false,
+  "iou_spec_raw": 0.955,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#F1C9B8",
+  "skin_dmax": 0
+ },
+ "m_laptop_hope": {
+  "iou_line": 0.931,
+  "iou_line_aligned": 0.931,
+  "aligned": false,
+  "iou_spec_raw": 0.937,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#F1C8B7",
+  "skin_dmax": 0
+ },
+ "m_laptop_tired": {
+  "iou_line": 0.942,
+  "iou_line_aligned": 0.942,
+  "aligned": false,
+  "iou_spec_raw": 0.945,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#F1C9B8",
+  "skin_dmax": 0
+ },
+ "f_laptop_hope": {
+  "iou_line": 0.891,
+  "iou_line_aligned": 0.891,
+  "aligned": false,
+  "iou_spec_raw": 0.416,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#FED7C5",
+  "skin_dmax": 14
+ },
+ "f_frustr_head": {
+  "iou_line": 0.909,
+  "iou_line_aligned": 0.909,
+  "aligned": false,
+  "iou_spec_raw": 0.417,
+  "extra_outside": 0.003,
+  "pass": true,
+  "skin": "#F8CFBD",
+  "skin_dmax": 6
+ },
+ "f_night_phone": {
+  "iou_line": 0.928,
+  "iou_line_aligned": 0.928,
+  "aligned": false,
+  "iou_spec_raw": 0.315,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": "#FED5C3",
+  "skin_dmax": 12
+ },
+ "f_excited": {
+  "iou_line": 0.906,
+  "iou_line_aligned": 0.906,
+  "aligned": false,
+  "iou_spec_raw": 0.345,
+  "extra_outside": 0.117,
+  "pass": true,
+  "skin": "#FDD9C6",
+  "skin_dmax": 16
+ },
+ "f_dream": {
+  "iou_line": 0.824,
+  "iou_line_aligned": 0.824,
+  "aligned": false,
+  "iou_spec_raw": 0.32,
+  "extra_outside": 0.192,
+  "pass": true,
+  "skin": "#F1C9B7",
+  "skin_dmax": 0
+ },
+ "f_hope": {
+  "iou_line": 0.926,
+  "iou_line_aligned": 0.926,
+  "aligned": false,
+  "iou_spec_raw": 0.356,
+  "extra_outside": 0.01,
+  "pass": true,
+  "skin": "#F2C9B8",
+  "skin_dmax": 0
+ },
+ "m_phone_cu": {
+  "iou_line": 0.922,
+  "iou_line_aligned": 0.922,
+  "aligned": false,
+  "iou_spec_raw": 0.924,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_subway_swipe_a": {
+  "iou_line": 0.951,
+  "iou_line_aligned": 0.951,
+  "aligned": false,
+  "iou_spec_raw": 0.942,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_wow": {
+  "iou_line": 0.822,
+  "iou_line_aligned": 0.822,
+  "aligned": false,
+  "iou_spec_raw": 0.853,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_laptop_blank": {
+  "iou_line": 0.916,
+  "iou_line_aligned": 0.916,
+  "aligned": false,
+  "iou_spec_raw": 0.921,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_meh": {
+  "iou_line": 0.916,
+  "iou_line_aligned": 0.916,
+  "aligned": false,
+  "iou_spec_raw": 0.944,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_show": {
+  "iou_line": 0.158,
+  "iou_line_aligned": 0.808,
+  "aligned": true,
+  "iou_spec_raw": 0.914,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_cu_blink": {
+  "iou_line": 0.93,
+  "iou_line_aligned": 0.93,
+  "aligned": false,
+  "iou_spec_raw": 0.932,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_subway_swipe_b": {
+  "iou_line": 0.951,
+  "iou_line_aligned": 0.951,
+  "aligned": false,
+  "iou_spec_raw": 0.944,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_wow_b": {
+  "iou_line": 0.935,
+  "iou_line_aligned": 0.935,
+  "aligned": false,
+  "iou_spec_raw": 0.953,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_laptop_blank_b": {
+  "iou_line": 0.923,
+  "iou_line_aligned": 0.923,
+  "aligned": false,
+  "iou_spec_raw": 0.923,
+  "extra_outside": 0.28,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_meh_b": {
+  "iou_line": 0.925,
+  "iou_line_aligned": 0.925,
+  "aligned": false,
+  "iou_spec_raw": 0.943,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_point_right_b": {
+  "iou_line": 0.918,
+  "iou_line_aligned": 0.918,
+  "aligned": false,
+  "iou_spec_raw": 0.96,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ },
+ "m_phone_show_b": {
+  "iou_line": 0.922,
+  "iou_line_aligned": 0.922,
+  "aligned": false,
+  "iou_spec_raw": 0.938,
+  "extra_outside": 0.0,
+  "pass": true,
+  "skin": null,
+  "skin_dmax": null
+ }
+}

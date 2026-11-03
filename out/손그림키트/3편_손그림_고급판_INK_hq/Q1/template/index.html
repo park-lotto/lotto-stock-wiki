@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 55%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="16" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.10"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script>
+<script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script>
+<script src="brand/qkit.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(16);
+// Q1 일반 해결책 + 직접 만들기 (16초) — 갈림길 표지판 → 카메라가 '직접' 길로 → 캡컷에서 하나씩 자르고 욕심
+// v2(2026-10-29): _assets 주인공(머리 감싸기 → 표지판 가리키기 / 캡컷 가리키기)·벽시계 / R1 무대 0초 / R4 끝맺음 / R5 펜 하나(동그라미 4.3→4.65)
+// ===== 컷1: 갈림길 표지판 (0~6.2) =====
+const CUT = 6.1; // 종이 넘김: 앞 컷 끝 = 뒤 컷 시작 (겹침 0)
+const c1 = S.layer();
+c1.xf((t) => { const p = eo(seg(t, 4.7, 6.2)); return { x: -390 * p, y: 345 * p, s: 1 + 1.1 * p, ox: 1350, oy: 195, o: t < CUT ? 1 : 0 }; });
+// 무대: 기둥 (컷 시작에 이미 서 있다)
+const pole = QK.stage(c1, -0.3);
+pole.fill(ell(1350, 1072, 150, 14, { n: 16 }), INK, 0, 0.1);
+pole.shape(rr(1325, 100, 50, 975, 6), 0, 0.1, BEIGE, { op: 0.55, w: 7 });
+// 하늘 구름 두 점 (무대 — 왼쪽 위 빈 하늘)
+pole.shape(cloud(250, 120, 130, 48, 7, 0.12), 0, 0.1, SKY, { op: 0.35, w: 5 });
+pole.shape(cloud(720, 80, 95, 36, 6, 0.12), 0, 0.1, SKY, { op: 0.35, w: 5 });
+// 주인공: 0~3.6 머리 감싸고 고민(지침) → 3.6 표지판을 가리키며 기대
+// 새 주인공(여): 0~3.6 턱 괴고 지침(펜 0~1.2) → 3.6 표지판을 가리킴(정지 교체)
+QK.person(c1, "g_f_tired", { x: 470, y: 597, H: 665, s: 0.0, dur: 1.0, win: [-1, 3.6] });
+QK.person(c1, "g_f_point_hope", { x: 330, y: 476, H: 760, stat: true, win: [3.6, 1e9] });
+const boards = [["직접", SKY], ["반자동", BEIGE], ["자동화", PINK], ["클로드", "#F2D27A"]];
+let t1 = null;
+boards.forEach(([txt, col], i) => {
+  const y = 150 + i * 190, h = 150, s0 = 1.2 + i * 0.8;
+  const right = i % 2 === 0;
+  const pts = right ? [[1030, y], [1620, y], [1700, y + h / 2], [1620, y + h], [1030, y + h]] : [[1670, y], [1080, y], [1000, y + h / 2], [1080, y + h], [1670, y + h]];
+  const B = QK.pop(c1, s0 + (i === 3 ? 0.4 : 0.2), 1e9, 1350, y + h / 2);
+  B.shape(poly(pts, 10, true, 1), 0, 0.1, col, { op: 0.5, w: 7 });
+  const T = c1.text(txt, { x: 1350 + (right ? -10 : 10), y: y + h / 2 + 6, size: 100, font: "gae", s: s0 + 0.55, anchor: "c", gap: 0.1 });
+  if (i === 0) t1 = T;
+});
+c1.circleMark(t1.box(0, 1), 4.65, 0.55, 40, 8);
+
+// ===== 컷2: 캡컷 화면 — 하나씩 자르고, 하나 더 (5.6~16) =====
+const c2 = S.layer();
+c2.xf((t) => ({ s: 1.12 - 0.12 * eo(seg(t, 5.6, 6.8)), ox: 1350, oy: 400, o: t < CUT ? 0 : Math.min(1, 0.7 + (t - CUT) / 0.12 * 0.3) }));
+// 무대: 모니터 + 벽시계 (컷 시작 0.3초 안에)
+const st2 = QK.stage(c2, 5.8);
+// 책상 (모니터를 올려 둔다, 결론 글씨는 책상 앞판에)
+st2.fill(ell(1300, 1076, 640, 10, { n: 16 }), INK, 0, 0.1);
+st2.shape(rr(700, 790, 1200, 300, 6), 0, 0.1, "#EFE4CB", { op: 0.8, w: 7 });
+st2.shape(rr(670, 758, 1250, 34, 8), 0, 0.1, BEIGE, { op: 0.7, w: 7 });
+st2.fill(ell(1355, 762, 200, 10, { n: 16 }), INK, 0, 0.12);
+st2.shape(poly([[1310, 690], [1400, 690], [1440, 758], [1270, 758]], 6), 0, 0.1, BEIGE, { op: 0.6, w: 7 });
+st2.shape(rr(850, 100, 1010, 590, 24), 0, 0.1, BEIGE, { op: 0.35, w: 7 });
+st2.shape(rr(880, 130, 950, 530, 10), 0, 0.1, "#FFFFFF", { op: 0.6, w: 4 });
+st2.shape(rr(910, 160, 420, 250, 8), 0, 0.1, "#FFFFFF", { op: 0.9, w: 4 });
+st2.shape(poly([[1090, 235], [1090, 335], [1170, 285]], 6, true, 0.5), 0, 0.1, ORG, { op: 0.6, w: 5 });
+[0, 1, 2, 3].forEach((i) => st2.line(ln(1370, 200 + i * 52, 1800 - (i % 2) * 90, 200 + i * 52), 0, 0.1, { w: 4 }));
+st2.line(rr(910, 440, 920, 200, 8), 0, 0.1, { w: 5 });
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => st2.line(ln(930 + i * 90, 448, 930 + i * 90, 462), 0, 0.1, { w: 3 }));
+// 벽시계(소품 자산, 바늘만 따로 돌린다)
+const CX = 185, CY = 165, CS = 1.15;
+QK.put(st2, "prop.clock", { x: CX, y: CY + 120 * CS, sc: CS, s: 0, drop: (() => { const n = INKASSETS.get("prop.clock").items.length; return [n - 5, n - 4, n - 3]; })() });
+// 주인공: 캡컷 타임라인을 가리킨다. 기대 → 9.5초 지침
+// 주인공: 캡컷 화면을 가리킴(정지) → 9.5 지침(정지 교체)
+QK.person(c2, "g_f_point_hope", { x: 300, y: 476, H: 760, stat: true, win: [-1, 9.5] });
+QK.person(c2, "g_f_tired", { x: 330, y: 597, H: 665, stat: true, win: [9.5, 1e9] });
+// 클립이 하나씩 붙는다 (점점 빨라짐) — 펜 없이 톡톡
+const starts = [7.5, 8.1, 8.6, 9.0, 9.4, 9.75, 10.05, 10.3, 10.5];
+const cols = [SKY, PINK, BEIGE];
+starts.forEach((s, i) => {
+  const x = 930 + i * 99, P = QK.pop(c2, s, 1e9, x + 45, 505);
+  P.line(ln(x - 5, 452, x - 5, 628), 0, 0.1, { w: 4 });
+  P.shape(rr(x, 470, 90, 70, 8), 0, 0.1, cols[i % 3], { op: 0.6, w: 5 });
+});
+[0, 1, 2, 3, 4].forEach((i) => { const s = 10.7 + i * 0.2, x = 930 + i * 99, P = QK.pop(c2, s, 1e9, x + 45, 590); P.shape(rr(x, 560, 90, 60, 8), 0, 0.1, cols[(i + 1) % 3], { op: 0.55, w: 5 }); });
+// 가위 (1.4배)
+const sc2 = c2.sub({ stat: true }); sc2.vis(7.1, 11.6, "fade");
+const SS = 1.4, sp = (x1, y1, x2, y2) => ln(x1 * SS, y1 * SS, x2 * SS, y2 * SS);
+sc2.line(sp(-14, -30, 12, 30), 0, 0.1, { w: 7 }); sc2.line(sp(14, -30, -12, 30), 0, 0.1, { w: 7 });
+sc2.shape(ell(-16 * SS, -44 * SS, 12 * SS, 12 * SS, { n: 10 }), 0, 0.1, ORG, { op: 0.7, w: 5 }); sc2.shape(ell(16 * SS, -44 * SS, 12 * SS, 12 * SS, { n: 10 }), 0, 0.1, ORG, { op: 0.7, w: 5 });
+sc2.xf((t) => { let x = 0; starts.forEach((s) => { x += 99 * eo(seg(t, s - 0.2, s + 0.1)); }); return { x: 905 + x, y: 412, ox: 0, oy: 0 }; });
+// 시계 바늘 (빠르게 돈다, 15초에 멈춤 — R4 마지막 1초 정지)
+const hm = mk("path", { d: "", stroke: INK, "stroke-width": 7, "stroke-linecap": "round", fill: "none", opacity: 0 }, st2.lg);
+const hh = mk("path", { d: "", stroke: INK, "stroke-width": 9, "stroke-linecap": "round", fill: "none", opacity: 0 }, st2.lg);
+const hs = mk("path", { d: "", stroke: ORG, "stroke-width": 4, "stroke-linecap": "round", fill: "none", opacity: 0 }, st2.lg);
+S.on((t) => {
+  const tt = Math.min(t, 15.0), on = t >= 6.0 ? 1 : 0;
+  const a = Math.max(0, tt - 7.3) * Math.PI * 2 * 1.4 + 2.2, b = a / 12 + 0.6, c = a * 3;
+  const L = (r, ang) => `M${CX} ${CY} L${(CX + r * Math.sin(ang)).toFixed(1)} ${(CY - r * Math.cos(ang)).toFixed(1)}`;
+  hm.setAttribute("d", L(84 * CS, a)); hh.setAttribute("d", L(54 * CS, b)); hs.setAttribute("d", L(76 * CS, c));
+  [hm, hh, hs].forEach((e) => e.setAttribute("opacity", on));
+});
+// 욕심: 하나 더…
+[["하나 더…", 7.3, 9.1], ["또 하나 더…", 9.1, 10.9], ["하나만 더…", 10.9, 12.7]].forEach(([txt, a, b]) => {
+  const L = c2.sub(); L.vis(a, b, "pop");
+  L.text(txt, { x: 640, y: 250, size: 100, font: "gae", s: a + 0.1, anchor: "c", gap: 0.07 });
+});
+const e1 = c2.text("실력은 늘지만,", { x: 1340, y: 835, size: 140, s: 12.4, anchor: "c", gap: 0.09 });
+const e2 = c2.text("대여섯 시간", { x: 1340, y: 985, size: 150, s: 13.35, anchor: "c", gap: 0.09 });
+c2.underline(e2.box(0, 2), 14.0, 0.5);
+
+S.start();
+});
+</script></body></html>

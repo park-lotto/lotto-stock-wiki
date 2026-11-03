@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<script src="strokes.js"></script>
+<style>
+@font-face { font-family: "Pretendard"; src: url("brand/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; }
+html, body { margin: 0; background: #fff; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fff; font-family: "Pretendard", sans-serif; color: #111; }
+#cap { position: absolute; top: 92px; left: 0; width: 1920px; text-align: center; font-size: 46px; font-weight: 400; color: #8a8a8a; letter-spacing: -0.02em; white-space: nowrap; }
+#cap b { color: #111; font-weight: 800; }
+.sc { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; opacity: 0; }
+.img { position: absolute; left: 610px; top: 240px; width: 700px; height: 700px; object-fit: contain; }
+.big { position: absolute; left: 0; width: 1920px; top: 430px; text-align: center; font-size: 190px; font-weight: 900; letter-spacing: -0.05em; line-height: 1; }
+.big span { color: #8a8a8a; font-weight: 500; font-size: 120px; }
+#rail { position: absolute; left: 64px; top: 380px; }
+#rail i { display: block; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #111; margin-bottom: 22px; box-sizing: border-box; background: #fff; }
+#rail i.on { background: #111; }
+.box { position: absolute; left: 460px; top: 470px; width: 1000px; height: 150px; border: 4px solid #111; border-radius: 22px; box-sizing: border-box; }
+.box .bar { height: 40px; border-bottom: 3px solid #111; display: flex; align-items: center; padding-left: 18px; gap: 10px; }
+.box .bar u { width: 13px; height: 13px; border-radius: 50%; border: 2.5px solid #111; display: inline-block; }
+.box .bar em { font-style: normal; font-size: 20px; font-weight: 700; margin-left: 10px; }
+.box .tx { font-size: 46px; font-weight: 600; padding: 22px 30px; white-space: nowrap; }
+.box .tx s { text-decoration: none; display: inline-block; width: 4px; height: 50px; background: #111; vertical-align: middle; margin-left: 4px; }
+.chk { position: absolute; left: 700px; width: 520px; font-size: 76px; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 34px; }
+.chk q { quotes: none; width: 78px; height: 78px; border: 6px solid #111; border-radius: 18px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+.chk q svg { width: 56px; height: 56px; }
+#cta { position: absolute; left: 1240px; top: 760px; padding: 18px 44px; background: #111; color: #fff; font-size: 52px; font-weight: 800; border-radius: 60px; letter-spacing: -0.03em; opacity: 0; }
+#n100, #n0 { position: absolute; font-size: 150px; font-weight: 900; letter-spacing: -0.05em; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="31" data-width="1920" data-height="1080">
+  <div id="cap"></div>
+  <div id="rail"></div>
+  <div class="sc" id="s0"><div class="big">쇼핑쇼츠</div></div>
+  <div class="sc" id="s1"><img class="img" src="i_think.png"></div>
+  <div class="sc" id="s2"><div id="flowClip" style="position:absolute;left:0;top:0;height:1080px;overflow:hidden;width:0"><img class="img" src="i_flow.png" style="left:410px;width:1100px;height:1100px;top:40px"></div></div>
+  <div class="sc" id="s3"><img class="img" src="i_folder.png" style="left:380px"><div id="n100" style="left:1140px;top:470px">0</div></div>
+  <div class="sc" id="s4"><img class="img" src="i_empty.png" style="left:380px"><div id="n0" style="left:1150px;top:470px">?</div></div>
+  <div class="sc" id="s5"><div class="big" style="font-size:150px">몰라서가 <span style="font-size:150px;color:#111;font-weight:900">아닙니다</span></div></div>
+  <div class="sc" id="s6"><img class="img" src="i_clock.png" style="left:380px"><div class="big" style="left:560px;top:450px;font-size:150px">반나절</div></div>
+  <div class="sc" id="s7"><div class="big" id="logo">숏템메이커</div></div>
+  <div class="sc" id="s8"><div class="box"><div class="bar"><u></u><u></u><u></u><em>숏템메이커</em></div><div class="tx" id="typed"></div></div></div>
+  <div class="sc" id="s9">
+    <div class="chk" style="top:300px"><q id="k0"></q>원고</div>
+    <div class="chk" style="top:470px"><q id="k1"></q>성우</div>
+    <div class="chk" style="top:640px"><q id="k2"></q>자막</div>
+  </div>
+  <div class="sc" id="s10"><div class="big" style="font-size:300px;top:360px">10분</div></div>
+  <div class="sc" id="s11"><img class="img" src="i_man.png" style="left:420px"><div id="cta">숏템메이커</div></div>
+  <svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#111"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#111" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#111"/><rect x="60" y="-9" width="6" height="18" fill="#c9a24a"/></g></svg>
+</div>
+<script>
+(() => {
+  const D = 31;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const eo = (p) => 1 - Math.pow(1 - p, 3);
+  const back = (p) => { const c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+  const ST = [0.3, 2.46, 4.74, 9.54, 11.96, 13.44, 14.91, 16.81, 20.27, 21.52, 24.9, 26.21];
+  const DU = [1.84, 1.96, 4.48, 2.1, 1.16, 1.15, 1.58, 3.14, 0.93, 3.06, 0.99, 3.61];
+  const CAP = ["쇼핑쇼츠, <b>돈</b> 된다", "만드는 법, <b>이미</b> 아시죠?", "소재 찾고, 원고 쓰고, <b>자막</b> 지우고, 성우 입히고", "저장한 레퍼런스는 <b>백 개</b>인데", "<b>올린 건</b> 몇 개입니까?", "<b>몰라서가</b> 아닙니다", "한 편에 <b>반나절</b>이 걸리니까요", "그래서 <b>만들었습니다</b>", "<b>소재</b>만 넣으면", "원고, 성우, 자막까지 <b>한 번에</b>", "<b>10분</b> 안에 한 편", "오늘 <b>한 편</b> 올리세요"];
+  const CHECK = '<svg viewBox="0 0 56 56"><path d="M10 29 L23 42 L46 14" fill="none" stroke="#111" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  for (let i = 0; i < 12; i++) $("rail").insertAdjacentHTML("beforeend", "<i></i>");
+  const dots = [...document.querySelectorAll("#rail i")];
+  let lastCap = -1, lastK = [-1, -1, -1];
+  // ---- hand-drawn reveal: each line-art image sits under a mask that a zig-zag pen stroke paints in ----
+  const NS = "http://www.w3.org/2000/svg";
+  const DRAW = [];
+  document.querySelectorAll("img.img").forEach((im, n) => {
+    const sc = +im.closest(".sc").id.slice(1);
+    const cs = getComputedStyle(im);
+    const L = parseFloat(im.style.left || cs.left), T = parseFloat(im.style.top || cs.top), W = parseFloat(im.style.width || cs.width), H = parseFloat(im.style.height || cs.height);
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.style.cssText = `position:absolute;left:${L}px;top:${T}px;overflow:visible`;
+    const name = im.getAttribute("src").replace(".png", ""), k = W / 700;
+    const paths = (window.STROKES[name] || []).map((d) => `<path d="${d}"/>`).join("");
+    svg.innerHTML = `<image href="${im.getAttribute("src")}" width="${W}" height="${H}" opacity="0" preserveAspectRatio="xMidYMid meet"/><g transform="scale(${k})" fill="none" stroke="#141414" stroke-width="${2.6 / Math.max(1, k * 0.9)}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`;
+    im.replaceWith(svg);
+    const ps = [...svg.querySelectorAll("g path")], lens = ps.map((q) => q.getTotalLength());
+    const cum = []; let tot = 0; lens.forEach((l) => { cum.push(tot); tot += l; });
+    ps.forEach((q, i) => { q.setAttribute("stroke-dasharray", lens[i] + 1); q.setAttribute("stroke-dashoffset", lens[i] + 1); });
+    DRAW.push({ sc, ps, lens, cum, tot, k, img: svg.querySelector("image"), L, T, done: -1, dur: Math.min(2.4, Math.max(0.95, DU[sc] * 0.8)) });
+  });
+  window.__drawWins = DRAW.map((o) => [ST[o.sc] - 0.05, ST[o.sc] - 0.05 + o.dur]);
+  function drawImgs(t) {
+    let pen = null;
+    DRAW.forEach((o) => {
+      const a = ST[o.sc] - 0.05, p = seg(t, a, a + o.dur);
+      // ease the pen speed slightly so it starts quick and settles at the end
+      const L = o.tot * (1 - Math.pow(1 - p, 1.6));
+      let i = 0; while (i < o.ps.length - 1 && o.cum[i + 1] <= L) i++;
+      if (o.done !== i) { // only touch strokes whose state changed
+        o.ps.forEach((q, j) => { if (j < i) q.setAttribute("stroke-dashoffset", 0); else if (j > i) q.setAttribute("stroke-dashoffset", o.lens[j] + 1); });
+        o.done = i;
+      }
+      const into = clamp(L - o.cum[i], 0, o.lens[i]);
+      o.ps[i].setAttribute("stroke-dashoffset", o.lens[i] + 1 - into);
+      o.img.setAttribute("opacity", seg(p, 0.82, 1));
+      if (p > 0 && p < 1) { const q = o.ps[i].getPointAtLength(into); pen = [o.L + q.x * o.k, o.T + q.y * o.k]; }
+    });
+    const P = $("pen");
+    if (pen) { P.style.opacity = 1; P.style.transform = `translate(${pen[0]}px, ${pen[1]}px)`; } else P.style.opacity = 0;
+  }
+
+  function render(t) {
+    let k = 0; for (let i = 0; i < 12; i++) if (t >= ST[i] - 0.12) k = i;
+    for (let i = 0; i < 12; i++) {
+      const s = $("s" + i), a = ST[i] - 0.12;
+      const on = i === k ? 1 : 0;
+      const p = back(seg(t, a, a + 0.32));
+      s.style.opacity = on * clamp(seg(t, a, a + 0.12));
+      s.style.transform = `scale(${0.94 + 0.06 * p})`;
+    }
+    if (k !== lastCap) { lastCap = k; $("cap").innerHTML = CAP[k]; }
+    $("cap").style.opacity = seg(t, ST[k] - 0.12, ST[k] + 0.08);
+    $("cap").style.transform = `translateY(${(1 - eo(seg(t, ST[k] - 0.12, ST[k] + 0.2))) * 16}px)`;
+    dots.forEach((d, i) => d.classList.toggle("on", i <= k));
+    $("rail").style.opacity = seg(t, 0.2, 0.5);
+
+    // scene details
+    $("flowClip").style.width = "1920px"; drawImgs(t);
+    $("n100").textContent = Math.round(100 * eo(seg(t, ST[3], ST[3] + 1.2)));
+    const ty = "소재 링크 붙여넣기", n = Math.floor(ty.length * seg(t, ST[8] - 0.1, ST[8] + 0.85));
+    $("typed").innerHTML = ty.slice(0, n) + (Math.floor(t * 3) % 2 ? "<s></s>" : "<s style='opacity:0'></s>");
+    [0, 1, 2].forEach((i) => {
+      const at = ST[9] + 0.15 + i * 0.85, on = t >= at ? 1 : 0;
+      if (on !== lastK[i]) { lastK[i] = on; $("k" + i).innerHTML = on ? CHECK : ""; }
+      if (on) $("k" + i).style.transform = `scale(${back(seg(t, at, at + 0.3))})`;
+    });
+    const lp = back(seg(t, ST[7] + 0.45, ST[7] + 0.85));
+    $("logo").style.transform = `scale(${t < ST[7] + 0.45 ? 0.0001 : lp})`;
+    $("logo").style.opacity = t < ST[7] + 0.45 ? 0 : 1;
+    $("cta").style.opacity = seg(t, ST[11] + 0.6, ST[11] + 0.8);
+    $("cta").style.transform = `scale(${0.6 + 0.4 * back(seg(t, ST[11] + 0.6, ST[11] + 0.95))})`;
+  }
+
+  window.__timelines = window.__timelines || {};
+  document.fonts.load('800 46px "Pretendard"').then(() => document.fonts.ready).then(() => {
+    const tl = gsap.timeline({ paused: true });
+    const P = { t: 0 };
+    tl.to(P, { t: D, duration: D, ease: "none", onUpdate: () => render(P.t) });
+    render(0);
+    window.__timelines["promo"] = tl;
+  });
+  render(0);
+})();
+</script>
+</body>
+</html>

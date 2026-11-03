@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="16" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(16);
+// P10 흑백에서 컬러로 (16초) — v4(Opus: 새 주인공 INKHERO(여), 흑백=gray 옵션→5.0 컬러 0.25초·카메라) / v3(Opus, ART_GATE_1: 전환 겹침 0·TV·폴더폰 부품) / v2(Opus): 주인공·스마트폰 = _assets, R1(무대 먼저)·R2(흑백 지침 → 컬러 설렘)·R4·R5·R8
+// 컷1 -~6.9 흑백 TV → 컬러 TV / 컷2 6.5~11.4 2G 폴더폰 → 스마트폰 / 컷3 11.2~ 2026년, 대단한 한 해. 문구·순서 v1(scene_v1.js) 그대로.
+function mkClip(id) { const defs = mk("defs", {}, S.svg); const cp = mk("clipPath", { id }, defs); return mk("circle", { cx: 0, cy: 0, r: 0 }, cp); }
+function reveal(L, id, cx, cy, a, b, rmax) { const c = mkClip(id); L.g.setAttribute("clip-path", "url(#" + id + ")"); c.setAttribute("cx", cx); c.setAttribute("cy", cy); S.on((t) => c.setAttribute("r", (eo(seg(t, a, b)) * rmax).toFixed(1))); }
+
+// ---- 거실(무대): 소파 + 바닥 ----
+function room(L) {
+  const back = rr(150, 560, 740, 420, 70); L.fill(back, "#E8C9A0", -99, 0.6); L.line(back, -99, 0.1, { w: 7 });
+  const a1 = rr(70, 700, 130, 300, 34), a2 = rr(840, 700, 130, 300, 34);
+  L.fill(a1, "#E8C9A0", -99, 0.75); L.line(a1, -99, 0.1, { w: 7 }); L.fill(a2, "#E8C9A0", -99, 0.75); L.line(a2, -99, 0.1, { w: 7 });
+  L.fill(rr(0, 1000, 1920, 80, 0), BEIGE, -99, 0.5); L.line(ln(0, 1000, 1920, 1000), -99, 0.1, { w: 6 });
+  shadow(L, 520, 1004, 920);
+}
+// ===== 컷1: 흑백 TV → 컬러 TV (TV = _assets prop.tv_crt / prop.tv_color) =====
+const c1 = cutL(S, -1, 6.5, { push: [1.0, 1.04], ox: 960, oy: 600 });
+const g1 = c1.sub({ gray: true });
+const gst = g1.sub({ stat: true }); room(gst);
+const cab = rr(1160, 800, 480, 200, 10); gst.fill(cab, "#C9A77C", -99, 0.6); gst.line(cab, -99, 0.1, { w: 7 });
+const h1 = { end: 1.35 };   // 주인공 펜 0.15~1.3 (아래 heroSeq, 방 위에 얹으려고 k1 뒤에 만든다)
+const tvg = art(g1.sub(), "prop.tv_crt", { x: 1400, y: 800, sc: 1.3, s: Math.max(0.6, h1.end), per: 0.03, opaque: true });
+g1.sub().vis(-1, 5.0, "fade").text("흑백 TV", { x: 1400, y: 870, size: 100, s: Math.max(3.0, tvg.end), anchor: "c", gap: 0.08 });
+// 4.9 컬러: 인물·방은 둥글게 퍼지며, TV 는 같은 자리에서 0.25초에 바뀐다(표정 지침 → 설렘)
+const k1 = c1.sub({ stat: true });
+mk("rect", { x: 0, y: 0, width: 1920, height: 1080, fill: "#FBF8F1" }, k1.fg); // 원 안에서 흑백 포즈가 비치지 않게 종이로 덮는다
+room(k1); k1.fill(cab, "#C9A77C", -99, 0.6); k1.line(cab, -99, 0.1, { w: 7 });
+reveal(k1, "cp1", 520, 520, 4.9, 5.9, 1700);
+heroSeq(c1, [["g_f_tired", 0, { s: 0.15, dur: 1.15, gray: true }], ["g_f_excited", 5.0, { gray: 5.0, cdur: 0.25 }]], { x: 520, y: 440, sc: 2.0 });
+const tvc = win(c1.sub({ stat: true }), 4.9, 1e9, 0.25);
+art(tvc, "prop.tv_color", { x: 1400, y: 800, sc: 1.3, opaque: true });
+c1.text("컬러 TV", { x: 1400, y: 870, size: 100, s: 5.0, anchor: "c", gap: 0.08 });
+
+// ===== 컷2: 2G 폴더폰 → 스마트폰 (prop.flipphone / prop.phone) =====
+const c2 = cutL(S, 6.5, 11.2, { pan: [24, -24] });
+const sfl = c2.sub({ stat: true }); sfl.fill(rr(0, 940, 1920, 140, 0), BEIGE, -99, 0.5); sfl.line(ln(0, 940, 1920, 940), -99, 0.1, { w: 6 });
+const g2 = c2.sub({ gray: true });
+const fp = art(g2.sub(), "prop.flipphone", { x: 560, y: 940, sc: 1.6, s: 6.5, per: 0.03, opaque: true });
+g2.sub().vis(-1, 9.6, "fade").text("2G 폴더폰", { x: 560, y: 200, size: 90, s: Math.max(7.8, fp.end), anchor: "c", gap: 0.06 });
+c2.line(pl([[820, 620], [970, 590], [1120, 620]]), 8.3, 0.25, { w: 9 }); c2.line(pl([[1080, 584], [1124, 620], [1078, 656]]), 8.55, 0.1, { w: 9, pen: false });
+const sp = art(c2.sub(), "prop.phone", { x: 1400, y: 940, sc: 2.7, s: 8.6, per: 0.06, opaque: true });
+const apps = win(c2.sub(), Math.max(9.5, sp.end - 0.2), 1e9, 0.2);
+["#F2B8B0", "#F4E28A", "#B9D6A8", "#BFA8E0", "#A8D2EA", "#F2B8B0"].forEach((c, i) => { const d = rr(1280 + (i % 2) * 130, 430 + Math.floor(i / 2) * 150, 110, 110, 26); apps.fill(d, c, -99, 0.95); apps.line(d, -99, 0.1, { w: 5 }); });
+c2.text("스마트폰", { x: 1400, y: 245, size: 90, s: Math.max(10.0, sp.end), anchor: "c", gap: 0.06 });
+
+// ===== 컷3: 2026년, 대단한 한 해 =====
+const c3 = cutL(S, 11.2, 1e9, { push: [1.04, 1.0] });
+const st3 = stageN(c3);
+st3.fill(rr(0, 1000, 1920, 80, 0), BEIGE, -99, 0.5); st3.line(ln(0, 1000, 1920, 1000), -99, 0.1, { w: 6 });
+st3.fill(ell(440, 640, 400, 400, { n: 30 }), "#F4E28A", -99, 0.38);
+heroSeq(c3, [["g_f_point_hope", 11.2], ["g_f_excited", 13.2]], { x: 420, y: 400, sc: 1.8, stat: true });
+const y1 = c3.text("2026", { x: 1060, y: 400, size: 230, font: "num", weight: 800, s: 11.7, gap: 0.1 });
+c3.text("년,", { x: y1.x + y1.w + 20, y: 400, size: 230, s: 12.26, gap: 0.1 });
+c3.text("대단한 한 해", { x: 1060, y: 760, size: 190, s: 12.62, gap: 0.08 });
+c3.circleMark(y1.box(0, 3), 13.2, 0.6, 34, 18);
+
+S.start();
+});
+</script></body></html>

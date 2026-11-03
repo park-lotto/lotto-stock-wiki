@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(12);
+/* P1~P5 장면 조립 보조 (공용 _assets/_lib_p 는 건드리지 않고 여기서만 감싼다)
+ * - 자산 아이템을 hq.js Layer 에 얹는다(좌우 반전·선 굵기 상한·무대 모드)
+ * - 주인공: 몸(뒤) / 머리(표정 묶음, 갈아끼움) / 앞팔·소품 세 층으로 나눠 그린다(R2: 표정 묶음 한 번에)
+ * - 무대(R1): 펜 없이 0.3초 선 + 0.25초 채색
+ */
+const K = (() => {
+  const A = INKASSETS, C = A.COLORS, W1 = A.W1, W2 = A.W2, W3 = A.W3;
+  const fx = (n) => (Math.round(n * 10) / 10).toString();
+  const RE = /(-?\d+(?:\.\d+)?)\s(-?\d+(?:\.\d+)?)/g;
+  const tr = (d, x, y, sx, sy) => d.replace(RE, (m, px, py) => fx(x + (+px) * sx) + " " + fx(y + (+py) * sy));
+  const H = (pts, closed, o) => A.H(pts, closed, o || {});
+
+  // 아이템 묶음 그리기. o: x,y,sc,mir,s,per,pen,wmax,stage
+  function items(L, its, o = {}) {
+    const x = o.x || 0, y = o.y || 0, sc = o.sc || 1, sx = o.mir ? -sc : sc, ws = Math.min(sc, o.wmax || 1.6);
+    const per = o.per || 0.1, stage = !!o.stage, pen = o.pen !== false && !stage;
+    const list = its.slice().sort((a, b) => (a.z || 0) - (b.z || 0));
+    let t = o.s || 0;
+    list.forEach((i) => {
+      const d = tr(i.d, x, y, sx, sc);
+      if (i.k === "fill") {
+        const ft = stage ? t : t + 0.2, fd = stage ? 0.25 : 0.3;
+        if (o.solid) { L.fill(d, "#FBF8F1", ft, 0.85, fd); L.fill(d, "#FBF8F1", ft, 0.85, fd); }   // 앞팔·손이 뒤 선을 비치지 않게
+        L.fill(d, i.c, ft, i.op, fd);
+      }
+      else {
+        const big = i.w >= W1 - 0.5, dur = stage ? 0.3 : (big ? per * 2.2 : per);
+        L.line(d, t, dur, { w: i.w * ws, c: i.c === C.INK ? undefined : i.c, pen: pen && big });
+        if (!stage) t += dur * (big ? 1 : 0.45);
+      }
+    });
+    return stage ? (o.s || 0) + 0.35 : t;
+  }
+  function shadow(L, cx, y, w, s) {
+    const pts = []; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; pts.push([cx + w / 2 * Math.cos(a), y + 12 * Math.sin(a)]); }
+    L.fill(H(pts, true, { jit: 0 }), C.INK, s, 0.1, 0.3);
+  }
+  // 자산 하나. o.keep(i, idx) 로 아이템 거르기
+  function asset(L, name, o = {}) {
+    const a = typeof name === "string" ? A.get(name, o.ao) : name;
+    let its = a.items; if (o.keep) its = its.filter(o.keep);
+    if (a.ground && o.ground !== false) { const [x0, , x1] = a.box, sc = o.sc || 1; shadow(L, (o.x || 0) + (x0 + x1) / 2 * sc * (o.mir ? -1 : 1), (o.y || 0) + 4 * sc, (x1 - x0) * 0.9 * sc, o.s || 0); }
+    return items(L, its, o);
+  }
+  // 주인공. o: pose, expr, view, look, tilt, x, y, sc, mir, s, per, stage, swaps:[{t, expr, view, look, tilt}], slump:{t, dy, r}
+  function hero(P, o) {
+    const mk = (e) => A.hero({ pose: o.pose, expr: e.expr, view: e.view || o.view || "front", look: e.look || o.look, tilt: e.tilt !== undefined ? e.tilt : o.tilt });
+    const h0 = mk(o), body = P.sub(), heads = [];
+    const back = h0.items.filter((i) => (i.z || 0) < 0), headIt = (h) => h.items.filter((i) => (i.z || 0) === 0), fr = h0.items.filter((i) => (i.z || 0) > 0 && (!o.dropFront || !o.dropFront(i)));
+    const g = { x: o.x, y: o.y, sc: o.sc, mir: o.mir, per: o.per || 0.08, stage: o.stage, wmax: o.wmax };
+    // 몸 → 머리 → 앞팔. 머리 층은 몸 선 위(몸 선을 먼저 붙인 뒤 머리 층을 만든다)·앞팔 아래
+    let t = items(body, back, { ...g, s: o.s, per: (o.per || 0.08) * 0.6, pen: false });
+    const H0 = body.sub(); heads.push(H0);
+    t = items(H0, headIt(h0), { ...g, s: o.stage ? o.s : t });
+    if (o.mid) o.mid(P);
+    const front = P.sub();
+    const tf = items(front, fr, { ...g, s: o.stage ? o.s : t, per: (o.per || 0.08) * 0.8, solid: true });
+    // 표정 갈아끼우기: 새 머리는 미리 그려 두고 0.25초 교차
+    const sw = o.swaps || [];
+    sw.forEach((e, k) => {
+      const Hk = body.sub(); heads.push(Hk);
+      items(Hk, headIt(mk({ ...o, ...e })), { ...g, s: e.t - 1.2, stage: true });
+    });
+    const T = [-1e9].concat(sw.map((e) => e.t), [1e9]);
+    heads.forEach((Hk, k) => {
+      const a = T[k], b = T[k + 1];
+      Hk.xf((t) => ({ o: (k === 0 ? 1 : clamp((t - a) / 0.25)) * (b > 1e8 ? 1 : 1 - clamp((t - b) / 0.25)) }));
+    });
+    // 어깨 처짐(몸·머리 같이 내려앉음)
+    if (o.slump) {
+      const S = o.slump, cx = o.x, cy = o.y;
+      const k = (t) => eo(seg(t, S.t, S.t + (S.dur || 0.6)));
+      body.xf((t) => ({ y: k(t) * (S.dy || 18), r: k(t) * (S.r || 0) * (o.mir ? -1 : 1), ox: cx, oy: cy + 300 * o.sc }));
+      front.xf((t) => ({ y: k(t) * (S.dy || 18) * 0.8 }));
+    }
+    return { end: tf, body, front, heads };
+  }
+  // 무대 선·채색 (펜 없음, 0.3초 + 0.25초)
+  function stg(L, pts, s, o = {}) {
+    const d = typeof pts === "string" ? pts : H(pts, o.closed !== false, { jit: o.jit === undefined ? 0.8 : o.jit, over: o.over });
+    if (o.solid) { L.fill(d, "#FBF8F1", s, 0.85, 0.2); L.fill(d, "#FBF8F1", s, 0.85, 0.2); L.fill(d, "#FBF8F1", s, 0.85, 0.2); }
+    if (o.fill) L.fill(d, o.fill, s, o.op === undefined ? 0.4 : o.op, 0.25);
+    if (o.w !== 0) L.line(d, s + (o.d || 0), o.dur || 0.3, { w: o.w || W1, c: o.c, pen: o.pen === true });
+    return d;
+  }
+  // 모서리가 살아 있는 다각형 점(닫힌 H 가 둥근 렌즈가 되지 않게 모서리마다 점 2개)
+  function Q(pts, r = 8) {
+    const n = pts.length, out = [];
+    pts.forEach((p, i) => { const a = pts[(i - 1 + n) % n], b = pts[(i + 1) % n];
+      const la = Math.hypot(a[0] - p[0], a[1] - p[1]) || 1, lb = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+      out.push([p[0] + (a[0] - p[0]) * r / la, p[1] + (a[1] - p[1]) * r / la]); out.push([p[0] + (b[0] - p[0]) * r / lb, p[1] + (b[1] - p[1]) * r / lb]); });
+    return out;
+  }
+  // 컷 창(ART_GATE_1 C1): 앞 컷 끝 = 뒤 컷 시작, 겹침 0. 무대는 a 전에 다 그려 두고 a 에 즉시 교체
+  function cut(a, b) { return S.layer().xf((t) => ({ o: t < a || t >= b ? 0 : 1 })); }   // 종이 넘김 = 즉시 교체
+  return { cut, Q, A, C, W1, W2, W3, H, RR: A.RR, O: A.O, items, asset, hero, stg, shadow, tr };
+})();
+
+// 새 주인공 시험(INKHERO.put) — P1 무대 일부 + 여(컷A 펜→컬러) / 남(컷B 펜→컬러, 5.6 정지 교체) / 여(컷C 회색→9.0 컬러 0.25초)
+const { H, RR, O, stg, C: KC } = K;
+const LEG = location.hash === "#legacy";   // 전후 비교용(옛 꺾은선 방식)
+const NIGHT = "#3E4F73", SUN = "#F2D27A";
+// ===== 컷 A 0~3.8: 여 g_f_night_phone (펜 0.35~1.7, 컬러 2.0) =====
+const cA = K.cut(-1, 3.8);
+const A0 = cA.sub();
+stg(A0, RR(120, 170, 310, 380, 14), -0.3, { fill: NIGHT, op: 0.45 });
+stg(A0, RR(1500, 640, 290, 400, 10), -0.25, { fill: KC.BEIGE, op: 0.5 });
+const hA = INKHERO.put(cA, "g_f_night_phone", { x: 960, y: 395, sc: 1.75, s: 0.35, dur: 1.35, legacy: LEG });
+// ===== 컷 B 3.8~7.0: 남 g_m_tired (펜 3.85~5.0, 컬러 5.3) → 5.6 g_m_excited 정지 교체 =====
+const cB = K.cut(3.8, 7.0);
+stg(cB.sub(), [[60, 996], [1860, 996]], 3.45, { closed: false });
+INKHERO.put(cB, "g_m_tired", { x: 1180, y: 430, sc: 1.7, s: 3.85, dur: 1.15, win: [3.8, 5.6], legacy: LEG });
+INKHERO.put(cB, "g_m_excited", { x: 1180, y: 430, sc: 1.7, stat: true, win: [5.6, 7.0] });
+const B1 = cB.sub();
+B1.text("쇼츠로", { x: 560, y: 380, size: 112, font: "num", weight: 800, anchor: "c", s: 4.0, gap: 0.09 });
+// ===== 컷 C 7.0~12: 여 g_f_laptop_hope (펜 7.05~8.2, 컬러 8.5) 회색 → 9.0 에 0.25초 컬러(P10 방식) =====
+const cC = K.cut(7.0, 1e9);
+INKHERO.put(cC, "g_f_laptop_hope", { x: 1490, y: 355, sc: 1.6, s: 7.05, dur: 1.15, gray: 9.0, cdur: 0.25 });
+cC.sub().text("다 해 보셨을 텐데, 결과는요?", { x: 150, y: 952, size: 110, s: 9.25, gap: 0.045 });
+
+S.start();
+});
+</script></body></html>

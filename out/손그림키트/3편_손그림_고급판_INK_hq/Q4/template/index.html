@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 55%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.10"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script>
+<script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script>
+<script src="brand/qkit.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(12);
+// Q4 해결 방향 (12초) — 탁자 위에 ① 쉬운 시스템 ② 여러 채널 노하우, 형광 동그라미
+// v3(2026-10-29 밤): 새 주인공 INKHERO(g_m_point_hope → 8.8 g_m_excited 정지 교체), 탁자 앞에 세워 60% 이상 보이게, 카메라 살짝 밀기
+const base = S.layer(); base.xf((t) => ({ s: 1 + 0.035 * eo(seg(t, 0, 11)), ox: 1000, oy: 560 }));
+// 무대: 탁자 뒷면 (0~0.3초 opacity)
+const st = QK.stage(base, -0.3);
+st.shape(rr(240, 860, 1660, 40, 8), 0, 0.1, BEIGE, { op: 0.6, w: 7 });
+// 주인공 — 왼쪽 1칸, 오른손으로 물건을 가리킨다. 기대 → 8.8초 설렘
+// 탁자
+const front = QK.stage(base, -0.3);
+front.fill(poly([[300, 1060], [1840, 1060], [1820, 1078], [320, 1078]], 6), INK, 0, 0.1);
+front.fill(rr(290, 900, 1560, 162, 6), "#EFE4CB", 0, 1); front.shape(rr(290, 900, 1560, 162, 6), 0, 0.1, "#EFE4CB", { op: 0.95, w: 7 });
+front.line(ln(320, 932, 1820, 932), 0, 0.1, { w: 4 });
+front.fill(rr(240, 860, 1660, 40, 8), "#E9DCBF", 0, 1); front.shape(rr(240, 860, 1660, 40, 8), 0, 0.1, "#E9DCBF", { op: 0.95, w: 7 });
+// 새 주인공(남, 탁자 앞에 선다 — 화면 높이 60% 이상 보이게): 물건을 가리키며 기대(펜 0~1.2) → 8.8 양 주먹 설렘(정지 교체)
+const H = QK.person(base, "g_m_point_hope", { x: 360, y: 560, H: 879, s: 0.0, dur: 1.0, win: [-1, 8.8] });
+QK.person(base, "g_m_excited", { x: 360, y: 562, H: 790, stat: true, win: [8.8, 1e9] });
+const num = (L, cx, cy, n, s) => { L.shape(ell(cx, cy, 54, 54, { n: 18 }), s, 0.32, "#FFFFFF", { op: 0.9, w: 7 }); return L.text(String(n), { x: cx, y: cy + 6, size: 78, font: "num", weight: 800, s: s + 0.34, anchor: "c" }); };
+// ① 쉬운 시스템 — 버튼 하나 달린 상자 (핵심 소품: 펜)
+const bx = 1100, by = 440, bw = 300, bh = 420, b1 = Math.max(2.4, H.end + 0.05);
+base.fill(poly([[bx - 10, 862], [bx + bw + 10, 862], [bx + bw, 878], [bx, 878]], 6), INK, b1, 0.1);
+base.shape(rr(bx, by, bw, bh, 22), b1, 0.55, SKY, { op: 0.5, w: 7 });
+const b0 = b1 + 0.6;
+base.shape(rr(bx + 30, by + 34, bw - 60, 110, 10), b0, 0.2, "#FFFFFF", { op: 0.9, w: 4, pen: false });
+base.line(ln(bx + 52, by + 70, bx + bw - 60, by + 70), b0 + 0.1, 0.15, { w: 4, pen: false }); base.line(ln(bx + 52, by + 104, bx + 190, by + 104), b0 + 0.15, 0.15, { w: 4, pen: false });
+const bt = ell(bx + bw / 2, by + 270, 82, 82, { n: 22 }); base.shape(bt, b0 + 0.2, 0.3, PINK, { op: 0.7, w: 7, pen: false });
+base.line(ell(bx + bw / 2, by + 270, 56, 56, { n: 18 }), b0 + 0.4, 0.2, { w: 4, pen: false });
+base.fill(ell(bx + bw / 2 - 18, by + 252, 16, 10, { n: 10 }), "#FFFFFF", b0 + 0.6, 0.8);
+const n1 = num(base, bx + bw / 2, 150, 1, 4.4);
+base.text("쉬운 시스템", { x: bx + bw / 2, y: 300, size: 76, font: "gae", s: n1.end + 0.1, anchor: "c", gap: 0.09 });
+// ② 여러 채널 노하우 — 채널 폰 3대(부채꼴로 세움)
+const ph = [[1515, -6, 5.6], [1655, 0, 6.1], [1795, 6, 6.6]];
+ph.forEach(([x, r, s], i) => {
+  const P = QK.pop(base, s, 1e9, x, 860); const R = P.sub(); R.xf(() => ({ r, ox: x, oy: 860 }));
+  QK.put(R, "prop.phone", { x, y: 860, sc: 1.4, s: 0, drop: [5, 6, 7, 9] });
+  const cy = 860 - 105 * 1.4; // 화면 가운데
+  const D = base.sub(); D.xf(() => ({ r, ox: x, oy: 860 }));
+  if (i === 0) { D.shape(poly([[x - 24, cy - 40], [x - 24, cy + 40], [x + 36, cy]], 6, true, 0.3), s + 0.25, 0.25, ORG, { op: 0.8, w: 5, pen: false }); }
+  if (i === 1) { D.shape(ell(x, cy - 52, 26, 26, { n: 12 }), s + 0.25, 0.2, PINK, { op: 0.8, w: 5, pen: false }); [0, 1, 2].forEach((k) => D.line(ln(x - 40, cy + 6 + k * 30, x + 40 - k * 16, cy + 6 + k * 30), s + 0.35 + k * 0.06, 0.12, { w: 5, pen: false })); }
+  if (i === 2) [0, 1, 2, 3].forEach((k) => { const h = 30 + k * 26; D.shape(rr(x - 46 + k * 24, cy + 70 - h, 16, h, 3), s + 0.25 + k * 0.06, 0.12, ORG, { op: 0.8, w: 4, pen: false }); });
+});
+const n2 = num(base, 1655, 150, 2, 7.5);
+const l2 = base.text("여러 채널", { x: 1655, y: 270, size: 76, font: "gae", s: n2.end + 0.1, anchor: "c", gap: 0.07 });
+base.text("노하우", { x: 1655, y: 360, size: 76, font: "gae", s: l2.end + 0.02, anchor: "c", gap: 0.07 });
+// 결론 손글씨 — 탁자 앞판에 크게
+const tx = base.text("결국 필요한 건 이 두 가지", { x: 1180, y: 990, size: 124, s: 9.0, anchor: "c", gap: 0.07 });
+base.circleMark(tx.box(11, 14), 10.0, 0.6, 28, 12);
+
+S.start();
+});
+</script></body></html>

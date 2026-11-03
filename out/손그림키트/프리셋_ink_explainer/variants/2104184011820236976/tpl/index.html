@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="UTF-8"><script src="brand/gsap.min.js"></script>
+<!-- ink_explainer 변형: 굵은 펜 아이콘 설명 → 가는 손떨림 선 + 연필이 직접 그리는 화이트보드(영상 상자·의자에 앉은 막대인간 줄·시청 유지율 축·일본어 손글씨), 원작 jasonzhu/production/2104184011820236976 앞 10초 -->
+<style>html,body{margin:0}#stage{position:relative;width:1280px;height:720px;overflow:hidden;background:#fff}canvas{position:absolute;left:0;top:0}</style></head><body>
+<div id="stage" data-composition-id="retain" data-start="0" data-duration="10" data-width="1280" data-height="720"><canvas id="c" width="1280" height="720"></canvas></div>
+<script>
+(function(){const D=10,g=document.getElementById('c').getContext('2d');const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>{p=cl(p);return p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2};
+const J=(x,y,k)=>[x+Math.sin(x*.07+y*.13+k)*1.1,y+Math.cos(x*.11-y*.05+k)*1.1];
+// 도형 = 점 목록. 그리기 [시작초, 끝초, 점들]
+function L(a,b,n=24){const o=[];for(let i=0;i<=n;i++)o.push(J(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n,i));return o}
+function poly(pts){let o=[];for(let i=0;i<pts.length-1;i++)o=o.concat(L(pts[i],pts[i+1]));return o}
+function circ(cx,cy,r,n=30){const o=[];for(let i=0;i<=n;i++){const a=-1.6+i/n*6.3;o.push(J(cx+Math.cos(a)*r,cy+Math.sin(a)*r,i))}return o}
+function person(x,y){const S=1.7,P=(px,py)=>[x+(px-x)*S,y+(py-y)*S]; // 의자에 앉은 막대인간(발 y), 1.7배
+ const R=[circ(x,y-120,13),L([x,y-107],[x,y-62]),poly([[x,y-62],[x+22,y-62],[x+22,y]]),L([x,y-62],[x,y]),poly([[x-4,y-95],[x+16,y-75]]),poly([[x-18,y-110],[x-18,y]]),poly([[x-18,y-55],[x+28,y-55],[x+28,y]])];return R.map(pp=>pp.map(q=>P(q[0],q[1])));
+ return [circ(x,y-120,13),L([x,y-107],[x,y-62]),poly([[x,y-62],[x+22,y-62],[x+22,y]]),L([x,y-62],[x,y]),poly([[x-4,y-95],[x+16,y-75]]),poly([[x-18,y-110],[x-18,y]]),poly([[x-18,y-55],[x+28,y-55],[x+28,y]])]}
+const S=[]; // [t0,t1,path,layer]
+function add(t0,t1,paths,lay){const tot=paths.length;paths.forEach((p,i)=>S.push([t0+(t1-t0)*i/tot,t0+(t1-t0)*(i+1)/tot,p,lay]))}
+// 층 0: 영상 상자, 층 1: 사람 줄, 층 2: 그래프
+add(0,1.1,[poly([[60,40],[360,40],[360,250],[60,250],[60,40]])],0);add(1.1,1.5,[poly([[180,100],[180,170],[240,135],[180,100]])],0);add(1.5,1.8,[L([75,232],[345,232])],0);
+add(.2,1.0,[L([0,640],[1280,640],60)],1);
+for(let k=0;k<5;k++)add(1.6+k*.45,2.0+k*.45,person(560+k*165,640),1);
+add(5.0,5.6,[L([440,330],[440,90]),poly([[430,105],[440,90],[450,105]])],2);add(7.4,8.2,[L([440,330],[1230,330],40),poly([[1215,320],[1230,330],[1215,340]])],2);add(8.0,8.4,[poly([[440,95],[475,95]])],2);
+const TX=[[2.4,4.6,'どこまで？',720,330,1],[7.9,99,'視聴者維持率',820,60,2],[8.2,99,'時間',1210,368,2]];
+function cam(t){ // 장면 배치: [배율, x, y] 층별
+ const a=E((t-4.4)/.8);return {box:[1-.0*a,0,0],row:[1-.12*a,40*a,40*a]}}
+function draw(t){g.fillStyle='#fff';g.fillRect(0,0,1280,720);g.strokeStyle='#161616';g.lineWidth=2.2;g.lineCap='round';g.lineJoin='round';let tip=null;
+ const c=cam(t);for(const [a,b,p,lay] of S){if(t<a)continue;const k=cl((t-a)/(b-a)),n=Math.max(1,Math.floor(p.length*k));const tf=lay==1?c.row:c.box;g.save();g.translate(tf[1],tf[2]);if(lay==1){g.translate(640,640);g.scale(tf[0],tf[0]);g.translate(-640,-640)}
+  g.beginPath();g.moveTo(p[0][0],p[0][1]);for(let i=1;i<n;i++)g.lineTo(p[i][0],p[i][1]);g.stroke();if(k<1){const q=p[n-1];const m=g.getTransform();tip=[m.a*q[0]+m.e,m.d*q[1]+m.f]}g.restore()}
+ g.fillStyle='#161616';g.textAlign='center';for(const [a,b,s,x,y,lay] of TX){if(t<a||t>b)continue;const n=Math.min(s.length,Math.floor((t-a)/.12)+1);g.font='36px "Yu Gothic"';g.fillText(s.slice(0,n),x,y);if(s=='視聴者維持率'&&t>8.9){g.fillRect(x-80,y+10,160*cl((t-8.9)/.4),2)}if(n<s.length)tip=tip||[x+13*n,y-10]}
+ if(t>9.2){g.lineWidth=1.8;g.beginPath();g.ellipse(1250,430,28,16,0,0,7);g.stroke();g.beginPath();g.arc(1238,470,4,0,7);g.stroke();g.font='18px "Yu Gothic"';g.fillText('…',1250,434)}
+ if(t>3.1&&t<4.6){g.lineWidth=2.2;g.beginPath();g.moveTo(1225,640);g.lineTo(1225,545);g.lineTo(1265,545);g.stroke()}
+ if(tip&&t<9.6){const [x,y]=tip;g.save();g.translate(x,y);g.rotate(-.75);g.fillStyle='#fff';g.strokeStyle='#161616';g.lineWidth=2;g.beginPath();g.moveTo(0,0);g.lineTo(10,-6);g.lineTo(62,-6);g.lineTo(62,6);g.lineTo(10,6);g.closePath();g.fill();g.stroke();g.beginPath();g.moveTo(10,-6);g.lineTo(10,6);g.moveTo(52,-6);g.lineTo(52,6);g.stroke();g.fillStyle='#161616';g.beginPath();g.moveTo(0,0);g.lineTo(4,-2.4);g.lineTo(4,2.4);g.fill();g.restore()}}
+window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true});const P={t:0};tl.to(P,{t:D,duration:D,ease:'none',onUpdate:()=>draw(P.t)});window.__timelines['retain']=tl;draw(0)})();
+</script></body></html>

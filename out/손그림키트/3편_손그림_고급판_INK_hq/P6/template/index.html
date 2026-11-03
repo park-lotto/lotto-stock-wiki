@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(12);
+// P6 진짜 바라는 것 (12초) — v3(Opus: 새 주인공 INKHERO(여)·전환 겹침 0·컷마다 카메라) / v2(Opus): 판정서 P6 지시대로 1컷 → 3컷, _assets 주인공, R1~R8
+// 컷1 0~3.2 생각에 잠김(얼굴 클로즈업) / 컷2 3.2~9.4 두 소망(구름 고정, 내용물만 교체) / 컷3 9.4~12 이 두 가지 아닙니까
+// 문구·순서는 v1 그대로(scene_v1.js). 2손가락 손 자산이 없어 컷3 은 bust.point(가리키기)로 대신했다.
+
+// ================= 컷1: 생각에 잠김 (0 ~ 3.2) =================
+const c1 = cutL(S, -1, 3.2, { push: [1.0, 1.06], ox: 700, oy: 480 });
+const st1 = stageN(c1);
+st1.fill(ell(700, 600, 600, 520, { n: 30 }), SKY, -99, 0.42);          // 무대: 인물 뒤 하늘색 바탕
+// 새 주인공(여) 꿈꾸는 얼굴 클로즈업 — 펜 0.05~1.0, 컬러 자동(펜 끝+0.3). 카메라 천천히 밀기
+INKHERO.put(c1, "g_f_dream", { x: 700, y: 470, sc: 3.0, s: 0.05, dur: 0.95 });
+const tr1 = c1.sub();
+[[1090, 400, 24], [1190, 310, 36], [1330, 210, 54]].forEach(([x, y, r], i) => { const d = ell(x, y, r, r, { n: 12 }); tr1.fill(d, "#FFFFFF", 1.85 + i * 0.15, 0.9, 0.2); tr1.line(d, 1.85 + i * 0.15, 0.18, { w: 7 }); });
+
+// ================= 컷2: 두 소망 (3.2 ~ 9.4) =================
+const c2 = cutL(S, 3.2, 9.4, { pan: [24, -24] });
+const st2 = stageN(c2);
+st2.fill(rr(0, 930, 1920, 150, 0), BEIGE, -99, 0.5); st2.line(ln(0, 930, 1920, 930), -99, 0.1, { w: 5, pen: false });
+// 구름 — 사람 뒤. 윤곽은 3.4~4.0 한 번만, 내용물만 교체(R6)
+const CL = cloud(1280, 470, 590, 400, 12, 0.055);
+const cl2 = c2.sub(); cl2.fill(CL, "#FFFFFF", 3.25, 0.95, 0.25); cl2.line(CL, 3.4, 0.6, { w: 8 });
+// 주인공(노트북 앞) — 이미 본 사람이라 그려진 채 등장, 6.6 에 기대 → 설렘
+heroSeq(c2, [["g_f_laptop_hope", 3.2], ["g_f_excited", 6.6]], { x: 390, y: 420, sc: 1.9, stat: true });
+const tr2 = c2.sub();
+[[640, 360, 14], [690, 310, 20]].forEach(([x, y, r]) => { const d = ell(x, y, r, r, { n: 12 }); tr2.fill(d, "#FFFFFF", 3.3, 0.95, 0.2); tr2.line(d, 3.3, 0.1, { w: 6, pen: false }); });
+// 풍선 ① 좋아하는 채널 (4.0 ~ 6.4)
+const b1 = win(c2.sub(), 4.0, 6.4, 0.15);
+const th1 = rr(1000, 270, 560, 350, 22); b1.fill(th1, SKY, 4.0, 0.55, 0.25); b1.line(th1, 4.05, 0.45, { w: 8 });
+const pl1 = poly([[1225, 380], [1225, 510], [1335, 445]], 8, true, 0.5); b1.line(pl1, 4.5, 0.25, { w: 7 }); b1.fill(pl1, "#FFFFFF", 4.6, 0.9, 0.2);
+b1.line(ln(1040, 580, 1300, 580), 4.75, 0.15, { w: 5, pen: false }); b1.line(ln(1040, 600, 1200, 600), 4.8, 0.15, { w: 4, pen: false });
+b1.text("저 채널 스타일,", { x: 1000, y: 710, size: 84, font: "gae", s: 4.95, gap: 0.05 });
+b1.text("나도 그대로", { x: 1000, y: 810, size: 84, font: "gae", s: 5.45, gap: 0.05 });
+// 풍선 ② 돋보기로 원본 (6.6 ~ 9.4)
+const b2 = win(c2.sub(), 6.6, 9.4, 0.15);
+const th2 = rr(1000, 270, 560, 350, 22); b2.fill(th2, BEIGE, 6.6, 0.6, 0.25); b2.line(th2, 6.6, 0.1, { w: 8, pen: false });
+b2.line(poly([[1150, 380], [1150, 510], [1260, 445]], 8, true, 0.5), 6.6, 0.1, { w: 7, pen: false });
+const lens = ell(1560, 470, 120, 120, { n: 26 });
+b2.fill(lens, "#FFFFFF", 6.65, 0.92, 0.25); b2.line(lens, 6.7, 0.45, { w: 9 }); b2.line(ln(1645, 560, 1735, 650), 7.15, 0.2, { w: 16 });
+b2.text("원본", { x: 1560, y: 475, size: 84, font: "gae", s: 7.4, anchor: "c" });
+const bp = []; for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, r = i % 2 ? 30 : 58; bp.push([1720 + r * Math.cos(a), 250 + r * Math.sin(a)]); }
+b2.fill(poly(bp, 0, true, 0), ORG, 7.6, 0.55, 0.2); b2.line(poly(bp, 0, true, 0.6), 7.6, 0.3, { w: 6, pen: false });
+b2.text("원본만 찾으면,", { x: 1000, y: 710, size: 84, font: "gae", s: 7.7, gap: 0.05 });
+b2.text("나도 터지는 영상", { x: 1000, y: 810, size: 84, font: "gae", s: 8.2, gap: 0.05 });
+
+// ================= 컷3: 이 두 가지 아닙니까 (9.4 ~ 12) =================
+const c3 = cutL(S, 9.4, 1e9, { push: [1.04, 1.0], ox: 960, oy: 540 });
+const st3 = stageN(c3);
+st3.fill(rr(0, 1000, 1920, 80, 0), BEIGE, -99, 0.5); st3.line(ln(0, 1000, 1920, 1000), -99, 0.1, { w: 5, pen: false });
+st3.fill(ell(560, 600, 420, 420, { n: 30 }), "#F4E28A", -99, 0.38);
+heroSeq(c3, [["g_f_point_hope", 9.4], ["g_f_excited", 10.4]], { x: 430, y: 380, sc: 1.8, stat: true });
+const e1 = c3.text("이 두 가지", { x: 1150, y: 360, size: 190, s: 9.5, gap: 0.06 });
+const e2 = c3.text("아닙니까", { x: 1150, y: 600, size: 190, s: 9.97, gap: 0.06 });
+c3.underline(e1.box(2, 5), 10.4, 0.3);
+
+S.start();
+});
+</script></body></html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(14);
+// P9 일꾼 배분 (14초) — v4(Opus: 새 주인공 INKHERO(남)·카메라) / v3(Opus, ART_GATE_1: 전환 겹침 0·조직도 1.6배·이름표 72px·결론 12.4/밑줄 12.7) / v2(Opus): 직급 = _assets rank.director/manager/staff(라이브 56:30 3단계), 동전 = prop.coin, 주인공 = _assets, R1~R8
+// 컷1 -~9.4 조직도 + 서류 배분 / 컷2 9.0~11.6 크레딧 일정하게 / 컷3 11.4~ 크레딧, 비정상으로 나가지 않게
+// 문구는 v1(scene_v1.js) 그대로. 아래 줄 이름표 대리/사원/사원 → 과장(소넷)/사원(하이쿠)/사원(하이쿠), 위 부장(오푸스·페이블) — README RANK_LABEL.
+// R4 때문에 컷2→3 경계를 11.8 → 11.4 로 0.4초 당겼다(결론 글씨가 끝 −1.3초에 끝나도록).
+function docSheet(L, x, y, w = 96, h = 70, yel = false) {
+  const d = rr(x, y, w, h, 5); L.fill(d, yel ? "#F4E28A" : "#FFFFFF", -99, 0.95); L.line(d, -99, 0.1, { w: 4.5, pen: false });
+  for (let i = 0; i < 3; i++) L.line(ln(x + 12, y + 18 + i * 17, x + w - 14 - (i === 2 ? 26 : 0), y + 18 + i * 17), -99, 0.1, { w: 3.5, pen: false });
+}
+
+// ===== 컷1: 조직도 + 서류 배분 (ART_GATE_1: 1.6배, 이름표 72px, 쪽지 150×110) =====
+const c1 = cutL(S, -1, 9.0, { push: [1.0, 1.04], ox: 900, oy: 520 });
+const st1 = stageN(c1);
+const ib = rr(90, 90, 340, 140, 18); st1.fill(ib, BEIGE, -99, 0.7); st1.line(ib, -99, 0.1, { w: 7 });
+st1.text("서류", { x: 260, y: 165, size: 84, font: "gae", anchor: "c" });
+st1.fill(rr(0, 980, 1920, 100, 0), BEIGE, -99, 0.4); st1.line(ln(0, 980, 1920, 980), -99, 0.1, { w: 5 });
+// 조직선(무대)
+st1.line(ln(1180, 470, 1180, 500), -99, 0.1, { w: 7 }); st1.line(ln(260, 500, 1380, 500), -99, 0.1, { w: 7 });
+st1.line(ln(260, 230, 260, 500), -99, 0.1, { w: 7 });
+[[420, 545], [900, 580], [1380, 580]].forEach(([x, y]) => st1.line(ln(x, 500, x, y), -99, 0.1, { w: 7 }));
+st1.line(pl([[435, 170], [700, 205], [1000, 290]]), -99, 0.1, { w: 7 }); st1.line(pl([[962, 262], [1002, 291], [958, 310]]), -99, 0.1, { w: 7 });
+// 부장 — 펜
+const rd = art(c1.sub(), "rank.director", { x: 1180, y: 470, sc: 1.1, s: 0.1, per: 0.03, opaque: true });
+c1.text("부장(사장)", { x: 1380, y: 220, size: 72, font: "gae", s: Math.max(1.3, rd.end), gap: 0.04 });
+c1.text("오푸스·페이블", { x: 1380, y: 315, size: 64, font: "gae", s: Math.max(1.3, rd.end) + 0.46, gap: 0.035 });
+// 아래 줄 — 하나씩 나타남(이미 그려진 채)
+const row = [["manager", 420, "과장 · 소넷"], ["staff", 900, "사원 · 하이쿠"], ["staff", 1380, "사원 · 하이쿠"]];
+row.forEach(([k, x, lab], i) => {
+  const L = c1.sub({ stat: true }).vis(2.3 + i * 0.25, 1e9, "pop");
+  art(L, "rank." + k, { x, y: 980, sc: 1.0, opaque: true });
+  c1.text(lab, { x, y: x === 420 ? 598 : 650, size: 72, font: "gae", s: 2.75 + i * 0.45, anchor: "c", gap: 0.035 });
+});
+// 깊이 판단 → 부장 (노란 서류 2장)
+for (let k = 0; k < 2; k++) {
+  const L = c1.sub(), t0 = 4.0 + k * 0.9; L.vis(t0 - 0.05, 1e9, "none"); docSheet(L, -75, -55, 150, 110, true);
+  L.xf((t) => { const p = eo(seg(t, t0, t0 + 0.9)); return { x: 440 + (930 - 440) * p, y: 165 + (380 - k * 18 - 165) * p, ox: 0, oy: 0 }; });
+}
+c1.text("깊이 판단", { x: 680, y: 120, size: 90, font: "gae", s: 4.6, anchor: "c", gap: 0.05 });
+// 단순히 보는 일 → 아래 줄 (흰 서류 6장)
+const TX = [610, 1050, 1530];
+for (let k = 0; k < 6; k++) {
+  const L = c1.sub(), t0 = 5.5 + k * 0.4, tx = TX[k % 3], ty = 915 - Math.floor(k / 3) * 16; L.vis(t0 - 0.05, 1e9, "none"); docSheet(L, -75, -55, 150, 110);
+  L.xf((t) => {
+    const p1 = eo(seg(t, t0, t0 + 0.4)), p2 = eo(seg(t, t0 + 0.4, t0 + 0.9)), p3 = eo(seg(t, t0 + 0.9, t0 + 1.2));
+    const x = 260 + (tx - 260) * p2, y = 290 + (500 - 290) * p1 + (ty - 500) * p3;
+    return { x, y, ox: 0, oy: 0 };
+  });
+}
+c1.text("단순히 보는 일", { x: 600, y: 400, size: 90, font: "gae", s: 6.8, anchor: "c", gap: 0.05 });
+
+// ===== 컷2: 크레딧이 일정하게 =====
+const c2 = cutL(S, 9.0, 11.4, { pan: [20, -20] });
+const st2 = stageN(c2);
+const bag = ell(300, 580, 200, 210, { n: 26 }); st2.fill(bag, BEIGE, -99, 0.7); st2.line(bag, -99, 0.1, { w: 8 });
+st2.line(pl([[230, 380], [300, 350], [370, 380]]), -99, 0.1, { w: 7 }); shadow(st2, 300, 795, 400);
+const pipeT = rr(500, 560, 1040, 90, 10); st2.fill(pipeT, "#CFD6DA", -99, 0.6); st2.line(ln(500, 560, 1540, 560), -99, 0.1, { w: 7 }); st2.line(ln(500, 650, 1540, 650), -99, 0.1, { w: 7 });
+const gauge = rr(1560, 400, 300, 380, 22); st2.fill(gauge, SKY, -99, 0.5); st2.line(gauge, -99, 0.1, { w: 8 }); shadow(st2, 1710, 795, 300);
+st2.fill(rr(1580, 560, 260, 200, 12), "#F2D27A", -99, 0.75);
+for (let i = 0; i < 4; i++) st2.line(ln(1580, 470 + i * 70, 1650, 470 + i * 70), -99, 0.1, { w: 5 });
+const cn = art(c2.sub(), "prop.coin", { x: 300, y: 700, sc: 1.25, s: 9.1, per: 0.04 });
+c2.text("크레딧", { x: 960, y: 160, size: 110, font: "gae", s: Math.max(9.6, cn.end), anchor: "c", gap: 0.06 });
+for (let i = 0; i < 6; i++) { const L = c2.sub({ stat: true }); L.vis(9.9, 1e9, "none"); art(L, "prop.coin", { x: 0, y: 0, sc: 0.36, shadow: false }); L.xf((t) => ({ x: 560 + ((t * 260 + i * 170) % 960), y: 641, ox: 0, oy: 0 })); }
+c2.text("일정하게", { x: 1030, y: 790, size: 100, font: "gae", s: 10.6, anchor: "c", gap: 0.06 });
+
+// ===== 컷3: 마무리 — 크레딧, 비정상으로 나가지 않게 =====
+const c3 = cutL(S, 11.4, 1e9, { push: [1.04, 1.0] });
+const st3 = stageN(c3);
+st3.fill(rr(0, 1000, 1920, 80, 0), BEIGE, -99, 0.5); st3.line(ln(0, 1000, 1920, 1000), -99, 0.1, { w: 5 });
+st3.fill(ell(440, 640, 400, 400, { n: 30 }), "#F4E28A", -99, 0.35);
+heroSeq(c3, [["g_m_point_hope", 11.4], ["g_m_excited", 12.4]], { x: 360, y: 400, sc: 1.6, stat: true });
+c3.text("크레딧,", { x: 1420, y: 290, size: 190, s: 11.45, anchor: "c", gap: 0.035 });
+const m2 = c3.text("비정상으로", { x: 1420, y: 520, size: 190, s: 11.75, anchor: "c", gap: 0.035 });
+c3.text("나가지 않게", { x: 1420, y: 750, size: 190, s: 12.07, anchor: "c", gap: 0.035 });
+c3.underline(m2.box(0, 4), 12.45, 0.25);
+
+S.start();
+});
+</script></body></html>

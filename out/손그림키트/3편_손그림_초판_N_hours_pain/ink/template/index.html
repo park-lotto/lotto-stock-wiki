@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(14);
+/* P1~P5 장면 조립 보조 (공용 _assets/_lib_p 는 건드리지 않고 여기서만 감싼다)
+ * - 자산 아이템을 hq.js Layer 에 얹는다(좌우 반전·선 굵기 상한·무대 모드)
+ * - 주인공: 몸(뒤) / 머리(표정 묶음, 갈아끼움) / 앞팔·소품 세 층으로 나눠 그린다(R2: 표정 묶음 한 번에)
+ * - 무대(R1): 펜 없이 0.3초 선 + 0.25초 채색
+ */
+const K = (() => {
+  const A = INKASSETS, C = A.COLORS, W1 = A.W1, W2 = A.W2, W3 = A.W3;
+  const fx = (n) => (Math.round(n * 10) / 10).toString();
+  const RE = /(-?\d+(?:\.\d+)?)\s(-?\d+(?:\.\d+)?)/g;
+  const tr = (d, x, y, sx, sy) => d.replace(RE, (m, px, py) => fx(x + (+px) * sx) + " " + fx(y + (+py) * sy));
+  const H = (pts, closed, o) => A.H(pts, closed, o || {});
+
+  // 아이템 묶음 그리기. o: x,y,sc,mir,s,per,pen,wmax,stage
+  function items(L, its, o = {}) {
+    const x = o.x || 0, y = o.y || 0, sc = o.sc || 1, sx = o.mir ? -sc : sc, ws = Math.min(sc, o.wmax || 1.6);
+    const per = o.per || 0.1, stage = !!o.stage, pen = o.pen !== false && !stage;
+    const list = its.slice().sort((a, b) => (a.z || 0) - (b.z || 0));
+    let t = o.s || 0;
+    list.forEach((i) => {
+      const d = tr(i.d, x, y, sx, sc);
+      if (i.k === "fill") {
+        const ft = stage ? t : t + 0.2, fd = stage ? 0.25 : 0.3;
+        if (o.solid) { L.fill(d, "#FBF8F1", ft, 0.85, fd); L.fill(d, "#FBF8F1", ft, 0.85, fd); }   // 앞팔·손이 뒤 선을 비치지 않게
+        L.fill(d, i.c, ft, i.op, fd);
+      }
+      else {
+        const big = i.w >= W1 - 0.5, dur = stage ? 0.3 : (big ? per * 2.2 : per);
+        L.line(d, t, dur, { w: i.w * ws, c: i.c === C.INK ? undefined : i.c, pen: pen && big });
+        if (!stage) t += dur * (big ? 1 : 0.45);
+      }
+    });
+    return stage ? (o.s || 0) + 0.35 : t;
+  }
+  function shadow(L, cx, y, w, s) {
+    const pts = []; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; pts.push([cx + w / 2 * Math.cos(a), y + 12 * Math.sin(a)]); }
+    L.fill(H(pts, true, { jit: 0 }), C.INK, s, 0.1, 0.3);
+  }
+  // 자산 하나. o.keep(i, idx) 로 아이템 거르기
+  function asset(L, name, o = {}) {
+    const a = typeof name === "string" ? A.get(name, o.ao) : name;
+    let its = a.items; if (o.keep) its = its.filter(o.keep);
+    if (a.ground && o.ground !== false) { const [x0, , x1] = a.box, sc = o.sc || 1; shadow(L, (o.x || 0) + (x0 + x1) / 2 * sc * (o.mir ? -1 : 1), (o.y || 0) + 4 * sc, (x1 - x0) * 0.9 * sc, o.s || 0); }
+    return items(L, its, o);
+  }
+  // 주인공. o: pose, expr, view, look, tilt, x, y, sc, mir, s, per, stage, swaps:[{t, expr, view, look, tilt}], slump:{t, dy, r}
+  function hero(P, o) {
+    const mk = (e) => A.hero({ pose: o.pose, expr: e.expr, view: e.view || o.view || "front", look: e.look || o.look, tilt: e.tilt !== undefined ? e.tilt : o.tilt });
+    const h0 = mk(o), body = P.sub(), heads = [];
+    const back = h0.items.filter((i) => (i.z || 0) < 0), headIt = (h) => h.items.filter((i) => (i.z || 0) === 0), fr = h0.items.filter((i) => (i.z || 0) > 0 && (!o.dropFront || !o.dropFront(i)));
+    const g = { x: o.x, y: o.y, sc: o.sc, mir: o.mir, per: o.per || 0.08, stage: o.stage, wmax: o.wmax };
+    // 몸 → 머리 → 앞팔. 머리 층은 몸 선 위(몸 선을 먼저 붙인 뒤 머리 층을 만든다)·앞팔 아래
+    let t = items(body, back, { ...g, s: o.s, per: (o.per || 0.08) * 0.6, pen: false });
+    const H0 = body.sub(); heads.push(H0);
+    t = items(H0, headIt(h0), { ...g, s: o.stage ? o.s : t });
+    if (o.mid) o.mid(P);
+    const front = P.sub();
+    const tf = items(front, fr, { ...g, s: o.stage ? o.s : t, per: (o.per || 0.08) * 0.8, solid: true });
+    // 표정 갈아끼우기: 새 머리는 미리 그려 두고 0.25초 교차
+    const sw = o.swaps || [];
+    sw.forEach((e, k) => {
+      const Hk = body.sub(); heads.push(Hk);
+      items(Hk, headIt(mk({ ...o, ...e })), { ...g, s: e.t - 1.2, stage: true });
+    });
+    const T = [-1e9].concat(sw.map((e) => e.t), [1e9]);
+    heads.forEach((Hk, k) => {
+      const a = T[k], b = T[k + 1];
+      Hk.xf((t) => ({ o: (k === 0 ? 1 : clamp((t - a) / 0.25)) * (b > 1e8 ? 1 : 1 - clamp((t - b) / 0.25)) }));
+    });
+    // 어깨 처짐(몸·머리 같이 내려앉음)
+    if (o.slump) {
+      const S = o.slump, cx = o.x, cy = o.y;
+      const k = (t) => eo(seg(t, S.t, S.t + (S.dur || 0.6)));
+      body.xf((t) => ({ y: k(t) * (S.dy || 18), r: k(t) * (S.r || 0) * (o.mir ? -1 : 1), ox: cx, oy: cy + 300 * o.sc }));
+      front.xf((t) => ({ y: k(t) * (S.dy || 18) * 0.8 }));
+    }
+    return { end: tf, body, front, heads };
+  }
+  // 무대 선·채색 (펜 없음, 0.3초 + 0.25초)
+  function stg(L, pts, s, o = {}) {
+    const d = typeof pts === "string" ? pts : H(pts, o.closed !== false, { jit: o.jit === undefined ? 0.8 : o.jit, over: o.over });
+    if (o.solid) { L.fill(d, "#FBF8F1", s, 0.85, 0.2); L.fill(d, "#FBF8F1", s, 0.85, 0.2); L.fill(d, "#FBF8F1", s, 0.85, 0.2); }
+    if (o.fill) L.fill(d, o.fill, s, o.op === undefined ? 0.4 : o.op, 0.25);
+    if (o.w !== 0) L.line(d, s + (o.d || 0), o.dur || 0.3, { w: o.w || W1, c: o.c, pen: o.pen === true });
+    return d;
+  }
+  // 모서리가 살아 있는 다각형 점(닫힌 H 가 둥근 렌즈가 되지 않게 모서리마다 점 2개)
+  function Q(pts, r = 8) {
+    const n = pts.length, out = [];
+    pts.forEach((p, i) => { const a = pts[(i - 1 + n) % n], b = pts[(i + 1) % n];
+      const la = Math.hypot(a[0] - p[0], a[1] - p[1]) || 1, lb = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+      out.push([p[0] + (a[0] - p[0]) * r / la, p[1] + (a[1] - p[1]) * r / la]); out.push([p[0] + (b[0] - p[0]) * r / lb, p[1] + (b[1] - p[1]) * r / lb]); });
+    return out;
+  }
+  // 컷 창(ART_GATE_1 C1): 앞 컷 끝 = 뒤 컷 시작, 겹침 0. 무대는 a 전에 다 그려 두고 a 에 즉시 교체
+  // cam = { s0, s1, dx, dy, ox, oy, e }: 컷 안 카메라(밀기 s0<s1 / 당기기 s0>s1 / 패닝 dx). e 까지 ease-out, 마지막 컷은 끝 −1초 전에 멈춤(R4)
+  function cut(a, b, cam) {
+    return S.layer().xf((t) => {
+      const o = t < a || t >= b ? 0 : 1;
+      if (!cam) return { o };
+      const e = cam.e || Math.min(b, S.dur - 1.0), k = eo(seg(t, Math.max(a, 0), e));
+      return { o, s: cam.s0 + (cam.s1 - cam.s0) * k, x: (cam.dx || 0) * k, y: (cam.dy || 0) * k, ox: cam.ox || 960, oy: cam.oy || 540 };
+    });
+  }
+  // 새 주인공(INKHERO.put) 자리 잡기: u = 머리 높이 px(= sc×160), bottom = 그림 밑변이 올 y(눈 위치를 거꾸로 구한다)
+  // HM[name] = [눈 위 머리끝, 눈 아래 그림 밑변] (머리 높이 단위, l_*.png 알파 실측 10-29)
+  const HM = { g_f_night_phone: [0.64, 1.64], g_f_hope: [0.57, 1.77], g_f_excited: [0.56, 1.86], g_f_laptop_hope: [0.58, 1.92], g_f_tired: [0.62, 1.65],
+    g_f_frustr_head: [0.64, 1.82], g_m_point_hope: [0.57, 2.82], g_m_tired: [0.54, 2.44], g_m_frustr_head: [0.61, 2.36], g_m_laptop_tired: [0.65, 2.4], g_m_excited: [0.57, 2.47], g_m_laptop_hope: [0.59, 2.53], g_m_hope: [0.7, 2.63] };
+  function hput(L, name, o) {
+    const m = HM[name], u = o.u, y = o.bottom !== undefined ? o.bottom - m[1] * u : o.y;
+    const r = INKHERO.put(L, name, { ...o, sc: u / 160, y });
+    // 종이색 실루엣(흰 옷이 뒤 무대를 비치지 않게) — 컬러판 아래, 펜 그리는 동안 들어온다(make_sil.py 가 만든 sil_*.png)
+    const sil = mk("image", { href: "brand/hero/sil_" + name.replace(/^g_/, "") + ".png", x: 0, y: 0, width: 1024, height: 1024, preserveAspectRatio: "none",
+      transform: r.lineImg.getAttribute("transform"), opacity: 0 });
+    r.root.fg.insertBefore(sil, r.root.fg.firstChild);
+    S.fills.push({ el: sil, s: o.stat ? -99 : (o.s || 0), dur: o.stat ? 0.01 : (o.dur || 1.2) * 0.5, op: 1 });
+    r.top = y - m[0] * u; r.bot = y + m[1] * u; return r;
+  }
+  return { hput, HM, cut, Q, A, C, W1, W2, W3, H, RR: A.RR, O: A.O, items, asset, hero, stg, shadow, tr };
+})();
+
+// N_hours_pain 「쉽다더니 몇 시간」 14초 (s02) — INK 손그림판(_lib_p + _assets + 새 주인공 남). 옛 판 = ../template (Sonnet 흰 바탕), ../out_v2.mp4
+// 컷 흐름(옛 판 유지): 쉽다고 해서 시작했는데… → 시계·할 일 7개 체크 → 5~6시간 → 쇼츠 한 편에, 결국 몇 시간
+// 주인공: P1 이 여자라 남자. 기대(g_m_laptop_hope) → 4.8 지침(g_m_laptop_tired) → 10.0 지침·이마(g_m_tired)
+const { H, RR, O, stg, asset, hput, C: KC } = K;
+// 카메라: 0~2.1 밀기(주인공) → 2.1~8.8 당기기(목록 전체) → 9.0~13.0 시계·숫자 쪽으로 패닝
+const R = S.layer().xf((t) => {
+  if (t < 2.1) { const k = eo(seg(t, 0, 2.1)); return { s: 1.0 + 0.06 * k, ox: 1440, oy: 420 }; }
+  if (t < 9.0) { const k = eo(seg(t, 2.1, 8.8)); return { s: 1.06 - 0.06 * k, ox: 1440, oy: 420 }; }
+  const k = eo(seg(t, 9.0, 13.0)); return { s: 1.0 + 0.04 * k, x: 30 * k, ox: 500, oy: 600 };
+});
+// 무대: 벽시계(시간이 흐른다) — 0초에 이미 걸려 있다
+const ST = R.sub();
+asset(ST, "prop.clock", { x: 760, y: 590, sc: 1.4, s: -0.3, stage: true });
+const HN = R.sub().xf((t) => ({ r: Math.max(0, t - 1.9) * 150, ox: 760, oy: 590 - 120 * 1.4 }));   // 도는 바늘(주황)
+HN.line(`M760 ${590 - 120 * 1.4} L760 ${590 - 215 * 1.4}`, 1.7, 0.2, { w: 7, c: "#F6A93B", pen: false });
+// 주인공(오른쪽): 펜 0~1.0 → 4.8 지침 → 10.0 이마 짚음
+hput(R, "g_m_laptop_hope", { x: 1440, bottom: 1090, u: 280, s: 0.0, dur: 0.85, win: [-1, 4.8] });
+hput(R, "g_m_laptop_tired", { x: 1440, bottom: 1090, u: 280, stat: true, win: [4.8, 10.0] });
+hput(R, "g_m_tired", { x: 1440, bottom: 1090, u: 280, stat: true, win: [10.0, 1e9] });
+const DK = R.sub();                                                                       // 책상 앞판(그림 밑변을 덮는다) — 0초에 이미 있다
+stg(DK, K.Q([[880, 960], [1920, 960], [1920, 1100], [880, 1100]], 6), -0.3, { solid: true, fill: KC.BEIGE, op: 0.55 });
+stg(DK, [[880, 960], [1920, 960]], -0.3, { closed: false });
+
+// 제목: 쉽다고 해서 시작했는데… (10.8 에 빠지고 그 자리에 결론)
+const TT = R.sub().xf((t) => ({ o: 1 - clamp((t - 10.8) / 0.2) }));
+TT.text("쉽다고 해서 시작했는데…", { x: 90, y: 110, size: 110, s: 1.05, gap: 0.05 });
+// 할 일 7개: 글 → 네모 → 체크(펜 하나, 겹치지 않게)
+const LS = R.sub();
+["소재 찾기", "원본 찾기", "자르기", "대본 쓰기", "목소리", "자막", "썸네일"].forEach((w, i) => {
+  const y = 250 + i * 72, s = 2.1 + i * 0.95;
+  const T = LS.text(w, { x: 150, y: y + 30, size: 58, font: "gae", s, gap: 0.05 });
+  const bx = 80, by = y;
+  LS.line(H(RR(bx, by, 50, 50, 6), true, { jit: 0.5 }), T.end + 0.02, 0.15, { w: 5, pen: false });
+  LS.line(H([[bx + 8, by + 26], [bx + 22, by + 42], [bx + 64, by - 10]], false), T.end + 0.2, 0.2, { w: 7, c: "#F6A93B" });
+});
+// 5~6시간 + 밑줄
+const NB = R.sub();
+const N = NB.text("5~6시간", { x: 80, y: 800, size: 150, font: "num", weight: 800, s: 9.0, gap: 0.1 });
+NB.underline(N.box(), 9.75, 0.45);
+// 결론(위쪽 — 아래 가운데는 나레이션 자막 자리)
+const CL = R.sub();
+const T2 = CL.text("쇼츠 한 편에, 결국 몇 시간", { x: 90, y: 110, size: 120, s: 11.0, gap: 0.05 });
+CL.underline(T2.box(9, 13), 11.9, 0.4);
+
+S.start();
+});
+</script></body></html>

@@ -1,0 +1,67 @@
+{
+  "preset_id": "ink_explainer",
+  "name": "흑백 펜 설명형 (혼자스 스타일)",
+  "용도": [
+    "설명",
+    "홍보",
+    "자료"
+  ],
+  "ratio": "16:9 (1920×1080)",
+  "reference": {
+    "youtube": "https://www.youtube.com/watch?v=qEVZ7AgB7zI (혼자스)",
+    "sheet": "ref_sheet.jpg"
+  },
+  "design_ref": {
+    "palette": {
+      "bg": "#ffffff",
+      "ink": "#111111",
+      "sub": "#8a8a8a"
+    },
+    "fonts": [
+      "Pretendard 800(굵은 핵심어)",
+      "Pretendard 400(나머지)"
+    ],
+    "look": "흰 바탕 + 흑백 펜 선화 + 위쪽 구절 자막(핵심어만 굵게) + 왼쪽 세로 진행 점"
+  },
+  "motion_character": {
+    "cut": "구절마다 장면 교체(1~4초), 작은 팝(0.94→1, back)",
+    "draw": "선화를 획으로 추출(tools/trace.py) → 펜이 획 순서대로 그림 → 마지막 18% 구간에 원본 겹쳐 검은 칠 채움",
+    "ui": "입력창 타이핑, 체크박스 하나씩, 숫자 카운트업, 큰 글자 카드"
+  },
+  "parts": [
+    "구절 자막",
+    "큰 글자",
+    "펜 그리기 그림",
+    "입력창 타이핑",
+    "체크리스트",
+    "카운트업",
+    "CTA 버튼",
+    "세로 진행 점"
+  ],
+  "assets_pipeline": [
+    "버텍스 1:1 흑백 선화(프롬프트 머리말 = 'Clean black ink line-art … Korean webtoon style … no text')",
+    "바탕 정리: 215 이상 → 흰색",
+    "py tools/trace.py (template 폴더에서) → strokes.js",
+    "edge-tts ko-KR-InJoonNeural 구절별 → 무음 제거 → 시작 시각 계산",
+    "연필 소리: ffmpeg anoisesrc 핑크노이즈+bandpass 4.2k+tremolo 11Hz (그리기 구간만)"
+  ],
+  "edit_points": "template/index.html 의 ST(시작)·DU(길이)·CAP(자막, <b>핵심어</b>)와 장면 div s0~s11",
+  "sound": "edge-tts InJoon 내레이션 + 합성 연필 소리",
+  "render": "npx -y hyperframes@0.8.105 render template --fps 30 -o out.mp4  → 내레이션·연필 소리 amix(normalize=0)",
+  "made_with": "버텍스 6장 + Opus 코드",
+  "sample": "sample.mp4 (숏템메이커 30초 홍보)",
+  "known_issues": [
+    "문구(소재만 넣으면/10분)가 실제 기능과 맞는지 미확인",
+    "목소리 무료 TTS"
+  ],
+  "verdicts": [
+    {
+      "date": "2026-10-20",
+      "by": "사장님",
+      "note": "슥삭슥삭 그려지는 과정 요청 → 획 따라 그리기로 반영"
+    }
+  ],
+  "usage": [],
+  "family": "I 손그림·펜 이야기",
+  "family_rep": true
+}
