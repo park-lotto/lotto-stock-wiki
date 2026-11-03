@@ -340,6 +340,10 @@ export async function restyleFlow(sid) {
   // 성공 = 오류·배치 충돌 없이 새 완성본을 썼다. 출처 검사(jumps)는 대본·장면이 그대로라 처음 편이 넘은 것과 같아 막지 않는다
   //   (실행기는 jumps 면 오류 문구 없이 ok:false 를 줘 runner.log 엔 render ok 인데 '다시 만들지 못했습니다'였다 — 옛 편은 원본 이름이 없어 거짓으로 걸린다)
   const made = fs.existsSync(fin) && fs.statSync(fin).mtimeMs > before;
+  if (r.ok && !r.error && !r.conflict && !made && fs.existsSync(fin)) {
+    // 실행기 성공 · 완성본 그대로 = 렌더가 바뀐 것이 없다고 본 것(입력 지문 같음) — 실패가 아니다(11-03 강태경·김형관·김준용 '다시 만들지 못했습니다' 3건)
+    return { ok: true, video: fin, title: f.title || '', unchanged: true, note: '바뀐 설정이 영상에 닿지 않아 완성본이 그대로입니다 — 바꾼 칸이 저장됐는지(shortem_settings get) 확인하세요' };
+  }
   if (r.error || r.conflict || !made) {
     const why = r.error || (r.conflict ? '자막·장면 배치가 맞지 않아 겉모습만 바꿔서는 다시 만들 수 없습니다'
       : `다시 만들지 못했습니다(실행기 결과 ${JSON.stringify(r).slice(0, 160)} · 완성본 ${made ? '새로 씀' : '안 바뀜'} · ${v}/render/final.mp4)`);   // 이유 없이 실패만 알리지 않는다(11-03 강태경 render ok 인데 실패)

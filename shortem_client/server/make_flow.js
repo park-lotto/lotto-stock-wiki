@@ -190,6 +190,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     }
     else if (step === 'restyle') {
       const r = await restyleFlow(sid);
+      if (r.ok && r.unchanged) return { ...(await flowOut({ need: 'done', sid, video: r.video, title: r.title })), hints: [r.note] };   // 바뀐 것 없음 = 실패 아님
       return r.ok ? flowOut({ need: 'done', sid, video: r.video, title: r.title }) : { fail: { why: r.error } };   // 완성본 폴더까지 새 겉모습으로(keepFinal)
     }
     return flowOut(await waitFlow(sid, waitMs()));

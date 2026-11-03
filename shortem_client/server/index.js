@@ -375,7 +375,7 @@ export function buildServer(ctx = makeCtx()) {
     try { cat = await catalog() || {}; } catch { /* 목록 없이도 지금 설정은 보여 준다 */ }
     const choices = { fonts: cat.fonts, caption_enter: cat.caption_enter, emphasis: cat.emphasis, caption_mode: cat.caption_mode,
       bgm: (cat.bgm || []).map(x => (x && (x.id || x.name)) || x).slice(0, 60),
-      shape: { 'text.caption.enter': { kind: '<caption_enter 중 하나>', ms: 300 }, 'text.caption.emphasis': { words: 'auto', style: '<emphasis 중 하나>' }, 'text.post_author': "'' = 작성자 줄 안 그림 · 글 = 고정" } };
+      shape: { 'text.caption.enter': { kind: '<caption_enter 중 하나>', ms: 300 }, 'text.caption.emphasis': { words: 'auto', style: '<emphasis 중 하나>', rgb: [255, 216, 74] }, 'text.post_author': "'' = 작성자 줄 안 그림 · 글 = 고정" } };
     return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm }, choices } });
   });
 
