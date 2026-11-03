@@ -73,3 +73,26 @@ def test_흐름_경보가_관리자_경보로_한_번만(env, monkeypatch):
     r2 = c.post("/api/claude/step", headers=_h(key), json={"step": "go", "payload": r.json()["next_payload"]})
     assert r2.status_code == 200 and len(calls) == 2
     assert len(_alerts(env)) == 1      # 다음 걸음에 중복 행 없음
+
+
+def test_흐름_경보가_dict_가_아니어도_요청이_깨지지_않고_경보는_올라간다(env, monkeypatch):
+    monkeypatch.setenv("CLAUDE_FLOW_ENGINE", ENGINE)
+
+    def start(url, version, sid):
+        return {"sid": sid, "ref": url, "phase": "a"}
+
+    def step(state, measure, replies, user):
+        state["alarm"] = "Jev 꺼짐(글 하나)"
+        return {"status": "execute", "message": "m", "state": state}
+    monkeypatch.setattr(cf, "_flow", lambda: types.SimpleNamespace(start=start, step=step))
+    pdir = [p for p in cf.CP.presets(env["store"]) if p["id"] == env["preset"]][0]["dir"]
+    import json
+    (pdir / "line.json").write_text(json.dumps({"line": "hybrid", "version": "키치잇판"}), encoding="utf-8")
+    key = _key(env)
+    c = env["client"]
+    assert c.get("/api/claude/license", headers=_h(key)).status_code == 200
+    r = c.post("/api/claude/step", headers=_h(key), json={"step": "start", "preset": env["preset"],
+                                                           "source": {"url": "https://www.youtube.com/shorts/cNo91ddBwB8"}})
+    assert r.status_code == 200, r.text
+    a = _alerts(env)
+    assert len(a) == 1 and "Jev 꺼짐(글 하나)" in a[0]["detail"]

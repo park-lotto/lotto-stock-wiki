@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { api, ApiError } from './api.js';
-import { runOps, aiRootDir, dataDir, engineRoot, lastRunMove } from './engine_bridge.js';
+import { runOps, aiRootDir, dataDir, engineRoot, lastRunMove, pending } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { packFile, PID_RE } from './local_settings.js';
 import { refreshCookies } from './logins.js';
@@ -232,6 +232,7 @@ async function runWithPreset(f) {
   try { const pk = f.preset && !f.bench ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
   try {
     const member = PID_RE.test(String(f.preset || '')) ? { SHORTEM_MEMBER_PACK: await packFile(f.preset) } : {};   // 꾸미기 값 → 렌더(엔진 styles.member_frame)
+    if (f.bench) f.runAt = Date.now();     // 이 실행기가 낸 회원 Claude 요청(_runner)만 이 흐름 것으로 본다(runnerAsks — 지난 실행 찌꺼기 거르기)
     return await runOps(job, f.do || [], { env: { ...member, ...(f.restyling ? { SHORTEM_RESTYLE: '1' } : {}), ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
   finally { if (rental) await rental.release(); }
 }
@@ -445,6 +446,11 @@ export function findingLine(fd, now = Date.now()) {
   return m <= 0 ? String(fd.say0 || '') : String(fd.say || '').replace('{m}', String(m));
 }
 
+// (판단 주인) 벤치 흐름 실행기가 지금 회원 Claude 답을 기다리나 — 키 없는 bm_tear 판독은 실행 중에 _runner 로 요청을 낸다(Ruling 16).
+//   벤치 흐름·실행 중(busy)·이번 실행 시작(runAt) 뒤에 만든 요청만. 제작 흐름은 보지 않는다(응답 그대로).
+const runnerAsks = f => !!(f.bench && f.status === 'execute' && f.busy && f.runAt) &&
+  pending().some(p => p.run === '_runner' && Number(p.req.made_at || 0) * 1000 >= f.runAt);
+
 // MCP 응답 꼴 — 회원에게는 message 한 줄만(세부 금지). need 로 다음 할 일.
 export function shapeFlow(f) {
   const tool = f.bench ? 'shortem_benchmark' : 'shortem_make';   // 벤치마킹 흐름은 같은 도구로 이어 기다린다
@@ -457,7 +463,7 @@ export function shapeFlow(f) {
     return { ...base, need: 'approve', script: f.wait.script, next: `고객에게 묻지 말고 대본을 네가 확인한 뒤 바로 shortem_make(step="approve", sid="${f.sid}")`,
       hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
   }
-  if ((f.status === 'review' || f.status === 'reject') && f.asks && f.asks.some(q => !fs.existsSync(path.join(q.dir, 'answer.json')))) {
+  if (((f.status === 'review' || f.status === 'reject') && f.asks && f.asks.some(q => !fs.existsSync(path.join(q.dir, 'answer.json')))) || runnerAsks(f)) {
     return { ...base, need: 'ai', next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), ${tool}(step="wait", sid="${f.sid}") 를 부르세요`,
       hints: ['판정 요청입니다 — 고객에게 묻지 말고 바로 답하세요'] };
   }

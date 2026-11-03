@@ -163,6 +163,9 @@ def _raise_flow_alarm(store, cid, sid, st2: dict) -> None:
     alarm = st2.pop("alarm", None)
     if not alarm:
         return
+    if not isinstance(alarm, dict):      # 꼴이 틀린 경보도 버리지 않는다(조용한 실패 금지) — 글로 감싸 올리고 꼴 어긋남은 로그로
+        CP.log.warning("claude_flow: 흐름 경보 꼴이 dict 가 아님 sid=%s type=%s", sid, type(alarm).__name__)
+        alarm = {"why": str(alarm)}
     rule = str((alarm or {}).get("kind") or ALARM_RULE)[:40]
     detail = f"sid {sid} · {str(alarm.get('at') or '')[:40]} · {str(alarm.get('why') or '')[:300]}"
     try:

@@ -2467,6 +2467,9 @@ def c_bm_brief(W, d):
     from tools.calcopy.engine import preset_brief as B
     p = _inside(W, f"channel/{d['slug']}/preset/{d['style']}")
     r = B.render(p, p, str(d.get("name") or d["slug"]))
+    for k in ("md", "claude_md"):        # 서버로는 작업 폴더 기준 상대 경로만(회원 홈 경로를 서버 기록에 남기지 않는다)
+        if r.get(k):
+            r[k] = Path(r[k]).resolve().relative_to(W.resolve()).as_posix() if Path(r[k]).is_absolute() else Path(r[k]).as_posix()
     z = W / "out" / f"{d['slug']}_{d['style']}.zip"
     z.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -2684,6 +2687,12 @@ def _hang_arm() -> None:
     faulthandler.dump_traceback_later(HANG_SEC, exit=True, file=sys.__stderr__)
 
 
+def _member_waiting() -> bool:
+    """이 프로세스 안에서 client_llm.ask 가 회원 Claude 답을 기다리는 중인가(줄 폴더 찌꺼기는 안 본다 — 같은 프로세스 상태만, Jev 0.77)."""
+    cl = sys.modules.get("tools.calcopy.engine.client_llm")
+    return bool(cl is not None and getattr(cl, "WAITING", None))
+
+
 def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: float) -> None:
     """items 를 각자 스레드로 돌리고 감시 — 예산 초과·진행 신호 stall 초 없음이면 그 일을 '시간 초과' 오류로 끝내고 하위 프로그램을 끈다.
     (판정은 서버 flow — 오류를 받으면 스스로 한 번 다시·다음 방법·회원 선택지로. 실행기는 절대 한없이 기다리지 않는다.)"""
@@ -2703,6 +2712,8 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
         if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
             sig, last, cpu = s2, now, c2
         cpu = min(cpu, c2)                        # 하위 프로그램이 끝나 합이 줄면 기준도 내린다
+        if _member_waiting():                     # 회원 Claude 답을 기다리는 중 = 멈춤 아님(키 없는 bm_tear 판독, Ruling 16). 예산 3배 상한·client_llm 시간 초과는 그대로
+            last = now
         last = max(last, float(_PROG.get("t") or 0))
         for d, t, t0 in th:
             rid = str(d.get("id") or d.get("cmd"))
