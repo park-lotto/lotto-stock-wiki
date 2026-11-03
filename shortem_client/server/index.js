@@ -20,6 +20,7 @@ import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from '
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
 import { selftest, encoderCheck, voiceProvider } from './selftest.js';
+import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
@@ -149,6 +150,8 @@ export function buildServer(ctx = makeCtx()) {
       fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
     }
     const notices = lost.optional.map(([k, pf]) => `${pf.name} 로그인이 안 됐습니다. 제작은 진행합니다. ${pf.name} 주소를 소재로 쓰면 받기가 안 될 수 있어요. 회원에게 그대로 알리고, 원하면 shortem_login(action="open", platform="${k}") 로 다시 시도`);
+    const others = otherServers();
+    if (others.length) notices.push(OTHERS_NOTICE(others.length));
     const voiceKey = KEY_SERVICES[voiceProvider(readSettings())] ? voiceProvider(readSettings()) : 'typecast';   // 고른 목소리 회사의 키만 본다(11-02)
     if (!keyStatus(voiceKey).present) fails.push({ where: '키', why: `${KEY_SERVICES[voiceKey].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[voiceKey].where})`, retry_ok: true });
     // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
@@ -392,6 +395,7 @@ async function main() {
     return runSupervisor(process.env.SHORTEM_INSTALL);
   }
   pruneAudit();
+  registerServer();     // 한 PC 여러 창 — 점검이 두 번째 창부터 알린다(instances.js)
   try { gcCache(); } catch { /* 캐시 없음 */ }
   try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
   try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
