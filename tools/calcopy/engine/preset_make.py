@@ -751,10 +751,10 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
             base += cnt
         return out
 
-    def ff(cmd, cwd=None):
+    def ff(cmd, cwd=None, **kw):
         dst = Path(str(cmd[-1]))
         if not re.fullmatch(r"scene-style-\d{4}\.mp4", dst.name) or "-filter_complex" not in cmd:
-            return orig_ff(cmd, cwd)
+            return orig_ff(cmd, cwd, **kw)
         c = list(map(str, cmd))
         first = round(float(c[c.index("-ss") + 1]) * FPS)
         n = int(c[c.index("-frames:v") + 1])
@@ -778,7 +778,7 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
             shutil.copyfile(hit, target)
             st["scenes_cached"] += 1
             return None
-        r = orig_ff(cmd, cwd)
+        r = orig_ff(cmd, cwd, **kw)
         copy_atomic(target, hit)
         st["scenes_rendered"] += 1
         return r
