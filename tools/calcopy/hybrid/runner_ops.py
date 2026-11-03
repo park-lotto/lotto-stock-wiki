@@ -2453,7 +2453,9 @@ def c_pm(W, d):
     sheets = [rel(W, p) for p in (doc / "plan" / "계획_시트_자동.jpg", doc / "plan" / "계획_접촉시트.jpg", out / "sheet_1s.jpg") if p.exists()]
     rows = jload(out / "run_log.json").get("checks") if make and (out / "run_log.json").exists() else None
     final = out / "final.mp4"
-    return {"ok": r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"final": str(final)} if make and final.exists() else {}),   # 절대 경로 = c_finish video 와 같은 꼴(회원 앱 keepFinal)
+    fails = [] if make else list(r.get("fails") or [])   # 계획 표 미달 행 — PC 는 담당이 표를 눈으로 봤다. 회원 길은 고칠 거리로 넘긴다(넘기지 않아 A-B-A 가 렌더 뒤에야 걸렸다)
+    return {"ok": False if fails else r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"problems": fails} if fails else {}),
+            **({"final": str(final)} if make and final.exists() else {}),   # 절대 경로 = c_finish video 와 같은 꼴(회원 앱 keepFinal)
             **({"rows": rows} if rows else {}), "seconds": r.get("seconds")}
 
 

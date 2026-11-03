@@ -1066,7 +1066,7 @@ def make_one(pdir: Path, wdir: Path, a, cfg_patch: dict | None = None) -> dict:
         rows += [{"B": "관문", "항목": "렌더 전 관문(G-1·③⑤⑦④, 어림 시각)", "값": (g1 + pr["bad"]) or 0, "기준": "0 — preset_gates", "ok": not (g1 + pr["bad"])}]
         print_table(w["name"] + " (계획 단계)", rows)
         fails = [f"{r['B']} {r['항목']} {r['값']}" for r in rows if not r["ok"]]
-        return {"work": w["name"], "ok": False if (g1 + pr["bad"]) else None,
+        return {"work": w["name"], "ok": False if (g1 + pr["bad"]) else None, "fails": fails,   # fails = 표 미달 행(PC 는 담당이 표를 봤다 — 회원 실행기 c_pm 은 이것을 고칠 거리로 넘긴다)
                 "note": f"계획 시트 {wdir / 'plan' / '계획_시트_자동.jpg'} · " + ("; ".join(fails) or "계획 검사 통과"),
                 "total_s": round(sum(clk.steps.values()), 1)}
     PG._stop("G-1 대본 글(TTS 전)", g1)
