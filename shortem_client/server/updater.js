@@ -10,7 +10,7 @@ import { ENGINE_VERSION } from './license.js';
 import { toolsDir, devMode } from './tools_paths.js';
 import { readZip, renting, holdPending } from './preset_rent.js';
 import { audit } from './audit.js';
-import { activeRuns } from './engine_bridge.js';
+import { activeRuns, resetEngineWorker } from './engine_bridge.js';
 
 const OK_PATH = /^(server|engine)\/[^\0]+$|^app_version\.json$/;
 export const installDir = () => path.resolve(toolsDir(), '..');
@@ -126,6 +126,7 @@ export function applyDownloaded(dir, home, running) {   // 관제 304 합치기�
   try {
     fs.cpSync(path.join(dir, 'engine'), path.join(home, 'engine'), { recursive: true, force: true });
     audit('update_engine_now', { result: path.basename(dir) });
+    resetEngineWorker();          // 설정 검사·미리보기 워커도 새 엔진으로(편마다 뜨는 실행기와 달리 떠 있다)
     return true;
   } catch (e) {
     audit('update_fail', { result: 'engine_now ' + String(e && e.message || e).slice(0, 70) });
