@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { workDir, ensureDir, homeDir } from './paths.js';
 import { run, runOk, resolveTools, toolsDir } from './tools_paths.js';
-import { browserExe, status as loginStatus, missingLogins } from './logins.js';
+import { browserExe, status as loginStatus, missingLogins, engineCookieEnv } from './logins.js';
 import { normalizeFrame, BASIC_FRAME } from './engine/frame.js';
 import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
@@ -114,7 +114,7 @@ async function testDownload(dir) {
   const { toolPath } = await import('./tools_paths.js');
   // 구간 받기는 유튜브에서 느리다 — 짧은 공개 영상을 낮은 화질로 통째로 받고 5초만 잘라 쓴다
   const r = await run('ytdlp', ['--no-playlist', '--no-warnings', '--ffmpeg-location', path.dirname(toolPath('ffmpeg')), '-f', 'bv*[height<=480][ext=mp4]+ba[ext=m4a]/b[height<=480][ext=mp4]/bv*+ba/b', '--merge-output-format', 'mp4', '--max-filesize', '60M',
-    '-o', path.join(tmp, 'dl.%(ext)s'), SELFTEST_URL()], { timeoutMs: 5 * 60000 });
+    '-o', path.join(tmp, 'dl.%(ext)s'), SELFTEST_URL()], { timeoutMs: 5 * 60000, env: { ...process.env, ...engineCookieEnv() } });   // 제작 받기와 같은 쿠키(11-03 회원 윤주홍: 점검만 무쿠키라 봇 확인에 막힘)
   const got = fs.readdirSync(tmp).find(n => n.endsWith('.mp4'));
   if (!got) { fs.rmSync(tmp, { recursive: true, force: true }); throw Object.assign(new Error('download'), { detail: r.stderr.slice(-400) }); }
   const out = path.join(dir, '시험_다운로드.mp4');
