@@ -436,3 +436,106 @@ def test_gate_from_remake_folder(tmp_path):
     g = remake.gate_of(_remake_out(tmp_path, verdict="미달", seams=False))
     assert g["ok"] is False and "자막 y" in g["fails"] and any("이음매" in x for x in g["fails"])
     assert remake.passed("원본 없음 — 대조 생략", True) is True and remake.passed("미달", True) is False
+
+
+# ── 최종 검토 고침(관제 319) — 다시 시도 길이 막다른 길·재제작으로 새지 않게 ──
+def _retry(st):
+    return flow.step(st, {}, {}, {"retry": True})
+
+
+def test_env_command_error_is_retry_stop_not_agy_missing():
+    st = flow.start_bench("https://www.youtube.com/@abc", [], "n", "c" * 12)
+    _go(st)
+    r = _go(st, {"bm_env": {"error": "실행기를 띄우지 못했다: spawn ENOENT"}})
+    assert r["status"] == "execute" and r["do"][0]["cmd"] == "bm_env"          # 잠깐의 문제 — 스스로 한 번 다시
+    r = _go(st, {"bm_env": {"error": "실행기를 띄우지 못했다: spawn ENOENT"}})
+    assert r["status"] == "stop" and r["retry_ok"] is True and "agy" not in r["why"]
+    r = _retry(st)
+    assert r["status"] == "execute" and r["do"][0]["cmd"] == "bm_env"
+
+
+def test_measure_zero_pass_retry_rereads_not_dead_end():
+    lines = _skel()["lines"]
+    st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, skel_lines={"a": lines, "b": lines}, reread=1)
+    r = _go(st, {"fill": {"ok": [], "bad": {"a": ["줄0 speaker 미기입"]}, "dir": "channel/s/줄판독"}})
+    assert r["status"] == "stop" and r["retry_ok"] is True
+    for _ in range(2):                    # 다시 시도할 때마다 같은 막다른 길이 아니라 판독을 새로
+        r = _retry(st)
+        assert r["status"] == "execute" and sorted(d["id"] for d in r["do"]) == ["read_a", "read_b"], r
+        assert all(d["cmd"] == "agy_read" for d in r["do"]) and st["bm"]["reread"] == 0
+        st["phase"] = "bm_measure_got"
+        st["bm"]["reread"] = 1
+        r = _go(st, {"fill": {"ok": [], "bad": {"a": ["줄0 speaker 미기입"]}, "dir": "channel/s/줄판독"}})
+        assert r["status"] == "stop" and r["retry_ok"] is True
+
+
+def test_match_error_retry_reruns_compare_with_same_trial():
+    st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"])
+    r = _go(st, rp={"bm_trial": {"work_dir": "trial/t0_abcdefabcdef", "ok": True}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"]
+    st["_asker_in"] = None                # 받은 입력을 못 둔 경우(ASKER_IN_MAX 넘음)에도 같은 시험 편으로
+    r = _go(st, {"side": {"side": "side/a.mp4"}, "pan": {"error": "ValueError: remake 관문 기록 없음"}})
+    assert r["status"] == "stop" and r["retry_ok"] is True
+    r = _retry(st)
+    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"], r      # 시험 편을 다시 만들지 않는다
+    assert r["do"][1]["work"] == "trial/t0_abcdefabcdef" and r["do"][0]["ours"] == "trial/t0_abcdefabcdef/final.mp4"
+    assert not any(q.get("id") == "bm_trial" for q in r.get("review") or [])
+
+
+def _multi_frame(enter=None):
+    """훅 카드가 있는 채널의 틀(to_frame_multi 꼴 — 실측: 방구 게시글형 frames[hook·body], 자막은 body 에만)."""
+    vid = {"kind": "video", "x": 0, "y": 300, "w": 1080, "h": 1200}
+    cap = {"kind": "text", "role": "caption", "x": 540, "y": 1300, "w": 980, "align": "center", "lines": 2,
+           "font": "CcPretendard-Bold", "size": 60, "line_h": 70, "rgb": [255, 255, 255], "enter": enter}
+    return {"canvas": [1080, 1920], "frames": [
+        {"id": "hook", "span": [0, 2.0], "layers": [dict(vid), {"kind": "text", "role": "title", "x": 540, "y": 200, "w": 980, "align": "center", "lines": 2,
+                                                                "font": "CcPretendard-Bold", "size": 80, "line_h": 90, "rgb": [255, 255, 255], "enter": None, "text": "제목"}]},
+        {"id": "body", "span": [2.0, None], "layers": [dict(vid), cap]}]}
+
+
+def test_bm_match_multi_frame_preset_reads_body_caption_and_offers_fix(tmp_path):
+    """실측(방구 3편 remake + 게시글형 틀)에서 드러남: 틀이 여러 장이면 자막 층을 못 찾아 우리 등장을 instant 로 잡고 고칠 후보가 0개였다."""
+    from tools.calcopy.engine import kal_analyze as K, preset_save as P
+    _remake_out(tmp_path)
+    _preset(tmp_path)
+    p = tmp_path / "channel" / "s" / "preset" / "틀"
+    (p / "frame.json").write_text(json.dumps(_multi_frame(), ensure_ascii=False), encoding="utf-8")
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1",
+                               "line_reads": ["channel/s/줄판독/a.json"]}])["pan"]
+    assert "error" not in out, out
+    assert len(out["cands"]) == 1 and out["cands"][0]["path"] == "frames[body].layers[text:caption].enter", out["cands"]
+    assert out["cands"][0]["path"] in P.flat(_multi_frame())                  # bm_fix(preset_save.fix_value) 가 실제로 고칠 수 있는 자리
+    (p / "frame.json").write_text(json.dumps(_multi_frame({"kind": "pop", "ms": 170}), ensure_ascii=False), encoding="utf-8")
+    o = K.ours_from_remake(tmp_path / "make" / "t1", _multi_frame({"kind": "pop", "ms": 170}))
+    assert {l["enter"] for l in o["lines"]} == {"pop"}                         # 본편 틀 자막 등장을 읽는다
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1",
+                               "line_reads": ["channel/s/줄판독/a.json"]}])["pan"]
+    assert {r["key"]: r for r in out["table"]["rows"]}["enter.mode.나레"]["judge"] == "in" and out["cands"] == []
+
+
+def test_skel_fill_match_on_real_remake_shape(tmp_path):
+    """고정 자료 = 실제 remake 결과(방구 3편 render, 10-16)·실제 뜯기(48PbLQ5az6k)·실제 틀(게시글형, 훅+본편)을 줄인 것.
+    이 편은 이음매 검사(10-17) 전이라 remake_log 에 steps.seams 가 없어 {ok:true} 만 덧붙였다(지금 remake 가 남기는 꼴). 큰 영상은 없다 → 컷·소리 칸은 못 잼."""
+    import shutil
+    from pathlib import Path
+    X = Path(__file__).parent / "fixtures" / "bm_real_remake"
+    shutil.copytree(X / "make", tmp_path / "make")
+    p = tmp_path / "channel" / "s" / "preset" / "틀"
+    p.mkdir(parents=True)
+    shutil.copy2(X / "frame.json", p / "frame.json")
+    t = tmp_path / "channel" / "s" / "뜯기" / "v1"
+    t.mkdir(parents=True)
+    shutil.copy2(X / "48PbLQ5az6k_뜯기.json", t / "뜯기.json")
+    sk = R.run_do(tmp_path, [{"id": "skel", "cmd": "bm_skel", "slug": "s", "ids": ["v1"]}])["skel"]
+    assert not sk["failed"] and len(sk["docs"]["v1"]["lines"]) == 12
+    fills = {"v1": {"lines": [{"i": l["i"], "speaker": "나레", "layer": "채널", "enter": "pop", "sfx": None, "scene": "장면"} for l in sk["docs"]["v1"]["lines"]],
+                    "doc": {"beats": ["훅", "본론"], "narr_share": 1.0}}}
+    f = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": fills}])["fill"]
+    assert f["ok"] == ["v1"] and not f["bad"]
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1", "line_reads": [f"{f['dir']}/v1.json"]}])["pan"]
+    assert "error" not in out, out
+    rows = {r["key"]: r for r in out["table"]["rows"]}
+    assert {k for k, r in rows.items() if r["judge"] == "failed"} == {"cut.median", "mix.lufs", "transition.rate", "thumb.frame0"}   # 영상 없이 못 재는 칸
+    assert rows["enter.mode.나레"]["ours"] == "instant" and rows["enter.mode.나레"]["judge"] == "out"
+    assert [c["path"] for c in out["cands"]] == ["frames[body].layers[text:caption].enter"]
+    assert out["gate_ok"] is False and any(x.startswith("관문:") for x in out["fails"]) and out["match_ok"] is False

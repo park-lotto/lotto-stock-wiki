@@ -33,8 +33,8 @@ REREAD_MAX = 1       # check_doc 를 못 넘은 줄판독을 다시 읽는 횟�
 
 STAGES = [("setup", "준비 확인"), ("bm_fetch", "벤치 영상 받기"), ("bm_tear", "영상 뜯기"), ("bm_read", "영상 보기"), ("bm_trial", "시험 영상 만들기"),
           ("bm_pan", "판볶이"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
-PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_trial": "bm_read",
-               "bm_trial_got": "bm_trial", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
+PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_reread": "bm_read", "bm_trial": "bm_read",
+               "bm_trial_got": "bm_trial", "bm_compare": "bm_pan", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
                "bm_verdict": "bm_confirm", "bm_verdict_got": "bm_confirm", "bm_brief": "bm_make", "bm_done": "done"}
 
 
@@ -50,6 +50,8 @@ def bm_setup(st, m, rp, u):
 def bm_env_got(st, m, rp, u):
     F = _F()
     e = m.get("bm_env") or {}
+    if e.get("error"):       # 실행기가 준비 확인을 못 돌렸다(띄우기 실패·시간 초과) — agy 가 없다는 뜻이 아니다. 잠깐의 문제로 다시
+        raise F._Stop("준비 확인을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_setup", auto=True, ask_member=True, detail=str(e["error"])[:300])
     if not e.get("agy"):
         raise F._Stop("영상을 볼 agy 가 이 PC에 없어요", "숏클 설치 안내의 agy 설치를 마친 뒤 다시 해 주세요", final=True)
     if not e.get("agy_login"):      # 오푸스로 조용히 넘어가지 않는다(영상을 볼 수 있는 건 구독 제미나이뿐)
@@ -161,12 +163,24 @@ def bm_measure_got(st, m, rp, u):
         st["log"].append(f"줄판독 검사 못 넘음 → 다시 읽기: {json.dumps(bad, ensure_ascii=False)[:300]}")
         return {"do": _read_do(b, list(bad), bad), "then": "bm_read_got"}
     if not ok:
-        raise F._Stop("벤치 영상 판독을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_tear_got", ask_member=True,   # 영상 보기(agy) 몫 — 회원 Claude 과제로 넘기지 않는다
+        raise F._Stop("벤치 영상 판독을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_reread", ask_member=True,   # 영상 보기(agy) 몫 — 회원 Claude 과제로 넘기지 않는다. 다시 시도 = 저장된 뼈대로 판독만 새로(최종 검토, Jev 0.80)
                       detail="줄판독 check_doc 불합격: " + json.dumps(bad, ensure_ascii=False)[:400])
     if bad:
         st["log"].append(f"줄판독 검사 못 넘은 편은 대조에서 뺌: {sorted(bad)}")
     b["line_reads"] = [f"{d}/{x}.json" for x in ok]
     return {"goto": "bm_trial"}
+
+
+def bm_reread(st, m, rp, u):
+    """줄판독이 다시 읽기 뒤에도 0편 통과로 멈춘 뒤 다시 시도 — 받기·뜯기·뼈대(기계값)는 그대로 두고 저장된 뼈대 줄로 agy 판독부터 새로.
+    다시 읽기 횟수는 처음으로(회원이 누른 다시 시도마다 한 벌). 뼈대가 없으면 뜯기 결과가 없는 것 — 처음부터."""
+    F = _F()
+    b = st["bm"]
+    ids = [v for v in (b.get("skel") or {}) if (b.get("skel_lines") or {}).get(v)]
+    if not ids:
+        raise F._Stop("벤치 영상 판독을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_setup", ask_member=True, detail="저장된 줄판독 뼈대 없음")
+    b["reread"] = 0
+    return {"do": _read_do(b, ids), "then": "bm_read_got"}
 
 
 TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 판볶이용)
@@ -224,6 +238,14 @@ def bm_trial_got(st, m, rp, u):
     return {"do": _compare_do(st), "then": "bm_panbokki"}
 
 
+def bm_compare(st, m, rp, u):
+    """대조(bm_side·bm_match)만 다시 — 받은 시험 편(st.bm.trial_dir)을 그대로 쓴다. 시험 편이 없으면 만들기부터."""
+    F = _F()
+    if not st["bm"].get("trial_dir"):
+        raise F._Stop("시험 영상을 만들지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", ask_member=True, detail="저장된 시험 편 없음")
+    return {"do": _compare_do(st), "then": "bm_panbokki"}
+
+
 def bm_panbokki(st, m, rp, u):
     """판볶이 — 어긋난 칸을 한 번에 한 칸씩. 고칠 값 고르기는 Jev(서버). PAN_MAX 넘으면 남은 칸과 함께 멈춘다."""
     F = _F()
@@ -232,7 +254,7 @@ def bm_panbokki(st, m, rp, u):
     if (m.get("side") or {}).get("side"):
         b["side"] = m["side"]["side"]       # 확정 검사·최종 판정이 좌우 영상을 본다
     if (m.get("pan") or {}).get("error"):      # 대조를 못 했다 — 빈 대조표로 '맞춤'·'다시 재기'로 새지 않게 멈춘다
-        raise F._Stop("벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", ask_member=True, detail=str(m["pan"]["error"])[:300])
+        raise F._Stop("벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_compare", ask_member=True, detail=str(m["pan"]["error"])[:300])   # 도구 문제 — 같은 시험 편으로 대조만 다시(30~50분 재제작 금지)
     if m.get("pan"):
         b["pan_last"] = m["pan"]
     p = b.get("pan_last") or {}             # Jev 가 쉬어서 멈춘 뒤 다시 시도하면 직전 대조표로 이어 간다
@@ -336,5 +358,6 @@ def bm_done(st, m, rp, u):
 
 
 PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch_got": bm_fetch_got, "bm_tear_got": bm_tear_got, "bm_skel_got": bm_skel_got, "bm_read_got": bm_read_got,
-          "bm_measure": bm_measure, "bm_measure_got": bm_measure_got, "bm_trial": bm_trial, "bm_trial_got": bm_trial_got, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,
+          "bm_measure": bm_measure, "bm_measure_got": bm_measure_got, "bm_reread": bm_reread, "bm_trial": bm_trial, "bm_trial_got": bm_trial_got,
+          "bm_compare": bm_compare, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,
           "bm_verdict": bm_verdict, "bm_verdict_got": bm_verdict_got, "bm_brief": bm_brief, "bm_done": bm_done}

@@ -871,8 +871,27 @@ ENTER_MS = 300          # frame 자막 enter 가 비어 있을 때 새로 넣는
 MATCH_FIX = {"enter.mode.나레": "layers[text:caption].enter", "enter.mode.원음": "layers[text:caption].enter"}
 
 
+def _cap_of(layers) -> dict | None:
+    return next((l for l in layers or [] if isinstance(l, dict) and l.get("kind") == "text" and l.get("role") == "caption"), None)
+
+
+def _caption_at(frame: dict | None) -> tuple[dict | None, str]:
+    """(판단 주인) 자막 줄을 그리는 층과 그 층의 flat 자리 머리(preset_save.flat 꼴). 한 틀이면 머리 ''.
+    틀 여러 장(to_frame_multi 꼴 — 훅 카드·본편)이면 자막 층이 있는 본편 틀(id 'body' 먼저, 없으면 자막 있는 마지막 틀) → 'frames[<id>].'.
+    실측(최종 검토, 방구 게시글형): 최상위 layers 만 보면 자막을 못 찾아 우리 등장이 instant 로 잡히고 판볶이 후보가 0개였다."""
+    f = frame or {}
+    cap = _cap_of(f.get("layers"))
+    if cap is not None:
+        return cap, ""
+    frs = [x for x in f.get("frames") or [] if isinstance(x, dict) and _cap_of(x.get("layers"))]
+    if not frs:
+        return None, ""
+    fr = next((x for x in frs if x.get("id") == "body"), frs[-1])
+    return _cap_of(fr["layers"]), f"frames[{fr.get('id')}]."
+
+
 def _caption_layer(frame: dict | None) -> dict | None:
-    return next((l for l in (frame or {}).get("layers") or [] if l.get("kind") == "text" and l.get("role") == "caption"), None)
+    return _caption_at(frame)[0]
 
 
 def _frame_enter(v) -> str:
@@ -923,10 +942,11 @@ def fix_cands(T: dict, frame: dict) -> list[dict]:
     """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 판볶이 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
     from tools.calcopy.engine import preset_save as P
     F = P.flat(frame)
-    cap = _caption_layer(frame) or {}
+    cap, head = _caption_at(frame)
+    cap = cap or {}
     out, seen = [], set()
     for r in T.get("rows") or []:
-        path = MATCH_FIX.get(r["key"])
+        path = head + MATCH_FIX[r["key"]] if r["key"] in MATCH_FIX else None
         if r.get("judge") != "out" or not path or path not in F or r.get("bench") not in ENTER_FRAME:
             continue
         k = ENTER_FRAME[r["bench"]]
