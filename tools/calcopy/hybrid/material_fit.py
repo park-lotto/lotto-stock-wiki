@@ -637,7 +637,9 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             mates = [x for x in cuts if x is not c and x.get("line") == c.get("line") and x.get("kind") == "tts"]
             if sp:
                 out.append(sp + " ← 샷 넘침")
-            elif not c.get("over") and mates:
+            elif not c.get("over") and mates and not (c.get("reuse_unfixed") and not (c.get("jumpy") or c.get("frozen"))):
+                # ↑ 재사용(B13 경고)만 걸린 컷은 빼지 않는다 — 경고가 고른 컷(제품 컷)을 지웠다(#3590 김효준: 원본 20초라 거리 3초를 못 지킴, Jev 뿌리 0.91·해결 0.86).
+                #   그 자리에 두고 아래 '[옮기기] … 관문 몫' 경고로만 남긴다. 장면 전환·멈춘 그림(진짜 결함)은 그대로 빼기
                 # 재사용·전환인데 같은 원본에 빈자리가 없다 — 같은 줄에 Claude 가 고른 다른 컷이 있으면 이 컷을 빼고 그 컷이 시간을 이어받는다
                 # (그 줄 장면만 남아 대사↔화면 그대로 · 다른 영상으로 바꾸지 않는다 — 10-27 펜티 E2 80초, 원음 줄이 원본을 거의 다 씀)
                 k = cuts.index(c)
