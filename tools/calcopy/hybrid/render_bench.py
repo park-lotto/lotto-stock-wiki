@@ -1214,6 +1214,7 @@ def face_crop(src: Path, t: float, ar: float) -> list[int]:
 
 
 BLUR_SIGMA = 25.0     # 가림 흐림 세기 = 제품 가림막 흐림의 최저값(deco_frame.blur_sigma 25~80)과 같은 gblur
+BLUR_FEATHER = 20     # 흐림 칸을 글자 상자보다 사방 이만큼 넓히고 그 띠에서 섞는다(px)
 BLUR_H_RATIO = 0.4    # 칸이 크면(큰 자막 띠) 세기 = 칸 높이 × 이 값 이상 — 10-27 싱크대 J6 띠 140px: 25 = '이 작업은 썬팅 시공과…' 읽힘 · 50+ 안 읽힘(눈 대조)
 
 
@@ -1232,7 +1233,15 @@ def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
         a, b = (float(r[4]), float(r[5])) if len(r) >= 6 else (None, None)
         en = f":enable='between(t,{max(0.0, a - ss):.3f},{b - ss:.3f})'" if a is not None else ""
         sg = max(float(sigma), round(BLUR_H_RATIO * h, 1))        # 글자 크기만큼 세게 — 고정 25 는 큰 자막이 흐린 채 읽혔다
-        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sg}[bb];[bo][bb]overlay={x}:{y}{en}")
+        # 글자 상자보다 사방 BLUR_FEATHER px 넓게 흐리고, 넓힌 띠에서 투명→불투명으로 섞어 얹는다 — 직각 경계가 피부 위에서 분홍 네모로 보였다
+        #   (#3702 임수정, Jev 뿌리 0.89·해결 0.86). 원래 글자 상자 안은 그대로 완전히 가린다. 원본 가장자리에서는 crop 이 잘린 만큼만
+        p = BLUR_FEATHER
+        x0, y0 = max(0, x - p), max(0, y - p)
+        cw, ch = f"min(iw-{x0}\\,{w + (x - x0) + p})", f"min(ih-{y0}\\,{h + (y - y0) + p})"
+        bx0, by0 = x - x0, y - y0      # 원래 글자 상자(조각 좌표) — 상자 안 = 1, 바깥 띠는 상자에서 멀어질수록 0(화면 끝에서 못 넓힌 쪽도 상자 끝까지 가린다)
+        alpha = (f"255*clip(1-max(max({bx0}-X\\,X-{bx0 + w - 1})\\,max({by0}-Y\\,Y-{by0 + h - 1}))/{p}\\,0\\,1)")
+        out.append(f"split[bo][bi];[bi]crop=w='{cw}':h='{ch}':x={x0}:y={y0},gblur=sigma={sg},format=yuva420p,"
+                   f"geq=lum='lum(X\\,Y)':cb='cb(X\\,Y)':cr='cr(X\\,Y)':a='{alpha}'[bb];[bo][bb]overlay={x0}:{y0}{en}")
     return ",".join(out)
 
 
