@@ -40,7 +40,10 @@ export function loadFlow(sid) {
   } catch { return null; }
 }
 export const isFlowSid = sid => !!loadFlow(sid);
-export const anyFlowBusy = () => [...flows.values()].some(f => f.busy || f.status === 'execute' || f.status === 'review');   // 돌고 있는 편이 있으면 엔진을 덮지 않는다
+// 돌고 있는 편이 있으면 엔진을 덮지 않는다. 멈춘 편(cancelled)은 상태 칸이 그대로 남아도 돌지 않는다 — 실행기가 아직 끝나는 중(busy)만 센다
+//   (11-03 강태경: 멈춘 편의 status 가 review 로 남아 벤치마킹이 '지금 만드는 편이 있습니다'로 3번 막힘, 목록은 진행 중 0)
+export const flowBusy = f => !!f && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
+export const anyFlowBusy = () => [...flows.values()].some(flowBusy);
 
 function reqId(tag) {
   const d = new Date(); const p = n => String(n).padStart(2, '0');
@@ -306,7 +309,9 @@ export async function restyleFlow(sid) {
   //   (실행기는 jumps 면 오류 문구 없이 ok:false 를 줘 runner.log 엔 render ok 인데 '다시 만들지 못했습니다'였다 — 옛 편은 원본 이름이 없어 거짓으로 걸린다)
   const made = fs.existsSync(fin) && fs.statSync(fin).mtimeMs > before;
   if (r.error || r.conflict || !made) {
-    return { error: String(r.error || (r.conflict ? '자막·장면 배치가 맞지 않아 겉모습만 바꿔서는 다시 만들 수 없습니다' : '다시 만들지 못했습니다')).slice(0, 300) };
+    const why = r.error || (r.conflict ? '자막·장면 배치가 맞지 않아 겉모습만 바꿔서는 다시 만들 수 없습니다'
+      : `다시 만들지 못했습니다(실행기 결과 ${JSON.stringify(r).slice(0, 160)} · 완성본 ${made ? '새로 씀' : '안 바뀜'} · ${v}/render/final.mp4)`);   // 이유 없이 실패만 알리지 않는다(11-03 강태경 render ok 인데 실패)
+    return { error: String(why).slice(0, 400) };
   }
   // 회원이 보는 완성본 폴더 복사는 make_flow.flowOut(keepFinal) 한 곳. f.video 는 마무리가 준 이 파일이거나, 안 끝난 편이면 소재 주소다(#1042 거기로 복사하다 ENOENT)
   return { ok: true, video: fin, title: f.title || '' };
