@@ -246,3 +246,13 @@ def test_japanese_script_one_owner(monkeypatch, tmp_path):
     assert A.TEXT_BY_LANG.get(C.script_lang(), A.TEXT) == "PR"
     monkeypatch.setenv("SHORTEM_SCRIPT_LANG", "ko")
     assert RB._font("Pretendard-ExtraBold.otf", 40).path.replace("\\", "/").endswith("Pretendard-ExtraBold.otf")
+
+
+def test_plan_look_member_material_add(monkeypatch):
+    """장면 검수 답 '재료_추가' = 회원이 src 에 넣은 파일을 재료로 등록하고 시트부터(11-03 김유선 덮어쓰기 우회)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "썰템쇼판", "tries": {}, "log": [], "_plan_over": ["L3 맞는 장면 없음"], "material": {"files": [{"name": "a.mp4"}]},
+          "script": {"S": {"lines": []}, "M": {}}}
+    monkeypatch.setattr(F, "_reply", lambda rp, k, need: rp[k])
+    out = F.ph_plan_look(st, {}, {"plan_썰템쇼판": {"재료_추가": ["src/ig_member.mp4"]}}, None)
+    assert out["then"] == "more_sheets" and {"name": "ig_member.mp4"} in st["material"]["files"]

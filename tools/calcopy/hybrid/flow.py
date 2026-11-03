@@ -2510,6 +2510,7 @@ WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
                   " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다."
+                  "\n★회원이 직접 준 영상은 이 PC 의 src 폴더에 넣고 \"재료_추가\": [\"파일이름.mp4\", …] 로 답하면 재료로 등록된다(기존 재료 파일을 덮어쓰지 마라)."
                   "\n★편 예산 시간을 넘었고 남은 것이 작은 품질 걸림뿐이면 \"넘기기\": true 로 답해 경고로 남기고 렌더로 간다(지어낸 사실·금지 출처는 못 넘긴다).")
 FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
                   "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
@@ -2591,6 +2592,9 @@ def ph_plan_look(st, m, rp, u):
     voice = [str(o) for o in over if VOICE_RX.search(str(o))]
     if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
         return _voice_rewrite(st, voice)
+    add = [Path(str(x)).name for x in (r.get("재료_추가") or []) if isinstance(x, str) and str(x).strip()][:6]
+    if add:          # 회원이 직접 준 영상(이 PC src 에 넣은 파일)을 재료로 등록 — 과제 답 action=material 과 같은 뒷길(11-03 김유선: 덮어쓰기 우회)
+        return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in add]}}, {}, {})
     more = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
     if more and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:     # 맞는 장면이 재료에 없다 — 그 자리에서 재료만 더(대본·앞 단계 그대로, 숏클 지침 4②)
         return _more_material(st, more)
