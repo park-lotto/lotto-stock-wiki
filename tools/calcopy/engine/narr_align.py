@@ -123,7 +123,8 @@ def speech_align(text: str, mp3, log=print) -> dict | None:
         i = owner[k]
         s[i] = ts[h][0] if s[i] is None else min(s[i], ts[h][0])
         e[i] = ts[h][1] if e[i] is None else max(e[i], ts[h][1])
-    want = [i for i, c in enumerate(text) if re.match(r"[가-힣A-Za-z0-9]", c)]
+    from tools.calcopy.hybrid.common import SPOKEN
+    want = [i for i, c in enumerate(text) if re.match(SPOKEN, c)]
     got = sum(1 for i in want if s[i] is not None)
     if not want or got < len(want) * SPEECH_ALIGN_MIN:
         log(f"[tts] 받아쓰기로 찾은 글자 {got}/{len(want)} — 글자 시각을 만들지 않는다")
@@ -360,9 +361,10 @@ def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: 
 
 def punct_marks(text: str) -> list[tuple[str, int]]:
     """글의 문장부호 순서대로 (종류, 앞까지 읽는 글자 수). ?·! 은 마침표."""
+    from tools.calcopy.hybrid.common import SPOKEN
     out = []
     for m in PUNCT_RE.finditer(text):
-        out.append((NORM[m.group()], len(re.findall(r"[가-힣A-Za-z0-9]", text[:m.start()]))))
+        out.append((NORM[m.group()], len(re.findall(SPOKEN, text[:m.start()]))))
     return out
 
 

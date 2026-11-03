@@ -230,3 +230,19 @@ def test_channel_name_once_when_head_bar_has_text(tmp_path, monkeypatch):
     assert [i["text"] for i in st["frame"]["post"]["head_bar"]["icons"]] == ["주스픽"]
     st = STY.member_frame({"frame": {"bg": [0, 0, 0]}})      # 채널명 자리 없는 틀 = 상단 가운데 한 번
     assert st["frame"]["watermark"]["text"] == "주스픽"
+
+
+def test_japanese_script_one_owner(monkeypatch, tmp_path):
+    """일본어 대본: 읽는 글자(SPOKEN) 한 곳 · 렌더 글꼴은 일본어 글자 있는 것 · 광고 표시 PR(11-03 윤상길 일본어판, 사장님 승인)."""
+    from tools.calcopy.hybrid import common as C
+    from tools.calcopy.engine import narr_verify as NV
+    assert C.nchar("すごい、アイテム！") == 7 and C.nchar("안녕 abc 3") == 6
+    assert NV.norm("使ってみた") == "使ってみた"
+    assert C.script_lang({"lines": [{"tts": "すごい"}]}) == "ja" and C.script_lang({"lines": [{"tts": "좋아요"}]}) == "ko"
+    monkeypatch.setenv("SHORTEM_SCRIPT_LANG", "ja")
+    from tools.calcopy.hybrid import render_bench as RB
+    assert RB._font("Pretendard-ExtraBold.otf", 40).path.replace("\\", "/").endswith(C.JP_FONT)
+    from tools.calcopy.engine import ad_mark as A
+    assert A.TEXT_BY_LANG.get(C.script_lang(), A.TEXT) == "PR"
+    monkeypatch.setenv("SHORTEM_SCRIPT_LANG", "ko")
+    assert RB._font("Pretendard-ExtraBold.otf", 40).path.replace("\\", "/").endswith("Pretendard-ExtraBold.otf")

@@ -57,6 +57,9 @@ def _rgb(c):
 
 def _font(name, px):
     from PIL import ImageFont
+    from tools.calcopy.hybrid.common import JP_FONT, script_lang
+    if script_lang() == "ja":          # 일본어 대본 = 판 글꼴(한글 전용)이 가나를 두부로 그린다 — 일본어 글자가 있는 글꼴로
+        name = JP_FONT
     return ImageFont.truetype(str(FONTS / name), int(px))
 
 
@@ -115,7 +118,8 @@ def narr_cap_starts(L: dict, sent: dict | None, align: dict | None, tts_char0: i
             out.append(round(dur * acc / sum(w), 3)); acc += x
         return out
     ch, st = align["characters"], align["character_start_times_seconds"]
-    idx = [i for i, c in enumerate(ch) if re.match(r"[가-힣A-Za-z0-9]", c)]
+    from tools.calcopy.hybrid.common import SPOKEN
+    idx = [i for i, c in enumerate(ch) if re.match(SPOKEN, c)]
     n_line = nchar(L["tts"])
     out, acc = [], 0
     for j, x in enumerate(w):
@@ -4157,6 +4161,11 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     st = ST.load(style_name)
     doc, work = Path(doc), Path(work)
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
+    from tools.calcopy.hybrid.common import script_lang
+    if script_lang(S) == "ja":          # 이 실행의 글꼴·광고 표시가 읽는다(한국어면 지워 다음 렌더에 남지 않게)
+        __import__("os").environ["SHORTEM_SCRIPT_LANG"] = "ja"
+    else:
+        __import__("os").environ.pop("SHORTEM_SCRIPT_LANG", None)
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
     RI.member_voice(S, st)                # 회원 목소리 칸 + 회원이 정한 말 빠르기(#1893 — 판 cps_target 맞춤을 건너뛴다)
     RI.voice_args(S, check=True)         # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다

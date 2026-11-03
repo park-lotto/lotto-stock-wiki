@@ -21,7 +21,8 @@ from pathlib import Path
 
 CACHE = Path("C:/숏템_칼카피/_cache/asr_sm")
 
-KEEP = re.compile(r"[가-힣A-Za-z0-9぀-ヿ一-鿿]")     # 가나·한자도 센다 — 일본어 대본이 0자가 되어 말속도 평균 0 나눗셈(11-03 윤상길 일본어판)
+from tools.calcopy.hybrid.common import SPOKEN  # noqa: E402 — 소리 내 읽는 글자 판단 주인 한 곳(가나·한자 포함, 11-03)
+KEEP = re.compile(SPOKEN)
 DIG = "영일이삼사오육칠팔구"
 
 
