@@ -25,6 +25,7 @@ export const isMaskedKey = v => /[*•●·×✕✱∗]/.test(String(v || ''));
 export function readKey(service = 'typecast') {
   let k = '';
   try { k = fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
+  if (KEY_SERVICES[service]?.prefix && k && !k.startsWith(KEY_SERVICES[service].prefix)) return '';   // 꼴이 틀린 키(키 ID 등) = 없는 키로 — 점검이 다시 넣으라고 한다(파일은 지우지 않는다)
   if (service !== 'vertex_sa' && isMaskedKey(k)) {           // 이미 저장된 가린 값 — 없는 키로 보고 치운다. 점검이 다시 넣으라고 안내한다
     try { fs.unlinkSync(keyFile(service)); } catch { /* 다음에 다시 */ }
     return '';
@@ -35,7 +36,7 @@ export function readKey(service = 'typecast') {
 // 회원이 넣는 키 목록 — 판단 한 곳(설정 화면·저장·엔진 환경변수가 이 표만 본다). 사장님 10-21: 미나 = 회원 일레븐랩스 키 · 쿠팡 = 회원 파트너스 키(없으면 회원 PC 크롬)
 export const KEY_SERVICES = Object.freeze({
   typecast: { label: '목소리 키(타입캐스트)', where: 'typecast.ai ▸ 개발자 ▸ API 키', env: 'TYPECAST_API_KEY', need: '없으면 타입캐스트 목소리를 만들 수 없습니다' },
-  elevenlabs: { label: '목소리 키(일레븐랩스)', where: 'elevenlabs.io ▸ 프로필 ▸ API Keys', env: 'ELEVENLABS_API_KEY', need: '미나 목소리 프리셋에 필요합니다' },
+  elevenlabs: { label: '목소리 키(일레븐랩스)', where: 'elevenlabs.io ▸ 프로필 ▸ API Keys', env: 'ELEVENLABS_API_KEY', prefix: 'sk_', need: '미나 목소리 프리셋에 필요합니다' },
   fish: { label: '목소리 키(피쉬오디오)', where: 'fish.audio ▸ API ▸ API Keys', env: 'FISH_API_KEY', need: '피쉬오디오 목소리를 고르면 필요합니다' },
   coupang_access: { label: '쿠팡 파트너스 Access Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_ACCESS_KEY', need: '없으면 이 PC 크롬 창으로 쿠팡을 찾습니다' },
   coupang_secret: { label: '쿠팡 파트너스 Secret Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_SECRET_KEY', need: 'Access Key 와 짝으로 넣습니다' },
@@ -62,6 +63,7 @@ export function saveKey(service, value) {
   }
   if (isMaskedKey(k)) return { ok: false, why: `가려진 키입니다 — 점이나 별표가 섞인 값은 쓸 수 없어요. ${svc.where} 에서 전체 키를 복사해 주세요` };
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
+  if (svc.prefix && !k.startsWith(svc.prefix)) return { ok: false, why: `API 키는 ${svc.prefix} 로 시작합니다 — 키 ID 가 아니라 ${svc.where} 에서 만든 키 값 전체를 붙여 넣으세요` };   // 11-03 회원: 키 ID 를 넣어 제작 중 400
   writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
   return { ok: true, ...keyStatus(service) };
 }

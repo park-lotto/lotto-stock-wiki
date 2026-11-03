@@ -197,6 +197,12 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
             data = json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         why = {401: "일레븐랩스 키가 맞지 않습니다", 402: "일레븐랩스 크레딧이 부족합니다", 429: "일레븐랩스 사용량 한도에 걸렸습니다"}.get(e.code, f"일레븐랩스 오류 {e.code}")
+        try:      # 본문의 status·message 를 붙인다(11-03 '키 ID 를 키로 씀'이 '오류 400' 한 줄로만 보였다) — 키 값은 본문에 없다
+            det = (json.loads(e.read().decode('utf-8', 'replace')) or {}).get('detail') or {}
+            if isinstance(det, dict) and (det.get('status') or det.get('message')):
+                why += f" — {det.get('status') or ''} {str(det.get('message') or '')[:160]}".rstrip()
+        except Exception:  # noqa: BLE001 — 본문이 없으면 코드만
+            pass
         raise RuntimeError(why) from None
     if not data.get("audio_base64"):
         raise RuntimeError("일레븐랩스 응답에 소리가 없습니다")
