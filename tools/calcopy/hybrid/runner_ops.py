@@ -2398,7 +2398,114 @@ def c_thumb_auto(W, d):
     return {"ok": True, "pick": {k: opt.get(k) for k in ("part", "t", "measure")} if opt else None, "cuts": len(T.get("cuts") or [])}
 
 
-CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
+PM_DOC = "pm"          # PC 제작 라인 작품 폴더 = W/doc/pm/{대본.json, 재료.json, 근거.md, plan/} — PC channel/<slug>/작품N 과 같은 꼴
+
+
+def pm_member_patch(W: Path, doc: Path) -> dict:
+    """회원 PC 가 PC 제작기(preset_make)에 덮는 것 — 짤 폴더 = 이 편이 받은 짤(W/memes), 회원 목소리 = 대본 voice 칸(preset_make.voice_spec 이 읽는 자리),
+    회원 빠르기 = make tts_tempo(회원이 정했을 때만 — #1893 회원 요청이 판을 이긴다). 회원 팩이 없으면 짤 폴더만."""
+    patch = {"meme_dir": str(W / "memes")}
+    f = os.environ.get("SHORTEM_MEMBER_PACK")
+    tts = {}
+    if f and Path(f).is_file():
+        tts = (json.loads(Path(f).read_text(encoding="utf-8")).get("member") or {}).get("tts") or {}
+    if tts.get("voice_id") and (doc / "대본.json").exists():
+        S = jload(doc / "대본.json")
+        want = {k: tts[k] for k in ("voice_id", "provider", "emotion") if tts.get(k)}
+        if S.get("voice") != want:
+            S["voice"] = want
+            jsave(doc / "대본.json", S)
+    if tts.get("tempo"):
+        patch["tts_tempo"] = float(tts["tempo"])
+    return patch
+
+
+def c_pm(W, d):
+    """PC 제작 라인 — 썰템쇼처럼 PC 가 engine/preset_make 로 납품한 판(사장님 11-03 '완벽하게 똑같이'). 회원 작업 폴더 doc/pm 의 대본·재료·근거로
+    PC 와 같은 함수(preset_make.make_one)를 부른다 — 계획 검사·렌더 전 관문·완성 검사(manifest checks) 전부 그 한 곳. 판단을 두 벌로 만들지 않는다.
+    d = {mode: plan|make, preset: 빌린 프리셋 경로(엔진 상대, 예 channel/humorshowshow/preset/썰템쇼_화자썰)}.
+    반환 {ok(계획 통과 None·미달 False·완성 True/False), note, problems[관문 글], sheets[계획 시트], final, rows(B표)}."""
+    from types import SimpleNamespace
+    from tools.calcopy.engine import preset_make as PM, preset_gates as PG
+    root = Path(__file__).resolve().parents[3]
+    pdir, doc, out = root / d["preset"], W / "doc" / PM_DOC, W / PM_DOC / "make"
+    if not (doc / "대본.json").exists() or not (doc / "재료.json").exists():
+        return {"ok": False, "error": "대본.json·재료.json 이 아직 없다(doc/pm)"}
+    make = d.get("mode") == "make"
+    if PAID_OFF and make:
+        return {"ok": False, "error": "SHORTEM_NO_PAID — 목소리 합성 막음"}
+    a = SimpleNamespace(plan=not make, allow_tts=make, tts=None, test=True, out=str(out), tag=None, cache=str(W / PM_DOC / "_cache"),
+                        desktop_dir=str(W / PM_DOC), results=str(W / PM_DOC / "results.json"))
+    try:
+        with _Alive(W, "영상 만들기" if make else "장면 계획"):
+            r = PM.make_one(pdir, doc, a, cfg_patch=pm_member_patch(W, doc))
+    except PG.GateStop as e:              # 렌더 전 관문 멈춤 — 글에 관문·컷·이유가 다 있다(preset_gates._stop)
+        return {"ok": False, "problems": [x.strip() for x in str(e).split(" / ") if x.strip()][:40], "error": str(e)[:1200]}
+    except (ValueError, SystemExit, StageError) as e:      # 재료 행 수·자막 조각·목소리 칸 등 — 회원 Claude 가 고칠 글 그대로
+        return {"ok": False, "error": str(e)[:1200]}
+    sheets = [rel(W, p) for p in (doc / "plan" / "계획_시트_자동.jpg", doc / "plan" / "계획_접촉시트.jpg", out / "sheet_1s.jpg") if p.exists()]
+    rows = jload(out / "run_log.json").get("checks") if make and (out / "run_log.json").exists() else None
+    final = out / "final.mp4"
+    return {"ok": r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"final": rel(W, final)} if make and final.exists() else {}),
+            **({"rows": rows} if rows else {}), "seconds": r.get("seconds")}
+
+
+def c_pm_sheet(W, d):
+    """(눈 — PC 담당이 원본을 보고 자를 자리를 정하던 것) 재료 행마다 원본 그 초 화면 + 구워질 칸(빨강) + 10% 눈금(원본 px).
+    칸 = preset_make.crop_box(계획 검사와 같은 함수) — 회원이 본 칸 = 구워지는 칸. 회원 Claude 가 Bash 로 프레임을 뽑지 않게(베이글·와사비 결함 B).
+    d = {preset, items?: [{src, ss, src_crop?, crop_x?}]} — items 가 없으면 doc/pm/재료.json 의 영상 행(cont·짤 빼고). 반환 {sheets, rows:[{k, src, ss, box, src_wh}]}."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy.engine import preset_make as PM
+    root = Path(__file__).resolve().parents[3]
+    WW, HH = PM.load_preset(root / d["preset"])[1]["window"]
+    doc = W / "doc" / PM_DOC
+    R = jload(doc / "재료.json") if (doc / "재료.json").exists() else {}
+    src_dir = Path(R.get("cand_dir") or (W / "src"))
+    items = d.get("items") or [dict(r, k=k) for k, r in enumerate(R.get("shots") or [])
+                               if not r.get("cont") and str(r.get("src") or "").endswith(".mp4")]
+    out_dir = doc / "plan" / "자를칸"
+    shutil.rmtree(out_dir, ignore_errors=True)
+    tiles, rows = [], []
+    for i, it in enumerate(items):
+        p = src_dir / str(it["src"])
+        if not p.exists():
+            rows.append({"k": it.get("k", i), "src": it["src"], "error": "원본 없음"})
+            continue
+        dm = dims(p)
+        sw, sh = int(dm["w"]), int(dm["h"])
+        box = PM.crop_box(it.get("src_crop"), it.get("crop_x"), sw, sh, WW, HH)
+        im = Image.open(frame(p, float(it.get("ss") or 0), out_dir / f"f{i:03d}.jpg")).convert("RGB")
+        dr = ImageDraw.Draw(im)
+        for g in range(1, 10):                       # 10% 눈금 + 원본 px 좌표
+            x, y = sw * g // 10, sh * g // 10
+            dr.line([(x, 0), (x, sh)], fill=(255, 255, 255), width=1)
+            dr.line([(0, y), (sw, y)], fill=(255, 255, 255), width=1)
+            dr.text((x + 3, 3), str(x), fill=(255, 255, 0))
+            dr.text((3, y + 3), str(y), fill=(255, 255, 0))
+        x0, y0, cw, ch = box
+        dr.rectangle([x0, y0, x0 + cw - 1, y0 + ch - 1], outline=(255, 0, 0), width=max(3, sw // 300))
+        lab = f"#{it.get('k', i)} {it['src']}@{float(it.get('ss') or 0):.2f} box {box} x{HH / ch:.2f}"
+        dr.rectangle([0, sh - 34, min(sw, 11 * len(lab)), sh], fill=(0, 0, 0))
+        dr.text((6, sh - 28), lab, fill=(255, 80, 80))
+        im.thumbnail((720, 720))
+        tiles.append(im)
+        rows.append({"k": it.get("k", i), "src": it["src"], "ss": it.get("ss"), "box": box, "src_wh": [sw, sh]})
+    sheets = []
+    for s in range(0, len(tiles), 6):                # 한 장 6칸(3×2)
+        part = tiles[s:s + 6]
+        tw, th = max(t.width for t in part), max(t.height for t in part)
+        sheet = Image.new("RGB", (tw * 3, th * ((len(part) + 2) // 3)), (20, 20, 20))
+        for j, t in enumerate(part):
+            sheet.paste(t, ((j % 3) * tw, (j // 3) * th))
+        sp = out_dir / f"자를칸_{s // 6 + 1}.jpg"
+        sheet.save(sp, quality=85)
+        sheets.append(rel(W, sp))
+    for f in out_dir.glob("f*.jpg"):
+        f.unlink()
+    return {"sheets": sheets, "rows": rows, "window": [WW, HH]}
+
+
+CMDS = {"env": c_env, "pm": c_pm, "pm_sheet": c_pm_sheet, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,

@@ -214,6 +214,19 @@ def voice_spec(v: dict, cfg: dict, voice: str) -> tuple:
     return VO.provider_of(t), VO.emotion_of(t)
 
 
+def crop_box(crop, crop_x, sw: int, sh: int, W: int, H: int) -> list[int]:
+    """(판단 주인 — 원본에서 자를 칸) 재료 src_crop 이 있으면 그대로, 없으면 원본 높이 전체·창 비율 가운데(crop_x 면 그 가로 자리).
+    계획 검사(plan_check)와 회원 자를 칸 시트(runner_ops.c_pm_sheet)가 같이 부른다 — 회원이 본 칸 = 구워지는 칸."""
+    if crop:
+        x, y, cw, ch = crop
+    else:
+        ch = sh
+        cw = min(sw, int(sh * W / H) // 2 * 2)
+        x = (sw - cw) // 2 if crop_x is None else int(crop_x)
+        y = 0
+    return [int(x), int(y), int(cw), int(ch)]
+
+
 def plan_check(w: dict, cfg: dict) -> dict:
     """소스 있나·길이 되나·해상도 ≥720p·확대 ≤2.3배(A4). 크롭 상자도 여기서 정한다(판단 한 곳)."""
     W, H = cfg["window"]
@@ -224,14 +237,8 @@ def plan_check(w: dict, cfg: dict) -> dict:
             continue
         sw, sh, sd = probe(c["path"])
         c["src_wh"], c["src_dur"] = (sw, sh), sd
-        if c["crop"]:
-            x, y, cw, ch = c["crop"]
-        else:
-            ch = sh
-            cw = min(sw, int(sh * W / H) // 2 * 2)
-            x = (sw - cw) // 2 if c["crop_x"] is None else int(c["crop_x"])
-            y = 0
-        c["box"] = [int(x), int(y), int(cw), int(ch)]
+        c["box"] = crop_box(c.get("crop"), c.get("crop_x"), sw, sh, W, H)
+        ch = c["box"][3]
         z = round(H / ch, 2)
         zooms.append(z)
         if not c["meme"] and min(sw, sh) < 720:
@@ -1024,11 +1031,17 @@ def plan_sheet(w, cfg, dst: Path):
 
 
 # ── 9) 한 작품 ──────────────────────────────────────────────────────────
-def make_one(pdir: Path, wdir: Path, a) -> dict:
+def make_one(pdir: Path, wdir: Path, a, cfg_patch: dict | None = None) -> dict:
+    """cfg_patch = 회원 PC 가 덮는 make 칸(짤 폴더·회원 빠르기 — runner_ops.c_pm 만 준다). PC 명령(main)은 안 준다 = PC 동작 그대로."""
     M, cfg = load_preset(pdir)
+    if cfg_patch:
+        cfg = {**cfg, **cfg_patch}
     clk = Clock()
     log = {"preset": str(pdir), "work": str(wdir), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     w = load_work(wdir, M, cfg)
+    lj = pdir / "line.json"      # 이 프리셋의 짝 판(대본 검사 기준) — 경로로 짐작하면 판 이름 없는 작품 폴더가 잇썸홈판으로 재졌다(11-03 썰템쇼 작품1·2)
+    if lj.exists():
+        w["style_version"] = json.loads(lj.read_text(encoding="utf-8")).get("version")
     if w["S"].get("hybrid"):   # 하이브리드(앞 프리셋 줄 + 뒤 체험 줄을 한 대본으로, 사장님 10-20) — 검사 기준만 manifest hybrid_checks 로 덮는다
         if not cfg.get("hybrid_checks"):
             raise SystemExit(f"{pdir}/manifest.json channel_rules.make 에 hybrid_checks 가 없다 — 하이브리드 길이·효과음 기준을 먼저 적어라")

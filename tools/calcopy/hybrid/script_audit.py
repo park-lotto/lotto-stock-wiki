@@ -99,7 +99,13 @@ def speech_rule(st: dict) -> dict | None:
 
 def as_lines(d: dict) -> dict:
     """대본 꼴 맞추기(주인 한 곳): 최상위 lines(하이브리드 판들) 그대로 / 없고 final.lines(샥탬 shark 대본)면 그것을 lines 로 —
-    샥탬 kind '나레/원음' 은 'tts/orig' 로. 최상위 lines 가 있으면 아무것도 안 바꾼다(옛 동작 그대로)."""
+    샥탬 kind '나레/원음' 은 'tts/orig' 로. PC 제작기(preset_make) 작품 대본(frame_vars 칸)은 화자 speaker → who · 줄 종류 없으면 tts ·
+    훅 제목('\\n' 2줄) → title_lines(11-03: 썰템쇼 PC 10편이 꼴을 못 읽혀 화자 0줄·제목 0줄로 전부 미달). 그 밖은 아무것도 안 바꾼다(옛 동작 그대로)."""
+    if d.get("frame_vars") and d.get("lines"):
+        lines = [{"id": l.get("id") or f"줄{i + 1}", **l, "kind": l.get("kind") or "tts",
+                  **({"who": l["speaker"]} if l.get("speaker") and not l.get("who") else {})} for i, l in enumerate(d["lines"])]
+        hook = next((v for k, v in d["frame_vars"].items() if "hook" in k and "title" in k and isinstance(v, str)), "")
+        return {**d, "lines": lines, **({"title_lines": [[[t, None]] for t in hook.split("\n") if t.strip()]} if hook and not d.get("title_lines") else {})}
     if d.get("lines") or not (d.get("final") or {}).get("lines"):
         return d
     return {**d, "lines": [{**l, "kind": KIND.get(l.get("kind"), l.get("kind"))} for l in d["final"]["lines"]]}
