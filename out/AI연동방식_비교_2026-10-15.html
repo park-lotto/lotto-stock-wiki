@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 연동 방식 비교</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#5b6475;--line:#e3e6ec;--acc:#2563eb;--ok:#1f9d55;--wait:#d97706;--no:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8ebf0;--sub:#9aa3b2;--line:#2c3340}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 10px;border-left:4px solid var(--acc);padding-left:10px}
+.meta{color:var(--sub);font-size:13px}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:16px}
+.hero p{margin:6px 0}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.08);font-size:13px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;color:#fff;white-space:nowrap}
+.ok{background:var(--ok)}.wait{background:var(--wait)}.no{background:var(--no)}
+blockquote{margin:0;background:var(--card);border-left:4px solid var(--acc);padding:10px 14px;border-radius:6px}
+.q{background:var(--card);border-left:4px solid var(--wait);border-radius:8px;padding:10px 14px;margin:8px 0}
+ol li{margin:6px 0}
+code{font-size:12.5px;background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px;word-break:break-all}
+</style></head><body><div class="wrap">
+<h1>AI 연동 방식 비교 — 볼케이노식 · 버텍스 · 고객 Max</h1>
+<div class="meta">2026-10-15 · 컨셉 스튜디오 상품화 검토 · 근거: Anthropic 공식 문서 + 볼케이노 사용 기록</div>
+
+<div class="hero">
+ <p><span class="tag ok">추천</span> <b>웹 스튜디오 + 버텍스(우리 서버)</b>를 기본 상품으로.</p>
+ <p><span class="tag no">불가</span> <b>고객 Claude Max를 우리 웹에 연동</b>은 Anthropic 규정 위반.</p>
+ <p><span class="tag wait">나중</span> 볼케이노식(고객 PC Claude Code + 우리 MCP)은 고급 회원용 별도 상품 후보.</p>
+</div>
+
+<h2>근거 — Anthropic 공식 규정</h2>
+<blockquote>"제3자 개발자는 자기 앱에 Claude.ai 로그인을 넣거나, <b>사용자를 대신해 Free·Pro·Max 요금제 인증으로 요청을 보내면 안 된다.</b> 또 Claude.ai 인증 정보나 세션 토큰을 <b>수집·저장·중계해서도 안 된다.</b>"<br>
+<span class="meta">— Claude Code Docs · Legal and compliance (code.claude.com/docs/en/legal-and-compliance), 번역</span></blockquote>
+<p>→ 고객이 Max를 결제해도 그 계정을 우리 웹 스튜디오가 받아 쓰는 길은 막혀 있습니다. 걸리면 고객 계정과 우리 서비스가 둘 다 위험합니다.</p>
+
+<h2>세 방식 비교</h2>
+<table>
+<tr><th></th><th>A. 웹 스튜디오 + 버텍스</th><th>B. 볼케이노식<br>(고객 PC Claude Code + 우리 MCP)</th><th>C. 웹 스튜디오 + 고객 Max</th></tr>
+<tr><td>가능한가</td><td><span class="tag ok">됨</span> 지금 라이브에서 버텍스로 도는 중</td><td><span class="tag ok">됨</span> 고객이 자기 Claude Code를 직접 쓰는 형태</td><td><span class="tag no">규정 위반</span></td></tr>
+<tr><td>고객 부담</td><td>웹에서 버튼만</td><td>Claude Code 설치·키 파일·파이썬·ffmpeg 설치·명령 승인</td><td>—</td></tr>
+<tr><td>60대 고객</td><td>쓸 수 있음</td><td>사실상 어려움</td><td>—</td></tr>
+<tr><td>AI 비용</td><td><b>우리가 냄</b> → 크레딧 가격에 반영</td><td>고객 구독이 냄</td><td>—</td></tr>
+<tr><td>컨셉 노하우 보호</td><td>서버에만 있음</td><td>서버가 단계별 지시만 주면 보호 (볼케이노 방식)</td><td>—</td></tr>
+<tr><td>품질 관리</td><td>우리가 통제</td><td>고객 PC 환경마다 달라짐 (9월 볼케이노 사용 때 PC마다 따로 설치해야 했음)</td><td>—</td></tr>
+<tr><td>영상 렌더</td><td>우리 서버</td><td>고객 PC</td><td>—</td></tr>
+</table>
+
+<h2>볼케이노는 어떻게 하나 (확인한 것)</h2>
+<table>
+<tr><th>항목</th><th>내용</th></tr>
+<tr><td>구조</td><td>두뇌는 볼케이노 서버(Cloudflare), 고객 PC는 실행기가 서버 지시대로 돌림</td></tr>
+<tr><td>AI 비용</td><td>고객 PC의 <b>구독 Claude</b>(<code>claude -p</code>)가 기본, 실패하면 고객 EvoLink 키(유료)</td></tr>
+<tr><td>고객이 넣는 키</td><td>컨셉마다 다름 — 정치는 네이버 이미지 검색·Typecast·Speechmatics 4개</td></tr>
+<tr><td>팩</td><td>첫 편에 효과음 79·밈 57·글꼴 4·얼굴/글자 인식 모델을 받음. <b>컨셉이 팩을 정함</b></td></tr>
+<tr><td>사람 개입</td><td>막히는 자리에서만 멈추고 대부분 Claude가 채움 (9월 뇌전구 편: 사람이 볼 것 1건)</td></tr>
+<tr><td>등급</td><td>일반 / 프반 전용</td></tr>
+</table>
+
+<h2>가져올 것 / 안 가져올 것</h2>
+<table>
+<tr><th>가져올 것</th><th>안 가져올 것</th></tr>
+<tr><td>컨셉마다 단계·필요한 것을 설정에 적어 두는 방식<br>막히는 자리만 멈추고 나머지는 AI가 채우는 방식<br>컨셉이 팩 기본값을 정하는 방식</td>
+<td>고객 PC에 설치시키기<br>고객이 API 키 파일을 직접 넣기</td></tr>
+</table>
+
+<h2>A로 가려면 남은 일</h2>
+<ol>
+ <li><b>편당 AI 비용 실측</b> — 버텍스 대본·검사 호출 + TTS를 컨셉별로 재서 크레딧 가격에 반영 <span class="tag wait">미실측</span></li>
+ <li><b>B는 같은 컨셉 설정표를 MCP로도 여는 것</b> — 엔진은 한 벌 그대로, 나중에</li>
+</ol>
+
+<h2>같이 짚을 것</h2>
+<div class="q"><b>우리 서버의 사장님 Max 토큰</b> — 7월부터 서버에 복사해 <code>claude -p</code>로 쓰고 있음(메모리 기록). 사장님 본인 작업에는 괜찮지만, <b>고객 영상 제작 단계에 이 경로가 들어가 있으면 위 규정에 걸립니다.</b> 지금 고객 제작 단계에서 쓰는지는 <b>아직 확인 안 함.</b></div>
+</div></body></html>

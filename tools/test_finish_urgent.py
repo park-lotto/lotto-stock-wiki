@@ -53,7 +53,8 @@ def _merge_order(repo):
     return [ln for ln in out.splitlines() if "track/" in ln]
 
 
-def test_급행이_먼저_push_보통은_보류(repo, tmp_path):
+def test_급행이_먼저_push_보통은_보류(repo, tmp_path, monkeypatch):
+    monkeypatch.setenv("TRACK_SOLO", "1")   # 옛 경로(혼자 병합·끼어듦 재시험) 시험 — 묶음 병합에선 끼어듦이 없다(관제 212)
     for n, f in (("급행", "u.py"), ("보통1", "a.py"), ("보통2", "b.py")):
         _make_track_commit(repo, n, fname=f, body="X = 1\n")
     drv = tmp_path / "driver.py"

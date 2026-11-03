@@ -1,0 +1,274 @@
+{
+ "id": "Tn9sfqSnZYw",
+ "dur": 7.57,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "판다인 줄 알았는데",
+   "colors": [
+    {
+     "word": "판다인 줄 알았는데",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "뒤집어보니까...",
+   "colors": [
+    {
+     "word": "뒤집어보니까...",
+     "hex": "#E3141B"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   410,
+   1080,
+   1560
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1591,
+   1659
+  ],
+  "title_y": [
+   [
+    170,
+    269
+   ],
+   [
+    300,
+    400
+   ]
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": null,
+  "note": "틀 A(흰 바탕 + 위 제목 2줄 검정/빨강 + 가운데 창 410~1560 + 창 아래 흰 바탕 위 자막). 0~0.2초는 제목 없는 끝 장면 미리보기(하트 날림). [광고] 표식 없음(눈)"
+ },
+ "lines": [
+  {
+   "t0": 0.4,
+   "t1": 1.5,
+   "speaker": "불명",
+   "text": "분명 판다였는데...",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽, 창 아래 흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1592,
+    1658
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~5px(눈, 확대 크롭 work2/fr/tn_c12.png)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "체크무늬 천 위 판다 인형을 두 손으로 잡음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "0.2 컷(미리보기→본편)은 줄 시작이 아니다"
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.8,
+   "speaker": "불명",
+   "text": "근데 왜 뒤집어?",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽, 창 아래 흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1592,
+    1657
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 4~5px(눈, 확대 크롭 work2/fr/tn_c12.png)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 1.78,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +27.3dB(유성 0.12·고립 0.95) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "판다 인형을 옆으로 뒤집음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.9,
+   "t1": 3.8,
+   "speaker": "불명",
+   "text": "잠깐만...",
+   "layer": null,
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽, 창 아래 흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1591,
+    1657
+   ],
+   "fill_hex": "#FFFDFF",
+   "outline": "검정 약 4~5px(눈, 확대 크롭 work2/fr/tn_c12.png)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 3.55,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +19.3dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "뒤집힌 판다 속에서 주황 털이 보임",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.5,
+   "speaker": "불명",
+   "text": "레서판다 등장ㅋㅋ",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽, 창 아래 흰 바탕) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1592,
+    1657
+   ],
+   "fill_hex": "#FDF9F9",
+   "outline": "검정 약 4~5px(눈, 확대 크롭 work2/fr/tn_c12.png)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "레서판다",
+     "hex": "#EEC071"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "레서판다 인형으로 바뀐 모습",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.4
+  ],
+  [
+   1.5,
+   1.6
+  ],
+  [
+   2.8,
+   2.9
+  ],
+  [
+   3.8,
+   4.5
+  ],
+  [
+   5.5,
+   7.57
+  ]
+ ],
+ "beats": "미리보기(0~0.2 끝 장면 레서판다+하트) → 훅(0.4~1.5 '분명 판다였는데...') → 질문(1.6~2.8 '근데 왜 뒤집어?') → 반전(2.9~3.8 '잠깐만...') → 공개(4.5~5.5 '레서판다 등장ㅋㅋ') → 끝(5.5~7.57 자막 없이 꼬리 흔들기 + 하트 반짝이, CTA 없음)",
+ "narr_share": "나레 줄 0/4, 나레 0초/7.57초",
+ "notes": [
+  "말 없음: 위스퍼(VAD) 언어 판정 en·한국어 낱말 0 — 들린 것은 영어 가사 노래 BGM 한 줄('I've got no roots…' 받아쓰기). 스펙트럼 work2/spec/all.jpg 2행 오른쪽 = 화음 띠(노래), 나레 말소리 띠 없음.",
+  "자막 4줄 모두 창 밖 아래 흰 바탕 위 흰 글 검정 외곽(작음, 잉크 높이 약 64px) · 줄 사이 0.1~0.7초 빈칸 · 끝 2초는 자막 없음.",
+  "0~0.2초 = 끝 장면(레서판다+하트)을 앞에 붙인 미리보기(iZ-TprLYezA 의 1위 미리보기와 같은 꼴) — 제목도 없다.",
+  "6.5~끝 여러 색 하트 윤곽 반짝이 — 채널이 얹은 꾸밈으로 봄(원본 촬영엔 없을 그림).",
+  "제목 빨강 hex 는 눈(px clusters 가 흰 바탕 검정 글을 못 잡음)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "끝 장면 미리보기: 레서판다 인형 + 여러 색 하트 윤곽(제목·자막 없음) → 0.2 컷 뒤 판다 인형 본편",
+  "face_frac": 0.0,
+  "text": ""
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "0.2초부터 상시 고정 2줄",
+ "sound_detail": "말 없음(한국어 낱말 0, 위스퍼 lang=en) · 영어 가사 노래 BGM(신호)"
+}

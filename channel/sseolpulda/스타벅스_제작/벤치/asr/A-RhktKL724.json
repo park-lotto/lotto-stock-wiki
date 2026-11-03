@@ -1,0 +1,1 @@
+{"results": [{"type": "word", "start_time": 0.0, "end_time": 2.2, "alternatives": [{"content": "이거 스타벅스 사이즈입니다."}]}, {"type": "word", "start_time": 3.8, "end_time": 5.2, "alternatives": [{"content": "그럼요. 당연히 돌리고 싶어."}]}], "engine": "gemini-free"}

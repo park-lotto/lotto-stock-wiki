@@ -1,0 +1,193 @@
+{
+ "_note": "뒤 화면 = 쿠팡 문어빨판 흡착패드(8550771212)와 같은 꼴(실리콘 문어빨판 패드) 유튜브 쇼츠 5편 — pwNqYHUBHjE luhv_lulu · ZfeCI2xMT7o Maryam Thomas 62,326회 · bEi9upNhuP4 · pyoLQRk8d8o Bespoke Studio · sHIWHLygBYw rae 'will it stick?'(상표 글자 줄은 crop 밖). 방송·공식 데모 안 씀. 박힌 글자는 src_crop 밖. 효과 없음(R4 — 대상 확실한 꾸밈만, 뒤는 손 흔들림·카메라 이동이 커서 뺌) · 샷 경계(scene>0.3): ZfeC 3.33·6.67 / bEi9 1.3·5.8 / pwNq 2.47·7.93·13.87 / pyoL 없음 — 컷은 모두 경계 안 · 같은 소스 재사용은 원본 시각 3초 넘게 떼거나 앞으로 이어지게(check B13)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/8편_Flipstik/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "shots": [
+  {
+   "i": 0,
+   "line": "B1",
+   "src": "pwNqYHUBHjE.mp4",
+   "ss": 0.6,
+   "dur": 1.75,
+   "src_crop": [
+    0,
+    800,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(pwNq 'clean my octo buddy'): 먼지·얼룩 점이 묻은 흰 문어빨판 패드 근접(샷 0~2.47 안)"
+  },
+  {
+   "i": 1,
+   "line": "B1",
+   "src": "ZfeCI2xMT7o.mp4",
+   "ss": 3.4,
+   "dur": 1.6,
+   "src_crop": [
+    0,
+    580,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(ZfeC 비행기): 폰 뒤 분홍 문어빨판 패드를 떼어 보여 줌(샷 3.33~6.67 안, 박힌 글자 y490~545 위로 잘라냄)"
+  },
+  {
+   "i": 2,
+   "line": "B1",
+   "src": "sHIWHLygBYw.mp4",
+   "ss": 6.0,
+   "dur": 1.15,
+   "src_crop": [
+    0,
+    420,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(sHIW 'will it stick?'): 거울 앞, 폰 뒤 패드에 립 제품을 붙여 봄(상표 글자 y≈320 위로 잘라냄)"
+  },
+  {
+   "i": 3,
+   "line": "B1",
+   "src": "bEi9upNhuP4.mp4",
+   "ss": 0.0,
+   "dur": 1.25,
+   "src_crop": [
+    0,
+    290,
+    720,
+    701
+   ],
+   "mute": true,
+   "ours": "리뷰(bEi9): 손에 든 초록·보라·주황 문어빨판 패드들(샷 0~1.3, 박힌 글자 y180~260 위로 잘라냄)"
+  },
+  {
+   "i": 4,
+   "line": "B2",
+   "src": "bEi9upNhuP4.mp4",
+   "ss": 2.2,
+   "dur": 2.0,
+   "src_crop": [
+    0,
+    330,
+    720,
+    701
+   ],
+   "mute": true,
+   "ours": "리뷰(bEi9): 폰 뒷면에 초록 문어빨판 패드를 꾹 눌러 붙임(샷 1.3~5.8 안)"
+  },
+  {
+   "i": 5,
+   "line": "B2",
+   "src": "sHIWHLygBYw.mp4",
+   "ss": 1.0,
+   "dur": 1.45,
+   "src_crop": [
+    0,
+    420,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(sHIW): 패드 붙은 폰을 들고 거울 셀카"
+  },
+  {
+   "i": 6,
+   "line": "B3",
+   "src": "pyoLQRk8d8o.mp4",
+   "ss": 5.6,
+   "dur": 2.3,
+   "src_crop": [
+    0,
+    450,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(pyoL 'Before I take a shower'): 샤워실 회색 타일 벽에 손 없이 붙어 있는 폰(박힌 글자 y200~290 위로 잘라냄)"
+  },
+  {
+   "i": 7,
+   "line": "B3",
+   "src": "bEi9upNhuP4.mp4",
+   "ss": 7.4,
+   "dur": 2.5,
+   "src_crop": [
+    0,
+    270,
+    720,
+    701
+   ],
+   "mute": true,
+   "ours": "리뷰(bEi9): 나무 방문에 폰을 붙이고 손 뗀 채 웃음"
+  },
+  {
+   "i": 8,
+   "line": "B4",
+   "src": "pwNqYHUBHjE.mp4",
+   "ss": 5.5,
+   "dur": 1.8,
+   "src_crop": [
+    0,
+    520,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(pwNq): 흐르는 물에 패드를 헹굼(샷 2.47~7.93 안)"
+  },
+  {
+   "i": 9,
+   "line": "B4",
+   "src": "pwNqYHUBHjE.mp4",
+   "ss": 8.2,
+   "dur": 1.6,
+   "src_crop": [
+    0,
+    520,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(pwNq): 패드에 비누 거품을 짜서 씻음(샷 7.93~13.87 안)"
+  },
+  {
+   "i": 10,
+   "line": "B5",
+   "src": "ZfeCI2xMT7o.mp4",
+   "ss": 8.2,
+   "dur": 2.1,
+   "src_crop": [
+    0,
+    580,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "리뷰(ZfeC): 비행기 좌석 화면에 폰을 붙이고 손가락으로 톡톡(샷 6.67~끝)"
+  },
+  {
+   "i": 11,
+   "line": "B5",
+   "src": "bEi9upNhuP4.mp4",
+   "ss": 28.5,
+   "dur": 2.05,
+   "src_crop": [
+    0,
+    270,
+    720,
+    701
+   ],
+   "mute": true,
+   "ours": "리뷰(bEi9): 화장실 벽에 폰 붙여 두고 손 흔듦"
+  }
+ ],
+ "effects": []
+}

@@ -1,0 +1,14 @@
+{
+ "_note": "숏템리폿 4차 31 인스탁스 미니 에보 시네마 앞 화면 소스 — hc = Henry's Camera wtxpqVtOymY 260~550초 사본(1920x1080 → 857x1080, 위에서 찍은 손만, 오른쪽 위 표식 x≥1840 은 crop 밖) · sf = SmartphoneFan cNLHS5tsRc0 250~346초 사본(손만) · 창 1080x1360. hc 는 14.0 → 62.2 → 102.8 차례지만 N1 이 먼저(hc 102.85 → 14.1 → sf 7.5 → hc 62.25 — 서로 ±3초 밖).",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/31_InstaxCinema/front/src",
+ "files": {"hc": "hc.mp4", "sf": "sf.mp4", "pp": "hc.mp4"},
+ "voice_src": {"hc": "hc_voice.wav", "sf": "sf_voice.wav"},
+ "scene_cuts": {"hc": [9.10, 32.38, 35.38, 92.73, 102.78, 111.29, 125.76, 136.10, 150.62, 194.66, 197.25, 200.67, 205.51, 208.59, 220.98, 292.64], "sf": [], "how": "ffmpeg 320px select scene>0.12 — 원래 시각에서 사본 시작(hc 260·sf 250)을 뺌 · sf 202.37~364.97 은 한 샷(사본 0~96 전부)"},
+ "blocks": {
+  "N1": {"src": "hc", "ss": 102.85, "src_crop": [520, 0, 857, 1080], "why": "hc 102.78~111.29 한 샷 — 두 손으로 쥔 에보 시네마 앞면(다이얼·단추), 얼굴 없음"},
+  "O1": {"src": "hc", "src_crop": [560, 0, 857, 1080], "why": "주머니에서 꺼내 쥐며 'wow, what a wild looking camera … can't believe this exists'(9.10~32.38 한 샷)"},
+  "N2": {"src": "sf", "ss": 7.5, "src_crop": [530, 0, 857, 1080], "why": "sf 카메라를 세로로 쥔 손(한 샷 안)"},
+  "O2": {"src": "hc", "src_crop": [480, 0, 857, 1080], "why": "손잡이 낀 카메라를 쥐며 'Wow … feels really good in the hands'(35.38~92.73 한 샷)"}
+ },
+ "consts": {"LUFS_FINAL": -14.0, "LUFS_NARR": -13.8, "LIMIT": 0.8, "GAINS": [10.3, 11.2], "GAP_NN": 0.25, "LEAD": 0.03, "_why": "−14 LUFS · GAINS = −16 − 원음 창 LUFS(ebur128, VOICE_AF 뒤: O1 −26.3 · O2 −27.2) · LEAD 0.03"}
+}

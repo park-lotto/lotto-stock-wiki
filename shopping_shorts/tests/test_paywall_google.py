@@ -27,7 +27,7 @@ def test_callback_rejects_state_mismatch(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "DASH_SECRET", "sec")
     called = {"n": 0}
-    monkeypatch.setattr(appmod, "_google_fetch_identity", lambda code: called.__setitem__("n", called["n"] + 1))
+    monkeypatch.setattr(appmod, "_google_fetch_identity", lambda code, **kw: called.__setitem__("n", called["n"] + 1))
     c = TestClient(appmod.app, cookies={"g_state": "GOOD"})
     r = c.get("/auth/google/callback?code=X&state=EVIL", follow_redirects=False)
     assert r.status_code == 303 and "/login" in r.headers["location"]
@@ -39,7 +39,7 @@ def test_callback_success_sets_session(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "DASH_SECRET", "sec")
     monkeypatch.setattr(appmod, "_google_fetch_identity",
-                        lambda code: {"sub": "sub-xyz", "email": "u@x.com"})
+                        lambda code, **kw: {"sub": "sub-xyz", "email": "u@x.com"})
     c = TestClient(appmod.app, cookies={"g_state": "S1"})
     r = c.get("/auth/google/callback?code=CODE&state=S1", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/"
@@ -52,7 +52,7 @@ def test_callback_success_sets_session(tmp_path, monkeypatch):
 def test_callback_failed_identity_no_session(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "DASH_SECRET", "sec")
-    monkeypatch.setattr(appmod, "_google_fetch_identity", lambda code: None)   # 인증 실패
+    monkeypatch.setattr(appmod, "_google_fetch_identity", lambda code, **kw: None)   # 인증 실패
     c = TestClient(appmod.app, cookies={"g_state": "S1"})
     r = c.get("/auth/google/callback?code=CODE&state=S1", follow_redirects=False)
     assert r.status_code == 303 and "/login" in r.headers["location"]
@@ -142,3 +142,13 @@ def test_create_customer_approved_flag(tmp_path):
     cust_pend = s.get_customer(cid_pend)
     assert cust_pend["approved_at"] is None                     # 대기중
     assert cust_pend["full_access_until"] == 0                  # 체험 미시작
+
+
+def test_redirect_uri_follows_host():
+    """g_state 쿠키가 도메인별이라 콜백도 들어온 도메인으로(2026-10-23 도메인전환)."""
+    class R:
+        def __init__(self, h): self.headers = {"host": h}
+    assert appmod._google_redirect_uri(R("stmaker.kr")) == "https://stmaker.kr/auth/google/callback"
+    assert appmod._google_redirect_uri(R("STMAKER.KR:443")) == "https://stmaker.kr/auth/google/callback"
+    assert appmod._google_redirect_uri(R("shoppingshorts.duckdns.org")) == appmod.GOOGLE_REDIRECT_URI
+    assert appmod._google_redirect_uri(None) == appmod.GOOGLE_REDIRECT_URI

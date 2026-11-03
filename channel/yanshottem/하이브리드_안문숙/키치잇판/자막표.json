@@ -1,0 +1,435 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.919,
+   "text": "동안으로 유명한",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "동안으로"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.919,
+   "t1": 2.696,
+   "text": "안문숙이 샴푸 대신",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "안문숙이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.696,
+   "t1": 3.745,
+   "text": "비누 하나만 쓴다네요?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "비누"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.745,
+   "t1": 4.675,
+   "text": "요거 하나만 갖고 가면",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.675,
+   "t1": 5.395,
+   "text": "끝나요",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "끝나요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 5.395,
+   "t1": 6.845,
+   "text": "저는 샴푸 필요 없어요",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "샴푸"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 6.845,
+   "t1": 8.149,
+   "text": "대체 어떤 비누길래?",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "비누길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 8.149,
+   "t1": 9.979,
+   "text": "한국에서 만든 도브 비누하고",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 9.979,
+   "t1": 11.299,
+   "text": "미국에서 만든 도브하고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 11.299,
+   "t1": 12.689,
+   "text": "성분 자체가 다르대",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "다르대"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 12.689,
+   "t1": 14.049,
+   "text": "와 이게 뭐냐",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "뭐냐"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 14.049,
+   "t1": 15.849,
+   "text": "완전 신세계를",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "신세계를"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "신세계를"
+    }
+   ]
+  },
+  {
+   "line": "O3",
+   "t0": 15.849,
+   "t1": 16.529,
+   "text": "맛본 거야",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 16.529,
+   "t1": 17.739,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 17.739,
+   "t1": 18.833,
+   "text": "바로 따라 사 봤는데요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 18.833,
+   "t1": 20.193,
+   "text": "보습 크림이 1/4이라",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "1/4이라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 20.193,
+   "t1": 21.294,
+   "text": "로션 바른 듯",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "로션"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 21.294,
+   "t1": 22.31,
+   "text": "촉촉하더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "촉촉하더라고요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 22.31,
+   "t1": 24.349,
+   "text": "미국에서 70년 가까이",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "70년"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 24.349,
+   "t1": 25.27,
+   "text": "팔려 온 비누래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "비누래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.27,
+   "t1": 26.222,
+   "text": "그래서 요즘",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "요즘"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 26.222,
+   "t1": 27.065,
+   "text": "비누로 머리 감는",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "비누로"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 27.065,
+   "t1": 28.192,
+   "text": "사람들 사이에서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "사이에서"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 28.192,
+   "t1": 29.0,
+   "text": "대세래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "대세래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = Cs-Ka_S8nDM",
+  "스티커 spark_lines → O3「완전 신세계를」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 18, 'cut': 6} · 강조 20/24"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "Cs-Ka_S8nDM",
+  "worst_slot_diff": 0.091,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 1.0
+    },
+    "ours": {
+     "pop": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 9
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.33,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.45,
+     "pop": 0.45,
+     "typing": 0.09
+    },
+    "ours": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "bench_emph": 0.73,
+    "ours_emph": 0.67,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "spark_lines": 1
+    },
+    "ours": {
+     "spark_lines": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

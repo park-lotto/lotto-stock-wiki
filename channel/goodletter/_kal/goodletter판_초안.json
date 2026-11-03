@@ -1,0 +1,115 @@
+{
+ "name": "goodletter판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": null,
+  "channel": "",
+  "analysis": "channel/goodletter/스타일분석.md",
+  "line_reads": "channel/goodletter/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\goodletter\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/goodletter/팔레트.json",
+  "rules_counted": "channel/goodletter/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": 5.96,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 24.2,
+  "max": 40.1
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 세요, 래요 · 존댓말 1.0 · 전언 0.5 · 자수 중앙 8.0",
+   "원음: 어미 야, 다, 예요, 어요 · 존댓말 0.57 · 전언 0.0 · 자수 중앙 6.0"
+  ],
+  "example": [],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   6,
+   464,
+   1068,
+   1096
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 6.01
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "pop",
+   "orig_enter": "pop",
+   "fx_rate": {
+    "원음": 1.0,
+    "제3자": 1.0,
+    "불명": 1.0,
+    "나레": 1.0
+   },
+   "plain_rate": 0.0,
+   "by_pos": {
+    "훅": 1.0,
+    "본문": 1.0,
+    "끝": 1.0
+   },
+   "strong": [
+    "화자=원음 → enter=pop 191/192",
+    "화자=원음 → enter_fx 191/192",
+    "자리=본문 → enter=pop 154/155",
+    "자리=본문 → enter_fx 154/155",
+    "역할=본문 → enter=pop 109/109",
+    "역할=본문 → enter_fx 109/109",
+    "자리=끝 → enter=pop 31/34",
+    "자리=끝 → enter_fx 31/34",
+    "자리=훅 → enter=pop 25/25",
+    "자리=훅 → enter_fx 25/25",
+    "역할=증거 → enter=pop 22/22",
+    "역할=증거 → enter_fx 22/22",
+    "역할=훅 → enter=pop 19/19",
+    "역할=훅 → enter_fx 19/19",
+    "역할=끝 → enter=pop 14/17",
+    "역할=끝 → enter_fx 14/17",
+    "화자전환 첫 덩어리=원음 → enter=pop 13/13",
+    "역할=반전 → enter=pop 12/12",
+    "역할=반전 → enter_fx 12/12",
+    "역할=공개 → enter=pop 11/12"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

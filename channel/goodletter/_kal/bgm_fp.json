@@ -1,0 +1,194 @@
+{
+ "goodletter__753rWbcjHYc": {
+  "tempo": {
+   "low": 126.0,
+   "low_ac": 0.15,
+   "all": 166.7,
+   "all_ac": 0.18
+  },
+  "centroid_hz": 845.0,
+  "match": [
+   [
+    "qiuqiu",
+    0.683
+   ],
+   [
+    "buttercup",
+    0.525
+   ],
+   [
+    "sweets",
+    0.449
+   ]
+  ],
+  "dur": 40.1
+ },
+ "goodletter__E6SXj8FdT2s": {
+  "tempo": {
+   "low": 147.7,
+   "low_ac": 0.11,
+   "all": 77.1,
+   "all_ac": 0.07
+  },
+  "centroid_hz": 784.0,
+  "match": [
+   [
+    "otsukare_summer",
+    0.69
+   ],
+   [
+    "beggin",
+    0.64
+   ],
+   [
+    "no_batidao",
+    0.547
+   ]
+  ],
+  "dur": 29.5
+ },
+ "goodletter__X9mRnmvmTD8": {
+  "tempo": {
+   "low": 65.4,
+   "low_ac": 0.15,
+   "all": 126.0,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 845.0,
+  "match": [
+   [
+    "buttercup",
+    0.888
+   ],
+   [
+    "free_bird",
+    0.691
+   ],
+   [
+    "everything",
+    0.66
+   ]
+  ],
+  "dur": 26.1
+ },
+ "goodletter__j-fB61Yhx5g": {
+  "tempo": {
+   "low": 147.7,
+   "low_ac": 0.09,
+   "all": 184.6,
+   "all_ac": 0.06
+  },
+  "centroid_hz": 676.0,
+  "match": [
+   [
+    "no_batidao",
+    0.791
+   ],
+   [
+    "free_bird",
+    0.777
+   ],
+   [
+    "lets_go",
+    0.726
+   ]
+  ],
+  "dur": 25.8
+ },
+ "goodletter__kfmZ_t4Bbss": {
+  "tempo": {
+   "low": 92.3,
+   "low_ac": 0.12,
+   "all": 172.3,
+   "all_ac": 0.16
+  },
+  "centroid_hz": 782.0,
+  "match": [
+   [
+    "beggin",
+    0.624
+   ],
+   [
+    "otsukare_summer",
+    0.6
+   ],
+   [
+    "no_batidao",
+    0.48
+   ]
+  ],
+  "dur": 29.9
+ },
+ "goodletter__m4m5oajgQFo": {
+  "tempo": {
+   "low": 73.8,
+   "low_ac": 0.12,
+   "all": 172.3,
+   "all_ac": 0.16
+  },
+  "centroid_hz": 749.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.637
+   ],
+   [
+    "otsukare_summer",
+    0.607
+   ],
+   [
+    "lets_go",
+    0.489
+   ]
+  ],
+  "dur": 24.1
+ },
+ "goodletter__sMx9RWuifCA": {
+  "tempo": {
+   "low": 143.6,
+   "low_ac": 0.07,
+   "all": 123.0,
+   "all_ac": 0.13
+  },
+  "centroid_hz": 619.0,
+  "match": [
+   [
+    "sweets",
+    0.843
+   ],
+   [
+    "beggin",
+    0.707
+   ],
+   [
+    "otsukare_summer",
+    0.705
+   ]
+  ],
+  "dur": 26.7
+ },
+ "goodletter__vcb_-h7Ajwo": {
+  "tempo": {
+   "low": 105.5,
+   "low_ac": 0.24,
+   "all": 105.5,
+   "all_ac": 0.14
+  },
+  "centroid_hz": 552.0,
+  "match": [
+   [
+    "sweets",
+    0.75
+   ],
+   [
+    "beggin",
+    0.729
+   ],
+   [
+    "machi_no_dorufin",
+    0.668
+   ]
+  ],
+  "dur": 25.1
+ }
+}

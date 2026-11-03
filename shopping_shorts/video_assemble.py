@@ -615,13 +615,21 @@ def _beat_effective_dur(beat, tts_path):
                           beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
 
 
-def _run_ffmpeg(cmd, cwd=None):
+# ffmpeg 한 번의 상한(초) — 끝없는 입력이 비어 영원히 도는 명령도 이 시간이면 오류로 끝난다(관제 285: 4시간 멈춤).
+# 정상 명령은 쇼츠 기준 수십 초~수 분. 더 긴 일은 호출부가 timeout 을 따로 준다. 환경변수로 바꿀 수 있다.
+_FF_TIMEOUT = float(os.environ.get("SHORTEM_FFMPEG_TIMEOUT") or 3600)
+
+
+def _run_ffmpeg(cmd, cwd=None, timeout=_FF_TIMEOUT):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
     stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
     않아, 명시 안 하면 subprocess가 그 핸들을 상속하려다 OSError([WinError 6]
     핸들이 잘못되었습니다)로 죽는다(2026-07-18 Task2 grounding 테스트 실측 — 이미
     _probe_duration은 이 패턴을 쓰고 있었다, 여기만 누락돼 있었다)."""
-    r = subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, **_FF_TEXT)
+    try:
+        r = subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, timeout=timeout, **_FF_TEXT)
+    except subprocess.TimeoutExpired:      # 끝없는 입력(-loop 1 등)이 비어 영원히 도는 명령을 끊는다(관제 285 — 멈춤 4시간)
+        raise RuntimeError(f"ffmpeg 시간 초과({timeout}초): {' '.join(map(str, cmd))[:300]}")
     if r.returncode != 0:
         raise RuntimeError(f"ffmpeg 실패(exit {r.returncode}): {(r.stderr or '')[-1000:]}")
     return r
@@ -1804,7 +1812,17 @@ def simple_caption_split(text, max_chars):
          없으면 창 안 마지막 어절 뒤에서 끊는다.
       4. 한 글자 관형사·부사(이 그 저 안 못 더 잘 꼭 딱 …) 뒤에서는 끊지 않는다 — 다음 어절과 같이 넘긴다.
       5. 마지막 줄이 한 어절이면 앞 줄에서 한 어절을 가져온다(앞 줄이 세 어절 이상일 때).
-    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다)."""
+    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다).
+    ★일본어는 띄어쓰기가 없어 이 규칙이 문장 통째를 한 어절로 본다 → _caption_segments_ja(폭=max_chars)로 보낸다(관제 248)."""
+    from shopping_shorts.script_translate import lang_of
+    _lg = lang_of(text)
+    if _lg in ("ja", "zh"):
+        try:
+            _mx = int(max_chars or 0)
+        except (TypeError, ValueError):
+            _mx = 0
+        _fn = _caption_segments_zh if _lg == "zh" else _caption_segments_ja
+        return _fn(text, width=_mx if _mx > 0 else None)
     words = (text or "").split()
     try:
         mx = int(max_chars or 0)
@@ -1846,6 +1864,128 @@ def simple_caption_split(text, max_chars):
     return [x for x in lines if x.strip()]
 
 
+# ── 일본어 자막 나누기(2026-10-21 관제 248) ──────────────────────────────────────
+# 일본어는 띄어쓰기가 없어 어절 규칙(_caption_segments)이 문장 통째를 한 덩어리로 보고, 그 뒤 _wrap_long 의
+# textwrap 이 19자에서 기계적으로 자른다("…使い道が多すぎ | てびっくり"). 그래서 ①문장부호 ②조사 뒤 ③가운데 순으로 나눈다.
+# 2026-10-21 라이브 e2e(job 1e2c12ade064, 캡컷 21구절) 실측 수리: 문말 조사 ね·よ 는 "重ね|られ" 같은 동사 속 ね 를 조사로 봐 뺐다
+#   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
+_JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
+_JA_MIN_HEAD = 3      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
+_JA_MIN_TAIL = 3      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+# ★일본어 한 줄 상한(관제 254, 2026-10-22): 19자는 띄어쓰기 있는 한국어 기준이다. 일본어는 공백 없이 전각 글자만이라
+#   19자가 자막 칸에 안 들어가 편집기가 글자를 줄였다(5자~19자 줄마다 크기가 달라 보임, 실측 job 1e2c12ade064).
+_JA_CAP_WRAP = 10   # 10-22 이 PC 렌더 실측: 템플릿 없음 자막 칸에 전각 11자부터 오른쪽이 잘렸다
+
+
+def _ja_split_long(seg, width=None):
+    """_CAP_WRAP 를 넘는 일본어 조각 하나 → 조각들. 조사 바로 뒤 중 두 조각 길이 차가 가장 작은 곳에서 끊고,
+    조사가 없으면 가운데 가까운 곳에서 _CAP_WRAP 이내로 자른다. 결과 조각이 또 길면 다시 나눈다."""
+    width = width or _JA_CAP_WRAP
+    if len(seg) <= width:
+        return [seg]
+    n = len(seg)
+    best = None
+    _hira = lambda c: "\u3040" <= c <= "\u309f"          # noqa: E731
+    for i in range(1, n):
+        head = seg[:i]
+        pt = next((p for p in _JA_PARTICLES if head.endswith(p)), None)
+        if not pt:
+            continue
+        if i < _JA_MIN_HEAD or n - i < _JA_MIN_TAIL:
+            continue
+        # 조사처럼 보이는 가나가 낱말 속 글자일 수 있다("もう"의 も·"もの"의 の). 앞이 한자·가타카나거나
+        # 뒤가 히라가나가 아닐 때만 조사 뒤로 본다("グッズを|一度"·"使い道が|多すぎ"·"のに|使い"는 통과).
+        # ★뒤 글자가 히라가나면 조사로 보지 않는다(2026-10-21 실측 수리 — 종전 '앞뒤 둘 다 히라가나' 조건은
+        #   "再利用で|きる"를 못 막았다). 결합 조사("のに"·"とは"·"ために")는 마지막 조사 뒤(한자·가타카나 앞)에서 잘린다.
+        if _hira(seg[i]):
+            continue
+        if pt == "の" and not head.endswith("のに"):
+            continue   # の 는 뒤 낱말을 꾸민다 — "普通の|カップ" 처럼 끊지 않는다(관제 254)
+        diff = abs(i - (n - i))
+        if best is None or diff < best[0]:
+            best = (diff, i)
+    if best is not None:
+        cut = best[1]
+    else:
+        # 조사가 없으면 가운데 가까운 **글자 종류 경계**(히라가나↔한자·가타카나)에서 자른다 — "割れ|やすかった"처럼
+        # 낱말 한가운데를 가르던 고정 가운데 절단 대신(2026-10-21 실측). 경계도 없으면 가운데.
+        # 글자 종류가 바뀌고 뒤가 히라가나가 아닌 자리(→한자·가타카나·영문 시작)만 — "普通|の" 같은 조사 앞 절단 금지(관제 254)
+        _cls = lambda c: "h" if _hira(c) else ("k" if "゠" <= c <= "ヿ" else ("c" if "一" <= c <= "鿿" else "o"))  # noqa: E731
+        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                 if _cls(seg[i - 1]) != _cls(seg[i]) and _cls(seg[i]) != "h" and seg[i] != "ー"]
+        if not cands:
+            # 긴 가타카나 낱말: ン·ング 뒤(다음이 가타카나 본글자)에서 나눈다 — "スタンディング|オベーションした"(관제 254 렌더 실측:
+            #   통째로 둔 15자가 완성본 오른쪽에서 잘렸다). 그래도 없으면 가운데.
+            _small = "ァィゥェォッャュョヮー"
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                     if seg[i - 1] == "ン" and _cls(seg[i]) == "k" and seg[i] not in _small
+                     or seg[i - 2:i] == "ング" and _cls(seg[i]) == "k" and seg[i] not in _small]
+        if not cands:
+            # て형 뒤(보조동사 앞) — "アイロンがけして|くれること"(관제 254). 가운데보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] in "てで" and _hira(seg[i - 2])]
+        if not cands:
+            # 그래도 없으면 の 뒤 낱말 시작 — 가운데 기계 절단("くしゃくしゃ|のシャツを")보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] == "の" and _cls(seg[i]) != "h"]
+        cut = min(cands, key=lambda i: (not _hira(seg[i - 1]), abs(i - (n - i)))) if cands else min(width, max(1, n // 2 + (n % 2)))   # 히라가나 끝 자리 우선("クリーニング|屋" 보다 "屋の|社長")
+    return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
+
+
+def _caption_segments_ja(narr, width=None):
+    """일본어 나레이션 → 자막 줄 목록. ①。！？!? 와 、, 뒤에서 끊는다 ②그래도 _CAP_WRAP(19)자를 넘으면
+    조사 뒤에서(앞 6자+·뒤 4자+, 가장 균형) 끊고, 조사가 없으면 가운데 가까운 곳에서 19자 이내로 자른다
+    ③끝 조각이 4자 미만이면 앞 조각에 붙인다. 각 조각 끝 마침표·쉼표는 _strip_cap_tail 로 뗀다.
+    width: 한 줄 상한(기본 _CAP_WRAP) — simple_caption_split 이 칸 글자 상한을 넘긴다."""
+    t = (narr or "").strip()
+    if not t:
+        return []
+    parts = [p for p in re.split(r"(?<=[。！？!?、,])", t)]
+    pieces = []
+    for p in parts:
+        p = _strip_cap_tail(p.strip())
+        if not p:
+            continue
+        pieces.extend(_ja_split_long(p, width))
+    pieces = [p for p in pieces if p.strip()]
+    if len(pieces) >= 2 and len(pieces[-1]) < _JA_MIN_TAIL:
+        last = pieces.pop()
+        pieces[-1] = pieces[-1] + last
+    return pieces
+
+
+_ZH_AFTER = "的了着过吧呢啊呀嘛哦"          # 이 글자 뒤에서 끊으면 자연스럽다(어기조사·구조조사)
+_ZH_BEFORE = ("就", "都", "也", "还", "但", "而", "所以", "因为", "然后", "可是", "而且", "直接", "只要", "连")   # 이 말 앞에서
+
+
+def _zh_split_long(seg, width=None):
+    """쉼표로도 못 줄인 긴 중국어 조각 → 자연 경계(的了吧… 뒤 / 就都也… 앞)에서 가장 균형 있게, 없으면 가운데."""
+    width = width or _CAP_WRAP
+    n = len(seg)
+    if n <= width:
+        return [seg]
+    lo, hi = 4, n - 3
+    cands = [i for i in range(lo, hi + 1) if seg[i - 1] in _ZH_AFTER or any(seg.startswith(w, i) for w in _ZH_BEFORE)]
+    cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
+    return _zh_split_long(seg[:cut], width) + _zh_split_long(seg[cut:], width)
+
+
+def _caption_segments_zh(narr, width=None):
+    """중국어 나레이션 → 자막 줄 목록(관제 254). ①。！？，、； 뒤에서 끊는다 ②그래도 넘치면 _zh_split_long
+    ③끝 조각이 3자 미만이면 앞 조각에 붙인다. 일본어 규칙은 가나 조사 기준이라 중국어엔 맞지 않는다."""
+    t = (narr or "").strip()
+    if not t:
+        return []
+    pieces = []
+    for p in re.split(r"(?<=[。！？!?，,、；;])", t):
+        p = _strip_cap_tail(p.strip())
+        if p:
+            pieces.extend(_zh_split_long(p, width))
+    pieces = [p for p in pieces if p.strip()]
+    if len(pieces) >= 2 and len(pieces[-1]) < 3:
+        last = pieces.pop()
+        pieces[-1] = pieces[-1] + last
+    return pieces
+
+
 def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
     각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
@@ -1864,10 +2004,19 @@ def _wrap_long(segs, manual=False):
       (_segmented_drawtext, 사장님 "자막은 무조건 한 줄"). 즉 화면 밖으로 안 나간다.
       그래서 manual일 때도 **띄어쓰기 없는 단일 어절**만은 방어를 남긴다(줄일 수 없는 것).
     """
+    from shopping_shorts.script_translate import lang_of
     out = []
     for s in segs:
         s = _strip_cap_tail(s)
         if not s:
+            continue
+        # ★일본어는 어절(띄어쓰기)이 없다 — textwrap 19자 기계 절단 대신 조사 뒤에서 나눈다(관제 248).
+        #   manual 이어도 19자 넘는 덩어리는 나눈다("어절 둘 이상이면 존중" 규칙이 일본어엔 안 맞는다).
+        if lang_of(s) in ("ja", "zh"):
+            if len(s.replace(" ", "")) > _CAP_WRAP:
+                out.extend((_caption_segments_zh if lang_of(s) == "zh" else _caption_segments_ja)(s) or [s])
+            else:
+                out.append(s)
             continue
         too_long = len(s.replace(" ", "")) > _CAP_WRAP
         # 사람이 정한 줄은 어절이 둘 이상이면 그대로 존중한다.
@@ -1906,6 +2055,13 @@ def _caption_segments(narration, preset=None):
         if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
             # 사람(또는 대본 AI)이 정한 줄 → 재분할하지 않는다(2026-09-07 경계 버그).
             return _wrap_long(lines, manual=True)
+    # ★일본어는 띄어쓰기가 없어 아래 어절 규칙이 통째로 한 덩어리가 된다 → 일본어 규칙으로(관제 248).
+    #   언어 판정은 script_translate.lang_of 한 곳.
+    from shopping_shorts.script_translate import lang_of
+    if lang_of(narr) == "ja":
+        return _caption_segments_ja(narr) or [narr]
+    if lang_of(narr) == "zh":
+        return _caption_segments_zh(narr) or [narr]
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -2720,6 +2876,205 @@ def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR
     return str(out_wav)
 
 
+# ── 🔊 소스 원음 깔기 + 나레이션 덕킹(관제 097, 2026-10-16) ─────────────────────────────
+#   해외 원본 영상 하나에 한국어 나레를 입히는 꼴(썰풀다 등) — 원음을 배경처럼 깔고, 나레가 나올 때만 낮춘다.
+#   ★판단의 주인 = 여기 함수 하나씩: 설정 읽기(source_audio_settings) · 원음 한 줄(source_audio_track) ·
+#     말소리 구간(speech_spans) · 덕킹(duck_source_audio) · 나레와 합치기(mix_narration_bed) · 한 벌(source_audio_bed).
+#     렌더·미리보기는 assemble 이, 캡컷은 capcut_draft.assemble_draft_folder 가 **같은 함수**를 부른다(0순위-B).
+#   ★기본은 끔(keep=false) — 종전 그대로 원음을 버린다(칸 클립 -an, 소리 = narration_track 한 줄).
+SOURCE_AUDIO_DEFAULT_VOLUME = 35      # % — 원음의 바탕 크기
+SOURCE_AUDIO_DEFAULT_DUCK_DB = 12     # dB — 나레가 나오는 동안 원음을 더 낮추는 양
+SOURCE_AUDIO_RAMP = 0.15              # 초 — 낮추고 되돌리는 경사(툭 끊기지 않게). 말 시작 **전**에 다 내려가 있다
+SOURCE_AUDIO_MERGE_GAP = 0.5          # 초 — 이보다 짧은 숨은 말소리로 친다(원음이 들썩이지 않게, 경사 2개보다 길어야 한다)
+_SPEECH_NOISE_DB = -35                # 나레 무음 판정 문턱(dBFS)
+_SPEECH_MIN_SILENCE = 0.25            # 초 — 이보다 짧은 무음은 무음으로 안 친다
+
+
+def _truthy(v):
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes", "on", "y")
+    return bool(v)
+
+
+def source_audio_settings(deco):
+    """deco["source_audio"] → {"volume": 0~1, "duck_db": dB} / 꺼져 있으면 None(종전 그대로).
+    ★0·false 는 유효값이다: volume=0 이면 원음 무음, duck_db=0 이면 덕킹 없음 — 기본값으로 튀지 않는다."""
+    sa = (deco or {}).get("source_audio") if isinstance(deco, dict) else None
+    if not isinstance(sa, dict) or not _truthy(sa.get("keep", False)):
+        return None
+
+    def _num(key, default, lo, hi):
+        v = sa.get(key)
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return float(default)
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return float(default)
+        if not math.isfinite(v):
+            return float(default)
+        return max(lo, min(hi, v))
+    return {"volume": _num("volume", SOURCE_AUDIO_DEFAULT_VOLUME, 0.0, 100.0) / 100.0,
+            "duck_db": _num("duck_db", SOURCE_AUDIO_DEFAULT_DUCK_DB, 0.0, 60.0)}
+
+
+_HAS_AUDIO_CACHE = {}
+
+
+def _has_audio(path):
+    key = str(path)
+    if key not in _HAS_AUDIO_CACHE:
+        try:
+            r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index",
+                                "-of", "csv=p=0", key], stdin=subprocess.DEVNULL, **_FF_TEXT)
+            _HAS_AUDIO_CACHE[key] = bool((r.stdout or "").strip())
+        except Exception:      # noqa: BLE001 — 못 재면 소리 없는 걸로(그 컷은 무음)
+            _HAS_AUDIO_CACHE[key] = False
+    return _HAS_AUDIO_CACHE[key]
+
+
+def _atempo_chain(speed):
+    """배속 → atempo 사슬(한 마디는 0.5~2.0 안이어야 옛 ffmpeg 에서도 된다). 1배면 빈 문자열."""
+    if not math.isfinite(speed) or speed <= 0 or abs(speed - 1.0) < 1e-3:
+        return ""
+    parts = []
+    while speed > 2.0:
+        parts.append("atempo=2.0")
+        speed /= 2.0
+    while speed < 0.5:
+        parts.append("atempo=0.5")
+        speed /= 0.5
+    parts.append(f"atempo={speed:.5f}")
+    return ",".join(parts) + ","
+
+
+def source_audio_track(cut_plan, source_video_paths, beat_frames, out_wav, sample_rate=NARR_SR):
+    """컷 계획(render_cut_plan) 그대로 소스 원음 **한 줄**을 만든다 — 화면 컷과 같은 자리·같은 배속·같은 프레임 자.
+
+    beat_frames: [(beat_idx, 프레임 수)] — narration_track 과 같은 자(완성본에 들어간 칸, 순서대로).
+    컷마다: 소스를 [start, start+c_src] 만 읽어(화면과 같은 창) 화면 배속(c_src/play_out)으로 맞추고, 정지(freeze) 몫은
+      무음으로 채워 **화면 프레임 수(cfr) × 표본/프레임** 에서 정확히 자른다. 칸 끝은 칸 프레임 수에 맞춘다.
+    소리 없는 소스(또는 컷 계획에 없는 칸)는 그 길이만큼 무음. 반환: out_wav(48kHz 스테레오 pcm)."""
+    spf = sample_rate // 30
+    by = {bp["idx"]: bp for bp in (cut_plan or [])}
+    ins, fc, labels = [], [], []
+
+    def _silence(ns):
+        lb = f"s{len(labels)}"
+        fc.append(f"anullsrc=r={sample_rate}:cl=stereo,atrim=end_sample={ns},asetpts=N/SR/TB[{lb}]")
+        labels.append(lb)
+
+    for idx, nfr in beat_frames:
+        left = int(nfr) * spf
+        if left <= 0:
+            continue
+        for cp in ((by.get(idx) or {}).get("clips") or []):
+            if left <= 0:
+                break
+            ns = min(left, int(cp["cfr"]) * spf)
+            if ns <= 0:
+                continue
+            src = (source_video_paths or {}).get(cp["video_id"])
+            if src and os.path.exists(str(src)) and _has_audio(src):
+                c_src, play_out = float(cp["c_src"]), float(cp["play_out"])
+                ins += ["-ss", f"{float(cp['start']):.3f}", "-t", f"{c_src:.3f}", "-i", str(src)]
+                k = ins.count("-i") - 1
+                tempo = _atempo_chain(c_src / play_out if play_out > 1e-6 else 1.0)
+                lb = f"s{len(labels)}"
+                fc.append(f"[{k}:a]aresample={sample_rate},aformat=sample_fmts=fltp:sample_rates={sample_rate}"
+                          f":channel_layouts=stereo,asetpts=PTS-STARTPTS,{tempo}"
+                          f"apad=whole_len={ns},atrim=end_sample={ns},asetpts=N/SR/TB[{lb}]")
+                labels.append(lb)
+            else:
+                _silence(ns)
+            left -= ns
+        if left > 0:            # 컷이 칸을 다 못 채웠다(컷 계획 없는 칸 포함) — 남은 몫은 무음
+            _silence(left)
+    if not labels:
+        raise RuntimeError("source_audio_track: 칸이 없습니다")
+    fc.append("".join(f"[{lb}]" for lb in labels) + f"concat=n={len(labels)}:v=0:a=1[a]")
+    _run_ffmpeg(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(fc), "-map", "[a]",
+                 "-c:a", "pcm_s16le", "-ar", str(sample_rate), str(out_wav)])
+    return str(out_wav)
+
+
+def speech_spans(narr_wav, merge_gap=SOURCE_AUDIO_MERGE_GAP):
+    """나레이션 한 줄에서 **말소리가 나는 구간** [(시작초, 끝초)] — 덕킹이 이 구간만 원음을 낮춘다.
+    무음(silencedetect)의 여집합이고, merge_gap 보다 짧은 숨은 말소리에 붙인다."""
+    total = _probe_duration(narr_wav)
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(narr_wav), "-af",
+                        f"silencedetect=noise={_SPEECH_NOISE_DB}dB:d={_SPEECH_MIN_SILENCE}", "-f", "null", "-"],
+                       stdin=subprocess.DEVNULL, **_FF_TEXT)
+    sil, cur = [], None
+    for line in (r.stderr or "").splitlines():
+        m = re.search(r"silence_start:\s*(-?[\d.]+)", line)
+        if m:
+            cur = max(0.0, float(m.group(1)))
+            continue
+        m = re.search(r"silence_end:\s*(-?[\d.]+)", line)
+        if m and cur is not None:
+            sil.append((cur, float(m.group(1))))
+            cur = None
+    if cur is not None:
+        sil.append((cur, total))
+    spans, t = [], 0.0
+    for a, b in sil:
+        if a - t > 1e-3:
+            spans.append([t, a])
+        t = max(t, b)
+    if total - t > 1e-3:
+        spans.append([t, total])
+    merged = []
+    for a, b in spans:
+        if merged and a - merged[-1][1] < merge_gap:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    return [(round(a, 3), round(b, 3)) for a, b in merged]
+
+
+def source_gain_expr(spans, volume, duck_db, ramp=SOURCE_AUDIO_RAMP):
+    """원음 크기 식(ffmpeg volume eval=frame): 바탕 volume, 말소리 구간에선 duck_db 만큼 더 낮춤(경사 ramp초).
+    경사는 말 시작 **전** ramp초에 내려가 말 끝 **뒤** ramp초에 돌아온다."""
+    if duck_db <= 0 or not spans:
+        return f"{volume:.5f}"
+    terms = "+".join(f"clip(min((t-{a - ramp:.3f})/{ramp},({b + ramp:.3f}-t)/{ramp}),0,1)" for a, b in spans)
+    return f"{volume:.5f}*pow(10,-{duck_db / 20.0:.5f}*min(1,{terms}))"
+
+
+def duck_source_audio(narr_wav, src_wav, settings, out_wav):
+    """원음 한 줄에 크기·덕킹을 구워 out_wav 로(나레는 안 섞는다 — 캡컷은 이것을 따로 트랙에 싣는다).
+    반환: (out_wav, spans)."""
+    spans = speech_spans(narr_wav)
+    expr = source_gain_expr(spans, float(settings["volume"]), float(settings["duck_db"]))
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(src_wav), "-af", f"volume='{expr}':eval=frame",
+                 "-c:a", "pcm_s16le", "-ar", str(NARR_SR), str(out_wav)])
+    return str(out_wav), spans
+
+
+def mix_narration_bed(narr_wav, ducked_wav, out_wav):
+    """나레 + (덕킹된) 원음 → 한 줄. ★amix normalize=0 — 기본(normalize=1)은 입력 개수로 나눠 나레가 -6dB 가 된다.
+    길이는 나레(첫 입력) 그대로라 표본 수 = 총 프레임 × 1600 이 유지된다.
+    ★채널 배치는 **나레를 따른다** — 모노 나레를 stereo 로 올리면 ffmpeg 가 채널마다 -3dB 로 나눠 목소리가 작아졌다(실측 -3.01dB)."""
+    layout = "stereo" if _audio_channels(narr_wav) >= 2 else "mono"
+    fmt = f"aformat=sample_fmts=fltp:sample_rates={NARR_SR}:channel_layouts={layout}"
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(narr_wav), "-i", str(ducked_wav), "-filter_complex",
+                 f"[0:a]{fmt}[n];[1:a]{fmt}[s];[n][s]amix=inputs=2:duration=first:normalize=0[a]",
+                 "-map", "[a]", "-c:a", "pcm_s16le", "-ar", str(NARR_SR), str(out_wav)])
+    return str(out_wav)
+
+
+def source_audio_bed(cut_plan, source_video_paths, beat_frames, narr_wav, settings, work, mix=True):
+    """원음 깔기 한 벌: 원음 한 줄 → 덕킹 → (mix=True) 나레와 합친 한 줄 / (mix=False) 덕킹된 원음만.
+    렌더(assemble)와 캡컷(capcut_draft)이 이 함수 하나를 부른다."""
+    work = Path(work)
+    src = source_audio_track(cut_plan, source_video_paths, beat_frames, work / "source_audio_raw.wav")
+    ducked, _ = duck_source_audio(narr_wav, src, settings, work / "source_audio_ducked.wav")
+    if not mix:
+        return ducked
+    return mix_narration_bed(narr_wav, ducked, work / "narration_bed.wav")
+
+
 def meme_cutaway(beat):
     """이 칸의 끼움 장면이 '맨 앞 감정짤'(관제 139, storyboard.meme_slots 가 남긴 match_type "meme" + head_sec + vid)인가 → 그 dict | None.
     ★짤은 덮어씌우기가 아니라 **컷 목록의 첫 컷**이다(화면 scenesV2Alloc 이 짤 컷을 앞에 둔다). 렌더·캡컷·ZIP·편집 화면 합본은
@@ -2731,6 +3086,30 @@ def meme_cutaway(beat):
         return cw if float(cw.get("head_sec") or 0) > 0 else None
     except (TypeError, ValueError):
         return None
+
+
+def meme_start(beat, dur):
+    """★짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음 타점(렌더·캡컷 sfx_events_for, 팩 비우기)이 이 값 하나를 쓴다.
+    앞 짤 = 0. 중간·뒤 짤 = 화면 컷 목록(screen_clips.meme_at — 렌더가 굽는 바로 그 컷)에서 짤 컷 시작. 짤 없으면 None.
+    컷 목록을 못 읽으면 자리 규칙으로 근사(뒤 = 칸 끝−짤, 중간 = 가운데)하고 한 줄 남긴다 — 조용히 줄 시작으로 돌아가지 않는다."""
+    cw = meme_cutaway(beat)
+    if not cw:
+        return None
+    pos = str(cw.get("pos") or "head")
+    if pos not in ("mid", "tail"):
+        return 0.0
+    try:
+        from shopping_shorts import screen_clips
+        at = screen_clips.meme_at(beat, dur)
+    except Exception as e:      # noqa: BLE001
+        at = None
+        print("[meme] 짤 시작 못 읽음 칸%s: %r" % ((beat or {}).get("beat_idx"), e), file=sys.stderr)
+    if at is not None:
+        return at
+    head = float(cw.get("head_sec") or 0)
+    rest = max(0.0, float(dur or 0) - head)
+    print("[meme] 칸%s 화면 컷 없음 — 짤 시작을 자리 규칙으로(%s)" % ((beat or {}).get("beat_idx"), pos), file=sys.stderr)
+    return round(rest if pos == "tail" else rest / 2, 3)
 
 
 def meme_sources(edit_plan, cutaway_paths):
@@ -2762,7 +3141,7 @@ def cutaway_overlay(asset_dur, beat_dur, w, h):
     return win, fc
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None, source_audio=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
@@ -2932,6 +3311,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     #   (clean_fn)·장면꾸미기(compose)는 종전처럼 mix_raw.mp4 의 소리를 받는다 — 입력 모양(영상+AAC 한 줄)은 그대로다.
     #   인코딩 횟수도 종전과 같다(종전: 칸 클립마다 1회 → 이제: 한 줄 1회 / 효과음·BGM이 있으면 뒤에서 1회 더 — 종전과 같음).
     narr = narration_track(edit_plan, tts_paths, beat_frames, work / "narration.wav")
+    if source_audio:
+        # 🔊 원음 깔기(관제 097) — 같은 컷 계획·같은 칸 프레임으로 원음 한 줄 → 덕킹 → 나레와 합친 narration_bed.wav.
+        #   assemble 이 이 파일을 소리의 바탕으로 쓴다. mix_raw(자막제거 입력)는 종전대로 나레만 싣는다(청소 입력 불변).
+        source_audio_bed(_cplan, source_video_paths, beat_frames, narr, source_audio, work)
     mix_raw = work / "mix_raw.mp4"
     _run_ffmpeg(["ffmpeg", "-y", "-i", str(mix_video), "-i", str(narr),
                  "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", str(mix_raw)])
@@ -3102,6 +3485,21 @@ def _missing_glyphs(font_path, text):
 
 
 
+def _default_or_lang_font(work, text):
+    """_font_ref 가 기본폰트로 되돌릴 때의 출구 — 규칙 ④(언어 폴백 폰트). 판단은 font_glyphs.fallback_font_for 한 곳."""
+    jp = _fg.fallback_font_for(text)
+    if jp:
+        base = _resolve_font()
+        if not base or _fg.too_broken(base, text, label="기본폰트"):
+            try:
+                _name = "font_ja.ttf" if jp.endswith("JP-Bold.ttf") else "font_lang" + Path(jp).suffix   # 일본어는 종전 이름 그대로
+                shutil.copy(jp, Path(work) / _name)
+                return _name
+            except Exception as e:      # noqa: BLE001 — 복사 실패는 종전(기본폰트)으로, 흔적은 남긴다
+                print(f"[폰트] 언어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
+    return "font.ttf"
+
+
 def _font_ref(font_name, work, key, text=""):
     """폰트 파일명 → work에 복사한 뒤 쓸 ffmpeg fontfile 참조명(상대경로).
 
@@ -3117,20 +3515,24 @@ def _font_ref(font_name, work, key, text=""):
       두부 한 글자보다 글꼴이 통째로 바뀌는 쪽이 더 큰 사고다.
       막으려는 건 '옥 말랑'처럼 **한글이 아예 없는 폰트**다(그 경우 100% 누락).
       실사용 글자 121자 점검에서 정상 폰트의 최대 누락은 3자(2.5%)였다.
+
+      ④ ①②와 폰트 이름이 비었을 때 기본폰트로 되돌리는데 **기본폰트(NanumGothic)도 그 문구를 못 그리면**
+        (일본어 — 23자 중 19자 두부, 2026-10-21 관제 248) font_glyphs.fallback_font_for(text) 가 주는
+        언어 폴백 폰트(NotoSansJP-Bold)를 work/font_ja.ttf 로 복사해 쓴다. 한국어·영어는 종전 그대로 font.ttf.
     """
     fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
     fname = os.path.basename(font_name or "")
     if not fname:
-        return fontref
+        return _default_or_lang_font(work, text)
     fpath = _FONT_DIR / fname
     if not fpath.exists():
-        return fontref
+        return _default_or_lang_font(work, text)
     body = "".join(dict.fromkeys((text or "").replace(" ", "")))
     miss = _missing_glyphs(fpath, text)
     if miss and body and len(miss) / len(body) >= _FONT_FALLBACK_RATIO:
         print(f"[폰트] {fname} 이 문구의 {len(miss)}/{len(body)}자를 못 그린다"
               f"({miss[:12]}) — 기본폰트로 대체한다(두부 방지)", file=sys.stderr)
-        return fontref
+        return _default_or_lang_font(work, text)
     if miss:
         # 몇 글자만 빠졌다 — 글꼴은 지키고 흔적만 남긴다(그 글자만 두부가 된다).
         print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "
@@ -3563,6 +3965,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "pack_edit": beat.get("pack_edit"),            # 2단계에서 고른 기본 팩 소리 빼기·바꾸기 — sfx_events_for 가 sfx_pack.events 로 넘긴다
             # 맨 앞 감정짤이 붙은 칸인가(관제 158) — 장면꾸미기가 이 칸을 '연결어(짤 장면)'로 본다(scene_style.moment_of). 판단은 meme_cutaway 한 곳.
             "meme": meme_cutaway(beat) is not None,
+            "meme_at": meme_start(beat, dur),              # 짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음이 짤 카드와 같이 울린다
             "head_trim": beat.get("head_trim", 0.0),
             # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
             #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).
@@ -3648,7 +4051,16 @@ def _line_sfx_len(path):
         return 0.0
 
 
-def sfx_events_for(timeline, sfx_paths):
+def _sfx_vol(sfx):
+    """칸 효과음 한 발의 음량 배수(3단계 효과음 줄 −/+, 0.0~2.0). 없거나 이상하면 1.0."""
+    try:
+        v = float((sfx or {}).get("vol", 1.0))
+    except (TypeError, ValueError):
+        return 1.0
+    return min(2.0, max(0.0, v))
+
+
+def sfx_events_for(timeline, sfx_paths, with_ref=False):
     """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
 
     비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다(별도 계산 금지 —
@@ -3674,7 +4086,7 @@ def sfx_events_for(timeline, sfx_paths):
                 if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
         manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - set(line)
         _pe = {b["beat_idx"]: b["pack_edit"] for b in (timeline or []) if b.get("pack_edit")}   # 2단계 팩 소리 빼기·바꾸기(관제 143 확장)
-        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe)
+        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe, with_ref=with_ref)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
@@ -3683,18 +4095,30 @@ def sfx_events_for(timeline, sfx_paths):
         segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
         seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
         pos = sfx.get("position")
-        if pos == "first":
+        if pos == "first" and sfx.get("match_type") == "line" and b.get("meme_at"):
+            offset = float(b["meme_at"])          # 짤 칸의 줄 효과음은 짤 카드가 나올 때(관제 203 — 짤을 중간·뒤로 옮기면 소리도 따라간다)
+        elif pos == "first":
             offset = 0.0
         elif pos == "transition":
             offset = b["dur"]
         else:
             offset = sum(seg_durs[:-1])
+        try:
+            offset = min(float(b["dur"]), max(0.0, offset + float(sfx.get("shift") or 0.0)))   # 3단계 효과음 줄에서 끌어 옮긴 만큼(관제 203)
+        except (TypeError, ValueError):
+            pass
         if sfx.get("match_type") == "line":
             # 줄 효과음 볼륨 = 분류별 표(storyboard.SFX_LINE_VOL 한 곳) — 렌더·캡컷이 이 보정배를 같은 식으로 쓴다
             from shopping_shorts import storyboard as _sbm
-            events.append((path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat"))))
+            # × 3단계 효과음 줄에서 고른 음량(sfx["vol"], 관제 203 — 없으면 1.0)
+            ev = (path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat")) * _sfx_vol(sfx))
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
         else:
-            events.append((path, b["t0"] + offset))
+            if with_ref or sfx.get("vol") is not None:
+                ev = (path, b["t0"] + offset, _sfx_vol(sfx))
+            else:
+                ev = (path, b["t0"] + offset)
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
     return events
 
 
@@ -4072,11 +4496,13 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     #   ⚠️out_path는 work **밖**이라 안전하다(work는 out_path의 형제 폴더).
     #     실패해도 삼킨다 — 청소가 렌더를 죽이면 안 된다.
     try:
-        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
+        _sa = source_audio_settings(deco)          # 원음 깔기(관제 097) — 꺼져 있으면 None, 종전 그대로
+        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths,
+                              **({"source_audio": _sa} if _sa else {}))
         base_video = clean_fn(mix_raw) if clean_fn else mix_raw
         # ★소리는 나레이션 무손실 한 줄(narration_track)에서 **한 번만** AAC 로 — 효과음·BGM 섞기·자막제거본·장면꾸미기 모두(2026-09-27).
         #   audio_wav_out 을 주면 완성본 소리(섞은 뒤)를 무손실로도 남긴다 — 호출부가 인트로를 붙일 때(prepend_still audio_wav) 쓴다.
-        _narr = work / "narration.wav"
+        _narr = work / ("narration_bed.wav" if _sa else "narration.wav")     # 원음 깔기 켜짐 = 나레+덕킹 원음 한 줄
         _narr = str(_narr) if _narr.exists() else None
         if not burn_captions:
             # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를

@@ -1,0 +1,2256 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/hottemreport/mp4/RWS43GF1A_U.mp4",
+ "measured_at": "2026-10-16 01:52",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 25.167,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 755,
+   "duration": 25.167,
+   "duration_container": 25.217,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   559,
+   1080,
+   1361
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   0,
+   0,
+   0
+  ],
+  "ink_polarity": "bright",
+  "caption_pos": "inside",
+  "caption_band": [
+   1417,
+   1493
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    132,
+    258
+   ],
+   [
+    282,
+    396
+   ],
+   [
+    412,
+    556
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    559,
+    1080,
+    1361
+   ],
+   "bg_rgb": [
+    0,
+    0,
+    0
+   ],
+   "bg_lum": 0.0,
+   "caption": {
+    "pos": "inside",
+    "band": [
+     624,
+     1359
+    ],
+    "ink": "bright"
+   },
+   "above_bands": [
+    [
+     132,
+     258
+    ],
+    [
+     282,
+     396
+    ],
+    [
+     412,
+     556
+    ]
+   ],
+   "n_samples": 50,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "inside",
+    "band": [
+     624,
+     1359
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 2,
+    "persist": 0.026,
+    "coverage": 0.893
+   },
+   {
+    "pos": "above",
+    "band": [
+     0,
+     553
+    ],
+    "ink": "dark",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     171,
+     224
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     283,
+     395
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1417,
+     1493
+    ],
+    "ink": "bright",
+    "score": 15.78,
+    "spans": 18,
+    "persist": 0.951,
+    "coverage": 0.976
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   1377,
+   1533
+  ],
+  "changes": [
+   0.4,
+   1.0,
+   2.3,
+   3.5,
+   4.3,
+   7.8,
+   8.8,
+   9.6,
+   10.5,
+   11.4,
+   12.1,
+   14.1,
+   15.5,
+   16.8,
+   18.5,
+   19.4,
+   20.5,
+   21.2,
+   21.9,
+   22.6,
+   23.9
+  ],
+  "spans": [
+   [
+    0.0,
+    0.4
+   ],
+   [
+    0.4,
+    1.0
+   ],
+   [
+    1.0,
+    2.3
+   ],
+   [
+    2.3,
+    3.5
+   ],
+   [
+    3.5,
+    4.3
+   ],
+   [
+    7.8,
+    8.8
+   ],
+   [
+    8.8,
+    9.6
+   ],
+   [
+    9.6,
+    10.5
+   ],
+   [
+    10.5,
+    11.4
+   ],
+   [
+    11.4,
+    12.1
+   ],
+   [
+    14.1,
+    15.5
+   ],
+   [
+    16.8,
+    18.5
+   ],
+   [
+    18.5,
+    19.4
+   ],
+   [
+    19.4,
+    20.5
+   ],
+   [
+    21.2,
+    21.9
+   ],
+   [
+    21.9,
+    22.6
+   ],
+   [
+    22.6,
+    23.9
+   ],
+   [
+    23.9,
+    25.17
+   ]
+  ],
+  "n_spans": 18,
+  "items": [
+   {
+    "i": 0,
+    "t0": 0.0,
+    "t1": 0.4,
+    "lines": 0,
+    "text": null
+   },
+   {
+    "i": 1,
+    "t0": 0.4,
+    "t1": 1.0,
+    "lines": 1,
+    "widths": [
+     555
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "미국에서 난리난"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 1.0,
+    "t1": 2.3,
+    "lines": 1,
+    "widths": [
+     816
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "전기 자전거가 있는데요"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 2.3,
+    "t1": 3.5,
+    "lines": 1,
+    "widths": [
+     835
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "래퍼들이 자기 차 컬러에"
+    ]
+   },
+   {
+    "i": 4,
+    "t0": 3.5,
+    "t1": 4.3,
+    "lines": 1,
+    "widths": [
+     553
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "맞춰 제작하면서"
+    ]
+   },
+   {
+    "i": 5,
+    "t0": 7.8,
+    "t1": 8.8,
+    "lines": 1,
+    "widths": [
+     801
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "바이럴이 제대로"
+    ]
+   },
+   {
+    "i": 6,
+    "t0": 8.8,
+    "t1": 9.6,
+    "lines": 1,
+    "widths": [
+     1039
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "터졌는데요"
+    ]
+   },
+   {
+    "i": 7,
+    "t0": 9.6,
+    "t1": 10.5,
+    "lines": 1,
+    "widths": [
+     484
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "겉은 클래식한"
+    ]
+   },
+   {
+    "i": 8,
+    "t0": 10.5,
+    "t1": 11.4,
+    "lines": 1,
+    "widths": [
+     468
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "올드스쿨인데"
+    ]
+   },
+   {
+    "i": 9,
+    "t0": 11.4,
+    "t1": 12.1,
+    "lines": 1,
+    "widths": [
+     327
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "속은 완전"
+    ]
+   },
+   {
+    "i": 10,
+    "t0": 14.1,
+    "t1": 15.5,
+    "lines": 1,
+    "widths": [
+     582
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "스펙도 놀라운 게"
+    ]
+   },
+   {
+    "i": 11,
+    "t0": 16.8,
+    "t1": 18.5,
+    "lines": 1,
+    "widths": [
+     643
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "최고 시속 97km에"
+    ]
+   },
+   {
+    "i": 12,
+    "t0": 18.5,
+    "t1": 19.4,
+    "lines": 1,
+    "widths": [
+     479
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "완충하면 최대"
+    ]
+   },
+   {
+    "i": 13,
+    "t0": 19.4,
+    "t1": 20.5,
+    "lines": 1,
+    "widths": [
+     747
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "160km까지 간다는데"
+    ]
+   },
+   {
+    "i": 14,
+    "t0": 21.2,
+    "t1": 21.9,
+    "lines": 1,
+    "widths": [
+     479
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "무채색 일색인"
+    ]
+   },
+   {
+    "i": 15,
+    "t0": 21.9,
+    "t1": 22.6,
+    "lines": 1,
+    "widths": [
+     478
+    ],
+    "top_y": 1417,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "한국 도로에서"
+    ]
+   },
+   {
+    "i": 16,
+    "t0": 22.6,
+    "t1": 23.9,
+    "lines": 1,
+    "widths": [
+     581
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "이거 타고 다니면"
+    ]
+   },
+   {
+    "i": 17,
+    "t0": 23.9,
+    "t1": 25.17,
+    "lines": 1,
+    "widths": [
+     637
+    ],
+    "top_y": 1418,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "시선 강탈이겠네요"
+    ]
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 74,
+    "stroke": 1.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 3,
+    "anim": "없음"
+   },
+   {
+    "line_h": 75,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 6,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 76,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 74,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 13,
+    "anim": "없음"
+   },
+   {
+    "line_h": 76,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 17,
+    "anim": "확대/축소"
+   }
+  ],
+  "unstable": [
+   [
+    4.3,
+    7.8
+   ],
+   [
+    12.1,
+    14.1
+   ],
+   [
+    15.5,
+    16.8
+   ],
+   [
+    20.5,
+    21.2
+   ]
+  ],
+  "ocr": {
+   "asked": 17,
+   "read": 17,
+   "errors": [],
+   "models": [
+    "gemini-3.5-flash"
+   ]
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 61,
+  "usable": 16,
+  "per_crop": [
+   {
+    "caption": 1,
+    "text": "미국에서 난리난",
+    "top5": [
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.7053
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.6639
+     },
+     {
+      "font": "Pretendard-Bold.otf",
+      "score": 0.6122
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.5958
+     },
+     {
+      "font": "IBMPlexSansKR-Bold.otf",
+      "score": 0.5684
+     }
+    ],
+    "grid": "fonts/c01.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 국난리미서"
+     }
+    ]
+   },
+   {
+    "caption": 4,
+    "text": "맞춰 제작하면서",
+    "top5": [
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.6568
+     },
+     {
+      "font": "GothicA1-Black.ttf",
+      "score": 0.6553
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.6312
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.5845
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5682
+     }
+    ],
+    "grid": "fonts/c04.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 맞면서작제"
+     }
+    ]
+   },
+   {
+    "caption": 8,
+    "text": "올드스쿨인데",
+    "top5": [
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.4679
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.4296
+     },
+     {
+      "font": "Binggrae-Bold.otf",
+      "score": 0.4243
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.4074
+     },
+     {
+      "font": "GothicA1-Black.ttf",
+      "score": 0.3783
+     }
+    ],
+    "grid": "fonts/c08.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 데드스올인"
+     }
+    ]
+   },
+   {
+    "caption": 11,
+    "text": "최고 시속 97km에",
+    "top5": [
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.622
+     },
+     {
+      "font": "GothicA1-Black.ttf",
+      "score": 0.6173
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.5266
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.5198
+     },
+     {
+      "font": "IBMPlexSansKR-Bold.otf",
+      "score": 0.4838
+     }
+    ],
+    "grid": "fonts/c11.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 고속시에최"
+     }
+    ]
+   },
+   {
+    "caption": 14,
+    "text": "무채색 일색인",
+    "top5": [
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.7421
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.6625
+     },
+     {
+      "font": "Pretendard-Bold.otf",
+      "score": 0.6536
+     },
+     {
+      "font": "NotoSansKR-Bold.otf",
+      "score": 0.6467
+     },
+     {
+      "font": "SpoqaHanSansNeo-Bold.otf",
+      "score": 0.6362
+     }
+    ],
+    "grid": "fonts/c14.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 무색인일채"
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "text": "시선 강탈이겠네요",
+    "top5": [
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.5957
+     },
+     {
+      "font": "GothicA1-Black.ttf",
+      "score": 0.5865
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.5299
+     },
+     {
+      "font": "Pretendard-Bold.otf",
+      "score": 0.5262
+     },
+     {
+      "font": "Cafe24Danjunghae.ttf",
+      "score": 0.5091
+     }
+    ],
+    "grid": "fonts/c17.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 강겠네선시"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "Pretendard-ExtraBold.otf",
+    "score": 0.6056
+   },
+   {
+    "font": "KCCGanpan.otf",
+    "score": 0.5899
+   },
+   {
+    "font": "Pretendard-Bold.otf",
+    "score": 0.5339
+   }
+  ]
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 1,
+    "fill_rgb": [
+     253,
+     251,
+     252
+    ],
+    "outline": {
+     "px": 1,
+     "rgb": [
+      108,
+      107,
+      107
+     ]
+    },
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 4,
+    "fill_rgb": [
+     253,
+     252,
+     255
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 8,
+    "fill_rgb": [
+     255,
+     253,
+     255
+    ],
+    "outline": {
+     "px": 1,
+     "rgb": [
+      101,
+      101,
+      101
+     ]
+    },
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 11,
+    "fill_rgb": [
+     253,
+     252,
+     254
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 14,
+    "fill_rgb": [
+     254,
+     252,
+     254
+    ],
+    "outline": {
+     "px": 1,
+     "rgb": [
+      108,
+      103,
+      108
+     ]
+    },
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 17,
+    "fill_rgb": [
+     254,
+     253,
+     254
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 74,
+    "stroke": 1.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 3,
+    "anim": "없음"
+   },
+   {
+    "line_h": 75,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 6,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 76,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 74,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 13,
+    "anim": "없음"
+   },
+   {
+    "line_h": 76,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 17,
+    "anim": "확대/축소"
+   }
+  ],
+  "glyph_used_for_summary": [
+   3,
+   6,
+   10,
+   13,
+   17
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    253,
+    252,
+    254
+   ],
+   "outline_px": 0,
+   "outline_rgb": [
+    108,
+    107,
+    107
+   ],
+   "box": null,
+   "shadow": [
+    [
+     -6,
+     2
+    ]
+   ],
+   "stroke_px": 2.0,
+   "line_h_px": 75
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 1,
+    "t0": 0.4,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 0.1,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.133,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.167,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.2,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.233,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.267,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.3,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.333,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 0.367,
+      "bbox": [
+       316,
+       1423,
+       499,
+       75
+      ],
+      "ink": 604
+     },
+     {
+      "t": 0.4,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4215
+     },
+     {
+      "t": 0.433,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4215
+     },
+     {
+      "t": 0.467,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4286
+     },
+     {
+      "t": 0.5,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4314
+     },
+     {
+      "t": 0.533,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4498
+     },
+     {
+      "t": 0.567,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4497
+     },
+     {
+      "t": 0.6,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4503
+     },
+     {
+      "t": 0.633,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4495
+     },
+     {
+      "t": 0.667,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4505
+     },
+     {
+      "t": 0.7,
+      "bbox": [
+       265,
+       1418,
+       556,
+       74
+      ],
+      "ink": 4457
+     }
+    ]
+   },
+   {
+    "caption": 9,
+    "t0": 11.4,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 11.1,
+      "bbox": [
+       311,
+       1404,
+       469,
+       99
+      ],
+      "ink": 4733
+     },
+     {
+      "t": 11.133,
+      "bbox": [
+       312,
+       1404,
+       468,
+       99
+      ],
+      "ink": 4732
+     },
+     {
+      "t": 11.167,
+      "bbox": [
+       311,
+       1404,
+       469,
+       99
+      ],
+      "ink": 4733
+     },
+     {
+      "t": 11.2,
+      "bbox": [
+       312,
+       1404,
+       468,
+       99
+      ],
+      "ink": 4714
+     },
+     {
+      "t": 11.233,
+      "bbox": [
+       312,
+       1377,
+       568,
+       126
+      ],
+      "ink": 4733
+     },
+     {
+      "t": 11.267,
+      "bbox": [
+       312,
+       1417,
+       453,
+       76
+      ],
+      "ink": 4699
+     },
+     {
+      "t": 11.3,
+      "bbox": [
+       312,
+       1417,
+       453,
+       76
+      ],
+      "ink": 4699
+     },
+     {
+      "t": 11.333,
+      "bbox": [
+       312,
+       1417,
+       453,
+       76
+      ],
+      "ink": 4699
+     },
+     {
+      "t": 11.367,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.4,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.433,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.467,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.5,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.533,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.567,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.6,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.633,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.667,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     },
+     {
+      "t": 11.7,
+      "bbox": [
+       375,
+       1417,
+       328,
+       76
+      ],
+      "ink": 3251
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "t0": 23.9,
+    "anim": "확대/축소",
+    "curve": [
+     {
+      "t": 23.6,
+      "bbox": [
+       249,
+       1378,
+       582,
+       128
+      ],
+      "ink": 4319
+     },
+     {
+      "t": 23.633,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4288
+     },
+     {
+      "t": 23.667,
+      "bbox": [
+       249,
+       1381,
+       623,
+       111
+      ],
+      "ink": 4290
+     },
+     {
+      "t": 23.7,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4276
+     },
+     {
+      "t": 23.733,
+      "bbox": [
+       249,
+       1379,
+       582,
+       113
+      ],
+      "ink": 4292
+     },
+     {
+      "t": 23.767,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4289
+     },
+     {
+      "t": 23.8,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4277
+     },
+     {
+      "t": 23.833,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4277
+     },
+     {
+      "t": 23.867,
+      "bbox": [
+       249,
+       1418,
+       582,
+       74
+      ],
+      "ink": 4277
+     },
+     {
+      "t": 23.9,
+      "bbox": [
+       371,
+       1418,
+       282,
+       74
+      ],
+      "ink": 2254
+     },
+     {
+      "t": 23.933,
+      "bbox": [
+       374,
+       1418,
+       279,
+       74
+      ],
+      "ink": 2254
+     },
+     {
+      "t": 23.967,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2255
+     },
+     {
+      "t": 24.0,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2247
+     },
+     {
+      "t": 24.033,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2249
+     },
+     {
+      "t": 24.067,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2247
+     },
+     {
+      "t": 24.1,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2247
+     },
+     {
+      "t": 24.133,
+      "bbox": [
+       425,
+       1418,
+       228,
+       74
+      ],
+      "ink": 2247
+     },
+     {
+      "t": 24.167,
+      "bbox": [
+       220,
+       1418,
+       638,
+       76
+      ],
+      "ink": 6384
+     },
+     {
+      "t": 24.2,
+      "bbox": [
+       220,
+       1418,
+       638,
+       76
+      ],
+      "ink": 6387
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -16.5,
+   "LRA": 1.9,
+   "TP": -3.9,
+   "S_spread": 1.8,
+   "S_n": 223,
+   "open3s_M": -15.9,
+   "rest_M": -16.9,
+   "hf_8k16k_dbfs": -42.97,
+   "openvoice": {
+    "floor_db": -26.61,
+    "open": 11.47,
+    "body": 11.21
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "리드미컬한",
+     "트렌디한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 들뜬 30대 남성 해설체",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "human"
+    }
+   ]
+  },
+  "transcript": {
+   "model": "gemini-flash-lite-latest",
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 25.0,
+     "text": "미국에서 난리가 난 전기 자전거가 있는데요. 래퍼들이 자기 차 컬러에 맞춰 제작하면서 유명해졌는데, 특히 R&B 팝스타 크리스 브라운이 타면서 바이럴이 제대로 터졌는데요. 겉은 클래식한 올드 스쿨인데 속은 완전 전기 바이크라는 게 반전 포인트입니다. 스펙도 놀라운 게 1500W 모터로 최고 시속 97km에 완충하면 최대 160km까지 간다는데, 우체색 1세기인 한국 도로에서 이거 타고 다니면 제대로 시선 강탈이겠네요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 1,
+   "langs": [
+    "ko"
+   ],
+   "ambient": "배경 음악",
+   "speech_sec_all": 25.0,
+   "ko_speech_sec": 25.0,
+   "speech_share_ko": 0.993,
+   "chars_nospace_ko": 181,
+   "cps": 7.24,
+   "pause_median": null,
+   "pauses": 0,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "human",
+     "share": 1.0,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 713,
+     "f0_median_hz": 186.0,
+     "semitone_std": 6.08
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 0,
+    "ambient": "배경 음악"
+   },
+   "duck_db": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "caption_eq_narration": 0.967,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.0,
+   "sfx": {
+    "count": 0,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "나레 1명"
+  }
+ },
+ "script_tone": {
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 1,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 1.0,
+  "hearsay": 2,
+  "person_1st": 0,
+  "person_2nd": 0
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   2.267,
+   3.733,
+   5.367,
+   6.633,
+   9.533,
+   10.433,
+   11.267,
+   12.1,
+   13.767,
+   15.533,
+   18.3,
+   21.133,
+   22.8
+  ],
+  "shots": 14,
+  "shot_len": {
+   "median": 1.67,
+   "p10": 0.85,
+   "p90": 2.81
+  },
+  "first_cut": 2.27,
+  "cut_per_min": 31.0,
+  "cut_eq_sub": [
+   9,
+   13
+  ],
+  "cut_eq_sub_rate": 0.692,
+  "zoom": {
+   "n": 103,
+   "median_rate_pct_s": 0.0,
+   "p90_abs_rate_pct_s": 3.54,
+   "zoomin_frac": 0.117,
+   "zoomout_frac": 0.097
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    2.267,
+    3.733,
+    5.367,
+    6.633,
+    9.533,
+    10.433,
+    11.267,
+    12.1,
+    13.767,
+    15.533,
+    18.3,
+    21.133,
+    22.8
+   ],
+   "raw_stats": {
+    "shots": 14,
+    "first_cut": 2.27,
+    "cut_std": 0.7,
+    "cut_eq_sub": [
+     9,
+     13
+    ]
+   },
+   "candidates": [
+    2.267,
+    3.733,
+    5.367,
+    6.633,
+    9.533,
+    10.433,
+    11.267,
+    12.1,
+    13.767,
+    15.533,
+    18.3,
+    21.133,
+    22.8
+   ],
+   "corr": [
+    -0.053,
+    0.13,
+    0.122,
+    0.262,
+    0.18,
+    -0.18,
+    0.073,
+    0.08,
+    0.03,
+    0.028,
+    0.235,
+    -0.012,
+    -0.058
+   ],
+   "cuts": [
+    2.267,
+    3.733,
+    5.367,
+    6.633,
+    9.533,
+    10.433,
+    11.267,
+    12.1,
+    13.767,
+    15.533,
+    18.3,
+    21.133,
+    22.8
+   ],
+   "merged_out": [],
+   "rejected": [],
+   "shots": 14,
+   "shot_median": 1.67,
+   "shot_min": 0.83,
+   "shot_max": 2.9,
+   "first_cut": 2.27,
+   "cut_std": 0.7,
+   "cut_per_min": 31.0,
+   "cut_eq_sub": [
+    9,
+    13
+   ],
+   "longest_still": 1.7,
+   "event_gap_med": 0.75,
+   "zoom": {
+    "n": 103,
+    "median_rate_pct_s": 0.0,
+    "p90_abs_rate_pct_s": 3.54,
+    "zoomin_frac": 0.117,
+    "zoomout_frac": 0.097
+   }
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     2.27
+    ],
+    "kind": "남의영상재편집",
+    "why": "헬멧을 쓴 사람이 주차장 배경에서 전기 자전거를 타는 모습이 담긴 외부 영상을 가져와 채널 틀 안에 편집해 넣었기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 1,
+    "t": [
+     2.27,
+     3.73
+    ],
+    "kind": "남의영상재편집",
+    "why": "흰색 SUV 차량과 흰색 전기 자전거가 지하 주차장에 세워져 있는 외부 영상을 가져와 편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 2,
+    "t": [
+     3.73,
+     5.37
+    ],
+    "kind": "남의영상재편집",
+    "why": "노란색 차량과 노란색 테두리의 전기 자전거가 주차장에 있는 모습을 촬영한 외부 영상을 가져왔기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 3,
+    "t": [
+     5.37,
+     6.63
+    ],
+    "kind": "남의영상재편집",
+    "why": "R&B 팝스타로 소개된 인물이 흰색 자전거에 앉아 있는 모습을 담은 외부 인물 영상을 편집해 사용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 4,
+    "t": [
+     6.63,
+     9.53
+    ],
+    "kind": "남의영상재편집",
+    "why": "야외 도로에서 어두운 배경 속 자전거를 타는 사람의 모습을 담은 외부 영상을 가져와 구성했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 5,
+    "t": [
+     9.53,
+     10.43
+    ],
+    "kind": "남의영상재편집",
+    "why": "헬멧을 착용한 사람이 흰색 자전거를 타고 벽면 도로를 달리는 외부 주행 영상을 가져왔기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 6,
+    "t": [
+     10.43,
+     11.27
+    ],
+    "kind": "남의영상재편집",
+    "why": "회색빛 바디의 자전거를 탄 사람이 잔디와 가로수가 있는 도로를 달리는 외부 영상을 편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 7,
+    "t": [
+     11.27,
+     12.1
+    ],
+    "kind": "남의영상재편집",
+    "why": "검은색 계열의 자전거를 탄 사람이 야외 도로를 주행하고 있는 모습을 담은 외부 영상이기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 8,
+    "t": [
+     12.1,
+     13.77
+    ],
+    "kind": "남의영상재편집",
+    "why": "헬멧을 쓴 라이더가 회색 자전거를 타고 도로를 주행하는 모습을 촬영한 외부 영상을 가져왔기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 9,
+    "t": [
+     13.77,
+     15.53
+    ],
+    "kind": "남의영상재편집",
+    "why": "야외에서 자전거를 수직으로 세워 스펙을 보여주는 듯한 퍼포먼스를 담은 외부 영상을 가져와 편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 10,
+    "t": [
+     15.53,
+     18.3
+    ],
+    "kind": "남의영상재편집",
+    "why": "녹색 테두리 휠을 장착한 독특한 디자인의 전동 자전거와 헬멧을 쓴 주행자가 도로를 달리는 해외 원본 영상 소스를 채널 틀 안에 편집하여 가져온 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 11,
+    "t": [
+     18.3,
+     21.13
+    ],
+    "kind": "남의영상재편집",
+    "why": "흰색 프레임의 전동 자전거를 타고 야외 창고 앞 도로를 주행하는 모습이 담긴 해외 원본 소스를 가져와 사용한 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 12,
+    "t": [
+     21.13,
+     22.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "야간에 주황색 LED 휠과 문양이 돋보이는 커스텀 전기 자전거가 야외에 세워져 있는 모습을 촬영한 해외 원본 영상 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 13,
+    "t": [
+     22.8,
+     25.17
+    ],
+    "kind": "남의영상재편집",
+    "why": "주황색 주행등과 휠이 장착된 전기 자전거를 타고 항구 주차장 같은 야외 공간을 주행하는 헬멧 착용자의 해외 원본 영상 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   }
+  ],
+  "share_by_time": {
+   "남의영상재편집": 1.0
+  },
+  "share_by_count": {
+   "남의영상재편집": 14
+  },
+  "models": [
+   "gemini-flash-lite-latest"
+  ],
+  "ok": true
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.0,
+  "count": 0,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.0,
+   "둘다_아님": 0.0
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "리드미컬한",
+   "트렌디한"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": {
+   "failed": "말 없는 구간 0.5초 미만"
+  },
+  "end": {
+   "fade": false,
+   "last0.5s_db": -19.5,
+   "prev_db": -20.0,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [
+   "male"
+  ],
+  "roles": 1,
+  "speakers_all": 1,
+  "cps": 7.24,
+  "narration": "human",
+  "tone": "빠르고 들뜬 30대 남성 해설체",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 0,
+  "per_min": 0.0,
+  "kind_share": {},
+  "slot_share": {},
+  "appearances": [],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 양끝 0.1초 간격 '보이나' 판독으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 0,
+   "failed": "429",
+   "sec": 1.3
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "429",
+   "sec": 1.5
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "failed": "429",
+   "sec": 2.0
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 3,
+   "failed": "429",
+   "sec": 1.5
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 4,
+   "failed": "429",
+   "sec": 1.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 7,
+   "failed": "429",
+   "sec": 1.4
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 8,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 9,
+   "failed": "429",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 10,
+   "failed": "429",
+   "sec": 1.3
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 11,
+   "failed": "429",
+   "sec": 1.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 12,
+   "failed": "429",
+   "sec": 1.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "ok": true,
+   "sec": 9.3
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "failed": "503",
+   "sec": 9.7
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "ok": true,
+   "sec": 16.3
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "failed": "429",
+   "sec": 1.5
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 2,
+   "ok": true,
+   "sec": 10.6
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 3,
+   "failed": "429",
+   "sec": 2.2
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 4,
+   "failed": "429",
+   "sec": 2.3
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 10.9
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 9.2
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 7.2
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-flash-lite-latest",
+   "key": 6,
+   "ok": true,
+   "sec": 11.8
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-flash-lite-latest",
+   "key": 7,
+   "ok": true,
+   "sec": 4.7
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.1,
+  "layout": 38.8,
+  "captions": 65.8,
+  "fonts_fx": 4.4,
+  "caption_motion": 2.2,
+  "audio_tone": 28.2,
+  "cuts_materials": 65.9,
+  "rules": 88.5,
+  "total": 293.8
+ }
+}

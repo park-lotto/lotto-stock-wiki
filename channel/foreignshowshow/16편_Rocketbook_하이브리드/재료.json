@@ -1,0 +1,227 @@
+{
+ "_note": "샥탬스토리 하이브리드 16편 Rocketbook 뒤 재료 — 같은 회사 후속 노트(Rocketbook Everlast) 리뷰 영상 2편 + B2 방송 투자자 와이드. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/16편_Rocketbook/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "U9Kas8l38Kc": {
+   "채널": "Smart Home Solver(리뷰)",
+   "제목": "Rocketbook Everlast Review: the Never-Ending Notebook",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "14~16 제목 글·26~33 샤크탱크 화면·36~42 펜 상표 근접·138~141 'don't use this' 글·리뷰어 셔츠 글자(얼굴 컷) — 그 구간 안 씀"
+  },
+  "HuwZ15jbJJo": {
+   "채널": "Jake Reeves(리뷰)",
+   "제목": "6 Months with Rocketbook EVERLAST (CORE): The Only Notebook You'll Ever Need?",
+   "해상도": "1920x1080 24fps",
+   "남의 글자": "78~92 펜 상표 근접·118~125 덧그림 — 그 구간 안 씀"
+  },
+  "bjW4T3xp8vc": {
+   "채널": "CNBC Ambition(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "왼쪽 아래 CNBC 로고 = 크롭 높이 900 밖"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 174.2,
+   "dur": 2.6,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(Smart Home Solver U9Kas8l38Kc, 1080p): 검은 에버레스트 노트 표지를 손으로 넘겨 보임(샷 173.97~182.30)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 36.1,
+   "dur": 2.3,
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(Jake Reeves HuwZ15jbJJo, 1080p): 나무 책상 위 에버레스트 노트와 펜(샷 34.13~38.54 — 펜 상표 글자는 작아 안 읽힘)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "bjW4T3xp8vc.mp4",
+   "ss": 325.05,
+   "dur": 0.9,
+   "src_crop": [
+    498,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "방송(bjW4T3xp8vc): 투자자 다섯 와이드(원본 샷 324.99~325.99, 소리 끔 — 아래 CNBC 로고는 크롭 높이 900 밖)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 94.5,
+   "dur": 2.2,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 파란 펜으로 노트에 필기(샷 91.83~101.21) — 92초 앞부분 카메라 당김(점프줌 검출) 뒤에서 시작",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 102.0,
+   "dur": 2.0,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 에버레스트 페이지에 펜으로 체크 목록을 씀(샷 100.63~118.60)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 186.0,
+   "dur": 2.0,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 페이지에 도형을 그리는 손(샷 179.71~192.88)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 190.1,
+   "dur": 1.5,
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 휴대폰 앱이 페이지를 찍는 초록 화면(같은 샷)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 266.3,
+   "dur": 2.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 휴대폰으로 지도 그린 페이지를 찍는 중(샷 256.47~269.53)",
+   "i": 7
+  },
+  {
+   "line": "B4",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 130.0,
+   "dur": 1.6,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 필기한 페이지 옆 물컵(샷 129.57~137.40)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 133.2,
+   "dur": 2.6,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 물 묻힌 천으로 페이지를 닦아 글씨가 지워짐(같은 샷 이어서)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "U9Kas8l38Kc.mp4",
+   "ss": 192.0,
+   "dur": 2.5,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 'Meeting notes' 페이지를 천으로 닦아 지움(샷 191.87~194.73)",
+   "i": 10
+  },
+  {
+   "line": "B5",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 199.0,
+   "dur": 2.2,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 파란 펜으로 메모를 적는 손(샷 196.63~208.13)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "HuwZ15jbJJo.mp4",
+   "ss": 274.0,
+   "dur": 1.9,
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 덮어 둔 에버레스트 노트와 펜(샷 273.50~끝)",
+   "i": 12
+  }
+ ],
+ "effects": []
+}

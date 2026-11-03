@@ -1,0 +1,318 @@
+{
+ "_note": "샥탬스토리 하이브리드 32편 Sliimey Honey — 앞 0~O2 끝 = 칼카피 그대로(끝 원음 창업자 '어릴 때부터 제일 좋아한 간식이 한국 마트 바나나우유였거든요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 Sliimey Honey 는 없음 → 비슷한 한국 '바나나우유 슬라임'(다른 회사) — B1 '똑같은 건 없고 비슷한 게'로 숨기지 않음. 스트레스 완화(효능)·먹어도 된다(안전) 말 없음 — 쿠팡 상품명의 '스트레스완화'도 대사에 안 씀. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "바나나우유 슬라임(쿠팡 9715389265 '3000 바나나우유 슬라임 촉감놀이 … 선물 장난감 슬라임' — 방송 제품 Sliimey Honey 바나나우유 슬라임과 다른 회사의 비슷한 슬라임)",
+ "same_product": false,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "17살이 만든 음식 슬라임 중 제일 잘 팔리는 게 '한국 마트 바나나우유' 슬라임 — 앞 O2 창업자 '한국 마트 바나나우유였거든요'로 끝남",
+  "뒤흥미": "쿠팡의 한국 바나나우유 슬라임(노란 크림 슬라임)을 뚜껑 열고 늘리고 마는 손 시점(nIOOLSPigCE·uRP1tqkbTls·EmSZgKIuabw — 셋 다 '바나나우유/바나나 버터 슬라임' 영상) — 원본이 신기했던 '바나나우유 슬라임'이 그대로 보임",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 'sliimey honey slime' → 없음 · '바나나우유 슬라임' → 9715389265·9715389397 '3000 바나나우유 슬라임'·9741419994 '바나나우유 빙수 슬랑이'·8391607177 '에밀리슬라임 나한테 바나나 버터 슬라임'(사진 C:/숏템_칼카피/foreignshowshow/31편_소재/img/cp_9715389265.jpg — 노란 크림 슬라임 통 '바나나우유 슬라임') — 결과 C:/숏템_칼카피/foreignshowshow/31편_소재/쿠팡API_32.json·쿠팡API_31b.json"
+ },
+ "hybrid": {
+  "front_doc": "../32편_SliimeyHoney",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/32편_SliimeyHoney/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/32편_SliimeyHoney/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/32편_SliimeyHoney/work",
+  "cut_after": "O2",
+  "cut_why": "O2 창업자 원음 '한국 마트 바나나우유였거든요' 끝(전체 길이 45.6→약 42초) — 그 '바나나우유 슬라임'을 뒤 체험(쿠팡에서 비슷한 바나나우유 슬라임을 사서 만져 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~30편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "17살이 만든 슬라임",
+  "line2": "한국 바나나우유 맛?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~30편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 바나나우유 슬라임이 궁금해서 쿠팡에서 찾아봤더니, 똑같은 건 없고 비슷한 게 있더라고요.",
+    "tts": "근데 저 바나나우유 슬라임이 궁금해서, 쿠팡에서 찾아봤더니, 똑같은 건 없고, 비슷한 게 있더라고요.",
+    "caps": [
+     "근데 저 바나나우유 슬라임이",
+     "궁금해서 쿠팡에서 찾아봤더니",
+     "똑같은 건 없고",
+     "비슷한 게 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "비슷한 게 있더라고요"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 바나나우유 슬라임이",
+      "span": "바나나우유 슬라임이",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에서 찾아봤더니",
+      "span": "쿠팡에서 찾아봤더니",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없고",
+      "span": "건 없고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 게 있더라고요",
+      "span": "있더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②공개(와우1)",
+    "text": "이게 말도 안 되는 게, 뚜껑을 열면 진짜 바나나우유 같은 노란 슬라임이 나와요.",
+    "tts": "이게 말도 안 되는 게, 뚜껑을 열면, 진짜 바나나우유 같은, 노란 슬라임이 나와요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "뚜껑을 열면",
+     "진짜 바나나우유 같은",
+     "노란 슬라임이 나와요"
+    ],
+    "facts": [
+     "c1",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뚜껑을 열면",
+      "span": "뚜껑을 열면",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 바나나우유 같은",
+      "span": "바나나우유 같은",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "노란 슬라임이 나와요",
+      "span": "슬라임이 나와요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2)",
+    "text": "진짜 핵심은 이건데, 손으로 쭉 늘리면 크림처럼 부드럽게 늘어나요.",
+    "tts": "진짜 핵심은 이건데, 손으로 쭉 늘리면, 크림처럼 부드럽게 늘어나요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "손으로 쭉 늘리면",
+     "크림처럼 부드럽게 늘어나요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손으로 쭉 늘리면",
+      "span": "쭉 늘리면",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "크림처럼 부드럽게 늘어나요",
+      "span": "부드럽게 늘어나요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 돌돌 말았다가 다시 펼치다 보면 계속 손이 가요.",
+    "tts": "심지어 이게 대박인 게, 돌돌 말았다가, 다시 펼치다 보면, 계속 손이 가요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "돌돌 말았다가",
+     "다시 펼치다 보면",
+     "계속 손이 가요"
+    ],
+    "facts": [
+     "c2",
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "돌돌 말았다가",
+      "span": "돌돌 말았다가",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다시 펼치다 보면",
+      "span": "펼치다 보면",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "계속 손이 가요",
+      "span": "손이 가요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 조카가 놀러 오면 과자보다 이 슬라임부터 찾아요.",
+    "tts": "요즘은 조카가 놀러 오면, 과자보다, 이 슬라임부터 찾아요.",
+    "caps": [
+     "요즘은 조카가 놀러 오면",
+     "과자보다",
+     "이 슬라임부터 찾아요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 조카가 놀러 오면",
+      "span": "조카가 놀러 오면",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "과자보다",
+      "span": "과자보다",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 슬라임부터 찾아요",
+      "span": "슬라임부터 찾아요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) 'sliimey honey slime' → 방송 제품 없음 · '바나나우유 슬라임' → 9715389265 '3000 바나나우유 슬라임 촉감놀이 … 선물 장난감 슬라임'(사진: 노란 크림 슬라임이 든 통 '바나나우유 슬라임') — 다른 회사 비슷한 제품(→ B1 '똑같은 건 없고 비슷한 게') · 결과 C:/숏템_칼카피/foreignshowshow/31편_소재/쿠팡API_31b.json",
+  "c2": "화면 = EmSZgKIuabw '바나나 버터 슬라임 ASMR' https://www.youtube.com/watch?v=EmSZgKIuabw (통 뚜껑을 여는 손 0.5~6.5초·돌돌 만 슬라임 48~51초·마는 손 114~117초) · 달파 DALPA 'ASMR 바나나우유를 쏟았다 슬라임' https://www.youtube.com/watch?v=nIOOLSPigCE (누르는 손 27~29초·늘리기 52~55.6·102.5~105.5초·주무르는 손 77~80초) · 아이캔 '바나나우유 슬라임 ASMR' https://www.youtube.com/watch?v=uRP1tqkbTls (통에서 꺼냄 18~21.5초·꺼낸 슬라임 덩이 27~30초·주무르는 손 66~69.5초) — 전부 손만, 사람 얼굴 없음",
+  "창작": "B4 '계속 손이 가요' · B5 '조카가 놀러 오면 과자보다 이 슬라임부터 찾아요' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

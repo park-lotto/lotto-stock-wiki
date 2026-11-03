@@ -1,0 +1,250 @@
+{
+ "_note": "14편 파데 스패출러(10-29 새 편, ep13 v3 방식, 판 잇템로그판_v2(끝 3줄 '~던데,'·'~고 하고.'·'아~ …겠다.')): 벤치 SbWTqCnleC8(850만, 같은 소재) 결 — 원본 2개(courtpaige 스패출러 두 번째 도전 → erikatitus 잘못 쓰다 고친 법) · 원음 3번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0. 효능·피부 개선 말 안 함(결과는 원본 화면 그대로·출연자 말 그대로 옮김) · courtpaige 손 제품(주걱 달린 파데) 브랜드 안 밝힘 · 끝 76초 뒤 제품 들고 말하는 장면(상표) 안 씀. 원본 = TikTok @.courtpaige 7532183589815881015(360만, 0~6초 위 박힌 글 → 안 씀) + @erikatitus 7185354106955975978(860만, 박힌 글 없음). · ④ 자막 색: 빨강 훅은 흰 티(et 넓은 장면) 위로, 강조색(주황) 덩어리 0(살색 위 금지).",
+ "slug": "ititemlog_ep14_spatula",
+ "brand": "잇템로그판_v2",
+ "pan": "잇템로그판_v2",
+ "product": "메이크업 파데 스패출러(쿠팡 6472871569 피카소 함경식 메이크업 스파츌라 = 비슷한 제품 — 영상 속 주걱 브랜드 미확인)",
+ "title_lines": [
+  [
+   [
+    "한국 주걱으로 파데 바르다"
+   ]
+  ],
+  [
+   [
+    "멘붕 온 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "한국 메이크업 아티스트들이 쓰던 스패출러 파데 바르기가 틱톡 유행(fashionmagazine.com/beauty-grooming/makeup/k-beauty-spatula · makeup.com foundation-makeup-spatula-hack) — 피카소 함경식 스패출러",
+  "f2": "cp 42.92~44.28 'I don't know what I'm doing wrong' · 67.48~69.60 'I'm still not sure how I feel about this technique'",
+  "f3": "cp 12.04~18.04 'A lot of you in the comments were calling me stupid for holding this at a 90 degree angle rather than flat like a butter knife'",
+  "f4": "et 2.6~5.0 'I've been using it wrong' · 6.0~13.6 가장자리로 살짝 묻힘 · 28.4~30.6 thin layers · 41.1~47.1 smaller sections",
+  "f5": "et 37.76~41.08 'I was using like one pump before. Now I'm using about half a pump'",
+  "f6": "et 55.36~59.80 'Girl you thought it looked like skin before. Look at it now. It's crazy'",
+  "f7": "cp 71.52~74.04 'it looks pretty undetectable up close this time'"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 주걱으로 파데 바르다가 멘붕 온 외국인들이 있다는데요?",
+   "caps": [
+    {
+     "text": "한국 주걱으로"
+    },
+    {
+     "text": "파데 바르다가"
+    },
+    {
+     "text": "멘붕 온 외국인들이"
+    },
+    {
+     "text": "있다는데요?"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(당황)",
+   "src": "cp.mp4",
+   "spans": [
+    [
+     42.95,
+     44.3
+    ]
+   ],
+   "said": "I don't know what I'm doing wrong",
+   "caps_rel": [
+    [
+     "뭘 잘못하는 건지",
+     0.0,
+     0.8
+    ],
+    [
+     "모르겠어",
+     0.8,
+     1.35
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 바르기",
+   "tts": "얇은 주걱에 파데를 묻혀 얼굴에 펴 바르는데,",
+   "caps": [
+    {
+     "text": "얇은 주걱에"
+    },
+    {
+     "text": "파데를 묻혀"
+    },
+    {
+     "text": "얼굴에 펴 바르는데"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 놀림",
+   "tts": "주걱을 세워 잡았다고 댓글에서 놀림까지 받았대요.",
+   "caps": [
+    {
+     "text": "주걱을 세워 잡았다고"
+    },
+    {
+     "text": "댓글에서 놀림까지"
+    },
+    {
+     "text": "받았대요"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(허탈)",
+   "src": "cp.mp4",
+   "spans": [
+    [
+     67.45,
+     69.62
+    ]
+   ],
+   "said": "I'm still not sure how I feel about this technique",
+   "caps_rel": [
+    [
+     "아직도",
+     0.0,
+     0.6
+    ],
+    [
+     "이 방법 잘 모르겠어",
+     0.6,
+     2.17
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 둘째 원본",
+   "tts": "이 외국인은 그동안 잘못 썼다며 방법을 바꿨는데,",
+   "caps": [
+    {
+     "text": "이 외국인은"
+    },
+    {
+     "text": "그동안 잘못 썼다며"
+    },
+    {
+     "text": "방법을 바꿨는데"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 방법",
+   "tts": "파데는 끝부분에 살짝 묻혀서 얇게 나눠 펴는 거래요.",
+   "caps": [
+    {
+     "text": "파데는 끝부분에"
+    },
+    {
+     "text": "살짝 묻혀서"
+    },
+    {
+     "text": "얇게 나눠 펴는 거래요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(감탄)",
+   "src": "et.mp4",
+   "spans": [
+    [
+     55.33,
+     59.85
+    ]
+   ],
+   "said": "Girl you thought it looked like skin before. Look at it now. It's crazy",
+   "caps_rel": [
+    [
+     "전에도 피부 같았지?",
+     0.0,
+     2.2
+    ],
+    [
+     "지금 봐 봐",
+     2.25,
+     3.25
+    ],
+    [
+     "미쳤어!",
+     3.3,
+     4.52
+    ]
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "이렇게 하면 파데도 반 펌프면 충분하다던데,",
+   "caps": [
+    {
+     "text": "이렇게 하면"
+    },
+    {
+     "text": "파데도 반 펌프면"
+    },
+    {
+     "text": "충분하다던데"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "그 놀림 받던 외국인도 가까이선 티가 안 났다고 하고.",
+   "caps": [
+    {
+     "text": "그 놀림 받던 외국인도"
+    },
+    {
+     "text": "가까이선"
+    },
+    {
+     "text": "티가 안 났다고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N8",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아~ 나도 내일은 주걱 세워서 발라 봐야겠다.",
+   "caps": [
+    {
+     "text": "아~ 나도 내일은"
+    },
+    {
+     "text": "주걱 세워서"
+    },
+    {
+     "text": "발라 봐야겠다"
+    }
+   ]
+  }
+ ]
+}

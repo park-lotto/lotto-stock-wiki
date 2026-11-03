@@ -1,0 +1,1231 @@
+{
+ "id": "rjiT9z_jCp0",
+ "dur": 44.033,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   299,
+   1080,
+   1588
+  ],
+  "caption_band": [
+   1376,
+   1512
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.6,
+   "speaker": null,
+   "text": "이봉주",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "이봉주 한국 최고 기록이 2시간 7분"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 0.6,
+   "t1": 1.5,
+   "speaker": null,
+   "text": "최고기록이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1381,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.47
+   ],
+   "_asr": [
+    "이봉주 한국 최고 기록이 2시간 7분"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.5,
+   "t1": 2.1,
+   "speaker": null,
+   "text": "2시간",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.47
+   ],
+   "_asr": [
+    "이봉주 한국 최고 기록이 2시간 7분"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 2.1,
+   "t1": 3.0,
+   "speaker": null,
+   "text": "7분 20초야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "이봉주 한국 최고 기록이 2시간 7분",
+    "20초야. 2000년에 세운 건데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.0,
+   "t1": 3.9,
+   "speaker": null,
+   "text": "2000년에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "20초야. 2000년에 세운 건데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.9,
+   "speaker": null,
+   "text": "세운 건데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "20초야. 2000년에 세운 건데",
+    "아직 아무도 못 깼어. 이게 얼마나"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.6,
+   "t1": 6.2,
+   "speaker": null,
+   "text": "이게 얼마나",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.63
+   ],
+   "_asr": [
+    "아직 아무도 못 깼어. 이게 얼마나"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.7,
+   "t1": 7.2,
+   "speaker": null,
+   "text": "대단한 거냐면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.1
+   ],
+   "_asr": [
+    "대단한 거냐면 100m를 18초에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.6,
+   "speaker": null,
+   "text": "100미터를",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1410,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "대단한 거냐면 100m를 18초에",
+    "뛰는 속도로 422번을 쉬지 않고"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.6,
+   "t1": 9.0,
+   "speaker": null,
+   "text": "18초에 뛰는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1377,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "뛰는 속도로 422번을 쉬지 않고"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.0,
+   "t1": 10.3,
+   "speaker": null,
+   "text": "속도로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1384,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "뛰는 속도로 422번을 쉬지 않고"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.3,
+   "t1": 10.9,
+   "speaker": null,
+   "text": "쉬지 않고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.93
+   ],
+   "_asr": [
+    "뛰는 속도로 422번을 쉬지 않고",
+    "가는 거야. 일반인이 100m를"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.9,
+   "t1": 11.7,
+   "speaker": null,
+   "text": "일반인이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.93
+   ],
+   "_asr": [
+    "가는 거야. 일반인이 100m를"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.7,
+   "speaker": null,
+   "text": "100미터를",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "가는 거야. 일반인이 100m를",
+    "전력으로 뛰면 보통 그 정도 나와."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.7,
+   "t1": 13.7,
+   "speaker": null,
+   "text": "전력으로 뛰면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "전력으로 뛰면 보통 그 정도 나와."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.1,
+   "t1": 15.2,
+   "speaker": null,
+   "text": "네 전력 질주",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "전력으로 뛰면 보통 그 정도 나와.",
+    "네. 전력 질주 속도로 두 시간을"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.2,
+   "t1": 15.8,
+   "speaker": null,
+   "text": "속도로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1384,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "네. 전력 질주 속도로 두 시간을"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.5,
+   "t1": 17.1,
+   "speaker": null,
+   "text": "그럼",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1382,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "가는 거지. 그럼 일반인은 따라갈 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.1,
+   "t1": 17.7,
+   "speaker": null,
+   "text": "일반인은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "가는 거지. 그럼 일반인은 따라갈 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.7,
+   "t1": 18.1,
+   "speaker": null,
+   "text": "따라갈 수",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "가는 거지. 그럼 일반인은 따라갈 수",
+    "있냐고? 기록은 못 따라가. 그런데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.0,
+   "t1": 19.7,
+   "speaker": null,
+   "text": "못 따라가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "있냐고? 기록은 못 따라가. 그런데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.7,
+   "t1": 20.1,
+   "speaker": null,
+   "text": "그런데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "있냐고? 기록은 못 따라가. 그런데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.1,
+   "t1": 20.9,
+   "speaker": null,
+   "text": "재미있는 게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "있냐고? 기록은 못 따라가. 그런데",
+    "여기서 재미있는게 나와. 세계 정상급"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.9,
+   "t1": 22.2,
+   "speaker": null,
+   "text": "세계 정상급",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.0
+   ],
+   "_asr": [
+    "여기서 재미있는게 나와. 세계 정상급"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.2,
+   "t1": 22.9,
+   "speaker": null,
+   "text": "마라토너들",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "여기서 재미있는게 나와. 세계 정상급",
+    "마라톤들 훈련을 조사해 보면 느리게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.9,
+   "t1": 23.3,
+   "speaker": null,
+   "text": "훈련을",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "마라톤들 훈련을 조사해 보면 느리게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 23.3,
+   "t1": 23.8,
+   "speaker": null,
+   "text": "조사해 보면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "마라톤들 훈련을 조사해 보면 느리게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 23.8,
+   "t1": 24.6,
+   "speaker": null,
+   "text": "느리게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "마라톤들 훈련을 조사해 보면 느리게",
+    "달리는게 전체 여덟 할이야. 빠른 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.2,
+   "t1": 25.6,
+   "speaker": null,
+   "text": "전체의",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달리는게 전체 여덟 할이야. 빠른 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.6,
+   "t1": 26.9,
+   "speaker": null,
+   "text": "여덟 할이야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1381,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달리는게 전체 여덟 할이야. 빠른 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 26.9,
+   "t1": 27.6,
+   "speaker": null,
+   "text": "두 할뿐이야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1381,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달리는게 전체 여덟 할이야. 빠른 건",
+    "두 할 뿐이야. 다리 속에 피가 가는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.6,
+   "t1": 28.4,
+   "speaker": null,
+   "text": "다리 속에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "두 할 뿐이야. 다리 속에 피가 가는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 28.8,
+   "t1": 29.7,
+   "speaker": null,
+   "text": "여러 번",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "두 할 뿐이야. 다리 속에 피가 가는",
+    "길은 여러 번 오래 달려야"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.7,
+   "t1": 30.1,
+   "speaker": null,
+   "text": "달려야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "길은 여러 번 오래 달려야"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 30.1,
+   "t1": 31.0,
+   "speaker": null,
+   "text": "늘어나거든",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "길은 여러 번 오래 달려야",
+    "늘어나거든. 한번 번 세 개로는 안"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 31.0,
+   "t1": 32.0,
+   "speaker": null,
+   "text": "세게로는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "늘어나거든. 한번 번 세 개로는 안"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 32.0,
+   "t1": 32.5,
+   "speaker": null,
+   "text": "안 늘어나",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "늘어나거든. 한번 번 세 개로는 안",
+    "늘어나. 그러니까 일반인이 따라할 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 32.5,
+   "t1": 33.6,
+   "speaker": null,
+   "text": "그러니까",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "늘어나. 그러니까 일반인이 따라할 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 33.6,
+   "t1": 34.1,
+   "speaker": null,
+   "text": "",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": null,
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "늘어나. 그러니까 일반인이 따라할 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 34.1,
+   "t1": 35.3,
+   "speaker": null,
+   "text": "기록이 아니라",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    34.4
+   ],
+   "_asr": [
+    "늘어나. 그러니까 일반인이 따라할 수",
+    "있는 건 기록이 아니라 그 여덟"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 35.3,
+   "t1": 36.6,
+   "speaker": null,
+   "text": "그 여덟 할이야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "있는 건 기록이 아니라 그 여덟",
+    "할이야. 느리게 올해 매일. 기록은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 36.6,
+   "t1": 37.2,
+   "speaker": null,
+   "text": "느리게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "할이야. 느리게 올해 매일. 기록은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 37.9,
+   "t1": 38.4,
+   "speaker": null,
+   "text": "매일",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "할이야. 느리게 올해 매일. 기록은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 38.4,
+   "t1": 38.9,
+   "speaker": null,
+   "text": "기록은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1378,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "할이야. 느리게 올해 매일. 기록은",
+    "못 따라가도 방법은 똑같아. 오늘은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 38.9,
+   "t1": 39.5,
+   "speaker": null,
+   "text": "못 따라가도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1376,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "못 따라가도 방법은 똑같아. 오늘은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 39.5,
+   "t1": 40.3,
+   "speaker": null,
+   "text": "방법은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "못 따라가도 방법은 똑같아. 오늘은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 40.3,
+   "t1": 40.8,
+   "speaker": null,
+   "text": "똑같아",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "못 따라가도 방법은 똑같아. 오늘은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 40.8,
+   "t1": 42.2,
+   "speaker": null,
+   "text": "오늘은 여기까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1375,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "못 따라가도 방법은 똑같아. 오늘은",
+    "여기까지. 다음 거 기대해. M."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

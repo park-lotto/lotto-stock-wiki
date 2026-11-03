@@ -1,0 +1,382 @@
+{
+ "topic": "Sliimey Honey(슬라이미 허니) — 진짜 음식처럼 생기고 향도 나는 수제 슬라임. 투자자가 슬라임 범벅 → 17살 고등학생이 코로나 때 차고에서 시작 → 제일 잘 팔리는 게 한국 마트 바나나우유 슬라임 → 엄마·친구들과 차고에서 포장 → 데이먼드와 성사",
+ "product": "Sliimey Honey 음식 향 슬라임(바나나우유 슬라임)",
+ "bench": {
+  "id": "Lbct5sgnyjM",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "스트레스 풀린다는 슬라임 (화면 제목: 스트레스 풀리는 슬라임 / 산다 vs 안산다)",
+  "dur": 51.5,
+  "views": 525000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "1초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '만지다 보면 스트레스까지 싹 풀린다'·원본 'stress relieving'·'anxiety relieving'(효능) → 쓰지 않음",
+  "원본 '먹어도 안 죽는다'(안전성) → 쓰지 않음",
+  "벤치·원본 매출·마진·투자 금액·지분(금액) → 쓰지 않음"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이거 좀 도와줘…",
+     "완전 슬라임 범벅!",
+     "어떡해?"
+    ],
+    "cap_at": [
+     224.09,
+     225.37,
+     228.09
+    ],
+    "span": [
+     224.09,
+     228.61
+    ],
+    "orig_en": "I mean, can you help me? I'm slimed. Yeah. What do I do?",
+    "text": "이거 좀 도와줘… 완전 슬라임 범벅! 어떡해?",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 투자자 두 손에 엉겨 붙은 흰 슬라임) — 벤치 0~1.0 슬라임 든 투자자(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "이거 좀 도와줘…",
+      "span": "도와줘…",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "완전 슬라임 범벅!",
+      "span": "완전 슬라임 범벅!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "어떡해?",
+      "span": "어떡해?",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "열일곱 살 고등학생이",
+     "코로나 때 집에 갇혀서",
+     "차고에서 만든 슬라임인데"
+    ],
+    "text": "열일곱 살 고등학생이 코로나 때 집에 갇혀서 차고에서 만든 슬라임인데",
+    "tts": "열일곱 살 고등학생이, 코로나 때 집에 갇혀서, 차고에서 만든 슬라임인데",
+    "fx": "빨강 번쩍 — 벤치 0.5",
+    "emph": [
+     {
+      "cap": "열일곱 살 고등학생이",
+      "span": "고등학생이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "코로나 때 집에 갇혀서",
+      "span": "집에 갇혀서",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차고에서 만든 슬라임인데",
+      "span": "만든 슬라임인데",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "진짜 음식처럼 생기고",
+     "냄새까지 똑같은데",
+     "제일 잘 팔리는 게",
+     "바나나우유 슬라임이라는데"
+    ],
+    "text": "진짜 음식처럼 생기고 냄새까지 똑같은데, 제일 잘 팔리는 게 바나나우유 슬라임이라는데",
+    "tts": "진짜 음식처럼 생기고, 냄새까지 똑같은데, 제일 잘 팔리는 게, 바나나우유 슬라임이라는데",
+    "fx": "초록 번쩍 — 벤치 7.7",
+    "emph": [
+     {
+      "cap": "진짜 음식처럼 생기고",
+      "span": "음식처럼 생기고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "냄새까지 똑같은데",
+      "span": "똑같은데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "제일 잘 팔리는 게",
+      "span": "제일 잘 팔리는",
+      "color": "노랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바나나우유 슬라임이라는데",
+      "span": "슬라임이라는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(정체·잉?)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "어릴 때부터 제일 좋아한 간식이",
+     "한국 마트 바나나우유였거든요"
+    ],
+    "cap_at": [
+     62.88,
+     65.84
+    ],
+    "span": [
+     62.88,
+     67.96
+    ],
+    "orig_en": "Growing up with Asian culture, one of my favorite snacks was always banana milk from Korean markets.",
+    "text": "어릴 때부터 제일 좋아한 간식이 한국 마트 바나나우유였거든요",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "어릴 때부터 제일 좋아한 간식이",
+      "span": "제일 좋아한 간식이",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한국 마트 바나나우유였거든요",
+      "span": "바나나우유였거든요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "반응",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "냄새 너무 궁금해",
+     "말만 들어도 맛있겠어",
+     "냄새 진짜 좋아요",
+     "대박!"
+    ],
+    "cap_at": [
+     108.92,
+     110.08,
+     111.72,
+     112.08
+    ],
+    "span": [
+     108.92,
+     112.84
+    ],
+    "orig_en": "I can't wait to smell it because you made it sound like… They smell. Amazing.",
+    "text": "냄새 너무 궁금해 말만 들어도 맛있겠어 냄새 진짜 좋아요 대박!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "냄새 너무 궁금해",
+      "span": "너무 궁금해",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "말만 들어도 맛있겠어",
+      "span": "들어도 맛있겠어",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "냄새 진짜 좋아요",
+      "span": "진짜 좋아요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "대박!",
+      "span": "대박!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "결과",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "엄마가 밤새 포장을 돕고",
+     "고등학교 친구들까지",
+     "차고로 출근한다는데"
+    ],
+    "text": "엄마가 밤새 포장을 돕고 고등학교 친구들까지 차고로 출근한다는데",
+    "tts": "엄마가 밤새 포장을 돕고, 고등학교 친구들까지, 차고로 출근한다는데",
+    "emph": [
+     {
+      "cap": "엄마가 밤새 포장을 돕고",
+      "span": "포장을 돕고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고등학교 친구들까지",
+      "span": "친구들까지",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차고로 출근한다는데",
+      "span": "출근한다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "17살이 만든 슬라임",
+  "line2": "한국 바나나우유 맛?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '스트레스 풀리는 슬라임 / 산다 vs 안산다'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 224.09~228.61 'I mean, can you help me?' 'I'm slimed.' 'Yeah.' 'What do I do?'(투자자 원음 — 이름은 자막에 안 씀) · 화면 223.86~229.10 슬라임 묻은 손을 든 투자자 · 0초 화면은 같은 원본 235.6초 그 손 근접(cover)",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=222s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 2.92~9.48 'a teen entrepreneur who started his business while stuck at home during the pandemic lockdown' · 91.88~95 'I may only be 17' · 142.81~145.53 'I'm currently producing everything out of my house's garage.'",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=2s",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 42.48~52.96 'Slimy Honey Gourmet Next Level slime that looks and smells like your favorite foods.' · 67.96~72.64 'our best selling glossy slime banana milk'",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=42s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 62.88~72.64 'Growing up with Asian culture, one of my favorite snacks was always banana milk from Korean markets. So I turned that into our best selling glossy slime banana milk'",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=62s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 108.92~112.84 'I can't wait to smell it because you made it sound like.' 'They smell.' 'Amazing.'(투자자·창업자 원음 — 화면 109.51~112.95 = 슬라임 통을 받은 투자자)",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=108s",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 145.69~158.45 'My mom does a lot to help me. She's spent all nighters with me packing orders. I actually hired many of my high school friends … They come Monday through Friday' · 결말 628.43~630.39 'Damon. I will take your offer.' — 금액·지분은 대본에 안 씀(앞 칼카피 N3 은 하이브리드에서 잘림)",
+   "url": "https://www.youtube.com/watch?v=AJTIEVJn7x4&t=145s",
+   "kind": "방송 원음"
+  }
+ }
+}

@@ -1,0 +1,334 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/hottemreport/mp4/eALs7BdBCQ0.mp4",
+ "measured_at": "2026-10-16 01:25",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 22.6,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 678,
+   "duration": 22.6,
+   "duration_container": 22.663,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": false,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": null,
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   151,
+   142,
+   137
+  ],
+  "ink_polarity": null,
+  "caption_pos": "none",
+  "caption_band": null,
+  "other_frame_segments": [],
+  "above_bands": [],
+  "bench_full_single": {
+   "window": null,
+   "bg_rgb": [
+    151,
+    142,
+    137
+   ],
+   "bg_lum": 144.1,
+   "caption": {
+    "pos": "none",
+    "band": null,
+    "ink": null
+   },
+   "above_bands": [],
+   "n_samples": 45,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [],
+  "failed": "영상 창을 못 찾음"
+ },
+ "captions": {
+  "failed": "자막 띠를 못 찾음(후보 점수 0)",
+  "method": "bench.captions.caption_score"
+ },
+ "fonts": {
+  "failed": "자막이 없어 글꼴 대조 못 함"
+ },
+ "text_fx": {
+  "failed": "자막이 없어 글자 효과 못 잼"
+ },
+ "caption_motion": {
+  "failed": "자막 없음"
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -12.2,
+   "LRA": 2.1,
+   "TP": 0.1,
+   "S_spread": 2.0,
+   "S_n": 197,
+   "open3s_M": -14.9,
+   "rest_M": -11.9,
+   "hf_8k16k_dbfs": -46.7,
+   "openvoice": {
+    "floor_db": -20.25,
+    "open": 4.01,
+    "body": 8.3
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "감성적인",
+     "어쿠스틱",
+     "따뜻한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "",
+   "speakers": []
+  },
+  "transcript": {
+   "segments": [],
+   "n": 0,
+   "langs": [],
+   "ambient": "",
+   "speech_sec_all": 0,
+   "ko_speech_sec": 0,
+   "speech_share_ko": 0.0,
+   "chars_nospace_ko": 0,
+   "cps": null,
+   "pause_median": null,
+   "pauses": 0,
+   "narration": "말소리 없음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [],
+   "narration": "none",
+   "source_audio_kept": false,
+   "source_evidence": {
+    "foreign_or_source_segments": 0,
+    "ambient": ""
+   },
+   "duck_db": {
+    "failed": "한국어 나레 구간 없음"
+   },
+   "caption_eq_narration": {
+    "failed": "자막 글자(OCR) 없음"
+   },
+   "sfx_per_sec": 0.044,
+   "sfx": {
+    "count": 1,
+    "outside_speech": 1,
+    "outside_per_sec": 0.044,
+    "times": [
+     [
+      22.46,
+      0.14
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "나레 없음"
+  }
+ },
+ "script_tone": {
+  "failed": "한국어 받아쓰기 구절 없음"
+ },
+ "cuts": {
+  "failed": "영상 창을 못 찾음(layout)"
+ },
+ "materials": {
+  "failed": "컷이 없음"
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.044,
+  "count": 1,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.0,
+   "둘다_아님": 1.0
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "감성적인",
+   "어쿠스틱",
+   "따뜻한"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": {
+   "failed": "한국어 나레 구간 없음"
+  },
+  "end": {
+   "fade": false,
+   "last0.5s_db": -15.5,
+   "prev_db": -14.2,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [],
+  "roles": 0,
+  "speakers_all": 0,
+  "cps": null,
+  "narration": "none",
+  "tone": null,
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 0,
+  "per_min": 0.0,
+  "kind_share": {},
+  "slot_share": {},
+  "appearances": [],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 상자 프레임 차분으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "소리 구성 duck_db: 한국어 나레 구간 없음",
+  "소리 구성 caption_eq_narration: 자막 글자(OCR) 없음",
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 0,
+   "ok": true,
+   "sec": 6.8
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "503",
+   "sec": 7.9
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "503",
+   "sec": 9.6
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "429",
+   "sec": 1.4
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "failed": "503",
+   "sec": 4.8
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-flash-lite-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 3.9
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "ok": true,
+   "sec": 9.2
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 3,
+   "failed": "429",
+   "sec": 0.9
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 4,
+   "failed": "429",
+   "sec": 1.1
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "503",
+   "sec": 4.2
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "failed": "503",
+   "sec": 4.3
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "ok": true,
+   "sec": 4.4
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.1,
+  "layout": 15.9,
+  "captions": 0.0,
+  "fonts_fx": 0.0,
+  "caption_motion": 0.0,
+  "audio_tone": 8.9,
+  "cuts_materials": 0.0,
+  "rules": 89.1,
+  "total": 114.0
+ }
+}

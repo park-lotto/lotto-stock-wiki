@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 30 다이슨 허쉬젯 미니 쿨 하이브리드 — 앞 = 숏템리폿 현장썰 MrExitStrategy·Phones And Drones 원음형 박창수판(30_HushJet/front), 뒤 = 쿠팡 9732030704 '다이슨 허쉬젯 미니 쿨 선풍기'(같은 제품 — 대표 사진 = 빨강 허쉬젯 미니 쿨, 두 리뷰어 것과 같은 꼴·다른 색). 뒤 화면 = 손·제품 컷만(두 원본 모두 위에서 찍은 손뿐 — 얼굴 0, 쿠팡 사진). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "다이슨 허쉬젯 미니 쿨(쿠팡 9732030704, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/30_HushJet/front/render/final.mp4",
+  "cut": 18.6,
+  "why": "원음 O2 'tiny' 끝(앞 18.294) 뒤 0.3초 — 같은 한 샷(pd 142.18~) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 14:27, '다이슨 허쉬젯' 1회, 29_cand/coupang_a.json): 9732030704 '다이슨 허쉬젯 미니 쿨 선풍기' — 같은 제품 다른 판매 9617003101·9604575842·9546745890(스톤/블러셔) · 대표 사진(front/src/cp_9732030704.jpg) = 빨강 허쉬젯 미니 쿨 한 대(흰 바탕)",
+  "o_neck": "Phones And Drones 원본(스피치매틱스) 121.45~135.77 'an actual neck lanyard where you're going to be able to actually put the fan itself inside, change the angle, wear this around your neck, and have that steady breeze blowing right up at you' · 화면 pd 124 목걸이 줄·me 95 줄에 매단 허쉬젯",
+  "o_base": "Phones And Drones 원본 159.17~161.29 'And here is also the base for it if you just want to set it on a desk' · 화면 pd 160 받침",
+  "o_speed": "Phones And Drones 원본 200.62~203.62 'Five different settings as well for speed' · 232.78~235.02 'there's a boost mode you can actually go into' · MrExitStrategy 사본 175.29~178.05 'boost mode … hold the plus button'"
+ },
+ "흥미이음": {
+  "원본흥미": "켜자마자 'Very powerful … that's impressive' · 'wow. That power is actually amazing on something this tiny'",
+  "뒤흥미": "쿠팡의 바로 그 허쉬젯 미니 쿨 — 목에 걸면 얼굴로 바람·책상 받침·다섯 단계+부스트",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 '다이슨 허쉬젯 미니 쿨 선풍기' + 대표 사진(허쉬젯 미니 쿨 본체) = 두 리뷰어의 허쉬젯 미니 쿨(색만 다름)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/30_HushJet/front/frame_render.json",
+  "title": "다이슨이 만든\n손풍기"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·빨강 허쉬젯·회색 바닥 위 — 빨강 위 빨강·흰 위 노랑 금지, 하늘",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "얼굴"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 책상·살색 손·분홍 줄 위 — 빨강·분홍·주황 금지, 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "책상"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 책상·살색 손 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "부스트"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 바닥·흰 책상 위 — 하늘"
+  },
+  "B5": {
+   "emphasis": {
+    "words": [
+     "어디 거냐고"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 바닥·흰 사진 위 — 하늘",
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 선풍기가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 선풍기가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "목걸이 줄에 끼워서 걸면, 바람이 얼굴 쪽으로 올라온다고 해요.",
+   "caps": [
+    "목걸이 줄에 끼워서 걸면",
+    "바람이",
+    "얼굴 쪽으로",
+    "올라온다고 해요"
+   ],
+   "emph": [
+    "얼굴"
+   ],
+   "facts": [
+    "o_neck"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "받침에 꽂아 두면, 책상 선풍기로도 쓸 수 있고요.",
+   "caps": [
+    "받침에 꽂아 두면",
+    "책상",
+    "선풍기로도",
+    "쓸 수 있고요"
+   ],
+   "emph": [
+    "책상"
+   ],
+   "facts": [
+    "o_base"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "바람 세기는 다섯 단계에, 부스트까지 있다네요.",
+   "caps": [
+    "바람 세기는",
+    "다섯 단계에",
+    "부스트까지",
+    "있다네요"
+   ],
+   "emph": [
+    "부스트"
+   ],
+   "facts": [
+    "o_speed"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "버스에서 꺼냈더니, 옆 사람들이 그거 어디 거냐고 계속 물어봤어요.",
+   "caps": [
+    "버스에서 꺼냈더니",
+    "옆 사람들이",
+    "그거 어디 거냐고",
+    "계속 물어봤어요"
+   ],
+   "emph": [
+    "어디 거냐고"
+   ],
+   "facts": []
+  }
+ ]
+}

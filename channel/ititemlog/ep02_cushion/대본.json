@@ -1,0 +1,167 @@
+{
+ "_note": "잇템로그판 해외반응 시리즈 — 한국 쿠션 반전(2026-10-22). 원본 = MissDarcei 'Ks61P_NoelQ'(3,985만, 채널 중앙 121만의 33배). 한국 검증 = 같은 주제 잇템로그 1,835만·떠튜브 1,238만. 편집점(떠튜브·잇템로그) = 결과 감정 과장 제목 · 반전 한 번 · 감탄 강조. 사실 근거 = Speechmatics 받아쓰기(segments) + 1초 시트(t1s.png).",
+ "slug": "ititemlog_ep02_cushion",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "한국 쿠션 파운데이션(쿠팡: 쿠션 파운데이션 — 어두운 호수 포함 제품 우선)",
+ "title_lines": [
+  [
+   [
+    "한국 쿠션 발랐다가"
+   ]
+  ],
+  [
+   [
+    "유령 된 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "0.20~3.76 'A makeup brand from Korea sent me this foundation should I try it on' — 0~3초 쿠션 들고 웃음",
+  "f2": "4~6초 'Wait for it...' 원본 글, 6~7초 뺨에 흰 점 · 7초 입 벌림",
+  "f3": "7.76~12.00 'They looked at me and they were like this is her shade I think if I blend it down my neck it'll be fine' — 8~9초 얼굴 반쪽 회색",
+  "f4": "10~16초 얼굴 전체 회색",
+  "f5": "같은 채널 2024 영상(YOLbmBYU-3E): TIRTIR 새 호수 11개 → 20호수, 43N 이 피부색과 맞음(ep01 facts)"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 화장품 회사에서 쿠션을 선물 받은 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 화장품 회사에서"
+    },
+    {
+     "text": "쿠션을 선물 받은 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(설렘)",
+   "src": "Ks61P_NoelQ.mp4",
+   "spans": [
+    [
+     0.2,
+     3.76
+    ]
+   ],
+   "said": "A makeup brand from Korea sent me this foundation should I try it on",
+   "caps_rel": [
+    [
+     "한국 브랜드가 이걸 보내줬어",
+     0.0,
+     1.9
+    ],
+    [
+     "한번 발라볼까?",
+     1.9,
+     3.56
+    ]
+   ]
+  },
+  {
+   "id": "N1b",
+   "kind": "tts",
+   "role": "나레 복선",
+   "tts": "그런데 뚜껑을 열어 보니 색이 생각보다 꽤 밝았는데요.",
+   "caps": [
+    {
+     "text": "그런데 뚜껑을 열어 보니"
+    },
+    {
+     "text": "색이 생각보다 꽤 밝았는데요",
+     "key": "밝았는데요"
+    }
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 문제",
+   "tts": "그래도 뺨에 살짝 찍어 봤더니 혼자 하얗게 떠 버렸는데요.",
+   "caps": [
+    {
+     "text": "그래도 뺨에 살짝 찍어 봤더니"
+    },
+    {
+     "text": "혼자 하얗게 떠 버렸는데요",
+     "key": "하얗게"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(애써 웃음)",
+   "src": "Ks61P_NoelQ.mp4",
+   "spans": [
+    [
+     7.76,
+     12.0
+    ]
+   ],
+   "said": "They looked at me and they were like this is her shade I think if I blend it down my neck it'll be fine",
+   "caps_rel": [
+    [
+     "날 보고 이게 내 색이라 생각했나 봐",
+     0.0,
+     2.2
+    ],
+    [
+     "목까지 펴 바르면 괜찮겠지",
+     2.2,
+     4.24
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 고조",
+   "tts": "하지만 얼굴 전체에 펴 바를수록 점점 회색으로 변해 갔는데요.",
+   "caps": [
+    {
+     "text": "하지만 얼굴 전체에 펴 바를수록"
+    },
+    {
+     "text": "점점 회색으로 변해 갔는데요",
+     "key": "회색"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 공개",
+   "tts": "알고 보니 그때 한국 쿠션은 밝은 호수뿐이었다는데요.",
+   "caps": [
+    {
+     "text": "알고 보니 그때 한국 쿠션은"
+    },
+    {
+     "text": "밝은 호수뿐이었다는데요",
+     "key": "밝은 호수"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "몇 년 뒤엔 어두운 색 쿠션까지 나와서 이번엔 진짜 자기 피부색을 찾았다고 하네요.",
+   "caps": [
+    {
+     "text": "몇 년 뒤엔 어두운 색 쿠션까지 나와서"
+    },
+    {
+     "text": "이번엔 진짜 자기 피부색을 찾았다고 하네요"
+    }
+   ]
+  }
+ ]
+}

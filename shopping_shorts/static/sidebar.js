@@ -57,16 +57,49 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 카드뉴스 제작소(관제 223, 2026-10-17) — 인스타 캐러셀 생성. 스위치 cardnews_enabled 열린 계정만(/api/me cardnews) 보인다.
+      { icon: "🗂", text: "카드뉴스 제작소", href: "/cardnews", cardnews: true },
       // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
-      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
-      { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
       // 유튜브제작(2026-10-12 관제 185) — 사장님 유튜브 영상 제작판. 서버 라우트(_yt_studio_page)도 관리자만 연다.
       { icon: "🎬", text: "유튜브제작",     href: "/yt_studio", admin: true },
       // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
       { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
+    ] },
+    // 🧳 숏템팩(관제 222, 2026-10-17 사장님 "좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 우리 팩 전부를 한 화면(/shortem_packs)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_packs_page)도 관리자만 연다. 세부 팩은 그 화면의 칸(#id)으로 바로 간다.
+    { label: "숏템팩", admin: true, items: [
+      { icon: "🧳", text: "전체 보기",       href: "/shortem_packs", admin: true },
+      { icon: "🔊", text: "효과음팩",        href: "/shortem_packs#sfx", admin: true },
+      { icon: "🧰", text: "효과음 서랍",     href: "/shortem_packs#drawer", admin: true },
+      { icon: "🎵", text: "배경음",          href: "/shortem_packs#bgm", admin: true },
+      { icon: "🎙", text: "성우",            href: "/shortem_packs#voice", admin: true },
+      { icon: "💬", text: "자막 스타일",     href: "/shortem_packs#caption", admin: true },
+      { icon: "✨", text: "등장 효과팩",     href: "/shortem_packs#motion", admin: true },
+      { icon: "🎞", text: "모션그래픽팩",    href: "/shortem_packs#mograph", admin: true },
+      { icon: "😀", text: "스티커·배지·도형", href: "/shortem_packs#deco", admin: true },
+      { icon: "🖼", text: "템플릿",          href: "/shortem_packs#template", admin: true },
+      { icon: "😂", text: "감정짤팩",        href: "/shortem_packs#meme", admin: true },
+      { icon: "🔤", text: "글꼴",            href: "/shortem_packs#font", admin: true },
+      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다. (관제 222: 제작 묶음 → 숏템팩 묶음)
+      { icon: "🔒", text: "효과 견본(에펙)", href: "/fx_samples", admin: true },
+    ] },
+    // 📊 채널 리포트(관제 281, 2026-10-27 사장님 "관리자만 보는 걸로 해서 왼쪽 카테고리에") — 우리 유튜브·틱톡 채널 성적.
+    //   묶음째 관리자 전용 — 서버 라우트(_channel_stats_page)도 관리자만 연다.
+    { label: "채널 리포트", admin: true, items: [
+      { icon: "📊", text: "우리 채널 성적", href: "/channel_stats", admin: true },
+    ] },
+    // 🧬 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 벤치해 만든 브랜드·스타일·결과물 장부를 한 화면(/shortem_preset)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_preset_page)도 관리자만 연다. 세부 칸은 그 화면의 #id 로 바로 간다.
+    { label: "숏템프리셋", admin: true, items: [
+      { icon: "🧬", text: "전체 보기",       href: "/shortem_preset", admin: true },
+      { icon: "🏷", text: "브랜드",          href: "/shortem_preset#brand", admin: true },
+      { icon: "🎙", text: "스타일",          href: "/shortem_preset#style", admin: true },
+      { icon: "📦", text: "결과물",          href: "/shortem_preset#result", admin: true },
+      { icon: "📺", text: "벤치 채널 보관함", href: "/admin/calcopy", admin: true },
+      { icon: "📑", text: "분석 문서",       href: "/shortem_preset#docs", admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -175,7 +208,23 @@
       // 44px 터치타깃(2026-08-15) — 실측 28px이라 가로띠에서 손가락으로 누르기 작았다.
       // 가로띠는 어차피 가로 스크롤(scrollWidth 1477 > 390)이라 높이를 키워도 안 잘린다.
       ".ss-item{margin:0;padding:0 13px;min-height:44px;display:flex;align-items:center;" +
-        "flex-shrink:0;font-size:13px}}";
+        "flex-shrink:0;font-size:13px}" +
+      // 폰 화면 넘침 공용 규칙(관제 276) — 실측(390px): select 는 가장 긴 보기 글자만큼 넓어져
+      //   역대히트작 551px·유튜브제작 404px로 페이지 전체를 옆으로 밀었고, 해외레퍼런스는 7칸 표가 636px.
+      //   select 는 화면 폭에 묶고, 표는 표 자리에서만 옆으로 밀어 보게 한다(페이지는 안 밀린다).
+      //   본문 상자(.wrap{max-width:…;margin:0 auto})는 margin:auto 라 폭이 화면이 아니라 내용에 맞춰
+      //   늘어난다 → 화면 폭에 묶는다. 페이지 .wrap 규칙(클래스)이 이겨서 !important 가 필요하다.
+      //   화면에 떠 있는 알림·창(인라인 position:fixed)은 빼야 자기 max-width(90vw 등)가 산다.
+      "body>*:not([style*='position:fixed']):not([style*='position: fixed']){max-width:100% !important;box-sizing:border-box}" +
+      "select{max-width:100%}" +
+      // th nowrap: 표를 화면 폭에 넣으면 칸이 짓눌려 머리글이 '구/독/자'로 세로 쪼개졌다 → 머리글은 한 줄, 넘치면 표만 옆으로
+      "table{display:block;max-width:100%;overflow-x:auto}th{white-space:nowrap}" +
+      // 손가락 크기(관제 276): 폰에서 단추·칩·선택상자가 20~31px(실측 — 랭킹 카드 28·31, 효과견본 칩 21, 레퍼런스 select 24).
+      //   60대 기준 44px 가 이상이지만 촘촘한 목록이 두 배로 길어지지 않게 36px 하한. 줄글 속 링크(a)는 글 흐름이라 뺀다.
+      "button,.btn,[role=button],select{min-height:36px}" +
+      // 구역 이동 칩(숏템팩·숏템프리셋·효과견본·유튜브제작의 nav 안 #링크, 25~30px)도 같은 하한
+      "nav:not(.ss-nav) a[href^='#']{min-height:36px;display:flex;align-items:center}" +
+      "input[type=text],input[type=search],input[type=url],input[type=number],input:not([type]){min-height:40px}}";
   // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
   // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
   // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
@@ -212,15 +261,16 @@
     ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
-    html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
+    // 묶음째 관리자 전용(g.admin, 숏템팩) — 항목처럼 기본 숨김, /api/me 가 관리자면 같은 ss-admin-only 로 보인다
+    html += '<div class="ss-group' + (g.admin ? ' ss-admin-only"' + ' style="display:none"' : '"') + '><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
-      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "") + (it.cardnews ? " ss-cardnews-only" : "");
+      var hide = (it.admin || it.meme || it.cardnews) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -333,7 +383,12 @@
   //   바로 복귀. 숫자 'N단계'는 7칸 미니 진행바로 바꿔 진척을 형태로 보인다.
   // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
   // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
-  var WORK_STEPS = 7;   // produce 7단계 — 미니바 칸 수
+  // ★칸 수·순서는 제작소 단계 동그라미(produce.html ORB_TO_PANEL)와 같아야 한다(관제 272).
+  //   예전엔 7칸에 step(=패널 번호)+1을 그대로 채워, 대본(패널8) 단계 작업은 꽉 차고 완성한 작업은
+  //   1칸만 찼다(박선정님 "완성했는데 미완성으로 나온다"). 이 사본은 tests/test_sidebar_work_bar.py 가
+  //   produce.html 원본과 같은지 지킨다.
+  var ORB_TO_PANEL = [0, 8, 7, 2, 1, 3, 4, 5, 6, 9];
+  var WORK_STEPS = ORB_TO_PANEL.length - 1;   // SNS 예약(마지막)은 선택이라 완성본까지를 꽉 찬 바로 친다
   // curWid: '지금 작업'으로 표시할 work_id. 안 넘기면 URL(?work=)에서 뽑는다.
   // ★produce.html의 WORK_ID는 `let`이라 **window에 안 올라간다**(렉시컬 바인딩 — MIX_JOB에서
   //   이미 한 번 밟은 함정). 그래서 window를 훔쳐보지 않고 **인자로 받는다**.
@@ -348,7 +403,10 @@
       d.works.forEach(function (w) {
         var cur = open && w.work_id === open;
         var name = escHtml(w.title || "(제목 없음)");
-        var done = Math.max(0, Math.min(WORK_STEPS, (w.step || 0) + 1));
+        // 완성본을 만든 작업(서버 done)은 마지막으로 보던 화면과 상관없이 꽉 찬 바다.
+        var orb = ORB_TO_PANEL.indexOf(w.step || 0);
+        //   완성 전 작업은 완성 화면에 서 있어도 한 칸 비워 둔다(꽉 찬 바 = 완성본 있음, 그 하나만 뜻한다).
+        var done = w.done ? WORK_STEPS : Math.max(1, Math.min(WORK_STEPS - 1, (orb < 0 ? 0 : orb) + 1));
         var bar = "";
         for (var i = 0; i < WORK_STEPS; i++) bar += '<span class="ss-work-seg' + (i < done ? " on" : "") + '"></span>';
         // 열기(제목+진행바)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
@@ -495,6 +553,8 @@
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
     if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
+    // 카드뉴스 제작소 스위치(cardnews_enabled) — 서버 /api/me cardnews 가 정본(서버 입구 _cn_gate와 같은 판정)
+    if (d.cardnews === true) document.querySelectorAll(".ss-cardnews-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;
@@ -771,7 +831,8 @@
         el = document.createElement("div"); el.id = id;
         el.setAttribute("role", "status");
         el.style.cssText = "position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483000;" +
-          "max-width:92vw;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
+          // width:max-content(관제 276): left:50% 라 폭이 화면 절반(폰 195px)으로 줄어 글이 잘게 꺾였다
+          "width:max-content;max-width:92vw;box-sizing:border-box;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
           "box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center";
         (document.body || document.documentElement).appendChild(el);
       }

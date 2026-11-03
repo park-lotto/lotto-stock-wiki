@@ -1,0 +1,469 @@
+{
+ "_note": "24 필라델피아 — 훅·앞 = 필라델피아 공식 광고(oEMSnPlLxes Phillyboy·8_hUXATvgo0 Texture, 배우 얼굴 구간 안 씀) · 미국 통 근접 6gR0t2Mgdc(원본 -6gR0t2Mgdc, MrE) · 뉴욕 낙농 = New York Dairy 공식 F2w30AFT5V0(인터뷰 얼굴 안 씀) · 필라델피아 = Visit Philadelphia 공식 CCOLfMHo9sU · 뒤 = 쿠팡 7319954910 사진 + 같은 190g 통(고랩스 GeRbTo1BsFk 손만) + 베이글 펴 바르기(OEYm6hPLlio 손만, 박힌 자막 자르기 밖)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/24_필라델피아/src",
+ "shots": [
+  {
+   "src": "oEMSnPlLxes.mp4",
+   "ss": 20.85,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "oEMSnPlLxes.mp4",
+     "ss": 20.85,
+     "dur": 0.85,
+     "fit": "cover",
+     "src_crop": [
+      380,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "8_hUXATvgo0.mp4",
+     "ss": 2.0,
+     "dur": 0.68,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "6gR0t2Mgdc.mp4",
+     "ss": 8.0,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      246,
+      1080,
+      1427
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homealone.mp4",
+     "ss": 0.1,
+     "dur": 1.16,
+     "fit": "cover",
+     "src_crop": [
+      138,
+      0,
+      363,
+      480
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "필라델피아 공식 광고 2편(통에 칼·베이글에 펴 바르는 칼) → 미국 필라델피아 통 뚜껑 이름 근접 → 놀라 볼 감싸는 나 홀로 집에 짤",
+   "why": "훅 '베이글에 발라 먹는 필라델피아 크림치즈, 필라델피아에선 만든 적이 없대요'",
+   "full": true
+  },
+  {
+   "src": "F2w30AFT5V0.mp4",
+   "ss": 0.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "F2w30AFT5V0.mp4",
+     "ss": 0.6,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      900,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "barnz.mp4",
+     "ss": 0.0,
+     "dur": 1.25,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "뉴욕주 낙농 단체(New York Dairy) 영상: 들판 → 낙농장 헛간(다가감)",
+   "why": "'처음 만든 곳은, 뉴욕주의 한 작은 마을이었는데'"
+  },
+  {
+   "src": "6gR0t2Mgdc.mp4",
+   "ss": 1.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "6gR0t2Mgdc.mp4",
+     "ss": 1.0,
+     "dur": 3.46,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      246,
+      1080,
+      1427
+     ]
+    }
+   ],
+   "ours": "필라델피아 통 뚜껑의 PHILADELPHIA 이름으로 다가감",
+   "why": "'이걸 받아 팔던 치즈 상인이, 새 이름을 붙이자고 했대요'"
+  },
+  {
+   "src": "F2w30AFT5V0.mp4",
+   "ss": 22.35,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "F2w30AFT5V0.mp4",
+     "ss": 22.35,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      590,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "phl_txt.mp4",
+     "ss": 0.0,
+     "dur": 1.39,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      1080,
+      1428
+     ]
+    }
+   ],
+   "ours": "젖소 얼굴 근접 → 필라델피아 관광청 공식: 도시 위 'PHILADELPHIA' 글자(세로칸 통째)",
+   "why": "'그 시절엔 좋은 우유랑 치즈 하면, 다들 필라델피아를'"
+  },
+  {
+   "src": "6gR0t2Mgdc.mp4",
+   "ss": 13.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "6gR0t2Mgdc.mp4",
+     "ss": 13.0,
+     "dur": 0.97,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      246,
+      1080,
+      1427
+     ]
+    }
+   ],
+   "ours": "필라델피아 통 뚜껑(이름)",
+   "why": "'떠올렸거든요'"
+  },
+  {
+   "src": "6gR0t2Mgdc.mp4",
+   "ss": 24.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "6gR0t2Mgdc.mp4",
+     "ss": 24.0,
+     "dur": 3.46,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      246,
+      1080,
+      1427
+     ]
+    }
+   ],
+   "ours": "필라델피아 오리지널 통 앞면 이름으로 다가감(SINCE 1872)",
+   "why": "'그래서 뉴욕에서 만든 치즈에, 필라델피아 이름을 떡하니 붙인 거죠'"
+  },
+  {
+   "src": "CCOLfMHo9sU.mp4",
+   "ss": 26.52,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "CCOLfMHo9sU.mp4",
+     "ss": 26.52,
+     "dur": 0.82,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "CCOLfMHo9sU.mp4",
+     "ss": 27.4,
+     "dur": 0.64,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "CCOLfMHo9sU.mp4",
+     "ss": 9.8,
+     "dur": 1.02,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "필라델피아 관광청 공식: 자유의 종 → 독립기념관 → 강 위 도시",
+   "why": "'그 뒤로 지금까지도, 필라델피아가 있는 주에선'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shaqshimmy.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shaqshimmy.mp4",
+     "ss": 0.1,
+     "dur": 1.12,
+     "fit": "cover",
+     "src_crop": [
+      230,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "어깨 들썩이는 샤킬 오닐 짤",
+   "why": "'만든 적이 없대요'"
+  },
+  {
+   "src": "GeRbTo1BsFk.mp4",
+   "ss": 4.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "GeRbTo1BsFk.mp4",
+     "ss": 4.0,
+     "dur": 2.49,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "한국 필라델피아 크림치즈 190g 통을 든 손",
+   "why": "'이름 하나 잘 빌려서, 크림치즈 하면 떠오르는'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_sealclap.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_sealclap.mp4",
+     "ss": 0.1,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      368,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "박수 치는 물개 짤",
+   "why": "'이름이 된 셈이죠'"
+  },
+  {
+   "src": "cp_7319954910.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "cp_7319954910.jpg",
+     "ss": 0,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      220,
+      150,
+      600,
+      792
+     ],
+     "move": "in"
+    },
+    {
+     "src": "GeRbTo1BsFk.mp4",
+     "ss": 9.6,
+     "dur": 1.95,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "쿠팡 7319954910 상품 사진(다가감, '2개' 표시 자르기 밖) → 같은 190g 통 옆면을 돌려 보는 손",
+   "why": "B 첫 줄 '쿠팡에서, 필라델피아 크림치즈를 주문해 봤는데'"
+  },
+  {
+   "src": "OEYm6hPLlio.mp4",
+   "ss": 24.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "OEYm6hPLlio.mp4",
+     "ss": 24.2,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      660,
+      0,
+      681,
+      900
+     ]
+    },
+    {
+     "src": "GeRbTo1BsFk.mp4",
+     "ss": 31.0,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "반 가른 베이글에 크림치즈를 숟가락으로 펴 바르는 손(박힌 자막 자르기 밖) → 연 통 속 크림치즈 근접",
+   "why": "'베이글에 쓱 펴 발라 보니까, 꾸덕하면서도 부드럽게 잘 발리고'"
+  },
+  {
+   "src": "OEYm6hPLlio.mp4",
+   "ss": 34.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "OEYm6hPLlio.mp4",
+     "ss": 34.55,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      1180,
+      0,
+      681,
+      900
+     ]
+    },
+    {
+     "src": "GeRbTo1BsFk.mp4",
+     "ss": 37.6,
+     "dur": 1.47,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "크림치즈 바른 베이글 반쪽을 기울여 드는 손(박힌 자막 나오기 전·자르기 밖) → 손가락으로 떠 보는 크림치즈",
+   "why": "'한 입 먹어 보니까, 왜 그 이름을 갖다 붙였는지 알'"
+  },
+  {
+   "src": "GeRbTo1BsFk.mp4",
+   "ss": 44.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "GeRbTo1BsFk.mp4",
+     "ss": 44.0,
+     "dur": 1.32,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "손가락에 묻은 크림치즈와 통",
+   "why": "'것 같더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.73,
+   "db": -3,
+   "why": "나 홀로 집에 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 2.47,
+   "db": -3,
+   "why": "샤크 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 6,
+   "dt": 2.5,
+   "db": -4,
+   "why": "물개 박수 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 0.0,
+   "db": -3,
+   "why": "끝 줄 띵"
+  }
+ ]
+}

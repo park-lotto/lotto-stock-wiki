@@ -1,0 +1,338 @@
+{
+ "_note": "샥탬스토리 하이브리드 27편 Just the Cheese — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 창업자 '그냥 치즈 그 자체예요!'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 Just the Cheese 없음 → 비슷한 Moon Cheese 치즈 스낵(바삭한 치즈 과자, 다른 회사) — B1 에서 '똑같은 건 없고 비슷하게'로 숨기지 않음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Moon Cheese 바삭한 치즈 스낵(쿠팡 6231316979 'Moon Cheese - 100% 천연 치즈 스낵 - 체다 - 56.7g - 12팩' — 방송 제품 Just the Cheese 와 다른 회사의 비슷한 바삭한 치즈 과자)",
+ "same_product": false,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "팬에 눌어붙어 바삭해진 치즈만 과자로 — 앞 O3 창업자 '그냥 치즈 그 자체예요!'로 끝남",
+  "뒤흥미": "치즈를 바삭하게 만든 동글동글한 과자(Moon Cheese 공식 영상 D9DosMImCg4 8~11 봉지들·mZJ1JCUEg2k 11.7~14.5 여러 맛 봉지 · EnWave 'Moon Cheese: How It's Made' 68~70·72~76·89~94·99~102 알갱이)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 'Moon Cheese' → 6231316979(상자 'MOON CHEESE' 상표) · 같은 회사 Just the Cheese 는 '100% 치즈 과자'·'Just the Cheese' 검색에 없음 — C:/숏템_칼카피/foreignshowshow/27편_소재/쿠팡API_27.json·쿠팡API_27b.json · 사진 C:/숏템_칼카피/foreignshowshow/27편_소재/img/cp_6231316979.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../27편_JustTheCheese",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/27편_JustTheCheese/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/27편_JustTheCheese/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/27편_JustTheCheese/work",
+  "cut_after": "O3",
+  "cut_why": "O3 창업자 원음 '그냥 치즈 그 자체예요!' 끝 — 그 '나도 먹어 볼까?'를 뒤 체험(쿠팡에서 비슷한 치즈 과자를 사서 먹어 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~26편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "치즈만 구워서",
+  "line2": "과자를 만든다고?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~26편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 치즈 과자가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고 비슷하게 치즈를 바삭하게 만든 과자가 있더라고요.",
+    "tts": "근데 저 치즈 과자가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고, 비슷하게 치즈를 바삭하게 만든 과자가 있더라고요.",
+    "caps": [
+     "근데 저 치즈 과자가 궁금해서",
+     "쿠팡에 쳐 봤더니",
+     "똑같은 건 없고",
+     "비슷하게 치즈를 바삭하게 만든",
+     "과자가 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "과자가 있더라고요"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 치즈 과자가 궁금해서",
+      "span": "과자가 궁금해서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "초록",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없고",
+      "span": "건 없고",
+      "color": "초록",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷하게 치즈를 바삭하게 만든",
+      "span": "치즈를 바삭하게 만든",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "과자가 있더라고요",
+      "span": "있더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②공개(와우1)",
+    "text": "이게 말도 안 되는 게, 봉지를 뜯으면 동글동글한 치즈 알갱이가 와르르 쏟아져요.",
+    "tts": "이게 말도 안 되는 게, 봉지를 뜯으면, 동글동글한 치즈 알갱이가, 와르르 쏟아져요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "봉지를 뜯으면",
+     "동글동글한 치즈 알갱이가",
+     "와르르 쏟아져요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "봉지를 뜯으면",
+      "span": "봉지를 뜯으면",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "동글동글한 치즈 알갱이가",
+      "span": "치즈 알갱이가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "와르르 쏟아져요",
+      "span": "와르르 쏟아져요",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 한 알 깨물면 과자처럼 와삭 부서지는데 맛은 진짜 치즈예요.",
+    "tts": "진짜 핵심은 이건데, 한 알 깨물면, 과자처럼 와삭 부서지는데, 맛은 진짜 치즈예요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "한 알 깨물면",
+     "과자처럼 와삭 부서지는데",
+     "맛은 진짜 치즈예요"
+    ],
+    "facts": [
+     "c2",
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 알 깨물면",
+      "span": "한 알 깨물면",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "과자처럼 와삭 부서지는데",
+      "span": "와삭 부서지는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "맛은 진짜 치즈예요",
+      "span": "치즈예요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 맛도 여러 가지라 봉지마다 골라 먹는 재미가 있어요.",
+    "tts": "심지어 이게 대박인 게, 맛도 여러 가지라, 봉지마다 골라 먹는 재미가 있어요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "맛도 여러 가지라",
+     "봉지마다",
+     "골라 먹는 재미가 있어요"
+    ],
+    "facts": [
+     "c1",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "초록",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "맛도 여러 가지라",
+      "span": "여러 가지라",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "봉지마다",
+      "span": "봉지마다",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "골라 먹는 재미가 있어요",
+      "span": "재미가 있어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 영화 볼 때 팝콘 대신 이거부터 꺼내 놓게 되더라고요.",
+    "tts": "요즘은 영화 볼 때, 팝콘 대신 이거부터, 꺼내 놓게 되더라고요.",
+    "caps": [
+     "요즘은 영화 볼 때",
+     "팝콘 대신 이거부터",
+     "꺼내 놓게 되더라고요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 영화 볼 때",
+      "span": "요즘은 영화",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "팝콘 대신 이거부터",
+      "span": "이거부터",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "꺼내 놓게 되더라고요",
+      "span": "되더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) '100% 치즈 과자'·'Moon Cheese' → 6231316979 'Moon Cheese - 100% 천연 치즈 스낵 - 체다 - 56.7g - 12팩'(→ B1 '똑같은 건 없고 비슷하게', 맛 여러 가지 = 상품 목록의 체다·다른 맛 판) · 'Just the Cheese' 검색 결과에 방송 제품 없음 · 결과 C:/숏템_칼카피/foreignshowshow/27편_소재/쿠팡API_27.json·쿠팡API_27b.json",
+  "c2": "Moon Cheese 공식 채널(@mooncheesesnacks4291): 'Moon Cheese Crunchy Cheese Sticks' https://www.youtube.com/watch?v=D9DosMImCg4 (봉지 여러 개 8~11초) · 'Moon Cheese Bites Brand Video' https://www.youtube.com/watch?v=mZJ1JCUEg2k (봉지 여러 맛 11.7~14.5초) · 장비 회사 EnWave 'Moon Cheese: How It's Made' https://www.youtube.com/watch?v=wsI_1K_7_ME (알갱이 68~70·72~76·89~94·99~102초)",
+  "창작": "B3 '맛은 진짜 치즈예요'(맛 느낌) · B5 '영화 볼 때 팝콘 대신 이거부터 꺼내 놓게' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

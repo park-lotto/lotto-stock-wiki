@@ -1,0 +1,217 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 꿀템노트판) · 시각은 final.mp4 기준 초",
+ "pack": "kkultemnote",
+ "rows": [
+  {
+   "line": "O1",
+   "t0": 0.0,
+   "t1": 1.21,
+   "text": "이 니트도 진짜 예쁘죠?",
+   "speaker": "orig",
+   "variant": "orig_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.21,
+   "t1": 2.625,
+   "text": "옷 잘 입는 김나영도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "김나영도"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.625,
+   "t1": 4.186,
+   "text": "요즘 매일 입는 니트가 있다는데요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 4.186,
+   "t1": 5.106,
+   "text": "근데 이게 약간 좀",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 5.106,
+   "t1": 7.296,
+   "text": "톤다운된 레드야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "레드야"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 7.296,
+   "t1": 8.798,
+   "text": "대체 뭐가 그렇게 좋은 건가요?",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 8.798,
+   "t1": 10.778,
+   "text": "너무 선명한 빨강은",
+   "speaker": "orig",
+   "variant": "orig_red",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 10.778,
+   "t1": 12.838,
+   "text": "조금 튀어 보일 수도 있는데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 12.838,
+   "t1": 14.847,
+   "text": "울 100%인데 얇고 가벼워서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "100%인데"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.847,
+   "t1": 16.019,
+   "text": "이너로도 입는다네요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O4",
+   "t0": 16.019,
+   "t1": 17.367,
+   "text": "이거 괜찮지 않아?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = 2wJTffElmjk",
+  "변형 orig_red → O3「너무 선명한 빨강은」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 2, 'fade': 5, 'cut': 4} · 강조 3/11"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "2wJTffElmjk",
+  "worst_slot_diff": 0.167,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "fade": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "fade": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 0.5,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 1.0
+    },
+    "ours": {
+     "fade": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 4
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.6,
+     "fade": 0.4
+    },
+    "ours": {
+     "cut": 0.5,
+     "fade": 0.5
+    },
+    "bench_emph": 0.3,
+    "ours_emph": 0.5,
+    "n": 2
+   },
+   "stickers": {
+    "bench": {
+     "other": 2,
+     "comment_card": 12,
+     "spark_lines": 1
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

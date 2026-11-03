@@ -1,0 +1,56 @@
+{
+ "topic": "im Water — Franke(@frankeinvents)의 '입는 생수': 라벨 모서리 'PEEL CORNER'를 뜯으면 라벨이 늘어나는 끈이 돼 생수를 크로스로 멘다",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "HzTJX_C12x8",
+ "bench_note": "벤치 '대기업도 겁낸 미국 괴짜 가수의 생수'(82만, 나레 몽타주) — 같은 원본 장면 확인(소재표). 벤치의 '대기업이 막았다'는 원본 장난 연출이라 대본에 안 씀",
+ "sources": {
+  "main": {
+   "file": "frankeinvents_7635303314745232670.mp4",
+   "who": "틱톡 @frankeinvents",
+   "views": 8600000,
+   "dur": 55.7,
+   "res": "720x1280"
+  }
+ },
+ "titles": {
+  "hook": "라벨 뜯으면 끈이 되는\n입는 생수"
+ },
+ "facts": {
+  "f1": {"text": "0.5~4초 병 라벨 'im' 로고를 카메라 앞에 들어 보임 · 7~9초 라벨 빨간 'PEEL CORNER' 띠를 가리킴 · 4.7~9.1 'What about this little sticker here that says Peel Corner?'", "kind": "화면+말(소재표·스피치매틱스)"},
+  "f2": {"text": "9.6~11.5 모서리를 잡아 뜯음 'Peel corner. Whoa!' · 12.5~14.5 라벨이 길게 풀려 끈이 됨(병이 끈에 매달림) · Whoa 4번(스피치매틱스 9.68~14.36)", "kind": "화면+본인 말"},
+  "f3": {"text": "23.2~33.9 'It stretches to fit any sized human being ever made' · 25~30초 끈을 머리 위로 길게 늘임 · 31~33초 끈을 크로스로 메고 병이 허리에", "kind": "화면+본인 말"},
+  "f4": {"text": "15.2~21.3 'You are witnessing history because this is the world's first wearable water'(본인 주장 — 원음 자막으로만)", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "N2", "O1", "N3", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(제품+~있는데요)", "text": "라벨을 뜯으면 그대로 어깨끈이 되는, 입는 생수가 있는데요.",
+    "caps": ["라벨을 뜯으면", "그대로 어깨끈이 되는", "입는 생수가 있는데요"], "facts": ["f1", "f2"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "겉보기엔 그냥 생수인데, 모서리 스티커를 잡고 쭉 당겨 보면요.",
+    "caps": ["겉보기엔 그냥 생수인데", "모서리 스티커를 잡고", "쭉 당겨 보면요"], "facts": ["f1"]},
+   {"id": "N3", "fn": "장점(하이브리드 컷 뒤 — 앞판 꼬리)", "text": "풀린 끈이 쭉 늘어나서, 누구든 몸에 메고 다닐 수 있대요.",
+    "caps": ["풀린 끈이 쭉 늘어나서", "누구든 몸에 메고", "다닐 수 있대요"], "facts": ["f3"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "ct", "span": [9.6, 14.85], "en": "Peel corner. Whoa! Whoa! Whoa! Whoa!",
+    "caps": ["모서리를 뜯으면… 우와!", "우와!", "우와!!"],
+    "check": "스피치매틱스 9.68~11.28 'Peel corner Whoa whoa' · 11.96~12.36 · 13.8~14.36 'whoa' / 말소리(−35dB) 9.87~14.73 · 15.17 장면 전환 전"},
+   {"id": "O2", "src": "ct", "span": [15.1, 21.4], "en": "You are witnessing history because this is the world's first wearable water.",
+    "caps": ["지금 역사적인 순간이야", "세계 최초 입는 물이거든!"],
+    "check": "말소리 15.23~21.26 · 21.6 'Let's go' 전에서 끊음 · 세계 최초는 본인 주장(원음 자막으로만)"}
+  ],
+  "dropped": {
+   "0~2.5 'almost got me thrown in jail'": "벤치의 '대기업이 막았다' 연출과 같은 장난 — 사실처럼 들릴 수 있어 안 씀",
+   "33.9~42.5 'two gallons on me, hands-free'": "앞판이 하이브리드 컷(O1 끝) 뒤라 안 씀",
+   "가격": "원본에 없음"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

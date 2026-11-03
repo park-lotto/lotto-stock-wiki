@@ -1,0 +1,146 @@
+{
+ "annapick__Ww0IZLSL7mY": {
+  "tempo": {
+   "low": 152.0,
+   "low_ac": 0.15,
+   "all": 63.8,
+   "all_ac": 0.03
+  },
+  "centroid_hz": 687.0,
+  "match": [
+   [
+    "sweets",
+    0.832
+   ],
+   [
+    "here_with_me",
+    0.793
+   ],
+   [
+    "lets_go",
+    0.575
+   ]
+  ],
+  "dur": 21.5
+ },
+ "annapick__hj9O7LmPZjo": {
+  "tempo": {
+   "low": 136.0,
+   "low_ac": 0.11,
+   "all": 78.3,
+   "all_ac": 0.11
+  },
+  "centroid_hz": 823.0,
+  "match": [
+   [
+    "no_batidao",
+    0.844
+   ],
+   [
+    "lets_go",
+    0.822
+   ],
+   [
+    "no_surprises",
+    0.736
+   ]
+  ],
+  "dur": 12.3
+ },
+ "annapick__iS0la2aQyl8": {
+  "tempo": {
+   "low": 161.5,
+   "low_ac": 0.12,
+   "all": 64.6,
+   "all_ac": 0.09
+  },
+  "centroid_hz": 746.0,
+  "match": [
+   [
+    "every_breath_you_take",
+    0.696
+   ],
+   [
+    "sweets",
+    0.65
+   ],
+   [
+    "here_with_me",
+    0.629
+   ]
+  ],
+  "dur": 26.0
+ },
+ "annapick__itYwQVyuCcc": {
+  "tempo": {
+   "low": 184.6,
+   "low_ac": 0.13,
+   "all": 166.7,
+   "all_ac": 0.06
+  },
+  "centroid_hz": 626.0,
+  "match": [
+   [
+    "here_with_me",
+    0.805
+   ],
+   [
+    "sweets",
+    0.61
+   ],
+   [
+    "before_spring_ends",
+    0.563
+   ]
+  ],
+  "dur": 25.2
+ },
+ "annapick__rF_-X8jLkdU": {
+  "tempo": {
+   "low": 72.8,
+   "low_ac": 0.2,
+   "all": 97.5,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 673.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.862
+   ],
+   [
+    "chubina",
+    0.676
+   ],
+   [
+    "lets_go",
+    0.626
+   ]
+  ],
+  "dur": 18.8
+ },
+ "annapick__wweUXE86oMM": {
+  "tempo": {
+   "low": 87.6,
+   "low_ac": 0.19,
+   "all": 80.7,
+   "all_ac": 0.09
+  },
+  "centroid_hz": 767.0,
+  "match": [
+   [
+    "no_surprises",
+    0.782
+   ],
+   [
+    "free_bird",
+    0.664
+   ],
+   [
+    "chubina",
+    0.65
+   ]
+  ],
+  "dur": 16.8
+ }
+}

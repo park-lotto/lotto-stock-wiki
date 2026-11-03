@@ -1,0 +1,242 @@
+{
+ "uljimatrot__7b1j3LptlCo": {
+  "tempo": {
+   "low": 126.0,
+   "low_ac": 0.09,
+   "all": 117.5,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 898.0,
+  "match": [
+   [
+    "everything",
+    0.716
+   ],
+   [
+    "here_with_me",
+    0.702
+   ],
+   [
+    "no_surprises",
+    0.7
+   ]
+  ],
+  "dur": 21.9
+ },
+ "uljimatrot__BFTGKYRPXeU": {
+  "tempo": {
+   "low": 126.0,
+   "low_ac": 0.09,
+   "all": 117.5,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 954.0,
+  "match": [
+   [
+    "no_surprises",
+    0.835
+   ],
+   [
+    "every_breath_you_take",
+    0.698
+   ],
+   [
+    "everything",
+    0.607
+   ]
+  ],
+  "dur": 24.6
+ },
+ "uljimatrot__JlgdcIk9Gd0": {
+  "tempo": {
+   "low": 117.5,
+   "low_ac": 0.05,
+   "all": 184.6,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 708.0,
+  "match": [
+   [
+    "sweets",
+    0.883
+   ],
+   [
+    "chubina",
+    0.674
+   ],
+   [
+    "here_with_me",
+    0.645
+   ]
+  ],
+  "dur": 24.2
+ },
+ "uljimatrot__NXBepjjp6BY": {
+  "tempo": {
+   "low": 147.7,
+   "low_ac": 0.06,
+   "all": 132.5,
+   "all_ac": 0.18
+  },
+  "centroid_hz": 911.0,
+  "match": [
+   [
+    "here_with_me",
+    0.818
+   ],
+   [
+    "lets_go",
+    0.773
+   ],
+   [
+    "otsukare_summer",
+    0.716
+   ]
+  ],
+  "dur": 19.1
+ },
+ "uljimatrot__QReZRnEVz0o": {
+  "tempo": {
+   "low": 105.5,
+   "low_ac": 0.05,
+   "all": 60.8,
+   "all_ac": 0.07
+  },
+  "centroid_hz": 809.0,
+  "match": [
+   [
+    "here_with_me",
+    0.756
+   ],
+   [
+    "sweets",
+    0.669
+   ],
+   [
+    "no_batidao",
+    0.611
+   ]
+  ],
+  "dur": 25.6
+ },
+ "uljimatrot__VlJMP0sNwhY": {
+  "tempo": {
+   "low": 103.4,
+   "low_ac": 0.06,
+   "all": 64.6,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 1027.0,
+  "match": [
+   [
+    "beggin",
+    0.628
+   ],
+   [
+    "sweets",
+    0.587
+   ],
+   [
+    "here_with_me",
+    0.467
+   ]
+  ],
+  "dur": 24.4
+ },
+ "uljimatrot__hNRxwfSjXxY": {
+  "tempo": {
+   "low": 89.1,
+   "low_ac": 0.07,
+   "all": 120.2,
+   "all_ac": 0.09
+  },
+  "centroid_hz": 849.0,
+  "match": [
+   [
+    "buttercup",
+    0.873
+   ],
+   [
+    "free_bird",
+    0.767
+   ],
+   [
+    "everything",
+    0.7
+   ]
+  ],
+  "dur": 24.5
+ },
+ "uljimatrot__oSytU7q_N7Y": {
+  "tempo": {
+   "low": 161.5,
+   "low_ac": 0.06,
+   "all": 83.4,
+   "all_ac": 0.11
+  },
+  "centroid_hz": 836.0,
+  "match": [
+   [
+    "lets_go",
+    0.814
+   ],
+   [
+    "no_batidao",
+    0.776
+   ],
+   [
+    "here_with_me",
+    0.768
+   ]
+  ],
+  "dur": 23.5
+ },
+ "uljimatrot__pjhCRN0BwaQ": {
+  "tempo": {
+   "low": 143.6,
+   "low_ac": 0.07,
+   "all": 123.0,
+   "all_ac": 0.11
+  },
+  "centroid_hz": 1202.0,
+  "match": [
+   [
+    "here_with_me",
+    0.631
+   ],
+   [
+    "no_batidao",
+    0.602
+   ],
+   [
+    "otsukare_summer",
+    0.535
+   ]
+  ],
+  "dur": 21.0
+ },
+ "uljimatrot__tv-hFwrvEc4": {
+  "tempo": {
+   "low": 178.2,
+   "low_ac": 0.1,
+   "all": 172.3,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 889.0,
+  "match": [
+   [
+    "here_with_me",
+    0.767
+   ],
+   [
+    "buttercup",
+    0.726
+   ],
+   [
+    "before_spring_ends",
+    0.568
+   ]
+  ],
+  "dur": 25.0
+ }
+}

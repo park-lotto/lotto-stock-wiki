@@ -1,0 +1,86 @@
+{
+ "_note": "숏템리폿 3차 02 의자 화면 소스. 시각은 1편 make_render.timeline(현장썰_run.py). files.pp = 무음 칸 자리표시. src_crop = [x,y,w,h] 소스 픽셀(창 0.794). 틱톡 wf 위 'Work from home setup'(y≈210~300)·4.93~ 아래 '160 degrees recline'(y≈1275~1350), 롱폼 4.10~6.84 아래 'DIY RECLINER WORKSTATION V5.0'(y≈894~1000) — 전부 crop 밖.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰3차_02_Chair/src",
+ "files": {
+  "wf": "tt_toolselectrodiy_7642785510229904653.mp4",
+  "lf": "BdsrY3NR2kQ.mp4",
+  "pp": "BdsrY3NR2kQ.mp4"
+ },
+ "voice_src": {
+  "lf": "lf_voice.wav"
+ },
+ "scene_cuts": {
+  "wf": [
+   4.933,
+   14.5
+  ],
+  "lf": [
+   4.104,
+   6.84,
+   17.384,
+   19.353
+  ],
+  "pp": [
+   4.104,
+   6.84,
+   17.384,
+   19.353
+  ],
+  "how": "ffmpeg select scene>0.25(틱톡 전체) / >0.2(롱폼 0~20초)"
+ },
+ "blocks": {
+  "N1": {
+   "src": "wf",
+   "ss": 0.9,
+   "src_crop": [
+    0,
+    320,
+    1080,
+    1360
+   ],
+   "why": "첫 프레임 = 제품: 의자에 앉은 남자가 뒤로 쭉 눕는 장면(벤치 0초와 같은 원본, 4.93 컷 전 한 샷)"
+  },
+  "N2": {
+   "src": "wf",
+   "ss": 5.0,
+   "src_crop": [
+    250,
+    320,
+    746,
+    940
+   ],
+   "why": "160도로 누워 노트북 화면을 머리 위로 — 아래 '160 degrees recline' 글자(y≈1275) 위로 자름(4.93~14.5 한 샷)"
+  },
+  "O1": {
+   "src": "lf",
+   "src_crop": [
+    360,
+    0,
+    698,
+    879
+   ],
+   "why": "같은 사람이 의자에 누워 카메라 보며 'If this is not ergonomic… hugged by this chair'(0~4.10·4.10~6.84 두 샷, 아래 'DIY RECLINER WORKSTATION V5.0' 글자 y≈894~ 위로 h 879)"
+  },
+  "N3": {
+   "src": "wf",
+   "ss": 8.3,
+   "src_crop": [
+    250,
+    320,
+    746,
+    940
+   ],
+   "why": "누운 채로 머리 위 화면 보며 작업(4.93~14.5 한 샷, 아래 글자 crop 밖) — 하이브리드 컷 뒤 꼬리"
+  }
+ },
+ "consts": {
+  "LUFS_FINAL": -14.0,
+  "LUFS_NARR": -13.8,
+  "LIMIT": 0.8,
+  "GAINS": [
+   9.5
+  ],
+  "GAP_NN": 0.25,
+  "_why": "−14 LUFS·TP ≤ −1.5(LIMIT 0.8 = 01 세로모니터와 같음) · GAINS 9.5 = −16 − lf_voice 0.40~6.75 창 −25.5 LUFS(ebur128)"
+ }
+}

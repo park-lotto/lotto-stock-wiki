@@ -1,0 +1,387 @@
+{
+ "_note": "얜샷템 강민경 포트레 스킨 틴트 편(벤치 셀럽장바구니 v1MZ9s9kl0Y) 재료. 원본 = 걍밍경 WmEjrZFVRB4(1080p 23.976 h264). 창 1080x1080(frame_얜샷템). _build_json.py 가 만든다.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/강민경_피부/src",
+ "narration": "일레븐랩스 미나(kr-mina, voice aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 합성 + atempo 1.35) — 벤치 나레 여성 차분한 설명체 약 8.4자/초",
+ "sources": {
+  "WmEjrZFVRB4": {
+   "채널": "걍밍경",
+   "제목": "B형 독감, 인생 톤업크림, 해리언니 생파",
+   "업로드": "2026-02-20",
+   "해상도": "1920x1080 23.976fps h264(137)",
+   "길이": 1337
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 638.3,
+   "dur": 2.09,
+   "src_span": [
+    638.3,
+    640.39
+   ],
+   "t_final": [
+    0.0,
+    2.09
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    770,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "강민경 얼굴(원본 확대 샷) — '너무 신기하다 이거 진짜' 말하는 입",
+   "why": "원음 638.30~ · 원본 샷 635.84~640.39(확대). 편집 자막(y≥840) 밖",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 638.3
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 640.39,
+   "dur": 1.46,
+   "src_span": [
+    640.39,
+    641.85
+   ],
+   "t_final": [
+    2.09,
+    3.55
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    555,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "강민경 얼굴(원본 넓은 샷) — '이거는 카메라로도' 말하는 입",
+   "why": "원음 계속 · 원본 640.39 에서 원본이 확대를 풀었다(원본 편집 그대로 — 점프 줌 1회)",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 640.39
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 643.1,
+   "dur": 1.1,
+   "src_span": [
+    643.1,
+    644.2
+   ],
+   "t_final": [
+    3.55,
+    4.65
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    760,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "고개를 돌린 강민경 얼굴 근접(본인 손이 목 쪽)",
+   "why": "원음 '무조건 비포 애프터 나오겠다' 641.85~642.95 계속, 화면은 원본 다음 샷 643.06~(얼굴 근접 — 입 모양은 다음 말 '그니까 이게 목까지', 원음과 입이 안 맞는 1.1초). 644.3 번개 꾸밈 전에 끊음",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 641.85
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 667.0,
+   "dur": 1.32,
+   "src_span": [
+    667.0,
+    668.32
+   ],
+   "t_final": [
+    4.65,
+    5.97
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    480,
+    0,
+    720,
+    720
+   ],
+   "res": "1920x1080",
+   "scale": 1.5,
+   "ours": "강민경이 검은 포트레 튜브·흰 스틱을 양손에 들고 보여 줌",
+   "why": "'강민경이 일 년 동안 포트레 팀과 만든' — 제품. 666.6 반짝이 뒤 · 아래 홍보 글상자(y≥750) 밖",
+   "mute": true
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 615.9,
+   "dur": 1.32,
+   "src_span": [
+    615.9,
+    617.22
+   ],
+   "t_final": [
+    5.97,
+    7.29
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    700,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "검은 배경 앞 강민경 얼굴(목에 발라 보자고 말하는 중)",
+   "why": "'스킨 틴트라는데' — 원본 샷 609.73~621.20 안, 꾸밈 없음(613 '아..ㅠ' 뒤)",
+   "mute": true
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 536.62,
+   "dur": 1.93,
+   "src_span": [
+    536.62,
+    538.55
+   ],
+   "t_final": [
+    7.29,
+    9.22
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    650,
+    0,
+    760,
+    760
+   ],
+   "res": "1920x1080",
+   "scale": 1.42,
+   "ours": "메이크업 의자의 강민경이 손짓하며 말함(본인 손)",
+   "why": "원음 '아침에 이렇게 막 급하게 바르고 나가도' 536.62~538.55(자동자막 '들뜸' 538.60 전 — 1판 538.95 는 '들뜸 없'이 새어 나레와 겹침) · 539.46 원본 컷(남의 손 퍼프 근접) 전 · 왼쪽 아티스트 머리(x<200) 밖 · 자막(y≥830) 밖",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 536.62
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 609.8,
+   "dur": 1.475,
+   "src_span": [
+    609.8,
+    611.275
+   ],
+   "t_final": [
+    9.22,
+    10.695
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    800,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "검은 배경 앞 강민경 얼굴(실물로 보면 티가 난다고 말하는 중)",
+   "why": "'들뜸 없는 제품을 만들자고 했다는데' — 원본 샷 609.73~ · 611.3 부터 얼굴이 오른쪽으로 빠져 그 전에 끊음",
+   "mute": true
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 621.3,
+   "dur": 1.475,
+   "src_span": [
+    621.3,
+    622.775
+   ],
+   "t_final": [
+    10.695,
+    12.17
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    300,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "강민경이 턱을 들고 자기 손으로 목에 바름",
+   "why": "'목에도 발라 보더니' — f4 목에 바르는 화면. 원본 샷 621.20~624.00, 왼쪽 아티스트 뒷머리(x<240) 밖",
+   "mute": true
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 652.25,
+   "dur": 1.8,
+   "src_span": [
+    652.25,
+    654.05
+   ],
+   "t_final": [
+    12.17,
+    13.97
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    810,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "강민경 얼굴 '진짜 찍길 잘했다'",
+   "why": "원음 652.25~ · 원본 샷 652.19~661.08 · 650~651 꾸밈 뒤",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 652.25
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 661.1,
+   "dur": 2.07,
+   "src_span": [
+    661.1,
+    663.17
+   ],
+   "t_final": [
+    13.97,
+    16.04
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    480,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "강민경이 검은 튜브·흰 스틱을 들고 말함",
+   "why": "원음 '목 안 찍고 넘어갔으면 이거 못 믿으셨겠어' 654.05~656.12 계속, 화면은 원본 661.08 샷(같은 제품 든 장면) · 664 일시정지 아이콘 전",
+   "audio_src": "kmk_WmEjrZFVRB4.mp4",
+   "audio_ss": 654.05
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "url": "https://www.youtube.com/watch?v=WmEjrZFVRB4",
+   "src_date": "걍밍경 유튜브 2026.02.20",
+   "ss": 631.1,
+   "dur": 1.95,
+   "src_span": [
+    631.1,
+    633.05
+   ],
+   "t_final": [
+    16.04,
+    17.99
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    660,
+    0,
+    780,
+    780
+   ],
+   "res": "1920x1080",
+   "scale": 1.38,
+   "ours": "목에 바른 뒤 놀란 강민경 얼굴(본인 손을 쇄골에)",
+   "why": "'실물로 보면 티가 확 난다네요' — 바른 뒤 반응 얼굴로 끝. 630 '어머' 꾸밈 뒤, 636 '뽀얗게' 꾸밈 전 · 끝 컷 ≥1.5초",
+   "mute": true
+  }
+ ],
+ "source_audio": {
+  "keep": true,
+  "note": "원음 = 강민경 본인 말만(근거.md §2). 원본 구간 LUFS O1 −16.8 · O2 −18.5 · O3 −15.5(웅얼거림 아님)."
+ },
+ "caption_effects": {
+  "now": "나레 = 틀 caption(나레_노랑) · 원음 = caption_events emph 흰색(따옴표 없음)",
+  "planned": "원음_흰글자(GmarketSansBold·y1320) 하위 스타일 — 엔진 요청"
+ },
+ "check": {
+  "total": 17.99,
+  "bench": 19.0,
+  "ratio": 0.947,
+  "n_shots": 11,
+  "shot_median": 1.475,
+  "bench_cut_median": 1.2,
+  "mantem_cut_median": 1.4,
+  "max_scale": 1.5,
+  "orig_share": 0.581,
+  "cap_max_chars": 10,
+  "near_3s": [
+   [
+    0,
+    1,
+    0.0
+   ],
+   [
+    1,
+    2,
+    1.25
+   ]
+  ],
+  "sources_used": [
+   "걍밍경 유튜브 2026.02.20"
+  ]
+ }
+}

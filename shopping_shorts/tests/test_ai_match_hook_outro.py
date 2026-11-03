@@ -123,7 +123,7 @@ def test_check_flags_long_line_with_one_scene_only_when_spare_cuts_exist():
            "a-2": {"secs": 2.0, "vid": "a", "outro": False, "label": "y"}}
     long_line = [{"text": "가" * 30}]            # 5.7자/초 → 약 5초
     bad = am.check({0: ["a-1"]}, long_line, idx, None)
-    assert 0 in bad and "장면 1개" in bad[0]
+    assert 0 in bad and "장면 1개" in bad[0], bad
     bad2 = am.check({0: ["a-1"]}, long_line, {"a-1": idx["a-1"]}, None)   # 남은 컷 없음
     assert not any("장면 1개" in w for w in bad2.values())
     assert "2.5초가 넘는 줄은 서로 다른 장면" in am.BRIEF

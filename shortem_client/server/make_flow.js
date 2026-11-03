@@ -1,0 +1,259 @@
+// 숏폼 만들기 흐름(관제 234 5판) — 프리셋 고르기 → 후보 소재 → 고객 사인 → 완성.
+//   단계 판단은 엔진(calcopy_make) 한 곳. 여기는 엔진 세션 JSON 을 Claude 가 따라 하기 쉬운 꼴(need·다음 할 일)로 옮기기만 한다.
+//   하이쿠도 따라오게: 응답마다 need 하나와 그 need 에 맞는 도구 호출 한 줄(next)을 준다.
+import fs from 'node:fs';
+import path from 'node:path';
+import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir, engineRoot } from './engine_bridge.js';
+import { rentPreset } from './preset_rent.js';
+import { refreshCookies } from './logins.js';
+import { packFile as localPackFile, PID_RE } from './local_settings.js';
+import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
+import { deliverInBackground, deliverStatus } from './deliver.js';
+import { logFinal } from './work_log.js';
+import { mineById } from './my_presets.js';
+import { restyleFlow, startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow, anyFlowBusy } from './flow_driver.js';
+import { api, ApiError } from './api.js';
+import { retryUpdate } from './updater.js';
+
+export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
+
+function aiNeed(runId) {
+  const n = pending().length;
+  // 물을 것이 없는데 아직 도는 중(목소리·렌더) — 'AI 0건에 답하라'고 하면 Claude 가 헤매다 셸 sleep 으로 기다렸다(10-20 회원 한 줄 실시험)
+  if (!n) return { need: 'wait', run_id: runId, next: `shortem_make(step="wait", run_id="${runId}")`,
+    hints: ['아직 만드는 중입니다(목소리·렌더는 몇 분 걸립니다) — 같은 wait 를 다시 부르면 끝날 때까지 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
+  return { need: 'ai', ai_requests: n, run_id: runId,
+    next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
+    hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
+}
+
+// 완성본 받기 상태(숏클 지침 8장 '연결 안 됐으면 안내') — 보내기는 뒤에서 돌아 결과를 기다리지 않는다. 어디로 가는지만 알린다
+export function deliverSay() {
+  const d = deliverStatus();
+  const to = [d.telegram.linked && d.telegram.on ? '텔레그램' : '', d.drive.found && d.drive.on ? '구글 드라이브' : ''].filter(Boolean);
+  return to.length ? { deliver: { to }, hint: `완성본을 ${to.join('·')}(으)로도 보내는 중입니다` }
+    : { deliver: { to: [] }, hint: '완성본 받기(텔레그램·구글 드라이브)가 아직 연결되지 않았습니다 — 원하시면 shortem_settings(action="open") 화면의 완성본 받기에서 연결할 수 있다고 한 줄 안내하세요' };
+}
+
+// 회원에게 물은 뒤 기다리기(숏클 지침 5장 '1분씩 최대 10분') — 셸 없이 기다리는 유일한 길. 한 번에 60초까지
+export const pauseSec = s => Math.max(5, Math.min(60, Number(s) || 60));
+
+const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
+
+// 고객이 사인하기 전에 볼 대본(제목·줄) — 엔진이 쓴 소재 폴더 대본.json 의 final(관제 234, 10-20: 파일 이름만 줘서 고객이 대본을 못 봤다)
+function scriptOf(S) {
+  if (S.topic_id == null) return undefined;
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), '대본.json'), 'utf8'));
+    const f = d.final || {};
+    return { title: String(f.title || d.title || ''), lines: (f.lines || []).map(l => String(l.text || '')) };
+  } catch { return undefined; }
+}
+
+// 엔진 세션 → 응답
+// 엔진 오류 글 → 고객용(경로·내부 파일 이름·벤치 경로를 지우고 짧게) — 숏템 내부를 설명하지 않는다(관제 234)
+export function cleanWhy(msg) {
+  return String(msg || '').replace(/[A-Za-z]:[\\/][^\s'"]*/g, '…').replace(/(?:^|[\s'"(])\/[^\s'"]+/g, ' …')
+    .replace(/channel\/[^\s'"]+/g, '프리셋').replace(/[\w가-힣.-]+\.(?:py|json|js|md|mp4|wav)/g, '파일')
+    .replace(/Traceback[\s\S]*/, '').replace(/\s+/g, ' ').trim().slice(0, 160) || '엔진이 멈췄습니다';
+}
+
+export function shapeSession(S) {
+  if (!S || S.error) return { fail: { why: cleanWhy((S && S.error) || '엔진이 답하지 않았습니다'), code: S && S.code, fix: '같은 단계를 한 번 더 부르세요. 또 실패하면 shortem_feedback 으로 알려 주세요' } };
+  const base = { sid: S.sid, state: S.state };   // 내부 프리셋 경로(벤치 채널 이름이 들어 있다)는 내보내지 않는다
+  if (S.state === 'candidates') {
+    const c = (S.candidates || []).map(cand);
+    if (!c.length) return { ...base, need: 'retry', hints: ['점수가 난 후보가 없습니다 — 잠시 뒤 shortem_make(step="start") 를 다시 부르면 소재를 더 찾습니다'] };
+    return { ...base, need: 'choose', candidates: c,
+      next: `고객에게 묻지 말고 가장 좋은 후보 번호로 바로 shortem_make(step="choose", sid="${S.sid}", n=<번호>)`,
+      hints: ['고객에게 묻지 말고 네가 골라 바로 진행하세요(고객이 먼저 지정한 번호가 있으면 그것)'] };
+  }
+  const t = S.topic || {};
+  if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: cleanWhy(S.error || '만들기가 멈췄습니다'), fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
+  if ((t.state || '') === 'plan_review' || S.state === 'plan_review') {
+    const files = (S.files || []).map(f => f.name);
+    return { ...base, need: 'approve', plan_files: files, script: scriptOf(S),
+      next: `고객에게 묻지 말고 대본을 네가 확인한 뒤 바로 shortem_make(step="approve", sid="${S.sid}")`,
+      hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
+  }
+  if ((t.state || '') === 'final_review' || S.state === 'final_review') {
+    // 완성본 = 엔진 소재 폴더(창고/calcopy/topics/<id>/final.mp4) → 고객이 보는 작업 폴더(바탕화면 숏템작업)에 한 벌 복사
+    const src = S.topic_id != null ? path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), 'final.mp4') : null;
+    const video = src && fs.existsSync(src)
+      ? keepFinal(src, { sid: S.sid, title: String(t.name || ''), marker: { preset: S.preset_id || null, topic_dir: path.dirname(src) } }) : null;
+    if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
+    const dv = deliverSay();
+    return { ...base, need: 'done', video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', dv.hint, `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
+  }
+  return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
+}
+
+// 프리셋 → 엔진 팩 파일 — 내용은 PC 로컬 설정(local_settings, 설정 화면·Claude 가 같이 고친 것) 한 곳
+export async function packFileFor(presetId) {
+  if (process.env.SHORTEM_DEV_PACK) return process.env.SHORTEM_DEV_PACK;
+  return PID_RE.test(String(presetId || '')) ? localPackFile(presetId) : null;
+}
+
+const RENT_FAIL = { disabled: '숏클 서버 쪽에서 프리셋 내려받기를 잠시 멈췄습니다 — 이 PC 문제가 아니니 잠시 뒤 다시 시도해 주세요',
+  not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
+  not_ready: '이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 부르세요', busy: '앞 작업이 끝난 뒤 다시 부르세요',
+  lease_lost: '작업 권한을 받지 못했습니다 — 다른 PC 에서 쓰는 중인지 확인하세요', no_key: '라이선스 키가 없습니다 — 숏템 설치를 다시 확인하세요' };
+
+// 프리셋이 필요한 단계(start·choose·approve)는 그 편 동안만 서버에서 빌린다 — 판단은 서버(claude_portal.preset_rent)
+async function go(args, opts, presetId) {
+  if (presetId && !process.env.SHORTEM_DEV_PACK) {
+    let rental;
+    try { rental = await rentPreset({ engineRoot: engineRoot(), presetId }); }
+    catch (e) { return { fail: { why: RENT_FAIL[e.code] || '프리셋을 받지 못했습니다', code: e.code || 'rent', fix: '잠시 뒤 같은 단계를 다시 부르세요' } }; }
+    if (rental.presetPath && args[0] === 'start') args = args.map((a, i) => (args[i - 1] === '--preset' ? rental.presetPath : a));
+    if (rental.dev && args.includes('rented')) return { fail: { why: '개발 PC 입니다 — SHORTEM_DEV_PRESET 에 엔진 프리셋 경로를 주세요', code: 'dev_preset' } };
+    opts = { ...opts, onClose: rental.release };
+  }
+  if (['start', 'choose', 'approve', 'restyle'].includes(args[0])) await refreshCookies();   // 받기 전 최신 로그인 쿠키(유튜브 세션은 자주 돈다)
+  const r = startRun(args, opts);
+  const out = await waitRun(r, waitMs());
+  if (out) return shapeSession(out);
+  return r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId);
+}
+
+export const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
+export const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
+
+// 고객이 준 해외 원본 채널 → 엔진이 읽는 원본 채널 목록 파일(~/.shortem/원본채널.json, 고객 채널만)
+function originalsFile(channel) {
+  const rel = '원본채널.json';
+  writeFileIn(homeDir(), rel, JSON.stringify({ note: '고객이 준 해외 원본 채널(관제 234)', channels: [{ platform: 'youtube', url: channel }] }));
+  return path.join(homeDir(), rel);
+}
+
+// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·단계형 길이 같이 부르는 한 곳.
+//   다시 만들기(restyle) 뒤엔 새 완성본으로 덮는다. 기록지(~/.shortem/작업기록.jsonl, work_log.js)는 새로 복사했을 때만 1줄.
+//   marker = 표식 파일에 그대로 적을 칸(옛 꼴 유지) · preset = 기록지 style 칸(없으면 marker.preset)
+function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
+  const name = `${String(title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${sid}.mp4`;
+  const video = path.join(ensureDir(workDir(), '완성본'), name);
+  const fresh = !fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs;
+  if (fresh) fs.copyFileSync(src, video);
+  try { fs.writeFileSync(video + '.json', JSON.stringify({ sid, title, ...marker })); } catch { /* 표식 없이도 영상은 본다 */ }
+  if (fresh) logFinal(video, { title, preset: preset || marker.preset || null, sid });
+  deliverInBackground(video, { title });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
+  return video;
+}
+
+// 단계형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
+function flowOut(s) {
+  if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
+  const f = loadFlow(s.sid) || {};
+  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow', topic_dir: path.dirname(s.video) }, preset: f.preset || null });
+  const dv = deliverSay();
+  return { ...s, video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요', dv.hint, ...(s.note ? [s.note] : [])] };
+}
+
+const idle = () => !activeRuns().length && !anyFlowBusy();
+
+// 멈춘 응답에 새 판을 싣는다 — 수리가 올라와 있으면 엔진을 덮고 회원 Claude 에게 같은 단계를 다시 부르라는 신호를 준다(사장님 10-31 "신호를 주면 새 판을 받아라")
+export async function updateSignal(o, { isIdle = idle, update = retryUpdate } = {}) {
+  if (!o || !o.fail || !isIdle()) return o;
+  const r = await update();
+  if (!r || !r.applied) return o;
+  return { ...o, fail: { ...o.fail, retry_ok: true }, hints: [...(o.hints || []), `숏템 수리판 ${r.version} 을 적용했습니다 — 회원에게 묻지 말고 같은 단계를 한 번 다시 부르세요`] };
+}
+
+export async function makeStep(a) {
+  if (a.step === 'start' && idle()) await retryUpdate();   // 새 편은 늘 최신 엔진으로
+  return updateSignal(await stepOnce(a));
+}
+
+async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds, offset }) {
+  if (step === 'pause') {
+    const sec = pauseSec(seconds);
+    await new Promise(r => setTimeout(r, sec * 1000));
+    return { paused: sec, hints: ['회원 답이 왔으면 그 답으로 이어 가고, 아직이면 같은 pause 를 다시(합쳐 10분까지). 10분이 지나면 네가 정해 완성본까지 간다'] };
+  }
+  if (sid && isFlowSid(sid)) {     // 단계형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+    if (step === 'script') {
+      const f = loadFlow(sid);
+      return f && f.script ? { sid, script: f.script, hints: ['대본을 그대로 보여 주세요. 고칠 줄을 말하면 shortem_make(step="revise", sid, revise="<줄 id 와 바꿀 말>") — 그 줄만 고치고 장면은 그대로 둡니다'] }
+        : { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝나면 다시 보세요'] };
+    }
+    if (step === 'revise') {
+      if (!String(revise || '').trim()) return { hints: ['revise 에 고칠 줄과 바꿀 말을 넣으세요(예: "L5 를 더 짧게")'] };
+      const r = await reviseFlow(sid, revise);
+      if (r && r.busy) return { sid, hints: ['지금 하던 일이 끝나는 대로 다시 보내 주세요 — shortem_make(step="wait") 뒤에 revise'] };
+      if (r && r.no_script) return { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝난 뒤 고칠 수 있습니다'] };
+      return flowOut(await waitFlow(sid, waitMs()));
+    }
+    if (step === 'approve') approveFlow(sid);
+    else if (step === 'retry') {
+      if (idle()) await retryUpdate();      // 멈춘 사이 고쳐졌으면 새 엔진으로 이어 간다(회원은 다시 시도만)
+      retryFlow(sid);
+    }
+    else if (step === 'restyle') {
+      const r = await restyleFlow(sid);
+      return r.ok ? { need: 'done', sid, video: r.video } : { fail: { why: r.error } };
+    }
+    return flowOut(await waitFlow(sid, waitMs()));
+  }
+  const mine = preset ? mineById(preset) : null;   // 내 벤치마킹 프리셋(관제 304) — 서버 지시서·소재 창고가 없다. 엔진 길로 간다(소재 = 준 영상 또는 벤치마킹한 채널)
+  if (mine && step === 'sources') return { hints: ['내 프리셋은 소재 창고가 없습니다 — 영상 주소를 받아 주세요'] };
+  if (step === 'sources' && preset) {   // 회원 '후보 뽑아줘' — 그 프리셋 소재 창고(벤치 채널 조회순)에서 안 만든 5개(판단 = 서버 flow.source_candidates)
+    try {
+      const r = await api.step({ step: 'sources', preset, offset: offset || 0 });
+      const list = (r.sources || []).map(x => ({ n: x.n, title: x.title, views: x.views, video: x.url }));
+      return list.length ? { need: 'choose', candidates: list, next_offset: r.next_offset, more: '회원이 다른 후보를 원하면 shortem_make(step="sources", offset=next_offset)', next: '고객에게 번호·제목·조회수 표로 보여 주고, 고른 번호의 video 로 shortem_make(step="start", video=<그 주소>)',
+        hints: ['대신 고르지 마세요. 10분 동안 답이 없으면 1번으로 시작합니다(지침 5장)'] }
+        : { hints: ['이 프리셋 소재 창고에 아직 안 만든 영상이 없습니다 — 영상 주소를 받아 주세요'] };
+    } catch (e) {
+      return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', fix: '잠시 뒤 다시 해 주세요', retry_ok: true } };
+    }
+  }
+  // 주소를 주면 그 영상, 주소 없이 '만들어줘'면 서버가 소재 창고 조회 1위(사장님 10-30) — 단계 진행 프리셋만. 아니면 아래 옛 길
+  if (step === 'start' && mine && !video && !topic) {
+    channel = channel || mine.channel;
+    if (!channel) return { hints: ['이 프리셋은 영상으로 만들었습니다 — 만들 영상 주소를 video 로 주세요'] };
+  }
+  if (step === 'start' && preset && !mine && !topic && !channel && !process.env.SHORTEM_DEV_PRESET) {
+    try {
+      const f = await startFlow({ preset, video: video || '', product });
+      return flowOut(await waitFlow(f.sid, waitMs()));
+    } catch (e) {
+      // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
+      if (e instanceof ApiError && e.code === 'busy_flow') return { fail: { why: e.msg, code: e.code, fix: '지금 편이 끝난 뒤 시작해 주세요' } };
+      if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
+        return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
+      }
+    }
+  }
+  if (step === 'wait') {
+    const r = getRun(run_id) || activeRuns()[0];
+    if (!r) return { hints: ['기다릴 작업이 없습니다 — shortem_make(step="status", sid=…) 로 보세요'] };
+    const out = await waitRun(r, waitMs());
+    return out ? shapeSession(out) : (r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId));
+  }
+  if (step === 'start') {
+    if (!preset) return { hints: ['고른 프리셋이 없습니다 — shortem_settings(action="open") 으로 설정 화면을 열어 프리셋을 고르세요'] };
+    const devPath = process.env.SHORTEM_DEV_PRESET || '';   // 개발 PC: 빌리지 않고 엔진 폴더의 프리셋을 쓴다
+    if (channel && !YT_CHANNEL.test(channel)) return { hints: ['채널 주소는 https://www.youtube.com/@이름 또는 /channel/UC… 꼴이어야 합니다(틱톡·인스타 채널은 아직 못 엽니다 — 영상 주소를 주세요)'] };
+    if (video && !VIDEO.test(video)) return { hints: ['영상 주소는 유튜브 쇼츠·틱톡 영상·인스타 릴스 주소여야 합니다'] };
+    const args = ['start', '--preset', devPath || 'rented', '--pack', '1',
+      ...(topic ? ['--topic', String(topic).slice(0, 200)] : []), ...(video ? ['--ref', video] : [])];
+    return go(args, { packFile: await packFileFor(preset), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} }, devPath ? null : preset);
+  }
+  if (!SID_RE.test(String(sid || ''))) return { hints: ['sid 가 필요합니다(start 응답의 sid)'] };
+  if (step === 'choose') {
+    if (!Number.isInteger(n) || n < 1) return { hints: ['고른 후보 번호 n 이 필요합니다'] };
+    return go(['choose', sid, String(n)], { packFile: await packFileFor(preset) }, devPathOr(preset));
+  }
+  if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
+  if (step === 'restyle') return go(['restyle', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
+  if (step === 'status') return go(['status', sid], { packFile: await packFileFor(preset) });
+  return { hints: ['모르는 단계입니다'] };
+}
+
+const devPathOr = p => (process.env.SHORTEM_DEV_PRESET ? null : p);
+
+export function aiList(limit = 3) {
+  return pending().slice(0, limit);
+}
+
+export const haveActive = () => activeRuns().length > 0 || fs.existsSync(path.join(homeDir(), 'ai'));

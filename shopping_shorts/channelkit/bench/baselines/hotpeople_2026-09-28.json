@@ -1,0 +1,393 @@
+{
+ "channel": "hotpeople",
+ "measured_at": "2026-09-27~28",
+ "sample": [
+  "3EkwnSzxMGg",
+  "7PFWxq0Y1bU",
+  "CmnmcIvwTPo",
+  "X4GIghUr_B4",
+  "aKubG1MrQ_k",
+  "dvJg0By8Luw",
+  "eehzg4pzwC4",
+  "kbxDhWBibcc",
+  "s1Z5z_TrnPA",
+  "z1fgI__kSPw"
+ ],
+ "profile": {
+  "narration": false,
+  "bgm": true
+ },
+ "about": "이번 주 옛 자(tools/hotpeople/measure)로 잰 값. 출처는 항목마다 source. bench가 허용 오차 안에서 재현해야 한다.",
+ "tolerance": {
+  "px": 5,
+  "count": 1,
+  "sec": 0.1,
+  "lufs": 0.2,
+  "ratio_pp": 2.0,
+  "glyph_px": 1.0,
+  "_note": "glyph_px: 획 폭·줄 높이는 좌표가 아니라 크기라 ±5px면 아무것도 못 잡는다 → ±1px(설계에 없던 결정)"
+ },
+ "layout": {
+  "main_videos": [
+   "3EkwnSzxMGg",
+   "CmnmcIvwTPo",
+   "X4GIghUr_B4",
+   "aKubG1MrQ_k",
+   "dvJg0By8Luw",
+   "eehzg4pzwC4",
+   "kbxDhWBibcc",
+   "s1Z5z_TrnPA",
+   "z1fgI__kSPw"
+  ],
+  "window_y": {
+   "3EkwnSzxMGg": [
+    483,
+    1273
+   ],
+   "CmnmcIvwTPo": [
+    483,
+    1273
+   ],
+   "X4GIghUr_B4": [
+    483,
+    1268
+   ],
+   "aKubG1MrQ_k": [
+    483,
+    1273
+   ],
+   "dvJg0By8Luw": [
+    483,
+    1268
+   ],
+   "eehzg4pzwC4": [
+    483,
+    1273
+   ],
+   "kbxDhWBibcc": [
+    483,
+    1273
+   ],
+   "s1Z5z_TrnPA": [
+    483,
+    1273
+   ],
+   "z1fgI__kSPw": [
+    483,
+    1268
+   ]
+  },
+  "window_x": [
+   0,
+   1080
+  ],
+  "logo_band": [
+   91,
+   195
+  ],
+  "caption_pos": "below",
+  "ink": "dark",
+  "bg_rgb_bin8": [
+   248,
+   248,
+   248
+  ],
+  "other_variants": {
+   "7PFWxq0Y1bU": {
+    "caption_pos": "inside",
+    "ink": "bright",
+    "window_y": [
+     449,
+     1569
+    ],
+    "old_rows_py_slot_y": [
+     270,
+     1920
+    ],
+    "note": "rows.py(비흰색 비율)는 검정 배경을 전부 '비흰색'으로 봐서 270~1920을 냈다. 실제 영상창은 449~1569(프레임 시트 육안: 위 검정+제목, 아래 검정 여백). 자막은 창 안 흰 글자+검정 외곽선."
+   }
+  },
+  "source": "rows.json(slot_y·above[0]) · color.py 배경 //8 양자화 bin(248) — 실제 화소 253~255"
+ },
+ "criteria": {
+  "T.sub_count": {
+   "total": 232,
+   "per_video": {
+    "3EkwnSzxMGg": 28,
+    "CmnmcIvwTPo": 24,
+    "X4GIghUr_B4": 27,
+    "aKubG1MrQ_k": 25,
+    "dvJg0By8Luw": 24,
+    "eehzg4pzwC4": 28,
+    "kbxDhWBibcc": 24,
+    "s1Z5z_TrnPA": 25,
+    "z1fgI__kSPw": 27
+   },
+   "source": "cuts.json subs"
+  },
+  "S.lines": {
+   "hist": {
+    "1": 55,
+    "2": 176,
+    "3": 1
+   },
+   "n": 232,
+   "source": "기준표 §2 S.lines (lines.py)"
+  },
+  "S.line_w": {
+   "median": 517,
+   "p90": 738,
+   "max": 940,
+   "source": "기준표 §2 S.line_w"
+  },
+  "L.sub_top": {
+   "median": 1285,
+   "source": "기준표 §1 L.sub_top"
+  },
+  "S.leading": {
+   "median": 80,
+   "source": "기준표 §2 S.leading"
+  },
+  "S.mark": {
+   "count": 15,
+   "n": 232,
+   "first": 9,
+   "last": 1,
+   "n_videos": 9,
+   "source": "기준표 §2 S.mark_rate/first/last"
+  },
+  "T.sub_sec": {
+   "median": 2.2,
+   "p10": 1.8,
+   "p90": 2.8,
+   "per_video_median": {
+    "3EkwnSzxMGg": 2.1,
+    "CmnmcIvwTPo": 2.4,
+    "X4GIghUr_B4": 2.8,
+    "aKubG1MrQ_k": 2.2,
+    "dvJg0By8Luw": 2.55,
+    "eehzg4pzwC4": 2.04,
+    "kbxDhWBibcc": 2.1,
+    "s1Z5z_TrnPA": 2.2,
+    "z1fgI__kSPw": 2.3
+   },
+   "source": "기준표 §4 T.sub_sec · cuts.json sub_med"
+  },
+  "S.weight": {
+   "median": 8.0,
+   "source": "glyph.json stroke"
+  },
+  "S.size_px": {
+   "median": 58.5,
+   "source": "glyph.json line_h 편 중앙의 중앙"
+  },
+  "S.outline": {
+   "count": 0,
+   "n": 54,
+   "source": "glyph.json"
+  },
+  "S.shadow": {
+   "count": 0,
+   "n": 54,
+   "source": "glyph.json"
+  },
+  "T.cut_raw": {
+   "shots_per_video": {
+    "3EkwnSzxMGg": 30,
+    "CmnmcIvwTPo": 22,
+    "X4GIghUr_B4": 22,
+    "aKubG1MrQ_k": 22,
+    "dvJg0By8Luw": 22,
+    "eehzg4pzwC4": 17,
+    "kbxDhWBibcc": 19,
+    "s1Z5z_TrnPA": 29,
+    "z1fgI__kSPw": 34
+   },
+   "cut_eq_sub_per_video": {
+    "3EkwnSzxMGg": "24/29",
+    "CmnmcIvwTPo": "21/21",
+    "X4GIghUr_B4": "21/21",
+    "aKubG1MrQ_k": "21/21",
+    "dvJg0By8Luw": "20/21",
+    "eehzg4pzwC4": "15/16",
+    "kbxDhWBibcc": "18/18",
+    "s1Z5z_TrnPA": "21/28",
+    "z1fgI__kSPw": "25/33"
+   },
+   "cut_eq_sub_median_pct": 95,
+   "first_cut_per_video": {
+    "3EkwnSzxMGg": 4.63,
+    "CmnmcIvwTPo": 2.7,
+    "X4GIghUr_B4": 3.03,
+    "aKubG1MrQ_k": 2.6,
+    "dvJg0By8Luw": 2.57,
+    "eehzg4pzwC4": 6.87,
+    "kbxDhWBibcc": 4.63,
+    "s1Z5z_TrnPA": 2.37,
+    "z1fgI__kSPw": 3.73
+   },
+   "source": "cuts.json cuts · rhythm.json — scene>0.3 창 crop, 0.2s 이후, 병합·검증 없음(옛 자와 같은 정의)"
+  },
+  "T.cut_count": {
+   "median": 22,
+   "per_video_final": {
+    "3EkwnSzxMGg": 28,
+    "CmnmcIvwTPo": 22,
+    "X4GIghUr_B4": 22,
+    "aKubG1MrQ_k": 22,
+    "dvJg0By8Luw": 21,
+    "eehzg4pzwC4": 16,
+    "kbxDhWBibcc": 19,
+    "s1Z5z_TrnPA": 26,
+    "z1fgI__kSPw": 30
+   },
+   "excluded": {
+    "3EkwnSzxMGg": {
+     "merged": [
+      31.434
+     ],
+     "rejected": [
+      11.634
+     ],
+     "verdict": {
+      "11.634": "같은 장면(육안) — 검증이 맞게 거름"
+     }
+    },
+    "dvJg0By8Luw": {
+     "merged": [],
+     "rejected": [
+      39.6
+     ],
+     "verdict": {
+      "39.6": "같은 장면(육안) — 맞게 거름"
+     }
+    },
+    "eehzg4pzwC4": {
+     "merged": [],
+     "rejected": [
+      13.833
+     ],
+     "verdict": {
+      "13.833": "★진짜 컷(원경 군무→근경 단체, 위쪽 65%가 같은 바위벽이라 상관 0.878) — 검증이 잘못 거름"
+     }
+    },
+    "s1Z5z_TrnPA": {
+     "merged": [
+      19.233,
+      20.567
+     ],
+     "rejected": [
+      20.4
+     ],
+     "verdict": {
+      "20.4": "플래시(밝기 번쩍) — 맞게 거름"
+     }
+    },
+    "z1fgI__kSPw": {
+     "merged": [
+      4.3,
+      24.233
+     ],
+     "rejected": [
+      3.733,
+      4.167
+     ],
+     "verdict": {
+      "3.733": "★진짜 컷(같은 무대 다른 앵글, 상관 0.983) — 검증이 잘못 거름",
+      "4.167": "플래시 — 맞게 거름"
+     }
+    }
+   },
+   "source": "설계 §1 장면 컷 = scene 0.3 + 0.2s 병합 + 상관<0.6. 옛 값(cuts.json)에서 병합·검증으로 빠진 것만 뺀 값. 뺀 시각은 육안 판정 기록(6건 중 4 맞음·2 틀림)."
+  },
+  "T.duration": {
+   "median": 57.353288,
+   "source": "cuts.json dur(컨테이너) — bench는 프레임÷fps라 ≤0.1s 차"
+  },
+  "A.lufs": {
+   "per_video": {
+    "3EkwnSzxMGg": -12.1,
+    "7PFWxq0Y1bU": -15.1,
+    "CmnmcIvwTPo": -10.0,
+    "X4GIghUr_B4": -11.1,
+    "aKubG1MrQ_k": -9.3,
+    "dvJg0By8Luw": -13.9,
+    "eehzg4pzwC4": -12.6,
+    "kbxDhWBibcc": -11.1,
+    "s1Z5z_TrnPA": -13.2,
+    "z1fgI__kSPw": -12.1
+   },
+   "median": -12.1,
+   "range": [
+    -15.1,
+    -9.3
+   ],
+   "source": "audio.json I"
+  },
+  "A.tp": {
+   "per_video": {
+    "3EkwnSzxMGg": 0.9,
+    "7PFWxq0Y1bU": 0.1,
+    "CmnmcIvwTPo": 1.4,
+    "X4GIghUr_B4": 0.1,
+    "aKubG1MrQ_k": 1.5,
+    "dvJg0By8Luw": 0.5,
+    "eehzg4pzwC4": 0.5,
+    "kbxDhWBibcc": 1.1,
+    "s1Z5z_TrnPA": 0.3,
+    "z1fgI__kSPw": 0.4
+   },
+   "range": [
+    0.1,
+    1.5
+   ],
+   "source": "audio.json TP"
+  },
+  "A.lra": {
+   "per_video": {
+    "3EkwnSzxMGg": 4.6,
+    "7PFWxq0Y1bU": 3.5,
+    "CmnmcIvwTPo": 9.2,
+    "X4GIghUr_B4": 5.3,
+    "aKubG1MrQ_k": 9.5,
+    "dvJg0By8Luw": 4.3,
+    "eehzg4pzwC4": 4.0,
+    "kbxDhWBibcc": 9.5,
+    "s1Z5z_TrnPA": 4.0,
+    "z1fgI__kSPw": 4.5
+   },
+   "source": "audio.json LRA"
+  },
+  "A.s_spread": {
+   "per_video": {
+    "3EkwnSzxMGg": 3.9,
+    "7PFWxq0Y1bU": 3.3,
+    "CmnmcIvwTPo": 9.0,
+    "X4GIghUr_B4": 5.0,
+    "aKubG1MrQ_k": 9.3,
+    "dvJg0By8Luw": 3.8,
+    "eehzg4pzwC4": 3.8,
+    "kbxDhWBibcc": 9.4,
+    "s1Z5z_TrnPA": 3.9,
+    "z1fgI__kSPw": 3.7
+   },
+   "source": "audio.json S_spread"
+  },
+  "A.open3s_M": {
+   "per_video": {
+    "3EkwnSzxMGg": -2.2,
+    "7PFWxq0Y1bU": 3.8,
+    "CmnmcIvwTPo": -4.2,
+    "X4GIghUr_B4": 3.2,
+    "aKubG1MrQ_k": -4.0,
+    "dvJg0By8Luw": -2.4,
+    "eehzg4pzwC4": -2.7,
+    "kbxDhWBibcc": -3.6,
+    "s1Z5z_TrnPA": -1.8,
+    "z1fgI__kSPw": -2.4
+   },
+   "quieter_open": 8,
+   "source": "audio.json open3s_M−rest_M. 기준표 §5의 '중앙 −2.3, −6.6~+3.8'은 audio.json 자체로 재현 안 됨(audio.json으로 계산하면 −2.4, −4.2~+3.8) — audio.json을 기준으로 삼음"
+  }
+ }
+}

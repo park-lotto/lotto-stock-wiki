@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>컨셉 스튜디오 설계</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#5b6475;--line:#e3e6ec;--acc:#2563eb;--ok:#1f9d55;--wait:#d97706;--no:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8ebf0;--sub:#9aa3b2;--line:#2c3340}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 10px;border-left:4px solid var(--acc);padding-left:10px}
+.meta{color:var(--sub);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.08);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card b{display:block;font-size:16px}.card small{color:var(--sub)}
+.flow{display:flex;flex-wrap:wrap;gap:8px}
+.step{flex:1 1 160px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.step b{display:block;color:var(--acc);font-size:12px}.step.c{border:2px dashed var(--wait)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;color:#fff}
+.ok{background:var(--ok)}.wait{background:var(--wait)}.no{background:var(--no)}
+.lay{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:14px}
+.lay div{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:6px 0}
+.lay .s{border-color:var(--acc)}
+.q{background:var(--card);border-left:4px solid var(--wait);border-radius:8px;padding:10px 14px;margin:8px 0}
+code{font-size:12.5px;background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px}
+</style></head><body><div class="wrap">
+<h1>컨셉 스튜디오 — 설계안</h1>
+<div class="meta">2026-10-15 · 트랙 칼카피숏템엔진 (관제 097) · 아직 안 만듦 · 확정: 사람 컨펌은 대본 1회만</div>
+
+<h2>한 줄로</h2>
+<p>숏템메이커 안에 <b>컨셉 스튜디오</b> 페이지를 하나 둡니다. 컨셉(정치·연예인·뷰티·픽션 썰…)은 <b>우리가 프리셋으로 미리 세팅</b>해 진열하고, 고객은 <b>컨셉을 고르고 → 소재를 넣고 → 대본만 확인</b>하면 완성본이 나옵니다. 컨셉을 늘릴 때 코드는 안 바뀌고 프리셋 한 장만 늘어납니다.</p>
+
+<h2>컨셉 = 프리셋 한 장 (우리가 세팅)</h2>
+<table>
+<tr><th>칸</th><th>정하는 것</th><th>고객이 바꿀 수 있나</th></tr>
+<tr><td>소재 종류</td><td>제품 링크 / 인물 이름 / 뉴스·이슈 주소</td><td>아니오</td></tr>
+<tr><td>대본 규칙</td><td>뼈대·말투·길이·금지어 (칼카피로 잰 숫자)</td><td>아니오</td></tr>
+<tr><td>영상 소재 찾기</td><td>해외 쇼핑 영상 / 방송·인물 영상 검색</td><td>아니오</td></tr>
+<tr><td>틀·헤드카피·자막</td><td>화면 모양 기본값</td><td>예 (내 팩으로 바꿔 끼움)</td></tr>
+<tr><td>목소리·배역</td><td>나레 + 배역별 목소리</td><td>예</td></tr>
+<tr><td>효과음·짤·BGM</td><td>팩 기본값</td><td>예</td></tr>
+<tr><td>자동 검사 기준</td><td>통과 못 하면 완성본 안 만듦</td><td>아니오</td></tr>
+</table>
+
+<h2>진열 예시</h2>
+<div class="grid">
+ <div class="card"><b>픽션 썰</b><small>제품 링크 · 배역 목소리 · 짤</small></div>
+ <div class="card"><b>방구석 썰</b><small>제품 링크 · 조사형</small></div>
+ <div class="card"><b>인물 스토리</b><small>인물 이름 · 뜨거운사람들 틀</small></div>
+ <div class="card"><b>정치</b><small>뉴스·이슈 주소</small></div>
+ <div class="card"><b>연예인</b><small>인물 이름 · 이슈</small></div>
+ <div class="card"><b>뷰티</b><small>제품 링크 또는 인물</small></div>
+ <div class="card"><b>+ 계속 추가</b><small>프리셋 한 장씩</small></div>
+</div>
+
+<h2>고객 흐름</h2>
+<div class="flow">
+ <div class="step"><b>1</b>컨셉 카드 고르기<br>(견본 영상 보고)</div>
+ <div class="step"><b>2</b>소재 넣기<br>컨셉에 맞는 칸만 뜸</div>
+ <div class="step"><b>3</b>(선택) 내 팩으로 바꿔 끼우기</div>
+ <div class="step c"><b>컨펌 · 유일</b>대본 확인·수정</div>
+ <div class="step"><b>4</b>장면·목소리·짤·효과음·렌더<br>전부 자동</div>
+ <div class="step"><b>5</b>자동 검사 통과 → 완성본<br>실패면 멈추고 이유 표시</div>
+</div>
+
+<h2>페이지 구성</h2>
+<div class="lay">
+ <div class="s"><b>컨셉 진열</b> — 카드 + 견본 영상, 구매한 컨셉만 열림</div>
+ <div class="s"><b>만들기</b> — 소재 칸 · 팩 선택 · 대본 확인 · 진행 상황 · 완성본</div>
+ <div class="s"><b>내 팩</b> — 틀·자막·목소리·효과음·짤 즐겨찾기 (지금 계정 저장 자리 재사용: <code>app.py:17866</code> 등)</div>
+ <div class="s"><b>관리자: 컨셉 등록</b> — 프리셋 한 장 올리기 + 견본 영상 + 공개/비공개</div>
+</div>
+
+<h2>뒤쪽 — 엔진을 한 벌로</h2>
+<table>
+<tr><th>지금</th><th>바꿀 모양</th></tr>
+<tr><td>숏템메이커 제작 단계 (제품 링크 전용, 라이브)<br>숏템엔진 <code>channelkit</code> (인물·주제, 트랙)</td>
+<td><b>소재 가져오기만 갈래</b>(제품 / 인물 / 뉴스)<br>대본 컨펌·렌더·자막·목소리·효과음·짤·자동 검사는 <b>공용 한 벌</b></td></tr>
+</table>
+<p class="meta">두 벌로 두면 컨셉이 10개가 될 때 고칠 곳도 두 곳 → 반드시 한쪽이 어긋납니다(0순위-B).</p>
+
+<h2>만드는 순서</h2>
+<table>
+<tr><th>#</th><th>할 일</th><th>결과물 검사</th><th>상태</th></tr>
+<tr><td>1</td><td>프리셋 한 장 모양 확정 + 픽션 썰을 1호 프리셋으로</td><td>고객 작업 3건이 대본 컨펌 1회로 완성본까지</td><td><span class="tag wait">다음</span></td></tr>
+<tr><td>2</td><td>배역 목소리·짤·효과음 자동 배치</td><td>완성본 소리·화면에서 실제로 들어갔나</td><td><span class="tag no">미착수</span></td></tr>
+<tr><td>3</td><td>뜨거운사람들을 2호 프리셋으로 (인물 소재 갈래)</td><td>같은 자로 재서 원본 범위 안 + 내용 관문 통과</td><td><span class="tag no">미착수</span></td></tr>
+<tr><td>4</td><td>컨셉 스튜디오 화면 (관리자만 먼저)</td><td>라이브에서 직접 눌러 완성본까지</td><td><span class="tag no">미착수</span></td></tr>
+<tr><td>5</td><td>정치·연예인·뷰티 프리셋 추가</td><td>컨셉마다 견본 3편</td><td><span class="tag no">미착수</span></td></tr>
+<tr><td>6</td><td>상품 분리(구매자만 열림) · 고객 공개</td><td>—</td><td><span class="tag wait">사장님 승인</span></td></tr>
+</table>
+
+<h2>짚어 둘 것</h2>
+<div class="q"><b>저작권</b> — 정치·연예인은 방송 영상을 씁니다. 상품으로 팔기 전에 정리 필요.</div>
+<div class="q"><b>돈</b> — 별도 상품 판매는 과금에 닿아 관제 카드 만들 때 사장님 승인.</div>
+<div class="q"><b>고객 화면</b> — 4번까지는 관리자만 보이게, 공개는 승인 뒤.</div>
+</div></body></html>

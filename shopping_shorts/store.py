@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -545,6 +546,29 @@ class Store:
                     PRIMARY KEY (customer_id, platform, channel_id)
                 )
             """)
+            # 나만의 채널 분류(관제 261, 2026-10-24 사장님 "폰에서 담을 때 분류 버튼 한 번").
+            #   fav_channel(회원 표)은 건드리지 않고 옆 표 둘로 둔다 — 분류는 지금 관리자만 쓴다.
+            #   분류 이름 목록(_def)과 채널↔분류(_cat). 분류가 없는 채널 = '기타'(행 없음).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat_def (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    sort INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    last_used_at TEXT,
+                    PRIMARY KEY (customer_id, name)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    platform TEXT NOT NULL,
+                    channel_id TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    set_at TEXT,
+                    PRIMARY KEY (customer_id, platform, channel_id)
+                )
+            """)
             # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
             # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
             # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
@@ -613,6 +637,22 @@ class Store:
                     contact TEXT,
                     done INTEGER NOT NULL DEFAULT 0,
                     created_at TEXT NOT NULL
+                )
+            """)
+            try:
+                c.execute("ALTER TABLE deposit_claim ADD COLUMN product TEXT")   # 입금 신고 상품(관제 292)
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
+            # 관리자가 손으로 정한 프로그램 구분(관제 295). shortem·shortcl 이 NULL 이면 자동 판정을 따른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS program_member (
+                    customer_id INTEGER PRIMARY KEY,
+                    shortem INTEGER,
+                    shortcl INTEGER,
+                    plan TEXT NOT NULL DEFAULT '',
+                    move TEXT NOT NULL DEFAULT '',
+                    tutor TEXT NOT NULL DEFAULT '',
+                    updated_at TEXT NOT NULL
                 )
             """)
             # 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지 참가자·제출물.
@@ -1119,6 +1159,43 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🗂 카드뉴스 제작소(관제 223, 2026-10-17) — 회원별 카드뉴스 작품·브랜드·자동 규칙.
+            # ★customer_id를 WHERE에 항상 끼운다(produce_works와 같은 관례) — 남의 것은 못 읽고 못 지운다.
+            # status: draft(수동 작업) · pending(자동 생성, 승인 대기) · approved(승인) — 보관함은 draft+approved.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    state_json TEXT NOT NULL,
+                    rule_id INTEGER,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_works_customer "
+                      "ON cardnews_works(customer_id, status, updated_at DESC)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_brand (
+                    customer_id INTEGER PRIMARY KEY,
+                    brand_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_rules (
+                    rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    rule_json TEXT NOT NULL,
+                    enabled INTEGER NOT NULL DEFAULT 1,
+                    next_run INTEGER NOT NULL DEFAULT 0,
+                    last_run INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_rules_due "
+                      "ON cardnews_rules(enabled, next_run)")
             # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
             # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
             # 일을 딸깍 한 번으로 끝낸다.
@@ -3307,12 +3384,14 @@ class Store:
     # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
     #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
     FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
+    FAV_CHANNEL_CAP_ADMIN = 0     # 관리자 = 한도 없음(0, 사장님 2026-10-24 "한도 없이", 10-18 의 100 을 대체) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
 
     def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
                         followers=None, last_video_thumb="", last_video_url="",
-                        customer_id=LEGACY_CUSTOMER_ID):
+                        customer_id=LEGACY_CUSTOMER_ID, cap=None):
         """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
-        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다."""
+        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다.
+        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한. 0 = 한도 없음."""
         platform = (platform or "").strip().lower()
         channel_id = (channel_id or "").strip().lstrip("@")
         if not platform or not channel_id:
@@ -3336,7 +3415,8 @@ class Store:
                 return False
             n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
                           (customer_id,)).fetchone()[0]
-            if n >= self.FAV_CHANNEL_CAP:
+            limit = self.FAV_CHANNEL_CAP if cap is None else cap
+            if limit and n >= limit:
                 return None
             c.execute(
                 "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
@@ -3349,10 +3429,82 @@ class Store:
 
     def fav_channel_remove(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
+            key = (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@"))
             c.execute(
-                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
-                (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")),
-            )
+                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?", key)
+            c.execute(
+                "DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?", key)
+
+    # ── 나만의 채널 분류(관제 261) ─────────────────────────────────────────
+    #   ★분류 이름·기타 판단의 주인은 여기다. 화면·공유는 이 메서드만 부른다.
+    FAV_CAT_ETC = "기타"          # 분류 안 한 채널. 이름 목록엔 넣지 않는다(행 없음 = 기타)
+    FAV_CAT_DEFAULTS = ("연예인제품", "연예인레시피", "썰쇼핑", "썰비하인드", "해외+상품",
+                        "해외+조회수", "샤크탱크", "해외화장품", "인스타스타일")   # 사장님 2026-10-24
+    FAV_CAT_NAME_MAX = 20
+
+    def fav_cat_clean(self, name):
+        """분류 이름 다듬기. 못 쓰는 이름이면 ''. '기타'는 그대로 '기타'."""
+        n = " ".join((name or "").split())[: self.FAV_CAT_NAME_MAX]
+        return n
+
+    def fav_cat_names(self, customer_id=LEGACY_CUSTOMER_ID, recent=True):
+        """분류 이름 — recent=True 면 최근에 쓴 것 먼저(폰 버튼), False 면 만든 순서 고정(목록 탭).
+        처음 부르면 기본 분류를 깐다."""
+        with self._conn() as c:
+            n = c.execute("SELECT COUNT(*) FROM fav_channel_cat_def WHERE customer_id=?",
+                          (customer_id,)).fetchone()[0]
+            if not n:
+                c.executemany(
+                    "INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                    " VALUES(?,?,?, datetime('now'))",
+                    [(customer_id, nm, i) for i, nm in enumerate(self.FAV_CAT_DEFAULTS)])
+            rows = c.execute(
+                "SELECT name FROM fav_channel_cat_def WHERE customer_id=?"
+                + (" ORDER BY (last_used_at IS NULL), last_used_at DESC, sort ASC, rowid ASC" if recent
+                   else " ORDER BY sort ASC, rowid ASC"),
+                (customer_id,)).fetchall()
+        return [r[0] for r in rows]
+
+    def fav_cat_add(self, name, customer_id=LEGACY_CUSTOMER_ID):
+        """새 분류. 돌려주는 값 = 실제 저장된 이름('' = 못 씀, '기타'는 따로 안 만든다)."""
+        n = self.fav_cat_clean(name)
+        if not n or n == self.FAV_CAT_ETC:
+            return n
+        self.fav_cat_names(customer_id)          # 기본 분류가 먼저 깔려 있어야 순서가 맞다
+        with self._conn() as c:
+            mx = c.execute("SELECT COALESCE(MAX(sort),0) FROM fav_channel_cat_def WHERE customer_id=?",
+                           (customer_id,)).fetchone()[0]
+            c.execute("INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                      " VALUES(?,?,?, datetime('now'))", (customer_id, n, mx + 1))
+        return n
+
+    def fav_cat_set(self, platform, channel_id, category, customer_id=LEGACY_CUSTOMER_ID):
+        """채널을 분류로 옮긴다. ''·'기타' = 기타로(행 삭제). 없는 분류 이름이면 새로 만든다.
+        돌려주는 값 = 실제 들어간 분류 이름."""
+        plat = (platform or "").strip().lower()
+        chid = (channel_id or "").strip().lstrip("@")
+        cat = self.fav_cat_clean(category)
+        if not plat or not chid:
+            return ""
+        if not cat or cat == self.FAV_CAT_ETC:
+            with self._conn() as c:
+                c.execute("DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?",
+                          (customer_id, plat, chid))
+            return self.FAV_CAT_ETC
+        self.fav_cat_add(cat, customer_id)
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO fav_channel_cat(customer_id, platform, channel_id, category, set_at)"
+                      " VALUES(?,?,?,?, datetime('now'))", (customer_id, plat, chid, cat))
+            c.execute("UPDATE fav_channel_cat_def SET last_used_at=strftime('%Y-%m-%d %H:%M:%f','now')"
+                      " WHERE customer_id=? AND name=?", (customer_id, cat))
+        return cat
+
+    def fav_cat_of(self, customer_id=LEGACY_CUSTOMER_ID):
+        """{(platform, channel_id): 분류} — 없는 채널은 기타."""
+        with self._conn() as c:
+            rows = c.execute("SELECT platform, channel_id, category FROM fav_channel_cat WHERE customer_id=?",
+                             (customer_id,)).fetchall()
+        return {(r[0], r[1]): r[2] for r in rows}
 
     def fav_channel_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """담은 순서대로 dict 리스트."""
@@ -3495,6 +3647,23 @@ class Store:
                 "last_error=?, updated_at=datetime('now') WHERE shortcode=?",
                 ((error or "")[:300], shortcode),
             )
+
+    def autoload_release_interrupted(self, window_sec=600):
+        """서버 재시작에 **끊긴** 시도를 돌려준다 — 기동 시 1회(관제 216, 2026-10-15).
+
+        ★선래치는 추출 **전에** 횟수를 올린다(재시작 루프 방지). 그런데 배포 재시작(SIGKILL)이
+          추출 도중 끊으면 그 1회가 영상 탓처럼 남는다. 실측 박세현님 work e4646d20d4f5:
+          소스 11개가 20:29·21:09 두 번의 배포 재시작에 끊겨 attempts=2·오류 없음·결과 없음 —
+          한 번만 더 끊기면 영구 포기(3회)가 되는 상태였다.
+        기동 직전 window_sec 안에 시작됐고 오류 없이 끝나지 못한 시도 = 이 재시작이 끊은 것.
+        결과가 있는 영상은 횟수가 쓰이지 않으므로 같이 깎여도 무해하다.
+        반환: 되돌린 행 수."""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1) "
+                "WHERE attempts>0 AND COALESCE(last_error,'')='' "
+                "AND updated_at >= datetime('now', ?)", ("-%d seconds" % int(window_sec),))
+            return cur.rowcount or 0
 
     def autoload_mark_error(self, shortcode, error):
         """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
@@ -5900,15 +6069,19 @@ class Store:
                 "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
 
     def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
-        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다.
+
+        done = 붙은 job이 완성본까지 만들었나(mix_jobs.status='done', 관제 272). step은 '마지막으로
+        보던 화면'일 뿐이라 완성 여부를 모른다 — 박선정님 핫팩·세탁볼이 완성됐는데 목록엔 미완성으로 떴다."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
-                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                "SELECT w.work_id, w.title, w.step, w.job_id, w.updated_at, j.status FROM produce_works w "
+                "LEFT JOIN mix_jobs j ON j.job_id = w.job_id "
+                "WHERE w.customer_id=? ORDER BY w.updated_at DESC, w.rowid DESC LIMIT ?",
                 (customer_id, limit),
             ).fetchall()
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
-                 "updated_at": r[4]} for r in rows]
+                 "updated_at": r[4], "done": r[5] == "done"} for r in rows]
 
     def rename_produce_work(self, work_id, name, customer_id=LEGACY_CUSTOMER_ID):
         """작업 이름 바꾸기(2026-08-17). 성공하면 확정된 제목 문자열, 남의 것/없으면 None.
@@ -5951,6 +6124,121 @@ class Store:
         with self._conn() as c:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
+
+    # ── 🗂 카드뉴스 제작소(관제 223) ──
+    # 판단(문구·검사·장 구성)은 cardnews.py 한 곳. 여기는 저장만 한다.
+    def cardnews_save(self, work_id, customer_id, state, status=None, title=None, rule_id=None):
+        """작품 저장. work_id가 없으면 새로 만든다. 남의 work_id면 None(produce_works와 같은 결).
+        status·title을 안 주면 기존 값 보존. 돌려주는 값 = work_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                row = c.execute("SELECT customer_id FROM cardnews_works WHERE work_id=?",
+                                (work_id,)).fetchone()
+                if row and row[0] != customer_id:
+                    return None
+                if row:
+                    cols, vals = ["state_json=?", "updated_at=?"], [payload, now]
+                    if status is not None:
+                        cols.append("status=?"); vals.append(status)
+                    if title is not None:
+                        cols.append("title=?"); vals.append(title)
+                    vals.append(work_id)
+                    c.execute(f"UPDATE cardnews_works SET {', '.join(cols)} WHERE work_id=?", tuple(vals))
+                    return work_id
+            work_id = work_id or ("cn_" + secrets.token_hex(6))
+            c.execute("INSERT INTO cardnews_works(work_id, customer_id, title, status, state_json, rule_id, "
+                      "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                      (work_id, customer_id, title or "", status or "draft", payload, rule_id, now, now))
+            return work_id
+
+    def cardnews_get(self, work_id, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                          "FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                          (work_id, customer_id)).fetchone()
+        if not r:
+            return None
+        return {"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                "rule_id": r[4], "created_at": r[5], "updated_at": r[6]}
+
+    def cardnews_list(self, customer_id, statuses=("draft", "approved"), limit=60):
+        qs = ",".join("?" * len(statuses))
+        with self._conn() as c:
+            rows = c.execute(f"SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                             f"FROM cardnews_works WHERE customer_id=? AND status IN ({qs}) "
+                             f"ORDER BY updated_at DESC LIMIT ?",
+                             (customer_id, *statuses, int(limit))).fetchall()
+        return [{"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                 "rule_id": r[4], "created_at": r[5], "updated_at": r[6]} for r in rows]
+
+    def cardnews_delete(self, work_id, customer_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
+
+    def cardnews_count_since(self, customer_id, since_iso, rule_id=None):
+        """자동 규칙의 '하루 몇 편' 상한 판정용 — since 이후 만든 작품 수."""
+        sql = "SELECT COUNT(*) FROM cardnews_works WHERE customer_id=? AND created_at>=?"
+        args = [customer_id, since_iso]
+        if rule_id is not None:
+            sql += " AND rule_id=?"; args.append(rule_id)
+        with self._conn() as c:
+            return c.execute(sql, tuple(args)).fetchone()[0]
+
+    def cardnews_brand_get(self, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT brand_json FROM cardnews_brand WHERE customer_id=?",
+                          (customer_id,)).fetchone()
+        return json.loads(r[0]) if r else None
+
+    def cardnews_brand_set(self, customer_id, brand):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO cardnews_brand(customer_id, brand_json, updated_at) VALUES (?,?,?) "
+                      "ON CONFLICT(customer_id) DO UPDATE SET brand_json=excluded.brand_json, "
+                      "updated_at=excluded.updated_at",
+                      (customer_id, json.dumps(brand, ensure_ascii=False), now))
+
+    def cardnews_rules(self, customer_id):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, rule_json, enabled, next_run, last_run FROM cardnews_rules "
+                             "WHERE customer_id=? ORDER BY rule_id", (customer_id,)).fetchall()
+        return [{"rule_id": r[0], "rule": json.loads(r[1]), "enabled": bool(r[2]),
+                 "next_run": r[3], "last_run": r[4]} for r in rows]
+
+    def cardnews_rule_save(self, customer_id, rule, next_run, rule_id=None, enabled=True):
+        """규칙 저장. 남의 rule_id면 None. 돌려주는 값 = rule_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(rule, ensure_ascii=False)
+        with self._conn() as c:
+            if rule_id:
+                n = c.execute("UPDATE cardnews_rules SET rule_json=?, enabled=?, next_run=? "
+                              "WHERE rule_id=? AND customer_id=?",
+                              (payload, 1 if enabled else 0, int(next_run), rule_id, customer_id)).rowcount
+                return rule_id if n else None
+            cur = c.execute("INSERT INTO cardnews_rules(customer_id, rule_json, enabled, next_run, created_at) "
+                            "VALUES (?,?,?,?,?)", (customer_id, payload, 1 if enabled else 0, int(next_run), now))
+            return cur.lastrowid
+
+    def cardnews_rule_delete(self, customer_id, rule_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_rules WHERE rule_id=? AND customer_id=?",
+                             (rule_id, customer_id)).rowcount > 0
+
+    def cardnews_rules_due(self, now_epoch):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, customer_id, rule_json, next_run FROM cardnews_rules "
+                             "WHERE enabled=1 AND next_run>0 AND next_run<=?", (int(now_epoch),)).fetchall()
+        return [{"rule_id": r[0], "customer_id": r[1], "rule": json.loads(r[2]), "next_run": r[3]} for r in rows]
+
+    def cardnews_rule_claim(self, rule_id, expect_next, new_next, now_epoch):
+        """자동 실행 1회를 **한 프로세스만** 가져간다 — next_run이 아직 expect_next일 때만 넘긴다.
+        웹 프로세스가 여럿이어도 같은 규칙이 두 번 돌지 않는다(SQL 한 문장 비교·갱신)."""
+        with self._conn() as c:
+            return c.execute("UPDATE cardnews_rules SET next_run=?, last_run=? WHERE rule_id=? AND next_run=?",
+                             (int(new_next), int(now_epoch), rule_id, int(expect_next))).rowcount == 1
 
     # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
     # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.
@@ -6331,21 +6619,55 @@ class Store:
 
     # ── 유튜브 로컬 릴레이 큐(2026-07-24) ──
     def enqueue_yt_relay(self, url):
-        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다."""
+        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다.
+        ★같은 URL 이 이미 대기·처리 중이거나 받아 둔 파일이 있으면 그 요청을 같이 쓴다(2026-10-29 관제 287).
+        종전엔 시간초과로 다시 부를 때마다 새 줄을 세워, 같은 영상이 6번 쌓이고 PC 가 17분 밀렸다.
+        updated_at = 마지막으로 누가 기다리기 시작한 시각 → 아무도 안 기다리는 요청은 next 가 버린다."""
         import secrets
-        req_id = secrets.token_hex(8)
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
+            from shopping_shorts import config
+            work_cut = (datetime.now(timezone.utc)
+                        - timedelta(seconds=config.YT_RELAY_POLL_TIMEOUT)).isoformat()
+            for rid, st, op, upd in c.execute(
+                    "SELECT req_id, status, out_path, updated_at FROM yt_relay WHERE url=? "
+                    "AND status IN ('pending','working','done') ORDER BY created_at DESC", (url,)).fetchall():
+                if st == "done" and not (op and Path(op).exists()):
+                    continue
+                # ★working 의 updated_at = PC 가 맡은 시각. 오래된 working 은 PC 가 도중에 죽은 것 —
+                #   거기 붙으면 영원히 안 끝난다(10-29 실사고: 에이전트 재시작 뒤 NsSZAEmgJ88 20분 멈춤).
+                if st == "working":
+                    if upd < work_cut:
+                        continue
+                    return rid
+                c.execute("UPDATE yt_relay SET updated_at=? WHERE req_id=?", (now, rid))
+                return rid
+            req_id = secrets.token_hex(8)
             c.execute("INSERT INTO yt_relay(req_id, url, status, created_at, updated_at) "
                       "VALUES(?,?,'pending',?,?)", (req_id, url, now, now))
         return req_id
 
-    def next_pending_yt_relay(self):
-        """가장 오래된 pending 요청 1건 → {req_id, url}. 없으면 None. 에이전트가 폴링한다."""
+    def next_pending_yt_relay(self, stale_after=None):
+        """가장 오래된 pending 요청 1건을 맡겨(working) {req_id, url} 반환. 없으면 None.
+        ★아무도 안 기다리는 pending(서버가 이미 시간초과로 포기)은 먼저 failed 로 버린다 — PC 헛일 방지.
+        working 으로 바꿔 맡기므로 에이전트가 여러 줄로 동시에 받아도 같은 요청을 두 번 안 받는다."""
+        if stale_after is None:
+            from shopping_shorts import config
+            stale_after = config.YT_RELAY_POLL_TIMEOUT + 20
+        cut = (datetime.now(timezone.utc) - timedelta(seconds=stale_after)).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
-            r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
-                          "ORDER BY created_at LIMIT 1").fetchone()
-        return {"req_id": r[0], "url": r[1]} if r else None
+            c.execute("UPDATE yt_relay SET status='failed', error='stale: 기다리는 쪽 없음(시간초과)', "
+                      "updated_at=? WHERE status='pending' AND updated_at<?", (now, cut))
+            while True:
+                r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
+                              "ORDER BY created_at LIMIT 1").fetchone()
+                if not r:
+                    return None
+                n = c.execute("UPDATE yt_relay SET status='working', updated_at=? "
+                              "WHERE req_id=? AND status='pending'", (now, r[0])).rowcount
+                if n:
+                    return {"req_id": r[0], "url": r[1]}
 
     def finish_yt_relay(self, req_id, out_path=None, error=None):
         """에이전트가 완료(out_path) 또는 실패(error) 보고. status를 done|failed로."""
@@ -6991,15 +7313,29 @@ class Store:
         f, l = int(first_seen or 0), int(last_seen or 0)
         return (l - f) < self.GHOST_MAX_USE and (now - l) > self.GHOST_IDLE
 
+    @staticmethod
+    def _ua_family(ua):
+        """브라우저 종류만 남긴다 — 버전 숫자는 뺀다(관제 238).
+        크롬은 몇 주마다 자동 업데이트돼 154→155만 바뀌어도 같은 PC를 못 알아봤다(윤주홍 10-19)."""
+        return re.sub(r"\d+", "", (ua or "")[:200])
+
+    def _same_pc_slot(self, rows, ua, ip):
+        """같은 PC로 보이는 칸(같은 IP + 같은 브라우저 종류) → slot | None. 판정은 여기 한 곳.
+
+        rows = (slot, device_id, first_seen, last_seen, ua, ip). 여럿이면 가장 오래 안 보인 칸.
+        """
+        ip, fam = (ip or "")[:64], self._ua_family(ua)
+        same = [r for r in rows if ip and r[5] == ip and self._ua_family(r[4]) == fam]
+        return min(same, key=lambda r: r[3] or 0)[0] if same else None
+
     def _replaceable_slot(self, rows, ua, ip, now):
         """꽉 찼을 때 새 PC에게 내줄 칸 → (slot, 사유) | (None, ""). 판정은 여기 한 곳.
 
         rows = (slot, device_id, first_seen, last_seen, ua, ip). 우선순위: 같은 PC → 유령 → 7일 미사용.
         """
-        ua, ip = (ua or "")[:200], (ip or "")[:64]
-        same = [r for r in rows if ip and r[5] == ip and (r[4] or "") == ua]
+        same = self._same_pc_slot(rows, ua, ip)
         if same:
-            return min(same, key=lambda r: r[3] or 0)[0], "same_pc"
+            return same, "same_pc"
         ghosts = [r for r in rows if self._is_ghost_slot(r[2], r[3], now)]
         if ghosts:
             return min(ghosts, key=lambda r: r[3] or 0)[0], "ghost"
@@ -7031,7 +7367,7 @@ class Store:
             return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen, ua, ip FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
@@ -7040,6 +7376,15 @@ class Store:
                               "WHERE customer_id=? AND slot=?",
                               (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
                     return True, slot, len(used)
+            # 🔁 쿠키만 잃은 같은 PC(관제 238): 그 칸을 이 도장으로 이어받는다 — 버튼 없이, 칸 수는 그대로.
+            #   황선희(10-19 쿠키 통째 삭제)·윤주홍(쿠키 손실+크롬 업데이트)이 같은 PC인데 막혔다.
+            slot = self._same_pc_slot(rows, ua, ip)
+            if slot:
+                c.execute("UPDATE customer_devices SET device_id=?, last_seen=?, ua=?, ip=? "
+                          "WHERE customer_id=? AND slot=?",
+                          (device_id, now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
+                print(f"[pc] 같은 PC 재인식 cid={customer_id} slot={slot}", file=sys.stderr)
+                return True, slot, len(used)
             return False, None, len(used)
 
     def device_register(self, customer_id, device_id, ua="", ip=""):
@@ -7496,25 +7841,37 @@ class Store:
                 (name, phone, email, channel or "", now))
             return cur.lastrowid
 
-    def add_deposit_claim(self, name, depositor, contact=""):
+    def program_members(self):
+        """관리자가 정한 프로그램 구분 전체 — {customer_id: {...}}."""
+        with self._conn() as c:
+            rows = c.execute("SELECT customer_id, shortem, shortcl, plan, move, tutor FROM program_member").fetchall()
+        return {r[0]: {"shortem": r[1], "shortcl": r[2], "plan": r[3], "move": r[4], "tutor": r[5]} for r in rows}
+
+    def save_program_member(self, customer_id, shortem, shortcl, plan, move, tutor):
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO program_member(customer_id, shortem, shortcl, plan, move, tutor, updated_at) "
+                      "VALUES(?,?,?,?,?,?,?)", (customer_id, shortem, shortcl, plan, move, tutor, now))
+
+    def add_deposit_claim(self, name, depositor, contact="", product=""):
         """'입금 완료했습니다' 신고 저장 → id.
         ★고객이 직접 누르는 것이라 **입금 사실을 증명하지 않는다** — 사장님이 통장을
           보고 확인하는 절차는 그대로다. 이건 '연락을 놓치지 않기 위한 알림'이다."""
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
         with self._conn() as c:
             cur = c.execute(
-                "INSERT INTO deposit_claim(name, depositor, contact, done, created_at) "
-                "VALUES(?,?,?,0,?)", (name, depositor, contact or "", now))
+                "INSERT INTO deposit_claim(name, depositor, contact, product, done, created_at) "
+                "VALUES(?,?,?,?,0,?)", (name, depositor, contact or "", product or "", now))
             return cur.lastrowid
 
     def list_deposit_claims(self, only_open=True):
         """입금 신고 목록 — 최신순. only_open이면 아직 처리 안 한 것만."""
-        q = ("SELECT id, name, depositor, contact, done, created_at FROM deposit_claim "
+        q = ("SELECT id, name, depositor, contact, done, created_at, product FROM deposit_claim "
              + ("WHERE done=0 " if only_open else "") + "ORDER BY id DESC")
         with self._conn() as c:
             rows = c.execute(q).fetchall()
         return [{"id": r[0], "name": r[1], "depositor": r[2], "contact": r[3],
-                 "done": r[4], "created_at": r[5]} for r in rows]
+                 "done": r[4], "created_at": r[5], "product": r[6] or ""} for r in rows]
 
     def close_deposit_claim(self, claim_id):
         """처리 완료 표시(승인하고 나면 목록에서 내린다)."""
@@ -7791,14 +8148,25 @@ class Store:
                 "                      WHERE w.state='running' AND w.owner=q.owner "
                 f"                       AND (w.task IN (" + lph + ")) = (q.task IN (" + lph + "))) "
                 f"                    < CASE WHEN q.owner='0' THEN ? "
-                f"                           WHEN q.task IN (" + lph + ") THEN ? ELSE 1 END) "
+                f"                           WHEN q.task IN (" + lph + ") THEN ? "
+                # ★놀 때만 같은 고객의 '다른 영상' 동시 N개(2026-10-20 관제 246 사장님).
+                #   실측 7일: 워커 12개 중 평균 1.47개 가동인데 고객 제작작업 60초+ 대기 126건이
+                #   전부 이 고객당-1개 칸 때문이었고, 그중 119건은 같은 고객의 **다른 영상**을 기다렸다.
+                #   같은 영상(job_id)은 단계 순서가 있어 여전히 하나씩 — job_id 가 없는 작업이
+                #   하나라도 끼면(판별 불가) 종전대로 1개.
+                "                           WHEN json_extract(q.args_json,'$.job_id') IS NOT NULL "
+                "                            AND NOT EXISTS (SELECT 1 FROM job_queue s WHERE s.state='running' "
+                "                                 AND s.owner=q.owner AND (json_extract(s.args_json,'$.job_id') IS NULL "
+                "                                  OR json_extract(s.args_json,'$.job_id') = json_extract(q.args_json,'$.job_id'))) "
+                "                            AND (SELECT COUNT(*) FROM job_queue a WHERE a.state='running') < ? "
+                "                           THEN ? ELSE 1 END) "
                 f"               AND (q.task NOT IN ({ph}) OR {_safe} OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
                 f"                     WHERE r.state='running' AND r.task IN ({ph}) "
                 f"                       AND NOT ({_safe_r}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다:
+                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다(10-20: light 다음에 burst 2개 추가):
                 #   lph, lph (카운트 조건) → admin (CASE 첫 THEN) → lph → light → ph, ph
                 #   한 칸이라도 어긋나면 조건이 조용히 뒤집힌다(2026-09-02에 실제로 어긋나
                 #   관리자 동시 2개 제한이 풀렸고, 회귀 테스트가 그걸 잡았다).
@@ -7806,6 +8174,8 @@ class Store:
                  + (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
                  + self._LIGHT_TASKS
                  + (int(os.environ.get("LIGHT_CONCURRENT_JOBS", "3") or 3),)
+                 + (int(os.environ.get("OWNER_BURST_IDLE_BELOW", "6") or 6),     # 전체 가동이 이 수 미만일 때만
+                    int(os.environ.get("OWNER_BURST_JOBS", "2") or 2))           # 같은 고객 다른 영상 동시 상한
                  + self._EXCLUSIVE_TASKS * 2)).fetchone()
             if not row:
                 return None
@@ -8338,6 +8708,33 @@ class Store:
         with self._conn() as c:
             c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
                       (int(key_id), int(customer_id)))
+
+    # ── 빌려준 키 한도(2026-10-26 관제 277) — 회사 키를 회원 계정에 넣고 크레딧 한도까지만 쓰게 한다 ──
+    #   판단(언제 끄나)은 keyroute.lent_key_charge 한 곳. 여기는 저장만 한다.
+    def lent_key_bump(self, fp, credits):
+        """그 키(지문)의 한도가 걸려 있으면 사용량을 더하고 (used, cap), 한도 없으면 None.
+        ★UPDATE 한 줄로 더한다 — 워커 여럿이 동시에 지워도 사용량이 안 빠진다."""
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?", ("lent_cap::" + fp,)).fetchone()
+            if not row:
+                return None
+            c.execute("INSERT INTO settings(key, value) VALUES(?, '0') ON CONFLICT(key) DO NOTHING",
+                      ("lent_used::" + fp,))
+            c.execute("UPDATE settings SET value = CAST(value AS INTEGER) + ? WHERE key=?",
+                      (int(credits), "lent_used::" + fp))
+            used = c.execute("SELECT value FROM settings WHERE key=?", ("lent_used::" + fp,)).fetchone()
+        return int(used[0]), int(row[0])
+
+    def lent_key_label_off(self, fp, label, off):
+        """회원 계정에 넣은 그 키 행(사장님 cid 0 행은 건드리지 않는다)의 표시 문구를 바꾸고, off면 끈다."""
+        import time
+        with self._conn() as c:
+            if off:
+                c.execute("UPDATE customer_keys SET label=?, status='off', checked_at=? "
+                          "WHERE key_hash=? AND customer_id != 0", (label, int(time.time()), fp))
+            else:
+                c.execute("UPDATE customer_keys SET label=? WHERE key_hash=? AND customer_id != 0",
+                          (label, fp))
 
     def set_customer_key_status(self, key_id, status):
         import time

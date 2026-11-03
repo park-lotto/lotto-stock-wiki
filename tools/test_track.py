@@ -493,7 +493,7 @@ def test_finish_conflict_does_not_run_gate(repo):
     g = _Gate()
     with pytest.raises(track.TrackError):
         track.finish("보이스", repo=repo, gate=g)
-    assert g.snapshots == 1, "충돌 상태에서 게이트를 돌리면 시간만 버린다(기준선만 찍힘)"
+    assert g.snapshots <= 1, "충돌 상태에서 게이트를 돌리면 시간만 버린다(묶음 병합은 관제 미리 검사에서 걸러 기준선도 안 찍는다)"
 
 
 def test_finish_handles_nothing_to_merge(repo):

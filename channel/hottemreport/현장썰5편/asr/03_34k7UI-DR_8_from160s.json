@@ -1,0 +1,48 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 5.95,
+   "speaker": "S1",
+   "text": "in the electric sneakers than regular. So, uh, Jordan and I are going to test that out.",
+   "kind": "speech"
+  },
+  {
+   "start": 6.2,
+   "end": 9.6,
+   "speaker": "S1",
+   "text": "I feel like I'm at least 2 and a half times faster.",
+   "kind": "speech"
+  },
+  {
+   "start": 17.8,
+   "end": 19.4,
+   "speaker": "S2",
+   "text": "",
+   "kind": "reaction"
+  },
+  {
+   "start": 22.9,
+   "end": 42.7,
+   "speaker": "S1",
+   "text": "So, there's no controller or anything. You make these things go by walking, and then the the AI within the shoes figures out how fast you want to be going by how fast you're trying to walk. You walk faster, the motors go faster, you slow down, and the motors slow down. And if you stop, uh, they're supposed to stop.",
+   "kind": "speech"
+  },
+  {
+   "start": 43.2,
+   "end": 46.0,
+   "speaker": null,
+   "text": "",
+   "kind": "sfx"
+  },
+  {
+   "start": 53.5,
+   "end": 108.8,
+   "speaker": "S1",
+   "text": "These are built as like last mile devices, but I'm testing now if like you can get upstairs with them on, and you kind of can.",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}

@@ -1,0 +1,289 @@
+{
+ "_note": "yanshot render — 페이지 1 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/정재형_후라이팬/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "ss": 453.44,
+   "src_crop": [
+    418,
+    0,
+    796,
+    796
+   ],
+   "cuts": [
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 453.44,
+     "src_crop": [
+      418,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.313,
+     "plan_i": 0
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 453.753,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.867,
+     "plan_i": 1
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 431.448,
+     "src_crop": [
+      458,
+      0,
+      620,
+      620
+     ],
+     "dur": 0.35,
+     "plan_i": 2
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 516.299,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.06,
+     "plan_i": 3
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 518.601,
+     "src_crop": [
+      554,
+      0,
+      620,
+      620
+     ],
+     "dur": 0.893,
+     "plan_i": 4
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 548.331,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.893,
+     "plan_i": 5
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 522.638,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.893,
+     "plan_i": 6
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 552.331,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.893,
+     "plan_i": 7
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 526.608,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.957,
+     "plan_i": 8
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 556.331,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.957,
+     "plan_i": 9
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 180.829,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.956,
+     "plan_i": 10
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 560.331,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.013,
+     "plan_i": 11
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 184.867,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.013,
+     "plan_i": 12
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 565.331,
+     "src_crop": [
+      562,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.013,
+     "plan_i": 13
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 241.224,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.014,
+     "plan_i": 14
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 310.36,
+     "src_crop": [
+      650,
+      0,
+      620,
+      620
+     ],
+     "dur": 0.876,
+     "plan_i": 15
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 248.732,
+     "src_crop": [
+      466,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.876,
+     "plan_i": 16
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 314.563,
+     "src_crop": [
+      482,
+      0,
+      620,
+      620
+     ],
+     "dur": 0.876,
+     "plan_i": 17
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 253.436,
+     "src_crop": [
+      418,
+      0,
+      796,
+      796
+     ],
+     "dur": 0.876,
+     "plan_i": 18
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 319.434,
+     "src_crop": [
+      362,
+      0,
+      620,
+      620
+     ],
+     "dur": 0.933,
+     "plan_i": 19
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 370.453,
+     "src_crop": [
+      394,
+      0,
+      796,
+      796
+     ],
+     "dur": 1.892,
+     "plan_i": 20
+    },
+    {
+     "src": "src_B2QIb4bBFO8.mp4",
+     "ss": 324.607,
+     "src_crop": [
+      554,
+      0,
+      620,
+      620
+     ],
+     "dur": 1.891,
+     "plan_i": 21
+    }
+   ],
+   "t_final": [
+    0.0,
+    22.305
+   ]
+  }
+ ]
+}

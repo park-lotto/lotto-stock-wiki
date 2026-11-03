@@ -77,9 +77,9 @@ note: 무엇이 모자란지 한 구절.
 
 P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집자**다. 장면이 먼저고, 문장은 장면에서 나온다.
 [재료 종류] %s (판: %s)
-[장면 목록 — 조각 번호(길이)·쓰임]
+[장면 목록 — 묶음별 조각 번호(길이): 화면 설명. ★제품이 무엇이고 무엇을 하는지는 이 화면 설명에서만 읽어라]
 %s
-[없는 장면] %s
+[없는 장면 — 재료에 **없다**. 이 내용을 효능·사실로 문장에 쓰지 마라] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
 [🎯 손님이 역할을 짐작해 담은 조각 — 역할 이름은 **손님 짐작**이다(문제인지 효과인지 헷갈렸을 수 있다). 조각 내용을 보고 이 스타일 칸 중 가장 맞는 칸의 맨 앞에 넣어라. 훅으로 담은 조각은 반드시 첫 칸. CTA로 담은 조각은 CTA 칸이 있을 때만 그 칸에, 없으면 넣지 마라(칸을 새로 만들지 마라). 맞는 칸이 정말 없으면 넣지 않아도 된다 — 손님 화면에 따로 보여 준다. 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 
@@ -94,6 +94,7 @@ P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집
   화면에 보이는 장면을 살려 말맛 있게(구어·리듬·감탄·과장 허용). 장면 설명문 금지.
   그 칸이 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)를 하는 칸이면 그 이야기를 하되, 깔리는 조각은 그 이야기에 어울리는 결과 장면으로.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
+  ★댓글 유도(「댓글에 OO 남기면」)는 칸이 하는 일이 댓글 유도인 칸에서만, 한 편에 한 번만 써라.
 - need: 그 칸이 하는 일.
 - weak: 딱 맞는 장면이 없어 가까운 장면으로 대신했으면 그 이유와 보충 방법 한 줄, 맞으면 빈 문자열.
 first_line_style: 고른 첫 줄 틀(빈칸 채운 것).
@@ -103,9 +104,9 @@ first_line_style: 고른 첫 줄 틀(빈칸 채운 것).
 P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집자**다. 장면이 먼저고, 문장은 장면에서 나온다.
 이번엔 정해진 스타일에 갇히지 말고 **이 재료로 가장 재밌는 이야기**를 짜라. 아래 [참고 스타일]은 흐름 참고만, [말맛 재료]의 결·어미·리듬을 살려라.
 [재료 종류] %s
-[장면 목록 — 조각 번호(길이)·쓰임]
+[장면 목록 — 묶음별 조각 번호(길이): 화면 설명. ★제품이 무엇이고 무엇을 하는지는 이 화면 설명에서만 읽어라]
 %s
-[없는 장면] %s
+[없는 장면 — 재료에 **없다**. 이 내용을 효능·사실로 문장에 쓰지 마라] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
 [🎯 손님이 역할을 짐작해 담은 조각 — 역할 이름은 **손님 짐작**이다(문제인지 효과인지 헷갈렸을 수 있다). 조각 내용을 보고 이 스타일 칸 중 가장 맞는 칸의 맨 앞에 넣어라. 훅으로 담은 조각은 반드시 첫 칸. CTA로 담은 조각은 CTA 칸이 있을 때만 그 칸에, 없으면 넣지 마라(칸을 새로 만들지 마라). 맞는 칸이 정말 없으면 넣지 않아도 된다 — 손님 화면에 따로 보여 준다. 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 [참고 스타일] %s — 칸 흐름: %s
@@ -121,14 +122,18 @@ P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편�
 - ids: 그 칸 조각 번호 1~3개(목록에 있는 것만, 한 조각은 한 칸에만). 조각 길이 합 × 1.2 ≥ 문장 읽는 시간(글자 수 ÷ 7초).
 - line: 한 문장(12~45자). 화면에 보이는 장면을 구체 동작·질감으로, 과장·감탄·반전 허용. 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)도 허용.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
+  ★댓글 유도(「댓글에 OO 남기면」)는 마지막 마무리 칸에서만, 한 편에 한 번만 써라.
 - weak: 딱 맞는 장면이 없어 대신했으면 이유와 보충 방법 한 줄, 맞으면 빈 문자열.
 first_line_style: 이 대본의 성격 한 구절.
 출력 JSON만.
 """
 
 P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리보드 칸마다 [칸이 하는 일]·[문장]·[깔린 조각의 화면 설명]이다.
-★문장이 화면 설명에 없는 **제품 사실**(가격·숫자·용량·제품 기능)을 지어낸 칸만 찾아, 같은 말투로 그 사실을 빼고 다시 써라.
-가족 반응·전문가 출처·댓글 유도·과장·감탄은 스타일이니 **고치지 마라**. 칸이 하는 일도 바꾸지 마라.
+★문장이 화면 설명에 없는 **제품 사실**(구체 금액·숫자·용량·제품 기능)을 지어낸 칸만 찾아, 같은 말투로 그 사실을 빼고 다시 써라.
+가족 반응·전문가 출처·댓글 유도·과장(「떼돈」「품절 대란」「난리 난」「미쳤다」)·감탄은 스타일이니 **고치지 마라**.
+고칠 게 없는 칸은 fix 에 넣지 마라(같은 문장을 다시 적지 마라).
+숫자 없는 가격 평가(「이 값에」「이 가격에」「가격 부담 없이」「가성비」)는 사실이 아니라 평가다 — **고치지 마라**.
+고칠 때도 칸이 하는 일은 남겨라 — 가격 칸에서 금액(「몇천 원」「만 원대」)을 뺄 때는 「이 가격에」처럼 가격 이야기는 남긴다.
 코드가 이미 걸러 낸 칸: %s
 출력 JSON만: {"fix":[{"i":칸번호(0부터),"why":"...","line":"..."}]}
 
@@ -478,7 +483,7 @@ def apply_signals(slots, key, nth=0, yt=True):
 
 
 # ── 감정짤 자리(관제 139, 2026-10-06 사장님 확정) ─────────────────────────────────────────────────────
-#   ★"어느 줄 맨 앞에 짤을 몇 초 넣나"의 주인은 meme_slots 하나다. 3단계 화면(scene_play.js scenesV2Alloc)·렌더·캡컷·ZIP 은
+#   ★"어느 줄에 짤을 몇 초 넣나"의 주인은 meme_slots 하나다(자리 앞/중간/뒤·길이를 사람이 바꾸면 meme_adjust, 관제 203). 3단계 화면(scene_play.js scenesV2Alloc)·렌더·캡컷·ZIP 은
 #     이 함수가 남긴 beat["cutaway"](match_type "meme", head_sec)를 **읽기만** 한다 — 짤 컷을 첫 컷으로 두고 남은 시간에 장면을 나눈다.
 #   규칙: 신호어 자리 [1]·[3] 줄만 · 길이 = 그 줄 음성에서 신호어 마지막 낱말이 끝나는 초를 1.0~2.0초로 자름 · 시작은 줄 시작 ·
 #         짤 뒤 남은 시간이 장면 하나 하한(1.0초)보다 짧으면 그 줄은 짤 없음.
@@ -499,7 +504,8 @@ def meme_emotion(rank, signal):
 
 
 def _compact(t):
-    return re.sub(r"[^0-9A-Za-z가-힣]", "", t or "")
+    from shopping_shorts.script_translate import letters_only      # 글자의 정의는 한 곳(가나·한자 포함, 관제 248)
+    return letters_only(t)
 
 
 def signal_end_sec(narration, signal, words):
@@ -608,13 +614,58 @@ def meme_head(beat, words, dur, manual=False):
     return head, None
 
 
-def meme_cut(asset, head, emotion, manual=False):
+MEME_POS = ("head", "mid", "tail")   # 짤 자리(관제 203) — 줄 맨 앞 / 가운데 / 맨 끝. 없으면 head(종전)
+MEME_ADJ_MIN = 0.5          # 사람이 −/+ 로 줄일 수 있는 짤 최소 길이
+MEME_ADJ_MAX = 3.0          # 사람이 −/+ 로 늘릴 수 있는 짤 최대 길이
+
+
+def meme_pos(cw):
+    """짤 자리 판정의 주인 — 화면(scene_play.js memeHeadOf)도 같은 규칙(없거나 모르는 값 = head)."""
+    p = str((cw or {}).get("pos") or "head")
+    return p if p in MEME_POS else "head"
+
+
+def meme_adjust(cw, dur, asset_dur, pos=None, sec=None):
+    """사람이 3단계에서 짤 자리·길이를 바꾼다(관제 203) — 판단은 여기 한 곳. 돌려주는 것 = (새 cutaway, None) | (None, 이유).
+    길이는 0.5~3.0초 · 짤 파일 길이 이하 · 짤 뒤(또는 앞뒤) 장면이 scene_min 이상 남게. 바꾼 짤은 manual(자동이 다시 안 정함)."""
+    if not isinstance(cw, dict) or cw.get("match_type") != "meme":
+        return None, "이 줄엔 짤이 없어요"
+    out = dict(cw)
+    if pos is not None:
+        if pos not in MEME_POS:
+            return None, "자리는 앞·중간·뒤 중 하나예요"
+        out["pos"] = pos
+    if sec is not None:
+        try:
+            sec = round(float(sec), 2)
+        except (TypeError, ValueError):
+            return None, "길이가 숫자가 아니에요"
+        hi = min(MEME_ADJ_MAX, float(asset_dur or 0) or MEME_ADJ_MAX)
+        if sec < MEME_ADJ_MIN - 1e-6 or sec > hi + 1e-6:
+            return None, "짤 길이는 %.1f~%.2f초예요" % (MEME_ADJ_MIN, hi)
+        out["head_sec"] = sec
+    smin = float(out.get("scene_min") or MEME_SCENE_MIN)
+    try:
+        rest = float(dur or 0) - float(out.get("head_sec") or 0)
+    except (TypeError, ValueError):
+        rest = 0.0
+    if rest < smin - 1e-6:
+        return None, "짤 뒤 장면이 %.1f초는 남아야 해요(지금 %.2f초)" % (smin, rest)
+    if meme_pos(out) == "head":
+        out.pop("pos", None)      # 종전 모양 그대로(앞 = 표식 없음)
+    out["manual"] = 1
+    return out, None
+
+
+def meme_cut(asset, head, emotion, manual=False, pos=None):
     """beat["cutaway"] 짤 모양 — 화면·렌더·캡컷이 읽는 열쇠는 여기 한 곳에서 만든다."""
     cw = {"asset_id": int(asset["asset_id"]), "match_type": "meme", "head_sec": head,
           "vid": "meme_%d" % int(asset["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
           "emotion": emotion, "scene_min": MEME_SCENE_MIN, "owner": int(asset.get("owner") or 0)}
     if manual:
         cw["manual"] = 1          # 사람이 고른 짤 — meme_slots 가 다시 정할 때 건드리지 않는다
+    if pos in ("mid", "tail"):
+        cw["pos"] = pos           # 짤 자리(관제 203) — 화면 scenesV2Alloc 이 이 자리에 짤 컷을 둔다
     return cw
 
 
@@ -1047,8 +1098,10 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     fixed = []
     for fx in r4.get("fix") or []:
         i = fx.get("i")
-        if isinstance(i, int) and 0 <= i < len(slots) and (fx.get("line") or "").strip():
-            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fx["line"].strip(), fx.get("why") or ""
+        # 검수자가 입력 칸 머리표("[price — …] 문장:")까지 베껴 돌려줄 때가 있다 — 문장만 남긴다(관제 216 시험 실측)
+        fl = re.sub(r"^\s*(칸\s*\d+\s*)?\[[^\]]*\]\s*(문장\s*:\s*)?", "", str(fx.get("line") or "")).strip()
+        if isinstance(i, int) and 0 <= i < len(slots) and fl and not _same_line(fl, slots[i].get("line")):
+            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fl, fx.get("why") or ""
             fixed.append(i)
     apply_signals(slots, key, 0, yt)      # 생성·사실 검수 뒤 코드가 신호어를 확인·보정(사실 검수가 줄을 고쳐도 신호어가 남게)
     check = slot_checks(slots, segs)
@@ -1059,6 +1112,46 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
             "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
             "star_missing": star_missing, "role_fixed": role_fixed, "role_left": role_left, "extra": extra, "extra_missing": r3.get("extra_missing") or [],
             "sig_key": key, "sig_yt": yt, "auth": [n3.get("auth"), n4.get("auth")]}
+
+
+def _board_guide(key, r1, groups_txt, star, segs, texts, roles_pick="", jkey="", platform="ig"):
+    """지침서 작가 보드(guide_writer) — 채널 지침서를 입혀 버텍스가 쓰고 코드가 검수·1회 재작성한다(2026-10-20 사장님).
+    결과 모양은 _board 와 같다(slots[slot·line·ids·need] · check · fixed …) — 3단계·렌더·캡컷이 같은 길로 받는다.
+    신호어(apply_signals)는 붙이지 않는다 — 연결어는 지침서가 정한다(근데·특히·심지어)."""
+    from shopping_shorts import guide_writer as _gw
+    n3, n4 = {}, {}
+    scene_text = " ".join(texts.get(c, "") for c in segs)
+    r3, left, style, gate_note = _gw.write(lambda p, s: sg._call_json(p, s, note=n3, vertex=True), key, r1.get("kind") or "", groups_txt,
+                                           r1.get("missing") or [], star, roles_pick, platform=platform, scene_text=scene_text, segs=segs)
+    names = dict((s[0], s[1]) for s in _gw.SLOTS[style])
+    slots = []
+    for sl in r3.get("slots") or []:
+        ids = [c for c in (sl.get("ids") or []) if c in segs]
+        slots.append({"slot": str(sl.get("slot") or "free"), "need": names.get(str(sl.get("slot") or ""), ""), "line": str(sl.get("line") or ""),
+                      "ids": ids, "weak": str(sl.get("weak") or ""), **({"cta_mark": True} if sl.get("slot") == "cta" else {})})
+    flags = _code_flags(slots, lambda c: texts.get(c, ""))
+    block = "\n".join("칸 %d [%s — %s] 문장: %s\n   화면: %s" % (i, sl.get("slot"), sl.get("need") or "", sl.get("line"),
+                                                       " / ".join(texts.get(c, "?") for c in sl.get("ids") or [])) for i, sl in enumerate(slots))
+    r4 = sg._call_json(P4 % (json.dumps({str(k): v for k, v in flags.items()}, ensure_ascii=False), block), S4, note=n4, vertex=True) or {}
+    fixed = []
+    for fx in r4.get("fix") or []:
+        i = fx.get("i")
+        fl = re.sub(r"^\s*(칸\s*\d+\s*)?\[[^\]]*\]\s*(문장\s*:\s*)?", "", str(fx.get("line") or "")).strip()
+        if isinstance(i, int) and 0 <= i < len(slots) and fl and not _same_line(fl, slots[i].get("line")):
+            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fl, fx.get("why") or ""
+            fixed.append(i)
+    check = slot_checks(slots, segs)
+    used = {c for sl in slots for c in (sl.get("ids") or [])}
+    role_fixed, role_left = _apply_role_picks(slots, roles_pick)
+    meta = _gw.STYLES["g:expA" if style == "A" else key]
+    style_line = r3.get("first_line_style") or ""
+    note = " · ".join(x for x in [gate_note, ("검수 남은 문제: " + " / ".join(left)) if left else ""] if x)
+    return {"names": [meta["name"]], "pan": "", "first_line_style": (style_line + (" — " + note if note else "")).strip(" —"), "slots": slots, "check": check,
+            "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
+            "star_missing": [c for c in star if c not in used], "role_fixed": role_fixed, "role_left": role_left, "extra": [], "extra_missing": [],
+            "sig_key": jkey, "sig_yt": platform != "ig", "auth": [n3.get("auth"), n4.get("auth")],
+            "guide": {"style": style, "mold": r3.get("mold") or "", "tries": r3.get("guide_tries"), "left": left, "gate": gate_note,
+                      "analysis": (r3.get("analysis") or "")[:600], "self_check": r3.get("check") or ""}}
 
 
 def inventory(db_path, jid, star_s="", role_s="", ex=None):
@@ -1129,8 +1222,11 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
         star_s, role_s = drop_seed_picks(star_s, role_s, ex)
     segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=bool(use_seed))
     tag_of = r1.get("tag_of") or {}
-    groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
-                                                              for c in g["ids"] if c in segs)) for g in r1["groups"]
+    # ★조각마다 화면 설명을 싣는다(관제 216) — 묶음 이름만 주면 작가가 화면을 못 보고 제품을 짐작해 쓴다
+    #   (실측 7f69cb45810b: 롤 메모 테이프인데 '필기 시연' 묶음 이름만 보고 지우개·잉크 대본이 나왔다)
+    groups_txt = "\n".join("  %s:\n%s" % (g["name"], "\n".join("    - %s(%.1f초%s): %s" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "",
+                                                                                     texts.get(c, "").strip()[:110])
+                                                           for c in g["ids"] if c in segs)) for g in r1["groups"]
                             if any(c in segs for c in g["ids"]))   # 씨앗 조각은 후보로 안 싣는다 — ★씨앗만 든 묶음은 이름도 안 싣는다(실으면 모델이 묶음 이름을 장면 번호 자리에 적는다, 관제 147)
     star = [x for x in star_s.split(",") if x]
     roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
@@ -1144,6 +1240,10 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             creative = _bk.parts_block(Store(db_path))
             out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","), prev=prev_s.split(","), key="%s:auto" % jid)
             out["auto"]["names"] = ["AI 자동"]
+        elif str(k).startswith("g:"):      # 지침서 작가(guide_writer) — 스위치 guide_writer_enabled 는 app 입구가 본다
+            from shopping_shorts import guide_writer as _gw
+            if str(k) in _gw.STYLES:
+                out[str(k)] = _board_guide(str(k), r1, groups_txt, star, segs, texts, roles_pick=roles_txt, jkey="%s:%s" % (jid, k))
         else:
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
@@ -1158,10 +1258,18 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     return out
 
 
-def families(db_path):
-    """[화면용] 스타일 카드 — 칸 구조가 같은 스타일을 한 카드로. 플랫폼·맞는 종류·첫 줄 틀들·칸 구조."""
+def families(db_path, guide=False):
+    """[화면용] 스타일 카드 — 칸 구조가 같은 스타일을 한 카드로. 플랫폼·맞는 종류·첫 줄 틀들·칸 구조.
+    guide=True(스위치 guide_writer_enabled 켠 계정)면 지침서 작가 스타일 카드를 앞에 붙인다 — 카드 id 는 'g:expA' 처럼 글자."""
     db = _ro(db_path)
     out = []
+    if guide:
+        from shopping_shorts import guide_writer as _gw
+        for gk, m in _gw.STYLES.items():
+            sl = [s for s in _gw.SLOTS[m["style"]] if s[0] != "cta"]
+            out.append({"id": gk, "names": [m["name"]], "yt": False, "fit": [], "guide": True,
+                        "first": ["지침서 첫 줄 틀 사전에서 고름"], "roles": [s[0] for s in sl], "chain": [s[1] for s in sl],
+                        "arc": "", "sit": "채널 600편 칼카피 지침서로 버텍스가 쓰고 코드가 검수(걸리면 1번 다시)"})
     for n, f, _ in _families(db):
         first = f["tpl"].get((f["roles"] or ["hook"])[0]) or []
         out.append({"id": n, "names": f["names"], "yt": any(str(x).startswith("유튜브") for x in f["names"]) or f["roles"][:1] == ["title"],
@@ -1231,11 +1339,16 @@ P_INS_SEAM = """
 """
 
 
-def _seam_txt(slots, extra):
-    """끼울 칸마다 앞 문장·뒤 문장(자리 = arc_place, 끼워 넣는 실제 자리와 같은 함수)."""
+def _ins_place(slots, extra, at=None):
+    """끼울 자리 주인 — 사람이 줄 [＋ 칸 추가]로 고른 자리(at)가 있으면 그 자리, 없으면 흐름 순위(arc_place). 문장 지시와 실제 끼우기가 같이 쓴다."""
+    return at if at is not None else arc_place(slots, extra)
+
+
+def _seam_txt(slots, extra, at_fixed=None):
+    """끼울 칸마다 앞 문장·뒤 문장(자리 = _ins_place, 끼워 넣는 실제 자리와 같은 함수)."""
     out = []
     for e in extra:
-        at = arc_place(slots, e)
+        at = _ins_place(slots, e, at_fixed)
         prev = (slots[at - 1].get("line") or "") if 0 < at <= len(slots) else "(맨 앞)"
         nxt = (slots[at].get("line") or "") if at < len(slots) else "(끝)"
         out.append("- %s: 앞 칸 %d \"%s\" → [여기] → 뒤 칸 %d \"%s\"" % (e, at, prev, at + 1, nxt))
@@ -1267,6 +1380,86 @@ ARC_RANK = [(("hook", "title"), 0), (("bait", "notice", "situation", "ask", "con
             (("price", "deal", "cta", "closing", "land", "outro", "end"), 8)]
 ARC_KO = {"hook": "훅", "bait": "미끼(궁금증)", "pain": "불편", "reveal": "정체 공개", "feature": "특징·쓰는 법", "escalation": "고조", "twist": "반전",
           "benefit": "이점·반응", "proof": "반응·증거", "how": "사용법", "result": "결과", "closing": "마무리"}
+
+
+# ── 칸 이름 한국어(관제 215, 2026-10-15) — 고객 화면에 보이는 칸 이름의 주인은 여기 한 곳.
+#   화면(produce.html sbKo)은 /api/produce/storyboard 의 role_ko 를 받아 쓴다. 손으로 두 벌 적다 영어 노출(1353판 중 626판).
+ROLE_KO = {
+    "hook": "훅",
+    "title": "제목",
+    "bait": "미끼",
+    "fame": "유명세",
+    "reveal": "정체 공개",
+    "limit": "한계",
+    "solve": "해결",
+    "more": "더",
+    "twist": "반전",
+    "land": "마무리",
+    "price": "가격",
+    "power": "성능",
+    "easy": "쉬움",
+    "extra": "덤",
+    "deal": "딜",
+    "howto": "사용법",
+    "vs": "비교",
+    "proof": "증거",
+    "react": "반응",
+    "what": "정체",
+    "good": "좋은 점",
+    "pain": "불편",
+    "how": "어떻게",
+    "story": "탄생 이야기",
+    "benefit": "효능",
+    "escalate": "고조",
+    "escalation": "고조",
+    "method": "방법",
+    "steps": "단계",
+    "texture": "식감",
+    "usage": "활용",
+    "witness": "증인",
+    "cta": "마무리",
+    "situation": "상황",
+    "notice": "눈치챔",
+    "ask": "물어봄",
+    "result": "결과",
+    "regret": "후회",
+    "origin": "본래 용도",
+    "cases": "엉뚱한 쓰임",
+    "mistake": "실수",
+    "authority": "권위",
+    "reason": "이유",
+    "problem": "문제",
+    "mechanism": "원리",
+    "ease": "쉬움",
+    "context": "맥락",
+    "spec": "스펙",
+    "bonus": "덤",
+    "source": "출처",
+    "fit": "맞는 사람",
+    "control": "조절",
+    "free": "새 칸",
+    "feature": "특징",
+    "closing": "마무리",
+    "targets": "쓰는 곳",
+    "spread": "입소문",
+    "scale": "화제성",
+    "action": "동작",
+    "before": "쓰기 전",
+    "contrast": "비교",
+    "effect": "효과",
+    "end": "마무리",
+    "identity": "정체 공개",
+    "intro": "소개",
+    "outro": "마무리",
+    "shock": "충격",
+    "use": "쓰는 법",
+}
+
+
+def role_ko(slot):
+    """칸 이름(escalation_2 처럼 번호가 붙어도) → 한국어. 모르는 이름은 None(호출부가 경보)."""
+    t = str(slot or "").lower()
+    return ROLE_KO.get(t) or ROLE_KO.get(t.split("_")[0])
 
 
 def arc_rank(slot):
@@ -1363,7 +1556,12 @@ def insert(db_path, jid, payload, R=None, ex=None):
                                             with_seed=bool(payload.get("use_seed")))
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
-    extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]
+    # at = 줄의 [＋ 칸 추가]가 정한 자리(그 칸 뒤 번호, 관제 200) — 사람이 자리를 골랐으니 칸 하나만, 같은 종류가 있어도 끼운다
+    at = payload.get("at") if isinstance(payload.get("at"), int) else None
+    extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and (at is not None or e not in have)]
+    if at is not None:
+        extra = extra[:1]
+        at = max(0, min(at, len(slots)))
     used = {c for x in slots for c in (x.get("ids") or [])}
     board_txt = "\n".join("%d | %s | %s | %s" % (i + 1, x.get("slot"), x.get("line"),
                                                  " / ".join("%s(%s)" % (c, texts.get(c, "?")[:40]) for c in x.get("ids") or []))
@@ -1381,7 +1579,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
         except ValueError:
             pass
     avg = sum(narr_secs(x.get("line") or "") for x in slots) / max(1, len(slots))
-    prompt = head + P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt) + style_voice + P_INS_SEAM % _seam_txt(slots, extra)
+    prompt = head + P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt) + style_voice + P_INS_SEAM % _seam_txt(slots, extra, at)
     n = {}
     r = (sg._call_json(prompt, S_INS, note=n, vertex=True) or {}) if extra else {}
     ok_ids = set(cand)
@@ -1391,7 +1589,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
         if sl not in extra or any(x["slot"] == sl for x in ins):
             continue
         ids = [c for c in it.get("ids") or [] if c in ok_ids][:3]
-        ins.append({"after": arc_place(slots, sl), "slot": sl,
+        ins.append({"after": _ins_place(slots, sl, at), "slot": sl,
                     "need": it.get("need") or EXTRA_DESC[sl].split(" — ")[0],
                     "line": (it.get("line") or "").strip(), "ids": ids, "why_scene": it.get("why_scene") or "", "added": True})
     touched = []
@@ -1402,7 +1600,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
             x["line_before"], x["line"], x["fixed_why"] = x.get("line"), t["line"].strip(), t.get("why") or "이어짐"
             touched.append(i)
     for it in sorted(ins, key=lambda x: arc_rank(x["slot"])):      # 흐름 순위 순서로 하나씩 — 고조·반전을 같이 넣어도 고조 → 반전
-        it["after"] = arc_place(slots, it["slot"])
+        it["after"] = _ins_place(slots, it["slot"], at)
         slots.insert(it["after"], it)
     sig_key = bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or []))
     flow_fixed, auth2, flow_retry = [], None, []
@@ -1432,3 +1630,168 @@ def insert(db_path, jid, payload, R=None, ex=None):
                sig_yt=yt, auth=[n.get("auth"), auth2], mode="insert",
                prompt_chars=len(prompt))
     return out
+
+
+# ── 장면 점검(관제 257, 2026-10-23 사장님 "대화창에서 대본을 바꾸면 장면조각도 다시 매칭 후보를 정해 보게 /
+#    의미 없이 바꾸는 게 아니라 이게 최선이면 그렇게 하는 게 맞고, 왜 최선인지 이유를 설명하며 피드백") ──
+# 판단 주인: scene_review() — 줄마다 지금 붙은 장면이 그 문장을 가장 잘 보여주는가를 판정한다.
+#   keep(유지·이유) / swap(더 맞는 조각이 목록에 확실히 있을 때만 · 조각 번호와 이유) / none(맞는 조각이 없음 · 장면에 맞춘 문장 제안).
+#   근거는 보드를 만들 때와 같은 조각 설명(_materials 의 rows — 장면·쓰임·소구점·길이) 하나. 화면은 결과를 보여 주기만 하고
+#   [이 장면으로 바꾸기]를 눌러야 칸에 넣는다(여기선 작업을 건드리지 않는다).
+SCENE_VERDICTS = ("keep", "swap", "none")
+SCENE_REVIEW_MAX_IDS = 3
+SCENE_REVIEW_TEMP = 0.1     # 판정은 같은 대본·같은 장면이면 같은 답이어야 한다(기본값으론 같은 줄이 교체↔유지로 갈렸다, 10-23 실측)
+
+_SR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "reply": {"type": "string"},
+        "reviews": {"type": "array", "items": {"type": "object", "properties": {
+            "line_no": {"type": "integer"},
+            "verdict": {"type": "string", "enum": list(SCENE_VERDICTS)},
+            "why": {"type": "string"},
+            "ids": {"type": "array", "items": {"type": "string"}},
+            "line": {"type": "string"},
+        }, "required": ["line_no", "verdict", "why"]}},
+    },
+    "required": ["reply", "reviews"],
+}
+
+_SR_PROMPT = """너는 쇼츠(세로 60초 이하) 편집 감독이다. 대본 줄마다 붙은 화면(장면 조각)이 그 문장을 가장 잘 보여주는지 판단한다.
+줄 하나 = 영상 한 칸이다. 성우가 문장을 읽는 동안 그 칸의 장면 조각이 순서대로 나온다.
+
+[장면 조각 목록 — 번호 | 길이 | 화면 설명 | 쓰임 | 소구점]
+{catalog}
+
+[대본과 지금 붙은 장면]
+{board}
+{product_hint}
+[점검할 줄] {targets}
+[회원 요청] {message}
+
+판단하는 법:
+- 기본은 유지(keep)다. 지금 장면이 문장의 핵심 말을 화면으로 보여주면 keep. why 에 문장의 어떤 말과 장면의 무엇이 맞는지 구체적으로 쓴다.
+- 목록에 **확실히 더 잘 맞는** 조각이 있을 때만 swap. ids 에 새 조각 번호(1~{max_ids}개, 순서대로 나올 차례)를 주고,
+  why 에 ① 지금 장면이 왜 약한지 ② 새 조각(번호를 적어라)이 문장의 어떤 말을 보여주는지 쓴다. 조금 나은 정도면 keep 으로 둔다.
+- 새 조각 길이 합이 그 줄 문장 길이(약 N초)를 덮게 고른다. [다른 줄 사용중] 표시가 있는 조각은 고르지 않는다.
+- 지금 장면이 맞아도 "장면이 문장보다 짧음" 표시가 있으면, 같은 내용을 이어 보여줄 안 쓴 조각이 목록에 있을 때
+  지금 조각을 그대로 앞에 두고 그 조각을 뒤에 더한 swap 을 제안한다(why 에 "장면이 짧아 ○○을 이어 붙인다"). 없으면 keep 하고 why 에 짧다고 적는다.
+- 지금 장면도 안 맞고 목록에도 맞는 조각이 없으면 none. why 에 문장의 어떤 말을 보여줄 화면이 없는지 쓰고,
+  line 에 지금 장면이 보여주는 것에 맞춘 문장(말투 그대로, 사실·수치 지어내지 말 것)을 준다.
+- 화면 내용은 목록의 설명에 적힌 것만 근거로 삼는다. 설명에 없는 장면을 지어내지 않는다.
+- why 는 회원이 읽는다. 조각을 가리킬 땐 번호를 쓰지 말고 화면 설명을 짧게 따옴표로(예: 「티셔츠가 부풀어 마르는 장면」) 쓴다. 번호는 ids 에만 넣는다.
+- 회원 요청이 있으면 그 요청(예: "더 역동적인 걸로")을 기준에 더한다. 그래도 요청에 맞는 조각이 없으면 없다고 솔직히 말한다(keep 또는 none).
+- reviews 는 점검할 줄마다 하나씩, line_no 는 대본 줄 번호(1부터). reply 는 전체를 한두 문장으로 요약(마크다운 기호 금지).
+"""
+
+
+def scene_review(slots, rows=None, materials=None, message="", product="", model=None, *, call=None, tries=2):
+    """줄마다 장면 판정 → {"reply", "auth", "model", "reviews": [{i, verdict, why, ids(제안·swap 일 때), cur_ids, line(none 일 때), have, need, short}]}.
+    slots: [{slot, line, ids}] — 화면의 지금 보드(손으로 고친 문장·장면 반영). rows: 점검할 줄 번호(0부터), None = 글이 있는 줄 전부.
+    materials: _materials(...) 결과 (segs, texts, order, rows). call: (prompt, schema) -> dict(테스트가 갈아끼운다).
+    AI 판정은 코드가 다시 거른다 — 목록 밖·다른 줄 사용중·중복 번호는 빼고, 남는 게 없으면 다시 묻고, 끝까지 안 되면 error."""
+    slots = [x if isinstance(x, dict) else {} for x in (slots or [])][:60]
+    if not slots:
+        raise ValueError("스토리보드 칸이 없어요")
+    segs, texts, order, cat_rows = materials or ({}, {}, [], [])
+    if not segs:
+        raise ValueError("장면 조각 목록이 비었어요 — 1단계 재료 분석을 먼저 해 주세요")
+    lines = [str(x.get("line") or "").strip() for x in slots]
+    cur = [[c for c in (x.get("ids") or []) if isinstance(c, str) and c] for x in slots]
+    if rows is None:
+        rows = [i for i, t in enumerate(lines) if t]
+    rows = sorted({int(i) for i in rows if isinstance(i, int) and 0 <= i < len(slots) and lines[i]})
+    if not rows:
+        raise ValueError("점검할 문장이 없어요")
+    used_by = {}
+    for i, ids in enumerate(cur):
+        for c in ids:
+            used_by.setdefault(c, set()).add(i)
+    catalog = "\n".join("%s%s" % (r, ("  [다른 줄 사용중: %s번]" % ",".join(str(k + 1) for k in sorted(used_by[sid])))
+                                      if used_by.get(sid) else "")
+                        for sid, r in zip(order, cat_rows))
+    chk = slot_checks([{"line": lines[i], "ids": cur[i]} for i in range(len(slots))], segs)
+    board = "\n".join("%d. [%s] (문장 약 %.1f초 · 장면 %.1f초%s) %s\n   지금 장면: %s" % (
+        i + 1, str(x.get("slot") or "").split("_")[0] or "-", narr_secs(lines[i]), chk[i]["have"],
+        " · 장면이 문장보다 짧음" if lines[i] and chk[i]["short"] else "", lines[i] or "(빈 칸)",
+        " / ".join("%s(%s초) %s" % (c, segs.get(c, "?"), texts.get(c, "(지금 재료에 없음)").strip()[:80]) for c in cur[i]) or "(없음)")
+        for i, x in enumerate(slots))
+    hint = ("\n[상품] %s\n" % str(product).strip()[:200]) if str(product or "").strip() else ""
+    prompt = _SR_PROMPT.format(catalog=catalog, board=board, product_hint=hint, max_ids=SCENE_REVIEW_MAX_IDS,
+                               targets=", ".join("%d번" % (i + 1) for i in rows),
+                               message=str(message or "").strip()[:1000] or "(없음 — 장면이 최선인지 점검)")
+    note = {}   # _call_json 이 실제로 탄 길(auth·model) — 화면이 "구글 버텍스 · Flash 3.6로 판단"을 말한다
+    call = call or (lambda p, s: sg._call_json(p, s, note=note, vertex=True, vertex_model=model or None,
+                                                   temperature=SCENE_REVIEW_TEMP))   # 길(op)은 대화창과 같은 script_generate — 회원 버텍스 기본 허용 op
+    got_rows, reply, last = {}, "", ""
+    for _ in range(max(1, tries)):
+        got = call(prompt, _SR_SCHEMA) or {}
+        reply = str(got.get("reply") or "").strip()[:2000] or reply
+        for rv in got.get("reviews") or []:
+            if not isinstance(rv, dict):
+                continue
+            n = rv.get("line_no")
+            i = n - 1 if isinstance(n, int) else -1
+            if i not in rows or i in got_rows:
+                continue
+            v = _sr_clean(rv, i, cur, used_by, segs, lines)
+            if v:
+                v["why"] = _sr_names(v["why"], texts)
+                got_rows[i] = v
+        miss = [i for i in rows if i not in got_rows]
+        if not miss:
+            break
+        last = "%s 판정이 비었어요" % ",".join("%d번" % (i + 1) for i in miss)
+        prompt += "\n★직전 답에 %s 줄 판정이 빠졌거나 쓸 수 없는 조각 번호였다. 목록에 있는 번호로 다시 판정하라.\n" % ",".join(str(i + 1) for i in miss)
+    if not got_rows:
+        raise ValueError("AI가 장면을 판정하지 못했어요 — " + (last or "응답이 비었어요") + ". 잠시 후 다시 해 주세요")
+    out = []
+    for i in rows:
+        v = got_rows.get(i) or {"verdict": "error", "why": "AI가 이 줄을 판정하지 못했어요", "ids": [], "line": ""}
+        ids = v["ids"] if v["verdict"] == "swap" else cur[i]
+        chk = slot_checks([{"line": lines[i], "ids": ids}], segs)[0]
+        out.append(dict(v, i=i, cur_ids=cur[i], have=chk["have"], need=chk["need"], short=chk["short"]))
+    auth = "vertex" if note.get("auth") == "vertex" else "free"
+    return {"reply": reply, "reviews": out, "auth": auth,
+            "model": note.get("model") or ((model or "") if auth == "vertex" else sg._MODEL)}
+
+
+def _sr_names(why, texts):
+    """이유 글에 AI가 남긴 조각 번호(grab_youtube_…-3 · 앞머리 뺀 …-3)를 화면 설명 조각 「…」으로 바꾼다 — 회원이 읽는 글이다."""
+    short = {}
+    for sid in texts:
+        short[sid] = sid
+        short[re.sub(r"^grab_[a-z]+_", "", sid)] = sid
+    if not short:
+        return why
+    pat = re.compile("|".join(re.escape(k) for k in sorted(short, key=len, reverse=True)))
+
+    def _nm(m):
+        d = re.split(r"[.。,·]", (texts.get(short[m.group(0)]) or "").strip())[0].strip()
+        return "「%s」" % (d[:22] + ("…" if len(d) > 22 else "")) if d else "장면"
+    return re.sub(r"\(\s*(「[^」]*」)\s*\)", r"\1", pat.sub(_nm, why))
+
+
+def _sr_clean(rv, i, cur, used_by, segs, lines):
+    """AI 판정 하나를 코드로 거른다 → dict | None(못 씀). swap 조각은 목록에 있고·다른 줄이 안 쓰고·중복 없는 것만.
+    거른 뒤 남는 게 지금 장면과 같으면 keep 으로 본다(바꿀 게 없다)."""
+    verdict = str(rv.get("verdict") or "")
+    why = str(rv.get("why") or "").strip()[:600]
+    if verdict not in SCENE_VERDICTS or not why:
+        return None
+    if verdict == "swap":
+        ids = []
+        for c in rv.get("ids") or []:
+            c = str(c or "").strip()
+            if c in segs and c not in ids and not (used_by.get(c, set()) - {i}):
+                ids.append(c)
+        ids = ids[:SCENE_REVIEW_MAX_IDS]
+        if not ids:
+            return None
+        if ids == cur[i]:
+            return {"verdict": "keep", "why": why, "ids": [], "line": ""}
+        return {"verdict": "swap", "why": why, "ids": ids, "line": ""}
+    if verdict == "none":
+        ln = str(rv.get("line") or "").strip()[:300]
+        return {"verdict": "none", "why": why, "ids": [], "line": ln if ln and ln != lines[i] else ""}
+    return {"verdict": "keep", "why": why, "ids": [], "line": ""}

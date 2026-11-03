@@ -274,6 +274,8 @@ const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
 // ★칸 전체 길이는 음성에 매여 있어 바꿀 수 없다(자막이 t0 누적으로 자리를 잡는다).
 //   그래서 "정한 컷은 그대로, **나머지 컷이 비례로 줄어든다**"가 규칙이다(사장님 선택).
 const FIXLEN = {};
+// 손 길이로 생긴 빈칸·넘침을 무엇으로 메우나(관제 204) — {칸: 'self'|'all'}, 없으면 'next'(옆 카드). 새 작업(DATA.hand_cut)만 읽는다.
+const FILLMODE = {};
 function fixKey(i, sid){ return i + ':' + sid; }
 function getFix(i, sid){ const v = FIXLEN[fixKey(i, sid)]; return v > 0 ? v : 0; }
 function setFix(i, sid, sec){
@@ -473,6 +475,8 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 //   구절 맞춤     = 같은 배분에서 **장면 전환을 자막 경계에 정확히**(모자란 화면은 상한 없이 느리게). 컷 수는 여전히 장면 수.
 //   상태는 PHRASE_EXACT 한 곳(칸 표식 beat.phrase_exact) — 켠 칸만 기록한다. 옛 규칙 작업에는 쓰지 않는다.
 const PHRASE_EXACT = {};            // beat_idx → true(구절 맞춤 정확)일 때만 기록
+// ★[빠르게 맞추기] 배속 상한 — **여기 한 곳**(관제 192). planClips 와 3단계 카드 버튼(scene_lab fitHtml)이 같이 읽는다.
+const FIT_FAST_MAX = 2.0;
 function cutRuleIsV2(){ return typeof DATA === 'object' && !!DATA && DATA.cut_rule === 'scenes_v2'; }
 function phraseExactOn(i){ return cutRuleIsV2() && PHRASE_EXACT[i] === true && phraseSyncOn(i); }
 // 화면의 [구절 맞춤] 체크 상태 — 새 규칙 작업은 '정확' 표식, 옛 작업은 종전 그대로
@@ -507,7 +511,7 @@ function screenStateFromServer(D){
   D = D || DATA || {};
   const beats = D.beats || [];
   const st = {lists: [], stretch: {}, phrase_sync: {}, phrase_exact: {}, cuts: {}, slow: {}, fixlen: {},
-              trims: {}, merges: {}};
+              trims: {}, merges: {}, fill: {}};
   beats.forEach((b, i) => {
     b = b || {};
     const ov = b.scene_override, seen = [];
@@ -523,6 +527,7 @@ function screenStateFromServer(D){
     if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
     if (+b.slow > 1) st.slow[i] = +b.slow;
     for (const [sid, v] of Object.entries(b.fixed_lens || {})) st.fixlen[i + ':' + sid] = v;
+    if (b.hand_fill === 'self' || b.hand_fill === 'all') st.fill[i] = b.hand_fill;
   });
   const ed = D.scene_lab_edits || {};        // 서버 plan.scene_lab 의 트림·합치기(api_mix_scene_lab_data)
   Object.assign(st.trims, ed.trims || {});
@@ -532,12 +537,12 @@ function screenStateFromServer(D){
 function screenState(){                      // 지금 화면 상태를 떠 간다(제작소 큰 화면이 받아 같은 컷을 짠다)
   return {lists: lists.map(l => (l || []).slice()), stretch: {...STRETCH}, phrase_sync: {...PHRASE_SYNC},
           phrase_exact: {...PHRASE_EXACT}, cuts: JSON.parse(JSON.stringify(CUTS)), slow: {...SLOW},
-          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES))};
+          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES)), fill: {...FILLMODE}};
 }
 function applyScreenState(st){
   st = st || {};
   const clr = o => Object.keys(o).forEach(k => delete o[k]);
-  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES].forEach(clr);
+  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES, FILLMODE].forEach(clr);
   lists = (st.lists || []).map(l => (l || []).slice());
   for (const [k, v] of Object.entries(st.stretch || {})) if (v) STRETCH[k] = true;
   for (const [k, v] of Object.entries(st.phrase_sync || {})) if (v === false) PHRASE_SYNC[k] = false;
@@ -551,6 +556,7 @@ function applyScreenState(st){
   for (const [k, v] of Object.entries(st.fixlen || {})){ const n = parseFloat(v); if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100; }
   for (const [k, v] of Object.entries(st.trims || {})) if (Array.isArray(v) && v.length === 2) TRIMS[k] = [+v[0], +v[1]];
   for (const [k, v] of Object.entries(st.merges || {})) if (Array.isArray(v) && v.length) MERGES[k] = v.slice();
+  for (const [k, v] of Object.entries(st.fill || {})) if (v === 'self' || v === 'all') FILLMODE[k] = v;
 }
 function cutsSum(i){ return (CUTS[i] || []).reduce((a, c) => a + c.dur, 0); }
 function _r2(x){ return Math.round(x * 100) / 100; }
@@ -726,6 +732,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
+  // [속도 맞추기]를 누른 조각인가(칸 데이터 beat.fit_segs — scene_lab fitToggle 이 적는다). 상한은 파일 맨 위 FIT_FAST_MAX
+  function fitSegOn(bi, segId){
+    const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[bi] || {};
+    return bi != null && Array.isArray(b.fit_segs) && b.fit_segs.includes(segId);
+  }
   // ★청소 뒤에도 같은 편성이면 컷이 그대로(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸).
   //   청소본은 **청소 전 컷이 읽은 구간**을 지운 것이다. 그런데 지운 구간(DATA.clean_spans)이 생기면 아래 배분의 여유(room)가
   //   달라져(구간이 장면보다 짧으면 cleanBound 가 null → room=len) 같은 편성의 컷이 바뀌었다(s5 2.53→2.13초, s1 1.49→1.90초)
@@ -762,7 +773,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (typeof console === 'object') console.warn('[meme] 칸', beatIdx, '짤 뒤 남은 시간', (ttsDur - head).toFixed(2), '< ', smin, '— 짤 뺌');
       return null;
     }
-    return {vid: String(cw.vid), head, smin, asset_id: cw.asset_id, emotion: cw.emotion || ''};
+    // 짤 자리(관제 203) — 서버 storyboard.meme_pos 와 같은 규칙: head(없거나 모르는 값)·mid·tail
+    const pos = (cw.pos === 'mid' || cw.pos === 'tail') ? cw.pos : 'head';
+    return {vid: String(cw.vid), head, smin, asset_id: cw.asset_id, emotion: cw.emotion || '', pos, full: ttsDur};
   }
   function scenesV2Alloc(segments, ttsDur, beatIdx, exact, useClean){
     const meme = memeHeadOf(beatIdx, ttsDur);
@@ -831,7 +844,15 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     // ④ 전환 시점을 가까운 자막 경계에 — 양쪽 컷이 MIN_CLIP 이상이고 배속 상한을 안 넘을 때만
     const caps = (typeof capsOf === 'function' ? (capsOf(beatIdx) || []) : []);
     const SNAP_SEC = 0.4;
-    const capB = caps.slice(1).map(c => Number(c.start) - headSec).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
+    // 자막 경계를 장면 시간축으로 옮긴다 — 앞 짤이면 짤만큼 당기고, 뒤 짤이면 그대로, 가운데 짤이면 짤 뒤 경계만 당긴다(짤 안 경계는 버림)
+    const memeAt = !meme ? 0 : (meme.pos === 'tail' ? ttsDur : (meme.pos === 'mid' ? ttsDur / 2 : 0));   // 장면 시간축에서 짤이 끼는 자리
+    const capB = caps.slice(1).map(c => {
+      const x = Number(c.start);
+      if (!meme) return x;
+      if (x < memeAt - EPS) return x;
+      if (x < memeAt + headSec - EPS) return NaN;
+      return x - headSec;
+    }).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
     if (exact && dur.length > 1){
       // ★구절 맞춤(관제 106): 전환을 자막 경계에 **정확히** — 0.4초·배속 상한을 보지 않는다.
       //   고른 배분의 전환 자리(ideal)에서 가장 덜 움직이는 경계 조합을 고른다(순서 유지 · 맞춘 전환 수가 최대인 조합 중 이동이 최소).
@@ -888,17 +909,85 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const okB = b >= minScene && b <= Math.max(real[j + 1], av[j + 1].room) * _maxS() + EPS;
       if (okA && okB){ dur[j] = a; dur[j + 1] = b; acc = best; }
     }
+    // ★손 길이 + 빈칸 메우기(관제 204, 2026-10-14 사장님 "끝을 잡아 줄이면 빈칸 — 위에서 고르게").
+    //   표식(DATA.hand_cut) 있는 **새 작업만** — 옛 작업에 묻혀 있던 손 길이(fixed_lens)는 계속 안 쓴다(기존 영상 불변).
+    //   L = 손으로 정한 컷 길이. 생긴 차이를 무엇으로 메울지는 칸 설정 FILLMODE[beatIdx]:
+    //     'next'(기본) = 옆 카드가 그만큼 더/덜 보여 준다(끝이면 앞 카드) · 'self' = 이 카드만 느리게/빠르게(시간 그대로)
+    //     'all' = 이 칸 카드 전부 같은 배속으로 칸을 채운다.  판단은 여기 한 곳 — 화면 안내 줄(handBarHtml)·렌더·캡컷은 이 결과를 읽는다.
+    const hsrc = scenes.map(() => null);
+    let handMode = null;                                          // 이 칸에서 실제로 쓴 메우기 방식(화면 안내 줄이 읽는다)
+    if (D.hand_cut && beatIdx != null && typeof getFix === 'function'){
+      const base = scenes.map((g, k) => Math.min(Math.max(real[k], av[k].room), dur[k]));
+      const want = scenes.map((g, k) => getFix(beatIdx, g.seg_id));
+      let mode = (typeof FILLMODE === 'object' && FILLMODE && FILLMODE[beatIdx]) || null;
+      if (want.some(x => x > 0)){
+        const src = base.slice();
+        want.forEach((L, k) => { if (L > 0) src[k] = Math.min(Math.max(MANUAL_MIN, L), av[k].far); });
+        // ★기본값(관제 204 7번, 2026-10-14 사장님): 구절 맞춤 칸은 '그 카드만 느리게/빠르게' — 장면 바뀌는 자리가 자막 경계에
+        //   그대로 남는다. 배속 한도(느리게 maxSlowmo · 빠르게 FIT_FAST_MAX)를 넘으면 '옆 장면 더'. 그 밖의 칸은 '옆 장면 더'.
+        // ★기본 = 칸 전체를 한 속도로(2026-10-15 사장님 "늘이고 줄이면 전체 칸 속도만 한 번에 — 1번 줄인다고 2·3번에 영향 없게,
+        //   2·3번을 바꾸고 싶으면 그걸 직접 끈다"). 묻지 않는다. 예전에 고른 값(FILLMODE)이 있으면 그대로.
+        if (!mode) mode = 'all';
+        handMode = mode;
+        if (mode === 'self'){
+          want.forEach((L, k) => { if (L > 0) hsrc[k] = src[k]; });
+        } else if (mode === 'all'){
+          const tot = sum(src);
+          if (tot > EPS){ dur = src.map(x => x * ttsDur / tot); src.forEach((x, k) => { hsrc[k] = x; }); }
+        } else {
+          want.forEach((L, k) => {
+            if (!(L > 0) || scenes.length < 2) return;
+            const j = k + 1 < scenes.length ? k + 1 : k - 1;
+            // 늘리기는 원본에 있는 만큼까지(넘기면 슬로모션) · 옆 카드는 장면 하한(minScene)보다 짧게 만들지 않는다(번쩍 컷 금지)
+            let diff = dur[k] - Math.min(Math.max(MANUAL_MIN, L), Math.max(dur[k], av[k].far));   // +면 빈칸(옆이 더), -면 넘침(옆이 덜)
+            diff = Math.max(diff, Math.min(0, minScene - dur[j]));
+            dur[k] -= diff; dur[j] += diff;
+            hsrc[k] = Math.min(dur[k], av[k].far);
+            hsrc[j] = Math.min(dur[j], Math.max(base[j], av[j].room));
+          });
+        }
+      }
+    }
     const memeCut = meme ? [{seg_id: 'meme:' + meme.vid, video_id: meme.vid, start: 0, dur: Math.round(headSec * 100) / 100,
                              src_dur: Math.round(headSec * 100) / 100, meme: 1, emotion: meme.emotion}] : [];
-    return memeCut.concat(scenes.map((g, k) => {
+    const sceneCuts = scenes.map((g, k) => {
       const d = Math.round(dur[k] * 100) / 100;
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
-      const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
-      if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      let src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
+      // ★[속도 맞추기] 빠르게(관제 192, 2026-10-13 강병주님 "박스로 고른 구간 뒷부분까지 쓰고 싶다") — 사람이 고른 구간(film_)이
+      //   이 컷 길이보다 길면 남는 뒷부분이 잘렸다. 누른 조각은 구간 전체를 컷 길이 안에 빠르게 튼다(음성은 그대로, 최대 FIT_FAST_MAX배).
+      //   렌더·캡컷은 이 컷을 서버 러너(screen_clips.lookup)로 그대로 받아 src_dur>dur 이면 playback_speed 로 빠르게 튼다.
+      //   ★켠 조각에서만 — 그 밖은 종전 한 줄 그대로(dur 반올림 차이로 src>d 가 되는 컷을 빠르게로 바꾸면 기존 작업 컷이 달라진다).
+      const fast = fitSegOn(beatIdx, g.seg_id) && av[k].len > d + 0.05;
+      if (fast) src = Math.min(av[k].len, d * FIT_FAST_MAX);
+      if (src < d - EPS || fast) c.src_dur = +src.toFixed(3);
+      if (fast) c.fit = true;
       if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
+      if (hsrc[k] != null){                                       // 손 길이(관제 204) — 위에서 정한 읽는 길이 그대로, 다르면 정확히 배속
+        src = hsrc[k];
+        if (Math.abs(src - d) > 0.01){ c.src_dur = +src.toFixed(3); c.fit = true; } else delete c.src_dur;
+        c.hand = 1; c.hand_mode = handMode;
+      }
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
-    }));
+    });
+    if (!meme || meme.pos === 'head') return memeCut.concat(sceneCuts);
+    if (meme.pos === 'tail') return sceneCuts.concat(memeCut);
+    // ★가운데 짤(관제 203) — 장면 전환 중 칸 가운데에 가장 가까운 곳에 끼운다. 장면이 하나면 그 장면을 둘로 나눠 앞뒤로 이어 튼다.
+    if (sceneCuts.length > 1){
+      let run = 0, at = 1, bestD = Infinity;
+      for (let k = 0; k < sceneCuts.length - 1; k++){
+        run += Number(sceneCuts[k].dur);
+        if (Math.abs(run - memeAt) < bestD){ bestD = Math.abs(run - memeAt); at = k + 1; }
+      }
+      return sceneCuts.slice(0, at).concat(memeCut, sceneCuts.slice(at));
+    }
+    const c = sceneCuts[0];
+    const d = Number(c.dur), d1 = Math.round(d / 2 * 100) / 100, d2 = Math.round((d - d1) * 100) / 100;
+    const sd = Number(c.src_dur || d), s1 = sd * d1 / d;
+    const c1 = {...c, dur: d1}, c2 = {...c, dur: d2, start: Number(c.start) + s1};
+    if (c.src_dur != null){ c1.src_dur = +s1.toFixed(3); c2.src_dur = +(sd - s1).toFixed(3); }
+    return [c1].concat(memeCut, [c2]);
   }
 
   // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
@@ -1021,7 +1110,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     base.forEach(c => {
       if (c.meme){ c.src_dur = Number(c.dur); return; }            // 짤 컷: 1배속·처음부터(칸 통합 속도·창 늘리기 대상 아님)
       const natural = Number(c.src_dur || c.dur || 0);
-      let wanted = natural * syncSpeed;
+      // ★손 길이 카드(관제 204)는 읽을 원본 길이가 이미 정해져 있다 — 칸 속도가 빨라지면 음성이 짧아져 그 안에 넣는 것만으로
+      //   같은 배속이 된다. 여기서 syncSpeed 를 또 곱하면 두 번 빨라진다(실측 10-15: 1.2배 칸에서 1.42배여야 할 카드가 1.71배).
+      let wanted = natural * (c.hand ? 1 : syncSpeed);
       const seg = ((typeof DATA === 'object' && DATA && DATA.segments) || {})[c.seg_id];
       const sourceTotal = Number((((typeof DATA === 'object' && DATA) || {}).src_duration || {})[c.video_id] || 0);
       let end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;
@@ -2471,7 +2562,7 @@ function togglePause(ev){
       paintCut();
     }
     if (seqBeat != null) tickSub();
-    if (seqBeat != null) armSfx(seqBeat);
+    if (seqBeat != null) armSfx(seqBeat, (a && a.src && !a.ended) ? a.currentTime : 0);   // 멈춘 자리부터
   }
   updatePlayBtns();
 }
@@ -2489,7 +2580,11 @@ function togglePause(ev){
 let sfxAudio = null;
 const sfxTimers = [];
 
-function sfxUrl(assetId){ return '/api/scene/' + encodeURIComponent(assetId) + '/media'; }
+function sfxUrl(assetId){
+  // 우리 효과음팩(서랍) 소리는 /api/sfx 로(회원도 들을 수 있게) — 서랍 목록은 scene_lab loadSfxList(cat 있는 항목)
+  const bank = typeof SFX_LIST !== 'undefined' && SFX_LIST && SFX_LIST.some(a => a.cat && String(a.id) === String(assetId));
+  return (bank ? '/api/sfx/' : '/api/scene/') + encodeURIComponent(assetId) + '/media';
+}
 
 // 자산 하나를 지금 즉시 들려준다(드롭다운 옆 ▶ 미리듣기).
 function previewSfx(assetId){
@@ -2502,17 +2597,53 @@ function previewSfx(assetId){
 
 function clearSfxTimers(){
   while (sfxTimers.length) clearTimeout(sfxTimers.pop());
+  if (_bgmAu) { try { _bgmAu.pause(); } catch(e){} }     // 배경음도 같이 멈춘다(멈춤·정지 둘 다 여기를 지난다)
+}
+
+// ★미리보기 효과음·배경음(10-15 사장님 "부분재생·전체재생해도 효과음·배경음이 적용 안 됨").
+//   종전 armSfx 는 칸 효과음 한 발만 **자기 계산**으로 울려 팩 효과음·음량·자리 옮기기·배경음이 빠졌다.
+//   이제 서버가 렌더와 같은 함수(video_assemble.sfx_events_for)로 잰 SFX_SOUNDS(칸 안 초·음량)를 그대로 울린다.
+let _bgmAu = null, _bgmKey = '';
+function armBgm(i, off){
+  const b = typeof window.bgmInfo === 'function' ? window.bgmInfo() : null;
+  if (!b || !b.current || !SL.server) { if (_bgmAu) _bgmAu.pause(); return; }
+  let t0 = 0;                                   // 칸 시작 = 앞 칸들이 화면에 머무는 초의 합(beatDur — 재생과 같은 길이)
+  for (let k = 0; k < i; k++) t0 += +beatDur(k) || 0;
+  t0 += off || 0;
+  const key = b.current;
+  if (!_bgmAu || _bgmKey !== key) { if (_bgmAu) _bgmAu.pause(); _bgmAu = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(key)); _bgmAu.loop = true; _bgmKey = key; }
+  const au = _bgmAu, rate = +b.speed || 1;
+  au.playbackRate = rate; au.volume = Math.max(0, Math.min(1, (+b.volume || 0) / 100));
+  const go = () => { const want = au.duration ? (t0 * rate) % au.duration : 0;
+    if (Math.abs(au.currentTime - want) > 0.4) au.currentTime = want; au.play().catch(() => {}); };
+  if (au.readyState >= 1) go(); else au.addEventListener('loadedmetadata', go, { once: true });
 }
 
 // 이 칸을 지금 재생하기 시작했다 — 타점에 맞춰 효과음을 예약한다.
-function armSfx(i){
+function armSfx(i, off){
   clearSfxTimers();
+  off = +off || 0;
   const b = (DATA.beats || [])[i];
+  armBgm(i, off);
+  const _bk = b && b.beat_idx != null ? b.beat_idx : i;
+  const _row = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(_bk));
+  if (_row && SL.server) {                      // 서버 계산이 있으면 그것만 쓴다(옛 계산은 서버 표가 없을 때만)
+    for (const s of (_row.sounds || [])) {
+      const v = Math.max(0, +s.vol || 0), at = (+s.t || 0) - off;
+      if (!s.url || v === 0 || at < -0.05) continue;
+      sfxTimers.push(setTimeout(() => { try { const a = new Audio(s.url); a.volume = Math.min(1, v); a.play().catch(() => {}); } catch(e){} }, Math.max(0, at * 1000)));
+    }
+    return;
+  }
   const sfx = b && b.sfx;
   if (!sfx || !sfx.asset_id || !SL.server) return;
   const dur = beatDur(i);                      // 이 칸이 화면에 머무는 초
   let at = 0;
-  if (sfx.position === 'transition') at = dur;
+  // 짤 칸의 줄 효과음은 짤 카드가 나올 때(관제 203) — 렌더 video_assemble.meme_start 와 같은 컷 목록(planClips)에서 짤 컷 시작
+  const _memeAt = () => { if (typeof lists === 'undefined' || typeof planClips !== 'function') return 0; let t = 0;
+    for (const c of planClips(lists[i] || [], dur, STRETCH[i], i)){ if (c.meme) return t; t += Number(c.dur) || 0; } return 0; };
+  if (sfx.position === 'first' && sfx.match_type === 'line' && b.cutaway && b.cutaway.match_type === 'meme' && b.cutaway.pos) at = _memeAt();
+  else if (sfx.position === 'transition') at = dur;
   else if (sfx.position !== 'first'){
     // last = 마지막 자막 구간이 시작하는 지점. 자막 구간 정보가 없으면 칸 끝 근처로 근사한다
     // (렌더는 실제 자막 길이로 계산한다 — 여기선 들려주는 게 목적이라 근사로 충분하다).

@@ -1,0 +1,1317 @@
+{
+ "res": {
+  "kitchit__BRa5Iv4A3Y8": [
+   {
+    "t": 6.83,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.427
+   },
+   {
+    "t": 15.32,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.405
+   },
+   {
+    "t": 6.84,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.387
+   }
+  ],
+  "kitchit__Cs-Ka_S8nDM": [
+   {
+    "t": 0.29,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.422
+   },
+   {
+    "t": 0.45,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.407
+   },
+   {
+    "t": 2.19,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.383
+   },
+   {
+    "t": 11.56,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.373
+   }
+  ],
+  "kitchit__Ks5kYYKAUlQ": [
+   {
+    "t": 5.66,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.38
+   }
+  ],
+  "kitchit__Nv99RyxmrfU": [
+   {
+    "t": 9.02,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.377
+   },
+   {
+    "t": 11.3,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.365
+   },
+   {
+    "t": 4.65,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.361
+   }
+  ],
+  "kitchit___Wa4IehA6yE": [],
+  "kitchit__cNo91ddBwB8": [
+   {
+    "t": 1.28,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.405
+   },
+   {
+    "t": 2.14,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.367
+   },
+   {
+    "t": 1.15,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.367
+   }
+  ],
+  "kitchit__oTi41R74WIY": [],
+  "kitchit__vSEaZ-BCELY": [
+   {
+    "t": 6.58,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.525
+   },
+   {
+    "t": 13.68,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.496
+   },
+   {
+    "t": 12.37,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.441
+   },
+   {
+    "t": 6.58,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.436
+   },
+   {
+    "t": 4.7,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.429
+   },
+   {
+    "t": 6.58,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.419
+   },
+   {
+    "t": 4.7,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.404
+   },
+   {
+    "t": 11.88,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.394
+   },
+   {
+    "t": 4.73,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.393
+   },
+   {
+    "t": 12.37,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.39
+   },
+   {
+    "t": 13.28,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.386
+   },
+   {
+    "t": 13.69,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.382
+   },
+   {
+    "t": 8.71,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.374
+   },
+   {
+    "t": 14.92,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.367
+   },
+   {
+    "t": 4.73,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.367
+   },
+   {
+    "t": 4.7,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.365
+   },
+   {
+    "t": 6.51,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.356
+   },
+   {
+    "t": 13.69,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.355
+   },
+   {
+    "t": 2.82,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.353
+   },
+   {
+    "t": 4.73,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.352
+   },
+   {
+    "t": 12.33,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.35
+   }
+  ],
+  "kkultemnote__2wJTffElmjk": [
+   {
+    "t": 8.49,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.462
+   },
+   {
+    "t": 6.62,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.447
+   },
+   {
+    "t": 15.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.447
+   },
+   {
+    "t": 15.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.436
+   },
+   {
+    "t": 15.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.435
+   },
+   {
+    "t": 3.21,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.434
+   },
+   {
+    "t": 12.55,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.381
+   },
+   {
+    "t": 11.09,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.363
+   },
+   {
+    "t": 15.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.352
+   }
+  ],
+  "kkultemnote__653bTRm8p6E": [
+   {
+    "t": 10.46,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.384
+   },
+   {
+    "t": 10.46,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.365
+   },
+   {
+    "t": 10.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.363
+   },
+   {
+    "t": 5.29,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.354
+   },
+   {
+    "t": 10.34,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.352
+   }
+  ],
+  "kkultemnote__BpUOIUwkoG4": [
+   {
+    "t": 5.33,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.421
+   },
+   {
+    "t": 8.86,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.391
+   },
+   {
+    "t": 8.85,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.37
+   },
+   {
+    "t": 13.94,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.369
+   }
+  ],
+  "kkultemnote__KCxJ5qJft38": [
+   {
+    "t": 4.03,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.469
+   },
+   {
+    "t": 4.15,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.418
+   },
+   {
+    "t": 3.93,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.413
+   },
+   {
+    "t": 5.07,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.393
+   },
+   {
+    "t": 5.41,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.372
+   },
+   {
+    "t": 2.72,
+    "file": "remotion_sfx:remotion-stock/public/sfx/chime_up.mp3",
+    "ncc": 0.353
+   },
+   {
+    "t": 15.13,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.353
+   }
+  ],
+  "kkultemnote___dzncUms1yQ": [
+   {
+    "t": 15.14,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.361
+   }
+  ],
+  "kkultemnote__cLk6fJly6OY": [
+   {
+    "t": 15.12,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.446
+   },
+   {
+    "t": 15.23,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.427
+   },
+   {
+    "t": 12.22,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.388
+   }
+  ],
+  "kkultemnote__m0Ex0y1DN5s": [
+   {
+    "t": 16.9,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.392
+   },
+   {
+    "t": 16.9,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.36
+   },
+   {
+    "t": 8.19,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.352
+   }
+  ],
+  "kkultemnote__znHaConczpE": [
+   {
+    "t": 13.81,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.401
+   },
+   {
+    "t": 6.09,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.391
+   },
+   {
+    "t": 4.61,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.388
+   },
+   {
+    "t": 12.9,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.377
+   },
+   {
+    "t": 13.81,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.375
+   }
+  ],
+  "starpickroom__21VoGAEK_pU": [
+   {
+    "t": 0.97,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.397
+   },
+   {
+    "t": 21.19,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.39
+   },
+   {
+    "t": 12.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.389
+   },
+   {
+    "t": 0.33,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.369
+   },
+   {
+    "t": 0.33,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.368
+   },
+   {
+    "t": 20.62,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.359
+   },
+   {
+    "t": 19.11,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.358
+   },
+   {
+    "t": 10.28,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.352
+   }
+  ],
+  "starpickroom__ASqFulFvhgg": [
+   {
+    "t": 33.21,
+    "file": "remotion_sfx:remotion-stock/public/sfx/chime_up.mp3",
+    "ncc": 0.456
+   },
+   {
+    "t": 16.21,
+    "file": "remotion_sfx:remotion-stock/public/sfx/chime_up.mp3",
+    "ncc": 0.451
+   },
+   {
+    "t": 12.49,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.405
+   },
+   {
+    "t": 8.13,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.377
+   },
+   {
+    "t": 20.32,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.37
+   },
+   {
+    "t": 18.74,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.365
+   },
+   {
+    "t": 14.43,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.364
+   },
+   {
+    "t": 22.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.363
+   },
+   {
+    "t": 13.85,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.357
+   }
+  ],
+  "starpickroom__EZQlWvvnKPI": [
+   {
+    "t": 16.68,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.44
+   },
+   {
+    "t": 14.62,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.435
+   },
+   {
+    "t": 14.73,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.421
+   },
+   {
+    "t": 33.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.414
+   },
+   {
+    "t": 13.68,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.414
+   },
+   {
+    "t": 17.51,
+    "file": "remotion_sfx:remotion-stock/public/sfx/chime_up.mp3",
+    "ncc": 0.413
+   },
+   {
+    "t": 13.68,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.388
+   },
+   {
+    "t": 15.13,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.369
+   },
+   {
+    "t": 13.68,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.359
+   }
+  ],
+  "starpickroom__VbpdNba182M": [
+   {
+    "t": 1.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.458
+   },
+   {
+    "t": 15.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.439
+   },
+   {
+    "t": 8.43,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.433
+   },
+   {
+    "t": 15.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.42
+   },
+   {
+    "t": 1.75,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.397
+   },
+   {
+    "t": 15.91,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.393
+   },
+   {
+    "t": 21.32,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.386
+   },
+   {
+    "t": 1.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.378
+   },
+   {
+    "t": 9.11,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.376
+   },
+   {
+    "t": 15.27,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.365
+   },
+   {
+    "t": 1.75,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.362
+   },
+   {
+    "t": 23.23,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.361
+   },
+   {
+    "t": 29.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.361
+   },
+   {
+    "t": 1.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.356
+   },
+   {
+    "t": 15.9,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.353
+   },
+   {
+    "t": 19.55,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.352
+   },
+   {
+    "t": 28.38,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.352
+   }
+  ],
+  "starpickroom__dKczVzmdr00": [
+   {
+    "t": 29.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.428
+   },
+   {
+    "t": 36.38,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.416
+   },
+   {
+    "t": 20.42,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.387
+   },
+   {
+    "t": 19.28,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav",
+    "ncc": 0.386
+   },
+   {
+    "t": 16.08,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.386
+   },
+   {
+    "t": 36.38,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.383
+   },
+   {
+    "t": 20.52,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.378
+   },
+   {
+    "t": 14.95,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.375
+   },
+   {
+    "t": 11.26,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.367
+   },
+   {
+    "t": 36.38,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.363
+   },
+   {
+    "t": 9.05,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.361
+   },
+   {
+    "t": 21.73,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.359
+   },
+   {
+    "t": 36.37,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.357
+   },
+   {
+    "t": 29.82,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.356
+   },
+   {
+    "t": 13.84,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.351
+   }
+  ],
+  "starpickroom__j5D30T2n0-w": [
+   {
+    "t": 18.82,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.443
+   },
+   {
+    "t": 4.66,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.426
+   },
+   {
+    "t": 9.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.425
+   },
+   {
+    "t": 0.19,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.422
+   },
+   {
+    "t": 2.54,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.397
+   },
+   {
+    "t": 2.54,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.394
+   },
+   {
+    "t": 11.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.392
+   },
+   {
+    "t": 10.51,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.386
+   },
+   {
+    "t": 19.35,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.384
+   },
+   {
+    "t": 27.64,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.381
+   },
+   {
+    "t": 20.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.366
+   },
+   {
+    "t": 15.49,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.362
+   },
+   {
+    "t": 4.41,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.361
+   },
+   {
+    "t": 24.08,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.36
+   },
+   {
+    "t": 24.08,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.358
+   },
+   {
+    "t": 2.53,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/tick.wav",
+    "ncc": 0.352
+   },
+   {
+    "t": 24.08,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.351
+   }
+  ],
+  "starpickroom__onmwSxfco-A": [
+   {
+    "t": 1.04,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav",
+    "ncc": 0.524
+   },
+   {
+    "t": 0.03,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.472
+   },
+   {
+    "t": 0.03,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.445
+   },
+   {
+    "t": 0.03,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.445
+   },
+   {
+    "t": 23.93,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.416
+   },
+   {
+    "t": 11.23,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.416
+   },
+   {
+    "t": 21.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.406
+   },
+   {
+    "t": 33.6,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.401
+   },
+   {
+    "t": 39.65,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.391
+   },
+   {
+    "t": 23.93,
+    "file": "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-2.mp3",
+    "ncc": 0.391
+   },
+   {
+    "t": 1.44,
+    "file": "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3",
+    "ncc": 0.381
+   },
+   {
+    "t": 0.04,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.379
+   },
+   {
+    "t": 2.75,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.378
+   },
+   {
+    "t": 40.67,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.374
+   },
+   {
+    "t": 42.72,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.369
+   },
+   {
+    "t": 23.93,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.367
+   },
+   {
+    "t": 21.24,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.366
+   },
+   {
+    "t": 12.15,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.364
+   },
+   {
+    "t": 41.58,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.364
+   },
+   {
+    "t": 7.12,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.363
+   },
+   {
+    "t": 15.12,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+    "ncc": 0.359
+   },
+   {
+    "t": 41.0,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.351
+   },
+   {
+    "t": 21.59,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.351
+   }
+  ],
+  "starpickroom__r5XN6Eilfxs": [
+   {
+    "t": 11.36,
+    "file": "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3",
+    "ncc": 0.458
+   },
+   {
+    "t": 0.64,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.454
+   },
+   {
+    "t": 0.63,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.439
+   },
+   {
+    "t": 14.15,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.394
+   },
+   {
+    "t": 14.79,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.383
+   },
+   {
+    "t": 14.14,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.378
+   },
+   {
+    "t": 21.33,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.37
+   },
+   {
+    "t": 14.79,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.368
+   },
+   {
+    "t": 0.63,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav",
+    "ncc": 0.361
+   },
+   {
+    "t": 19.44,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.36
+   },
+   {
+    "t": 0.13,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav",
+    "ncc": 0.358
+   },
+   {
+    "t": 15.67,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.355
+   },
+   {
+    "t": 11.37,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav",
+    "ncc": 0.355
+   },
+   {
+    "t": 14.15,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav",
+    "ncc": 0.352
+   },
+   {
+    "t": 17.22,
+    "file": "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav",
+    "ncc": 0.35
+   }
+  ]
+ },
+ "also": {
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/click2.wav": [
+   "shopping_shorts/assets/sfx_packs/팩09/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/click2.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/ding.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/ding.wav",
+   "research/sfx_census/meme_sfx/끄덕_엄지/팩01__ding.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/dung.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/dung.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/opener.wav": [
+   "shopping_shorts/assets/sfx_packs/팩04/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩07/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/opener.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/pop.wav": [
+   "shopping_shorts/assets/sfx_packs/팩10/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/pop.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/tick.wav": [
+   "shopping_shorts/assets/sfx_packs/팩05/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩07/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩10/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/tick.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩01/whoosh.wav": [
+   "shopping_shorts/assets/sfx_packs/팩08/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩09/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/whoosh.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/click2.wav": [
+   "shopping_shorts/assets/sfx_packs/팩10/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/click2.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/ding.wav": [
+   "shopping_shorts/assets/sfx_packs/팩07/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩09/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/ding.wav",
+   "research/sfx_census/meme_sfx/끄덕_엄지/팩02__ding.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/dung.wav": [
+   "shopping_shorts/assets/sfx_packs/팩07/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/dung.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/opener.wav": [
+   "shopping_shorts/assets/sfx_packs/팩05/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩08/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/opener.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/pop.wav": [
+   "shopping_shorts/assets/sfx_packs/팩09/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/pop.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/tick.wav": [
+   "shopping_shorts/assets/sfx_packs/팩04/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩08/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/tick.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩02/whoosh.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩10/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/whoosh.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/click2.wav": [
+   "shopping_shorts/assets/sfx_packs/팩07/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/click2.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/ding.wav": [
+   "shopping_shorts/assets/sfx_packs/팩08/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/ding.wav",
+   "research/sfx_census/meme_sfx/끄덕_엄지/팩03__ding.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/dung.wav": [
+   "shopping_shorts/assets/sfx_packs/팩08/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩10/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/dung.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/opener.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩09/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩10/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/opener.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/opener.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/pop.wav": [
+   "shopping_shorts/assets/sfx_packs/팩07/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/pop.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/tick.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩09/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/tick.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/tick.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩03/whoosh.wav": [
+   "shopping_shorts/assets/sfx_packs/팩05/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/whoosh.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩04/click2.wav": [
+   "shopping_shorts/assets/sfx_packs/팩08/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/click2.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩04/ding.wav": [
+   "shopping_shorts/assets/sfx_packs/팩05/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩10/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩18/ding.wav",
+   "shopping_shorts/assets/sfx_packs/팩20/ding.wav",
+   "research/sfx_census/meme_sfx/끄덕_엄지/팩04__ding.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩04/dung.wav": [
+   "shopping_shorts/assets/sfx_packs/팩05/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩09/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/dung.wav",
+   "shopping_shorts/assets/sfx_packs/팩19/dung.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩04/pop.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/pop.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩04/whoosh.wav": [
+   "shopping_shorts/assets/sfx_packs/팩07/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩11/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩15/whoosh.wav",
+   "shopping_shorts/assets/sfx_packs/팩17/whoosh.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/click2.wav": [
+   "shopping_shorts/assets/sfx_packs/팩06/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩12/click2.wav",
+   "shopping_shorts/assets/sfx_packs/팩14/click2.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩05/pop.wav": [
+   "shopping_shorts/assets/sfx_packs/팩08/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩13/pop.wav",
+   "shopping_shorts/assets/sfx_packs/팩16/pop.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/click2.wav": [],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/ding.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/팩21_사장님__ding.wav"
+  ],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/dung.wav": [],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/opener.wav": [],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/pop.wav": [],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/tick.wav": [],
+  "sfx_packs:shopping_shorts/assets/sfx_packs/팩21_사장님/whoosh.wav": [],
+  "remotion_sfx:remotion-stock/public/sfx/chime_up.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/end_whoosh.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/impact.mp3": [
+   "research/sfx_census/meme_sfx/충격_입막/sfx__impact.mp3"
+  ],
+  "remotion_sfx:remotion-stock/public/sfx/kakao_ding.mp3": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/sfx__kakao_ding.mp3"
+  ],
+  "remotion_sfx:remotion-stock/public/sfx/pop_appear.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/sting_hit.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/sting_whoosh.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/tick.mp3": [],
+  "remotion_sfx:remotion-stock/public/sfx/transition_swipe.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측1_2sUHI8hEafE_20.76s.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측1_2sUHI8hEafE_20.76s.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측2_K5AaCbt2iLM_4.78s.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측2_K5AaCbt2iLM_4.78s.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측3_1EJB0irk2Lw_16.65s.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/1_이븐쇼핑_실측샘플__3_띠링(결과감탄)_실측3_1EJB0irk2Lw_16.65s.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보1_mixkit265_유사0.77.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보1_mixkit265_유사0.77.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보2_mixkit599_유사0.76.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보2_mixkit599_유사0.76.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보3_mixkit2177_유사0.76.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/2_추천후보(길이맞춤)__3_띠링(결과감탄)_구후보3_mixkit2177_유사0.76.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/2_추천후보(길이맞춤)__3_띠링(결과감탄)_후보1_챙(효과음종합)_유사0.81.wav": [
+   "research/sfx_census/meme_sfx/끄덕_엄지/2_추천후보(길이맞춤)__3_띠링(결과감탄)_후보1_챙(효과음종합)_유사0.81.wav"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/Claps (박수)__Applause  Sound Effect.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/감탄_박수/튜브렌즈가 자주 사용하는 효과음__와우!.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/sfx__error.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/튜브렌즈가 자주 사용하는 효과음__삐 틀림.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track01_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track02_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track03_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track04_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track05_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track06_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track07_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track08_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track09_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track10_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track11_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/거절_절레/틀림 효과음 오류__Track12_에러 캔슬 취소 오답.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 1.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 2.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 3.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 4.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 5.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 6.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/긴장 깜짝 놀란 효과음__Suspense 7.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/공포_움찔/특별한 효과음__심장소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/기쁨_환호/사람효과음__함성소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__ding_0.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__ding_1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__ding_2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__ding_5.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_11.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_4.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_5.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_6.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_7.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_8.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__r3_ding_9.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__x_ding_4.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__x_ding_5.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__x_ding_6.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/sfx_norm__x_ding_7.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/버튼소리__띠링 효과음1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/버튼소리__띠링 효과음2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/끄덕_엄지/버튼소리__띠링.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/새 폴더 (2)__뿅.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용 베스트.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용 베스트.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용1.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용1.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용12.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용12.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용2.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용2.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용3.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용3.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/자주쓰는 웃긴 효과음__띠용소리.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__띠용소리.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/놀람/튜브렌즈가 자주 사용하는 효과음__WOW 1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__01 Processing.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__02 Dial-up.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__03 RF Switcher.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__04 Erased Data.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__05 Reboot Failure.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__EA Glitch SFX (1).mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__EA Glitch SFX (2).mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 1.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 2.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 3.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 4.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 5.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 6.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 7.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/Glitch (글리치)__Glitch SFX 8.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/sfx__glitch-1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/sfx__glitch-2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/sfx__glitch-3.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치 효과음 1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치 효과음 2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치 효과음 3.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치 효과음 4.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치 효과음1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치효과음2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/글리치 효과음__글리치효과음5.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/자주쓰는 웃긴 효과음__황당할때 .mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__황당할때 .mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/당황_멘붕/자주쓰는 웃긴 효과음__황당할때2.mp3": [
+   "research/sfx_census/meme_sfx/의심_황당/자주쓰는 웃긴 효과음__황당할때2.mp3"
+  ],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/사람효과음__악당웃음소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/사람효과음__웃음소리 1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/사람효과음__웃음소리 2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/튜브렌즈가 자주 사용하는 효과음__하하하 정신나간웃는소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/특별한 효과음__관객웃음소리1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/특별한 효과음__관객웃음소리2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/효과음 120가지 #02__067_사악한웃음소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/웃음/효과음 120가지 #02__074_어이없는 웃음소리.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/의심_황당/sfx_norm__boing_0.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/의심_황당/sfx_norm__boing_1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/의심_황당/sfx_norm__boing_2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/의심_황당/sfx_norm__boing_3.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/2_추천후보(길이맞춤)__0_오프너(영상시작)_후보1_두둥(효과음종합)_유사0.89.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/2_추천후보(길이맞춤)__0_오프너(영상시작)_후보2_넷플두둥_1초.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/2_추천후보(길이맞춤)__0_오프너(영상시작)_후보3_넷플두둥+저음보강.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-1.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/자주쓰는 웃긴 효과음__두둥.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/튜브렌즈가 자주 사용하는 효과음__두둥.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/튜브렌즈가 자주 사용하는 효과음__두둥2.mp3": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion10.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion12.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion13.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion14.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion2.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion3.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion5.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion6.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion7.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/폭발__Explosion8.wav": [],
+  "meme_sfx:research/sfx_census/meme_sfx/충격_입막/효과음__넷플 두둥.mp3": []
+ }
+}

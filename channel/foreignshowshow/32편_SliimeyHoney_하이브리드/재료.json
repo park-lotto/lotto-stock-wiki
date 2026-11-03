@@ -1,0 +1,187 @@
+{
+ "_note": "샥탬스토리 하이브리드 32편 Sliimey Honey 뒤 재료 — 쿠팡의 비슷한 제품(한국 바나나우유 슬라임)과 같은 꼴(옅은 노랑 크림 슬라임)의 손 시점 영상 3편. 창 1080x1052. 사람 얼굴 없는 손·슬라임 컷만. 달파 영상 9~24초 채널 로고·글 화면, 아이캔 영상 박힌 한국어 자막 구간(6~9·42·48·57·81~84초)·처음 3초 그림 화면은 안 씀.",
+ "_dur_note": "컷 길이 = 뒤 렌더 render_info 의 실제 줄 길이에 맞춤(인자 DUR)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/32편_SliimeyHoney/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "nIOOLSPigCE": {
+   "채널": "달파 DALPA",
+   "url": "https://www.youtube.com/watch?v=nIOOLSPigCE",
+   "제목": "ASMR🍌바나나우유를 쏟았다 슬라임🥛 | 달파파ASMR",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "화면 아래 가운데 옅은 워터마크 — 높이 960(y 0~960) 자르기 밖 · 9~24초 로고·제목 화면 안 씀"
+  },
+  "uRP1tqkbTls": {
+   "채널": "아이캔 다이어트 / I-Can",
+   "url": "https://www.youtube.com/watch?v=uRP1tqkbTls",
+   "제목": "바나나우유 슬라임 ASMR/ 지글리 슬라임/ 액괴 ASMR/ Banana Milk Slime ASMR",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "박힌 한국어 자막(화면 아래) — 자막 없는 구간만 + 높이 960 자르기"
+  },
+  "EmSZgKIuabw": {
+   "채널": "혜니의 DIY 일상",
+   "url": "https://www.youtube.com/watch?v=EmSZgKIuabw",
+   "제목": "바나나 버터 슬라임 ASMR",
+   "해상도": "1080x1920 30fps",
+   "남의 글자": "없음(손 시점)"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "nIOOLSPigCE.mp4",
+   "ss": 27.0,
+   "dur": 2.6,
+   "src_crop": [
+    507,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "달파 DALPA(nIOOLSPigCE, 1080p): 옅은 노랑 바나나우유 슬라임을 누르는 손(샷 24.66~38.04, 손만 — 아래 워터마크는 높이 960 밖)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "uRP1tqkbTls.mp4",
+   "ss": 27.0,
+   "dur": 2.4,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "아이캔(uRP1tqkbTls, 1080p): 통에서 꺼낸 노란 슬라임 덩이(샷 4.57~49.67, 사람 없음 — 통 라벨 나오는 12~15초는 안 씀, 아래 자막 자리는 높이 960 밖)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "EmSZgKIuabw.mp4",
+   "ss": 0.5,
+   "dur": 2.8,
+   "src_crop": [
+    0,
+    60,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "EmSZgKIuabw(세로 1080x1920): 슬라임 통 뚜껑을 여는 손(샷 0~29.83, 손만)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "uRP1tqkbTls.mp4",
+   "ss": 18.0,
+   "dur": 2.6,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "아이캔: 통을 기울여 노란 슬라임을 꺼내는 손(손만)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "nIOOLSPigCE.mp4",
+   "ss": 52.0,
+   "dur": 2.4,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "달파: 슬라임을 위로 쭉 늘리는 손(샷 51.89~55.72, 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "nIOOLSPigCE.mp4",
+   "ss": 102.5,
+   "dur": 2.4,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "달파: 길게 늘어난 슬라임(샷 102.40~125.89, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "EmSZgKIuabw.mp4",
+   "ss": 48.0,
+   "dur": 2.6,
+   "src_crop": [
+    0,
+    640,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "EmSZgKIuabw: 돌돌 말린 슬라임을 펼치는 손(샷 38.97~85.60, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "uRP1tqkbTls.mp4",
+   "ss": 66.0,
+   "dur": 2.6,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "아이캔: 슬라임을 주무르는 두 손(샷 59.97~69.87, 손만)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "nIOOLSPigCE.mp4",
+   "ss": 77.0,
+   "dur": 2.2,
+   "src_crop": [
+    467,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "달파: 슬라임을 모아 쥐는 두 손(샷 76.04~85.59, 손만)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "EmSZgKIuabw.mp4",
+   "ss": 114.0,
+   "dur": 2.6,
+   "src_crop": [
+    0,
+    520,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "EmSZgKIuabw: 동그랗게 만 슬라임을 든 손(샷 107.77~ 안, 손만)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

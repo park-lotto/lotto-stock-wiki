@@ -1,0 +1,16 @@
+{
+ "_note": "키치잇 틀 숫자(렌더용, 1080x1920) — 실측 Cs-Ka_S8nDM 3.0초 프레임(제목·박스·창·출처) · BRa5Iv4A3Y8 자막 크롭(색) · 글꼴 크기 = 같은 글을 그 글꼴로 그려 잉크 폭/높이를 맞춘 값(2026-10-18, channel/kitchit/스타일분석.md §2). 렌더 = channel/kitchit/하이브리드_성시경/render_kitchit.py",
+ "canvas": {"w": 1080, "h": 1920, "bg_rgb": [0, 0, 0]},
+ "window": {"x": 0, "y": 420, "w": 1080, "h": 1080},
+ "title1": {"font_file": "Jalnan2.ttf", "size": 79, "rgb": [255, 255, 255], "shear": 0.2, "ink_top": 164, "ink_h": 76, "note": "흰 굵은 기울임(약 11도) · 잉크 x132~947 y164~239 · 핵심 낱말 빨강(#FF2A2A) 변형 있음(Ks5k '가을 햇볕'·_Wa '쩍쩍')"},
+ "title2": {"font_file": "Jalnan2.ttf", "size": 77, "rgb": [0, 0, 0], "box": [42, 269, 1037, 399], "box_rgb": [253, 230, 0], "ink": [65, 288, 1017, 364], "note": "노랑 박스 #FDE600 + 검정 글 · 6/8편. BRa = 박스 없이 노랑 글(#F3FC32) · vSE = 분홍·연보라 글(옛 틀 08-17)"},
+ "logo": {"font_file": "Jalnan2.ttf", "size": 43, "x": 75, "y": 435, "rgba": [205, 205, 205, 215], "stroke": 2, "stroke_rgba": [50, 50, 50, 200], "note": "벤치 '키치잇' 잉크 x75~205 y435~480 회색 둥근 글 + 진회색 테두리 — 우리 = '얜샷템'"},
+ "credit": {"font_file": "Pretendard-Bold.otf", "size": 46, "rgb": [182, 182, 182], "ink_top": 1535, "ink_h": 40, "note": "'출처: <원본 채널명>' 가운데 · 회색 #B6B6B6(BRa 는 #5C5C5C 어두움)"},
+ "caption": {
+  "font_file": "Jalnan2.ttf", "font_alt": "TmonMonsori.ttf", "size": 73, "ink_h": 70, "center_y": 1351, "max_w": 900,
+  "fill_hex": "#FFFFFF", "outline_hex": "#151618", "outline_em": 0.10, "ring_hex": "#FFFFFF", "ring_em": 0.03,
+  "emph_cycle": ["#FEDD00", "#00FD0B", "#65FEFB", "#FD6B7B", "#BDB4FC"],
+  "typing_ring_hex": "#FFFFFF",
+  "note": "덩어리 2~5어절 1줄 · 핵심 낱말 하나만 색(노랑·초록·하늘·분홍·연보라 돌림) · 글꼴 1위 Jalnan2(Cs-Ka 뜯기 합산 0.36·눈 대조), BRa 는 TmonMonsori 와 더 닮음"
+ }
+}

@@ -1,0 +1,203 @@
+# -*- coding: utf-8 -*-
+"""핫템리포트 꼴 소리 — 나레 사이 '원음 리액션 구간' + 원음 바탕(덕킹) (관제 097, 2026-10-16).
+
+원본 OE-11wb7vdY: 나레 0~5.0 → 원음 리액션 5.0~10.4("Oh, I love it!"·"아!!!"·웃음) → 나레 10.4~12.5 →
+원음 12.5~20.0("JARVIS, close helmet."·기계음·"It's so cool!") → 나레 20.0~32.1 → 원음 32.3~34.0.
+나레가 멈춘 구간은 원음이 덕킹 없이 그대로 들린다(뜯기 2판 audio.composition: 원음 깔림 True·덕킹 3.93dB).
+
+narr_video.py 는 고치지 않는다(주인 다름). 두 단계로 감싼다:
+  1) gap_tts(tts, 문장들, gaps) — 타입캐스트 한 파일(한 번 합성)을 문장 경계 쉼에서 갈라 그 자리에 무음 gap 초를 끼운다
+     → narr_gapped.wav. narr_video 에 이 파일을 tts 로 넘기면 자막·컷 시각이 무음을 건너뛰어 잡힌다(time_steps = silencedetect).
+  2) add_source_bed(final.mp4, timeline.json, 재료.json, narr_gapped.wav, volume, duck_db) — narr_video 가 만든 완성본(나레+BGM)
+     위에 원음 한 줄을 깐다. 원음 한 줄·덕킹은 shopping_shorts.video_assemble.source_audio_bed(mix=False) 하나를 부른다
+     (렌더·캡컷과 같은 함수 — 판단 두 벌 금지). 나레가 없는 gap 구간은 덕킹이 안 걸려 원음이 그대로 난다.
+결과물 검사: measure(final) — 구간별 LUFS·RMS(dB)를 표로(원본과 같은 자로 잰다).
+
+    PYTHONUTF8=1 py tools/calcopy/hottem_audio.py gap <tts> <대본.json> <out.wav> --gaps "0:5.0,1:6.5,end:1.5"
+    PYTHONUTF8=1 py tools/calcopy/hottem_audio.py bed <final.mp4> <timeline.json> <재료.json> <narr_gapped.wav> <out.mp4> [--volume 1.0 --duck-db 10 --gap-gain "3.49:6.09:7,8.76:13.76:4"]
+    PYTHONUTF8=1 py tools/calcopy/hottem_audio.py measure <mp4> --spans "0:5,5:10.4,…"
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from shopping_shorts import video_assemble as va  # noqa: E402
+
+SR = va.NARR_SR
+
+
+def _dur(p) -> float:
+    return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)],
+                                capture_output=True, text=True).stdout.strip())
+
+
+def _silences(audio, noise="-38dB", d=0.12) -> list[tuple[float, float]]:
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(audio), "-af", f"silencedetect=noise={noise}:d={d}", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    st = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r)]
+    en = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r)]
+    return list(zip(st, en))
+
+
+BREAK_LEN_W = 0.3   # 같은 거리면 긴 쉼을 고른다(문장 끝 쉼 0.26~0.70초 > 쉼표 쉼, HONOR 실측)
+
+
+def sentence_breaks(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[float]:
+    """문장 끝 쉼 가운데 시각들 — 판정은 break_points 한 곳."""
+    bp = break_points(audio, sentences, noise, d)
+    if any(m is None for m, _ in bp):
+        raise SystemExit(f"문장 끝 쉼을 못 가름(쉼 부족) — {bp}")
+    return [m for m, _ in bp]
+
+
+def break_points(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[tuple[float, float]]:
+    """(판단 주인) 문장 k 끝의 쉼 가운데 시각(k=0..n-2) — 무음 검출 + **말 시간** 기준 글자 비례.
+    각 쉼의 위치를 '그 앞까지 말한 시간'(쉼 길이를 뺀 시간)으로 바꾸고, 글자 비례 예상 말 시간에 가까운 쉼을 순서대로 고른다
+    (비용 = |말 시간 차| − BREAK_LEN_W × 쉼 길이, 앞에서 고른 쉼 뒤에서만).
+    ★10-16 실측: -38dB/0.12초 로 찾으면 문장 사이 0.1초 쉼(3.44~3.54)을 못 보고 '?' 쉼(1.56~1.87)을 1번 줄 끝으로 골랐다
+      → -30dB/0.08초 + 앞뒤 무음 뺀 말 구간 기준.
+    ★10-16 핫템 HONOR: 벽시계 시각으로 글자 비례하면 쉼표 쉼이 쌓여 2·3번 줄 끝을 11.408·13.669로 골랐다(받아쓰기 9.75·12.79)
+      → 말 시간 기준으로 바꿈. 쉼이 모자라면 멈춘다(조용히 어긋나지 않게)."""
+    dur = _dur(audio)
+    allsil = _silences(audio, noise, d)
+    lead = next((b for a, b in allsil if a <= 0.01), 0.0)
+    tail = next((a for a, b in allsil if b >= dur - 0.01), dur)
+    sil = [(a, b) for a, b in allsil if a > lead + 0.01 and b < tail - 0.01]
+    pos, acc = [], 0.0
+    for a, b in sil:
+        pos.append(a - lead - acc)
+        acc += b - a
+    speech = tail - lead - acc
+    lens = [len(re.sub(r"[\s,.?!~;…]", "", s)) for s in sentences]
+    tot = sum(lens) or 1
+    out, prev, c = [], -1, 0
+    for k in range(len(sentences) - 1):
+        c += lens[k]
+        exp = speech * c / tot
+        cand = range(prev + 1, len(sil) - (len(sentences) - 2 - k))
+        if not cand:   # 쉼이 경계 수보다 적다(쉼 줄인 나레) — 이 경계는 못 가름(None), 부르는 쪽이 정한다
+            out.append((None, float("inf")))
+            continue
+        j = min(cand, key=lambda i: abs(pos[i] - exp) - BREAK_LEN_W * (sil[i][1] - sil[i][0]))
+        prev = j
+        out.append((round((sil[j][0] + sil[j][1]) / 2, 3), round(abs(pos[j] - exp), 3)))   # (쉼 가운데, 예상 말 시간과의 거리)
+    return out
+
+
+def gap_tts(tts, sentences: list[str], gaps: dict, out_wav) -> dict:
+    """gaps = {문장번호(그 문장 뒤): 초, 'end': 초}. 반환 = {"breaks": [...], "inserted": [(원래 시각, 새 시작, 길이)], "dur"}."""
+    br = sentence_breaks(tts, sentences)
+    cuts = sorted((br[int(k)], float(v)) for k, v in gaps.items() if k != "end")
+    ins, fc, labels, t0, shift = [], [], [], 0.0, 0.0
+    for i, (t, g) in enumerate(cuts):
+        fc.append(f"[0:a]atrim={t0:.3f}:{t:.3f},asetpts=N/SR/TB,aresample={SR},aformat=channel_layouts=mono[p{i}]")
+        fc.append(f"anullsrc=r={SR}:cl=mono,atrim=0:{g:.3f}[g{i}]")
+        labels += [f"[p{i}]", f"[g{i}]"]
+        ins.append((t, round(t + shift, 3), g))
+        shift += g
+        t0 = t
+    fc.append(f"[0:a]atrim={t0:.3f},asetpts=N/SR/TB,aresample={SR},aformat=channel_layouts=mono[pz]")
+    labels.append("[pz]")
+    if gaps.get("end"):
+        fc.append(f"anullsrc=r={SR}:cl=mono,atrim=0:{float(gaps['end']):.3f}[ge]")
+        labels.append("[ge]")
+    fc.append("".join(labels) + f"concat=n={len(labels)}:v=0:a=1[a]")
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(tts), "-filter_complex", ";".join(fc), "-map", "[a]", "-c:a", "pcm_s16le", "-ar", str(SR), str(out_wav)])
+    return {"breaks": br, "inserted": ins, "dur": round(_dur(out_wav), 3), "src_dur": round(_dur(tts), 3)}
+
+
+def shot_muted(sh: dict) -> bool:
+    """(판단 주인) 이 컷의 원음을 끄나 — 재료 shots[i].mute 가 참이거나 짤(kind '짤'). narr_video 원음 깔기(cut_plan_from)와
+    remake_video(원음 꼴 틀 A) 둘 다 이것만 부른다(10-16 썰풀다 새소재4 요청: 컷별 원음 끄기)."""
+    return bool(sh.get("mute")) or sh.get("kind") == "짤"
+
+
+def cut_plan_from(timeline: dict, M: dict) -> tuple[list, dict, list]:
+    """narr_video timeline.json(shots=[(a,b)]) + 재료.json → source_audio_track 의 (cut_plan, source_video_paths, beat_frames).
+    칸 하나(idx 0)에 컷마다 소스 [ss, ss+길이] 를 배속 1로 — narr_video.shot_clip 이 화면에 쓴 바로 그 구간."""
+    base = Path(M["cand_dir"])
+    clips, paths, tot = [], {}, 0
+    for k, (a, b) in enumerate(timeline["shots"]):
+        sh = M["shots"][k]
+        nfr = int(round(b * 30)) - int(round(a * 30))
+        vid = f"s{k}"
+        # audio_src/audio_ss = 화면과 다른 소스의 소리(10-16: 어두운 LED 화면을 밝은 화면으로 바꾸되 원음 리액션은 그대로 두려고)
+        paths[vid] = str(base / (sh.get("audio_src") or sh["src"]))
+        mute = shot_muted(sh)
+        start = float(sh["audio_ss"]) if sh.get("audio_ss") is not None else float(sh.get("ss", 0))
+        clips.append({"video_id": vid if not mute else "__mute__", "start": start, "c_src": (b - a), "play_out": (b - a), "cfr": nfr})
+        tot += nfr
+    return [{"idx": 0, "clips": clips}], paths, [(0, tot)]
+
+
+def add_source_bed(final_mp4, timeline_json, materials_json, narr_wav, out_mp4, volume=1.0, duck_db=10.0, work=None, gap_gain=None) -> dict:
+    """gap_gain = [[시작, 끝, dB], …] — 원음 구간만 따로 올린다(소스마다 크기가 달라 volume 하나로는 한쪽이 깨진다:
+    10-16 실측 8ys8 리액션 −24.7 LUFS vs cYMA 명령 −21.8, cYMA 최고점 −2.6dBFS 라 volume 2.0 이면 s16 에서 잘림).
+    source_audio_bed 는 volume≤1 로 부르고(정수 파일에 쓰기 전 잘림 방지) 올림은 소수점 소리에서 한 뒤 alimiter."""
+    T = json.loads(Path(timeline_json).read_text(encoding="utf-8"))
+    M = json.loads(Path(materials_json).read_text(encoding="utf-8"))
+    work = Path(work or Path(out_mp4).with_suffix("")).resolve()
+    work.mkdir(parents=True, exist_ok=True)
+    plan, paths, frames = cut_plan_from(T, M)
+    ducked = va.source_audio_bed(plan, paths, frames, str(narr_wav), {"volume": volume, "duck_db": duck_db}, work, mix=False)
+    # ★채널 배치는 완성본을 따른다 — narr_video 완성본은 모노(나레 mp3)라 stereo 로 올리면 채널마다 -3dB(mix_narration_bed 와 같은 함정)
+    lay = "stereo" if va._audio_channels(final_mp4) >= 2 else "mono"
+    gexpr = "1"
+    for a, b, db in reversed(gap_gain or []):
+        gexpr = f"if(between(t,{a},{b}),{10 ** (db / 20):.4f},{gexpr})"
+    fc = (f"[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts={lay}[m];"
+          f"[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts={lay},volume='{gexpr}':eval=frame[s];"
+          "[m][s]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.89:level=false[a]")
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(final_mp4), "-i", str(ducked), "-filter_complex", fc, "-map", "0:v", "-map", "[a]",
+                    "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(out_mp4)])
+    return {"ducked": str(ducked), "out": str(out_mp4), "volume": volume, "duck_db": duck_db, "gap_gain": gap_gain}
+
+
+def measure(media, spans: list[tuple[float, float]]) -> list[dict]:
+    """구간별 소리 크기 — ebur128 통합 LUFS + RMS dB(astats). 원본과 우리 완성본을 같은 자로 잰다."""
+    out = []
+    for a, b in spans:
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", str(media), "-vn",
+                            "-af", "ebur128=peak=true,astats=measure_overall=RMS_level:measure_perchannel=none", "-f", "null", "-"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+        I = re.findall(r"I:\s+(-?[\d.]+) LUFS", r)
+        rms = re.findall(r"RMS level dB:\s+(-?[\d.inf]+)", r)
+        out.append({"span": [a, b], "lufs_I": float(I[-1]) if I else None, "rms_db": rms[-1] if rms else None})
+    return out
+
+
+def _spans(s: str) -> list[tuple[float, float]]:
+    return [tuple(map(float, x.split(":"))) for x in s.split(",") if x.strip()]
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    g = sub.add_parser("gap"); g.add_argument("tts"); g.add_argument("script"); g.add_argument("out"); g.add_argument("--gaps", required=True)
+    b = sub.add_parser("bed"); [b.add_argument(x) for x in ("final", "timeline", "materials", "narr", "out")]
+    b.add_argument("--volume", type=float, default=1.0); b.add_argument("--duck-db", type=float, default=10.0)
+    b.add_argument("--gap-gain", default="", help="'시작:끝:dB,…' 원음 구간만 올림")
+    m = sub.add_parser("measure"); m.add_argument("media"); m.add_argument("--spans", required=True)
+    a = ap.parse_args(argv)
+    if a.cmd == "gap":
+        S = json.loads(Path(a.script).read_text(encoding="utf-8"))
+        sents = [l["text"] for l in S["final"]["lines"]]
+        gaps = {k: float(v) for k, v in (x.split(":") for x in a.gaps.split(","))}
+        res = gap_tts(a.tts, sents, gaps, a.out)
+    elif a.cmd == "bed":
+        gg = [list(map(float, x.split(":"))) for x in a.gap_gain.split(",") if x.strip()]
+        res = add_source_bed(a.final, a.timeline, a.materials, a.narr, a.out, a.volume, a.duck_db, gap_gain=gg)
+    else:
+        res = measure(a.media, _spans(a.spans))
+    print(json.dumps(res, ensure_ascii=False, indent=1))
+
+
+if __name__ == "__main__":
+    main()

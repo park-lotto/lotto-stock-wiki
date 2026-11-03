@@ -1,0 +1,385 @@
+{
+ "_note": "샥탬스토리 하이브리드 8편 Flipstik — 앞 0~17.838초(O1~O6) = 칼카피(새 엔진 재렌더, 0초 원 = 타일 벽 폰 전체), 끝 원음 '이제 아무 데도 안 붙겠죠?'(머리카락·모래·스파게티 범벅 뒤) → 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(잇썸홈판 존댓말). Flipstik 은 쿠팡에 없어 비슷한 문어빨판 흡착패드(숨기지 않음, 대본설명서 §2). CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "1+1 흡착패드 문어빨판 휴대폰 스마트폰 흡착패드(쿠팡 8550771212, 3,500원, 상품평 515 — 10-19 쿠팡 검색 '휴대폰 흡착 거치대 스티커') — Flipstik 과 같은 제품 아님(비슷한 것). 같은 꼴 후보 8099579707 구스페리(1,963)·9687972851 니코리",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "폰을 벽·유리·타일 어디든 손 안 대고 붙여 두는 얇은 패드 — 머리카락·모래·스파게티로 더럽혀도 닦으면 다시 붙나?(앞 O6 원음 '이제 아무 데도 안 붙겠죠?'로 끝)",
+  "뒤흥미": "쿠팡 문어빨판 패드도 폰 뒤에 붙여 벽·타일·방문·비행기 화면에 손 떼고 붙여 둠 + 더러워지면 물로 씻어 다시 씀 — 같은 꼴(실리콘 문어빨판 패드) 영상에서 눈에 보임: pyoLQRk8d8o 샤워실 타일 벽에 붙은 폰 · bEi9upNhuP4 폰 뒤 초록 패드→나무 문에 붙이고 손 뗌 · ZfeCI2xMT7o 비행기 좌석 화면에 붙임 · pwNqYHUBHjE 패드를 비누·물로 씻음",
+  "판정": "같음",
+  "근거": "신기한 점(손 안 대고 아무 매끈한 면에 폰 고정·씻어서 다시 씀)이 그대로 보임 — 원리는 다름(Flipstik 접착 덮개 / 문어빨판 흡착)이라 B1 에서 '똑같은 건 없어서 제일 비슷한'을 말함. 쿠팡 검색 결과(쿠팡검색_8-12_2026-10-19.json '휴대폰 흡착 거치대 스티커'·'나노 흡착 폰 스티커') 썸네일 C:/숏템_칼카피/foreignshowshow/하이브리드/8편_Flipstik/cp_thumb/grid.jpg = 실리콘 문어빨판 패드. 상품 페이지·상품평은 10-19 저녁부터 쿠팡 403(재시도 기록 plan/하이브리드_계획.md)"
+ },
+ "hybrid": {
+  "front_doc": "../8편_Flipstik",
+  "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_8편_Flipstik.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/8편_Flipstik/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/8편_Flipstik/엔진v2_하이브리드",
+  "cut_after": "O6",
+  "cut_why": "O6 원음 '이제 아무 데도 안 붙겠죠?' 끝(17.838) — 범벅 폰이 다시 붙을지 궁금증으로 끊고 '근데 진짜 닦으면 다시 붙나 싶어서'로 잇는다(앞 N4~O8 시연 결과는 뒤 체험이 받는다)",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~6·9~11편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "어디든 폰 붙이는",
+  "line2": "스티커의 반전?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 8.29,
+  "cps_note": "앞 8편 완성본 나레 실측 cps_out 8.29(work/render/render_info narr)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 진짜 닦으면 다시 붙나 싶어서 쿠팡에 쳐 봤더니, 똑같은 건 없어서 비슷한 문어빨판 패드를 찾았거든요",
+    "tts": "근데 진짜 닦으면 다시 붙나 싶어서 쿠팡에 쳐 봤더니, 똑같은 건 없어서 비슷한 문어빨판 패드를 찾았거든요",
+    "caps": [
+     "근데 진짜",
+     "닦으면 다시 붙나 싶어서",
+     "쿠팡에 쳐 봤더니",
+     "똑같은 건 없어서",
+     "비슷한 문어빨판 패드를",
+     "찾았거든요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "emph_words": [
+     "문어빨판"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph": [
+     {
+      "cap": "근데 진짜",
+      "span": "근데 진짜",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "닦으면 다시 붙나 싶어서",
+      "span": "붙나 싶어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없어서",
+      "span": "건 없어서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 문어빨판 패드를",
+      "span": "문어빨판 패드를",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "찾았거든요",
+      "span": "찾았거든요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위·숫자(와우1)",
+    "text": "이게 말도 안 되는 게 상품평이 5백 개 넘는 걸 폰 뒤에 붙였더니",
+    "tts": "이게 말도 안 되는 게 상품평이 5백 개 넘는 걸 폰 뒤에 붙였더니",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "상품평이",
+     "5백 개 넘는 걸",
+     "폰 뒤에 붙였더니"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "emph_words": [
+     "5백 개"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "상품평이",
+      "span": "상품평이",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "5백 개 넘는 걸",
+      "span": "5백 개",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "폰 뒤에 붙였더니",
+      "span": "붙였더니",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 샤워실 타일이나 방문에 꾹 누르기만 하면 손을 떼도 딱 붙어 있더라고요",
+    "tts": "진짜 핵심은 이건데, 샤워실 타일이나 방문에 꾹 누르기만 하면 손을 떼도 딱 붙어 있더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "샤워실 타일이나 방문에",
+     "꾹 누르기만 하면",
+     "손을 떼도",
+     "딱 붙어 있더라고요"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "emph_words": [
+     "딱"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤워실 타일이나 방문에",
+      "span": "타일이나 방문에",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "꾹 누르기만 하면",
+      "span": "누르기만 하면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손을 떼도",
+      "span": "손을 떼도",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "딱 붙어 있더라고요",
+      "span": "있더라고요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 먼지가 묻으면 물로 헹궈서 다시 쓰면 돼요",
+    "tts": "심지어 이게 대박인 게 먼지가 묻으면 물로 헹궈서 다시 쓰면 돼요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "먼지가 묻으면",
+     "물로 헹궈서",
+     "다시 쓰면 돼요"
+    ],
+    "facts": [
+     "f13"
+    ],
+    "emph_words": [
+     "물로 헹궈서"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "먼지가 묻으면",
+      "span": "먼지가 묻으면",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "물로 헹궈서",
+      "span": "물로 헹궈서",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다시 쓰면 돼요",
+      "span": "쓰면 돼요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "비행기 좌석 화면에 붙여 놓고 영상 보니까 옆자리에서 신기하다고 난리예요",
+    "tts": "비행기 좌석 화면에 붙여 놓고 영상 보니까 옆자리에서 신기하다고 난리예요",
+    "caps": [
+     "비행기 좌석 화면에",
+     "붙여 놓고",
+     "영상 보니까",
+     "옆자리에서",
+     "신기하다고 난리예요"
+    ],
+    "facts": [
+     "f14"
+    ],
+    "emph_words": [
+     "난리"
+    ],
+    "emph": [
+     {
+      "cap": "비행기 좌석 화면에",
+      "span": "좌석 화면에",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "붙여 놓고",
+      "span": "붙여 놓고",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "영상 보니까",
+      "span": "영상 보니까",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "옆자리에서",
+      "span": "옆자리에서",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "신기하다고 난리예요",
+      "span": "난리예요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 검색(2026-10-19 이 PC 회선, C:/숏템_칼카피/foreignshowshow/하이브리드/쿠팡검색_8-12_2026-10-19.json): '플립스틱'·'Flipstik' = 같은 제품 없음(지팡이의자·립스틱·등산스틱만) → '휴대폰 흡착 거치대 스티커' 8550771212 '1+1 흡착패드 보조배터리 인플루언서 문어빨판 휴대폰 스마트폰 흡착패드' 3,500원 상품평 (515) · 8099579707 구스페리 흡착식 실리콘 부착 패드 (1,963) · 9687972851 니코리 핸드폰 뽁뽁이 흡착판 (73). 구글 렌즈 원본 3장(lens_src 8_a·b·d crop) → Flipstik 이름 안 나옴(아이폰 케이스·필름만, hits 전부 1). 10-20 '옥토버디'·'Octobuddy' 재검색은 ok=False(쿠팡 IP 막힘) · 10-20 00:52 검색 '옥토버디'·'Octobuddy'·'실리콘 흡착 폰케이스 문어' ok=False(IP 막힘) · 01:13 상품 페이지 8550771212 403 — 쿠팡 근거는 10-19 검색 결과(상품명·평점 수·썸네일 = 실리콘 문어빨판 패드)까지. 상품평 글은 못 봄",
+  "f12": "같은 꼴 패드 영상: pyoLQRk8d8o(샤워실 타일 벽에 손 없이 붙은 폰), bEi9upNhuP4(폰 뒤 초록 패드 → 나무 방문에 붙이고 손 뗌·화장실 벽) — '꾹 누르기만'·'딱'은 체감 표현",
+  "f13": "같은 꼴 패드 영상 pwNqYHUBHjE 'clean my octo buddy w/ me!' — 패드를 비누 거품·흐르는 물로 씻어 다시 씀(0~17초). '먼지가 묻으면'은 앞 O6 시연(머리카락·모래)을 받는 체감 표현",
+  "f14": "같은 꼴 패드 영상 ZfeCI2xMT7o(비행기 좌석 화면에 폰 붙임, 'double-sided octobuddy') — '옆자리에서 신기하다고 난리'는 창작(사회 반응)",
+  "창작": "B3 '꾹'·'딱' 체감 · B5 '옆자리에서 신기하다고 난리' = 화자 감상·사회 반응(설명서 §4 창작 허용선). 금액은 말하지 않음"
+ }
+}

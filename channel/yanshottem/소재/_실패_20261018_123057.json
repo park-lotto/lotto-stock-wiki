@@ -1,0 +1,1781 @@
+{
+ "meta": {
+  "when": "2026-10-18 12:30",
+  "channels": 177,
+  "ok": 9,
+  "days": 7,
+  "videos": 47,
+  "secs": 88,
+  "prev": "20261018_014406",
+  "errors": {
+   "UCKFmJFCmSRgTpPHp9OR2ylw": "HTTP Error 404: Not Found",
+   "UCLonE7p-TmUpzbcLpAMyS5g": "HTTP Error 404: Not Found",
+   "UC9c_LyrFLDRsg3hQuIUoL2A": "HTTP Error 404: Not Found",
+   "UCRrWxSEJzitWDTEF_aADh9A": "HTTP Error 404: Not Found",
+   "UCcLYXGJ5fJ7Sgm3A60ubTOg": "HTTP Error 404: Not Found",
+   "UCNVXvKAeo3mM3toKsg-Mqog": "HTTP Error 404: Not Found",
+   "UCqFTdAP2rY2Fn8iF8P2biog": "HTTP Error 500: Internal Server Error",
+   "UC3Eu-_fIreXjCQFXNw2OwlQ": "HTTP Error 404: Not Found",
+   "UCEA4A1PEdCrLSe0-Bfy1pdw": "HTTP Error 500: Internal Server Error",
+   "UClcybvgYb7X7dRKtg7LRiTQ": "HTTP Error 404: Not Found",
+   "UCh2XU0o0Yw5TUY2R5CsmGrA": "HTTP Error 404: Not Found",
+   "UCSJH3yRBxjVz4qh4ufcyCbg": "HTTP Error 500: Internal Server Error",
+   "UC9z5bQhQz6wIoUF-gXjbQcQ": "HTTP Error 404: Not Found",
+   "UClHe-IBvI7BF8PIbiTN7R3g": "HTTP Error 404: Not Found",
+   "UCMvUJmiUAPWfYfRVn3yX49g": "HTTP Error 404: Not Found",
+   "UCXYopIAj243elO--bMv1dmQ": "HTTP Error 404: Not Found",
+   "UCB-6j0fUzSn2aYgtYobsK0A": "HTTP Error 404: Not Found",
+   "UCUkSuomkN5lvSvK9I32lqvA": "HTTP Error 404: Not Found",
+   "UCIqaMA0Gi50gyzBajLapWhg": "HTTP Error 500: Internal Server Error",
+   "UCKZYBi2X3WQ3XCW2Eah-MsA": "HTTP Error 404: Not Found",
+   "UCOyqDQ0TlMcNCXtO-F0O2cQ": "HTTP Error 404: Not Found",
+   "UCZWZQb5mUhRI9TptVwMLxng": "HTTP Error 404: Not Found",
+   "UCH7LDikfWpV4np9ZWTjSV5A": "HTTP Error 404: Not Found",
+   "UC95hKw-MZRQpd-x5_IYvdVA": "HTTP Error 404: Not Found",
+   "UCuq0faATNN9iYZCnFH6YOVw": "HTTP Error 404: Not Found",
+   "UCE2YZseDUIgbKdfMElgaUvw": "HTTP Error 404: Not Found",
+   "UC1d1uKVAcNqjiFL6GSW0EsQ": "HTTP Error 404: Not Found",
+   "UCXpmQ4PvqDs8IPS69Xb8n6g": "HTTP Error 404: Not Found",
+   "UCH3EefPjSwu7EduxqSqfb6Q": "HTTP Error 404: Not Found",
+   "UC3Q0AgtkCe1REE0xx24sftw": "HTTP Error 404: Not Found",
+   "UC4xnPasjL_mN7HYKf3xpDug": "HTTP Error 404: Not Found",
+   "UC5yPEx8g3JWg5AbrPfgl5hA": "HTTP Error 404: Not Found",
+   "UCYioMvNUQrBNoZRhghUS0ww": "HTTP Error 500: Internal Server Error",
+   "UCXdraDjRcuw5wL4417mtU2A": "HTTP Error 404: Not Found",
+   "UCmmtOXuQUAbmjw_7jgjoE1A": "HTTP Error 404: Not Found",
+   "UCeb1pXBDBXLiT1FfL0JMJDw": "HTTP Error 404: Not Found",
+   "UC2aidlQc0uCT6Zeibmhvoug": "HTTP Error 404: Not Found",
+   "UCrT1-sFkSwPVcJsi2V7NGww": "HTTP Error 404: Not Found",
+   "UCFw2gtdchWd-orp2CtFabQQ": "HTTP Error 404: Not Found",
+   "UCIlYGmfmlW-zbO5fjgZrtzQ": "HTTP Error 404: Not Found",
+   "UCCapyciQ07tS7mFIOBj03IA": "HTTP Error 404: Not Found",
+   "UCyCxT72OnAdA4cuxP8tweDg": "HTTP Error 404: Not Found",
+   "UCqp4T7IfaOFJ-iM_LvVKAhA": "HTTP Error 500: Internal Server Error",
+   "UCdOccpjUtItcCHpnEFxIvAw": "HTTP Error 500: Internal Server Error",
+   "UCBqgG4FSpdPC4eefrncYtoA": "HTTP Error 404: Not Found",
+   "UC8b-vRHkG86tmfg4l9OyOuA": "HTTP Error 404: Not Found",
+   "UCOBOQySnA5CVV5HIaBKqtKw": "HTTP Error 404: Not Found",
+   "UCCl4m0n2HukfK3fWU7iFpSA": "HTTP Error 500: Internal Server Error",
+   "UC9vrLznZJMKciifPfiAa27A": "HTTP Error 500: Internal Server Error",
+   "UCpwiso7AV3DV7vsRytZ5kPw": "HTTP Error 500: Internal Server Error",
+   "UCZKYwy4AOEQ95GIpbeHLMmw": "HTTP Error 404: Not Found",
+   "UC_5iRDr9L8mISVLkjHtRqyQ": "HTTP Error 404: Not Found",
+   "UC9Bbsv9K7DyUmH6WMFxBacQ": "HTTP Error 404: Not Found",
+   "UCof-FgtXvTDGSJD59u0fspQ": "HTTP Error 404: Not Found",
+   "UCCmwSBKOv9HCpJc6xSvl6Qw": "HTTP Error 404: Not Found",
+   "UCwxwG8ELPhzk1vstJxb3QiQ": "HTTP Error 404: Not Found",
+   "UCImEFdJXlL6LElqUQgaPuQw": "HTTP Error 404: Not Found",
+   "UC9AuqKoOXq92jrU_ZQKe8Iw": "HTTP Error 404: Not Found",
+   "UCJFL3Ba0TYa3euZQ2koHz_A": "HTTP Error 404: Not Found",
+   "UCviYJ1NoWTQX-b-1WM7p5FQ": "HTTP Error 500: Internal Server Error",
+   "UCjAHaa33aBPrdM9NETn39Bg": "HTTP Error 500: Internal Server Error",
+   "UCyt0QiK5n1abTIgz06AU7pg": "HTTP Error 404: Not Found",
+   "UCy3ItyTtUyg_3gvX2SKiCGQ": "HTTP Error 404: Not Found",
+   "UC7cLavnjswhMwzcbgMoAVOg": "HTTP Error 404: Not Found",
+   "UCvmaZrNCGuYR1Ga8r_fOMyQ": "HTTP Error 500: Internal Server Error",
+   "UCN9S0a_iB1kU0fm0ZWf4C0w": "HTTP Error 404: Not Found",
+   "UCPf6h8zc-rGQmbwxI2MzYSg": "HTTP Error 500: Internal Server Error",
+   "UCGsTItB1zIOrRH6sRfEoUWw": "HTTP Error 404: Not Found",
+   "UCIeXTAYFCuXdLt1lJKVstRw": "HTTP Error 404: Not Found",
+   "UCGAC1mM9uWnK5V9dWAgE52w": "HTTP Error 404: Not Found",
+   "UCriUurzi2RyLpRUEcK1-K6w": "HTTP Error 404: Not Found",
+   "UCg2OPjYkGGE7G85uvn5LubA": "HTTP Error 404: Not Found",
+   "UCKP-V1CII9aLzPKv7xiNjJA": "HTTP Error 404: Not Found",
+   "UC-f_q3Y6EV2NiK_BGfKT-vg": "HTTP Error 404: Not Found",
+   "UC7RGK7qUWIhiTjssuRJV50g": "HTTP Error 404: Not Found",
+   "UCiFAoyeta9i2PxZqmS-plZA": "HTTP Error 404: Not Found",
+   "UCIoWCrrFusdKlZsWWhwVwZg": "HTTP Error 404: Not Found",
+   "UC_Oz9FtAc1K6d10lXUAKqEQ": "HTTP Error 404: Not Found",
+   "UC0d1fX9LLpgUxZcTDjpfDug": "HTTP Error 404: Not Found",
+   "UCDaRfnv-1veAAeJXQsaTFQw": "HTTP Error 500: Internal Server Error",
+   "UCb4RVNu0_dLTr8jAFcKzxYQ": "HTTP Error 404: Not Found",
+   "UCUH_DUCejDw-BGQwQ_2o3SA": "HTTP Error 404: Not Found",
+   "UCjLRSG2O553JbBwpe8V9g0w": "HTTP Error 500: Internal Server Error",
+   "UCLW2UnO6_a1PTqd6NyIXQjg": "HTTP Error 404: Not Found",
+   "UCts35MyYFb9JSqbb1K57l8w": "HTTP Error 404: Not Found",
+   "UCluUvENYjv4S3ZKZotth3Pw": "HTTP Error 404: Not Found",
+   "UC9_M_m745Lij4epEEuB8nqQ": "HTTP Error 404: Not Found",
+   "UCAYGJWBIVZybyTeEq5lgZAg": "HTTP Error 500: Internal Server Error",
+   "UCgwE0alEVZ1bejmL1lrneTw": "HTTP Error 404: Not Found",
+   "UCbHu-bzMFx8DFz9AxYciDBA": "HTTP Error 404: Not Found",
+   "UCvLWowI3SEsPXHM-J1aCeoQ": "HTTP Error 404: Not Found",
+   "UCYIq1cWl8C9nCTwPtBlhxDQ": "HTTP Error 404: Not Found",
+   "UCOcn2TjZHmmjj2dp8UjLUiQ": "HTTP Error 500: Internal Server Error",
+   "UCt0PLeiBMmIRh_DXNklPnQw": "HTTP Error 500: Internal Server Error",
+   "UC9jlTXmOAa_z-hsSd5BhsaQ": "HTTP Error 500: Internal Server Error",
+   "UC-d_KTJjiwgc_7pIUAbuAUg": "HTTP Error 404: Not Found",
+   "UCNCpNkH-oyBTsng9WmENrsQ": "HTTP Error 404: Not Found",
+   "UCbYz_qI_Mx5EN48oXHTkYvQ": "HTTP Error 404: Not Found",
+   "UCWiQ8klYiKS0-CHZ94iLKjQ": "HTTP Error 500: Internal Server Error",
+   "UCGp1LngzCeaU3BQnp0up13Q": "HTTP Error 404: Not Found",
+   "UCcMqmkKnA8_3KCbR8NOX-0A": "HTTP Error 404: Not Found",
+   "UCSms4GMc7frTcapzvKDL8_Q": "HTTP Error 404: Not Found",
+   "UCvl4ocmrAM1Zw3_0Laz_FmA": "HTTP Error 404: Not Found",
+   "UCipSIwlTjGXqc7g03tUFcEA": "HTTP Error 500: Internal Server Error",
+   "UCPcL3IKB83Fg_-RqdEmqYiQ": "HTTP Error 404: Not Found",
+   "UCFcVwP_mNpjr1VfVJAP7v-Q": "HTTP Error 404: Not Found",
+   "UCNoi89_76w_m7cVipcnH3aw": "HTTP Error 404: Not Found",
+   "UCzw9q7H-mrRsLtlvEReXDgQ": "HTTP Error 500: Internal Server Error",
+   "UCcFqNAMUVbE5Z_WbZx7EeWg": "HTTP Error 404: Not Found",
+   "UC_pdzCBnkHuMvyFg9TivIvA": "HTTP Error 404: Not Found",
+   "UCSiZrrcJISEL4d43zpsmU-A": "HTTP Error 404: Not Found",
+   "UCGNN3l0Z809ww2yU90kuBPQ": "HTTP Error 500: Internal Server Error",
+   "UCughL3TMyUeOVnZGawoU3SA": "HTTP Error 404: Not Found",
+   "UCPG6fn24QEopCI56AtLgVPg": "HTTP Error 404: Not Found",
+   "UCHAPIMnIWV3Vx9PcUOqeO9A": "HTTP Error 500: Internal Server Error",
+   "UCBxACxvrpFgDRZ56pd7Is-A": "HTTP Error 404: Not Found",
+   "UCBhcBYdgUvtlXe-0wuk0ZHg": "HTTP Error 404: Not Found",
+   "UC8sJv8jDxUwlFEhJbI_JEKA": "HTTP Error 404: Not Found",
+   "UC36P-1B0e65rwg_K9plRpsA": "HTTP Error 404: Not Found",
+   "UCveC1Yc7lGCeSP86CZJcMJA": "HTTP Error 404: Not Found",
+   "UCh6XCLv2a5ksYbj5fbXUTGA": "HTTP Error 404: Not Found",
+   "UCgZ8XiHPLPV0Rwjlw6v2gMg": "HTTP Error 404: Not Found",
+   "UCzP8jY6DdU17ZneAVdh2KKA": "HTTP Error 404: Not Found",
+   "UCtiWuAa1_VUXrWEP_sqimFQ": "HTTP Error 500: Internal Server Error",
+   "UCiy6MuDk3VW28qT5z7Oh0Ng": "HTTP Error 404: Not Found",
+   "UCh2Zu8NY-jW9kmQARCx2DOA": "HTTP Error 404: Not Found",
+   "UCb837sgxAAW8emhoVzlU3YA": "HTTP Error 404: Not Found",
+   "UCPgJb8EgPUL10IA7WBFnhQg": "HTTP Error 404: Not Found",
+   "UCLD0xEViECZC2lCKl_qh_xg": "HTTP Error 404: Not Found",
+   "UC8A5SL7KNpejTo-CmAWZYrw": "HTTP Error 404: Not Found",
+   "UC7Bu26DgVoxjgGADIBOJvzQ": "HTTP Error 404: Not Found",
+   "UC4hrY1RKtdsn0IZUzK_TbPQ": "HTTP Error 500: Internal Server Error",
+   "UC0JV193WWkbGnOM1baAZHjA": "HTTP Error 404: Not Found",
+   "UC0DGnJx4P0g8Vw5CMhvTykQ": "HTTP Error 404: Not Found",
+   "UCvVqycqGwMcpErd3b1Tq7UQ": "HTTP Error 500: Internal Server Error",
+   "UCa0h-0d5n4os05JXEMvZ3zg": "HTTP Error 404: Not Found",
+   "UCx8wWESm_LxCO19RHlN7sZw": "HTTP Error 404: Not Found",
+   "UCbeVcittZw4OMmRnbmd9ekg": "HTTP Error 404: Not Found",
+   "UC_IeMicIG54K4tFAl523VhA": "HTTP Error 404: Not Found",
+   "UCVhZxyZjU-_IKwIC8aHLpNQ": "HTTP Error 500: Internal Server Error",
+   "UCTa7zuk9pYC0d03wpyS5xcw": "HTTP Error 404: Not Found",
+   "UCRHXLvAKDZMoPFp2_4JFnyw": "HTTP Error 404: Not Found",
+   "UCJ5bkdAUIjoSJc3A6I81Mfw": "HTTP Error 404: Not Found",
+   "UCCdtE8OqqwxCnBuNwxUeLyg": "HTTP Error 500: Internal Server Error",
+   "UC2C4NndKwQDuwfG9vD_2Wjg": "HTTP Error 404: Not Found",
+   "UCvhgSfwhCFxZOXoe48KRBcw": "HTTP Error 500: Internal Server Error",
+   "UCqd0-SQrx5dYSU7mHW7LJfw": "HTTP Error 404: Not Found",
+   "UCZLb1a7bdqVIPrjnsqfh9wg": "HTTP Error 404: Not Found",
+   "UCR1JpghdiBKM_KkujIGtO4g": "HTTP Error 500: Internal Server Error",
+   "UCEW5_2DGpSFQXc0D8GZ76DQ": "HTTP Error 404: Not Found",
+   "UCAcAMvytqwrtXBKEgV4mv_g": "HTTP Error 404: Not Found",
+   "UC5sH24yLtVuDULR9rvx-tkA": "HTTP Error 404: Not Found",
+   "UCVA2fCka_yf6zJw9G3moGCw": "HTTP Error 404: Not Found",
+   "UCN-kiB21Wl0cDMS6PnmRboA": "HTTP Error 404: Not Found",
+   "UCrUBA-Mz6-UihcogwvmnrZg": "HTTP Error 404: Not Found",
+   "UClvcYe4ClwLpJqPTiBUAZPA": "HTTP Error 500: Internal Server Error",
+   "UCjdDMURsQnD7Yw6z_NeH7Rw": "HTTP Error 404: Not Found",
+   "UCNuF05PkJwmF8kRJNQWrFhg": "HTTP Error 404: Not Found",
+   "UCJUiFXj187WOLf9gomXzKzg": "HTTP Error 404: Not Found",
+   "UCIjX3jZVwC_xwVmQIEKA2aA": "HTTP Error 404: Not Found",
+   "UCIH8CBy4CA7Ra7D-dTmwUBQ": "HTTP Error 404: Not Found",
+   "UCFU_jTj5fZH9pAYy1V1MuoA": "HTTP Error 404: Not Found",
+   "UC8-W3IyU2cJ7T8RLvFEyJpA": "HTTP Error 404: Not Found",
+   "UC6Wdp7EU3U3yZVYoNeuckuQ": "HTTP Error 500: Internal Server Error",
+   "UClB1AyGhDmEQ1RZp-tmOuBg": "HTTP Error 404: Not Found",
+   "UCg2RwqOd8edX7iq7knnftnA": "HTTP Error 404: Not Found",
+   "UC4-w1Y7cvAQpsY5FBxTslfA": "HTTP Error 404: Not Found",
+   "UCh879Dz1s-TP97-i6sSxXOQ": "HTTP Error 404: Not Found"
+  }
+ },
+ "순위": [
+  {
+   "인물": "최은경",
+   "제품": "스웨이드로퍼 ZARA 가죽로퍼",
+   "점수": 802.0,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "mHHUlYnVgdQ",
+    "title": "'너무 잘 만들었다' ZARA에서 최은경이 찾은 명품 슈즈 #최은경#주름로퍼#스웨이드로퍼#가죽로퍼#ZARA#명품슈즈",
+    "url": "https://www.youtube.com/shorts/mHHUlYnVgdQ",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 131910,
+    "hours": 136.5,
+    "speed": 966.3,
+    "mult": 21.62,
+    "growth": 179.9,
+    "published": "2026-10-12T11:00:12+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "'너무 잘 만들었다' ZARA에서 최은경이 찾은 명품 슈즈 #최은경#주름로퍼#스웨이드로퍼#가죽로퍼#ZARA#명품슈즈",
+     "url": "https://www.youtube.com/shorts/mHHUlYnVgdQ",
+     "views": 131910,
+     "hours": 136.5,
+     "speed": 966.3
+    }
+   ],
+   "순위": 1
+  },
+  {
+   "인물": "김나영",
+   "제품": "가을패션 기본니트 레드니트",
+   "점수": 682.0,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "FwIO7TTByHY",
+    "title": "김나영이 알려주는 가을 니트 코디 #김나영#니트#가을패션#레드니트#기본니트",
+    "url": "https://www.youtube.com/shorts/FwIO7TTByHY",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 72727,
+    "hours": 88.5,
+    "speed": 821.7,
+    "mult": 11.92,
+    "growth": 216.9,
+    "published": "2026-10-14T11:00:19+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "김나영이 알려주는 가을 니트 코디 #김나영#니트#가을패션#레드니트#기본니트",
+     "url": "https://www.youtube.com/shorts/FwIO7TTByHY",
+     "views": 72727,
+     "hours": 88.5,
+     "speed": 821.7
+    }
+   ],
+   "순위": 2
+  },
+  {
+   "인물": "한혜연",
+   "제품": "자라남자신발 공간디렉터 반해버린",
+   "점수": 660.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "qUQiFn9yhBc",
+    "title": "한혜연이 만나 반해버린 남자의 정체는? #한혜연#자라홈#자라신발#자라남자신발#공간디렉터",
+    "url": "https://www.youtube.com/shorts/qUQiFn9yhBc",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 13136,
+    "hours": 16.5,
+    "speed": 795.7,
+    "mult": 2.15,
+    "growth": 690.0,
+    "published": "2026-10-17T11:00:22+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "한혜연이 만나 반해버린 남자의 정체는? #한혜연#자라홈#자라신발#자라남자신발#공간디렉터",
+     "url": "https://www.youtube.com/shorts/qUQiFn9yhBc",
+     "views": 13136,
+     "hours": 16.5,
+     "speed": 795.7
+    }
+   ],
+   "순위": 3
+  },
+  {
+   "인물": "채정안",
+   "제품": "가죽재킷 멋쟁이들 중요하게",
+   "점수": 596.3,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "XHQNeb30wMc",
+    "title": "멋쟁이들 외투 고를 때 중요하게 생각하는 거? #채정안#가을템#외투#가죽재킷",
+    "url": "https://www.youtube.com/shorts/XHQNeb30wMc",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 80821,
+    "hours": 112.5,
+    "speed": 718.4,
+    "mult": 13.25,
+    "growth": 119.7,
+    "published": "2026-10-13T11:00:38+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "멋쟁이들 외투 고를 때 중요하게 생각하는 거? #채정안#가을템#외투#가죽재킷",
+     "url": "https://www.youtube.com/shorts/XHQNeb30wMc",
+     "views": 80821,
+     "hours": 112.5,
+     "speed": 718.4
+    }
+   ],
+   "순위": 4
+  },
+  {
+   "인물": "손태영",
+   "제품": "네이처리퍼블릭 미국대란템 코스트코",
+   "점수": 582.0,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "14XUPMz_shE",
+    "title": "미국 코스트코에서 품절대란 난 한국 화장품#손태영#미국대란템#고소영#네이처리퍼블릭#화장품",
+    "url": "https://www.youtube.com/shorts/14XUPMz_shE",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 112557,
+    "hours": 160.5,
+    "speed": 701.2,
+    "mult": 18.45,
+    "growth": 23.4,
+    "published": "2026-10-11T11:00:15+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "미국 코스트코에서 품절대란 난 한국 화장품#손태영#미국대란템#고소영#네이처리퍼블릭#화장품",
+     "url": "https://www.youtube.com/shorts/14XUPMz_shE",
+     "views": 112557,
+     "hours": 160.5,
+     "speed": 701.2
+    }
+   ],
+   "순위": 5
+  },
+  {
+   "인물": "카리나",
+   "제품": "나오자마자 일어난 들고",
+   "점수": 489.1,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "i5XQ7sG_Fho",
+    "title": "카리나가 들고 나오자마자 품절 대란 일어난 이유",
+    "url": "https://www.youtube.com/shorts/i5XQ7sG_Fho",
+    "cid": "UCF8sj4jXaMaui-otHive4aA",
+    "cname": "스타템 쇼츠",
+    "views": 986,
+    "hours": 2.0,
+    "speed": 489.1,
+    "mult": 0.7,
+    "growth": null,
+    "published": "2026-10-18T01:30:00+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "스타템 쇼츠",
+     "title": "카리나가 들고 나오자마자 품절 대란 일어난 이유",
+     "url": "https://www.youtube.com/shorts/i5XQ7sG_Fho",
+     "views": 986,
+     "hours": 2.0,
+     "speed": 489.1
+    }
+   ],
+   "순위": 6
+  },
+  {
+   "인물": "이서진",
+   "제품": "10년째 목주름 빼놓고",
+   "점수": 222.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "D5J39noIjmU",
+    "title": "\"목주름은 못 숨겨요\" 이서진이 10년째 절대 안 빼놓고 바르는 이것",
+    "url": "https://www.youtube.com/shorts/D5J39noIjmU",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 737,
+    "hours": 3.0,
+    "speed": 244.9,
+    "mult": 0.49,
+    "growth": null,
+    "published": "2026-10-18T00:30:25+00:00"
+   },
+   "출처": "이서진도 몰래 쟁여두고 쓴다는 정유미의 10년 찐템   나이 들수록 관리하기 힘든 '목주름' 방어하는 연예인들의 뷰티 비법 공개! 🤫✨📌 출처: Allure Korea, 채널십오야   #이서진 #정유미 #연예인협찬템",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "\"목주름은 못 숨겨요\" 이서진이 10년째 절대 안 빼놓고 바르는 이것",
+     "url": "https://www.youtube.com/shorts/D5J39noIjmU",
+     "views": 737,
+     "hours": 3.0,
+     "speed": 244.9
+    }
+   ],
+   "순위": 7
+  },
+  {
+   "인물": "",
+   "제품": "빌려줘요 미나미 억울한",
+   "점수": 167.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "jWX9bhy_jEI",
+    "title": "아니 왜 언니들 거는 안 빌려줘요? 억울한 미나미의 가방 털기 🎒✨",
+    "url": "https://www.youtube.com/shorts/jWX9bhy_jEI",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 31585,
+    "hours": 51.5,
+    "speed": 613.2,
+    "mult": 21.06,
+    "growth": 24.6,
+    "published": "2026-10-16T00:00:18+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "아니 왜 언니들 거는 안 빌려줘요? 억울한 미나미의 가방 털기 🎒✨",
+     "url": "https://www.youtube.com/shorts/jWX9bhy_jEI",
+     "views": 31585,
+     "hours": 51.5,
+     "speed": 613.2
+    }
+   ],
+   "순위": 8
+  },
+  {
+   "인물": "박보검",
+   "제품": "버리고 선택한 에어팟",
+   "점수": 93.6,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "I7IyRGdS4M4",
+    "title": "박보검이 에어팟 버리고 선택한 ‘이 이어폰’의 정체 🎧",
+    "url": "https://www.youtube.com/shorts/I7IyRGdS4M4",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 2632,
+    "hours": 25.6,
+    "speed": 102.9,
+    "mult": 1.75,
+    "growth": 53.9,
+    "published": "2026-10-17T01:56:58+00:00"
+   },
+   "출처": "📌 출처: GQ KOREA",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "박보검이 에어팟 버리고 선택한 ‘이 이어폰’의 정체 🎧",
+     "url": "https://www.youtube.com/shorts/I7IyRGdS4M4",
+     "views": 2632,
+     "hours": 25.6,
+     "speed": 102.9
+    }
+   ],
+   "순위": 9
+  },
+  {
+   "인물": "차예련",
+   "제품": "100통이나 뭐길래 대체",
+   "점수": 40.6,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "44IOSQkKFPc",
+    "title": "100통이나 비운 차예련 쿠션 대체 뭐길래?",
+    "url": "https://www.youtube.com/shorts/44IOSQkKFPc",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 1124,
+    "hours": 20.5,
+    "speed": 54.8,
+    "mult": 0.8,
+    "growth": 2.0,
+    "published": "2026-10-17T07:00:00+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "100통이나 비운 차예련 쿠션 대체 뭐길래?",
+     "url": "https://www.youtube.com/shorts/44IOSQkKFPc",
+     "views": 1124,
+     "hours": 20.5,
+     "speed": 54.8
+    }
+   ],
+   "순위": 10
+  },
+  {
+   "인물": "이혜원",
+   "제품": "스타일링 3초 가능",
+   "점수": 38.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "tRaaShdFQao",
+    "title": "2. 똥손도 3초 만에 가능! 이혜원의 역대급 헤어 스타일링",
+    "url": "https://www.youtube.com/shorts/tRaaShdFQao",
+    "cid": "UCF8sj4jXaMaui-otHive4aA",
+    "cname": "스타템 쇼츠",
+    "views": 1922,
+    "hours": 50.0,
+    "speed": 38.4,
+    "mult": 1.37,
+    "growth": 34.3,
+    "published": "2026-10-16T01:30:14+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "스타템 쇼츠",
+     "title": "2. 똥손도 3초 만에 가능! 이혜원의 역대급 헤어 스타일링",
+     "url": "https://www.youtube.com/shorts/tRaaShdFQao",
+     "views": 1922,
+     "hours": 50.0,
+     "speed": 38.4
+    }
+   ],
+   "순위": 11
+  },
+  {
+   "인물": "이효리",
+   "제품": "디저트",
+   "점수": 32.6,
+   "채널수": 3,
+   "묶음영상수": 3,
+   "대표": {
+    "id": "XA2btr4xYiw",
+    "title": "이효리 부부가 쟁여두고 먹는다는 최고급 디저트 대공개!",
+    "url": "https://www.youtube.com/shorts/XA2btr4xYiw",
+    "cid": "UCF8sj4jXaMaui-otHive4aA",
+    "cname": "스타템 쇼츠",
+    "views": 1345,
+    "hours": 110.0,
+    "speed": 12.2,
+    "mult": 0.96,
+    "growth": 0.5,
+    "published": "2026-10-13T13:30:09+00:00"
+   },
+   "출처": "영상 출처: 뜬뜬 DdeunDdeun",
+   "묶음": [
+    {
+     "cname": "스타템 쇼츠",
+     "title": "이효리 부부가 쟁여두고 먹는다는 최고급 디저트 대공개!",
+     "url": "https://www.youtube.com/shorts/XA2btr4xYiw",
+     "views": 1345,
+     "hours": 110.0,
+     "speed": 12.2
+    },
+    {
+     "cname": "원픽숏츠",
+     "title": "이효리가 친구한테 선물 받고 바로 재주문해버린 대박 디저트 #이효리 #이상순 #이효리디저트 #만수르디저트 #대추야자",
+     "url": "https://www.youtube.com/shorts/oQYUVmgQyMI",
+     "views": 1426,
+     "hours": 136.4,
+     "speed": 10.5
+    },
+    {
+     "cname": "킵셀럽",
+     "title": "\"약간 설레더라고요\" 이효리가 남편한테 깜짝 선물 받은 가방",
+     "url": "https://www.youtube.com/shorts/lJjOUjKn5lM",
+     "views": 1511,
+     "hours": 148.7,
+     "speed": 10.2
+    }
+   ],
+   "순위": 12
+  },
+  {
+   "인물": "강주은",
+   "제품": "코스트코",
+   "점수": 31.6,
+   "채널수": 2,
+   "묶음영상수": 2,
+   "대표": {
+    "id": "GQSLuy-RFDk",
+    "title": "강주은이 코스트코 갈 때마다 무조건 털어온다는 역대급 미니 치즈 정체",
+    "url": "https://www.youtube.com/shorts/GQSLuy-RFDk",
+    "cid": "UCF8sj4jXaMaui-otHive4aA",
+    "cname": "스타템 쇼츠",
+    "views": 1435,
+    "hours": 74.0,
+    "speed": 19.4,
+    "mult": 1.02,
+    "growth": 3.2,
+    "published": "2026-10-15T01:30:30+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "스타템 쇼츠",
+     "title": "강주은이 코스트코 갈 때마다 무조건 털어온다는 역대급 미니 치즈 정체",
+     "url": "https://www.youtube.com/shorts/GQSLuy-RFDk",
+     "views": 1435,
+     "hours": 74.0,
+     "speed": 19.4
+    },
+    {
+     "cname": "원픽숏츠",
+     "title": "강주은이 연말마다 코스트코 가자마자 사재기한다는 대박 식재료의 정체 #코스트코양갈비 #몬트리올스테이크스파이스 #강주은양갈비 #코스트코추천템 #양갈비레시피",
+     "url": "https://www.youtube.com/shorts/zpq8SC9nhyw",
+     "views": 1315,
+     "hours": 108.1,
+     "speed": 12.2
+    }
+   ],
+   "순위": 13
+  },
+  {
+   "인물": "여배우",
+   "제품": "머리",
+   "점수": 26.6,
+   "채널수": 2,
+   "묶음영상수": 2,
+   "대표": {
+    "id": "QtFJA_PZJAM",
+    "title": "머리 휑했던 여배우의 반전 근황#shorts",
+    "url": "https://www.youtube.com/shorts/QtFJA_PZJAM",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 1432,
+    "hours": 78.5,
+    "speed": 18.2,
+    "mult": 0.95,
+    "growth": 1.7,
+    "published": "2026-10-14T21:00:24+00:00"
+   },
+   "출처": "영상 출처: 출처 최종시안, 채정안TV, 류혜영레몬과밀치회",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "머리 휑했던 여배우의 반전 근황#shorts",
+     "url": "https://www.youtube.com/shorts/QtFJA_PZJAM",
+     "views": 1432,
+     "hours": 78.5,
+     "speed": 18.2
+    },
+    {
+     "cname": "킵셀럽",
+     "title": "\"머리가 전보다 훨씬 덜 빠지는 느낌\" 여배우가 샤워 후 바르는 두피 앰플",
+     "url": "https://www.youtube.com/shorts/BM10Dr43EvA",
+     "views": 1251,
+     "hours": 120.3,
+     "speed": 10.4
+    }
+   ],
+   "순위": 14
+  },
+  {
+   "인물": "김나영",
+   "제품": "소개해요 플랫슈즈 인스타",
+   "점수": 25.7,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "f5T2b3h892U",
+    "title": "지금 사야 하는 여자 플랫슈즈 추천 🤍 김나영 제니 인스타 착장 신발을 소개해요",
+    "url": "https://www.youtube.com/shorts/f5T2b3h892U",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 4019,
+    "hours": 115.9,
+    "speed": 34.7,
+    "mult": 2.87,
+    "growth": 9.4,
+    "published": "2026-10-13T07:34:25+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "지금 사야 하는 여자 플랫슈즈 추천 🤍 김나영 제니 인스타 착장 신발을 소개해요",
+     "url": "https://www.youtube.com/shorts/f5T2b3h892U",
+     "views": 4019,
+     "hours": 115.9,
+     "speed": 34.7
+    }
+   ],
+   "순위": 15
+  },
+  {
+   "인물": "",
+   "제품": "언더아머 선택한 운동화",
+   "점수": 25.1,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "rw5CY-ghN1Y",
+    "title": "운동 집안 송강이 선택한 운동화#송강#헬스#운동화#언더아머",
+    "url": "https://www.youtube.com/shorts/rw5CY-ghN1Y",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 4080,
+    "hours": 40.5,
+    "speed": 100.7,
+    "mult": 0.67,
+    "growth": 62.0,
+    "published": "2026-10-16T11:00:14+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "운동 집안 송강이 선택한 운동화#송강#헬스#운동화#언더아머",
+     "url": "https://www.youtube.com/shorts/rw5CY-ghN1Y",
+     "views": 4080,
+     "hours": 40.5,
+     "speed": 100.7
+    }
+   ],
+   "순위": 16
+  },
+  {
+   "인물": "박지현",
+   "제품": "귀지압패치 내돈내산 부기완화",
+   "점수": 21.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "cCGbgxBVKl0",
+    "title": "박지현 이쁜 얼굴선의 비밀!#박지현#피어싱#귀지압#귀지압패치#부기완화 #내돈내산",
+    "url": "https://www.youtube.com/shorts/cCGbgxBVKl0",
+    "cid": "UCkIZOE5YJpBtxzp9VyNCLmQ",
+    "cname": "원픽꿀템",
+    "views": 1662,
+    "hours": 64.5,
+    "speed": 25.8,
+    "mult": 0.27,
+    "growth": 2.1,
+    "published": "2026-10-15T11:00:21+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽꿀템",
+     "title": "박지현 이쁜 얼굴선의 비밀!#박지현#피어싱#귀지압#귀지압패치#부기완화 #내돈내산",
+     "url": "https://www.youtube.com/shorts/cCGbgxBVKl0",
+     "views": 1662,
+     "hours": 64.5,
+     "speed": 25.8
+    }
+   ],
+   "순위": 17
+  },
+  {
+   "인물": "이렇게",
+   "제품": "공부하 누르며 발바닥",
+   "점수": 20.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "5Lrwl1YjbNs",
+    "title": "\"이렇게 하면 이마가 어떻게 되는 건데?\" 채정안이 발바닥 누르며 공부하는 지압 양말",
+    "url": "https://www.youtube.com/shorts/5Lrwl1YjbNs",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1130,
+    "hours": 52.7,
+    "speed": 21.5,
+    "mult": 0.84,
+    "growth": 0.3,
+    "published": "2026-10-15T22:50:27+00:00"
+   },
+   "출처": "영상 출처: 채정안TV",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"이렇게 하면 이마가 어떻게 되는 건데?\" 채정안이 발바닥 누르며 공부하는 지압 양말",
+     "url": "https://www.youtube.com/shorts/5Lrwl1YjbNs",
+     "views": 1130,
+     "hours": 52.7,
+     "speed": 21.5
+    }
+   ],
+   "순위": 18
+  },
+  {
+   "인물": "강민경",
+   "제품": "놓아두 다비치 차에서",
+   "점수": 20.2,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "moN86riV4pw",
+    "title": "\"탈취제는 무조건 고체\" 다비치 강민경이 차에서 밥 먹고 놓아두는 탈취제",
+    "url": "https://www.youtube.com/shorts/moN86riV4pw",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 2008,
+    "hours": 96.3,
+    "speed": 20.8,
+    "mult": 1.49,
+    "growth": 3.9,
+    "published": "2026-10-14T03:10:02+00:00"
+   },
+   "출처": "영상 출처: 걍밍경",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"탈취제는 무조건 고체\" 다비치 강민경이 차에서 밥 먹고 놓아두는 탈취제",
+     "url": "https://www.youtube.com/shorts/moN86riV4pw",
+     "views": 2008,
+     "hours": 96.3,
+     "speed": 20.8
+    }
+   ],
+   "순위": 19
+  },
+  {
+   "인물": "김도연",
+   "제품": "좋아요 지퍼백 크기별",
+   "점수": 17.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "B8lPNnCrD_g",
+    "title": "\"이거 진짜 좋아요\" 김도연이 크기별로 사서 여행 짐 싸는 지퍼백",
+    "url": "https://www.youtube.com/shorts/B8lPNnCrD_g",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1370,
+    "hours": 76.7,
+    "speed": 17.9,
+    "mult": 1.01,
+    "growth": 0.0,
+    "published": "2026-10-14T22:50:23+00:00"
+   },
+   "출처": "영상 출처: VOGUE KOREA",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"이거 진짜 좋아요\" 김도연이 크기별로 사서 여행 짐 싸는 지퍼백",
+     "url": "https://www.youtube.com/shorts/B8lPNnCrD_g",
+     "views": 1370,
+     "hours": 76.7,
+     "speed": 17.9
+    }
+   ],
+   "순위": 20
+  },
+  {
+   "인물": "정재형",
+   "제품": "파피에다르메니 고현정향수 비밀고현정",
+   "점수": 16.7,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "HVRQBh4RVtk",
+    "title": "뷔가 정재형한테 선물로 가져온 집 안 필수 향기 종이의 비밀고현정과 뷔가 공통으로 집에서 꼭 쓴다는 종이 향수 실물 #뷔 #고현정 #종이향수 #파피에다르메니 #뷔향수 #고현정향수",
+    "url": "https://www.youtube.com/shorts/HVRQBh4RVtk",
+    "cid": "UClu_j7ECO-FXxGxJTjmSghQ",
+    "cname": "원픽숏츠",
+    "views": 1476,
+    "hours": 88.1,
+    "speed": 16.7,
+    "mult": 0.98,
+    "growth": 0.5,
+    "published": "2026-10-14T11:23:08+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "원픽숏츠",
+     "title": "뷔가 정재형한테 선물로 가져온 집 안 필수 향기 종이의 비밀고현정과 뷔가 공통으로 집에서 꼭 쓴다는 종이 향수 실물 #뷔 #고현정 #종이향수 #파피에다르메니 #뷔향수 #고현정향수",
+     "url": "https://www.youtube.com/shorts/HVRQBh4RVtk",
+     "views": 1476,
+     "hours": 88.1,
+     "speed": 16.7
+    }
+   ],
+   "순위": 21
+  },
+  {
+   "인물": "태연",
+   "제품": "연예인추천템 크리스마스 빼빼로데",
+   "점수": 16.5,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "f7LNV_iRpqo",
+    "title": "단것 덕후가 뽑은 올해 최고의 초코 카라멜 솔직 리뷰 #shorts #쇼츠 #태연 #소녀시대 #연예인 #연예인추천템 #태연추천템 #초콜렛 #빼빼로데이 #크리스마스",
+    "url": "https://www.youtube.com/shorts/f7LNV_iRpqo",
+    "cid": "UCxk2JvA40ffmBdxPoDCCaHw",
+    "cname": "연예인Pick",
+    "views": 1128,
+    "hours": 66.3,
+    "speed": 17.0,
+    "mult": 0.75,
+    "growth": 1.4,
+    "published": "2026-10-15T09:15:18+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "연예인Pick",
+     "title": "단것 덕후가 뽑은 올해 최고의 초코 카라멜 솔직 리뷰 #shorts #쇼츠 #태연 #소녀시대 #연예인 #연예인추천템 #태연추천템 #초콜렛 #빼빼로데이 #크리스마스",
+     "url": "https://www.youtube.com/shorts/f7LNV_iRpqo",
+     "views": 1128,
+     "hours": 66.3,
+     "speed": 17.0
+    }
+   ],
+   "순위": 22
+  },
+  {
+   "인물": "김나영",
+   "제품": "가방마다 립글로스 같아요",
+   "점수": 15.0,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "YTVC5diPxDM",
+    "title": "\"이거 한 5개 정도 쓴 것 같아요\" 김나영이 가방마다 넣어 두는 립글로스",
+    "url": "https://www.youtube.com/shorts/YTVC5diPxDM",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1032,
+    "hours": 66.5,
+    "speed": 15.5,
+    "mult": 0.76,
+    "growth": 0.1,
+    "published": "2026-10-15T09:00:25+00:00"
+   },
+   "출처": "영상 출처: 김나영의 nofilterTV",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"이거 한 5개 정도 쓴 것 같아요\" 김나영이 가방마다 넣어 두는 립글로스",
+     "url": "https://www.youtube.com/shorts/YTVC5diPxDM",
+     "views": 1032,
+     "hours": 66.5,
+     "speed": 15.5
+    }
+   ],
+   "순위": 23
+  },
+  {
+   "인물": "김나영",
+   "제품": "들어간다고 손바닥 수납템",
+   "점수": 14.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "MIxz1xLfJuA",
+    "title": "\"손바닥만 한데 짐이 다 들어간다고? 김나영·윤혜진이 반한 미친 수납템\"",
+    "url": "https://www.youtube.com/shorts/MIxz1xLfJuA",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 1612,
+    "hours": 98.0,
+    "speed": 16.4,
+    "mult": 1.07,
+    "growth": 6.6,
+    "published": "2026-10-14T01:30:25+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "\"손바닥만 한데 짐이 다 들어간다고? 김나영·윤혜진이 반한 미친 수납템\"",
+     "url": "https://www.youtube.com/shorts/MIxz1xLfJuA",
+     "views": 1612,
+     "hours": 98.0,
+     "speed": 16.4
+    }
+   ],
+   "순위": 24
+  },
+  {
+   "인물": "한혜진",
+   "제품": "잡아줘서 냉장고 탈취제",
+   "점수": 12.5,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "Dm2AhzduaRY",
+    "title": "\"냉장고의 강한 냄새도 5분 만에 잡아줘서\" 한혜진이 냉장고와 화장실에 두는 탈취제",
+    "url": "https://www.youtube.com/shorts/Dm2AhzduaRY",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1171,
+    "hours": 90.5,
+    "speed": 12.9,
+    "mult": 0.87,
+    "growth": 0.2,
+    "published": "2026-10-14T09:00:29+00:00"
+   },
+   "출처": "영상 출처: 한혜진 Han Hye Jin",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"냉장고의 강한 냄새도 5분 만에 잡아줘서\" 한혜진이 냉장고와 화장실에 두는 탈취제",
+     "url": "https://www.youtube.com/shorts/Dm2AhzduaRY",
+     "views": 1171,
+     "hours": 90.5,
+     "speed": 12.9
+    }
+   ],
+   "순위": 25
+  },
+  {
+   "인물": "이미숙",
+   "제품": "보물인데 나의 바르",
+   "점수": 11.3,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "H00UQD2CwQ0",
+    "title": "\"이거는 나의 보물인데\" 이미숙이 햇볕 본 날 꼭 바르는 팩",
+    "url": "https://www.youtube.com/shorts/H00UQD2CwQ0",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1459,
+    "hours": 124.7,
+    "speed": 11.7,
+    "mult": 1.08,
+    "growth": 0.0,
+    "published": "2026-10-12T22:50:20+00:00"
+   },
+   "출처": "영상 출처: 출처 이미숙_숙스러운 미숙씨",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"이거는 나의 보물인데\" 이미숙이 햇볕 본 날 꼭 바르는 팩",
+     "url": "https://www.youtube.com/shorts/H00UQD2CwQ0",
+     "views": 1459,
+     "hours": 124.7,
+     "speed": 11.7
+    }
+   ],
+   "순위": 26
+  },
+  {
+   "인물": "류혜영",
+   "제품": "올리브영 쟁여둔다 세일할",
+   "점수": 10.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "GccbDUdHqo0",
+    "title": "올리브영 세일할 때 류혜영이 무조건 쟁여둔다는 인생 세럼 공개",
+    "url": "https://www.youtube.com/shorts/GccbDUdHqo0",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 1004,
+    "hours": 68.5,
+    "speed": 14.7,
+    "mult": 0.72,
+    "growth": 0.7,
+    "published": "2026-10-15T07:00:38+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "올리브영 세일할 때 류혜영이 무조건 쟁여둔다는 인생 세럼 공개",
+     "url": "https://www.youtube.com/shorts/GccbDUdHqo0",
+     "views": 1004,
+     "hours": 68.5,
+     "speed": 14.7
+    }
+   ],
+   "순위": 27
+  },
+  {
+   "인물": "이나연",
+   "제품": "떨어지진 공들여 아니야",
+   "점수": 10.2,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "QMXdHaWWZB0",
+    "title": "\"오르기만 하지 값이 떨어지진 않을 거 아니야\" 이나연이 공들여 모은 명품",
+    "url": "https://www.youtube.com/shorts/QMXdHaWWZB0",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1454,
+    "hours": 138.5,
+    "speed": 10.5,
+    "mult": 1.08,
+    "growth": 0.2,
+    "published": "2026-10-12T09:00:27+00:00"
+   },
+   "출처": "영상 출처: A급 장영란, 일단이나연",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"오르기만 하지 값이 떨어지진 않을 거 아니야\" 이나연이 공들여 모은 명품",
+     "url": "https://www.youtube.com/shorts/QMXdHaWWZB0",
+     "views": 1454,
+     "hours": 138.5,
+     "speed": 10.5
+    }
+   ],
+   "순위": 28
+  },
+  {
+   "인물": "화사",
+   "제품": "물어본다 10명 심장템",
+   "점수": 9.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "QdNoSzry4gA",
+    "title": "10명 중 8명이 물어본다는 화사의 '내 심장템' 정체",
+    "url": "https://www.youtube.com/shorts/QdNoSzry4gA",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 1544,
+    "hours": 141.8,
+    "speed": 10.9,
+    "mult": 1.03,
+    "growth": 0.0,
+    "published": "2026-10-12T05:40:35+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "10명 중 8명이 물어본다는 화사의 '내 심장템' 정체",
+     "url": "https://www.youtube.com/shorts/QdNoSzry4gA",
+     "views": 1544,
+     "hours": 141.8,
+     "speed": 10.9
+    }
+   ],
+   "순위": 29
+  },
+  {
+   "인물": "강민경",
+   "제품": "구원한 클렌저 닭살",
+   "점수": 9.6,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "e1v3dw4JajE",
+    "title": "닭살 피부 구원한 강민경의 인생 클렌저 🧴",
+    "url": "https://www.youtube.com/shorts/e1v3dw4JajE",
+    "cid": "UCYQiT1vKJixoaLNe6EZrcoQ",
+    "cname": "사심털이범",
+    "views": 1251,
+    "hours": 119.0,
+    "speed": 10.5,
+    "mult": 0.83,
+    "growth": 0.0,
+    "published": "2026-10-13T04:32:17+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "사심털이범",
+     "title": "닭살 피부 구원한 강민경의 인생 클렌저 🧴",
+     "url": "https://www.youtube.com/shorts/e1v3dw4JajE",
+     "views": 1251,
+     "hours": 119.0,
+     "speed": 10.5
+    }
+   ],
+   "순위": 30
+  },
+  {
+   "인물": "이사배",
+   "제품": "느껴본 없어요 거즈",
+   "점수": 9.3,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "X8gTtOD6_-A",
+    "title": "\"자극을 느껴본 적이 없어요\" 이사배가 세안 후 수건 대신 쓰는 거즈 패드",
+    "url": "https://www.youtube.com/shorts/X8gTtOD6_-A",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1095,
+    "hours": 114.5,
+    "speed": 9.6,
+    "mult": 0.81,
+    "growth": 0.0,
+    "published": "2026-10-13T09:00:27+00:00"
+   },
+   "출처": "영상 출처: 출처 RISABAE",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"자극을 느껴본 적이 없어요\" 이사배가 세안 후 수건 대신 쓰는 거즈 패드",
+     "url": "https://www.youtube.com/shorts/X8gTtOD6_-A",
+     "views": 1095,
+     "hours": 114.5,
+     "speed": 9.6
+    }
+   ],
+   "순위": 31
+  },
+  {
+   "인물": "이채영",
+   "제품": "뒤집어졌 수분크림 말이야",
+   "점수": 9.3,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "MLlR1-9x5o8",
+    "title": "\"피부 뒤집어졌을 때 그것만 얼굴에 바른단 말이야\" 이채영이 트러블 날 때 바르는 수분크림",
+    "url": "https://www.youtube.com/shorts/MLlR1-9x5o8",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1391,
+    "hours": 144.3,
+    "speed": 9.6,
+    "mult": 1.03,
+    "growth": 0.0,
+    "published": "2026-10-12T03:10:18+00:00"
+   },
+   "출처": "영상 출처: 출처 스튜디오 프로미스나인",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"피부 뒤집어졌을 때 그것만 얼굴에 바른단 말이야\" 이채영이 트러블 날 때 바르는 수분크림",
+     "url": "https://www.youtube.com/shorts/MLlR1-9x5o8",
+     "views": 1391,
+     "hours": 144.3,
+     "speed": 9.6
+    }
+   ],
+   "순위": 32
+  },
+  {
+   "인물": "이나연",
+   "제품": "연예인추천템 구원템 대머리",
+   "점수": 8.9,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "8Bc1qdiRaC0",
+    "title": "탈모 때문에 밤새 울던 이나연이 찾아낸 마지막 구원템 #Shorts #shorts #쇼츠 #이나연 #탈모 #대머리 #연예인 #연예인추천템",
+    "url": "https://www.youtube.com/shorts/8Bc1qdiRaC0",
+    "cid": "UCxk2JvA40ffmBdxPoDCCaHw",
+    "cname": "연예인Pick",
+    "views": 1077,
+    "hours": 116.8,
+    "speed": 9.2,
+    "mult": 0.72,
+    "growth": 0.1,
+    "published": "2026-10-13T06:42:29+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "연예인Pick",
+     "title": "탈모 때문에 밤새 울던 이나연이 찾아낸 마지막 구원템 #Shorts #shorts #쇼츠 #이나연 #탈모 #대머리 #연예인 #연예인추천템",
+     "url": "https://www.youtube.com/shorts/8Bc1qdiRaC0",
+     "views": 1077,
+     "hours": 116.8,
+     "speed": 9.2
+    }
+   ],
+   "순위": 33
+  },
+  {
+   "인물": "카리나",
+   "제품": "사각사각 필기감 필사할",
+   "점수": 8.8,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "a3iOt9n_Mbw",
+    "title": "카리나가 매일 필사할 때 쓴다는 사각사각 필기감 최강 볼펜 공개",
+    "url": "https://www.youtube.com/shorts/a3iOt9n_Mbw",
+    "cid": "UCF8sj4jXaMaui-otHive4aA",
+    "cname": "스타템 쇼츠",
+    "views": 1250,
+    "hours": 141.5,
+    "speed": 8.8,
+    "mult": 0.89,
+    "growth": 0.2,
+    "published": "2026-10-12T06:00:26+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "스타템 쇼츠",
+     "title": "카리나가 매일 필사할 때 쓴다는 사각사각 필기감 최강 볼펜 공개",
+     "url": "https://www.youtube.com/shorts/a3iOt9n_Mbw",
+     "views": 1250,
+     "hours": 141.5,
+     "speed": 8.8
+    }
+   ],
+   "순위": 34
+  },
+  {
+   "인물": "송혜교",
+   "제품": "알았어요 핸드크림 전부터",
+   "점수": 7.4,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "dzXNZ--hR-0",
+    "title": "\"향수인 줄 알았어요\" 송혜교가 모델 되기 전부터 쓰던 핸드크림",
+    "url": "https://www.youtube.com/shorts/dzXNZ--hR-0",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1238,
+    "hours": 162.5,
+    "speed": 7.6,
+    "mult": 0.92,
+    "growth": 0.0,
+    "published": "2026-10-11T09:00:06+00:00"
+   },
+   "출처": "영상 출처: VOGUE KOREA",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"향수인 줄 알았어요\" 송혜교가 모델 되기 전부터 쓰던 핸드크림",
+     "url": "https://www.youtube.com/shorts/dzXNZ--hR-0",
+     "views": 1238,
+     "hours": 162.5,
+     "speed": 7.6
+    }
+   ],
+   "순위": 35
+  },
+  {
+   "인물": "채정안",
+   "제품": "지켜주 플럼핑 고민",
+   "점수": 5.8,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "0IxNTYu1NWY",
+    "title": "얇은 입술 고민 끝! 채정안의 입술 볼륨 지켜주는 플럼핑 립밤은?",
+    "url": "https://www.youtube.com/shorts/0IxNTYu1NWY",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 1093,
+    "hours": 140.5,
+    "speed": 7.8,
+    "mult": 0.78,
+    "growth": 0.0,
+    "published": "2026-10-12T07:00:03+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "얇은 입술 고민 끝! 채정안의 입술 볼륨 지켜주는 플럼핑 립밤은?",
+     "url": "https://www.youtube.com/shorts/0IxNTYu1NWY",
+     "views": 1093,
+     "hours": 140.5,
+     "speed": 7.8
+    }
+   ],
+   "순위": 36
+  },
+  {
+   "인물": "",
+   "제품": "수분크림 트와이스 두껍게",
+   "점수": 4.2,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "ruTqKyuRTBA",
+    "title": "\"혹시 너 지분 있냐\" 트와이스 지효가 자기 전에 두껍게 얹는 수분크림",
+    "url": "https://www.youtube.com/shorts/ruTqKyuRTBA",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1468,
+    "hours": 100.7,
+    "speed": 14.6,
+    "mult": 1.09,
+    "growth": 1.6,
+    "published": "2026-10-13T22:50:09+00:00"
+   },
+   "출처": "영상 출처: Harper's BAZAAR Korea",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"혹시 너 지분 있냐\" 트와이스 지효가 자기 전에 두껍게 얹는 수분크림",
+     "url": "https://www.youtube.com/shorts/ruTqKyuRTBA",
+     "views": 1468,
+     "hours": 100.7,
+     "speed": 14.6
+    }
+   ],
+   "순위": 37
+  },
+  {
+   "인물": "",
+   "제품": "바르고 알아요 가비",
+   "점수": 4.1,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "3KnmnhAvz38",
+    "title": "\"우리 지금 이거 하나만 들고 다닌 거 알아요?\" 가비가 여행 내내 바르고 잔 크림",
+    "url": "https://www.youtube.com/shorts/3KnmnhAvz38",
+    "cid": "UCsj_EbzX6DDT_VMzzV91eVA",
+    "cname": "킵셀럽",
+    "views": 1026,
+    "hours": 72.3,
+    "speed": 14.2,
+    "mult": 0.76,
+    "growth": 0.0,
+    "published": "2026-10-15T03:10:20+00:00"
+   },
+   "출처": "영상 출처: TEO 테오",
+   "묶음": [
+    {
+     "cname": "킵셀럽",
+     "title": "\"우리 지금 이거 하나만 들고 다닌 거 알아요?\" 가비가 여행 내내 바르고 잔 크림",
+     "url": "https://www.youtube.com/shorts/3KnmnhAvz38",
+     "views": 1026,
+     "hours": 72.3,
+     "speed": 14.2
+    }
+   ],
+   "순위": 38
+  },
+  {
+   "인물": "",
+   "제품": "연예인추천템 리센느 미나미",
+   "점수": 3.2,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "5S9KMqU48ls",
+    "title": "아이돌 촬영장 난리 나게 만든 가방 속 물건의 정체 #shorts #쇼츠 #연예인 #연예인추천템 #쇼핑쇼츠 #리센느 #미나미 #원이",
+    "url": "https://www.youtube.com/shorts/5S9KMqU48ls",
+    "cid": "UCxk2JvA40ffmBdxPoDCCaHw",
+    "cname": "연예인Pick",
+    "views": 1508,
+    "hours": 136.0,
+    "speed": 11.1,
+    "mult": 1.01,
+    "growth": 0.0,
+    "published": "2026-10-12T11:30:18+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "연예인Pick",
+     "title": "아이돌 촬영장 난리 나게 만든 가방 속 물건의 정체 #shorts #쇼츠 #연예인 #연예인추천템 #쇼핑쇼츠 #리센느 #미나미 #원이",
+     "url": "https://www.youtube.com/shorts/5S9KMqU48ls",
+     "views": 1508,
+     "hours": 136.0,
+     "speed": 11.1
+    }
+   ],
+   "순위": 39
+  },
+  {
+   "인물": "",
+   "제품": "연예인들 급하게 반신욕",
+   "점수": 2.7,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "a3T1bbid7Ro",
+    "title": "급하게 붓기살 빼야 할 때 연예인들이 몰래 쓰는 반신욕 비법",
+    "url": "https://www.youtube.com/shorts/a3T1bbid7Ro",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 1109,
+    "hours": 92.5,
+    "speed": 12.0,
+    "mult": 0.79,
+    "growth": 0.0,
+    "published": "2026-10-14T07:00:24+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "급하게 붓기살 빼야 할 때 연예인들이 몰래 쓰는 반신욕 비법",
+     "url": "https://www.youtube.com/shorts/a3T1bbid7Ro",
+     "views": 1109,
+     "hours": 92.5,
+     "speed": 12.0
+    }
+   ],
+   "순위": 40
+  },
+  {
+   "인물": "",
+   "제품": "잡으려고 트와이스 회복루틴",
+   "점수": 1.6,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "oVYi3avMb0c",
+    "title": "트와이스 지효가 속건성 잡으려고 매일 바른다는 기초 회복루틴",
+    "url": "https://www.youtube.com/shorts/oVYi3avMb0c",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 1200,
+    "hours": 164.5,
+    "speed": 7.3,
+    "mult": 0.86,
+    "growth": 0.4,
+    "published": "2026-10-11T07:00:21+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "트와이스 지효가 속건성 잡으려고 매일 바른다는 기초 회복루틴",
+     "url": "https://www.youtube.com/shorts/oVYi3avMb0c",
+     "views": 1200,
+     "hours": 164.5,
+     "speed": 7.3
+    }
+   ],
+   "순위": 41
+  },
+  {
+   "인물": "이사배",
+   "제품": "연예인추천템 다이어트 연예인들",
+   "점수": 1.3,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "A2ycdeV5ilU",
+    "title": "연예인들이 급하게 살과 붓기 뺄 때 쓰는 비밀 입욕제 #쇼츠 #연예인 #연예인추천템 #쇼핑쇼츠 #인마이백 #shorts #붓기 #다이어트 #입욕제 #반신욕 #수지 #이사배",
+    "url": "https://www.youtube.com/shorts/A2ycdeV5ilU",
+    "cid": "UCxk2JvA40ffmBdxPoDCCaHw",
+    "cname": "연예인Pick",
+    "views": 51,
+    "hours": 39.5,
+    "speed": 1.3,
+    "mult": 0.03,
+    "growth": 0.1,
+    "published": "2026-10-16T12:03:39+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "연예인Pick",
+     "title": "연예인들이 급하게 살과 붓기 뺄 때 쓰는 비밀 입욕제 #쇼츠 #연예인 #연예인추천템 #쇼핑쇼츠 #인마이백 #shorts #붓기 #다이어트 #입욕제 #반신욕 #수지 #이사배",
+     "url": "https://www.youtube.com/shorts/A2ycdeV5ilU",
+     "views": 51,
+     "hours": 39.5,
+     "speed": 1.3
+    }
+   ],
+   "순위": 42
+  },
+  {
+   "인물": "",
+   "제품": "찍어드릴게요 마라탕 모여라",
+   "점수": 1.2,
+   "채널수": 1,
+   "묶음영상수": 1,
+   "대표": {
+    "id": "_j5XpEXYDpU",
+    "title": "마라탕 중독자 모여라🍲 안나가 먹는 부담 없는 마라탕 좌표 찍어드릴게요",
+    "url": "https://www.youtube.com/shorts/_j5XpEXYDpU",
+    "cid": "UCk6r_65ZW9mOAAY_AwLtpEg",
+    "cname": "셀럽템즈",
+    "views": 249,
+    "hours": 44.5,
+    "speed": 5.6,
+    "mult": 0.18,
+    "growth": 0.5,
+    "published": "2026-10-16T07:00:31+00:00"
+   },
+   "출처": "",
+   "묶음": [
+    {
+     "cname": "셀럽템즈",
+     "title": "마라탕 중독자 모여라🍲 안나가 먹는 부담 없는 마라탕 좌표 찍어드릴게요",
+     "url": "https://www.youtube.com/shorts/_j5XpEXYDpU",
+     "views": 249,
+     "hours": 44.5,
+     "speed": 5.6
+    }
+   ],
+   "순위": 43
+  }
+ ],
+ "snapshot": {
+  "qUQiFn9yhBc": [
+   1792294257.109235,
+   13136
+  ],
+  "rw5CY-ghN1Y": [
+   1792294257.109235,
+   4080
+  ],
+  "cCGbgxBVKl0": [
+   1792294257.109235,
+   1662
+  ],
+  "FwIO7TTByHY": [
+   1792294257.109235,
+   72727
+  ],
+  "XHQNeb30wMc": [
+   1792294257.109235,
+   80821
+  ],
+  "mHHUlYnVgdQ": [
+   1792294257.109235,
+   131910
+  ],
+  "14XUPMz_shE": [
+   1792294257.109235,
+   112557
+  ],
+  "A2ycdeV5ilU": [
+   1792294257.109235,
+   51
+  ],
+  "f7LNV_iRpqo": [
+   1792294257.109235,
+   1128
+  ],
+  "8Bc1qdiRaC0": [
+   1792294257.109235,
+   1077
+  ],
+  "5S9KMqU48ls": [
+   1792294257.109235,
+   1508
+  ],
+  "HVRQBh4RVtk": [
+   1792294257.109235,
+   1476
+  ],
+  "zpq8SC9nhyw": [
+   1792294257.109235,
+   1315
+  ],
+  "oQYUVmgQyMI": [
+   1792294257.109235,
+   1426
+  ],
+  "D5J39noIjmU": [
+   1792294257.109235,
+   737
+  ],
+  "I7IyRGdS4M4": [
+   1792294257.109235,
+   2632
+  ],
+  "jWX9bhy_jEI": [
+   1792294257.109235,
+   31585
+  ],
+  "QtFJA_PZJAM": [
+   1792294257.109235,
+   1432
+  ],
+  "MIxz1xLfJuA": [
+   1792294257.109235,
+   1612
+  ],
+  "e1v3dw4JajE": [
+   1792294257.109235,
+   1251
+  ],
+  "QdNoSzry4gA": [
+   1792294257.109235,
+   1544
+  ],
+  "44IOSQkKFPc": [
+   1792294257.109235,
+   1124
+  ],
+  "_j5XpEXYDpU": [
+   1792294257.109235,
+   249
+  ],
+  "GccbDUdHqo0": [
+   1792294257.109235,
+   1004
+  ],
+  "a3T1bbid7Ro": [
+   1792294257.109235,
+   1109
+  ],
+  "f5T2b3h892U": [
+   1792294257.109235,
+   4019
+  ],
+  "0IxNTYu1NWY": [
+   1792294257.109235,
+   1093
+  ],
+  "oVYi3avMb0c": [
+   1792294257.109235,
+   1200
+  ],
+  "i5XQ7sG_Fho": [
+   1792294257.109235,
+   986
+  ],
+  "tRaaShdFQao": [
+   1792294257.109235,
+   1922
+  ],
+  "GQSLuy-RFDk": [
+   1792294257.109235,
+   1435
+  ],
+  "XA2btr4xYiw": [
+   1792294257.109235,
+   1345
+  ],
+  "a3iOt9n_Mbw": [
+   1792294257.109235,
+   1250
+  ],
+  "5Lrwl1YjbNs": [
+   1792294257.109235,
+   1130
+  ],
+  "YTVC5diPxDM": [
+   1792294257.109235,
+   1032
+  ],
+  "3KnmnhAvz38": [
+   1792294257.109235,
+   1026
+  ],
+  "B8lPNnCrD_g": [
+   1792294257.109235,
+   1370
+  ],
+  "Dm2AhzduaRY": [
+   1792294257.109235,
+   1171
+  ],
+  "moN86riV4pw": [
+   1792294257.109235,
+   2008
+  ],
+  "ruTqKyuRTBA": [
+   1792294257.109235,
+   1468
+  ],
+  "X8gTtOD6_-A": [
+   1792294257.109235,
+   1095
+  ],
+  "BM10Dr43EvA": [
+   1792294257.109235,
+   1251
+  ],
+  "H00UQD2CwQ0": [
+   1792294257.109235,
+   1459
+  ],
+  "QMXdHaWWZB0": [
+   1792294257.109235,
+   1454
+  ],
+  "MLlR1-9x5o8": [
+   1792294257.109235,
+   1391
+  ],
+  "lJjOUjKn5lM": [
+   1792294257.109235,
+   1511
+  ],
+  "dzXNZ--hR-0": [
+   1792294257.109235,
+   1238
+  ]
+ }
+}

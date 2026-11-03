@@ -1,0 +1,42 @@
+{
+ "_what": "숏비타민c(shortvitc) 06 줄판독 막힘 기록 — 원본을 받을 곳이 없다(관제 263 지시서 06, 오푸스 실행자 2026-10-25). 줄판독·규칙빈도·sfx_events·스타일분석.md 는 이 때문에 만들지 않았다(지어내지 않음).",
+ "checked_at": "2026-10-25",
+ "youtube": {
+  "channel_now": {
+   "name": "숏비타민",
+   "channel_id": "UCkIeZfHns_ySgsQYgeqXOxQ",
+   "subs": 14900,
+   "videos": 16,
+   "what": "힌디어 일반 영상 16편(a74NJ2fPeVI 'main bade aaram se…' 1,100회 등) — 10-03 역분석의 한국어 쇼츠 203편은 목록에 없음",
+   "cmd": "yt-dlp --flat-playlist -J https://www.youtube.com/@숏비타민c (shorts 탭: 'This channel does not have a shorts tab')"
+  },
+  "bench_ids_10_03": [
+   "-HZX-42OSIE",
+   "-p7viz9lFiU",
+   "3HUm0FFBYr4",
+   "EBz18tILN0g",
+   "EeLU0Td3NIA",
+   "YBEYndT3PFU",
+   "ZjptOdsyG6Y",
+   "sQEV-KOUBpE",
+   "us8AbRCsWt8",
+   "xGo_jUGhpTY",
+   "yFuOU84shJE"
+  ],
+  "bench_ids_result": "11/11 'Video unavailable'(yt-dlp, 10-25)"
+ },
+ "local": {
+  "C:/숏템_칼카피/shortvitc": "없음(이번에 flat.json 만 만듦)",
+  "D:/숏템/칼카피/shortvitc": "D: 드라이브 연결 안 됨(Get-PSDrive = C·G 뿐) — 10-03 역분석이 mp4 11편 + info.json 203편을 여기 두었다고 적음",
+  "다른 곳": "C:/Users/CH·Temp·Desktop·창고(C:/숏템_칼카피/창고) 에서 shortvitc mp4·id 파일 0(PowerShell 재귀 검색)"
+ },
+ "sound_mode_prior": {
+  "source": "channel/shortvitc/역분석_2026-10-03.md §3·§6 (Whisper base 4편 + 0.5초 프레임 9편 — 10-03 기록, 이번에 재확인 못 함)",
+  "per_video": "4편 받아쓰기: 첫 한 줄만 나레('창의력이 남다르다는데?' 류), 이후 원본 소리 · 9편 훅 자막이 모두 '~다는데..' 나레 꼴",
+  "verdict": "형식 자리 '해외원본 > 자막+배경음'과 10-03 기록이 어긋난다 — 기록상 소리는 '첫 줄 나레 + 원음'(자막은 원음 위 해설·괄호 속마음). BGM 이 깔렸는지는 미측정. 원본이 없어 편별 재판정 불가 → 자리 결론 보류(근거 = 10-03 기록뿐)"
+ },
+ "unblock": [
+  "D: 외장 연결 → D:/숏템/칼카피/shortvitc mp4 11편으로 줄판독(단 조회 상위가 아니라 09-14~16 최근 11편 — 벤치 기준을 사장님/페이블이 정함)",
+  "또는 숏비타민c 와 같은 꼴(해외원본+첫 줄 '~다는데..' 나레+괄호 속마음 자막) 다른 채널로 벤치 교체"
+ ]
+}

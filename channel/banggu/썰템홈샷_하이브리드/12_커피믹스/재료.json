@@ -1,0 +1,384 @@
+{
+ "_note": "12 커피믹스 — 앞 = SBS 뉴스 공식 「한국인의 일상을 바꾼 한 잔…'커피믹스의 아버지'」 monsAd2HMdQ(탕비실·공장·로스터·맥심 모카골드 마일드 상자) + 채널A 공식 h_1EsWsGovw(옛 '커피믹스' 상자·스틱 더미) · 뒤 = 쿠팡 9777086822 상품 사진 + 리뷰 qLasHb-GYmY·ICZlbMRrV8(원래 id -ICZlbMRrV8)·mUNV5HYjeX8(손·컵만). 박힌 자막·방송사 로고·출처 표시는 자르기 밖.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/12_커피믹스/src",
+ "shots": [
+  {
+   "src": "monsAd2HMdQ.mp4",
+   "ss": 75.9,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "monsAd2HMdQ.mp4",
+     "ss": 75.9,
+     "dur": 3.1,
+     "fit": "cover",
+     "src_crop": [
+      380,
+      100,
+      701,
+      740
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_owenwow.mp4",
+     "ss": 0.3,
+     "dur": 1.04,
+     "fit": "cover",
+     "src_crop": [
+      130,
+      0,
+      379,
+      400
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "SBS: 탕비실 커피포트 옆 머그컵에 커피믹스 스틱을 터는 손 → '와우' 오웬 윌슨 짤",
+   "why": "훅 = 누구나 아는 탕비실 커피믹스 = '이게 어디서 처음 나왔지?'",
+   "full": true
+  },
+  {
+   "src": "monsAd2HMdQ.mp4",
+   "ss": 83.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "monsAd2HMdQ.mp4",
+     "ss": 83.3,
+     "dur": 4.11,
+     "fit": "cover",
+     "src_crop": [
+      240,
+      110,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "SBS: 머그컵 커피를 숟가락으로 젓는 손",
+   "why": "'커피 따로 크림 따로 설탕까지 따로 타 먹었다'"
+  },
+  {
+   "src": "monsAd2HMdQ.mp4",
+   "ss": 47.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "monsAd2HMdQ.mp4",
+     "ss": 47.0,
+     "dur": 3.78,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      110,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "SBS: 동서식품 공장 컨베이어 위 커피 가루",
+   "why": "'셋을 미리 섞어 두자고 한 게 시작' — 사람 없는 공장 화면(직원 얼굴로 오해 없게)"
+  },
+  {
+   "src": "monsAd2HMdQ.mp4",
+   "ss": 60.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "monsAd2HMdQ.mp4",
+     "ss": 60.1,
+     "dur": 3.73,
+     "fit": "cover",
+     "src_crop": [
+      680,
+      110,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "SBS: 공장 로스터에서 도는 원두",
+   "why": "'칠십육년 겨울에 나온 게 세계 최초 커피믹스'"
+  },
+  {
+   "src": "h_1EsWsGovw.mp4",
+   "ss": 60.9,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "h_1EsWsGovw.mp4",
+     "ss": 60.9,
+     "dur": 1.32,
+     "fit": "cover",
+     "src_crop": [
+      785,
+      110,
+      730,
+      964
+     ]
+    },
+    {
+     "src": "aisle_zoom.mp4",
+     "ss": 0.03,
+     "dur": 1.52,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      100,
+      600,
+      792
+     ]
+    }
+   ],
+   "ours": "채널A: 옛 '커피믹스' 빨간 상자 앞 냄비에 물 붓기(옛 화면, 사람 없음) → 마트 커피믹스 진열대 (진열대는 같은 구간을 천천히 다가가는 영상으로 구움 — zoomclip)",
+   "why": "'커피믹스라는 이름은 상표 등록을 못 해서'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tobeycry.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tobeycry.mp4",
+     "ss": 0.1,
+     "dur": 1.35,
+     "fit": "cover",
+     "src_crop": [
+      368,
+      0,
+      543,
+      718
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "울먹이는 토비 맥과이어 짤",
+   "why": "'두고두고 아쉬웠다고'"
+  },
+  {
+   "src": "h_1EsWsGovw.mp4",
+   "ss": 40.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "h_1EsWsGovw.mp4",
+     "ss": 40.2,
+     "dur": 2.82,
+     "fit": "cover",
+     "src_crop": [
+      670,
+      20,
+      580,
+      766
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomjaw.mp4",
+     "ss": 0.2,
+     "dur": 1.05,
+     "fit": "cover",
+     "src_crop": [
+      78,
+      0,
+      484,
+      640
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "채널A: 노란 커피믹스 스틱이 수북한 더미 → 턱 빠진 톰 짤",
+   "why": "'모카골드 하나만 해도 매초 백칠십 개'"
+  },
+  {
+   "src": "coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "coupang.jpg",
+     "ss": 0,
+     "dur": 2.05,
+     "fit": "cover",
+     "src_crop": [
+      90,
+      70,
+      400,
+      528
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 9777086822 맥심 모카골드 마일드 상품 사진(다가감, 'X2' 표시는 자르기 밖)",
+   "why": "B 첫 줄 '쿠팡에서 맥심 모카골드' — 같은 제품"
+  },
+  {
+   "src": "box_zoom.mp4",
+   "ss": 0.03,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "box_zoom.mp4",
+     "ss": 0.03,
+     "dur": 1.81,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      110,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "SBS: '맥심 모카골드 마일드' 상자 근접 (같은 원본 구간을 천천히 다가가는 영상으로 구움 — zoomclip, 멈춤 방지)",
+   "why": "'마일드를 한 상자 샀는데' — 같은 제품"
+  },
+  {
+   "src": "qLasHb-GYmY.mp4",
+   "ss": 10.4,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "qLasHb-GYmY.mp4",
+     "ss": 10.4,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      740,
+      978
+     ]
+    },
+    {
+     "src": "ICZlbMRrV8.mp4",
+     "ss": 25.3,
+     "dur": 1.28,
+     "fit": "cover",
+     "src_crop": [
+      150,
+      0,
+      700,
+      925
+     ]
+    }
+   ],
+   "ours": "맥심 모카골드 스틱 두 개를 컵에 터는 손 → 마일드 상자 앞 노란 잔에 뜨거운 물 붓기",
+   "why": "'컵에 톡 털어 넣고, 뜨거운 물만 부으면'"
+  },
+  {
+   "src": "mUNV5HYjeX8.mp4",
+   "ss": 18.05,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "mUNV5HYjeX8.mp4",
+     "ss": 18.05,
+     "dur": 3.37,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      40,
+      740,
+      978
+     ]
+    }
+   ],
+   "ours": "집 책상, 커피포트 옆 노란 머그에 모카골드 마일드 스틱을 터는 손(얼굴 안 나옴)",
+   "why": "'주말 아침에 집에서 타 마셔도'"
+  },
+  {
+   "src": "ICZlbMRrV8.mp4",
+   "ss": 34.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ICZlbMRrV8.mp4",
+     "ss": 34.0,
+     "dur": 2.47,
+     "fit": "cover",
+     "src_crop": [
+      150,
+      0,
+      700,
+      925
+     ]
+    }
+   ],
+   "ours": "마일드 상자 앞 노란 잔 커피를 젓는 숟가락",
+   "why": "'직원 하나의 생각이, 한국 사람 아침을'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_kidmanclap.mp4",
+   "ss": 0.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_kidmanclap.mp4",
+     "ss": 0.2,
+     "dur": 1.44,
+     "fit": "cover",
+     "src_crop": [
+      146,
+      0,
+      363,
+      480
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "박수 치는 니콜 키드먼 짤",
+   "why": "'바꿔 놓은 셈이죠'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 0,
+   "dt": 3.1,
+   "db": -3,
+   "why": "와우 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 3,
+   "dt": 0.0,
+   "db": -4,
+   "why": "세계 최초 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 4,
+   "dt": 2.84,
+   "db": -3,
+   "why": "토비 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 2.82,
+   "db": -3,
+   "why": "톰 턱 빠짐 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 2.46,
+   "db": -3,
+   "why": "박수 짤 띵"
+  }
+ ]
+}

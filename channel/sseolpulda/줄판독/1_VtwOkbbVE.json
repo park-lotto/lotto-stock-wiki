@@ -1,0 +1,1080 @@
+{
+ "id": "1_VtwOkbbVE",
+ "dur": 21.85,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "다이소 기획자도 감탄한",
+   "colors": [
+    {
+     "word": "다이소 기획자도 감탄한",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "공간 활용 끝판왕",
+   "colors": [
+    {
+     "word": "공간 활용 끝판왕",
+     "hex": "#AE0074"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   320,
+   1080,
+   1620
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1095,
+   1190
+  ],
+  "title_y": [
+   [
+    140,
+    226
+   ],
+   [
+    237,
+    328
+   ]
+  ],
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    920,
+    10,
+    1070,
+    60
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": {
+   "what": "왼쪽 위 흐린 'CapCut' 글씨(편집기 워터마크)",
+   "alpha": "흐림(눈)"
+  },
+  "note": "틀 A(흰 바탕 + 위 제목 2줄 검정/자홍 + 가운데 창 320~1620 + 아래 흰 여백). 자막은 창 안 y≈1095~1190, 줄마다 채움색이 바뀜(흰·분홍·연두·노랑·초록·하늘·청록·주황)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.233,
+   "speaker": "나레",
+   "text": "미국 공구 제조사도",
+   "layer": null,
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1173
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "은색 아일렛 펀치 공구 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 1.233,
+   "t1": 2.533,
+   "speaker": "나레",
+   "text": "당황했던 역대급 실수",
+   "layer": null,
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1085,
+    1196
+   ],
+   "fill_hex": "#ED8AC9",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "당황했던 역대급 실수",
+     "hex": "#F179C7"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "공구 손잡이 → 파란 천에 펀치를 댐",
+   "fit": 5,
+   "cut_at": [
+    2.067
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 2.533,
+   "t1": 3.533,
+   "speaker": "나레",
+   "text": "원래는 가죽이나",
+   "layer": null,
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1099,
+    1174
+   ],
+   "fill_hex": "#C6FFC1",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "원래는 가죽이나",
+     "hex": "#C3FFBC"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파란 천에 구멍 내는 펀치",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 3.533,
+   "t1": 4.933,
+   "speaker": "나레",
+   "text": "천막 구멍 뚫을 때나 쓰던",
+   "layer": null,
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1106,
+    1182
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파란 천막 천에 아일렛 박힌 구멍",
+   "fit": 9,
+   "cut_at": [
+    4.267,
+    4.767
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 4.933,
+   "t1": 5.9,
+   "speaker": "나레",
+   "text": "아일렛 타공기였음",
+   "layer": null,
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1098,
+    1186
+   ],
+   "fill_hex": "#EAD02E",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "아일렛 타공기였음",
+     "hex": "#E9CF1B"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "골판지에 펀치를 대고 누름",
+   "fit": 8,
+   "cut_at": [
+    5.567
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 5.9,
+   "t1": 6.6,
+   "speaker": "나레",
+   "text": "제작자가",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1101,
+    1174
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "펀치로 금속 고리를 집음",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 6.6,
+   "t1": 7.767,
+   "speaker": "나레",
+   "text": "\"아, 손가락 찍히는 건",
+   "layer": null,
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": null,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1107,
+    1175
+   ],
+   "fill_hex": "#1AFF25",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "아, 손가락 찍히는 건",
+     "hex": "#14FF20"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "손으로 고리를 끼우는 모습",
+   "fit": 7,
+   "cut_at": [
+    6.867,
+    7.3
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "낱말 단위로 덧붙어 완성(30fps 띠·10fps 시트 work2/fr/1v_a.jpg·1v_b.jpg)"
+  },
+  {
+   "t0": 7.767,
+   "t1": 8.767,
+   "speaker": "나레",
+   "text": "진짜 못 참지\"",
+   "layer": null,
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": null,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1096,
+    1184
+   ],
+   "fill_hex": "#44FF4E",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "진짜 못 참지",
+     "hex": "#15FF21"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "고리 끼우는 손 → 8.6 검정 화면",
+   "fit": 5,
+   "cut_at": [
+    8.233,
+    8.6
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "낱말 단위로 덧붙어 완성(30fps 띠·10fps 시트 work2/fr/1v_a.jpg·1v_b.jpg)"
+  },
+  {
+   "t0": 8.767,
+   "t1": 9.4,
+   "speaker": "나레",
+   "text": "하면서 헤드에",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1108,
+    1173
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "금속 고리 더미 위 펀치 헤드",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 9.4,
+   "t1": 10.0,
+   "speaker": "나레",
+   "text": "자석을 때려",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1099,
+    1182
+   ],
+   "fill_hex": "#B4E0F5",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "자석을 때려",
+     "hex": "#B1DEF3"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "펀치 헤드에 고리가 자석처럼 붙음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 10.0,
+   "t1": 10.833,
+   "speaker": "나레",
+   "text": "박아 버린 건데",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1107,
+    1183
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "헤드에 고리가 붙은 펀치 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 10.833,
+   "t1": 12.033,
+   "speaker": "나레",
+   "text": "이걸 본 자취생들이",
+   "layer": null,
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1106,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 11.73,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +22.7dB(유성 0.22·고립 0.5) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "고리 더미와 펀치",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 12.033,
+   "t1": 13.533,
+   "speaker": "나레",
+   "text": "\"어, 이거 고무장갑 뚫으면",
+   "layer": null,
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": null,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1096,
+    1185
+   ],
+   "fill_hex": "#8DFFF1",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "어, 이거 고무장갑 뚫으면",
+     "hex": "#78FFF3"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "12.1 검정 → 노란 고무장갑에 펀치를 댐",
+   "fit": 9,
+   "cut_at": [
+    12.1,
+    12.7
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "낱말 단위로 덧붙어 완성(30fps 띠·10fps 시트 work2/fr/1v_a.jpg·1v_b.jpg)"
+  },
+  {
+   "t0": 13.533,
+   "t1": 14.3,
+   "speaker": "나레",
+   "text": "대박이겠는데\"",
+   "layer": null,
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": null,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1184
+   ],
+   "fill_hex": "#8DFFF1",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "대박이겠는데",
+     "hex": "#78FFF3"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "고무장갑에 아일렛 박힘",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "낱말 단위로 덧붙어 완성(30fps 띠·10fps 시트 work2/fr/1v_a.jpg·1v_b.jpg)"
+  },
+  {
+   "t0": 14.3,
+   "t1": 15.533,
+   "speaker": "나레",
+   "text": "라며 싹 다 뚫어서",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1185
+   ],
+   "fill_hex": "#FCFCFC",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "아일렛 박힌 고무장갑을 벽 고리에 걺",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 15.533,
+   "t1": 16.367,
+   "speaker": "나레",
+   "text": "벽에 걸어버리기",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1089,
+    1184
+   ],
+   "fill_hex": "#C7FFCA",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "벽에 걸어버리기",
+     "hex": "#C5FFBD"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "수건을 벽 고리에 걺",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 16.367,
+   "t1": 17.033,
+   "speaker": "나레",
+   "text": "시작했다는 거",
+   "layer": null,
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1095,
+    1187
+   ],
+   "fill_hex": "#F6F8FA",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물티슈 통을 벽에 걺",
+   "fit": 6,
+   "cut_at": [
+    16.5
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 17.067,
+   "t1": 17.867,
+   "speaker": "나레",
+   "text": "심지어 별도로",
+   "layer": null,
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1089,
+    1195
+   ],
+   "fill_hex": "#F0D2EA",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "심지어 별도로",
+     "hex": "#F2D4EA"
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 17.19,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +24.6dB(유성 0.18·고립 0.55) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "새 펀치(은색) 근접",
+   "fit": 5,
+   "cut_at": [
+    17.233
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 17.867,
+   "t1": 18.867,
+   "speaker": "나레",
+   "text": "구멍을 안 뚫어도",
+   "layer": null,
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "fill_hex": "#FEFCFE",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "펀치 헤드에 고리를 끼움",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 18.9,
+   "t1": 19.433,
+   "speaker": "나레",
+   "text": "찍는 순간",
+   "layer": null,
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1098,
+    1177
+   ],
+   "fill_hex": "#EA7E1B",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "찍는 순간",
+     "hex": "#EF7A09"
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 18.95,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +24.1dB(유성 0.09·고립 0.55) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "민트색 비닐 파우치에 펀치를 누름",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 19.433,
+   "t1": 20.7,
+   "speaker": "나레",
+   "text": "절단과 압착이 동시에",
+   "layer": null,
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1103,
+    1183
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파우치에 펀치를 누르는 손",
+   "fit": 8,
+   "cut_at": [
+    20.067
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  },
+  {
+   "t0": 20.7,
+   "t1": 21.85,
+   "speaker": "나레",
+   "text": "완벽하게 끝난다고",
+   "layer": null,
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 200,
+   "variant": "줄 전체 색 채움(검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1099,
+    1174
+   ],
+   "fill_hex": "#82FFF4",
+   "outline": "검정 약 4~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "완벽하게 끝난다고",
+     "hex": "#7BFFF3"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "파우치에 아일렛이 박힌 결과",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "작게 → 0.2초에 제 크기(30fps 띠 work2/fr/1v_e.jpg)"
+  }
+ ],
+ "no_caption": [
+  [
+   17.033,
+   17.067
+  ],
+  [
+   18.867,
+   18.9
+  ]
+ ],
+ "beats": "훅(0~2.53 '미국 공구 제조사도 / 당황했던 역대급 실수') → 공개(2.53~5.9 '원래는 가죽이나 천막 구멍 뚫을 때나 쓰던 / 아일렛 타공기였음') → 본문(5.9~10.83 제작자 인용 '\"아, 손가락 찍히는 건 진짜 못 참지\"' → 헤드에 자석) → 반전(10.83~14.3 '이걸 본 자취생들이 / \"어, 이거 고무장갑 뚫으면 대박이겠는데\"') → 본문(14.3~17.03 벽에 걸기) → 고조(17.07~20.7 '심지어 별도로 구멍을 안 뚫어도 찍는 순간 절단과 압착이 동시에') → 끝(20.7~21.85 '완벽하게 끝난다고', CTA 없음)",
+ "narr_share": "나레 줄 22/22, 나레 21.8초/21.85초",
+ "notes": [
+  "음슴체 나레 1명(스피치매틱스 10-15 57낱말이 자막과 낱말 단위로 맞음 — 소리 '앞차기', 화면 '압착이'만 다름).",
+  "등장 = pop(작게 → 0.2초에 제 크기) 18줄 · 인용 대사 4줄(\"아, 손가락…\", \"어, 이거…\")은 낱말이 하나씩 덧붙는 append — 이 채널 6편 중 처음으로 등장 효과가 있는 편.",
+  "채움색이 줄마다 바뀜: 흰 12줄 · 색 10줄(분홍 #F179C7·연두 #C3FFBC/#C5FFBD·노랑 #E9CF1B·초록 #14FF20·하늘 #B1DEF3·청록 #78FFF3·연분홍 #F2D4EA·주황 #EF7A09) — 줄 전체 색이라 emph 에 줄 글 통째로 적음(낱말 강조와 구분: variant '줄 전체 색 채움').",
+  "검정 화면 전환 2곳(8.6·12.1, 각 0.1~0.6초 검정 위에 자막만) — 인용 대사 앞뒤.",
+  "왼쪽 위 흐린 'CapCut' 워터마크·오른쪽 위 [광고]. 채널이 얹은 그림·이모지 0."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "아일렛 펀치(공구) 근접 + 제목 2줄 + 첫 자막이 0초부터",
+  "face_frac": 0.0,
+  "text": "다이소 기획자도 감탄한 / 공간 활용 끝판왕 / 미국 공구 제조사도"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "상시 고정 2줄",
+ "sound_detail": "한국어 음슴체 나레 1명(스피치매틱스 10-15) + 배경음"
+}

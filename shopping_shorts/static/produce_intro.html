@@ -194,6 +194,9 @@
     @font-face{font-family:'HCDanjunghae';src:url('/fonts/Cafe24Danjunghae.ttf')}
     @font-face{font-family:'HCGanpan';src:url('/fonts/KCCGanpan.otf')}
     @font-face{font-family:'HCBunpil';src:url('/fonts/HakgyoansimBunpil.ttf')}
+    @font-face{font-family:'HCKonkon';src:url('/fonts/OwnglyphKonkon.ttf')}
+    @font-face{font-family:'HCAdultKid';src:url('/fonts/AdultKid.ttf')}
+    @font-face{font-family:'HCKaturi';src:url('/fonts/Katuri.ttf')}
     /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
@@ -1376,14 +1379,7 @@
               </details>
 
               
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎬 모션 팩</summary>
-                <div style="padding:2px 0 12px">
-                  <select id="motionPack" style="width:100%;padding:6px;border-radius:6px">
-                    <option value="">모션 끄기</option>
-                  </select>
-                </div>
-              </details>
+              <!-- 🎬 모션 팩(옛 반짝임·광선 전환)은 뺐다(관제 222, 2026-10-17 — 60일 1건, 지어낸 효과). 저장된 옛 작업은 서버 렌더가 그대로 그린다 -->
 
               
               <details style="border-top:1px dashed var(--line)">
@@ -1593,7 +1589,7 @@
           <label id="thumbIntroWrap" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;min-height:44px">
             <input type="checkbox" id="thumbIntro">
             <span style="font-size:13px">🖼 <b>썸네일을 영상 맨 앞에</b> 넣기
-              <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
+              <span class="hint" style="margin-left:4px">맨 앞에 찰나로 표지를 보여줍니다</span></span>
           </label>
           <div id="finalStatus" class="hint" style="margin-top:10px"></div>
           <div id="exportBox" style="margin-top:14px"></div>

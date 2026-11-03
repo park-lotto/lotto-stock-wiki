@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>픽션 썰 자동화 흐름</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#5b6475;--line:#e3e6ec;--acc:#2563eb;--ok:#1f9d55;--wait:#d97706;--no:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8ebf0;--sub:#9aa3b2;--line:#2c3340}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 10px;border-left:4px solid var(--acc);padding-left:10px}
+.meta{color:var(--sub);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.08);font-size:13px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.step{flex:1 1 150px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.step b{display:block;color:var(--acc);font-size:12px}
+.step.c{border:2px dashed var(--wait)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;color:#fff}
+.ok{background:var(--ok)}.wait{background:var(--wait)}.no{background:var(--no)}
+.q{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--wait);border-radius:8px;padding:10px 14px;margin:8px 0}
+code{font-size:12.5px;background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px}
+</style></head><body><div class="wrap">
+<h1>픽션 썰 — 사람 손 없이 도는 흐름</h1>
+<div class="meta">2026-10-15 · 트랙 칼카피숏템엔진 (관제 097) · 설계안, 아직 안 만듦</div>
+
+<h2>결론</h2>
+<p><b>팩을 한 번 지정해 두면 중간에 사람이 손댈 필요가 없게 만들 수 있습니다.</b> 저장하는 자리는 이미 계정마다 있습니다. 비어 있는 건 <b>제작 단계가 그 팩을 읽어 가는 연결</b>입니다.</p>
+
+<h2>지금 상태 (코드 확인)</h2>
+<table>
+<tr><th>단계</th><th>상태</th><th>근거</th></tr>
+<tr><td>제품 → 픽션 대본</td><td><span class="tag ok">자동</span></td><td><code>tools/calcopy/try_fiction.py</code> 버텍스, 고쳐 쓰기 2회</td></tr>
+<tr><td>대본 → 제작 작업 등록</td><td><span class="tag no">수동</span> 원본 작업 ID·위 제목을 손으로 씀</td><td><code>fiction_live_job.py</code> 18줄</td></tr>
+<tr><td>장면 매칭·TTS·렌더</td><td><span class="tag ok">자동</span> 라이브 단계 그대로</td><td>라이브 워커</td></tr>
+<tr><td>배역 목소리</td><td><span class="tag no">수동</span> 줄 번호 보고 지정</td><td>핸드오프 10-08</td></tr>
+<tr><td>감정 짤</td><td><span class="tag no">안 됨</span> 확정 대본 경로는 0개</td><td>핸드오프 10-08</td></tr>
+<tr><td>배역 = 같은 얼굴</td><td><span class="tag no">안 됨</span> 여러 사람 섞임</td><td>10-08 영상 캡처</td></tr>
+</table>
+
+<h2>이미 있는 저장 자리 (계정별)</h2>
+<table>
+<tr><th>무엇</th><th>위치</th><th>제작 단계가 읽나</th></tr>
+<tr><td>헤드카피 · 틀 · 자막 프리셋 (종류당 50개)</td><td><code>app.py:17866</code></td><td>아니오 — 화면에서 고를 때만</td></tr>
+<tr><td>글꼴 즐겨찾기</td><td><code>app.py:17793</code></td><td>아니오</td></tr>
+<tr><td>목소리 프리셋</td><td><code>app.py:174</code></td><td>작업에 지정된 1개만</td></tr>
+<tr><td>효과음 팩</td><td><code>app.py:19866</code></td><td>작업별</td></tr>
+</table>
+
+<h2>① 처음 한 번 — "픽션 썰 팩" 저장</h2>
+<table>
+<tr><th>칸</th><th>담는 것</th></tr>
+<tr><td>틀 · 헤드카피</td><td>위 제목 띠 모양 (문구는 대본에서 자동)</td></tr>
+<tr><td>자막</td><td>나레 자막 / 대사 자막 상자</td></tr>
+<tr><td>배역</td><td>사장 · 직원 · 여자 → 목소리 1개씩 (+ 얼굴 기준 사진, 선택)</td></tr>
+<tr><td>효과음</td><td>효과음 팩 1개</td></tr>
+<tr><td>짤</td><td>밈팩 묶음 (화남·당황·웃음 등 감정별)</td></tr>
+</table>
+
+<h2>② 매번 — 제품 링크 + 팩 선택 → 완성본</h2>
+<div class="flow">
+ <div class="step"><b>1</b>대본 작성<br>틀 안 맞는 제품은 자동 거름 (시험에서 6개 중 3개만 맞았음)</div>
+ <div class="step c"><b>A · 컨펌 (스위치)</b>대본 확정</div>
+ <div class="step"><b>2</b>화자 표시 → 배역 목소리</div>
+ <div class="step"><b>3</b>장면 매칭<br>배역 줄은 같은 얼굴 컷</div>
+ <div class="step"><b>4</b>감정 자리 → 짤<br>대사 사이 → 효과음</div>
+ <div class="step"><b>5</b>렌더 → 자동 검사</div>
+ <div class="step c"><b>B · 확인</b>완성본 보고 내보내기</div>
+</div>
+
+<h2>컨펌 자리</h2>
+<table>
+<tr><th>자리</th><th>필수?</th><th>이유</th></tr>
+<tr><td><b>A. 대본 확정</b> (렌더 전)</td><td>스위치 — 처음엔 켜기 추천</td><td>렌더는 편당 수 분. 이야기가 별로면 그 시간이 버려지니 여기서 거르는 게 제일 쌉니다</td></tr>
+<tr><td><b>B. 완성본 확인</b></td><td>지금과 같음</td><td>고객은 원래 완성본을 보고 받습니다</td></tr>
+<tr><td>자동 검사 실패</td><td>사람 대신 <b>멈춤</b></td><td>목소리-화자 불일치 · 다른 배역 얼굴 · 짤 0개면 완성본을 안 만들고 이유를 남김 (우상혁 편 이후 내용 검사와 같은 방식)</td></tr>
+</table>
+
+<h2>만드는 순서 (트랙 브랜치에서만)</h2>
+<table>
+<tr><th>#</th><th>할 일</th><th>결과물 검사</th></tr>
+<tr><td>1</td><td>제작 단계가 팩을 읽는 연결 + 작업 하나 → 완성본까지 도는 함수 하나</td><td>실제 작업 3건을 손 없이 끝까지</td></tr>
+<tr><td>2</td><td>화자 표시 → 배역 목소리</td><td>완성본 소리의 줄별 목소리 = 대본 화자</td></tr>
+<tr><td>3</td><td>감정 자리 → 짤·효과음</td><td>완성본에 짤·효과음이 실제로 들어갔나</td></tr>
+<tr><td>4</td><td>배역 = 같은 얼굴 (<code>channelkit/vision</code> 재사용)</td><td>배역 컷 얼굴 일치율 · 가장 어려움</td></tr>
+</table>
+
+<h2>정해 주실 것</h2>
+<div class="q"><b>1.</b> 대본 확정(A)을 기본으로 켤까요, 끌까요? — 추천: 처음엔 켜고, 틀이 안정되면 끔</div>
+<div class="q"><b>2.</b> 배역 얼굴: 팩에 기준 사진을 넣을까요, 영상 안에서 많이 나오는 사람을 자동으로 배역에 붙일까요?</div>
+</div></body></html>

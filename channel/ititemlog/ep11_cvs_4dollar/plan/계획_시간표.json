@@ -1,0 +1,909 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.326
+   ],
+   "O1": [
+    2.406,
+    7.646
+   ],
+   "N2": [
+    7.726,
+    9.47
+   ],
+   "O2": [
+    9.55,
+    17.27
+   ],
+   "N3": [
+    17.35,
+    20.257
+   ],
+   "N4": [
+    20.337,
+    22.663
+   ],
+   "O3": [
+    22.743,
+    25.703
+   ],
+   "N5": [
+    25.783,
+    29.271
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새벽 1시에",
+    "t0": 0.0,
+    "t1": 0.714,
+    "show": [
+     0.0,
+     0.714
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "한국 편의점을 턴 외국인이 있는데요",
+    "t0": 0.714,
+    "t1": 2.326,
+    "key": "편의점",
+    "show": [
+     0.714,
+     2.406
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "한국 새벽 1시인데",
+    "t0": 2.406,
+    "t1": 3.926,
+    "show": [
+     2.406,
+     4.046
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "저녁을 또 깜빡했어",
+    "t0": 4.046,
+    "t1": 5.366,
+    "show": [
+     4.046,
+     5.366
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "편의점 가서 뭐 있나 보자",
+    "t0": 5.366,
+    "t1": 7.646,
+    "show": [
+     5.366,
+     7.726
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가장 먼저 놀란 건",
+    "t0": 7.726,
+    "t1": 8.726,
+    "show": [
+     7.726,
+     8.726
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "우유 종류였는데요",
+    "t0": 8.726,
+    "t1": 9.47,
+    "key": "우유",
+    "show": [
+     8.726,
+     9.55
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "커피 우유, 초코 우유",
+    "t0": 9.55,
+    "t1": 11.39,
+    "show": [
+     9.55,
+     11.39
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "민트초코 우유, 복숭아 우유",
+    "t0": 11.39,
+    "t1": 13.59,
+    "show": [
+     11.39,
+     13.59
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "딸기 우유, 수박 우유",
+    "t0": 13.59,
+    "t1": 15.83,
+    "key": "수박",
+    "show": [
+     13.59,
+     15.83
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "그리고 바나나 우유",
+    "t0": 15.83,
+    "t1": 17.27,
+    "key": "바나나 우유",
+    "show": [
+     15.83,
+     17.35
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "결국 바나나우유를 고르고",
+    "t0": 17.35,
+    "t1": 18.921,
+    "key": "바나나우유",
+    "show": [
+     17.35,
+     18.921
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "김치까지 담았는데요",
+    "t0": 18.921,
+    "t1": 20.257,
+    "show": [
+     18.921,
+     20.337
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그런데 계산대에서",
+    "t0": 20.337,
+    "t1": 21.48,
+    "show": [
+     20.337,
+     21.48
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "금액을 보고 깜짝 놀랐는데요",
+    "t0": 21.48,
+    "t1": 22.663,
+    "show": [
+     21.48,
+     22.743
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "다 해서 4달러였어",
+    "t0": 22.743,
+    "t1": 24.023,
+    "key": "4달러",
+    "show": [
+     22.743,
+     24.023
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 득템이야",
+    "t0": 24.023,
+    "t1": 25.703,
+    "show": [
+     24.023,
+     25.783
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새벽에도 이렇게 싸게 장을 볼 수 있다니",
+    "t0": 25.783,
+    "t1": 28.069,
+    "show": [
+     25.783,
+     28.069
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "부럽다는 댓글이 많았다고 하네요",
+    "t0": 28.069,
+    "t1": 29.271,
+    "show": [
+     28.069,
+     29.567
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 15.0,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "놀란 얼굴",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.203,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 18.0,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "놀란 얼굴 근접",
+    "line": "N1",
+    "t0": 1.203,
+    "kind": "tts",
+    "t1": 2.406,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O1",
+    "ss": 0.2,
+    "src": "sYOGLQFqeUI.mp4",
+    "t0": 2.406,
+    "kind": "orig",
+    "t1": 7.726,
+    "dur": 5.32,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 38.0,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "놀란 얼굴",
+    "line": "N2",
+    "t0": 7.726,
+    "kind": "tts",
+    "t1": 8.638,
+    "dur": 0.912,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 42.3,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "우유 진열대",
+    "line": "N2",
+    "t0": 8.638,
+    "kind": "tts",
+    "t1": 9.55,
+    "dur": 0.912,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "우유 진열대 가리키기",
+    "line": "O2",
+    "ss": 42.04,
+    "src": "sYOGLQFqeUI.mp4",
+    "t0": 9.55,
+    "kind": "orig",
+    "t1": 17.35,
+    "dur": 7.8,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 50.2,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "바나나우유 들고",
+    "line": "N3",
+    "t0": 17.35,
+    "kind": "tts",
+    "t1": 18.843,
+    "dur": 1.493,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 51.2,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "김치 집기",
+    "line": "N3",
+    "t0": 18.843,
+    "kind": "tts",
+    "t1": 20.337,
+    "dur": 1.494,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 52.6,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "김치 들고 놀람",
+    "line": "N4",
+    "t0": 20.337,
+    "kind": "tts",
+    "t1": 21.54,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 55.2,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "계산대",
+    "line": "N4",
+    "t0": 21.54,
+    "kind": "tts",
+    "t1": 22.743,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "계산대·카드",
+    "line": "O3",
+    "ss": 54.88,
+    "src": "sYOGLQFqeUI.mp4",
+    "t0": 22.743,
+    "kind": "orig",
+    "t1": 25.783,
+    "dur": 3.04,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 57.2,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "봉투 들고 웃음",
+    "line": "N5",
+    "t0": 25.783,
+    "kind": "tts",
+    "t1": 27.675,
+    "dur": 1.892,
+    "over": 0.0
+   },
+   {
+    "src": "sYOGLQFqeUI.mp4",
+    "ss": 53.6,
+    "w": 1,
+    "crop": [
+     140,
+     40,
+     780,
+     1036
+    ],
+    "see": "김치 들고 얼굴",
+    "line": "N5",
+    "t0": 27.675,
+    "kind": "tts",
+    "t1": 29.5667,
+    "dur": 1.892,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "sYOGLQFqeUI.mp4",
+    "span": [
+     0.2,
+     5.44
+    ],
+    "t0": 2.406,
+    "t1": 7.646
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "sYOGLQFqeUI.mp4",
+    "span": [
+     42.04,
+     49.76
+    ],
+    "t0": 9.55,
+    "t1": 17.27
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "sYOGLQFqeUI.mp4",
+    "span": [
+     54.88,
+     57.84
+    ],
+    "t0": 22.743,
+    "t1": 25.703
+   }
+  ],
+  "end": 29.5667
+ },
+ "placement": {
+  "reference": "aUicTeDoW04",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새벽 1시에",
+    "t0": 0.0,
+    "t1": 0.714,
+    "show": [
+     0.0,
+     0.714
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "한국 편의점을 턴 외국인이 있는데요",
+    "t0": 0.714,
+    "t1": 2.326,
+    "key": "편의점",
+    "show": [
+     0.714,
+     2.406
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "한국 새벽 1시인데",
+    "t0": 2.406,
+    "t1": 3.926,
+    "show": [
+     2.406,
+     4.046
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "저녁을 또 깜빡했어",
+    "t0": 4.046,
+    "t1": 5.366,
+    "show": [
+     4.046,
+     5.366
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "편의점 가서 뭐 있나 보자",
+    "t0": 5.366,
+    "t1": 7.646,
+    "show": [
+     5.366,
+     7.726
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가장 먼저 놀란 건",
+    "t0": 7.726,
+    "t1": 8.726,
+    "show": [
+     7.726,
+     8.726
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "우유 종류였는데요",
+    "t0": 8.726,
+    "t1": 9.47,
+    "key": "우유",
+    "show": [
+     8.726,
+     9.55
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "커피 우유, 초코 우유",
+    "t0": 9.55,
+    "t1": 11.39,
+    "show": [
+     9.55,
+     11.39
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "민트초코 우유, 복숭아 우유",
+    "t0": 11.39,
+    "t1": 13.59,
+    "show": [
+     11.39,
+     13.59
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "딸기 우유, 수박 우유",
+    "t0": 13.59,
+    "t1": 15.83,
+    "key": "수박",
+    "show": [
+     13.59,
+     15.83
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "그리고 바나나 우유",
+    "t0": 15.83,
+    "t1": 17.27,
+    "key": "바나나 우유",
+    "show": [
+     15.83,
+     17.35
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "결국 바나나우유를 고르고",
+    "t0": 17.35,
+    "t1": 18.921,
+    "key": "바나나우유",
+    "show": [
+     17.35,
+     18.921
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "김치까지 담았는데요",
+    "t0": 18.921,
+    "t1": 20.257,
+    "show": [
+     18.921,
+     20.337
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그런데 계산대에서",
+    "t0": 20.337,
+    "t1": 21.48,
+    "show": [
+     20.337,
+     21.48
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "금액을 보고 깜짝 놀랐는데요",
+    "t0": 21.48,
+    "t1": 22.663,
+    "show": [
+     21.48,
+     22.743
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "다 해서 4달러였어",
+    "t0": 22.743,
+    "t1": 24.023,
+    "key": "4달러",
+    "show": [
+     22.743,
+     24.023
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 득템이야",
+    "t0": 24.023,
+    "t1": 25.703,
+    "show": [
+     24.023,
+     25.783
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새벽에도 이렇게 싸게 장을 볼 수 있다니",
+    "t0": 25.783,
+    "t1": 28.069,
+    "show": [
+     25.783,
+     28.069
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "부럽다는 댓글이 많았다고 하네요",
+    "t0": 28.069,
+    "t1": 29.271,
+    "show": [
+     28.069,
+     29.567
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = aUicTeDoW04",
+   "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+   "효과음 0발(본보기 0) []",
+   "등장 {'cut': 19} · 강조 0/19"
+  ]
+ }
+}

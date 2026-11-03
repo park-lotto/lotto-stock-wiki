@@ -1625,6 +1625,14 @@ _EN_CHARS_PER_SEC = 14.9        # 공백·문장부호 **제외**(norm) — 화�
 _EN_RAW_CHARS_PER_SEC = 18.0    # 공백 **포함**(raw) — narr_secs(len(text))용. 같은 실측 65.2초: raw 1176자 = 18.04
 #   ★두 값은 같은 실측의 두 기준이다(raw/norm = 1.21). 한국어는 계수 하나(7.41)를 raw 기준 narr_secs 와 norm 기준 화면이
 #   같이 써서 화면이 1.33배 후하게 나오는데(종전 동작, 여기서 안 건드린다), 영어는 사장님 제보가 "표시"라 정확히 가른다.
+# 일본어모드(2026-10-21 관제 248). 실측: 2026-10-21 서버 eleven_v3 speed 1.0 일본어 5줄 14.34초:
+#   norm 97자 → 6.76, raw 106자 → 7.39 (페이블 실측, 음성 Rachel 21m00…). 영어와 같이 norm/raw 두 기준.
+_JA_CHARS_PER_SEC = 6.8         # 공백·문장부호 **제외**(norm) — 화면 s2SecOf 용(produce.html JA_CHARS_PER_SEC 와 짝)
+_JA_RAW_CHARS_PER_SEC = 7.4     # len(text)(raw) — narr_secs 용
+# 중국어(관제 254, 2026-10-23 실측): 라이브 중국어 성우 4명 × 12줄 TTS 중앙 norm 4.35 · raw 4.85자/초
+#   (원어민 쇼츠 내레이션 4편 4.2~6.5자/초와 같은 대) — produce.html ZH_CHARS_PER_SEC 와 짝
+_ZH_CHARS_PER_SEC = 4.4
+_ZH_RAW_CHARS_PER_SEC = 4.9
 
 
 def speech_cps(text=None, lang=None, norm=False):
@@ -1632,13 +1640,19 @@ def speech_cps(text=None, lang=None, norm=False):
 
     lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로, norm 무시)
     lang="en" → norm=True(공백·문장부호 제외 글자수로 나눌 때) _EN_CHARS_PER_SEC · norm=False(len(text)) _EN_RAW_CHARS_PER_SEC
-    lang이 없으면 text로 판정한다(script_translate.is_english_sentence: 영어 단어 3개 이상·한글 0)."""
+    lang="ja" → norm=True _JA_CHARS_PER_SEC · norm=False _JA_RAW_CHARS_PER_SEC (2026-10-21 관제 248)
+    lang="zh" → norm=True _ZH_CHARS_PER_SEC · norm=False _ZH_RAW_CHARS_PER_SEC (2026-10-23 관제 254)
+    lang이 없으면 text로 판정한다(script_translate.lang_of — 언어 판정의 유일한 주인)."""
     if lang is None and text:
         try:
-            from shopping_shorts.script_translate import is_english_sentence
-            lang = "en" if is_english_sentence(text) else "ko"
+            from shopping_shorts.script_translate import lang_of
+            lang = lang_of(text)
         except Exception:      # noqa: BLE001 — 판정 실패는 종전(한국어) 동작
             lang = "ko"
+    if lang == "ja":
+        return float(_JA_CHARS_PER_SEC if norm else _JA_RAW_CHARS_PER_SEC)
+    if lang == "zh":
+        return float(_ZH_CHARS_PER_SEC if norm else _ZH_RAW_CHARS_PER_SEC)
     if lang == "en":
         return float(_EN_CHARS_PER_SEC if norm else _EN_RAW_CHARS_PER_SEC)
     return _SYLLABLES_PER_SEC * _speech_speed()
@@ -2007,9 +2021,18 @@ def film_seg_from_id(seg_id, extract):
         if v:
             known.setdefault(_wash(v), str(v))
     real = known.get(vid)
+    if real is None and EXTRA_SRC_RE.match(vid):
+        # ★3단계 '장면 보충'으로 더한 영상 x1·x2…(관제 209) — extract 에 없어도 이 표에서 풀려야 한다.
+        #   안 풀리면 썸네일 검은 칸 + 화면 컷·완성본에서 그 조각이 빠진다(10-15 라이브 실측 job ed7c92abb6b4).
+        #   경로 안전: id 는 숫자만 허용하고, 파일은 하류(_resolve_sources 표)에서만 찾는다.
+        real = vid
     if real is None:
         return None
     return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+# 3단계 '장면 보충' 영상 id(work/x{n}/) — 판정은 이 한 곳(mix_pipeline.extra_source_paths 도 이것을 쓴다)
+EXTRA_SRC_RE = re.compile(r"^x(\d+)$")
 
 
 def scene_table(extract, plan, *, seg_map=None, film=True):
@@ -3006,8 +3029,9 @@ def _hook_opener(hook):
 
 
 def _dup_key(s):
-    """중복 판정용 정규화 — 따옴표·문장부호·공백을 걷어낸 글자만 남긴다."""
-    return re.sub(r"[^가-힣0-9A-Za-z]", "", s or "")
+    """중복 판정용 정규화 — 따옴표·문장부호·공백을 걷어낸 글자만 남긴다(글자의 정의는 script_translate.letters_only 한 곳)."""
+    from shopping_shorts.script_translate import letters_only
+    return letters_only(s)
 
 
 def _is_same_opening(opener, narration, prefix=8):
@@ -3320,7 +3344,8 @@ def _looks_cta_text(text):
         return True
     # 마지막 줄 전용이라 넓게 잡는다(guess_cta_index만 부른다) — 라이브 7일 실측 누락:
     #   "궁금하면 프로필에" / "궁금하시면 나도 남겨주세요" / "아무 댓글 주세요" / "제품사진 눌러봐".
-    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러")):
+    # "화면 속 스티커를 클릭해주세요"(Park님 383ac5b29649, 10-19) — 클릭·스티커·링크 부름도 CTA
+    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러", "클릭", "스티커", "링크")):
         return True
     # "'주름'이라고 남겨주세요"처럼 '댓글' 없이 따옴표 키워드만 부르는 말(김성현님 3b4111969ac4 원문)
     return bool(re.search(r"['‘’\"“”][^'‘’\"“”]{1,15}['‘’\"“”]\s*(?:이?라고)?\s*(?:댓글에?)?\s*"
@@ -6226,6 +6251,11 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("stretch_fill", None)
         # [속도 맞추기](2026-09-26) — 고객이 누른 조각만. 이 칸 목록에 있는 id만 남긴다(뺀 조각의 찌꺼기 방지).
+        # 손 길이로 생긴 빈칸을 무엇으로 메우나(관제 204) — 'self'·'all'만 남긴다(없으면 옆 카드, 기본).
+        if eb.get("fill") in ("self", "all"):
+            beat["hand_fill"] = eb.get("fill")
+        else:
+            beat.pop("hand_fill", None)
         _fit = [x for x in (eb.get("fit") or []) if isinstance(x, str) and x in (eb.get("list") or [])]
         if _fit:
             beat["fit_segs"] = _fit
@@ -6439,8 +6469,11 @@ _SENT_SPLIT = re.compile(
 
 
 def _narr_key(s):
-    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다)."""
-    return re.sub(r"[^0-9A-Za-z가-힣]+", "", s or "")
+    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다).
+    ★글자의 정의는 script_translate.letters_only 한 곳(가나·한자 포함) — 2026-10-21 일본어 줄이 전부 빈 키가 되어
+      enforce_script_order 가 칸 11→1 로 뭉갠 라이브 사고(job e582f0e0c9b4)."""
+    from shopping_shorts.script_translate import letters_only
+    return letters_only(s)
 
 
 def script_has_lines(script):

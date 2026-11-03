@@ -1,0 +1,32 @@
+{
+ "레이저 모기 퇴치기": {
+  "search_url": "https://www.coupang.com/np/search?q=%EB%A0%88%EC%9D%B4%EC%A0%80%20%EB%AA%A8%EA%B8%B0%20%ED%87%B4%EC%B9%98%EA%B8%B0",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9579462940",
+    "name": "퀴브 레이저모기퇴치기 야외 퇴치기 모기레이저",
+    "url": "https://www.coupang.com/vp/products/9579462940",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9579462940&itemId=28594230038&vendorItemId=95538022498&traceid=V0-153-8522446601337940&requestid=20261022234945645001407901&token=31850C%7CGM&pt=0&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/Vol2lzSQyCcXEektViVBrw8vhFSXqWtXlt6R3aLwWcNF_aGcfJB-UHBfLdOsovyABeoeAbzvgkTdLQEMUbwTRrjlzaY6w73yvR0lZBf_6yHcWkvz3d6KYu58DpAzwH2d8ovAEO9xHtFT9OsIQ5j1OYWuKw3tpGRGuazcPb8q10tfpug8RHRMhd-fHUFirUuBVqq2IRVfZYF64vWKJmu5XWwd7QrPboOca0ftgrIy05A-A17z_dRzd8BVSL9kA9T08X04UNiqhNXmgMm3vZaHl9WkwY4HKdjqmhwbGV73J-GI1bdBBjnQj7bSa0vfBXFEp97cDzigyi_O6HxPBdK6-WWP4wqK_tEGsFdJNOycdwRFDW-7MPgCsZ73XHIY_uAZFkcMfNuvNtEHmUxa9_vLpm5Wl7HPgpMeqZRDjC_lAH7n3DNwG2j5rLVIxWHS2xKUBG4ru_6EPhpXOCRFikEOG6HF54Gs2sgVSsZBoSq5JZXYj4ZC7_9omWSxjgO4rnNfDmRp9-exhNDaTYHZJMAJq6J2vChGNkmx4PP8wTqu_X0=",
+    "price": "94,300원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9720232700",
+    "name": "레이저 조류퇴치기 고출력 장거리 농가 축사 장치 원격 해충 빔 철도 과수원 쫒기",
+    "url": "https://www.coupang.com/vp/products/9720232700",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9720232700&itemId=29088546993&vendorItemId=96014151424&traceid=V0-153-432300a0212a3730&requestid=20261022234945645001407901&token=31850C%7CGM&pt=0&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/3XoKRmL9lzkoAhL-3ZXoW3_HpAKoeetQWbg7twvzgoe7IsfxTV01ArmfFl3SDR2kWO--2IrffD2Q79-fvBuvaSZ6aAjvQVGj_NJRZfhBQvDk1z7iIlD_AHf9kxMC5-MgkVT68_mKBsFcebwTPkBdTp-nRzz6B1-n2Sh8lg5rMAmRhlwBeE6Y8RD4j9RH_q6G4XEwWHr_lVGbTDsXDFEYZ9BR-LcHE5MFIVQGO7JEjfrD-wRtm1gcmx22D9c1VHwpZNbtfyTQ4nVR5SdskJ0I1AaV-YFTTbSFRI7UGVqmlPyWfokE6vJtt6vy-i_wwMLqqLA7Wa-Lt31FHe32_kg_tY-5PRKNF5A1Nj_q7twvGNkbPFFZm8K8TNn2BztPawNODrRDHC6qCY19UueS_J40tN-j1JUA33LEHaK2fTv7LILvsPVdT_HeqE4mEgFVJz1X0-tYDrzAw36lkAovLKj1mzClljF6Iij46Ssfj6hbYQXLxNj3imQyRz7oVuRqGypfrZSAyMJBbvIO5OevbZZfbi4CC3o44tvJWmhtThgINEI=",
+    "price": "13,900원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   }
+  ]
+ }
+}

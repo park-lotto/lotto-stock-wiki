@@ -1,0 +1,207 @@
+{
+ "Manna Titan": {
+  "ep": "2 물병_같은제품",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=Manna%20Titan",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "만나 타이탄 물병": {
+  "ep": "2 물병_같은제품",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9397029690",
+    "name": "Manna Titan 스테인리스 스틸 진공 단열 갤런 저그 - 4L 오닉스",
+    "url": "https://www.coupang.com/vp/products/9397029690?itemId=27909475349&vendorItemId=95574358495",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/8b96/9751f71d88fb086f3aa7ddf571a1a3b6e92201ed0d68e1f682bd644ca4b2.jpg",
+    "price": "148,500원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9597851124",
+    "name": "Manna 타이탄 스테인리스 스틸 텀블러 샌드 2.3L 1개, Sand",
+    "url": "https://www.coupang.com/vp/products/9597851124?itemId=28651877843&vendorItemId=95594291904",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/d4bd/10398cbc92c38e2ff4e2afc84203c0e2e7f1f90bc57ddf74c4623db98939.jpg",
+    "price": "86,600원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9727829802",
+    "name": "Manna Titan 스테인리스 진공 단열 갤런 저그 4L 해머드 오닉스, 1개, 1ml, 135 Ounces 해머드 …스 / 135 Ounces",
+    "url": "https://www.coupang.com/vp/products/9727829802?itemId=29110612197&vendorItemId=96035346150",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/2202/ac94c2c10ad023989adf85d359a637874b6b7cb894d0627023bd99634da1.jpg",
+    "price": "179,900원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9620210908",
+    "name": "다빈 500ml 보틀 원형 페트병 알루미늄 무타공 뚜껑 포함 100개입, 100개",
+    "url": "https://www.coupang.com/vp/products/9620210908?itemId=28727203708&vendorItemId=95667474320",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/6b7e3a5ac7d18062ce31ab36a345f93e5b423b3a642c19385410ef158f8e_1782969473758.png",
+    "price": "38,500원",
+    "rating": "(9)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8761452742",
+    "name": "아이스 스탠다드 용기 PET 보틀 AJSP 480ml 1개 국산 물통 물병 캡 색상 선택가능",
+    "url": "https://www.coupang.com/vp/products/8761452742?itemId=25482315716&vendorItemId=91917841522",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/prod/e03236af-dfb4-4fc2-bb0c-52d496cd0367_fixing_v2.png",
+    "price": "1,080원",
+    "rating": "(13)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9668612333",
+    "name": "만나 타이탄 스테인리스 진공 물통, 1개, 4L, 사파이어",
+    "url": "https://www.coupang.com/vp/products/9668612333?itemId=28907369936&vendorItemId=95839446278",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/1258/e578bc0bc8c1a230430d9e1f94ca03b2b222f9b10baf643db92d85a04784.jpg",
+    "price": "151,600원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EB%A7%8C%EB%82%98%20%ED%83%80%EC%9D%B4%ED%83%84%20%EB%AC%BC%EB%B3%91",
+  "source": "crawl",
+  "notice": ""
+ },
+ "manna 4L": {
+  "ep": "2 물병_같은제품",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9397029690",
+    "name": "Manna Titan 스테인리스 스틸 진공 단열 갤런 저그 - 4L 오닉스",
+    "url": "https://www.coupang.com/vp/products/9397029690?itemId=27909475349&vendorItemId=95574358495",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/8b96/9751f71d88fb086f3aa7ddf571a1a3b6e92201ed0d68e1f682bd644ca4b2.jpg",
+    "price": "148,500원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9727829802",
+    "name": "Manna Titan 스테인리스 진공 단열 갤런 저그 4L 해머드 오닉스, 1개, 1ml, 135 Ounces 웜 그레이. / 135 Ounces",
+    "url": "https://www.coupang.com/vp/products/9727829802?itemId=29110612188&vendorItemId=96035346149",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/a762/1e11ead2fd4994a8b2431524c5309ec8fbe73262566b1ad72983c2f35105.jpg",
+    "price": "179,900원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "2313447536",
+    "name": "퀸센스 해피아워 진공에어포트 보온 보냉병, 3L, 1개",
+    "url": "https://www.coupang.com/vp/products/2313447536?itemId=3991100737&vendorItemId=91163633951",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2024/09/23/15/4/987bd7b2-afa7-4cce-b14b-68d56c4aae3b.jpg",
+    "price": "40,450원",
+    "rating": "(192)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=manna%204L",
+  "source": "crawl",
+  "notice": ""
+ },
+ "타이탄 보틀 4L": {
+  "ep": "2 물병_같은제품",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8873289957",
+    "name": "동남 하이쿨 보냉 보온 물통 4리터, 1개, 4L",
+    "url": "https://www.coupang.com/vp/products/8873289957?itemId=25890638965&vendorItemId=92876558408",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/97c7/bc643c610d849a0e2f07f61ce46947207ae37af76f0f0aab6a6f09587c4f.jpg",
+    "price": "18,500원",
+    "rating": "(2)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7598299509",
+    "name": "필하이 대용량 보온보냉물통 스테인리스 워터저그 B타입 4L(실용량 3.8L), 1개, 오리지널, 4L",
+    "url": "https://www.coupang.com/vp/products/7598299509?itemId=25312323876&vendorItemId=91929979990",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/2f2110a37fa4e0adddf853701d01a6170c40815263b7ccc8175b0c26964f_1782106671098.jpg",
+    "price": "25,800원",
+    "rating": "(251)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9397029690",
+    "name": "Manna Titan 스테인리스 스틸 진공 단열 갤런 저그 - 4L 오닉스",
+    "url": "https://www.coupang.com/vp/products/9397029690?itemId=27909475349&vendorItemId=95574358495",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/8b96/9751f71d88fb086f3aa7ddf571a1a3b6e92201ed0d68e1f682bd644ca4b2.jpg",
+    "price": "148,500원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8115175041",
+    "name": "투데이리빙 3리터 대용량 워터 디스펜서 수도꼭지 카페 감성 저그 가죽 스트랩 음료 보관 손잡이 디스팬서 홈카페, R99966A(투명, 1개, 3L, 투명",
+    "url": "https://www.coupang.com/vp/products/8115175041?itemId=23005952551&vendorItemId=90039837352",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/c382/b9154ebee00348d8da55aaaceb34547f745930199b497d2991ad0e6142a4.jpg",
+    "price": "13,800원",
+    "rating": "(244)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9576382480",
+    "name": "미타 국내산 대용량 캠핑 물통 워터저그 디스펜서, 베이지, 1개",
+    "url": "https://www.coupang.com/vp/products/9576382480?itemId=28584591019&vendorItemId=94880643546",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/1d66/d382bf47658fcfd54bb100460660a2fa981bade7b18950da923504b26314.jpg",
+    "price": "38,790원",
+    "rating": "(320)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7405470324",
+    "name": "쿠스포츠 대용량 헬스 물통 메가보틀, 혼합색상, 2.4L, 2개",
+    "url": "https://www.coupang.com/vp/products/7405470324?itemId=29202970335&vendorItemId=96123232811",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/997f8281-a082-47e2-a129-d3649e6b97734915795065563710442.png",
+    "price": "200원",
+    "rating": "(86)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "1149607871",
+    "name": "빅베어 쉐이커 보틀, 퍼플, 2.5L, 1개",
+    "url": "https://www.coupang.com/vp/products/1149607871?itemId=2123227478&vendorItemId=70121825950",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/3666372914598446-259d1844-0e7a-4790-ae02-22f004b7a4fc.jpg",
+    "price": "11,400원",
+    "rating": "(2,372)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "5131434",
+    "name": "미르코리아 워터저그 키퍼 보온보냉 MWJ, 블랙그레이, 1개, 3L",
+    "url": "https://www.coupang.com/vp/products/5131434?itemId=19931978&vendorItemId=3034107798",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/product/image/vendoritem/2019/04/16/3034107798/9dbb1778-778a-4d1c-8c3d-4eeed5535371.jpg",
+    "price": "23,390원",
+    "rating": "(1,226)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%ED%83%80%EC%9D%B4%ED%83%84%20%EB%B3%B4%ED%8B%80%204L",
+  "source": "crawl",
+  "notice": ""
+ }
+}

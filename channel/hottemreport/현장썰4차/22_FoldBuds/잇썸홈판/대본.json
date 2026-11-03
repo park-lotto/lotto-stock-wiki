@@ -1,0 +1,232 @@
+{
+ "_note": "숏템리폿 4차 22 SIAX 폴드 버즈 하이브리드 — 앞 = 숏템리폿 현장썰 Mrwhosetheboss 원음형 박창수판(22_FoldBuds/front), 뒤 = 쿠팡 9659063775 'SIAX FOLD BUDS 클립형 얇은 케이스 접이식 휴대폰 블루투스 이어폰 종이처럼'(같은 제품 — 리뷰어 화면 'SIAX FOLD BUDS'·보라 케이스). 뒤 화면 = Mrwhosetheboss 다른 장면(손·폰만) + DemiGlaceTomato 손 개봉 + 쿠팡 대표 사진(move). 금액·효능·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "SIAX FOLD BUDS 접이식 초박형 블루투스 이어폰(쿠팡 9659063775, 퍼플·실버 옵션) — 같은 이름 다른 판매 9698016501",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/22_FoldBuds/front/render/final.mp4",
+  "cut": 17.97,
+  "why": "원음 O2 'transforming buds' 끝(앞 17.666) 뒤 0.3초 — 같은 한 샷(mw 97.13~101.63) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 00:2x, 'SIAX 이어폰'): 9659063775 'SIAX FOLD BUDS 클립형 얇은 케이스 접이식 휴대폰 블루투스 이어폰 종이처럼, RPLE, 퍼플' · 9698016501 'SIAX Fold 초박형 접이식 인이어 이어폰 … 클립형 휴대폰 케이스' — 22_FoldBuds/coupang.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_9659063775_0.jpg): 보라 납작 케이스 + 투명 거치 틀(USB-C 꽂는 부분) = Mrwhosetheboss 화면 보라 케이스·폰 뒤 틀과 같은 모양",
+  "o_stick": "Mrwhosetheboss 원본(사본 초) 62.52~72.72 'they come with this adapter that plugs into the USB-C port of your phone, you use a bit of 3M tape to stick it permanently to the back, and then you stick the earbuds case into that mechanism'",
+  "o_power": "같은 원본 73.08~78.52 'I love the idea of your earbuds never needing to be charged again because they're just passively taking power from the iPhone'",
+  "o_magnet": "같은 원본 137.10~146.30 'when you plop them back in when you're done, it's all magnetic, that shuts … You can't lose them, or at least you can't lose your earbuds so long as they're in the case'"
+ },
+ "흥미이음": {
+  "원본흥미": "케이스까지 6.4mm 라 'Oh my goodness … this tiny' · 뚜껑을 열면 이어폰이 튀어나와 'Wow … transforming buds'",
+  "뒤흥미": "쿠팡의 바로 그 SIAX 폴드 버즈 — 폰 뒤에 붙이고 폰 배터리로 충전되고 자석으로 닫히는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: 리뷰어 화면 글 'SIAX FOLD BUDS' = 쿠팡 상품명 'SIAX FOLD BUDS' + 대표 사진(보라 케이스·거치 틀) 대조"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/22_FoldBuds/front/frame_render.json",
+  "title": "종이처럼 얇은\n접이식 이어폰"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·회색 책상 위 — 노랑 대신 하늘"
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "딱"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "주황 폰·흰 바탕 위 — 빨강·노랑 금지, 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "알아서"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "주황 폰 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "착"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 책상·손 위 — 하늘"
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리예요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 책상·손 위 — 하늘"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 종이처럼 얇은 접이식 이어폰이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "그 종이처럼 얇은 접이식 이어폰이",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 폰 충전 구멍에 꽂아서 폰 뒤에 딱 붙여 둔대요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "폰 충전 구멍에 꽂아서",
+    "폰 뒤에 딱",
+    "붙여 둔대요"
+   ],
+   "emph": [
+    "딱"
+   ],
+   "facts": [
+    "o_stick"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 폰에 붙어 있는 동안 폰 배터리로 알아서 충전된대요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "폰에 붙어 있는 동안",
+    "폰 배터리로",
+    "알아서 충전된대요"
+   ],
+   "emph": [
+    "알아서"
+   ],
+   "facts": [
+    "o_power"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 자석으로 착 닫혀서, 이어폰 잃어버릴 일이 없대요.",
+   "caps": [
+    "심지어 자석으로",
+    "착 닫혀서",
+    "이어폰 잃어버릴 일이",
+    "없대요"
+   ],
+   "emph": [
+    "착"
+   ],
+   "facts": [
+    "o_magnet"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "출근길에 폰 뒤에서 꺼내 꼈더니, 다들 그거 뭐냐고 난리예요.",
+   "caps": [
+    "출근길에 폰 뒤에서",
+    "꺼내 꼈더니",
+    "다들 그거 뭐냐고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}

@@ -1,0 +1,1004 @@
+{
+ "id": "oSytU7q_N7Y",
+ "dur": 23.4,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정이 이번에 입은",
+   "colors": [
+    {
+     "word": "장윤정이",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "이번에",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "입은",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "bg": "빨강 띠 #FF1700(y152~327)"
+  },
+  {
+   "text": "독특한 모양의 청바지 가격",
+   "colors": [
+    {
+     "word": "독특한",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "모양의",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "청바지",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "가격",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "bg": "검정 바탕"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   [
+    184,
+    286
+   ],
+   [
+    340,
+    422
+   ]
+  ],
+  "window": [
+   0,
+   472,
+   1080,
+   1375
+  ],
+  "caption_band": [
+   1153,
+   1263
+  ],
+  "caption_band_raised": [
+   950,
+   1147
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": {
+   "what": null,
+   "alpha": null
+  },
+  "bg_hex": "#000000",
+  "hook": {
+   "t0": 0,
+   "t1": 4.03,
+   "what": "누끼 인물 1명 전신·검정 바탕(창 없음), 0→4초 연속 확대 약 ×1.8",
+   "arrow": {
+    "hex": "#FF1A31",
+    "outline": "흰색",
+    "w": 175,
+    "h": 155,
+    "xy_t0": [
+     297,
+     1300
+    ],
+    "xy_t3.9": [
+     158,
+     920
+    ],
+    "anim": "0초부터 있음(등장 애니 없음), 확대에 맞춰 위치만 지퍼를 따라감(크기 고정)"
+   },
+   "exit": "원(고리) 회전 전환 4.03~4.3초"
+  },
+  "fixed_icon": {
+   "what": "빨강 외곽 흰 지그재그 화살표(커서 모양, 왼쪽 아래를 가리킴)",
+   "x": [
+    858,
+    969
+   ],
+   "y": [
+    1288,
+    1396
+   ],
+   "hex": "#C92D1B",
+   "t_in": 4.2,
+   "t_out": 23.4,
+   "anim": "없음(고정·깜빡임 없음, 0.033초 빨강 픽셀 수 실측)"
+  }
+ },
+ "lines": [
+  {
+   "t0": 4.2,
+   "t1": 5.67,
+   "text": "장윤정은 가장 최근",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [
+    4.03
+   ],
+   "y": [
+    1166,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 536,
+   "align": "center",
+   "max_w": 621,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 소파에 앉아 휴대폰 들고 말함(원 프레임 회전 전환 직후)",
+   "motion": "cam",
+   "transition": "zoomblur",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 5.67,
+   "t1": 6.53,
+   "text": "청바지인데",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "y": [
+    1157,
+    1243
+   ],
+   "fill_hex": "#FDFCFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 526,
+   "align": "center",
+   "max_w": 561,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 앉아서 말함",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 6.53,
+   "t1": 7.8,
+   "text": "조금 독특한 모양을",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 9,
+   "cut_at": [
+    6.53
+   ],
+   "y": [
+    1164,
+    1251
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 538,
+   "align": "center",
+   "max_w": 613,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "청바지 허리·지퍼 근접, 손",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 7.8,
+   "t1": 8.4,
+   "text": "하고 있는",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1165,
+    1248
+   ],
+   "fill_hex": "#FDFCFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 518,
+   "align": "center",
+   "max_w": 266,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 지퍼 근접",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.9,
+   "text": "바지를 입고 나왔는데요",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1165,
+    1249
+   ],
+   "fill_hex": "#FFFDFF",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 538,
+   "align": "center",
+   "max_w": 771,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 지퍼 근접",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 9.9,
+   "t1": 11.43,
+   "text": "이 청바지는 특이하게도",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 7,
+   "cut_at": [
+    9.9
+   ],
+   "y": [
+    1155,
+    1254
+   ],
+   "fill_hex": "#FDFCFE",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 508,
+   "align": "center",
+   "max_w": 951,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "식탁 옆에 선 다리 전신(청바지)",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 11.43,
+   "t1": 12.57,
+   "text": "가운데 지퍼가",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1164,
+    1243
+   ],
+   "fill_hex": "#FEFCFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 540,
+   "align": "center",
+   "max_w": 436,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 선 다리",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 12.57,
+   "t1": 13.43,
+   "text": "일자가 아니라",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1165,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 534,
+   "align": "center",
+   "max_w": 457,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 선 다리",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 13.43,
+   "t1": 14.53,
+   "text": "서로 교차되는",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 9,
+   "cut_at": [
+    13.43
+   ],
+   "y": [
+    1165,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 516,
+   "align": "center",
+   "max_w": 415,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "지퍼 부분을 손으로 가리킴 근접",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 14.53,
+   "t1": 16.07,
+   "text": "크로스오버 형태였습니다",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1164,
+    1250
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 556,
+   "align": "center",
+   "max_w": 773,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 지퍼 근접",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 16.07,
+   "t1": 17.7,
+   "text": "제가 궁금해서 조사해보니",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 7,
+   "cut_at": [
+    16.07
+   ],
+   "y": [
+    1159,
+    1254
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 538,
+   "align": "center",
+   "max_w": 848,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "녹색 상의+청바지 앞, 손으로 지퍼 만짐(조금 넓게)",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 17.7,
+   "t1": 19.67,
+   "text": "가격이 더욱 충격적이었는데",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1157,
+    1259
+   ],
+   "fill_hex": "#FEFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 543,
+   "align": "center",
+   "max_w": 892,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 19.67,
+   "t1": 20.97,
+   "text": "화면을 빠르게 톡톡",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "위로 올린 자리(y≈980~1096)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [
+    19.67
+   ],
+   "y": [
+    1000,
+    1096
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 538,
+   "align": "center",
+   "max_w": 624,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 얼굴(눈 감고 앉음) — 행동 유도 문구",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 20.97,
+   "t1": 22.5,
+   "text": "두 번 눌러주시면\n감사합니다",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "2줄·위로 올린 자리(y≈950~1147)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [],
+   "y": [
+    958,
+    1142
+   ],
+   "fill_hex": "#FEFCFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 566,
+   "align": "center",
+   "max_w": 582,
+   "letter_gap_px": 0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 2줄 '두 번 눌러주시면/감사합니다'",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 22.5,
+   "t1": 23.4,
+   "text": "R13 크로스오버 청바지\n약 80만원 ~ 100만원",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "2줄·위로 올린 자리(y≈950~1147)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "fit": 10,
+   "cut_at": [
+    22.5
+   ],
+   "y": [
+    956,
+    1147
+   ],
+   "fill_hex": "#FEFDFE",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 538,
+   "align": "center",
+   "max_w": 761,
+   "letter_gap_px": 0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "청바지 제품 사진(나무 바닥 위 펼침) — 제품명+가격 2줄 공개 카드",
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   4.2
+  ]
+ ],
+ "beats": "훅(0~4.03 누끼 인물 전신·검정 바탕·천천히 확대 + 빨간 곡선 화살표가 지퍼, 자막 없이 나레가 제목 읽음) → 원 회전 전환(4.03~4.3) → 나레 본문(4.2~19.7 지퍼 모양 설명, 컷 4개) → 궁금증 '가격이 더욱 충격적' → 행동 유도(19.7~22.5 '화면을 빠르게 톡톡/두 번 눌러주시면 감사합니다') → 끝 공개(22.5~23.4 제품 사진 위 'R13 크로스오버 청바지/약 80만원 ~ 100만원')",
+ "narr_share": "나레 15/15 덩어리, 나레 소리 0.1~22.5초 ≈ 22.4/23.4초(훅 0~4.2 은 자막 없이 제목 낭독)",
+ "notes": [
+  "자막 문구 '두 번 눌러주시면 감사합니다' vs 나레(vtt) '두 번 누르면 공개됩니다' — 화면 글과 말이 다르다",
+  "가격 공개 카드는 따로 꾸민 카드가 아니라 본문 자막과 같은 모양(흰+검정 외곽 10px)을 2줄로 위(y956~1147)로 올린 것, 22.5초 제품 사진 컷과 함께, 나레 끝난 뒤 0.9초 무음 아닌 배경만",
+  "목소리 성별·TTS 여부는 들을 수 없어 미확인(전 구간 vtt 가 자막과 같은 문장 → 나레로 판정)",
+  "효과음 후보 없음(뜯기 sfx 없음·전환 4.03 에 광대역 솟음 없음)",
+  "글꼴 이름은 등록 글꼴 대조 안 함(눈 추정)",
+  "size_px 90 = 흰 잉크 높이 79px 에서 눈 역산",
+  "x·max_w 는 흰+검정 이웃 마스크 자동값 — 밝은 배경 흰 부분이 섞여 ±40px 오차 가능(가운데 정렬은 눈 확인)"
+ ],
+ "name_evidence": [
+  "장윤정 — 제목·자막 화면 글자(이름이 speaker 에는 안 쓰임, 전 줄 나레)"
+ ],
+ "frame0": {
+  "what": "누끼 인물(녹색 니트+청바지) 전신 검정 바탕 + 빨간 곡선 화살표(#FF1A31, 흰 외곽)가 지퍼를 가리킴, 위 제목 2줄",
+  "face_frac": 0.07,
+  "text": "장윤정이 이번에 입은 / 독특한 모양의 청바지 가격"
+ },
+ "_made_by": "kal_analyze.skeleton → 워커 줄판독(1080 원본 프레임·0.033초 잉크 수·픽셀 중앙값)"
+}

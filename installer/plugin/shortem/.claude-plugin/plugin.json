@@ -1,0 +1,39 @@
+{
+  "name": "shortem",
+  "displayName": "숏템",
+  "version": "1.0.0",
+  "description": "숏템 채널 프리셋으로 내 PC에서 숏폼을 만드는 명령 모음(/shortem:setup · /shortem:make). 숏템 설치팩이 먼저 깔려 있어야 합니다.",
+  "author": {
+    "name": "숏템메이커",
+    "url": "https://shoppingshorts.duckdns.org"
+  },
+  "homepage": "https://shoppingshorts.duckdns.org/claude",
+  "license": "LicenseRef-Proprietary",
+  "keywords": ["shorts", "video", "숏폼"],
+  "mcpServers": {
+    "shortem": {
+      "command": "${SHORTEM_NODE:-node}",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/launcher.js"],
+      "env": {
+        "SHORTEM_LICENSE": "${user_config.license_key}",
+        "SHORTEM_WORK": "${user_config.work_dir}",
+        "SHORTEM_CLIENT": "claude-code"
+      }
+    }
+  },
+  "userConfig": {
+    "license_key": {
+      "type": "string",
+      "title": "숏템 라이선스 키",
+      "description": "숏템메이커 '클로드형' 페이지에서 복사한 키(SHORTEM-L1. 로 시작). 안전 저장소에 보관되고 채팅에는 남지 않습니다.",
+      "sensitive": true,
+      "required": false
+    },
+    "work_dir": {
+      "type": "directory",
+      "title": "작업 폴더",
+      "description": "완성 영상이 저장될 폴더. 비워 두면 바탕화면의 '숏템작업' 폴더를 씁니다.",
+      "required": false
+    }
+  }
+}

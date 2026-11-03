@@ -1,0 +1,139 @@
+{
+ "topic": "코스트코 누스포 두바이 스프레드 — 한국인이 섞어 먹어 맛이 묻혔다는 썰",
+ "orig": [
+  "한국 코스트코가 억울했던 이유. 최근 코스트코는 비싼 두바이를 저격한 두바이 스프레드를 출시했는데 바삭한 카다이프를 넣어 차별화를 줬고 맛부터 가격까지 깔 게 없는 제품이라 해외에선 인기가 많지만 유독 한국에선",
+  "이거 그냥 초코마 카다이프 아니야? 라며 반응이 안 좋았다고 함. 사실 이는 한국인들의 스프레드 먹는 방식이 잘못됐기 때문인데",
+  "원래는 피스타치오와 초코의 맛을 따로 느낄 수 있게 크림을 분리해서 출시했지만 비빔밥의 나라 한국인들은 뭐야 크림이 두 개네? 그냥 비벼 버려야지.",
+  "라면 두 개의 맛을 혼합해 버렸고 대부분이 초코범벅 피스타치오 맛을 영접했던 것.",
+  "하지만 이후 찍어 먹는 맛을 안 유튜버들의 맛있다는 평가가 줄을 이루기 시작해서 현재는 대량 생산이 이어지고 있다고."
+ ],
+ "facts": {
+  "f1": {
+   "text": "코스트코 코리아 누스포 두바이 초콜릿 크림 스프레드 1kg — 헤이즐넛(초코) 크림·피스타치오 크림 반반 구성",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334"
+  },
+  "o1": {
+   "text": "원본 영상 나레: 원래는 두 맛을 따로 느끼라고 크림을 분리해 냈는데 한국인은 비벼 먹어 초코 범벅이 됐다(원본 영상의 주장)",
+   "url": "https://www.youtube.com/watch?v=rGFXQlS9Cp4"
+  },
+  "c1": {
+   "text": "댓글(좋아요 1000): 초코는 불량식품 하트초콜릿 맛, 피스타치오 부분도 향이 약해서 한 번 먹고 방치 중",
+   "url": "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgwkfIqCqHHXnrwXQ_x4AaABAg"
+  },
+  "c2": {
+   "text": "댓글: 따로 먹어도 피스타치오 맛이 거의 안 남",
+   "url": "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgzhZukW5nLMI8q0Xs54AaABAg"
+  },
+  "c3": {
+   "text": "댓글: 아 진짜 우리는 비벼버림 / 저걸 어케 안비비냐",
+   "url": "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=Ugyf3B7vjciBxAu0Pg14AaABAg , https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgwFPQ1Ja9JVxLqa7554AaABAg"
+  },
+  "c4": {
+   "text": "댓글(좋아요 7300): 두 가지 맛 스프레드는 떠서 빵 위에 올려 먹는 게 정석으로 알고 있음 — 대댓글로 '그냥 방법 중 하나'라는 반박",
+   "url": "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=Ugx5CIswl8YkUiisZDt4AaABAg"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "훅(질문)+상황",
+    "text": "한국인이 비벼버린 두바이 스프레드 얘기 아는 사람? 얼마 전 코스트코가 진한 초코 크림이랑 고소한 피스타치오 크림을 큰 통 하나에 딱 반반으로 나눠 담아서 내놨는데,",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334"
+    ]
+   },
+   {
+    "fn": "반응",
+    "text": "막상 사 먹은 사람들 사이에선 피스타치오 맛은 거의 안 나고 그냥 흔한 초코 맛이라는 말이 돌았다고 함.",
+    "facts": [
+     "c1",
+     "c2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgwkfIqCqHHXnrwXQ_x4AaABAg",
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgzhZukW5nLMI8q0Xs54AaABAg"
+    ]
+   },
+   {
+    "fn": "진짜 이유(전언)",
+    "text": "근데 알고 보니 두 크림 맛을 각각 따로 즐기라고 일부러 통 안에서 반반 나눠 담은 거였다는데,",
+    "facts": [
+     "o1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4"
+    ]
+   },
+   {
+    "fn": "반전(섞음)",
+    "text": "비빔밥의 민족답게 다들 통째로 숟가락으로 휘저어 버리니까 진한 초코가 피스타치오 향을 싹 다 덮어버렸다는 것.",
+    "facts": [
+     "o1",
+     "c3"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4",
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=Ugyf3B7vjciBxAu0Pg14AaABAg , https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgwFPQ1Ja9JVxLqa7554AaABAg"
+    ]
+   },
+   {
+    "fn": "결말(댓글 반응)",
+    "text": "댓글에선 떠서 빵에 따로 올려 먹는 게 정석이라는 쪽이랑 저걸 어떻게 안 섞냐는 쪽으로 의견이 확 갈렸다고 함.",
+    "facts": [
+     "c4",
+     "c3"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=Ugx5CIswl8YkUiisZDt4AaABAg",
+     "https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=Ugyf3B7vjciBxAu0Pg14AaABAg , https://www.youtube.com/watch?v=rGFXQlS9Cp4&lc=UgwFPQ1Ja9JVxLqa7554AaABAg"
+    ]
+   }
+  ],
+  "check": {
+   "n_ok": true,
+   "lines_without_fact": [],
+   "chars": [
+    69,
+    42,
+    38,
+    47,
+    45
+   ],
+   "ranges": [
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ]
+   ],
+   "len_off_lines": [],
+   "copied_lines": [],
+   "polite_endings": 0,
+   "unsourced_numbers": []
+  },
+  "model": "오푸스 손 작성(조율자 3차 반려 — 썰 구조·근거 링크)"
+ },
+ "titles": {
+  "hook": "한국인이 비벼버린\n두바이 스프레드",
+  "post": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드"
+ },
+ "note": "정보형 문장은 0줄(가격·평점·영양 뺌). 원본 영상 주장(o1)은 '~다는데/~다는 것' 전언으로만. 댓글은 원본 영상 댓글(2026-10-16 yt-dlp 400개 수집)."
+}

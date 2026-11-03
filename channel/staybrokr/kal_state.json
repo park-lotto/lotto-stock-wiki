@@ -1,0 +1,156 @@
+{
+ "slug": "staybrokr",
+ "ref": "@staybrokr",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 1115.8,
+   "at": "2026-10-23 11:45",
+   "outputs": {
+    "ids": [
+     "ee3U4FtLb10",
+     "R6Beze-n77Q",
+     "ns7CedS9ZmM",
+     "cgB_rjyKxhQ",
+     "Y6lvDvtgaqk",
+     "lYFJTJSTM6s"
+    ],
+    "dir": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\staybrokr\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 3.6,
+   "at": "2026-10-23 11:26",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\staybrokr\\top.json"
+   },
+   "note": "스테이브로 | 숙소추천 구독 984 편 137 조회중앙 2,300 최대 139,000 (구독 대비 중앙 2.34)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 16.5,
+   "at": "2026-10-23 11:27",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\staybrokr\\src",
+    "ids": [
+     "ee3U4FtLb10",
+     "R6Beze-n77Q",
+     "ns7CedS9ZmM",
+     "cgB_rjyKxhQ",
+     "Y6lvDvtgaqk",
+     "lYFJTJSTM6s"
+    ]
+   },
+   "note": "받음 6/6(1080p, C 여유 100.8GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 200.6,
+   "at": "2026-10-23 11:48",
+   "outputs": {
+    "dirs": {
+     "ee3U4FtLb10": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_ee3U4FtLb10",
+     "R6Beze-n77Q": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_R6Beze-n77Q",
+     "ns7CedS9ZmM": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_ns7CedS9ZmM",
+     "cgB_rjyKxhQ": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_cgB_rjyKxhQ",
+     "Y6lvDvtgaqk": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_Y6lvDvtgaqk",
+     "lYFJTJSTM6s": "C:\\숏템_칼카피\\staybrokr\\kal\\frames_lYFJTJSTM6s"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.3,
+   "at": "2026-10-23 11:48",
+   "outputs": {
+    "skeletons": [
+     "ee3U4FtLb10",
+     "R6Beze-n77Q",
+     "ns7CedS9ZmM",
+     "cgB_rjyKxhQ",
+     "Y6lvDvtgaqk",
+     "lYFJTJSTM6s"
+    ],
+    "bundle": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\staybrokr\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\staybrokr\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 6편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-23 11:48",
+   "outputs": {
+    "pending": {
+     "ee3U4FtLb10": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.8) speaker 미기입",
+      "줄0(0.0~0.8) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.7~2.1) speaker 미기입",
+      "줄1(1.7~2.1) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "R6Beze-n77Q": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.8) speaker 미기입",
+      "줄0(0.0~0.8) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(0.8~1.3) speaker 미기입",
+      "줄1(0.8~1.3) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "ns7CedS9ZmM": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.2) speaker 미기입",
+      "줄0(0.0~1.2) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.2~1.8) speaker 미기입",
+      "줄1(1.2~1.8) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "cgB_rjyKxhQ": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.0) speaker 미기입",
+      "줄0(0.0~1.0) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.0~2.4) speaker 미기입",
+      "줄1(1.0~2.4) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "Y6lvDvtgaqk": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.8) speaker 미기입",
+      "줄0(0.0~0.8) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(0.8~1.6) speaker 미기입",
+      "줄1(0.8~1.6) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "lYFJTJSTM6s": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.0) speaker 미기입",
+      "줄0(0.0~1.0) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.0~1.8) speaker 미기입",
+      "줄1(1.0~1.8) enter 미기입(꾸밈 없으면 'instant')"
+     ]
+    }
+   },
+   "note": "줄판독 미완 6/6편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "미정",
+ "n": 6,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "스테이브로 | 숙소추천",
+  "url": "https://www.youtube.com/@staybrokr/shorts",
+  "subs": 984,
+  "total": 137,
+  "view_median": 2300,
+  "view_max": 139000,
+  "top_ids": [
+   "ee3U4FtLb10",
+   "R6Beze-n77Q",
+   "ns7CedS9ZmM",
+   "cgB_rjyKxhQ",
+   "Y6lvDvtgaqk",
+   "lYFJTJSTM6s"
+  ],
+  "views_per_sub": 2.34
+ }
+}

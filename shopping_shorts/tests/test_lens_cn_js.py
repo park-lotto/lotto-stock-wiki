@@ -10,9 +10,11 @@ _START = "function _lensSearchUrl("
 _END = "function renderLens("
 
 
+LENS_OPEN_JS = INDEX_HTML.parent / "lens_open.js"   # 6곳 열기 판단의 주인(관제 209 — index.html 에서 옮김)
+
+
 def _slice():
-    src = INDEX_HTML.read_text(encoding="utf-8")
-    return src[src.index(_START):src.index(_END)]
+    return LENS_OPEN_JS.read_text(encoding="utf-8")
 
 
 @pytest.mark.skipif(NODE is None, reason="node 없음")

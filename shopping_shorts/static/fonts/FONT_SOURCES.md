@@ -41,3 +41,9 @@
 - 잘난체 공식 안내: https://image.goodchoice.kr/images/jalnan_font/jalnan-font-202004ver.pdf (파일 자체 유료 판매·임의 개작 재배포 금지).
 - 이번 사용은 편집기 웹폰트 임베딩이다. 별도 폰트 판매/다운로드 팩 기능은 추가하지 않았다.
 - S-CoreDream 6/7은 팩에 있지만 동봉 고지만으로 배포 조건을 확정하지 않아 이번 등록에서 제외했다. 공식 라이선스 원문 확보 후 별도 적용한다.
+
+## 2026-10-17 모션그래픽팩(관제 222)
+
+| 로컬 파일 | 공식 원본 / 용도 |
+|---|---|
+| `Righteous-Regular.ttf` | Google Fonts `ofl/righteous` (OFL 1.1, `licenses/Righteous-OFL.txt`) · 3·2·1 카운트다운 숫자 — 레퍼런스 숫자와 겹침 대조 1위 |

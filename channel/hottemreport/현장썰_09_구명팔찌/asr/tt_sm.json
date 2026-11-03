@@ -1,0 +1,50 @@
+{
+ "engine": "speechmatics",
+ "lang": "es",
+ "segments": [
+  {
+   "start": 0.1,
+   "end": 11.62,
+   "text": "El día de hoy pondremos a prueba este brazalete que te podría salvar la vida en dado caso de que no pudieras salir del agua Pero realmente funciona Como dicen Vale la pena Bueno pues pongámoslo a prueba",
+   "f0": 202.5,
+   "db": -19.8
+  },
+  {
+   "start": 12.22,
+   "end": 21.54,
+   "text": "Vamos a ver si si funciona Bien pues ya tengo aquí la pulsera conmigo Me voy a sumergir y vamos a ver qué tan rápido me saca esto Si si abre Si no vamos a ver",
+   "f0": 266.7,
+   "db": -18.8
+  },
+  {
+   "start": 24.94,
+   "end": 34.62,
+   "text": "Es importante mencionar que los cartuchos de aire comprimido son reemplazables es decir que puedes usarla varias veces Como puedes ver si me jaló hacia arriba Veamos cuánto aguanta",
+   "f0": 201.3,
+   "db": -20.0
+  },
+  {
+   "start": 36.1,
+   "end": 42.42,
+   "text": "esto A mi me aguanta súper bien de peso ahí y algo que está muy cool es que tiene aquí un silbatito para",
+   "f0": 235.3,
+   "db": -18.2
+  },
+  {
+   "start": 43.94,
+   "end": 51.66,
+   "text": "a su Está súper duro simula súper bien y vimos que puede aguantar hasta dos personas de calificación Le damos diez",
+   "f0": 280.8,
+   "db": -19.6
+  }
+ ],
+ "dur": 53.48,
+ "db_all": -19.6,
+ "bed": {
+  "nonspeech_s": 7,
+  "loud_s": 7,
+  "tonal_s": 1,
+  "loud_share": 1.0,
+  "tonal_share": 0.14
+ }
+}

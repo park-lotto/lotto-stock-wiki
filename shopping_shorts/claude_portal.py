@@ -1,0 +1,2156 @@
+"""'클로드형' 서버 포털 — 고객 PC(로컬 MCP)가 부르는 REST 와 고객 페이지(/claude)의 판단 주인(관제 234, 숏템MCP).
+
+설계: docs/superpowers/specs/2026-10-18-숏템MCP-design.md(§2-3·§5·§7·§8·§9) · 계약: 2026-10-18-숏템MCP-api.md.
+서버는 **보여주기·설정·내려주기·라이선스 확인·이상 행동 탐지**만 한다. 제작(대본·TTS·렌더·검사) 호출은 0건.
+
+판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
+  issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
+  license                         기기 지문 DEVICES_MAX(2)대·회수·정지·엔진 버전
+  lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
+  assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
+  pack                            그 job 의 발급 목록 안 자산만 재발급
+  preview                         견본(preview/ 접두사)만, Range 거부, 10분 토큰 — 원본(assets/)과 저장소 접두사가 다르다
+  anomaly_check                   §7-9 A1~A10 탐지 → allow/throttle/deny/alert
+  asset_url                       원본 서명 URL 만들기 — 객체 저장소(R2)로 바꿀 때 **이 함수 하나만** 바뀐다
+
+★DB 는 숏템메이커 sqlite 하나(Store 연결 방식 그대로). 표는 여기서 CREATE TABLE IF NOT EXISTS — store.py 는 안 고친다.
+★키·토큰 원문은 로그·DB 어디에도 안 남긴다(해시·앞 12자만).
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import hmac
+import json
+import logging
+import math
+import os
+import re
+import secrets
+import shutil
+import sqlite3
+import threading
+import time
+from contextlib import contextmanager
+from pathlib import Path
+from urllib.parse import unquote
+
+from shopping_shorts import channel_profile
+
+log = logging.getLogger(__name__)
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+
+# 고정 단계 이름(9) — PC 진행 표시·lease step_name 공용(api.md §8)
+STEP_NAMES = ("소재", "분석", "대본", "장면 계획", "음성", "렌더", "검사", "확인", "완료")
+LICENSE_DAYS = 365
+LEASE_TTL = 180
+SESSION_TTL = 180        # 접속 자리 — PC 가 60초마다 잡는다. 창을 닫으면 3분 뒤 풀린다(관제 296)
+SESSION_KICK = 300       # 페이지에서 끊은 PC 는 5분간 다시 못 잡는다(켜 둔 PC 의 다음 신호가 바로 되찾지 않게)
+HEARTBEAT_EVERY = 60
+ASSET_URL_TTL = 6 * 3600
+PREVIEW_TOKEN_TTL = 600
+START_TTL = 72 * 3600    # START.md 인증값 기한
+DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 관리자 승인(관제 296)
+PROFILES_MAX = 10
+ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
+# 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
+PREVIEW_KINDS = {"font": ("png",), "sfx": ("mp3",), "bgm": ("mp3",), "template": ("jpg", "png"),
+                 "meme": ("jpg",), "voice": ("mp3",), "result": ("mp4",)}
+PREVIEW_MEDIA = {"png": "image/png", "jpg": "image/jpeg", "mp3": "audio/mpeg", "mp4": "video/mp4"}
+# 노출 검사 공용 목록(api.md §9) — 페이지 응답(/api/claude/me/*)에 이 키가 있으면 안 된다
+PAGE_FORBIDDEN_KEYS = ("bench", "strengths", "frame", "path", "commit", "evidence", "slug_bench")
+
+# 탐지 임계값 초기안(설계 §7-9, 개정 4 D 확정) — 설정 키 claude_anomaly_thresholds(JSON)로 배포 없이 덮어쓴다
+ANOMALY_DEFAULTS = {
+    "a1_countries": 2,          # 24h 안 서로 다른 국가 수
+    "a2_warn": 5, "a2_suspend": 10,          # 24h 동시 실행 시도
+    "a3_per_day": 200, "a3_ratio": 3.0, "a3_min_calls": 10, "a3_throttle_per_min": 10,
+    "a4_per_min": 60, "a4_per_hour": 600, "a4_repeat": 3, "a4_suspend_sec": 3600,
+    "a5_suspend": 10,           # 하루 목록 밖 자산 요청
+    "a6_alert": 3,              # 24h 회수된 키 사용
+    "a7_per_day": 3, "a7_days": 7,
+    "a10_per_day": 500, "a10_full_min": 10, "a10_bad_per_day": 10, "a10_repeat": 3,
+    "suspend_sec": 30 * 86400,  # 사람이 풀 때까지(관리자 경보 '해제')
+}
+
+RULE_TITLE = {
+    "A1": "키 공유 의심(다른 국가·등록 안 된 기기)", "A2": "동시 실행 시도", "A3": "자산 긁어가기 의심",
+    "A4": "짧은 시간 대량 요청", "A5": "고른 프리셋 밖 자산 요청", "A6": "회수된 키 사용",
+    "A7": "하트비트 없이 끊긴 작업 반복", "A8": "엔진 버전 낮음·위조", "A9": "기기 교체 잦음", "A10": "견본 긁어가기 의심",
+}
+
+_HTTP = {"no_key": 401, "bad_key": 401, "expired": 401, "revoked": 403, "suspended": 403, "device_unknown": 403,
+         "device_limit": 403, "account_mismatch": 403, "engine_old": 403, "not_in_plan": 403, "not_entitled": 403, "tier_locked": 403,
+         "busy_other_device": 409, "busy_session": 409, "lease_lost": 409, "rate_limited": 429, "disabled": 503, "bad_request": 400}
+
+_FP_RE = re.compile(r"^[0-9a-f]{64}$")
+_JOB_RE = re.compile(r"^[A-Za-z0-9_\-]{1,64}$")
+_PID_RE = re.compile(r"^[\w\-.가-힣]{1,80}$")
+_SEMVER = re.compile(r"^(\d{1,4})\.(\d{1,4})\.(\d{1,6})$")
+
+
+class PortalError(Exception):
+    """고객용 실패 하나 — {"ok": false, "code", "msg", "retry_after"?} 로 나간다."""
+
+    def __init__(self, code, msg, retry_after=None):
+        super().__init__(msg)
+        self.code, self.msg, self.retry_after = code, msg, retry_after
+        self.status = _HTTP.get(code, 400)
+
+    def body(self):
+        b = {"ok": False, "code": self.code, "msg": self.msg}
+        if self.retry_after is not None:
+            b["retry_after"] = int(self.retry_after)
+        return b
+
+
+def call(fn, *a, **kw):
+    """라우트 공용 — (HTTP 상태, 본문). 라우트는 이것만 부르고 판단하지 않는다."""
+    try:
+        return 200, fn(*a, **kw)
+    except PortalError as e:
+        return e.status, e.body()
+
+
+def _now():
+    return int(time.time())
+
+
+def store_dir() -> Path:
+    return Path(os.environ.get("CLAUDE_STORE_DIR") or (HERE / "data" / "claude_store"))
+
+
+def channel_root() -> Path:
+    """장부(channel/브랜드.json…)와 프리셋 틀(channel/<slug>/preset/**)이 있는 저장소 뿌리."""
+    return Path(os.environ.get("CLAUDE_CHANNEL_ROOT") or ROOT)
+
+
+# ── 비밀값 ──────────────────────────────────────────────────────────────
+def _base_secret() -> bytes:
+    """CLAUDE_LICENSE_SECRET 이 있으면 그것, 없으면 세션 서명키(DASH_SECRET)에서 파생. 소스에 기본값을 박지 않는다."""
+    env = (os.environ.get("CLAUDE_LICENSE_SECRET") or "").strip()
+    if env:
+        return env.encode()
+    import sys
+    app = sys.modules.get("shopping_shorts.app")
+    dash = getattr(app, "DASH_SECRET", "") if app else ""
+    dash = dash or (os.environ.get("DASH_SECRET") or "").strip()
+    if not dash:
+        try:
+            from shopping_shorts.config import DB_PATH
+            dash = (Path(DB_PATH).parent / ".session_secret").read_text(encoding="utf-8").strip()
+        except OSError:
+            dash = ""
+    if not dash:
+        raise PortalError("disabled", "서버 준비가 끝나지 않았습니다(비밀값 없음)")
+    return hmac.new(dash.encode(), b"shortem-claude-license-v1", hashlib.sha256).digest()
+
+
+def _k(label: str) -> bytes:
+    return hmac.new(_base_secret(), label.encode(), hashlib.sha256).digest()
+
+
+def _mac(label, msg) -> str:
+    return hmac.new(_k(label), msg.encode(), hashlib.sha256).hexdigest()
+
+
+# ── DB ──────────────────────────────────────────────────────────────────
+_SCHEMA = (
+    """CREATE TABLE IF NOT EXISTS claude_trials (
+        cid INTEGER PRIMARY KEY, started INTEGER NOT NULL, expires INTEGER NOT NULL, converted INTEGER NOT NULL DEFAULT 0)""",
+    """CREATE TABLE IF NOT EXISTS claude_licenses (
+        cid INTEGER PRIMARY KEY, kv INTEGER NOT NULL DEFAULT 0, gkv INTEGER NOT NULL DEFAULT 0,
+        key_hash TEXT, issued INTEGER, expires INTEGER, plan TEXT DEFAULT 'claude', entitled_json TEXT,
+        revoked INTEGER NOT NULL DEFAULT 0, suspended_until INTEGER NOT NULL DEFAULT 0, suspend_rule TEXT)""",
+    """CREATE TABLE IF NOT EXISTS claude_license_slots (
+        cid INTEGER NOT NULL, slot INTEGER NOT NULL, kv INTEGER NOT NULL, key_hash TEXT, issued INTEGER, expires INTEGER,
+        PRIMARY KEY (cid, slot))""",
+    """CREATE TABLE IF NOT EXISTS claude_devices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, cid INTEGER NOT NULL, fp_hash TEXT NOT NULL, dev_id TEXT NOT NULL,
+        name TEXT, slot INTEGER, created INTEGER, last_seen INTEGER, removed INTEGER NOT NULL DEFAULT 0)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_devices_cid ON claude_devices(cid, removed)",
+    """CREATE TABLE IF NOT EXISTS claude_leases (
+        cid INTEGER PRIMARY KEY, lease_id TEXT NOT NULL, fp_hash TEXT NOT NULL, device_name TEXT,
+        job_id TEXT NOT NULL, step_name TEXT, acquired INTEGER, expires INTEGER)""",
+    """CREATE TABLE IF NOT EXISTS claude_accounts (
+        cid INTEGER PRIMARY KEY, acct TEXT NOT NULL, bound INTEGER)""",
+    """CREATE TABLE IF NOT EXISTS claude_sessions (
+        cid INTEGER PRIMARY KEY, fp_hash TEXT NOT NULL DEFAULT '', device_name TEXT, expires INTEGER NOT NULL DEFAULT 0,
+        kicked_fp TEXT, kicked_until INTEGER NOT NULL DEFAULT 0)""",
+    """CREATE TABLE IF NOT EXISTS claude_change_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, cid INTEGER NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL,
+        fp_hash TEXT, dev_id TEXT, name TEXT, acct TEXT, old_dev_id TEXT, created INTEGER, decided INTEGER)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_change_cid ON claude_change_requests(cid, status)",
+    """CREATE TABLE IF NOT EXISTS claude_license_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, cid INTEGER, device_hash TEXT, ip TEXT,
+        country TEXT, route TEXT, kind TEXT, asset_ids TEXT, detail TEXT)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_llog ON claude_license_log(cid, kind, ts)",
+    """CREATE TABLE IF NOT EXISTS claude_lease_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, cid INTEGER, device_hash TEXT, action TEXT,
+        job_id TEXT, lease_id TEXT, step_name TEXT, result TEXT)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_lslog ON claude_lease_log(cid, ts)",
+    """CREATE TABLE IF NOT EXISTS claude_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, cid INTEGER, rule TEXT, level TEXT,
+        count INTEGER, detail TEXT, notified INTEGER DEFAULT 0, resolved INTEGER NOT NULL DEFAULT 0, resolved_at INTEGER)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_alerts ON claude_alerts(cid, rule, ts)",
+    """CREATE TABLE IF NOT EXISTS claude_profiles (
+        id TEXT PRIMARY KEY, customer_id INTEGER NOT NULL, name TEXT, preset_id TEXT, options_json TEXT,
+        version INTEGER NOT NULL DEFAULT 1, created INTEGER, updated INTEGER)""",
+    "CREATE INDEX IF NOT EXISTS idx_claude_profiles_cid ON claude_profiles(customer_id)",
+    """CREATE TABLE IF NOT EXISTS claude_feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, cid INTEGER, kind TEXT, text TEXT, job_id TEXT)""",
+    """CREATE TABLE IF NOT EXISTS claude_assets (
+        id TEXT PRIMARY KEY, kind TEXT NOT NULL, name TEXT, sha256 TEXT NOT NULL, size INTEGER,
+        preview_id TEXT, grp TEXT, meta_json TEXT, updated INTEGER)""",
+    """CREATE TABLE IF NOT EXISTS claude_job_assets (
+        cid INTEGER NOT NULL, job_id TEXT NOT NULL, asset_id TEXT NOT NULL, issued INTEGER,
+        profile_id TEXT, profile_version INTEGER, PRIMARY KEY (cid, job_id, asset_id))""",
+)
+_schema_ready: set = set()
+_schema_lock = threading.Lock()
+
+
+def _store(store=None):
+    if store is not None:
+        return store
+    from shopping_shorts.config import DB_PATH
+    from shopping_shorts.store import Store
+    return Store(DB_PATH)
+
+
+def ensure_schema(store):
+    key = str(Path(store.db_path).resolve())
+    if key in _schema_ready:
+        return
+    with _schema_lock:
+        if key in _schema_ready:
+            return
+        with _tx(store) as c:
+            for sql in _SCHEMA:
+                c.execute(sql)
+        _schema_ready.add(key)
+
+
+@contextmanager
+def _tx(store, write=False):
+    c = store._conn()
+    shared = getattr(getattr(store, "_reuse_tl", None), "conn", None) is c
+    try:
+        if write and not c.in_transaction:
+            c.execute("BEGIN IMMEDIATE")      # lease 처럼 읽고-쓰기가 겹치면 안 되는 곳 — 쓰기 순서를 하나로
+        yield c
+        c.commit()
+    except BaseException:
+        c.rollback()
+        raise
+    finally:
+        if not shared:
+            c.close()
+
+
+def _rows(c, sql, args=()):
+    cur = c.execute(sql, args)
+    cols = [d[0] for d in cur.description or ()]
+    return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+
+def _row(c, sql, args=()):
+    r = _rows(c, sql, args)
+    return r[0] if r else None
+
+
+def _setting(store, key, default=""):
+    try:
+        v = store.get_setting(key, None)
+    except Exception:      # noqa: BLE001 — 설정 조회 실패는 기본값(로그는 남긴다)
+        log.warning("claude_portal: 설정 %s 조회 실패", key, exc_info=True)
+        return default
+    return default if v in (None, "") else v
+
+
+def _thresholds(store) -> dict:
+    t = dict(ANOMALY_DEFAULTS)
+    raw = _setting(store, "claude_anomaly_thresholds", "")
+    if raw:
+        try:
+            t.update({k: v for k, v in json.loads(raw).items() if k in ANOMALY_DEFAULTS})
+        except (ValueError, AttributeError):
+            log.warning("claude_portal: claude_anomaly_thresholds JSON 이 깨져 기본값을 쓴다")
+    return t
+
+
+def devices_max(cid) -> int:
+    """이 계정의 기기 상한 — 판단은 여기 한 곳."""
+    return DEVICES_MAX
+
+
+def key_slots(cid) -> int:
+    """이 계정의 키 자리 — 둘째 키는 관리자만(사장님 10-31). 회원은 키 1개로 PC 2대를 쓴다."""
+    from shopping_shorts import app as _app
+    return 2 if _app._is_admin(cid) else 1
+
+
+def _is_staff(cid) -> bool:
+    """관리자 계정은 Claude 계정 묶기·동시 접속 제한을 받지 않는다."""
+    from shopping_shorts import app as _app
+    return bool(_app._is_admin(cid))
+
+
+def _gate(store, key, cid) -> bool:
+    """스위치 판정은 app._setting_gate 하나(""끔·"admin"·"11,42"·"1")."""
+    from shopping_shorts import app as _app
+    return bool(_app._setting_gate(store, key, cid))
+
+
+TRIAL_DAYS = 7
+MOVED = 2        # claude_trials.converted — Pro 회원이 버튼으로 옮겨 온 상태. 기한 없음. 관리자가 해제하면 1 로 바뀌어 다시 신청할 수 없다
+
+
+def _trial_row(store, cid):
+    ensure_schema(store)
+    with _tx(store) as c:
+        return _row(c, "SELECT * FROM claude_trials WHERE cid=?", (int(cid),))
+
+
+def _pro_open(store, cid) -> bool:
+    """Pro 회원 전체 기간 공개(사장님 11-02 "1주일 숏템 숏클 같이") — claude_pro_open_until(유닉스 초)까지. 지나면 저절로 닫힌다."""
+    try:
+        if int(str(_setting(store, "claude_pro_open_until", "0") or 0)) <= _now():
+            return False
+        return (store.get_customer(int(cid)) or {}).get("plan") == "pro"
+    except (ValueError, TypeError):
+        return False
+
+
+def portal_open(store, cid) -> bool:
+    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한 + Pro 전환(관제 306)."""
+    t = _trial_row(store, cid)
+    if t and t["converted"] == MOVED:
+        return True
+    if _pro_open(store, cid):
+        return True
+    if not _gate(store, "claude_portal_enabled", cid):
+        return False
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        return True
+    return not (t and not t["converted"] and t["expires"] <= _now())
+
+
+def trial_state(store, cid, eligible) -> dict:
+    """마이페이지 표시용. available=버튼을 보여도 되나(Pro 회원, 관제 306), days_left=무료 기간 남은 날."""
+    store = _store(store)
+    t = _trial_row(store, cid)
+    if t:
+        active = not t["converted"] and t["expires"] > _now()
+        return {"available": False, "active": active, "days_left": max(0, (t["expires"] - _now() + 86399) // 86400) if active else 0}
+    return {"available": bool(eligible) and not portal_open(store, cid), "active": False, "days_left": 0}
+
+
+def claim_trial(cid, eligible, store=None) -> dict:
+    """Pro 회원의 숏클 전환(관제 306, 사장님 11-02) — 누르면 바로 열리고 기한이 없다. 관리자 고객표에는 무료 이동으로 남는다.
+    회원별 행에 쓴다: 강의 뒤 동시에 눌러도 서로 덮어쓰지 않는다(설정값 한 칸에 쓰는 set_member 는 동시 클릭에 빠진다)."""
+    store = _store(store)
+    cid = int(cid)
+    if portal_open(store, cid):
+        return {"ok": True, "already": True}
+    if not eligible:
+        raise PortalError("bad_request", "Pro 회원만 신청할 수 있습니다")
+    if _trial_row(store, cid):
+        raise PortalError("bad_request", "숏클은 관리자 확인이 필요합니다")      # 관리자가 해제했거나 무료 기간이 끝난 계정
+    now = _now()
+    with _tx(store, write=True) as c:
+        c.execute("INSERT OR IGNORE INTO claude_trials(cid, started, expires, converted) VALUES(?,?,?,?)", (cid, now, now, MOVED))
+    saved = store.program_members().get(cid) or {}
+    store.save_program_member(cid, 1, 1, saved.get("plan") or "", saved.get("move") or "free", saved.get("tutor") or "")
+    log.info("claude_portal: cid %s Pro 전환", cid)
+    return {"ok": True, "moved": True}
+
+
+def _assets_on(store, cid) -> bool:
+    """claude_assets_enabled 는 **킬스위치** — 비어 있으면 켬(포털 스위치를 따른다), "0/off" 면 끔, 그 밖은 _setting_gate."""
+    v = str(_setting(store, "claude_assets_enabled", "")).strip().lower()
+    if v == "":
+        return True
+    if v in ("0", "off", "false"):
+        return False
+    return _gate(store, "claude_assets_enabled", cid)
+
+
+# ── 라이선스 키 ──────────────────────────────────────────────────────────
+def _sig(cid, exp, kv) -> str:
+    return _mac("license", f"{cid}|{exp}|{kv}")[:32]
+
+
+def _key_hash(key: str) -> str:
+    return _mac("keyhash", key)
+
+
+def _gkv(store) -> int:
+    try:
+        return int(str(_setting(store, "license_kv", "0")).strip() or 0)
+    except ValueError:
+        return 0
+
+
+def issue_license(cid, store=None, slot=1) -> dict:
+    """새 키 발급(kv+1 — 그 자리 옛 키 즉시 무효). 키 원문은 반환값에만 있고 DB 엔 해시만 남는다.
+    slot 2 = 관리자 둘째 PC 키(사장님 10-31 "회사·집 2개 발급, 관리자만") — 한쪽을 새로 받아도 다른 쪽이 끊기지 않는다."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    now = _now()
+    exp = now + LICENSE_DAYS * 86400
+    slot = int(slot)
+    if slot not in (1, 2) or slot > key_slots(cid):
+        raise PortalError("bad_request", "둘째 키는 관리자만 받을 수 있습니다")
+    with _tx(store, write=True) as c:
+        row = _row(c, "SELECT kv FROM claude_licenses WHERE cid=?", (cid,))
+        top = _row(c, "SELECT MAX(kv) AS kv FROM claude_license_slots WHERE cid=?", (cid,))
+        kv = max(row["kv"] if row else 0, (top or {}).get("kv") or 0) + 1      # 자리끼리 kv 가 겹치면 옛 키가 되살아난다
+        key = f"SHORTEM-L1.{cid}.{exp}.{kv}.{_sig(cid, exp, kv)}"
+        if slot == 2:
+            if not row:
+                raise PortalError("bad_request", "첫째 키를 먼저 발급하세요")
+            c.execute("INSERT OR REPLACE INTO claude_license_slots(cid, slot, kv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
+                      (cid, slot, kv, _key_hash(key), now, exp))
+        elif row:
+            c.execute("UPDATE claude_licenses SET kv=?, gkv=?, key_hash=?, issued=?, expires=?, revoked=0 WHERE cid=?",
+                      (kv, _gkv(store), _key_hash(key), now, exp, cid))
+        else:
+            c.execute("INSERT INTO claude_licenses(cid, kv, gkv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
+                      (cid, kv, _gkv(store), _key_hash(key), now, exp))
+    return {"key": key, "kv": kv, "issued": now, "expires": exp}
+
+
+def member_key(cid, store=None) -> str:
+    """회원의 지금 키 — 서명 방식이라 저장 없이 다시 만들 수 있다(옛 키를 끊지 않는다). 없거나 끝났으면 새로 발급."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store) as c:
+        row = _row(c, "SELECT kv, expires, revoked FROM claude_licenses WHERE cid=?", (cid,))
+    if row and not row["revoked"] and row["expires"] > _now():
+        key = f"SHORTEM-L1.{cid}.{row['expires']}.{row['kv']}.{_sig(cid, row['expires'], row['kv'])}"
+        try:
+            verify_license(key, store)
+            return key
+        except PortalError:
+            pass
+    return issue_license(cid, store)["key"]
+
+
+def start_token(cid) -> str:
+    """START.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    cid, exp = int(cid), _now() + START_TTL
+    return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
+
+
+def start_redeem(token, store=None) -> dict:
+    """인증값 → 회원 키. 설치 스크립트만 부른다. 판단은 이 함수 하나."""
+    store = _store(store)
+    parts = str(token or "").split(".")
+    if len(parts) != 3 or not parts[0].isdigit() or not parts[1].isdigit():
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    cid, exp = int(parts[0]), int(parts[1])
+    if not hmac.compare_digest(parts[2], _mac("start", f"{cid}|{exp}")[:32]):
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    if exp < _now():
+        raise PortalError("expired", "시작 파일 기한이 지났습니다 — 페이지에서 새로 받아 주세요")
+    if not portal_open(store, cid):
+        raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
+    return {"ok": True, "key": member_key(cid, store)}
+
+
+def start_line(cid, base) -> str:
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용)."""
+    return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
+
+
+def start_cmd(cid, base) -> str:
+    """회원별 더블클릭 설치 파일 — 파워쉘을 열 필요가 없다."""
+    return ("@echo off\r\n"
+            f'powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{start_line(cid, base)}"\r\n'
+            "pause\r\n")
+
+
+def start_md(cid, base) -> str:
+    """회원별 START.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    line = start_line(cid, base)
+    return ("# 숏클 시작\n\n"
+            "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
+            f"Claude Code 가 없으면 PowerShell 창에 아래 한 줄을 붙여 넣어도 같습니다. 이 파일은 {START_TTL // 3600}시간 동안 쓸 수 있고, 남에게 주지 마세요.\n\n"
+            f"```powershell\n{line}\n```\n\n"
+            "Claude 에게 — 아래만 하세요. 다른 파일은 열거나 고치지 마세요.\n\n"
+            "1. 위 한 줄을 PowerShell 로 백그라운드 실행합니다. 약 1GB 를 받아 10분 넘게 걸릴 수 있으니 끝날 때까지 기다립니다.\n"
+            "2. `설치 완료` 가 나오면 사용자에게 \"새 창에서 준비 점검이 시작됩니다\"라고 한 줄만 알립니다.\n"
+            "3. 실패하면 나온 메시지를 쉬운 말로 알리고 같은 한 줄을 한 번 더 실행합니다.\n")
+
+
+def start_zip(cid, base) -> bytes:
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 START.md 대로 설치한다."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("START.md", start_md(cid, base))
+    return buf.getvalue()
+
+
+def _parse_key(key):
+    if not key:
+        raise PortalError("no_key", "라이선스 키가 없습니다 — 숏템메이커 '클로드형' 페이지에서 키를 발급하세요")
+    parts = key.strip().split(".")
+    if len(parts) != 5 or parts[0] != "SHORTEM-L1" or not all(p.isdigit() for p in parts[1:4]):
+        raise PortalError("bad_key", "라이선스 키 형식이 올바르지 않습니다")
+    cid, exp, kv = int(parts[1]), int(parts[2]), int(parts[3])
+    if not hmac.compare_digest(parts[4], _sig(cid, exp, kv)):
+        raise PortalError("bad_key", "라이선스 키가 올바르지 않습니다")
+    return cid, exp, kv
+
+
+def verify_license(key, store=None) -> dict:
+    """키 → {"cid","exp","kv","issued","row"}. 위조 bad_key · 만료 expired · 옛 kv·회수·전역 kv 변경 revoked."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, exp, kv = _parse_key(key)
+    with _tx(store) as c:
+        row = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
+        extra = _row(c, "SELECT * FROM claude_license_slots WHERE cid=? AND kv=?", (cid, kv))
+    held = extra or row          # 둘째 자리 키면 그 자리 해시와, 아니면 첫째 자리와 대조. 회수·전역 kv·정지는 계정 행 하나
+    if (not row or held["kv"] != kv or not hmac.compare_digest(held["key_hash"] or "", _key_hash(key.strip()))
+            or int(row["gkv"] or 0) != _gkv(store) or row["revoked"]):
+        raise PortalError("revoked", "이 라이선스 키는 더 이상 쓸 수 없습니다 — 페이지에서 새 키를 발급하세요")
+    if exp < _now():
+        raise PortalError("expired", "라이선스 기간이 끝났습니다")
+    return {"cid": cid, "exp": exp, "kv": kv, "issued": held["issued"], "row": row}
+
+
+def ctx_from_request(request, ip="") -> dict:
+    """라우트 → 판단 함수로 넘기는 요청 정보(헤더만). 쿠키·본문은 안 읽는다."""
+    h = request.headers
+    auth = h.get("authorization") or ""
+    return {"key": auth[7:].strip() if auth.lower().startswith("bearer ") else "",
+            "device": (h.get("x-shortem-device") or "").strip().lower(),
+            # ★HTTP 헤더는 ASCII 만 실린다 — PC 는 이름을 UTF-8 퍼센트 인코딩해 보낸다(한글 기기명)
+            "device_name": re.sub(r"[\x00-\x1f<>]", "", unquote(h.get("x-shortem-device-name") or "")).strip()[:40],
+            "engine": (h.get("x-shortem-engine") or "").strip(),
+            "claude": acct if _FP_RE.match(acct := (h.get("x-shortem-claude") or "").strip().lower()) else "",
+            "ip": ip, "country": (h.get("cf-ipcountry") or h.get("x-geo-country") or "").strip().upper()[:4],
+            "referer": h.get("referer") or "", "host": h.get("host") or "", "range": h.get("range") or ""}
+
+
+def _fp_hash(fp) -> str:
+    return hashlib.sha256(("shortem-dev|" + fp).encode()).hexdigest()
+
+
+def _open_request(c, cid, kind):
+    return _row(c, "SELECT * FROM claude_change_requests WHERE cid=? AND kind=? AND status IN ('new','asked')", (cid, kind))
+
+
+def _note_request(c, cid, kind, status, fp_hash=None, dev_id=None, name=None, acct=None):
+    """변경 요청은 회원·종류마다 1건 — 다른 대상이 오면 앞 요청을 덮어쓴다."""
+    cur = _open_request(c, cid, kind)
+    if cur and (cur["fp_hash"], cur["acct"]) == (fp_hash, acct):
+        return
+    if cur:
+        c.execute("UPDATE claude_change_requests SET status=?, fp_hash=?, dev_id=?, name=?, acct=?, old_dev_id=NULL, created=? WHERE id=?",
+                  (status, fp_hash, dev_id, name, acct, _now(), cur["id"]))
+    else:
+        c.execute("INSERT INTO claude_change_requests(cid, kind, status, fp_hash, dev_id, name, acct, created) VALUES(?,?,?,?,?,?,?,?)",
+                  (cid, kind, status, fp_hash, dev_id, name, acct, _now()))
+
+
+def _guard_account(store, ctx, cid):
+    """판정 주인(관제 296): 회원 키 1개 = Claude 계정 1개. 처음 본 계정에 묶고, 다른 계정은 승인 전까지 막는다.
+    계정 값이 없는 요청(옛 엔진·Claude Desktop)은 통과한다."""
+    acct = ctx.get("claude") or ""
+    if not acct or _is_staff(cid):
+        return
+    with _tx(store, write=True) as c:
+        cur = _row(c, "SELECT acct FROM claude_accounts WHERE cid=?", (cid,))
+        if not cur:
+            c.execute("INSERT OR IGNORE INTO claude_accounts(cid, acct, bound) VALUES(?,?,?)", (cid, acct, _now()))
+            return
+        if cur["acct"] == acct:
+            return
+        _note_request(c, cid, "account", "asked", acct=acct)
+    raise PortalError("account_mismatch", "이 라이선스는 다른 Claude 계정에 연결돼 있습니다 — 계정 변경을 요청했습니다. 승인되면 바로 쓸 수 있습니다")
+
+
+def _guard_session(store, cid, fh):
+    """판정 주인(관제 296): 한 회원은 한 번에 PC 1대만 접속한다. 자리는 session() 이 잡고 여기서 막는다."""
+    if _is_staff(cid):
+        return
+    with _tx(store) as c:
+        s = _row(c, "SELECT * FROM claude_sessions WHERE cid=?", (cid,))
+    if not s:
+        return
+    now = _now()
+    if s["kicked_fp"] == fh and s["kicked_until"] > now:
+        raise PortalError("busy_session", "이 PC 접속은 숏클 페이지에서 끊었습니다 — 5분 뒤 다시 시도하세요", s["kicked_until"] - now)
+    if s["fp_hash"] and s["fp_hash"] != fh and s["expires"] > now:
+        raise PortalError("busy_session", f"다른 PC({s['device_name'] or '다른 PC'})에서 숏템을 쓰는 중입니다 — 동시에 1대만 쓸 수 있습니다", s["expires"] - now)
+
+
+def _semver(v):
+    m = _SEMVER.match(v or "")
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+def member_tier(store, cid) -> str:
+    """숏클 반(판단 주인) — 관리자가 정한 program_member.plan(기본반·고급반·프리미엄반). 없으면 기본. 벤치마킹 노하우는 고급 이상만."""
+    try:
+        plan = str((store.program_members().get(int(cid)) or {}).get("plan") or "")
+    except Exception as e:  # noqa: BLE001 — 반을 못 읽으면 기본으로(경보 한 줄)
+        log.warning("claude_portal: cid %s 반을 읽지 못했다: %s", cid, type(e).__name__)
+        plan = ""
+    return "premium" if "프리미엄" in plan else "advanced" if "고급" in plan else "basic"
+
+
+def _front(store, ctx, route, need_device=True):
+    """PC 라우트 공통 관문: 키 → 스위치 → 탐지(속도·정지) → 지문 → 엔진 → 등록 기기. (cid, info, device_row)"""
+    try:
+        info = verify_license(ctx.get("key"), store)
+    except PortalError as e:
+        if e.code == "revoked":
+            try:
+                cid, _, _ = _parse_key(ctx.get("key"))
+                anomaly_check(cid, {"type": "revoked_key", "route": route, **_ev(ctx)}, store=store)
+            except PortalError:
+                pass
+        raise
+    cid = info["cid"]
+    if not portal_open(store, cid):
+        raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
+    _raise_on(anomaly_check(cid, {"type": "request", "route": route, **_ev(ctx)}, store=store))
+    if route == "install":                       # 설치 전 연결 파일 — 아직 엔진·기기 지문 계산기가 없다(키만 본다)
+        return cid, info, None
+    fp = ctx.get("device") or ""
+    if not _FP_RE.match(fp):
+        raise PortalError("bad_request", "기기 지문이 올바르지 않습니다 — 설치팩을 다시 확인하세요")
+    want = _semver(str(_setting(store, "claude_min_engine", "1.0.0")))
+    have = _semver(ctx.get("engine"))
+    if route != "update" and (have is None or (want and have < want)):   # 업데이트 창구는 오래된 엔진도 들어와야 새 판을 받는다
+        anomaly_check(cid, {"type": "engine_old", "route": route, **_ev(ctx)}, store=store)
+        raise PortalError("engine_old", "숏템 엔진이 오래됐습니다 — 설치팩을 새로 받아 주세요")
+    dev = None
+    if need_device:
+        with _tx(store) as c:
+            dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND fp_hash=? AND removed=0", (cid, _fp_hash(fp)))
+        if not dev:
+            raise PortalError("device_unknown", "이 기기는 등록되지 않았습니다 — 먼저 '숏템 준비 점검'으로 기기를 등록하세요")
+        if route != "update":                    # 막힌 PC 도 새 판은 받는다
+            _guard_account(store, ctx, cid)
+            _guard_session(store, cid, dev["fp_hash"])
+    return cid, info, dev
+
+
+def _ev(ctx):
+    return {"ip": ctx.get("ip", ""), "country": ctx.get("country", ""),
+            "device": _fp_hash(ctx["device"])[:12] if ctx.get("device") else ""}
+
+
+def _raise_on(res):
+    if res["action"] in ("deny", "throttle"):
+        raise PortalError(res["code"], res["msg"], res.get("retry_after"))
+
+
+# ── 프리셋·장부 ──────────────────────────────────────────────────────────
+def _public_preset_id(internal: str) -> str:
+    """고객에게 보이는 프리셋 id — 내부 경로(벤치 채널 slug 가 들어 있다)를 그대로 안 내보낸다(§7-4 slug 비노출)."""
+    return "p_" + hashlib.sha256(("preset|" + internal).encode()).hexdigest()[:10]
+
+
+def presets(store=None, include_off=False) -> list:
+    """channel/<slug>/preset/**/frame.json(+manifest.json) 전부. 스위치 claude_presets_off(쉼표 목록)로 끈 것은 뺀다."""
+    base = channel_root() / "channel"
+    off = set()
+    if store is not None:
+        off = {x.strip() for x in str(_setting(store, "claude_presets_off", "")).split(",") if x.strip()}
+    out = []
+    for fp in sorted(base.glob("*/preset/**/frame.json")):
+        d = fp.parent
+        if not (d / "manifest.json").exists():
+            continue
+        rel = d.relative_to(base).as_posix()           # sseolpulda/preset/A_흰바탕창/창아래_검정
+        slug, _, style = rel.partition("/preset/")
+        internal = f"{slug}/{style}"
+        pid = _public_preset_id(internal)
+        if not include_off and (pid in off or internal in off):
+            continue
+        out.append({"id": pid, "internal": internal, "slug": slug, "style": style, "dir": d})
+    return out
+
+
+def _preset_by_id(store, pid):
+    return next((p for p in presets(store) if p["id"] == pid), None)
+
+
+def _style_label(style: str) -> str:
+    """'A_흰바탕창/창아래_검정' → '흰바탕창 · 창아래 검정' (틀 설명 문장 — 수치·좌표 없음)."""
+    parts = []
+    for seg in style.split("/"):
+        seg = re.sub(r"^[A-Z]_", "", seg)
+        parts.append(seg.replace("_", " "))
+    return " · ".join(p for p in parts if p)
+
+
+def preset_names(store, ids) -> list:
+    """고객에게 보이는 프리셋 이름(관제 234 5판 — PC 로컬 설정 화면이 쓴다). 이름표 = shopping_shorts/claude_preset_names.json
+    ({내부 slug/틀 또는 고객용 id: {name, desc}}), 관리자 설정 claude_preset_names 가 칸 단위로 덮는다. 없으면 틀 설명. 벤치 slug 는 안 내보낸다."""
+    names = json.loads((Path(__file__).resolve().parent / "claude_preset_names.json").read_text(encoding="utf-8"))
+    try:
+        names.update(json.loads(str(_setting(store, "claude_preset_names", "") or "{}")))
+    except ValueError:
+        log.warning("claude_portal: 관리자 설정 claude_preset_names 가 깨졌다 — 기본 이름표만 쓴다")
+    out = []
+    by_id = {p["id"]: p for p in presets(store)}   # 틀 폴더는 한 번만 훑는다(프리셋마다 훑으면 20×20 — 10-25 설정 화면 0.65초)
+    for pid in ids:
+        p = by_id.get(pid)
+        if not p:
+            continue
+        n = names.get(pid) or names.get(p["internal"]) or {}
+        name = str(n.get("name") or _style_label(p["style"]))[:40]
+        out.append({"id": pid, "name": name, "desc": str(n.get("desc") or "")[:120],
+                    "group": str(n.get("group") or "")[:30],   # 형식 묶음(사장님 10-24) — 설정 화면이 묶어서 보여준다
+                    **({"aliases": al[:8]} if (al := preset_aliases().get(_name_key(name))) else {})})
+    return out
+
+
+def _name_key(s: str) -> str:
+    return re.sub(r"[\s+·_\-()]", "", str(s or "").split("(")[0]).lower()
+
+
+def preset_aliases() -> dict:
+    """프리셋 이름 → 회원이 부르는 다른 이름(10-26 회원 '<URL> 이걸로 키치잇 스타일로' 가 '키치잇 프리셋 없음'으로 시작 못 함).
+    주인 = 엔진 channel/프리셋.json presets.<slug>.bench_option(채널 이름)·member.preset_name — 여기는 읽기만. 괄호 설명은 뺀다."""
+    try:
+        d = json.loads((channel_root() / "channel" / "프리셋.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.warning("claude_portal: channel/프리셋.json 을 못 읽어 프리셋 별칭 없이 간다")
+        return {}
+    out: dict = {}
+    for slug, x in (d.get("presets") or {}).items():
+        pn = ((x or {}).get("member") or {}).get("preset_name") if isinstance(x, dict) else None
+        bo = re.split(r"[(（]", str((x or {}).get("bench_option") or ""))[0].strip() if isinstance(x, dict) else ""
+        if pn and bo:
+            out.setdefault(_name_key(pn), [])
+            if bo not in out[_name_key(pn)]:
+                out[_name_key(pn)].append(bo)
+    return out
+
+
+def _ledgers():
+    from shopping_shorts import calcopy_board
+    return calcopy_board.preset_home(channel_root())
+
+
+def _entitled(store, cid, row=None) -> list:
+    """구매한 프리셋 목록. 아직 결제 연동 전이라 entitled_json 이 비면 켜져 있는 프리셋 전부."""
+    allp = [p["id"] for p in presets(store)]
+    raw = (row or {}).get("entitled_json")
+    if raw:
+        try:
+            want = set(json.loads(raw))
+            return [p for p in allp if p in want]
+        except ValueError:
+            log.warning("claude_portal: cid %s entitled_json 이 깨졌다", cid)
+    return allp
+
+
+# ── 자산 카탈로그·저장소 ──────────────────────────────────────────────────
+def put_blob(path: Path) -> tuple:
+    """원본 파일 → assets/<sha256>(내용주소). (sha256, size). 같은 내용은 한 번만 저장."""
+    h, size = hashlib.sha256(), 0
+    with open(path, "rb") as f:                       # 조각으로 — 설치 묶음(수백 MB)도 메모리에 다 올리지 않는다
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+    sha = h.hexdigest()
+    dst = store_dir() / "assets" / sha
+    if not dst.exists() or dst.stat().st_size != size:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dst.with_suffix(".tmp")
+        shutil.copyfile(path, tmp)
+        os.replace(tmp, dst)
+    return sha, size
+
+
+def upsert_asset(store, aid, kind, name, sha, size, grp="", preview_id=None, meta=None):
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        c.execute("INSERT INTO claude_assets(id, kind, name, sha256, size, preview_id, grp, meta_json, updated) "
+                  "VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET kind=excluded.kind, name=excluded.name, "
+                  "sha256=excluded.sha256, size=excluded.size, preview_id=excluded.preview_id, grp=excluded.grp, "
+                  "meta_json=excluded.meta_json, updated=excluded.updated",
+                  (aid, kind, name, sha, size, preview_id, grp, json.dumps(meta or {}, ensure_ascii=False), _now()))
+
+
+def _assets(store, kind=None) -> list:
+    ensure_schema(store)
+    with _tx(store) as c:
+        if kind:
+            return _rows(c, "SELECT * FROM claude_assets WHERE kind=? ORDER BY id", (kind,))
+        return _rows(c, "SELECT * FROM claude_assets ORDER BY kind, id")
+
+
+def _voices() -> list:
+    try:
+        return json.loads((HERE / "assets" / "voice_presets.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.warning("claude_portal: voice_presets.json 을 못 읽었다", exc_info=True)
+        return []
+
+
+def catalog(store) -> dict:
+    """옵션 검증용 id 집합 — 서버 자산 id 만 옵션 값이 된다."""
+    rows = _assets(store)
+    cat = {"font": set(), "sfx_pack": set(), "bgm": set(), "template": set(), "meme_kind": set(),
+           "voice": {v.get("preset_id") for v in _voices() if v.get("preset_id")}}
+    for r in rows:
+        k, rest = r["id"].split(":", 1)
+        if k == "font":
+            cat["font"].add(rest)
+        elif k == "sfx" and r.get("grp"):
+            cat["sfx_pack"].add(r["grp"])
+        elif k == "bgm":
+            cat["bgm"].add(rest)
+        elif k == "template":
+            cat["template"].add(rest)
+        elif k == "meme" and r.get("grp"):
+            cat["meme_kind"].add(r["grp"])
+    return cat
+
+
+def asset_url(asset: dict, cid, job_id, now=None) -> tuple:
+    """원본 서명 URL — **이 함수 하나**가 정한다. 지금은 서버 디스크 + /api/claude/blob/<토큰>(HMAC, 6h, 1 URL 1 파일).
+    객체 저장소(R2/S3)를 붙이면 여기만 그 서명 URL 로 바꾼다. (url, 만료)"""
+    exp = (now or _now()) + ASSET_URL_TTL
+    payload = json.dumps({"s": asset["sha256"], "a": asset["id"], "c": int(cid), "j": job_id, "e": exp},
+                         separators=(",", ":"), ensure_ascii=False).encode()
+    b = base64.urlsafe_b64encode(payload).decode().rstrip("=")
+    return f"/api/claude/blob/{b}.{_mac('blob', b)[:32]}", exp
+
+
+def blob(token: str) -> dict:
+    """서명 URL → 원본 파일. 위조·만료면 403. Range 허용(원본 다운로드 경로 — 견본과 다른 길)."""
+    try:
+        b, sig = token.rsplit(".", 1)
+    except ValueError:
+        raise PortalError("bad_request", "주소가 올바르지 않습니다") from None
+    if not hmac.compare_digest(sig, _mac("blob", b)[:32]):
+        raise PortalError("not_in_plan", "주소가 올바르지 않습니다")
+    try:
+        d = json.loads(base64.urlsafe_b64decode(b + "=" * (-len(b) % 4)))
+    except ValueError:
+        raise PortalError("bad_request", "주소가 올바르지 않습니다") from None
+    if int(d.get("e") or 0) < _now():
+        raise PortalError("expired", "주소 유효 시간이 지났습니다 — 다시 받아 주세요")
+    sha = str(d.get("s") or "")
+    if not re.fullmatch(r"[0-9a-f]{64}", sha):
+        raise PortalError("bad_request", "주소가 올바르지 않습니다")
+    f = store_dir() / "assets" / sha
+    if not f.exists():
+        raise PortalError("not_in_plan", "자산 파일이 서버에 없습니다")
+    return {"file": f, "name": str(d.get("a") or sha).split(":")[-1].split("/")[-1], "media_type": "application/octet-stream"}
+
+
+def _refs_of(merged: dict, store) -> list:
+    """합본이 **실제로 참조하는** 자산 id(순서 유지·중복 없음) — 글꼴(틀이 그리는 것)·효과음 팩 파일·곡·템플릿."""
+    opts = merged.get("options") or {}
+    refs = [f"font:{f}" for f in channel_profile.fonts_of(merged.get("frame"))]
+    pack = opts.get("sfx_pack")
+    if pack:
+        refs += [r["id"] for r in _assets(store, "sfx") if r.get("grp") == pack]
+    tr = (opts.get("bgm") or {}).get("track")
+    if tr and tr != "none":
+        refs.append(f"bgm:{tr}")
+    tpl = opts.get("template")
+    if tpl and tpl != "none":
+        refs.append(f"template:{tpl}")
+    return list(dict.fromkeys(refs))
+
+
+def _strip_internal(x):
+    """규칙에서 근거·측정 원값·경로를 뺀다(고객 PC 로는 계산에 쓰는 값만)."""
+    drop = {"why", "evidence", "bench", "sources", "source", "variable_stats", "strengths", "measured_at", "notes",
+            "unknown", "from", "path", "commit", "made_by", "tool", "rules_path", "nearest_template"}
+    if isinstance(x, dict):
+        return {k: _strip_internal(v) for k, v in x.items() if k not in drop}
+    if isinstance(x, list):
+        return [_strip_internal(v) for v in x]
+    return x
+
+
+def _rules_of(pdir: Path, man: dict) -> dict:
+    # 공식 문장(man["rules"])은 PC 가 쓰지 않는다 — 노하우 최소 노출(설계 §7-4)이라 보내지 않는다. 칸 역할·고정값만 간다.
+    rules = {"roles": man.get("roles") or [],
+             "fixed": {k: (v or {}).get("value") for k, v in (man.get("fixed") or {}).items() if isinstance(v, dict)}}
+    rp = man.get("rules_path")
+    if isinstance(rp, str) and rp.startswith("channel/") and ".." not in rp:
+        f = channel_root() / rp
+        try:
+            rules["script"] = _strip_internal(json.loads(f.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            pass       # 대본 규칙표가 없는 틀도 있다(틀 규칙만 간다)
+    return rules
+
+
+# ── license ─────────────────────────────────────────────────────────────
+def _member_name(store, cid) -> str:
+    """회원 Claude 첫 인사 "○○ 회원님"(숏클 지침 2장) — 가입 이름, 없으면 아이디. 못 찾으면 빈칸(PC 는 '회원님'만)."""
+    try:
+        cu = store.get_customer(cid) or {}
+    except Exception as e:                       # 회원 표가 없는 시험 저장소 등 — 인사만 빠진다
+        log.debug("member_name: %s", e)
+        return ""
+    return re.sub(r"[\s<>]+", " ", str(cu.get("name") or cu.get("username") or "")).strip()[:20]
+
+
+def license(ctx: dict, store=None) -> dict:
+    """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, DEVICES_MAX 차면 교체 대기·관리자 승인으로만 바뀐다)."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, info, _ = _front(store, ctx, "license", need_device=False)
+    _guard_account(store, ctx, cid)
+    fp = ctx["device"]
+    name = ctx.get("device_name") or "이름 없는 기기"
+    now = _now()
+    fh = _fp_hash(fp)
+    registered_now = False
+    limit = devices_max(cid)
+    asked = other = False
+    with _tx(store, write=True) as c:
+        dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND fp_hash=? AND removed=0", (cid, fh))
+        live = _rows(c, "SELECT slot FROM claude_devices WHERE cid=? AND removed=0", (cid,))
+        if dev:
+            c.execute("UPDATE claude_devices SET last_seen=?, name=? WHERE id=?", (now, name, dev["id"]))
+        elif len(live) < limit:
+            used = {r["slot"] for r in live}
+            slot = next(s for s in range(1, limit + 1) if s not in used)
+            c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen) VALUES(?,?,?,?,?,?,?)",
+                      (cid, fh, fp[:12], name, slot, now, now))
+            dev = {"slot": slot, "name": name}
+            registered_now = True
+            live.append({"slot": slot})
+            c.execute("UPDATE claude_change_requests SET status='closed', decided=? WHERE cid=? AND kind='device' AND status IN ('new','asked') AND fp_hash=?",
+                      (now, cid, fh))
+        else:
+            cur = _open_request(c, cid, "device")
+            asked = bool(cur and cur["fp_hash"] == fh and cur["status"] == "asked")
+            other = bool(cur and cur["fp_hash"] != fh and cur["created"] > now - 86400)   # 대기 중인 PC 가 아닌 또 다른 PC
+            _note_request(c, cid, "device", "new", fp_hash=fh, dev_id=fp[:12], name=name)
+    if not dev:
+        if other:
+            _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
+        raise PortalError("device_limit", "기기 교체 승인을 기다리는 중입니다 — 승인되면 바로 쓸 수 있습니다" if asked else
+                          f"PC {limit}대가 이미 등록돼 있습니다 — 숏클 페이지 '등록 기기'에서 뺄 PC 를 고르고 교체를 요청해 주세요")
+    _guard_session(store, cid, fh)
+    _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
+    row = info["row"]
+    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "tier": member_tier(store, cid), "expires": info["exp"],
+            "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
+            "devices_used": len(live), "devices_max": limit,
+            "entitled_presets": _entitled(store, cid, row),
+            "presets": preset_names(store, _entitled(store, cid, row)),
+            "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
+                          "version": p["version"]} for p in list_profiles(cid, store)],
+            "min_engine": str(_setting(store, "claude_min_engine", "1.0.0")),
+            "min_installer": str(_setting(store, "claude_min_installer", "1.0.0")), "server_time": _now()}
+
+
+# ── lease ───────────────────────────────────────────────────────────────
+def _lease_log(c, cid, fh, action, job_id, lease_id, step, result):
+    c.execute("INSERT INTO claude_lease_log(ts, cid, device_hash, action, job_id, lease_id, step_name, result) "
+              "VALUES(?,?,?,?,?,?,?,?)", (_now(), cid, (fh or "")[:12], action, job_id, lease_id, step, result))
+
+
+def session(ctx: dict, body: dict, store=None) -> dict:
+    """POST /api/claude/session — PC 가 켜져 있는 동안 자리를 잡는다(hold)·끌 때 놓는다(release). 막는 판정은 _guard_session."""
+    store = _store(store)
+    ensure_schema(store)
+    action = (body or {}).get("action") if isinstance(body, dict) else None
+    if action not in ("hold", "release"):
+        raise PortalError("bad_request", "action 은 hold·release 중 하나입니다")
+    cid, _, dev = _front(store, ctx, "session")
+    with _tx(store, write=True) as c:
+        if action == "hold":
+            c.execute("INSERT INTO claude_sessions(cid, fp_hash, device_name, expires) VALUES(?,?,?,?) "
+                      "ON CONFLICT(cid) DO UPDATE SET fp_hash=excluded.fp_hash, device_name=excluded.device_name, "
+                      "expires=excluded.expires, kicked_fp=NULL, kicked_until=0",
+                      (cid, dev["fp_hash"], dev.get("name"), _now() + SESSION_TTL))
+        else:
+            c.execute("DELETE FROM claude_sessions WHERE cid=? AND fp_hash=?", (cid, dev["fp_hash"]))
+    return {"ok": True, "ttl": SESSION_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+
+
+def lease(ctx: dict, body: dict, store=None) -> dict:
+    """POST /api/claude/lease — cid 당 활성 1개. acquire(멱등)·heartbeat·release(멱등)."""
+    store = _store(store)
+    ensure_schema(store)
+    body = body if isinstance(body, dict) else {}
+    action = body.get("action")
+    job_id = str(body.get("job_id") or "")
+    lease_id = str(body.get("lease_id") or "")
+    step = body.get("step_name")
+    if action not in ("acquire", "heartbeat", "release"):
+        raise PortalError("bad_request", "action 은 acquire·heartbeat·release 중 하나입니다")
+    if step is not None and step not in STEP_NAMES:
+        raise PortalError("bad_request", "단계 이름이 목록에 없습니다")
+    if action == "acquire" and not _JOB_RE.match(job_id):
+        raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
+    # 반납은 속도 제한에 막히면 안 된다 — 막히면 임대가 3분 남아 다음 일이 줄줄이 busy 가 된다
+    cid, _, dev = _front(store, ctx, "lease_release" if action == "release" else "lease")
+    fh = dev["fp_hash"]
+    now = _now()
+    busy = None
+    expired_old = False
+    with _tx(store, write=True) as c:
+        cur = _row(c, "SELECT * FROM claude_leases WHERE cid=?", (cid,))
+        if cur and cur["expires"] <= now:
+            _lease_log(c, cid, cur["fp_hash"], "expired", cur["job_id"], cur["lease_id"], cur["step_name"], "expired")
+            c.execute("DELETE FROM claude_leases WHERE cid=?", (cid,))
+            expired_old, cur = True, None
+        if action == "acquire":
+            if cur and cur["fp_hash"] == fh and cur["job_id"] == job_id:
+                c.execute("UPDATE claude_leases SET expires=?, step_name=COALESCE(?, step_name) WHERE cid=?",
+                          (now + LEASE_TTL, step, cid))
+                _lease_log(c, cid, fh, "acquire", job_id, cur["lease_id"], step, "renew")
+                out = {"ok": True, "lease_id": cur["lease_id"], "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+            elif cur and cur["fp_hash"] == fh and str(cur["job_id"]).startswith("u"):
+                # 같은 기기의 미리보기 임대(job u…)는 새 일에 자리를 내준다 — 반납을 못 한 채 끊긴 것까지 3분 막지 않는다
+                _lease_log(c, cid, fh, "release", cur["job_id"], cur["lease_id"], cur["step_name"], "takeover")
+                lid = "ls_" + secrets.token_hex(8)
+                c.execute("UPDATE claude_leases SET lease_id=?, job_id=?, step_name=?, acquired=?, expires=? WHERE cid=?",
+                          (lid, job_id, step, now, now + LEASE_TTL, cid))
+                _lease_log(c, cid, fh, "acquire", job_id, lid, step, "ok")
+                out = {"ok": True, "lease_id": lid, "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+            elif cur:
+                busy = cur
+                _lease_log(c, cid, fh, "acquire", job_id, None, step, "busy")
+            else:
+                lid = "ls_" + secrets.token_hex(8)
+                c.execute("INSERT INTO claude_leases(cid, lease_id, fp_hash, device_name, job_id, step_name, acquired, expires) "
+                          "VALUES(?,?,?,?,?,?,?,?)", (cid, lid, fh, dev.get("name"), job_id, step, now, now + LEASE_TTL))
+                _lease_log(c, cid, fh, "acquire", job_id, lid, step, "ok")
+                out = {"ok": True, "lease_id": lid, "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+        elif action == "heartbeat":
+            if cur and cur["lease_id"] == lease_id and cur["fp_hash"] == fh:
+                c.execute("UPDATE claude_leases SET expires=?, step_name=COALESCE(?, step_name) WHERE cid=?",
+                          (now + LEASE_TTL, step, cid))
+                _lease_log(c, cid, fh, "heartbeat", cur["job_id"], lease_id, step, "ok")
+                out = {"ok": True, "ttl": LEASE_TTL}
+            else:
+                _lease_log(c, cid, fh, "heartbeat", job_id or None, lease_id, step, "lost")
+                out = None
+        else:
+            if cur and cur["lease_id"] == lease_id and cur["fp_hash"] == fh:
+                c.execute("DELETE FROM claude_leases WHERE cid=?", (cid,))
+            _lease_log(c, cid, fh, "release", job_id or (cur or {}).get("job_id"), lease_id, step, "ok")
+            out = {"ok": True}
+    if expired_old:
+        anomaly_check(cid, {"type": "lease_expired", "route": "lease", **_ev(ctx)}, store=store)
+    if busy is not None:
+        wait = max(1, busy["expires"] - now)
+        # A2 = '작업 중에 다른 기기가 시작'(설계 §7-9 표)만 센다 — 같은 기기(제작 중 미리보기·프로그램 재시작)는 거절만(10-30 실측: 같은 PC 미리보기 10번에 30일 정지)
+        if busy["fp_hash"] != fh:
+            _raise_on(anomaly_check(cid, {"type": "busy", "route": "lease", **_ev(ctx)}, store=store))
+        if busy["fp_hash"] == fh:
+            raise PortalError("busy_other_device", "이 기기에서 다른 작업이 진행 중입니다 — 끝나거나 3분 뒤 다시 시도하세요", wait)
+        raise PortalError("busy_other_device",
+                          f"다른 기기({busy.get('device_name') or '다른 기기'})에서 작업 중입니다 — 끝나거나 3분 뒤 다시 시도하세요", wait)
+    if out is None:
+        raise PortalError("lease_lost", "작업 권한이 끊겼습니다(다른 곳에서 해제됐거나 3분 넘게 연락이 없었습니다) — 다시 시작하면 이어집니다")
+    if action == "release":
+        anomaly_check(cid, {"type": "released", "route": "lease", **_ev(ctx)}, store=store)
+    return out
+
+
+def force_release(cid, store=None) -> dict:
+    """마이페이지 '강제 해제' — 앞 기기는 다음 하트비트에서 lease_lost 를 받는다.
+    작업이 없으면 켜 둔 PC 의 접속을 끊는다(작업 중인 PC 는 접속을 끊지 않는다, 관제 296)."""
+    store = _store(store)
+    ensure_schema(store)
+    now = _now()
+    kicked = False
+    with _tx(store, write=True) as c:
+        cur = _row(c, "SELECT * FROM claude_leases WHERE cid=?", (int(cid),))
+        if cur:
+            c.execute("DELETE FROM claude_leases WHERE cid=?", (int(cid),))
+            _lease_log(c, int(cid), cur["fp_hash"], "force_release", cur["job_id"], cur["lease_id"], cur["step_name"], "ok")
+        if not (cur and cur["expires"] > now):
+            s = _row(c, "SELECT * FROM claude_sessions WHERE cid=?", (int(cid),))
+            if s and s["fp_hash"] and s["expires"] > now:
+                c.execute("UPDATE claude_sessions SET fp_hash='', expires=0, kicked_fp=?, kicked_until=? WHERE cid=?",
+                          (s["fp_hash"], now + SESSION_KICK, int(cid)))
+                kicked = True
+    return {"ok": True, "released": bool(cur), "kicked": kicked}
+
+
+def _active_lease(c, cid):
+    cur = _row(c, "SELECT * FROM claude_leases WHERE cid=?", (cid,))
+    return cur if cur and cur["expires"] > _now() else None
+
+
+# ── assets_for · pack ───────────────────────────────────────────────────
+def _profile_row(c, cid, profile_id):
+    return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
+
+
+def _lease_match(cur, job_id: str, job_request: dict) -> None:
+    """유효 작업 권한인가(그 job·그 기기·그 lease) — 판단 한 곳(_job_gate·benchmark_rent 공용)."""
+    if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
+            or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
+        raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
+
+
+def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tuple:
+    """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
+    스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필(또는 PC 로컬 설정이 고른 프리셋 id) → 구매(등급)한 프리셋.
+    반환 (프로필 행 또는 None, 프리셋, 라이선스 행)."""
+    job_id = str(job_request.get("job_id") or "")
+    if not _JOB_RE.match(job_id):
+        raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
+    if not _assets_on(store, cid):
+        raise PortalError("disabled", "자산 내려받기가 지금 꺼져 있습니다")
+    with _tx(store) as c:
+        cur = _active_lease(c, cid)
+        prof = _profile_row(c, cid, profile_id)
+        lic = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
+    _lease_match(cur, job_id, job_request)
+    if not prof and not preset_id:
+        raise PortalError("bad_request", "채널 프로필을 찾을 수 없습니다 — 페이지에서 프로필을 저장하세요")
+    want = prof["preset_id"] if prof else str(preset_id)
+    if want not in _entitled(store, cid, lic):
+        raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
+    p = _preset_by_id(store, want)
+    if not p:
+        raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
+    return prof, p, lic
+
+
+def preset_pack_path(pid: str) -> Path:
+    """서버가 보관하는 프리셋 꾸러미(tools/claude_portal/preset_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 preset_rent 로만 나간다."""
+    return store_dir() / "preset_packs" / f"{pid}.zip"
+
+
+def _seal_pack(data: bytes, cid, job_id: str) -> dict:
+    """꾸러미 잠그기 한 곳 — 요청마다 새 열쇠(AES-256-GCM), 덧붙임 글 = cid|job(preset_rent·benchmark_rent 공용). 열쇠는 PC 메모리에만 둔다."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
+    aad = f"{cid}|{job_id}".encode()
+    return {"aad": aad.decode(), "pack": base64.b64encode(nonce + AESGCM(key).encrypt(nonce, data, aad)).decode(),
+            "key": base64.b64encode(key).decode(), "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) -> dict:
+    """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
+    이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, _ = _job_gate(store, cid, profile_id, job_request, preset_id=preset_id)
+    f = preset_pack_path(p["id"])
+    if not f.is_file():
+        log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
+        raise PortalError("not_ready", "이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, job_request.get("device_hash"), "rent", job_id, job_request.get("lease_id"), None, p["id"])
+    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", **_seal_pack(f.read_bytes(), cid, job_id)}
+
+
+def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=None) -> dict:
+    """POST /api/claude/rent — 관문 뒤 preset_rent. PC 로컬 설정이면 profile 없이 preset(고객용 프리셋 id)."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "rent")
+    return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store,
+                       preset_id=preset_id or None)
+
+
+def benchmark_pack_path() -> Path:
+    """고급반 벤치마킹 묶음(tools/claude_portal/benchmark_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 benchmark_rent 로만 나간다."""
+    return store_dir() / "benchmark" / "benchmark_pack.zip"
+
+
+def benchmark_rent(ctx: dict, job_id, lease_id=None, store=None) -> dict:
+    """POST /api/claude/benchmark_rent — 채널 벤치마킹 엔진 빌려주기(관제 304, 사장님 11-02 "고급형은 그 노하우를 담아준다").
+    문턱 판단 = member_tier 한 곳(고급·프리미엄). 프리셋 임대와 같은 꼴: 작업 권한 뒤 잠근 꾸러미, PC 는 쓰는 동안만 푼다."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "benchmark")
+    if member_tier(store, cid) == "basic":
+        raise PortalError("tier_locked", "채널 벤치마킹은 고급반에서 제공돼요")
+    job_id = str(job_id or "")
+    if not _JOB_RE.match(job_id):
+        raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
+    with _tx(store) as c:
+        cur = _active_lease(c, cid)
+    _lease_match(cur, job_id, {"device_hash": dev["fp_hash"], "lease_id": lease_id})
+    f = benchmark_pack_path()
+    if not f.is_file():
+        log.warning("claude_portal: 벤치마킹 묶음이 없다 — benchmark_pack.py 로 만들어 올려라")
+        raise PortalError("not_ready", "벤치마킹을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, dev["fp_hash"], "benchmark", job_id, lease_id, None, "benchmark")
+    return {"ok": True, **_seal_pack(f.read_bytes(), cid, job_id)}
+
+
+# ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────
+def update_path() -> Path:
+    """앱(서버+엔진) 묶음 표 — 쓰기는 update_register·rollout_* 한 곳뿐(도구가 직접 쓰지 않는다).
+    {version, sha256, size, notes}          전체 판(미리보기·빠른배포가 읽는 칸)
+    rollout {version, sha256, size, notes, percent, cids, started, stage_at, approved_by}   단계 배포 중인 후보
+    recalled {판: {at, why, by}}            되돌린 판 — 이 판을 가진 회원은 전체 판을 다시 받는다
+    previous {version, sha256, size}        rollout_finish 직전 전체 판"""
+    return store_dir() / "updates" / "latest.json"
+
+
+def update_table() -> dict:
+    p = update_path()
+    return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
+
+
+def _update_save(d: dict):
+    """통째로 바꾼다(요청이 읽는 동안 반쪽 파일을 보지 않게)."""
+    p = update_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def update_register(version: str, sha256: str, size: int, notes: str = "") -> dict:
+    """전체 판 바로 등록(빠른배포·설치판 올리기) — 판 표를 쓰는 길의 주인. 단계 배포 중이면 끼어들 수 없고, 회수 기록은 지킨다."""
+    d = update_table()
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"단계 배포 중({d['rollout']['version']})입니다 — publish_update --rollout-finish 또는 --rollout-rollback 뒤에 올리세요")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    d.update(version=version, sha256=sha256, size=size, notes=notes)
+    _update_save(d)
+    return d
+
+
+# ── 단계 배포(관제 304, 사장님 11-02 "1명 → 10% → 전체, 실패율이 오르면 자동으로 되돌린다") ───────────────
+#   판단 주인: 대상 = rollout_includes·update_target / 나빠짐 = rollout_bad / 넓히기·전체 승인 = rollout_advance.
+#   재는 값: claude_flow_runs 의 engine(편을 만든 앱 판, X-Shortem-Engine). ★version 칸은 프리셋 판이라 앱 판을 못 가른다.
+ROLLOUT_STEPS = (0, 10, 100)      # 0 = 지정 회원만
+ROLLOUT_MIN_RUNS = 3              # 넓히기 전에 새 판으로 끝난 편 수(막힘+완성)
+ROLLOUT_BASE_DAYS = 30            # 옛 판 대조 구간(시작 전부터 센다 — 표본이 작은 1명 단계에서도 비교가 된다)
+ROLLOUT_WATCH_EVERY = 300         # 초 — 업데이트 창구가 불릴 때 이 간격으로 잰다(별도 크론 없이 돈다)
+ROLLOUT_MARGIN = 0.10             # 막힘 비율이 옛 판보다 이만큼은 높아야 나빠진 것
+ROLLOUT_P = 0.10                  # 우연히 그럴 확률 상한
+
+
+def rollout_includes(r: dict, cid) -> bool:
+    """이 회원이 이 후보를 받나 — 판·cid 해시로 고정. 퍼센트를 넓혀도 앞사람은 그대로, 판이 바뀌면 시험 대상도 바뀐다."""
+    if int(cid) in [int(x) for x in r.get("cids") or ()]:
+        return True
+    h = hashlib.sha256(f"shortem-rollout|{r['version']}|{int(cid)}".encode()).hexdigest()
+    return int(h[:8], 16) % 100 < int(r.get("percent") or 0)
+
+
+def update_target(d: dict, cid, have: str):
+    """이 회원에게 줄 판(없으면 None) — 단계 배포 후보 > 회수된 판 내리기 > 전체 판. 판단은 이 함수 하나."""
+    hv = _semver(str(have or ""))
+    if not hv or not d.get("version"):
+        return None
+    r = d.get("rollout")
+    if r and rollout_includes(r, cid) and _semver(r["version"]) > hv:
+        return r
+    if have in (d.get("recalled") or {}) and have != d["version"]:       # ★판 번호는 더 높지만 받아야 한다
+        return {**d, "rollback": True}
+    return d if _semver(d["version"]) > hv else None
+
+
+def rollout_bad(new_stop: int, new_n: int, old_stop: int, old_n: int) -> bool:
+    """새 판 막힘 비율이 옛 판보다 나빠졌나 — 차이가 ROLLOUT_MARGIN 을 넘고, 우연으로 보기 어려울 때(단측 정확 검정)."""
+    if new_stop < 2 or new_n <= 0:
+        return False
+    if old_n <= 0:                       # 옛 판 표본이 없으면 절대 기준만
+        return new_stop >= 3 and new_stop / new_n >= 0.6
+    if new_stop / new_n <= old_stop / old_n + ROLLOUT_MARGIN:
+        return False
+    n, k = new_n + old_n, new_stop + old_stop
+    tot = math.comb(n, new_n)
+    p = sum(math.comb(k, i) * math.comb(n - k, new_n - i) for i in range(new_stop, min(k, new_n) + 1)) / tot
+    return p < ROLLOUT_P
+
+
+def rollout_health(store=None, d: dict | None = None) -> dict:
+    """후보 판 편 vs 옛 판 편 막힘 비율. verdict = none(단계 배포 없음)·bad·thin(새 판 표본 부족)·ok."""
+    from shopping_shorts import claude_flow        # claude_flow 가 이 모듈을 부른다 — 표 주인은 저쪽
+    d = update_table() if d is None else d
+    r = d.get("rollout")
+    if not r:
+        return {"verdict": "none"}
+    store = _store(store)
+    c = claude_flow.stop_counts(store, r["version"], r["started"], r["started"] - ROLLOUT_BASE_DAYS * 86400)
+    bad = rollout_bad(c["new_stop"], c["new_n"], c["old_stop"], c["old_n"])
+    return {**c, "version": r["version"], "percent": r.get("percent"),
+            "verdict": "bad" if bad else ("thin" if c["new_n"] < ROLLOUT_MIN_RUNS else "ok")}
+
+
+def rollout_start(version: str, sha256: str, size: int, cids: list, notes: str = "") -> dict:
+    """1명 단계 시작 — 전체 판은 그대로 두고 후보만 얹는다."""
+    d = update_table()
+    if not d.get("version"):
+        raise PortalError("bad_request", "되돌아갈 전체 판이 없습니다 — 먼저 전체 판을 올리세요")
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"이미 단계 배포 중입니다({d['rollout']['version']})")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    if _semver(version) <= _semver(d["version"]):
+        raise PortalError("bad_request", f"후보 판은 전체 판({d['version']})보다 높아야 합니다")
+    cids = [int(x) for x in cids]
+    if not cids:
+        raise PortalError("bad_request", "첫 단계에 받을 회원을 지정하세요")
+    d["rollout"] = {"version": version, "sha256": sha256, "size": size, "notes": notes, "percent": 0, "cids": cids,
+                    "started": _now(), "stage_at": _now()}
+    _update_save(d)
+    return d["rollout"]
+
+
+def rollout_advance(percent: int, store=None, approved_by: str = "") -> dict:
+    """다음 단계로(0 → 10 → 100, 건너뛰기 금지). ★100 은 사람 승인 이름이 있어야만 — 자동 감시는 이 함수를 부르지 않는다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    now = ROLLOUT_STEPS.index(r["percent"])
+    if percent not in ROLLOUT_STEPS or ROLLOUT_STEPS.index(percent) != now + 1:
+        raise PortalError("bad_request", f"다음 단계는 {ROLLOUT_STEPS[now + 1:now + 2]} 입니다")
+    if percent == 100 and not str(approved_by or "").strip():
+        raise PortalError("approval_required", "전체 배포는 사람 승인이 있어야 합니다(--approved-by)")
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"넓히기 전 점검에서 나빠짐: {_health_text(h)}", by="auto", store=store)
+        raise PortalError("bad_request", f"실패율이 나빠져 되돌렸습니다: {_health_text(h)}")
+    if h["verdict"] != "ok":
+        raise PortalError("bad_request", f"새 판으로 끝난 편이 모자랍니다({h['new_n']}/{ROLLOUT_MIN_RUNS}편)")
+    r.update(percent=percent, stage_at=_now())
+    if percent == 100:
+        r["approved_by"] = str(approved_by).strip()
+    _update_save(d)
+    return r
+
+
+def rollout_finish() -> dict:
+    """100% 뒤 굳히기 — 후보가 전체 판이 된다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r or r.get("percent") != 100:
+        raise PortalError("bad_request", "100% 단계에서만 굳힙니다")
+    d["previous"] = {k: d.get(k) for k in ("version", "sha256", "size")}
+    d.update({k: r.get(k) for k in ("version", "sha256", "size", "notes")})
+    d.pop("rollout")
+    _update_save(d)
+    return d
+
+
+def _health_text(h: dict) -> str:
+    return f"새 판 {h.get('new_stop')}/{h.get('new_n')} · 옛 판 {h.get('old_stop')}/{h.get('old_n')}"
+
+
+def rollout_rollback(why: str, by: str = "auto", store=None) -> dict:
+    """멈추고 되돌린다 — 후보를 내리고 회수 표에 올린다. 이미 받은 회원은 다음 켤 때 전체 판을 받는다(update_target)."""
+    d = update_table()
+    r = d.pop("rollout", None)
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    d.setdefault("recalled", {})[r["version"]] = {"at": _now(), "why": str(why)[:200], "by": str(by)[:40]}
+    _update_save(d)
+    log.error("claude_portal: 단계 배포 되돌림 %s (%s) — %s", r["version"], by, why)
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        _raise_alert(c, 0, "rollout_rollback", "warn", 1, f"{r['version']} → {d['version']} ({by}): {str(why)[:200]}")
+    return d
+
+
+def rollout_tick(store=None, force=False) -> dict | None:
+    """감시 한 번 — 나빠졌으면 멈추고 되돌린다. 넓히기는 하지 않는다. 업데이트 창구가 주기마다 부른다."""
+    d = update_table()
+    if not d.get("rollout"):
+        return None
+    stamp = update_path().with_name("rollout_tick")
+    if not force and stamp.is_file() and time.time() - stamp.stat().st_mtime < ROLLOUT_WATCH_EVERY:
+        return None
+    stamp.touch()
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"실패율 악화: {_health_text(h)}", by="auto", store=store)
+        h["rolled_back"] = True
+    return h
+
+
+def update_info(ctx: dict, have: str, store=None) -> dict:
+    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 받을 판이 있으면 서명 받기 주소. 무엇을 받나는 update_target."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, _ = _front(store, ctx, "update")
+    try:
+        rollout_tick(store)
+    except Exception:      # 감시가 죽어도 업데이트는 나간다 — 대신 크게 남긴다
+        log.exception("claude_portal: 단계 배포 감시 실패 — 자동 되돌리기가 멈춰 있다")
+    d = update_table()
+    if not d:
+        return {"ok": True, "update": False}
+    t = update_target(d, cid, have)
+    if not t:
+        return {"ok": True, "update": False, "latest": d["version"]}
+    if not (store_dir() / "assets" / t["sha256"]).is_file():
+        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", t["version"])
+        return {"ok": True, "update": False}
+    url, exp = asset_url({"sha256": t["sha256"], "id": f"update:shortem-app-{t['version']}.zip"}, cid, "update")
+    out = {"ok": True, "update": True, "version": t["version"], "sha256": t["sha256"], "size": t["size"], "url": url,
+           "expires": exp, "notes": str(t.get("notes") or "")[:200]}
+    if t.get("rollback"):
+        out["rollback"] = True      # updater.js 는 판 높낮이를 안 본다 — 받아서 그대로 바꾼다
+    return out
+
+
+INSTALL_PLATS = ("win-x64", "mac-arm64", "mac-x64")
+
+
+def install_path(plat: str) -> Path:
+    """설치 묶음 표(플랫폼별) — tools/claude_portal/publish_update.py --install 이 쓴다. {version, sha256, size}"""
+    return store_dir() / "install" / f"latest-{plat}.json"
+
+
+def install_info(ctx: dict, plat: str, store=None) -> dict:
+    """GET /api/claude/install?plat= — exe 없이 까는 길(사장님 10-20 "인증서 없이 스타터킷처럼 바로").
+    연결 파일(.mcpb·플러그인)이 키만 들고 와서 실행 도구까지 든 묶음을 받아 직접 푼다(브라우저로 받지 않으니
+    '인터넷에서 받은 파일' 표시가 없고, 서명 안 된 exe 를 고객이 두 번 누를 일도 없다). 판단은 이 함수 하나."""
+    store = _store(store)
+    ensure_schema(store)
+    if plat not in INSTALL_PLATS:
+        raise PortalError("bad_request", "지원하지 않는 컴퓨터 종류입니다")
+    cid, _, _ = _front(store, ctx, "install")
+    p = install_path(plat)
+    if not p.is_file():
+        return {"ok": True, "ready": False}
+    d = json.loads(p.read_text(encoding="utf-8"))
+    if not (store_dir() / "assets" / d["sha256"]).is_file():
+        log.warning("claude_portal: 설치 묶음 %s %s 파일이 저장소에 없다", plat, d["version"])
+        return {"ok": True, "ready": False}
+    url, exp = asset_url({"sha256": d["sha256"], "id": f"install:shortem-{plat}-{d['version']}.zip"}, cid, "install")
+    return {"ok": True, "ready": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url, "expires": exp}
+
+
+def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
+    """이번 작업에 필요한 것만 — 합본(channel_profile.merge) → 합본이 참조하는 자산만 서명 URL(6h).
+
+    job_request = {"job_id", "lease_id"?, "extra"?, "device_hash"}. 유효 lease(job 일치) 필수."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, lic = _job_gate(store, cid, profile_id, job_request)
+    try:
+        frame = json.loads((p["dir"] / "frame.json").read_text(encoding="utf-8"))
+        man = json.loads((p["dir"] / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.error("claude_portal: 프리셋 %s 틀을 못 읽었다", p["internal"], exc_info=True)
+        raise PortalError("not_entitled", "이 프리셋을 지금 준비할 수 없습니다") from None
+    options = json.loads(prof["options_json"] or "{}")
+    merged = channel_profile.merge({"frame": frame}, channel_profile.DEFAULT_PACK, options)
+    refs = _refs_of(merged, store)
+    # 대본 신호어가 고른 구체 짤·효과음 — 프로필이 허용한 풀 안만
+    extra = job_request.get("extra") or ""
+    eff = merged["options"]
+    by_id = {a["id"]: a for a in _assets(store)}
+    for it in [x.strip() for x in str(extra).split(",") if x.strip()][:40]:
+        a = by_id.get(it)
+        ok = bool(a) and ((a["kind"] == "meme" and a.get("grp") in ((eff.get("meme_pool") or {}).get("kinds") or []))
+                          or (a["kind"] == "sfx" and a.get("grp") == eff.get("sfx_pack")))
+        if not ok:
+            anomaly_check(cid, {"type": "out_of_plan", "route": "assets", "asset": it}, store=store)
+            raise PortalError("not_in_plan", "고른 프로필 밖 자산입니다")
+        if it not in refs:
+            refs.append(it)
+    now = _now()
+    assets, missing = [], []
+    for aid in refs:
+        a = by_id.get(aid)
+        if not a:
+            missing.append(aid)
+            continue
+        url, _ = asset_url(a, cid, job_id, now)
+        assets.append({"id": a["id"], "kind": a["kind"], "sha256": a["sha256"], "size": a["size"], "name": a["name"], "url": url})
+    if missing:
+        log.warning("claude_portal: cid %s job %s 참조 자산이 등록 안 됨 %s — sync_assets 를 돌려라", cid, job_id, missing)
+    with _tx(store, write=True) as c:
+        for a in assets:
+            c.execute("INSERT OR REPLACE INTO claude_job_assets(cid, job_id, asset_id, issued, profile_id, profile_version) "
+                      "VALUES(?,?,?,?,?,?)", (cid, job_id, a["id"], now, profile_id, prof["version"]))
+    _raise_on(anomaly_check(cid, {"type": "assets_issued", "route": "assets", "n": len(assets)}, store=store))
+    issued = int((lic or {}).get("issued") or 0)
+    bundle = {"preset_id": prof["preset_id"], "profile_version": prof["version"],
+              "license": {"cid": cid, "issued": issued, "mark": _mac("mark", f"{cid}|{issued}|{job_id}")[:12]},
+              "frame": merged["frame"], "rules": _rules_of(p["dir"], man), "options": eff, "per_video": merged["per_video"]}
+    return {"ok": True, "job": job_id, "profile_version": prof["version"], "expires": now + ASSET_URL_TTL,
+            "bundle": bundle, "assets": assets, "missing": missing}
+
+
+def assets(ctx: dict, profile_id, job_id, lease_id=None, extra=None, store=None) -> dict:
+    """GET /api/claude/assets — 관문 뒤 assets_for."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "assets")
+    return assets_for(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "extra": extra,
+                                        "device_hash": dev["fp_hash"]}, store=store)
+
+
+def pack(cid, asset_id, job, store=None) -> dict:
+    """그 job 의 발급 목록 안 자산만 서명 URL 재발급. 목록 밖 = not_in_plan(A5)."""
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store) as c:
+        hit = _row(c, "SELECT 1 FROM claude_job_assets WHERE cid=? AND job_id=? AND asset_id=?", (int(cid), str(job), str(asset_id)))
+        a = _row(c, "SELECT * FROM claude_assets WHERE id=?", (str(asset_id),)) if hit else None
+    if not a:
+        _raise_on(anomaly_check(int(cid), {"type": "out_of_plan", "route": "pack", "asset": str(asset_id)}, store=store))
+        raise PortalError("not_in_plan", "이번 작업 목록에 없는 자산입니다")
+    url, _ = asset_url(a, cid, job)
+    return {"ok": True, "asset": {"id": a["id"], "kind": a["kind"], "sha256": a["sha256"], "size": a["size"], "name": a["name"], "url": url}}
+
+
+def pack_route(ctx: dict, asset_id, job, store=None) -> dict:
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, _ = _front(store, ctx, "pack")
+    return pack(cid, asset_id, job, store=store)
+
+
+def feedback(ctx: dict, body: dict, store=None) -> dict:
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, _ = _front(store, ctx, "feedback")
+    body = body if isinstance(body, dict) else {}
+    kind, text = body.get("kind"), body.get("text")
+    limit = 30000 if kind == "code_fix" else 2000      # code_fix = 회원 Claude 가 고친 엔진 diff — 우리가 검토해 반영한다(자동 반영 없음, 사장님 10-31)
+    if kind not in ("request", "bug", "code_fix") or not isinstance(text, str) or not text.strip() or len(text) > limit:
+        raise PortalError("bad_request", "kind 는 request·bug·code_fix, text 는 1~2000자(code_fix 30000자)입니다")
+    job = str(body.get("job_id") or "")[:64] or None
+    with _tx(store, write=True) as c:
+        cur = c.execute("INSERT INTO claude_feedback(ts, cid, kind, text, job_id) VALUES(?,?,?,?,?)", (_now(), cid, kind, text.strip(), job))
+        fid = cur.lastrowid
+    if kind in ("code_fix", "bug"):      # 회원 Claude 가 고친 것·고장 — 옛 프로그램도 서버에서 바로 보인다(관제 304, 판단 = claude_live). 전문은 이 표에 남는다
+        from shopping_shorts import claude_live
+        claude_live.witness(store, cid, kind, text.strip()[:claude_live.EVENT_HEAD], level="important", sid=job, ref=fid)
+    return {"ok": True, "id": fid}
+
+
+# ── 견본(preview) ───────────────────────────────────────────────────────
+def preview_token(cid) -> dict:
+    exp = _now() + PREVIEW_TOKEN_TTL
+    return {"t": f"{int(cid)}.{exp}.{_mac('preview', f'{int(cid)}|{exp}')[:24]}", "exp": exp}
+
+
+def _preview_file(kind, pid):
+    for ext in PREVIEW_KINDS.get(kind, ()):
+        f = store_dir() / "preview" / kind / f"{pid}.{ext}"
+        if f.exists():
+            return f, ext
+    return None, None
+
+
+def _preview_total(kind) -> int:
+    d = store_dir() / "preview" / kind
+    exts = PREVIEW_KINDS.get(kind, ())
+    return sum(1 for f in d.glob("*") if f.suffix.lstrip(".") in exts) if d.exists() else 0
+
+
+def preview(cid, kind, pid, token, headers: dict, store=None) -> dict:
+    """견본만(STORE/preview/<kind>/<id>.<ext>). 세션 cid·10분 토큰 둘 다, Range 거부, 다른 사이트 Referer 거부."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    h = {str(k).lower(): v for k, v in (headers or {}).items()}
+    if kind not in PREVIEW_KINDS or not _PID_RE.match(str(pid or "")) or ".." in str(pid):
+        raise PortalError("bad_request", "견본 주소가 올바르지 않습니다")
+    bad = None
+    # ★브라우저 <audio>/<video> 는 첫 요청에 늘 "Range: bytes=0-"(처음부터 끝까지)를 싣는다(2026-10-18 헤드리스 크롬 실측 403).
+    #   그건 통째 요청이라 받아 주고(라우트가 206 아닌 200 통째로 보낸다) — 중간부터·조각 요청만 거부한다.
+    rng = str(h.get("range") or "").replace(" ", "").lower()
+    if rng and rng != "bytes=0-":
+        bad = "range"
+    ref = h.get("referer") or ""
+    if ref and h.get("host"):
+        m = re.match(r"^https?://([^/]+)", ref)
+        if not m or m.group(1).lower() != str(h["host"]).lower():
+            bad = "referer"
+    if bad:
+        _raise_on(anomaly_check(cid, {"type": "preview_bad", "route": "preview", "detail": bad}, store=store))
+        raise PortalError("not_in_plan", "견본은 페이지 안에서만 볼 수 있습니다")
+    try:
+        tc, texp, tsig = str(token or "").split(".")
+        good = (int(tc) == cid and int(texp) >= _now()
+                and hmac.compare_digest(tsig, _mac("preview", f"{cid}|{int(texp)}")[:24]))
+    except ValueError:
+        good = False
+    if not good:
+        raise PortalError("expired", "견본 보기 시간이 지났습니다 — 페이지를 새로 고쳐 주세요")
+    _raise_on(anomaly_check(cid, {"type": "request", "route": "preview", "kind": kind, "asset": f"{kind}:{pid}"}, store=store))
+    f, ext = _preview_file(kind, pid)
+    if not f:
+        raise PortalError("bad_request", "아직 준비되지 않은 견본입니다")
+    return {"file": f, "media_type": PREVIEW_MEDIA[ext],
+            "headers": {"Content-Disposition": "inline", "Cache-Control": "private, max-age=600", "Accept-Ranges": "none"}}
+
+
+# ── 이상 행동 탐지(§7-9) ─────────────────────────────────────────────────
+# 숏클이 켜져 있으면 저절로 나가는 요청 — 사람의 속도가 아니라 A4 에 세지 않는다(11-02 실측: 이것만으로 시간당 600회, 회원 3명 오정지)
+_A4_BACKGROUND = ("session", "live_pull")
+
+
+def _count_a4(c, cid, since):
+    return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind='request' AND ts>=? AND route NOT IN (?,?)",
+                     (cid, since) + _A4_BACKGROUND).fetchone()[0]
+
+
+def _count(c, cid, kind, since, route=None):
+    if route:
+        return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind=? AND route=? AND ts>=?",
+                         (cid, kind, route, since)).fetchone()[0]
+    return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind=? AND ts>=?", (cid, kind, since)).fetchone()[0]
+
+
+def _alerts_since(c, cid, rule, since, level=None):
+    if level:
+        return c.execute("SELECT COUNT(*) FROM claude_alerts WHERE cid=? AND rule=? AND level=? AND ts>=?",
+                         (cid, rule, level, since)).fetchone()[0]
+    return c.execute("SELECT COUNT(*) FROM claude_alerts WHERE cid=? AND rule=? AND ts>=?", (cid, rule, since)).fetchone()[0]
+
+
+def _raise_alert(c, cid, rule, level, count, detail):
+    cur = c.execute("INSERT INTO claude_alerts(ts, cid, rule, level, count, detail) VALUES(?,?,?,?,?,?)",
+                    (_now(), cid, rule, level, count, detail))
+    return {"id": cur.lastrowid, "cid": cid, "rule": rule, "level": level, "count": count, "detail": detail}
+
+
+def _suspend(c, cid, seconds, rule):
+    until = _now() + int(seconds)
+    c.execute("UPDATE claude_licenses SET suspended_until=MAX(suspended_until, ?), suspend_rule=? WHERE cid=?", (until, rule, cid))
+
+
+def _notify(alerts):
+    """텔레그램 경보 — 요청을 기다리게 하지 않는다(뒤 줄). 실패는 삼키지 않고 로그로 남긴다."""
+    if not alerts or os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    lines = [f"🛡 [클로드형 경보] {a['rule']} {RULE_TITLE.get(a['rule'], '')} · cid {a['cid']} · {a['level']} · {a['count']}회 · {a['detail']}"
+             for a in alerts]
+
+    def _send():
+        try:
+            from shopping_shorts import notify
+            if not notify.send_telegram("\n".join(lines) + "\n→ /admin '클로드형 경보'에서 확인"):
+                log.warning("claude_portal: 텔레그램 경보 전송 실패(키 없음·네트워크) — DB 경보는 남아 있다: %s", lines)
+        except Exception:      # noqa: BLE001 — 경보 실패가 요청을 깨면 안 된다. 대신 로그
+            log.exception("claude_portal: 텔레그램 경보 전송 중 예외")
+    threading.Thread(target=_send, daemon=True).start()
+
+
+_prune_state = {"day": None}
+
+
+def anomaly_check(cid, event: dict, store=None) -> dict:
+    """판정 주인(§7-9): 이벤트를 기록하고 A1~A10 규칙으로 판정 → {"action": allow|throttle|deny|alert, code, msg, retry_after}.
+
+    event.type: request(모든 라우트·미리보기) · license · device_limit · busy · assets_issued · out_of_plan · revoked_key ·
+                lease_expired · released · engine_old · preview_bad"""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    t = _thresholds(store)
+    now = _now()
+    typ = event.get("type") or "request"
+    route = event.get("route") or typ
+    res = {"action": "allow", "code": None, "msg": None}
+    alerts = []
+
+    def _deny(code, msg, retry=None, action="deny"):
+        res.update({"action": action, "code": code, "msg": msg})
+        if retry is not None:
+            res["retry_after"] = int(retry)
+
+    with _tx(store, write=True) as c:
+        c.execute("INSERT INTO claude_license_log(ts, cid, device_hash, ip, country, route, kind, asset_ids, detail) VALUES(?,?,?,?,?,?,?,?,?)",
+                  (now, cid, event.get("device", ""), event.get("ip", ""), event.get("country", ""), route, typ,
+                   event.get("asset") or (str(event["n"]) if "n" in event else None), event.get("detail")))
+        lic = _row(c, "SELECT suspended_until, suspend_rule FROM claude_licenses WHERE cid=?", (cid,))
+        suspended = bool(lic and (lic["suspended_until"] or 0) > now)
+
+        def _hit_suspend(rule, seconds, detail, count):
+            _suspend(c, cid, seconds, rule)
+            alerts.append(_raise_alert(c, cid, rule, "suspend", count, detail))
+            _deny("suspended", "이상 사용이 감지돼 잠시 멈췄습니다 — 관리자 확인 뒤 풀립니다", seconds)
+
+        if typ == "request":
+            if suspended:
+                _deny("suspended", "이상 사용이 감지돼 잠시 멈췄습니다 — 관리자 확인 뒤 풀립니다", lic["suspended_until"] - now)
+            else:
+                m1 = _count_a4(c, cid, now - 59)
+                h1 = _count_a4(c, cid, now - 3599)
+                if route != "lease_release" and (m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]):
+                    if not _alerts_since(c, cid, "A4", now - 60):
+                        alerts.append(_raise_alert(c, cid, "A4", "throttle", m1 if m1 > t["a4_per_min"] else h1,
+                                                   f"분당 {m1} · 시간당 {h1}"))
+                    if _alerts_since(c, cid, "A4", now - 3600, "throttle") >= t["a4_repeat"]:
+                        _hit_suspend("A4", t["a4_suspend_sec"], "속도 제한 반복", m1)
+                    else:
+                        _deny("rate_limited", "요청이 너무 많습니다 — 잠시 뒤 다시 시도하세요", 60, "throttle")
+                elif route == "assets" and _alerts_since(c, cid, "A3", now - 86400) and \
+                        _count(c, cid, "request", now - 59, "assets") > t["a3_throttle_per_min"]:
+                    _deny("rate_limited", "자산 요청이 너무 많습니다 — 잠시 뒤 다시 시도하세요", 60, "throttle")
+                elif route == "preview":
+                    d1 = _count(c, cid, "request", now - 86400, "preview")
+                    kind = event.get("kind")
+                    total = _preview_total(kind) if kind else 0
+                    seen = c.execute("SELECT COUNT(DISTINCT asset_ids) FROM claude_license_log WHERE cid=? AND kind='request' "
+                                     "AND route='preview' AND ts>=? AND asset_ids LIKE ?", (cid, now - 86400, f"{kind}:%")).fetchone()[0] if kind else 0
+                    # 전수 순차 = 짤·BGM·효과음만(설계 §8-1). 글꼴·템플릿은 고르는 화면이 한 번에 여러 장 보여 준다
+                    full = kind in ("meme", "bgm", "sfx") and total >= t["a10_full_min"] and seen >= total
+                    if d1 > t["a10_per_day"] or full:
+                        if not _alerts_since(c, cid, "A10", now - 600):
+                            alerts.append(_raise_alert(c, cid, "A10", "throttle", d1,
+                                                       "24h 견본 %d개" % d1 + (f" · {kind} 전부 차례로" if full else "")))
+                        if _alerts_since(c, cid, "A10", now - 86400, "throttle") >= t["a10_repeat"]:
+                            _hit_suspend("A10", t["suspend_sec"], "견본 긁기 지속", d1)
+                        else:
+                            _deny("rate_limited", "견본을 너무 많이 열었습니다 — 내일 다시 보거나 고른 것만 보세요", 3600, "throttle")
+        elif typ in ("license", "device_limit"):
+            hit, detail = False, ""
+            if typ == "device_limit":
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {devices_max(cid)}대 찬 상태)"
+            else:
+                n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
+                              "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]
+                if n >= t["a1_countries"]:
+                    hit, detail = True, f"24h 국가 {n}곳"
+            if hit:
+                prior = _alerts_since(c, cid, "A1", now - 86400)
+                if prior == 0:
+                    alerts.append(_raise_alert(c, cid, "A1", "warn", 1, detail))
+                    res["action"] = "alert"
+                else:
+                    _hit_suspend("A1", t["suspend_sec"], detail, prior + 1)
+        elif typ == "busy":
+            n = _count(c, cid, "busy", now - 86400)
+            if n >= t["a2_suspend"]:
+                _hit_suspend("A2", t["suspend_sec"], f"24h 동시 실행 시도 {n}회", n)
+            elif n == t["a2_warn"]:
+                alerts.append(_raise_alert(c, cid, "A2", "warn", n, f"24h 동시 실행 시도 {n}회"))
+                res["action"] = "alert"
+        elif typ == "assets_issued":
+            day = c.execute("SELECT COALESCE(SUM(CAST(asset_ids AS INTEGER)),0) FROM claude_license_log WHERE cid=? AND kind='assets_issued' AND ts>=?",
+                            (cid, now - 86400)).fetchone()[0]
+            calls = _count(c, cid, "assets_issued", now - 7 * 86400)
+            done = _count(c, cid, "released", now - 7 * 86400)
+            ratio = calls / max(1, done)
+            if day > t["a3_per_day"] or (calls >= t["a3_min_calls"] and ratio > t["a3_ratio"]):
+                first = _row(c, "SELECT MIN(ts) AS ts FROM claude_alerts WHERE cid=? AND rule='A3' AND resolved=0", (cid,))
+                if first and first["ts"] and first["ts"] <= now - 86400:
+                    _hit_suspend("A3", t["suspend_sec"], f"하루 자산 {day}개 · 7일 요청/완료 {ratio:.1f}", day)
+                elif not _alerts_since(c, cid, "A3", now - 86400):
+                    alerts.append(_raise_alert(c, cid, "A3", "throttle", day, f"하루 자산 {day}개 · 7일 요청/완료 {ratio:.1f}"))
+                    res["action"] = "alert"
+        elif typ == "out_of_plan":
+            n = _count(c, cid, "out_of_plan", now - 86400)
+            if n >= t["a5_suspend"]:
+                _hit_suspend("A5", t["suspend_sec"], f"하루 목록 밖 요청 {n}회", n)
+            else:
+                _deny("not_in_plan", "이번 작업 목록에 없는 자산입니다")
+        elif typ == "revoked_key":
+            n = _count(c, cid, "revoked_key", now - 86400)
+            if n >= t["a6_alert"] and not _alerts_since(c, cid, "A6", now - 86400):
+                alerts.append(_raise_alert(c, cid, "A6", "alert", n, f"24h 회수된 키 {n}회"))
+            res["action"] = "deny" if n < t["a6_alert"] else "alert"
+        elif typ == "lease_expired":
+            n = _count(c, cid, "lease_expired", now - 86400)
+            if n >= t["a7_per_day"] and not _alerts_since(c, cid, "A7", now - 86400):
+                days = sum(1 for d in range(t["a7_days"])
+                           if c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind='lease_expired' AND ts>=? AND ts<?",
+                                        (cid, now - (d + 1) * 86400, now - d * 86400)).fetchone()[0] >= t["a7_per_day"])
+                level = "alert" if days >= t["a7_days"] else "warn"
+                alerts.append(_raise_alert(c, cid, "A7", level, n, f"하루 {n}회 끊김 · {days}일째"))
+                res["action"] = "alert"
+        elif typ == "engine_old":
+            if not _alerts_since(c, cid, "A8", now - 86400):
+                alerts.append(_raise_alert(c, cid, "A8", "warn", 1, "엔진 버전 낮음·알 수 없음"))
+            res["action"] = "deny"
+        elif typ == "preview_bad":
+            n = _count(c, cid, "preview_bad", now - 86400)
+            if n >= t["a10_bad_per_day"]:
+                _hit_suspend("A10", t["suspend_sec"], f"하루 Range·다른 사이트 견본 요청 {n}회", n)
+            else:
+                _deny("not_in_plan", "견본은 페이지 안에서만 볼 수 있습니다")
+    _notify([a for a in alerts if a["level"] != "throttle" or a["rule"] in ("A3", "A10")])
+    res["alerts"] = alerts
+    day = time.strftime("%Y-%m-%d")
+    if _prune_state["day"] != day:
+        _prune_state["day"] = day
+        try:
+            prune_logs(store)
+        except sqlite3.Error:
+            log.warning("claude_portal: 로그 정리 실패", exc_info=True)
+    return res
+
+
+def prune_logs(store=None, keep_days=365) -> dict:
+    """claude_license_log·claude_lease_log 1년 보관(설계 §7-7) — 그보다 오래된 행 삭제."""
+    store = _store(store)
+    ensure_schema(store)
+    cut = _now() - int(keep_days) * 86400
+    with _tx(store, write=True) as c:
+        a = c.execute("DELETE FROM claude_license_log WHERE ts<?", (cut,)).rowcount
+        b = c.execute("DELETE FROM claude_lease_log WHERE ts<?", (cut,)).rowcount
+    return {"license_log": a, "lease_log": b}
+
+
+# ── 관리자 경보 ─────────────────────────────────────────────────────────
+def list_alerts(store=None, include_resolved=False, limit=200) -> list:
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store) as c:
+        sql = "SELECT * FROM claude_alerts" + ("" if include_resolved else " WHERE resolved=0") + " ORDER BY id DESC LIMIT ?"
+        rows = _rows(c, sql, (int(limit),))
+    for r in rows:
+        r["title"] = RULE_TITLE.get(r["rule"], r["rule"])
+    return rows
+
+
+def resolve_alert(alert_id, store=None) -> dict:
+    """경보 해제 — 정지(suspend) 경보면 그 고객 정지도 같이 푼다(정지는 사람이 푼다)."""
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        a = _row(c, "SELECT * FROM claude_alerts WHERE id=?", (int(alert_id),))
+        if not a:
+            return {"ok": True, "closed": 0}
+        c.execute("UPDATE claude_alerts SET resolved=1, resolved_at=? WHERE id=?", (_now(), a["id"]))
+        if a["level"] == "suspend":
+            c.execute("UPDATE claude_licenses SET suspended_until=0, suspend_rule=NULL WHERE cid=?", (a["cid"],))
+    return {"ok": True, "closed": 1, "unsuspended": a["level"] == "suspend"}
+
+
+def member_ids(store=None) -> set:
+    """관리자가 숏클로 승인한 회원 — 스위치 claude_portal_enabled 의 고객 목록이 정본(관제 294)."""
+    v = str(_setting(_store(store), "claude_portal_enabled", "") or "").strip().lower()
+    return {int(x) for x in v.split(",") if x.strip().isdigit()}
+
+
+def set_member(cid, on, store=None) -> dict:
+    """숏클 승인·해제. 전체 공개("1")면 목록이 없으니 건드리지 않는다. 비면 관리자만("admin")으로 돌아간다."""
+    store = _store(store)
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        raise PortalError("bad_request", "지금은 전체 공개 상태입니다")
+    _write_member(store, cid, on)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:   # 관리자 결정이 무료 기한보다 앞선다(관제 300)
+        c.execute("UPDATE claude_trials SET converted=1 WHERE cid=?", (int(cid),))
+    return {"ok": True, "on": bool(on)}
+
+
+def _write_member(store, cid, on):
+    ids = member_ids(store)
+    (ids.add if on else ids.discard)(int(cid))
+    # 끝의 쉼표는 필수 — 회원 1번 하나만 남으면 값이 "1"(전체 공개)이 된다(11-01 시험에서 잡음)
+    store.set_setting("claude_portal_enabled", "".join(f"{x}," for x in sorted(ids)) or "admin")
+
+
+def set_revoked(cid, revoked=True, store=None) -> dict:
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        n = c.execute("UPDATE claude_licenses SET revoked=? WHERE cid=?", (1 if revoked else 0, int(cid))).rowcount
+    return {"ok": True, "changed": n}
+
+
+# ── 프로필·고객 페이지 ───────────────────────────────────────────────────
+def list_profiles(cid, store=None) -> list:
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store) as c:
+        rows = _rows(c, "SELECT * FROM claude_profiles WHERE customer_id=? ORDER BY updated DESC", (int(cid),))
+    return [{"profile_id": r["id"], "name": r["name"], "preset_id": r["preset_id"], "version": r["version"],
+             "options": json.loads(r["options_json"] or "{}"), "updated": r["updated"]} for r in rows]
+
+
+def save_profile(cid, body: dict, store=None) -> dict:
+    """POST /api/claude/me/profile — 옵션 검증(자산 id 만·모르는 키 거절) 뒤 저장, version+1."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    body = body if isinstance(body, dict) else {}
+    name = str(body.get("name") or "").strip()
+    if not name or len(name) > 30:
+        raise PortalError("bad_request", "프로필 이름은 1~30자입니다")
+    pid = body.get("preset_id")
+    with _tx(store) as c:
+        lic = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
+    if pid not in _entitled(store, cid, lic):
+        raise PortalError("not_entitled", "고를 수 없는 프리셋입니다")
+    try:
+        opts = channel_profile.validate(body.get("options") or {}, catalog(store))
+    except channel_profile.OptionError as e:
+        raise PortalError("bad_request", str(e)) from None
+    now = _now()
+    prof_id = body.get("profile_id")
+    with _tx(store, write=True) as c:
+        if prof_id:
+            cur = _profile_row(c, cid, prof_id)
+            if not cur:
+                raise PortalError("bad_request", "프로필을 찾을 수 없습니다")
+            ver = cur["version"] + 1
+            c.execute("UPDATE claude_profiles SET name=?, preset_id=?, options_json=?, version=?, updated=? WHERE id=?",
+                      (name, pid, json.dumps(opts, ensure_ascii=False), ver, now, prof_id))
+        else:
+            n = c.execute("SELECT COUNT(*) FROM claude_profiles WHERE customer_id=?", (cid,)).fetchone()[0]
+            if n >= PROFILES_MAX:
+                raise PortalError("bad_request", f"프로필은 {PROFILES_MAX}개까지 만들 수 있습니다")
+            prof_id, ver = "cp_" + secrets.token_hex(6), 1
+            c.execute("INSERT INTO claude_profiles(id, customer_id, name, preset_id, options_json, version, created, updated) "
+                      "VALUES(?,?,?,?,?,?,?,?)", (prof_id, cid, name, pid, json.dumps(opts, ensure_ascii=False), ver, now, now))
+    return {"ok": True, "profile_id": prof_id, "version": ver, "options": opts}
+
+
+def remove_device(cid, device_id, store=None) -> dict:
+    """관리자의 기기 빼기(관제 296). 회원은 직접 못 뺀다 — 교체는 request_swap → decide_change."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store) as c:
+        dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND dev_id=? AND removed=0", (cid, str(device_id or "")))
+    if not dev:
+        raise PortalError("bad_request", "기기를 찾을 수 없습니다")
+    with _tx(store, write=True) as c:
+        _drop_device(c, cid, dev)
+    return {"ok": True}
+
+
+def _drop_device(c, cid, dev):
+    c.execute("UPDATE claude_devices SET removed=1 WHERE id=?", (dev["id"],))
+    c.execute("DELETE FROM claude_leases WHERE cid=? AND fp_hash=?", (cid, dev["fp_hash"]))
+    c.execute("DELETE FROM claude_sessions WHERE cid=? AND fp_hash=?", (cid, dev["fp_hash"]))
+
+
+def request_swap(cid, device_id, store=None) -> dict:
+    """회원이 뺄 PC 를 고른다. 새 PC 가 먼저 설치를 시도해 대기에 올라와 있어야 한다. 바뀌는 건 관리자 승인 때."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store, write=True) as c:
+        req = _open_request(c, cid, "device")
+        if not req:
+            raise PortalError("bad_request", "새 PC 에서 먼저 설치를 해 주세요")
+        if not _row(c, "SELECT id FROM claude_devices WHERE cid=? AND dev_id=? AND removed=0", (cid, str(device_id or ""))):
+            raise PortalError("bad_request", "기기를 찾을 수 없습니다")
+        c.execute("UPDATE claude_change_requests SET status='asked', old_dev_id=? WHERE id=?", (str(device_id), req["id"]))
+    return {"ok": True}
+
+
+def list_changes(store=None) -> list:
+    """관리자 승인 목록 — 교체·계정 변경 요청과 그 회원의 최근 30일 승인 횟수."""
+    store = _store(store)
+    ensure_schema(store)
+    since = _now() - 30 * 86400
+    with _tx(store) as c:
+        rows = _rows(c, "SELECT * FROM claude_change_requests WHERE status='asked' ORDER BY id")
+        for r in rows:
+            r["done_30d"] = c.execute("SELECT COUNT(*) FROM claude_change_requests WHERE cid=? AND status='done' AND decided>=?",
+                                      (r["cid"], since)).fetchone()[0]
+            old = _row(c, "SELECT name FROM claude_devices WHERE cid=? AND dev_id=? AND removed=0", (r["cid"], r["old_dev_id"]))
+            r["old_name"] = (old or {}).get("name") or ""
+    return [{"id": r["id"], "cid": r["cid"], "member": _member_name(store, r["cid"]), "kind": r["kind"], "name": r["name"] or "",
+             "old_name": r["old_name"], "created": r["created"], "done_30d": r["done_30d"]} for r in rows]
+
+
+def decide_change(req_id, approve, store=None) -> dict:
+    """관리자 승인·거절 — 승인하면 그 자리에서 바뀐다(재설치 없음)."""
+    store = _store(store)
+    ensure_schema(store)
+    now = _now()
+    with _tx(store, write=True) as c:
+        req = _row(c, "SELECT * FROM claude_change_requests WHERE id=? AND status='asked'", (int(req_id),))
+        if not req:
+            raise PortalError("bad_request", "이미 처리된 요청입니다")
+        cid = req["cid"]
+        if approve and req["kind"] == "device":
+            old = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND dev_id=? AND removed=0", (cid, req["old_dev_id"]))
+            if not old:
+                raise PortalError("bad_request", "뺄 기기가 이미 없습니다")
+            _drop_device(c, cid, old)
+            c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen) VALUES(?,?,?,?,?,?,?)",
+                      (cid, req["fp_hash"], req["dev_id"], req["name"], old["slot"], now, now))
+        elif approve:
+            c.execute("INSERT INTO claude_accounts(cid, acct, bound) VALUES(?,?,?) ON CONFLICT(cid) DO UPDATE SET acct=excluded.acct, bound=excluded.bound",
+                      (cid, req["acct"], now))
+        c.execute("UPDATE claude_change_requests SET status=?, decided=? WHERE id=?", ("done" if approve else "rejected", now, req["id"]))
+    return {"ok": True}
+
+
+def admin_devices(cid, store=None) -> list:
+    """관리자 회원표 — 이 회원의 숏클 등록 기기."""
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store) as c:
+        return _rows(c, "SELECT dev_id AS id, name, slot, last_seen FROM claude_devices WHERE cid=? AND removed=0 ORDER BY slot", (int(cid),))
+
+
+# 페이지 내려받기 칸(사장님 10-20 exe 없이) — desktop = shortem.mcpb(윈도·맥 공용, 두 번 누르면 Claude 데스크탑이 받는다)
+#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+START.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
+#   win-x64·mac-* = 예전 설치 프로그램(서명 전엔 페이지에 안 띄운다 — 남겨 두기만)
+INSTALLER_KINDS = ("desktop", "code-win-x64", "win-x64", "mac-arm64", "mac-x64")
+
+
+def _installers() -> list:
+    mf = store_dir() / "installers" / "manifest.json"
+    try:
+        d = json.loads(mf.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    out = []
+    for it in d.get("items") or []:
+        if not isinstance(it, dict) or it.get("os") not in INSTALLER_KINDS:
+            continue
+        f = store_dir() / "installers" / Path(str(it.get("file") or "")).name
+        out.append({"os": it["os"], "version": it.get("version"), "sha256": it.get("sha256"), "size": it.get("size"),
+                    "ready": f.is_file(), "download": f"/api/claude/me/installer/{it['os']}" if f.is_file() else None})
+    return out
+
+
+def installer_file(os_id) -> dict:
+    for it in json.loads((store_dir() / "installers" / "manifest.json").read_text(encoding="utf-8")).get("items") or []:
+        if it.get("os") == os_id and os_id in INSTALLER_KINDS:
+            f = store_dir() / "installers" / Path(str(it.get("file") or "")).name
+            if f.is_file():
+                return {"file": f, "name": f.name}
+    raise PortalError("bad_request", "아직 준비되지 않은 설치팩입니다")
+
+
+def _caption_packs() -> list:
+    """자막팩 이름·설명 — static/caption-motions.js 의 /*PACKS*/ 묶음 하나가 주인(여기는 읽기만)."""
+    try:
+        js = (HERE / "static" / "caption-motions.js").read_text(encoding="utf-8")
+        d = json.loads(js.split("/*PACKS*/")[1])
+    except (OSError, IndexError, ValueError):
+        log.warning("claude_portal: caption-motions.js 자막팩을 못 읽었다", exc_info=True)
+        return []
+    return [{"id": k, "label": v.get("label") or k, "desc": v.get("desc") or ""} for k, v in d.items()
+            if k in channel_profile.CAPTION_PACKS]
+
+
+def _clean_example(v):
+    return re.sub(r"\s*\([^)]*\)", "", str(v or "")).strip() or None
+
+
+def home(cid, store=None) -> dict:
+    """GET /api/claude/me/home — 프리셋 카드(브랜드 이름만)·팩 목록(견본 id 만)·내 프로필·라이선스·기기·설치팩.
+    ★페이지 응답 — PAGE_FORBIDDEN_KEYS(bench·strengths·frame·path·commit·evidence·slug_bench)·원본 서명 URL 0개."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    led = _ledgers()
+    brand_of = {b["slug"]: b["brand"] for b in led.get("brands") or []}
+
+    def _pv(kind, pid):
+        return str(pid) if pid is not None and _preview_file(kind, pid)[0] else None
+
+    # 번호(n) 없는 장부 행은 미리보기를 못 여니 뺀다 — 한 행 때문에 회원 페이지 전체가 500 이 났다(11-02 ititemlog)
+    passed = [r for r in led.get("results") or [] if r.get("state") == "통과" and r.get("n") is not None]
+    results = [{"n": r.get("n"), "brand": r.get("brand"), "style": r.get("style"), "seconds": r.get("seconds"),
+                "date": r.get("date"), "preview": _pv("result", r.get("n"))} for r in passed]
+    plist = []
+    for p in presets(store):
+        mine = [r["n"] for r in passed if r.get("channel") == p["slug"]]
+        plist.append({"id": p["id"], "brand": brand_of.get(p["slug"]) or "숏템 프리셋", "label": _style_label(p["style"]),
+                      "results": mine})
+    styles = [{"name": s["name"], "desc": s.get("desc") or "", "example": _clean_example(s.get("example")),
+               "audio_kinds": s.get("audio_kinds") or []} for s in led.get("styles") or []]
+    rows = _assets(store)
+    fonts_json = {}
+    try:
+        for f in json.loads((HERE / "static" / "fonts.json").read_text(encoding="utf-8")):
+            fonts_json[Path(f.get("file") or "").stem.lower()] = f.get("name")
+    except (OSError, ValueError):
+        pass
+    fonts, sfx, bgm, tpls, memes = [], {}, [], [], {}
+    font_seen = set()
+    for r in rows:
+        meta = json.loads(r.get("meta_json") or "{}")
+        k, rest = r["id"].split(":", 1)
+        if k == "font":
+            # 같은 파일을 가리키는 이름 둘(렌더러 이름·Cc 이름)은 한 칸만 — 고객에겐 같은 글꼴이다
+            if r["sha256"] in font_seen:
+                continue
+            font_seen.add(r["sha256"])
+            stem = Path(r["name"] or "").stem
+            label = (meta.get("label") or fonts_json.get(stem.lower())
+                     or re.sub(r"^\d+_", "", stem).replace("_", " ").replace("-", " ") or rest)
+            fonts.append({"id": rest, "name": label, "preview": _pv("font", rest)})
+        elif k == "sfx":
+            g = sfx.setdefault(r["grp"], {"id": r["grp"], "files": [], "preview": _pv("sfx", r["grp"])})
+            g["files"].append(meta.get("slot") or r["name"])
+        elif k == "bgm":
+            bgm.append({"id": rest, "title": meta.get("title") or rest, "artist": meta.get("artist") or "", "preview": _pv("bgm", rest)})
+        elif k == "template":
+            tpls.append({"id": rest, "name": meta.get("label") or rest, "preview": _pv("template", rest)})
+        elif k == "meme":
+            memes.setdefault(r["grp"], {"kind": r["grp"], "count": 0})["count"] += 1
+    for m in memes.values():
+        d = store_dir() / "preview" / "meme"
+        m["sprites"] = sorted(f.stem for f in d.glob("*.jpg") if f.stem.startswith(f"sprite_{m['kind']}_")) if d.exists() else []
+    voices = [{"id": v["preset_id"], "name": v.get("name"), "desc": v.get("one_liner") or "", "variant": v.get("variant"),
+               "preview": _pv("voice", v["preset_id"])} for v in _voices() if v.get("preset_id")]
+    with _tx(store) as c:
+        lic = _row(c, "SELECT kv, issued, expires, revoked, suspended_until FROM claude_licenses WHERE cid=?", (cid,))
+        devs = _rows(c, "SELECT dev_id, name, slot, created, last_seen FROM claude_devices WHERE cid=? AND removed=0 ORDER BY slot", (cid,))
+        cur = _active_lease(c, cid)
+        sess = _row(c, "SELECT device_name FROM claude_sessions WHERE cid=? AND fp_hash<>'' AND expires>?", (cid, _now()))
+        swap = _open_request(c, cid, "device")
+        acct_req = _open_request(c, cid, "account")
+        notes = _rows(c, "SELECT rule, level, ts FROM claude_alerts WHERE cid=? AND resolved=0 AND level IN ('warn','suspend') ORDER BY id DESC LIMIT 5", (cid,))
+    lic_out = {"has_key": bool(lic and lic["kv"]), "issued": (lic or {}).get("issued"), "expires": (lic or {}).get("expires"),
+               "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now()),
+               "slots": key_slots(cid)}
+    return {"ok": True, "presets": plist, "styles": styles, "results": results,
+            "packs": {"fonts": fonts, "sfx": sorted(sfx.values(), key=lambda g: g["id"]), "bgm": bgm, "templates": tpls,
+                      "voices": voices, "memes": sorted(memes.values(), key=lambda m: -m["count"]),
+                      "caption_packs": _caption_packs(), "caption_motions": list(channel_profile.CAPTION_MOTIONS),
+                      "caption_modes": list(channel_profile.CAPTION_MODES)},
+            "profiles": list_profiles(cid, store), "license": lic_out,
+            "devices": [{"id": d["dev_id"], "name": d["name"], "slot": d["slot"], "last_seen": d["last_seen"]} for d in devs],
+            "devices_max": devices_max(cid),
+            "lease": ({"device": cur["device_name"], "step": cur["step_name"], "since": cur["acquired"]} if cur else None),
+            "session": ({"device": sess["device_name"]} if sess else None),
+            "swap": ({"name": swap["name"], "status": swap["status"]} if swap else None),
+            "account_change": bool(acct_req),
+            "notices": [{"title": RULE_TITLE.get(n["rule"], n["rule"]), "level": n["level"], "ts": n["ts"]} for n in notes],
+            "installers": _installers(), "steps": list(STEP_NAMES),
+            # 그림 안내(설치→키→첫 편) — 설치팩 쪽이 static/claude_guide.html 로 넣으면 링크가 열린다
+            "guide": "/static/claude_guide.html" if (HERE / "static" / "claude_guide.html").is_file() else None}
+
+
+def forbidden_hits(obj, keys=PAGE_FORBIDDEN_KEYS) -> list:
+    """노출 검사 — obj 안 금지 키 경로 + 원본 서명 URL 문자열. 빈 목록이어야 통과."""
+    hits = []
+
+    def walk(x, at):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k in keys:
+                    hits.append(f"{at}.{k}")
+                walk(v, f"{at}.{k}")
+        elif isinstance(x, list):
+            for i, v in enumerate(x):
+                walk(v, f"{at}[{i}]")
+        elif isinstance(x, str) and "/api/claude/blob/" in x:
+            hits.append(f"{at}=<blob url>")
+    walk(obj, "$")
+    return hits

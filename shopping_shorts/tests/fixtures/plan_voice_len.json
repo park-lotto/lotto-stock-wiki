@@ -1,0 +1,190 @@
+{
+ "_note": "관문 ⑧ 표본(10-25) — 이미 만든 편의 줄 캐시(복사본, 합성 막음)로 계획 길이: est_end = 어림(글자÷cps), real_end = 진짜 목소리(render_bench.voice_plan), final = 완성본. same_engine = 쉼 맞춤(fit_voice, 86bb25f85) 뒤 렌더라 계획과 같은 엔진 — 그 편은 real_end == final 이어야 한다. 옛 편 final 이 긴 것은 fit_voice 전 줄 앞뒤 무음(줄마다 0~0.45초). est_short/real_short = 관문 ⑤ 걸린 컷 수. 만든 스크립트 scratchpad g8/measure.py",
+ "rows": [
+  {
+   "doc": "ep02_cushion_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 27.0,
+   "real_end": 30.1333,
+   "final": 31.4,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.417
+  },
+  {
+   "doc": "ep04_lip_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 26.4667,
+   "real_end": 26.9333,
+   "final": 27.767,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.194
+  },
+  {
+   "doc": "ep05_rice_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 23.8,
+   "real_end": 27.2,
+   "final": 27.533,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.473
+  },
+  {
+   "doc": "ep08_cvs_onigiri_blurtest",
+   "style": "잇템로그판",
+   "skip": "StageError: TTS 줄 말속도 이상(평균 7.67자/초의 ±35% 밖: [('N2b', 4.86)]) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 narr_full.mp3 와"
+  },
+  {
+   "doc": "ep08_cvs_onigiri_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 25.3,
+   "real_end": 26.2,
+   "final": 26.933,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.135
+  },
+  {
+   "doc": "ep09_strawberry_latte_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 25.9,
+   "real_end": 28.2667,
+   "final": 28.867,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.473
+  },
+  {
+   "doc": "ep10_icecream_combo_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 24.3,
+   "real_end": 26.4667,
+   "final": 27.967,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.325
+  },
+  {
+   "doc": "ep11_cvs_4dollar_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 26.9333,
+   "real_end": 29.0667,
+   "final": 29.433,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.615
+  },
+  {
+   "doc": "ep12_sheetmask_rule",
+   "style": "잇템로그판_v2",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 28.0333,
+   "real_end": 28.6667,
+   "final": 30.467,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.317
+  },
+  {
+   "doc": "ep12_sheetmask_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 25.5,
+   "real_end": 25.8333,
+   "final": 27.067,
+   "same_engine": false,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.118
+  },
+  {
+   "doc": "ep13_salmon_cream_v3",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 25.1,
+   "real_end": 26.8667,
+   "final": 28.133,
+   "same_engine": false,
+   "est_short": 1,
+   "real_short": 1,
+   "max_cut_err": 0.372
+  },
+  {
+   "doc": "키치잇판",
+   "style": "키치잇판",
+   "len": [
+    25,
+    30
+   ],
+   "est_end": 26.5667,
+   "real_end": 26.7,
+   "final": 26.7,
+   "same_engine": true,
+   "est_short": 0,
+   "real_short": 0,
+   "max_cut_err": 0.184
+  },
+  {
+   "doc": "잇템로그판",
+   "style": "잇템로그판",
+   "len": [
+    26,
+    31
+   ],
+   "est_end": 25.4333,
+   "real_end": 26.8333,
+   "final": 27.633,
+   "same_engine": false,
+   "est_short": 4,
+   "real_short": 3,
+   "max_cut_err": 0.606
+  }
+ ]
+}

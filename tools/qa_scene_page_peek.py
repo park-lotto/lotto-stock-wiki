@@ -39,8 +39,8 @@ with sync_playwright() as p:
     check(len(scenes) > 2, "편집기 페이지 %d개" % len(scenes))
     check(all("?at=" in (s.get("media") or "") for s in scenes) and len({s["media"] for s in scenes}) == len(scenes),
           "페이지마다 그 페이지 시각의 그림 주소(전부 다름)")
-    check(all(len(s.get("media_points") or []) == 3 and s["media_points"][1] == s["media"] for s in scenes),
-          "페이지마다 앞·가운데·뒤 주소 3개(가운데 = 기본 그림)")
+    check(all(len(s.get("media_points") or []) == 5 and s["media_points"][2] == s["media"] for s in scenes),
+          "페이지마다 맨앞·앞·가운데·뒤·맨뒤 주소 5개(가운데 = 기본 그림)")
     pg.evaluate("""(job)=>{ MIX_JOB=job; return openSceneStyleEditor(); }""", a.job)
     pg.wait_for_selector("iframe[title='문구와 효과 편집기']", timeout=20000)
     fr = pg.frame_locator("iframe[title='문구와 효과 편집기']")
@@ -70,12 +70,12 @@ with sync_playwright() as p:
             exposed += 1
         frame.wait_for_function("()=>{const m=document.querySelector('.precision-media');return m.complete&&m.naturalWidth>0&&getComputedStyle(m).visibility!=='hidden'}", timeout=20000)
         aft = frame.evaluate(state)
-        check(aft["src"] == want and aft["on"] == 1, "%d쪽: 넘긴 뒤 그림 = 그 페이지 가운데 시각(%s), 직후 상태 %s" % (idx + 1, want.split("?")[-1], now["vis"]))
+        check(aft["src"] == want and aft["on"] == 2, "%d쪽: 넘긴 뒤 그림 = 그 페이지 가운데 시각(%s), 직후 상태 %s" % (idx + 1, want.split("?")[-1], now["vis"]))
         s0 = aft
     check(exposed == 0, "넘기는 순간 '아직 안 뜬 새 그림이 보이는' 경우 %d회(0이어야 — 뜰 때까지 숨김)" % exposed)
     check(s0["peekHidden"] is False, "[앞·가운데·뒤] 버튼이 보인다")
     idx = int(s0["cur"]) - 1
-    for k, nm in ((0, "앞"), (2, "뒤"), (1, "가운데")):
+    for k, nm in ((0, "맨앞"), (1, "앞"), (3, "뒤"), (4, "맨뒤"), (2, "가운데")):
         frame.click("[data-scene-peek] [data-peek='%d']" % k)
         frame.wait_for_function("()=>{const m=document.querySelector('.precision-media');return m.complete&&m.naturalWidth>0&&getComputedStyle(m).visibility!=='hidden'}", timeout=20000)
         st = frame.evaluate(state)
@@ -84,7 +84,7 @@ with sync_playwright() as p:
     frame.evaluate("(d)=>{(%s)(d)}" % step, 1)
     frame.wait_for_timeout(1500)
     st = frame.evaluate(state)
-    check(st["on"] == 1 and st["src"] == scenes[int(st["cur"]) - 1]["media"], "페이지를 넘기면 가운데로 돌아간다")
+    check(st["on"] == 2 and st["src"] == scenes[int(st["cur"]) - 1]["media"], "페이지를 넘기면 가운데로 돌아간다")
     if a.out:
         Path(a.out).mkdir(parents=True, exist_ok=True)
         pg.screenshot(path=str(Path(a.out) / "scene_page_peek.png"))

@@ -53,15 +53,23 @@ class Test한국날짜로_센다:
 
 
 class Test상한:
-    def test_상한은_300(self):
-        assert pw._PREWARM_DAILY_CAP == 300
+    def test_상한은_없다(self):
+        """2026-10-15 사장님 "300개 제한없이"(관제 216) — 0 = 상한 없음."""
+        assert pw._PREWARM_DAILY_CAP == 0
+
+    def test_상한없음이면_300건_넘어도_통과(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 0)
+        s = _S(f"{_kst_today()}|300")
+        assert pw._daily_take(s) is True
+        assert s.v == f"{_kst_today()}|301"
 
     def test_상한_안이면_통과하고_1_올린다(self):
         s = _S(f"{_kst_today()}|5")
         assert pw._daily_take(s) is True
         assert s.v == f"{_kst_today()}|6"
 
-    def test_상한에_닿으면_막고_안_올린다(self):
+    def test_상한에_닿으면_막고_안_올린다(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 300)
         s = _S(f"{_kst_today()}|300")
         before = s.v
         assert pw._daily_take(s) is False
@@ -74,14 +82,21 @@ class Test상한:
 
 
 class Test남은_몫_안내:
-    def test_남은_건수를_센다(self):
+    def test_남은_건수를_센다(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 300)
         assert pw.daily_remaining(_S(f"{_kst_today()}|30")) == 270
 
-    def test_다_썼으면_0(self):
+    def test_다_썼으면_0(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 300)
         assert pw.daily_remaining(_S(f"{_kst_today()}|300")) == 0
 
-    def test_넘겨도_음수가_아니다(self):
+    def test_넘겨도_음수가_아니다(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 300)
         assert pw.daily_remaining(_S(f"{_kst_today()}|999")) == 0
+
+    def test_상한없음이면_안내없음(self, monkeypatch):
+        monkeypatch.setattr(pw, "_PREWARM_DAILY_CAP", 0)
+        assert pw.daily_remaining(_S(f"{_kst_today()}|999")) is None
 
     def test_세기만_하고_쓰지_않는다(self):
         """★안내용이다 — 조회가 몫을 까먹으면 담을 때마다 한도가 준다."""

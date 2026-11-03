@@ -1,0 +1,117 @@
+{
+ "topic": "앤커 사운드코어 리버티 5 프로(프로 맥스) — 예초기를 최대로 돌리며 이어폰 마이크로 말하는 Mike O'Brien 'It is full throttle right now … This is insane.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "zencDPGewuk",
+ "bench_note": "벤치 '기네스북에 오른 노래방 이어폰의 정체'(2.78만, 핫템리포트 10-27 목록 117편 조회수 60위, 설명란 '앤커 사운드코어 리버티 5 프로는 통화 음성 품질로 기네스 세계기록에 오른 무선 이어폰 … #사운드코어 #리버티5프로') — 화면 속 제품 = 사운드코어 리버티 5 프로 맥스. 원음형 = 유튜브 Mike O'Brien 'NEW soundcore Liberty 5 Pro & Pro Max - Unbelievable mic test!' Y4V-Z2UxyRg(47.8만, 소리 트랙 1개 en 140 — 자동 더빙 없음) 전체. 벤치의 한국 리뷰 채널 노래방 화면은 안 씀.",
+ "sources": {
+  "mo": {
+   "file": "mo.mp4",
+   "who": "유튜브 Mike O'Brien Y4V-Z2UxyRg 전체(137+140) — 228~237 마당에서 예초기를 최대로 돌리며 말함(본인 얼굴·예초기) · 242~248 같은 마당 얼굴 근접 · 107~110 프로 맥스 케이스를 쥔 손 · 378~387 이어폰을 집은 손가락",
+   "views": 477909,
+   "dur": 1006.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "예초기 옆에서도\n또렷한 이어폰"
+ },
+ "facts": {
+  "f1": {
+   "text": "앤커 공식 제품 페이지 anker.com/ca/products/d1203-liberty-5-pro-anc-earbuds-clear-calls 'Officially recognized as the world's clearest earbuds for calls' · Mike O'Brien 원본(스피치매틱스) 8.0~12.6 'tons of wild new features and even a Guinness World Record for call quality' · 176.6~178.8 'these had a Guinness World Record for microphone quality' · 원본 180~186 화면 인증서 글 'Highest speech quality score (G-MOS) for TWS earbuds' · 쿠팡 9546164062 '앤커 사운드코어 리버티 5 프로'",
+   "kind": "공식·리뷰·판매처"
+  },
+  "f2": {
+   "text": "앤커 공식 제품 페이지(같은 곳) 'Filters out extreme background noise up to 100 dB+ so your voice is heard loud and clear' · Mike O'Brien 원본 228.91~236.92(예초기 최대로 돌리는 중 이어폰 마이크로 말함)",
+   "kind": "공식·리뷰"
+  },
+  "f3": {
+   "text": "Mike O'Brien 원본 228.91~236.92 'It is full throttle right now. I like if I was weed whacking, I could technically have a conversation on the phone right now. This is insane.' · 242.16~248.12 'That was running at full throttle. These earbuds actually do block a lot of sound.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "통화 음질로, 기네스 세계 기록까지 받았다는 이어폰이 있는데요.",
+    "caps": [
+     "통화 음질로",
+     "기네스 세계 기록까지",
+     "받았다는 이어폰이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "원음 사이 한 줄(원리)",
+    "text": "옆에서 기계가 아무리 시끄러워도, 목소리만 골라서 보내 준다네요.",
+    "caps": [
+     "옆에서 기계가",
+     "아무리 시끄러워도",
+     "목소리만 골라서 보내 준다네요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "mo",
+    "span": [
+     228.85,
+     237.0
+    ],
+    "en": "It is full throttle right now. I like if I was weed whacking, I could technically have a conversation on the phone right now. This is insane.",
+    "caps": [
+     "지금 최대로 돌려요",
+     "예초기 돌리면서도",
+     "이 상태로",
+     "전화 통화까지 되겠는데요?",
+     "미쳤네요!"
+    ],
+    "check": "스피치매틱스: It 228.91 · now 230.20~230.52 · I 230.56 · phone 234.72~234.96 · now 235.16~235.48 · This 235.76 · insane 236.16~236.92 · 다음 Like 236.96(뒤 자름) — 예초기가 화면 왼아래에서 도는 한 샷(227.5~237.4, 237.4 예초기 머리가 카메라 앞을 지나감) · 아래 박힌 글 'Outdoor Microphone Test'(y≥950)·예초기 상표 ECHO(y≥1030)는 crop 밖 · 자막 칸이 글자 수 비례라 말 차례(throttle 끝 230.52·phone right now 끝 235.48)에 맞게 글 수 8:8:3:10:4(한 칸이 길면 화면 밖으로 넘쳐 1차 렌더에서 다섯 칸으로 나눔 — 말소리 구간 −38dB 7조각 합 6.33초 기준) "
+   },
+   {
+    "id": "O2",
+    "src": "mo",
+    "span": [
+     242.1,
+     248.0
+    ],
+    "en": "That was running at full throttle. These earbuds actually do block a lot of sound.",
+    "caps": [
+     "방금 게 최대였어요",
+     "이어폰이 소리를",
+     "진짜 엄청나게",
+     "많이 막아 주네요"
+    ],
+    "check": "스피치매틱스: That 242.16 · throttle 243.16~243.92 · This 243.96 · these 244.64 · sound 247.40~248.12 · 원본 컷 248.03(프레임 차 47) 앞에서 끝 · 얼굴 근접 한 샷(241.2~248.03) · 박힌 글 y≥950 crop 밖 · 자막 칸 글 수 8:6:6:7(한 칸 넘침 → 넷으로)(throttle 끝 243.92)"
+   }
+  ],
+  "dropped": {
+   "벤치 '노래방 테스트'(씨넷코리아 화면)": "한국 채널 화면 — 안 씀",
+   "마이크 8개·골전도 센서 2개": "1차 출처(공식 페이지)에서 숫자를 못 찾아 안 씀",
+   "AI 칩 이름": "안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

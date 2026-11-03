@@ -1,0 +1,947 @@
+{
+ "_note": "샥탬스토리 16편 Rocketbook 재료 계획. 창 1080x1052(벤치 pc1_ezP__eY, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(bjW4T3xp8vc_audio.m4a).",
+ "sources": {
+  "bjW4T3xp8vc": {
+   "채널": "CNBC Ambition(공식)",
+   "제목": "The Sharks Blast to the Future | Shark Tank Misses",
+   "해상도": "1920x1080 29.97fps (137) + 140-7 영어 원어(더빙 트랙 7개는 안 씀)",
+   "길이": 349.0,
+   "받은 구간": "전체",
+   "남의 글자": "왼쪽 아래 CNBC 공작 로고·'CNBC.COM/CHANNELFINDER'·이름/제안 띠 = 화면 아래 y≥920 → 모든 컷 크롭 높이 900 · 330초 뒤 끝 글자 화면·0초 CNBC 로고 안 씀 · 무대 'ROCKETBOOK' 표지판·노트 = 제품 브랜드 · 무대 TV 속 구글 드라이브 아이콘 화면(31~41초)은 안 씀"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "샤크 5명이 거절한",
+  "line2": "미래에서 온 노트?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 179.84,
+   "audio_dur": 0.6,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    107.6,
+    108.2
+   ],
+   "ss": 107.6,
+   "dur": 0.6,
+   "t_final_est": [
+    0.0,
+    0.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    298,
+    150,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "투자자(정장)가 창업자에게 받은 로켓북 노트를 들고 있음(원본 샷 106.81~111.01, 소리 = 다음 컷 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 180.44,
+   "audio_dur": 1.81,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    180.44,
+    182.25
+   ],
+   "ss": 180.44,
+   "dur": 1.81,
+   "t_final_est": [
+    0.6,
+    2.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    368,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 옷 투자자가 웃으며 '이렇게 웃기고 황당한 건 오랜만'(말하는 본인, 샷 179.61~182.28)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 182.32,
+   "audio_dur": 0.4,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    182.32,
+    182.72
+   ],
+   "ss": 182.32,
+   "dur": 0.4,
+   "t_final_est": [
+    2.41,
+    2.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    361,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 셔츠 투자자 반응(샷 182.28~183.28)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    17.9,
+    19.308
+   ],
+   "ss": 17.9,
+   "dur": 1.408,
+   "t_final_est": [
+    2.81,
+    4.22
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    424,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "금발 투자자가 웃으며 듣는 모습(원본 샷 17.85~20.05, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    3.4,
+    5.121
+   ],
+   "ss": 3.4,
+   "dur": 1.721,
+   "t_final_est": [
+    4.22,
+    5.94
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    688,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "우주복 입은 창업자 둘이 'ROCKETBOOK' 표지판 앞에 서 있음(와이드, 샷 3.34~8.24)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 8.32,
+   "audio_dur": 3.04,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    8.32,
+    11.36
+   ],
+   "ss": 8.32,
+   "dur": 3.04,
+   "t_final_est": [
+    5.94,
+    8.98
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    868,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 머리 창업자가 노트를 들고 소개(말하는 본인 — 입 모양 확인, 샷 8.24~11.38 · 중간 cover 컷은 넣지 않음: 투자자 얼굴=1인칭 자막 오해, TV 기호=멈춤, 창업자 투샷=입 모양 안 맞음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    32.0,
+    34.098
+   ],
+   "ss": 32.0,
+   "dur": 2.098,
+   "t_final_est": [
+    8.98,
+    11.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    538,
+    30,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "무대 TV: 필기한 페이지를 휴대폰으로 찍어 올리는 화면(원본 샷 31.97~34.53 — 왼쪽 구글 드라이브·에버노트 아이콘 줄은 크롭 밖)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    49.0,
+    50.969
+   ],
+   "ss": 49.0,
+   "dur": 1.969,
+   "t_final_est": [
+    11.08,
+    13.05
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    30,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "무대 TV: 페이지 아래 기호에 펜으로 X 표시(샷 48.52~54.05)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 71.92,
+   "audio_dur": 0.46,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    71.92,
+    72.38
+   ],
+   "ss": 71.92,
+   "dur": 0.46,
+   "t_final_est": [
+    13.05,
+    13.51
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    482,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 셔츠 투자자가 턱을 괴고 듣는 중(샷 70.64~72.41)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 72.45,
+   "audio_dur": 1.63,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    72.45,
+    74.08
+   ],
+   "ss": 72.45,
+   "dur": 1.63,
+   "t_final_est": [
+    13.51,
+    15.14
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    878,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 머리 창업자(말하는 본인 — 입 모양 확인, 샷 72.41~74.11)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O3",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 74.13,
+   "audio_dur": 2.19,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    74.13,
+    76.32
+   ],
+   "ss": 74.13,
+   "dur": 2.19,
+   "t_final_est": [
+    15.14,
+    17.33
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "우주복 소매 앞 로켓북 노트 근접(샷 74.11~77.01)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "N3",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    116.5,
+    118.042
+   ],
+   "ss": 116.5,
+   "dur": 1.542,
+   "t_final_est": [
+    17.33,
+    18.87
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    180,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "무대 전자레인지에 투자자가 노트를 넣음(원본 샷 116.42~119.09)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N3",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    121.3,
+    122.842
+   ],
+   "ss": 121.3,
+   "dur": 1.542,
+   "t_final_est": [
+    18.87,
+    20.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    180,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "전자레인지 속 노트 위에 물 컵을 올림(샷 121.25~123.89)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 151.44,
+   "audio_dur": 2.66,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    151.44,
+    154.1
+   ],
+   "ss": 151.44,
+   "dur": 2.66,
+   "t_final_est": [
+    20.41,
+    23.07
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    521,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "대머리 투자자가 손짓하며 반대(말하는 본인, 샷 151.42~154.12)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "O4",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 154.15,
+   "audio_dur": 2.41,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    154.15,
+    156.56
+   ],
+   "ss": 154.15,
+   "dur": 2.41,
+   "t_final_est": [
+    23.07,
+    25.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    538,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "투자자석 — 창업자가 노트를 나눠 주는 중(샷 154.12~156.82)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "O5",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 186.8,
+   "audio_dur": 2.9,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    186.8,
+    189.7
+   ],
+   "ss": 186.8,
+   "dur": 2.9,
+   "t_final_est": [
+    25.48,
+    28.38
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    541,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 머리 창업자 근접 — 듣는 표정(샷 186.25~189.72, 말은 화면 밖 검은 옷 투자자)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O5",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 189.75,
+   "audio_dur": 0.73,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    189.75,
+    190.48
+   ],
+   "ss": 189.75,
+   "dur": 0.73,
+   "t_final_est": [
+    28.38,
+    29.11
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    249,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 옷 투자자 'So I'm out'(말하는 본인, 샷 189.72~190.66)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "N4",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    204.8,
+    205.698
+   ],
+   "ss": 204.8,
+   "dur": 0.898,
+   "t_final_est": [
+    29.11,
+    30.01
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    310,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "양복 투자자가 빠지겠다고 말함(원본 샷 204.74~206.17, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "N4",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    278.05,
+    278.969
+   ],
+   "ss": 278.05,
+   "dur": 0.919,
+   "t_final_est": [
+    30.01,
+    30.93
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    465,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "금발 투자자가 빠지겠다고 말함(샷 278.01~279.45, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "O6",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 320.6,
+   "audio_dur": 0.8,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    320.6,
+    321.4
+   ],
+   "ss": 320.6,
+   "dur": 0.8,
+   "t_final_est": [
+    30.93,
+    31.73
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    455,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 셔츠 투자자 'I'm out'(말하는 본인, 샷 317.38~321.45)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O6",
+   "kind": "원음",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": false,
+   "audio_src": "bjW4T3xp8vc_audio.m4a",
+   "audio_ss": 321.5,
+   "audio_dur": 0.86,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    321.5,
+    322.36
+   ],
+   "ss": 321.5,
+   "dur": 0.86,
+   "t_final_est": [
+    31.73,
+    32.59
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    868,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "창업자 반응(샷 321.45~323.16)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "N5",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    326.02,
+    327.522
+   ],
+   "ss": 326.02,
+   "dur": 1.502,
+   "t_final_est": [
+    32.59,
+    34.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "우주복 창업자 둘이 무대를 걸어 나감(와이드, 원본 샷 325.99~327.29, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 22,
+   "line": "N5",
+   "kind": "나레",
+   "src": "bjW4T3xp8vc.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "src_orig_span": [
+    327.35,
+    329.427
+   ],
+   "ss": 327.35,
+   "dur": 2.077,
+   "t_final_est": [
+    34.09,
+    36.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    388,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "검은 셔츠 투자자가 씁쓸하게 말함(샷 327.29~329.10, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/16편_Rocketbook/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.6
+   ],
+   "target": [
+    345,
+    935,
+    630,
+    1305
+   ],
+   "target_what": "투자자가 든 로켓북 노트(제품) — 손 상자 = 108초 원본 프레임 눈 측정(완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    488,
+    1120
+   ],
+   "size": 527,
+   "face_clear": true,
+   "target_box": [
+    345,
+    935,
+    630,
+    1305
+   ],
+   "target_path": [
+    [
+     0.0,
+     345.0,
+     935.0,
+     630.0,
+     1305.0
+    ],
+    [
+     0.067,
+     340.0,
+     923.3,
+     628.7,
+     1298.3
+    ],
+    [
+     0.133,
+     331.0,
+     913.0,
+     623.3,
+     1293.0
+    ],
+    [
+     0.2,
+     318.3,
+     906.7,
+     614.3,
+     1291.7
+    ],
+    [
+     0.267,
+     309.3,
+     904.0,
+     605.3,
+     1289.0
+    ],
+    [
+     0.333,
+     305.7,
+     903.7,
+     601.7,
+     1288.7
+    ],
+    [
+     0.4,
+     307.0,
+     903.0,
+     603.0,
+     1288.0
+    ],
+    [
+     0.467,
+     310.0,
+     904.0,
+     606.0,
+     1289.0
+    ],
+    [
+     0.533,
+     313.0,
+     907.0,
+     609.0,
+     1292.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     488,
+     1120
+    ],
+    [
+     0.067,
+     484,
+     1111
+    ],
+    [
+     0.133,
+     477,
+     1103
+    ],
+    [
+     0.2,
+     466,
+     1099
+    ],
+    [
+     0.267,
+     457,
+     1096
+    ],
+    [
+     0.333,
+     454,
+     1096
+    ],
+    [
+     0.4,
+     455,
+     1096
+    ],
+    [
+     0.467,
+     458,
+     1096
+    ],
+    [
+     0.533,
+     461,
+     1100
+    ]
+   ],
+   "track_conf": 0.566,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.566 · 원 527px = 물건 반대각선 243×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "O1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.6,
+    0.98
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "원 다음 얼굴 컷 첫 프레임(14·15편과 같은 꼴)"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.5 '가장 후회한 제품'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 4.5 '사진을 찍으면'"
+  },
+  {
+   "line": "O3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 9.0 '모두 지워져'"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 16.5 '두번째 책은 안 팔 생각인거야?'"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 23.0 '모든 투자자들의 거절'"
+  }
+ ]
+}

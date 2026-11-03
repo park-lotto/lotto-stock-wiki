@@ -1,0 +1,193 @@
+{
+ "채널": "잇썸홈",
+ "channel": "homedesignnote",
+ "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+ "topic": "Anbernic RG DS (원조, 2025-12 출시, 4인치 640x480 x2, RK3568, 3GB, 안드로이드 14, 약 $94~100)",
+ "목소리": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.32,
+ "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)",
+ "from": "원샷링크딸깍 엔진(script_engine v1 · 대본 설명서 경로) · C:\\calcopy_link\\work\\hdn_rgds\\대본.json",
+ "lines": [
+  {
+   "i": 0,
+   "text": "DS 못 잊은 팬들 등쌀에 골치였던 중국 회사가 DS에 안드로이드를 넣어버렸대요.",
+   "role": "계기",
+   "point": "",
+   "shots": [
+    {
+     "piece": "DS 못 잊은 팬들"
+    },
+    {
+     "piece": "등쌀에 골치였던 중국"
+    },
+    {
+     "piece": "회사가 DS에"
+    },
+    {
+     "piece": "안드로이드를 넣어버렸대요"
+    }
+   ],
+   "tts": "DS 못 잊은 팬들 등쌀에 골치였던 중국 회사가 DS에 안드로이드를 넣어버렸대요."
+  },
+  {
+   "i": 1,
+   "text": "근데 겉은 딱 옛날 DS인데 속은 완전 딴 물건이라는데,",
+   "role": "불편공감",
+   "point": "잉",
+   "shots": [
+    {
+     "piece": "근데 겉은 딱 옛날"
+    },
+    {
+     "piece": "DS인데 속은 완전 딴"
+    },
+    {
+     "piece": "물건이라는데"
+    }
+   ],
+   "tts": "근데 겉은 딱 옛날 DS인데 속은 완전 딴 물건이라는데,"
+  },
+  {
+   "i": 2,
+   "text": "진짜 핵심은 이건데, 위아래 화면 두 장이 다 터치돼서 옛날 DS 게임이 그대로 돌아가요.",
+   "role": "원리스펙",
+   "point": "와우",
+   "shots": [
+    {
+     "piece": "진짜 핵심은 이건데"
+    },
+    {
+     "piece": "위아래 화면 두 장이 다"
+    },
+    {
+     "piece": "터치돼서 옛날 DS"
+    },
+    {
+     "piece": "게임이 그대로 돌아가요"
+    }
+   ],
+   "tts": "진짜 핵심은 이건데, 위아래 화면 두 장이 다 터치돼서 옛날 DS 게임이 그대로 돌아가요."
+  },
+  {
+   "i": 3,
+   "text": "심지어 더 미친 포인트는, 레트로 게임기 중엔 처음 쓴 칩을 넣어서 PSP 게임 일부까지 돌아간대요.",
+   "role": "원리스펙",
+   "point": "와우",
+   "shots": [
+    {
+     "piece": "심지어 더 미친 포인트는"
+    },
+    {
+     "piece": "레트로 게임기 중엔 처음"
+    },
+    {
+     "piece": "쓴 칩을 넣어서 PSP"
+    },
+    {
+     "piece": "게임 일부까지 돌아간대요"
+    }
+   ],
+   "tts": "심지어 더 미친 포인트는, 레트로 게임기 중엔 처음 쓴 칩을 넣어서 PSP 게임 일부까지 돌아간대요."
+  },
+  {
+   "i": 4,
+   "text": "근데 진짜 충격적인 건, 이 회사가 2018년 미국 유명 래퍼 이름 달고 팔린 게임기를 만든 곳으로 알려졌대요.",
+   "role": "사회반응",
+   "point": "와우",
+   "shots": [
+    {
+     "piece": "근데 진짜 충격적인 건"
+    },
+    {
+     "piece": "이 회사가 2018년"
+    },
+    {
+     "piece": "미국 유명 래퍼 이름"
+    },
+    {
+     "piece": "달고 팔린 게임기를 만든"
+    },
+    {
+     "piece": "곳으로 알려졌대요"
+    }
+   ],
+   "tts": "근데 진짜 충격적인 건, 이 회사가 2018년 미국 유명 래퍼 이름 달고 팔린 게임기를 만든 곳으로 알려졌대요."
+  },
+  {
+   "i": 5,
+   "text": "가격도 백 달러 안팎이라 접어서 들고 다니면 딱 그 시절 DS 느낌이에요.",
+   "role": "체감비유",
+   "point": "",
+   "shots": [
+    {
+     "piece": "가격도 백 달러 안팎이라"
+    },
+    {
+     "piece": "접어서 들고 다니면 딱"
+    },
+    {
+     "piece": "그 시절 DS 느낌이에요"
+    }
+   ],
+   "tts": "가격도 백 달러 안팎이라 접어서 들고 다니면 딱 그 시절 DS 느낌이에요."
+  },
+  {
+   "i": 6,
+   "text": "요즘 삼사십 대 아재들 사이에서 추억 소환템이라고 난리래요.",
+   "role": "사회반응",
+   "point": "",
+   "shots": [
+    {
+     "piece": "요즘 삼사십 대 아재들"
+    },
+    {
+     "piece": "사이에서 추억"
+    },
+    {
+     "piece": "소환템이라고 난리래요"
+    }
+   ],
+   "tts": "요즘 삼사십 대 아재들 사이에서 추억 소환템이라고 난리래요."
+  }
+ ],
+ "chars": 239,
+ "est_sec": 29.33,
+ "facts": {
+  "f1": "Anbernic RG DS는 DS형 접이식(클램쉘) 듀얼스크린 안드로이드 게임기로, 2025년 12월(12/7경 출하 예정)에 나왔다. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f2": "화면은 4인치 IPS 두 장, 장당 640x480(4:3), 둘 다 터치 되고 정전식 스타일러스도 지원한다. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f3": "칩셋은 록칩 RK3568(쿼드코어 Cortex-A55 최대 2.0GHz, Mali-G52 2EE), 램 3GB, 저장 32GB + microSD 최대 2TB. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f4": "OS는 안드로이드 14(리눅스 구성도 있음), 배터리 4000mAh로 약 6시간, 완충 약 3.5시간. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f5": "무게 321g, 크기 160x91x21.5mm, 아날로그 스틱 2개, 6축 자이로, 진동, 스테레오 스피커. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f6": "정가 99.99달러, 사전주문 12/9까지 93.99달러. 리뷰 매체는 실거래가 94~100달러로 정리. 원화 가격은 미확인. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f7": "두 화면이 터치되는 진짜 위/아래 구성이라 DS 게임은 melonDS로 대부분 잘 돈다. PS1·PSP 일부·N64도 가능, PS2·GameCube·3DS는 실사용상 어렵다(Heldgames 평가 3.5/5). (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f8": "위아래 화면에 서로 다른 앱을 동시에 띄우는 것이 가능한지는 이 출처들에서 미확인(영상 자막 주장은 별도 검증 필요). 비DS 앱에서 둘째 화면은 메뉴·박스아트·컨트롤 오버레이로 쓰이고 앱마다 지원이 다르다. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f9": "흥미: 일부 리뷰어 샘플에서 듀얼스크린 게임 때 두 화면이 어긋나는(비동기) 문제가 나왔고, 앤버닉이 출하 전 펌웨어 1.4 업데이트로 위 화면 주사율 저하 등을 고쳤다. (https://www.notebookcheck.net/Anbernic-rolls-out-an-update-to-fix-the-RG-DS-ahead-of-shipping.1179922.0.html)",
+  "f10": "흥미: 칩 예상은 H700·Unisoc T618이었지만 실제는 RK3568 — 레트로 핸드헬드로는 처음 쓴 칩으로 소개됐다. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f11": "흥미: 앤버닉 최초의 완전 투명 모델(투명 화이트, '얼음 같다')이 있고, 공식 공개는 유출 몇 주 뒤 앤버닉 유튜브에서 먼저 했다. (https://retrododo.com/anbernic-officially-reveals-sub-100-rg-ds-handheld-emulator/)",
+  "f12": "권위: 앤버닉은 2017년 중국 선전에서 Shenzhen YangLiMing Electronic Technology가 상표를 등록해 시작, 첫 제품 RG. RG351P·RG353V·RG35XX로 레트로 핸드헬드 대표 브랜드가 됐고 자체 사이트는 30개+ 모델을 냈다고 밝힌다. (https://en.wikipedia.org/wiki/Anbernic)",
+  "f13": "흥미: 2018년 래퍼 술자보이(Soulja Boy)의 'SouljaGame 콘솔'이 앤버닉 기기를 리브랜딩한 것으로 알려졌고 출시 한 달도 안 돼 중단됐다(위키 기준). (https://en.wikipedia.org/wiki/Anbernic)",
+  "f14": "후속작 RG DS Plus(2026-09-15 판매, 첫 72시간 84.99달러·이후 94.99달러)는 4.3인치 1024x768 화면, 같은 RK3568 칩. 영상 속 기기는 640x480 원조 RG DS(검은색, 스틱 있음)로 보임. Plus 정보는 단일 출처(retrohandhelds)라 재확인 필요. (https://retrohandhelds.gg/tag/anbernic-rg-ds-plus/)"
+ },
+ "title_lines": [],
+ "sfx": 0,
+ "search_seed": [
+  "Anbernic RG DS",
+  "Anbernic RG DS review"
+ ],
+ "meme": 0,
+ "ref_video": "C:/calcopy_link/src/RE4kpUfbXSU.mp4",
+ "exclude_title": [
+  "RG DS Plus",
+  "DS Plus",
+  "RG DDS",
+  "Retroid",
+  "RGLauncher"
+ ]
+}

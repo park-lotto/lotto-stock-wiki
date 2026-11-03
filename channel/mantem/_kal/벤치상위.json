@@ -1,0 +1,532 @@
+{
+ "for": "mantem 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-31",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@만템"
+ ],
+ "rows": [
+  {
+   "id": "BDAjUIBTjfY",
+   "views": 2300000,
+   "title": "장윤정이 '이것'에 돈 아끼지 않는 이유 #장윤정 #도경완 #장윤정치약 #소금치약 #구강케어 #치약추천 #연예인추천템 #꿀템추천 #연예인쇼핑템 #쿠팡템 #벨레다치약",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "S_CXTCRKFVg",
+   "views": 2200000,
+   "title": "전지현이 이미숙한테 선물해서 난리 난 휴대용 용기 #전지현 #이미숙 #살림템 #휴대용용기 #간식통 #쿠팡템 #꿀템 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "qBPnRzR-VaQ",
+   "views": 1800000,
+   "title": "최은경이 집에서 쓰는 100년 전통 인생 염색약 #최은경 #염색약추천 #셀프염색 #최은경염색약 #로레알 #새치염색 #연예인추천템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "3Xb8hDoRiU4",
+   "views": 1300000,
+   "title": "대성이 집에만 70통 사놨다는 역대급 립밤 #대성 #대성립밤 #연예인추천템 #뷰티템 #쿠팡추천템 #쿠팡템 #립밤추천 #꿀템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "9FcPMZtJVB0",
+   "views": 1200000,
+   "title": "요즘 명품 좋아하는 사람들 사이에서 난리 난 김혜수 실사용 가방 #김혜수가방 #명품백추천 #연예인명품백 #김혜수패션 #꿀템 #연예인 추천템 #품절템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "Sq-kzCh0Xds",
+   "views": 1100000,
+   "title": "강주은이 고등학생 때부터 쓴 마술의 양념 #강주은양념 #시즈닝추천 #쇼핑쇼츠 #강주은 #최민수 #만능양념장 #해외직구템 #집밥레시피 #주방꿀템 #연예인추천템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "Pfvwjggi7UA",
+   "views": 756000,
+   "title": "송은이가 진짜 맛있다고 극찬한 간식 #송은이 #간식추천 #마카다미아 #쇼핑쇼츠 #연예인추천템 #쿠팡템 #견과류추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "0LOyszI-Z0U",
+   "views": 674000,
+   "title": "귀차니스트 수영이 쓰는 역대급 가성비 쿠션 #수영쿠션 #쿠션추천 #쇼핑쇼츠 #연예인쿠션 #뷰티쇼츠 #피부표현 #화장품추천 #베이스메이크업 #귀차니즘",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "A-0s6cNnXcc",
+   "views": 591000,
+   "title": "이국주 최애 초콜릿! 김숙 박은혜가 맛도 안보고 쟁임 #이국주 #김숙 #박은혜 #일본쇼핑 #일본마트 #일본과자 #일본초콜릿 #연예인추천템 #먹템 #쿠팡템 #꿀템 #간식추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "_xFVbLsDfx8",
+   "views": 549000,
+   "title": "이영자가 집에서 꼭 신는다는 최애 실내화 #이영자 #요가신발 #실내화추천 #쿠팡템 #편한신발 #꿀템 #쿠팡템추천 #연예인쇼핑템 #연예인추천템 #살림템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "vJvexR2tnCE",
+   "views": 547000,
+   "title": "전원주 골프 실력 공개! 선우용여도 깜짝 놀란 전원주 골프 실력 #선우용녀 #전원주 #예능 #예능레전드",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "fzJceuELrZo",
+   "views": 505000,
+   "title": "차예련 주상욱 부부가 100통 넘게 썼다는 인생 쿠션 #차예련쿠션 #주상욱쿠션 #차예련 #주상욱 #연예인쿠션 #인생쿠션 #쿠션추천 #쇼핑쇼츠 #피부정착템 #뷰티꿀팁 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "-J3ou-Lgug8",
+   "views": 448000,
+   "title": "박미선이 극찬한 알룰로스 다크초콜릿 #박미선 #다크초콜릿 #연예인추천템 #저당초콜릿 #다이어트간식 #혈당관리 #쇼핑쇼츠 #내돈내산 #간식추천 #넛츠그린 #넛츠그린초콜릿",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "JNncwkF1uu8",
+   "views": 439000,
+   "title": "김성은이 알려주는 코스트코 가격 꿀팁! 이거 모르고 사면 후회합니다. #김성은 #코스트코 #코스트코꿀팁 #코스트코가격 #쇼핑꿀팁 #코스트코추천 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "AAQcRheFRg4",
+   "views": 346000,
+   "title": "선우용녀가 백화점만 가면 무조건 사온다는 캔디 #선우용녀 #건강사탕 #진저캔디 #목캔디 #목감기 #생강사탕 #간식추천 #쇼핑쇼츠 #알펜바우어 #쿠팡템 #꿀템 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "lxVn-X2w89o",
+   "views": 188000,
+   "title": "정유미가 사자마자 문신처럼 매일 신는다는 역대급 운동화 #정유미신발 #데일리운동화 #쇼츠 #연예인추천템 #연예인쇼핑템 #셀럽템 #꿀템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "Ot-8QHdZlKc",
+   "views": 186000,
+   "title": "일반 참치와 아예 다른 올리브오일 들어간 전세계 최고 참치 #올리브오일참치 #참치추천 #고급참치 #참치캔추천 #인생참치 #송은이 #쿠팡템추천 #꿀템 #연예인추천템 #리오마레참치",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "Kl99JF-ahw4",
+   "views": 136000,
+   "title": "장윤정 재력 앞에서 도경완이 살아남는 법 #장공장장윤정 #도장TV #장윤정 #도경완 #예능",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "7oehmnmW63c",
+   "views": 129000,
+   "title": "가방 안 들던 김완선이 매일 쓰는 데일리백 #김완선가방 #미니백 #파우치가방 #핸드폰가방 #데일리가방 #수납력좋은가방 #쇼핑쇼츠 #가방추천 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "2pSULZ2ya90",
+   "views": 125000,
+   "title": "한혜진이 10년동안 썼다는 트리트먼트 정체 #한혜진헤어 #한혜진트리트먼트 #연예인추천템 #헤어로션 #머릿결관리 #쿠팡꿀템 #품절템 #꿀템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "BJEc6ucuwdo",
+   "views": 113000,
+   "title": "장윤정이 돈 아끼지 않고 싹 쓸어온 덴마크 수건 #장윤정수건 #장윤정 #욕실템 #테클라수건 #호텔수건 #수건추천 #쇼핑쇼츠 #연예인추천템 #연예인쇼핑템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "e31X1cY19lU",
+   "views": 100000,
+   "title": "가격은 사나운데 장윤정도 반한 쇼파 #소파추천 #쇼파추천 #장윤정소파 #고급가구",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "vA2_bfihhIw",
+   "views": 97000,
+   "title": "윤혜진이 명품백 다 포기하고 이것만 메는 이유 #여행가방 #수납가방 #가방추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "w5XLfj2ft7A",
+   "views": 58000,
+   "title": "이청아가 반한 2년째 리필중인 필기감 대박인 펜 #이청아펜 #필기구추천 #인생볼펜 #볼펜추천 #손목안아픈펜 #연예인추천템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "wPzn2tmvEQY",
+   "views": 45000,
+   "title": "김강우도 눈 뒤집혀서 쓸어왔다는 화제의 살림템 #셀럽템 #김강우 #쇼핑쇼츠 #꿀템 #찐템 #쿠팡템 #연예인쇼핑템 #키친타올추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ZMQychWTqU4",
+   "views": 44000,
+   "title": "김영옥이 커피마실 때 무조건 넣는 명품 설탕 #김영옥 #연예인쇼핑템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "M6XV5a05gSk",
+   "views": 43000,
+   "title": "88세 김영옥이 매일 챙겨 먹는 간식 #김영옥 #코스트코추천 #간식추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "18Uplj3TTN8",
+   "views": 42000,
+   "title": "장윤정이 딸이라는 걸 끝까지 숨겼던 아버지 #장윤정 #도경완 #장공장장윤정",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "MqMCqvsmtBc",
+   "views": 42000,
+   "title": "차예련 주상욱이 300봉지 먹은 인생 과자 #차예련과자 #김과자 #쿠팡템 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "hsfqOv6HNVI",
+   "views": 42000,
+   "title": "이도현도 반한 임지연의 인생 향수 #임지연향수 #향수추천 #임지연이도현",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "n6AKB0zMAiA",
+   "views": 37000,
+   "title": "선우용여가 극찬한 발편한 신발 #선우용녀 #부모님선물 #효도선물 #발편한운동화 #자세교정신발 #선우용여운동화 #운동화추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "BzEO7-_uXkQ",
+   "views": 33000,
+   "title": "박세리가 면세점에서 꼭 사오는 찐 애정템 #박세리 #화장품추천#면세점쇼핑",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ThwJP22p3FI",
+   "views": 33000,
+   "title": "진짜 맛있다는 강남표 밥도둑 과자 후리카케 #명란과자 #후리카케 #과자추천 #간식추천 #우마이봉",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "VtDRjJiQ2oI",
+   "views": 33000,
+   "title": "요즘 할머니들 사이에서 없어서 못 판다는 김영옥 최애 모자 #김영옥 #딘딘 #할머니선물 #모자추천 #효도선물 #쇼핑쇼츠 #선물추천 #추석선물 #연예인쇼핑템 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ClAV4XH_LYU",
+   "views": 31000,
+   "title": "88세 김영옥의 장수비결! 매일 먹는 아침식단 #장수비결 #건강비법 #건강한중년",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "k4VQWlbLK9Y",
+   "views": 30000,
+   "title": "선우용여가 비싸도 꼭 산다는 건강 식초 #선우용여 #식초추천 #건강식단",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "M18pruMA10I",
+   "views": 30000,
+   "title": "차예련이 텀블러 씻을 때 꼭 쓰는 필수템 #주상욱 #텀블러세척 #텀블러추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "lbFae30R3-w",
+   "views": 29000,
+   "title": "고준희 다이어트 간식의 비밀 #고준희 #두부도넛 #살안찌는간식 #다이어트식단",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "amvBeEhBnC0",
+   "views": 28000,
+   "title": "정지선 셰프가 만든 마라탕을 먹은 아들 반응 #정지선 #마라탕레시피 #쿠팡추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "pDcYEKaCzCA",
+   "views": 27000,
+   "title": "25년 동안 장윤정 아버지가 딸 공연을 안 본 이유 #장윤정 #장공장장윤정 #장윤정콘서트",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "S_FqiJ-KMPU",
+   "views": 26000,
+   "title": "90세가 되고서야 알게 된 인생의 후회 #선우용녀 #전원주 #쇼츠 #예능",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "fWKcn40Kkmw",
+   "views": 26000,
+   "title": "에어팟보다 싼 박보검이 쓰는 이어폰 #박보검 #이어폰추천 #음질좋은이어폰",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "B1_N7Q347x8",
+   "views": 26000,
+   "title": "이경민이 명품가방 다 제치고 선택한 인생 가방 #이경민 #가성비가방 #가방추천 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "FADDKn0lKa8",
+   "views": 25000,
+   "title": "도경완도 못 들어본 장윤정 말투 #장윤정 #도경완 #shorts #도장TV #예능",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "AGyWQ7UH_OM",
+   "views": 25000,
+   "title": "선우용여가 장볼 때 꼭 사는 호텔 무염버터 #선우용여 #버터추천 #호텔버터 #무염버터 #백화점추천 ##고급버터 #라꽁비에뜨 #연예인추천템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "zaTUnfk-BdA",
+   "views": 21000,
+   "title": "아웃백 VIP 선우용여가 아웃백 혼자 가는 이유 #선우용녀 #아웃백 #아울렛",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "0G-PLbSMo-8",
+   "views": 19000,
+   "title": "샤넬에 10억 쓴 김준희가 VIC 방에서 겨우 산 가방 #연예인추천템 #샤넬 #김준희",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "MtF1c3A8Ftw",
+   "views": 18000,
+   "title": "엄마들 사이에서 절대 기 죽지 않는 장영란 운동화 #신발추천 #명품신발 #발편한운동화 #운동화추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "s3cNBfYfo1A",
+   "views": 18000,
+   "title": "차예련이 남편 주상욱 졸라서 산 샤넬백 #차예련 #주상욱 #차예련가방 #연예인가방 #데일리백추천 #가방추천 #샤넬백 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "pJ_5s7DBAkg",
+   "views": 17000,
+   "title": "정리왕 최은경이 찾은 초저가 가방 정리법! #최은경 #가방정리 #연예인추천템 #연예인템 #가방정리 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "m7o0nG2Uo38",
+   "views": 17000,
+   "title": "필기감 대박인 카리나 추천 볼펜 #카리나 #볼펜추천 #카리나볼펜 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "RP8LoWM1CNQ",
+   "views": 16000,
+   "title": "가방 안 사는 장윤정이 돈 쓰게 된 이유 #장윤정 #장공장 #가방추천 #연예인추천템 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ekvkvF2YDNU",
+   "views": 16000,
+   "title": "많은 명품백 중에 안소희가 메는 최애 가방 #안소희 #가방추천 #데일리백",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "2-G63OnLvcQ",
+   "views": 16000,
+   "title": "김영옥이 반한 박은영 셰프가 선물한 가방 #김영옥 #김영옥가방 #효도선물 #선물추천 #어머니가방 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "xg-aFAv2G_c",
+   "views": 15000,
+   "title": "다 쓴 핫팩도 못 버리는 전원주 #전원주 #전원주인공 #예능 #예능레전드 #전원주유튜브",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "yN-ojosYj7A",
+   "views": 14000,
+   "title": "이지현이 밥솥 치운 진짜 이유 #쥬얼리 #전자레인지용기 #전기세절약 #냉동밥",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "lyCRm0XeeWg",
+   "views": 14000,
+   "title": "한가인이 숨겨온 비밀 견과류 #한가인견과류 #건강간식 #쿠팡템 #견과류추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "3TyBKkAVRCY",
+   "views": 12000,
+   "title": "소녀시대 유리가 쓰는 국내 가성비 향수 #향수추천 #가성비향수 #소녀시대유리",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "w26o0qbBhIY",
+   "views": 12000,
+   "title": "유진 기태영 부부가 매일 챙겨 먹는다는 역대급 가성비 유럽 채소 #유진채소 #유럽채소 #유기농채소 #무농약채소 #건강식단 #간편식단 #채소추천 #내돈내산 #쿠팡템 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "5JiTs2U8nO4",
+   "views": 10000,
+   "title": "고기 안 먹던 전원주, 선우용여가 산다고 하자.. #전원주 #선우용녀 #예능 #쇼츠 #전원주유튜브 #순풍선우용여",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "BQVqI9pbalA",
+   "views": 10000,
+   "title": "샴푸 대신 이것 썼더니 머리가 장말 안빠져! #선우용여 #안문숙 #탈모비누 #탈모예방 #도브",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "tOgGFrZDb2c",
+   "views": 10000,
+   "title": "이미도가 알려주는 질릴 수가 없는 미친 다이어트 닭가슴살 꿀조합 #이미도식단 #닭가슴살 #다이어트레시피 #쇼핑쇼츠 #쿠팡꿀템 #연예인추천템 #쿠팡추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "dADyxzAEyUE",
+   "views": 10000,
+   "title": "365일 매일 들고 다녀도 새것 같다는 한예슬 가방 #한예슬가방 #연예인템 #연예인쇼핑템 #데일리백추천 #연예인추천템 #셀럽템 #가방추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "60OjngnIL-g",
+   "views": 9500,
+   "title": "강주은이 코스트코에서 꼭 담는 최애 치즈 #강주은 #최민수 #치즈추천 #코스트코추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "4M5UeHEGZ1g",
+   "views": 9400,
+   "title": "노인 냄새 없애주는 선우용여 필수 향수 #향수추천 #부모님선물추천 #선우용녀",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ot05fiBaC_Y",
+   "views": 8500,
+   "title": "티파니가 극찬한 성냥 인센스 스틱! 신현빈 최애 향기 아이템 #신현빈 #티파니 #인센스스틱 #향기추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "f8iM47VenD4",
+   "views": 8300,
+   "title": "나연, 전소미가 정착했다는 화제의 위생 퍼프 #뷰티템 #꿀템 #쿠팡템 #전소미퍼프 #나연퍼프 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "uL5LHlQeBKQ",
+   "views": 8100,
+   "title": "화장품에 수십억 쓴 윤미라가 결국 정착한 뷰티템 #윤미라 #세럼추천 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "SGcb3nX8csM",
+   "views": 8000,
+   "title": "장윤정이 진짜 잘 샀다고 난리 난 마법의 식탁 #장윤정 #도경완 #식탁추천 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "q3SIh9xlFxY",
+   "views": 7700,
+   "title": "기안84가 평생 같은 지갑만 고집하는 진짜 이유 #기안84 #기안84지갑 #지갑추천 #쇼핑쇼츠 #연예인템 #쿠팡템 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "ot0r7nfUWhU",
+   "views": 7600,
+   "title": "이효리 김혜수 고소영이 가방에 매일 들고 다니는 물건 #건강습관 #건강템 #에너지충전 #쇼츠",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "TO7Q-QhZVbE",
+   "views": 7300,
+   "title": "82세 선우용여가 매일 아침 먹는 건강식단! 연어 베이글 레시피 #선우용녀 #간단요리 #다이어트레시피 #선우용여베이글 #연어베이글",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "L_8k2eGo8Ng",
+   "views": 7000,
+   "title": "여배우 이미숙이 탐낸 3천원짜리 가성비 립템 #이미숙 #다이소 #뷰티템 #메이크업꿀팁 #립추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "WWlokuw-UWw",
+   "views": 6900,
+   "title": "제니 살냄새 진짜 이거라고? 주변에서 난리 난 바디워시 정보 #제니 #제니살냄새 #바디워시추천 #살냄새바디워시 #은은한향기 #연예인추천템 #쿠팡템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "kpbDvlu3x8Y",
+   "views": 6800,
+   "title": "80대 선우용여가 쓰는 치아 관리 필수템 #선우용여 #치약추천 #잇몸관리",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "nhHJmDrdAP4",
+   "views": 6500,
+   "title": "윤혜진이 추천한 간식처럼 먹는 밥도둑 반찬! #꿀템 #윤혜진 #쿠팡추천템 #김자반",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "bwd4VCKEheU",
+   "views": 5400,
+   "title": "이청아가 스태프들한테 싹 돌렸다는 미친 기능의 보조배터리 #이청아 #애플워치보조배터리 #보조배터리추천 #쇼핑쇼츠 #쿠팡템 #연예인추천템 #꿀템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "2jhFXw8Xipc",
+   "views": 5200,
+   "title": "브라이언이 반한 최은경 집 가구 #브라이언 #최은경 #인테리어 #집꾸미기 #연예인쇼핑템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "8XlzBKdPK90",
+   "views": 5000,
+   "title": "여배우들이 촬영 전에 꼭 챙긴다는 안구 케어법 #신현빈 #안구케어 #티파니 #눈꺼풀세정제 #아이클리너 #다래끼예방 #눈노폐물 #눈건강 #뷰티꿀팁 #쇼핑쇼츠 #연예인추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "esEqAiMvmxg",
+   "views": 4800,
+   "title": "청소광 브라이언이 추천하는 누렇게 변한 옷 새하얗게 만드는 방법 #브라이언 #흰옷세탁 #브라이언추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "FedCdx0gt6U",
+   "views": 4200,
+   "title": "청소광 브라이언이 강추한 물때 제거 방법 #브라이언 #욕실청소 #물때제거 #화장실청소 #샤워부스청소 #청소템 #살림템 #욕실세정제 #쇼핑쇼츠 #쿠팡꿀템 #브라이언",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "wFIIt2Tzt2c",
+   "views": 3500,
+   "title": "류혜영도 10년째 내돈내산 중인 미백템! #류혜영 #류혜영치약 #미백치약 #치아미백 #치약추천",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "qRtpazx7cmY",
+   "views": 3300,
+   "title": "냉장고 안 넣어도 얼음보다 차갑다는 성찬 쿨링 마사지기 #성찬 #성찬붓기 #쿨링마사지기 #붓기빼는법 #쇼츠추천 #연예인추천템 #꿀템 #쿠팡템 #쿠팡추천템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "5d4yrunU_go",
+   "views": 2700,
+   "title": "장윤정이 매일 아침 챙겨먹는 것 #장윤정 #올리브오일 #엑스트라버진 #건강생활",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "Gb82xOXd17g",
+   "views": 2400,
+   "title": "박명수가 먹자마자 반한 코스트코 간식 #디저트 #박명수 #할명수 #코스트코템",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "HG1Z3uUxbvg",
+   "views": 2100,
+   "title": "전원주가 현금을 잔뜩 들고 나가는 이유 #예능 #shorts #쇼츠 #전원주인공",
+   "ch": "https://www.youtube.com/@만템"
+  },
+  {
+   "id": "o0bSPVrcW0g",
+   "views": 1800,
+   "title": "메이크업 아티스트 포니가 추천하는 인생 쿠션! #쿠션추천 #화장품추천 #가성비쿠션 #포렌코즈",
+   "ch": "https://www.youtube.com/@만템"
+  }
+ ]
+}

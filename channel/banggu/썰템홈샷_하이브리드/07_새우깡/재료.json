@@ -1,0 +1,456 @@
+{
+ "_note": "07 새우깡 — 훅 = 농심 공식 새우깡 광고 속 봉지(장면 자체가 '깡이 뭔데?' 질문) + 물음표 닉 영 짤 · 옛 흑백 광고 = 농심기획(농심 광고 계열사) 공식 채널(타임코드 TCG 글자·좌우 검은 띠 밖) · MBC 뉴스투데이 공장 화면(주황 틀·자막·로고 밖) · 뒤 = 쿠팡 94817 사진 + 개봉·먹방 · 1차 렌더 눈 확인 뒤: MBC 옛 광고 컷(미키마우스 섞임) 뺌 · 닉 영 짤(1.3초 멈춤) → 드웨인 존슨 짤 · 양파깡 봉지는 줌으로 구움",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/07_새우깡/src",
+ "shots": [
+  {
+   "src": "1mjJhpzz1eQ.mp4",
+   "ss": 29.3,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "1mjJhpzz1eQ.mp4",
+     "ss": 29.3,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      1023,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_rockeyebrow.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "농심 공식 새우깡 광고(2024): 새우깡 봉지를 든 모델(29.3, 왼쪽 위 농심 로고 밖) → 눈썹 올리는 드웨인 존슨 짤",
+   "why": "훅 = 새우깡 봉지 = '깡이 뭔데?' 질문 + ??? 짤"
+  },
+  {
+   "src": "E1COGhm2Tiw.mp4",
+   "ss": 0.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "E1COGhm2Tiw.mp4",
+     "ss": 0.5,
+     "dur": 2.69,
+     "fit": "cover",
+     "src_crop": [
+      480,
+      40,
+      600,
+      792
+     ]
+    }
+   ],
+   "ours": "농심기획 공식 1972 흑백 광고: 한복 입은 아이들(TCG 타임코드 글자 밖)",
+   "why": "'처음 이 과자를 만들었을 땐' — 그 시절"
+  },
+  {
+   "src": "E1COGhm2Tiw.mp4",
+   "ss": 6.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "E1COGhm2Tiw.mp4",
+     "ss": 5.8,
+     "dur": 1.16,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      40,
+      620,
+      820
+     ]
+    }
+   ],
+   "ours": "같은 흑백 광고: 찡그린 아이 얼굴",
+   "why": "'이름을 못 정했다고' — 고민"
+  },
+  {
+   "src": "1DjpwP-TDNw.mp4",
+   "ss": 43.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "1DjpwP-TDNw.mp4",
+     "ss": 43.3,
+     "dur": 2.72,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      60,
+      575,
+      760
+     ]
+    }
+   ],
+   "ours": "MBC: 공장에서 쏟아지는 새우깡 과자(이름 없는 과자 덩어리)",
+   "why": "'새우스낵, 새우튀밥, 새우뻥까지' — 이름 후보만 많던 그 과자"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ewfallon.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ewfallon.mp4",
+     "ss": 0.0,
+     "dur": 1.65,
+     "fit": "cover",
+     "kind": "짤",
+     "src_crop": [
+      140,
+      60,
+      400,
+      528
+     ]
+    }
+   ],
+   "ours": "질색하는 지미 팰런 'EW!' 짤(위 #FALLONTONIGHT 표식 밖)",
+   "why": "'하나같이 별로였고'"
+  },
+  {
+   "src": "bBOAjke11bs.mp4",
+   "ss": 7.86,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "bBOAjke11bs.mp4",
+     "ss": 7.86,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      450,
+      0,
+      700,
+      925
+     ]
+    },
+    {
+     "src": "iZznEnzvREw.mp4",
+     "ss": 14.0,
+     "dur": 1.29,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      650,
+      858
+     ]
+    }
+   ],
+   "ours": "농심기획 공식 새우깡 광고(2006): 새우깡을 먹으며 웃는 꼬마 여자아이(아래 작은 글 밖) → 농심기획 공식 1976 흑백 광고 속 모자 쓴 여자아이(TCG 밖)",
+   "why": "'그때 사장님의 어린 딸이, 아리랑을 아리깡 아리깡' — 꼬마 딸(광고 속 아이, 실제 그 딸 아님 — 말하지 않음)"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cruiselaugh.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cruiselaugh.mp4",
+     "ss": 0.0,
+     "dur": 1.03,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "크게 웃는 톰 크루즈 짤",
+   "why": "'하고 불렀다고' — 귀여운 말실수"
+  },
+  {
+   "src": "DnrrZNkj7Ok.mp4",
+   "ss": 24.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "DnrrZNkj7Ok.mp4",
+     "ss": 24.2,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      880,
+      160,
+      700,
+      925
+     ]
+    },
+    {
+     "src": "KcI2K2Kw40w.mp4",
+     "ss": 5.85,
+     "dur": 0.45,
+     "fit": "cover",
+     "src_crop": [
+      60,
+      0,
+      272,
+      360
+     ]
+    },
+    {
+     "src": "KcI2K2Kw40w.mp4",
+     "ss": 7.45,
+     "dur": 0.9,
+     "fit": "cover",
+     "src_crop": [
+      10,
+      0,
+      272,
+      360
+     ]
+    },
+    {
+     "src": "kci2_bags_zoom.mp4",
+     "ss": 0.03,
+     "dur": 0.58,
+     "fit": "cover",
+     "src_crop": [
+      100,
+      0,
+      272,
+      360
+     ]
+    }
+   ],
+   "ours": "농심 공식 새우깡 광고(비, 2020): 새우깡 봉지를 든 가수 비(왼쪽 손글씨 밖) → 농심기획 공식 '깡삼형제'(2003): 감자깡 봉지 → 양파깡 봉지 든 모델 → 깡 형제 봉지들(kci2_bags_zoom = KcI2K2Kw40w 14.3~15.35 끝 화면을 천천히 다가가게 구운 것)",
+   "why": "'그 깡 한 글자를 붙여서 새우깡, 뒤이어 감자깡, 양파깡까지'"
+  },
+  {
+   "src": "izzn_onion_zoom.mp4",
+   "ss": 0.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "izzn_onion_zoom.mp4",
+     "ss": 0.2,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      440,
+      0,
+      650,
+      858
+     ]
+    }
+   ],
+   "ours": "농심기획 공식 1976 흑백 광고 끝 양파깡 봉지(izzn_onion_zoom = iZznEnzvREw 18.4~20.0 을 천천히 다가가게 구운 것, 멈춤 방지 · TCG 밖)",
+   "why": "'줄줄이 나왔고'"
+  },
+  {
+   "src": "1DjpwP-TDNw.mp4",
+   "ss": 46.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "1DjpwP-TDNw.mp4",
+     "ss": 46.5,
+     "dur": 2.57,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      60,
+      575,
+      760
+     ]
+    }
+   ],
+   "ours": "MBC: 공장 컨베이어 위 새우깡 판(주황 틀·자막 밖)",
+   "why": "'출시하자 공장 앞에, 물건 받으러 온 트럭들이' — 공장(트럭 그림은 못 찾음 △)"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mindblown.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mindblown.mp4",
+     "ss": 0.0,
+     "dur": 1.18,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "머리가 터지는 마인드 블로운 짤",
+   "why": "'줄을 섰다는 얘기' — 놀람"
+  },
+  {
+   "src": "still_coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_coupang.jpg",
+     "ss": 0,
+     "dur": 1.8,
+     "fit": "cover",
+     "src_crop": [
+      180,
+      260,
+      640,
+      740
+     ],
+     "move": "in"
+    },
+    {
+     "src": "uVdmaYlcc9s.mp4",
+     "ss": 1.0,
+     "dur": 1.24,
+     "fit": "cover",
+     "src_crop": [
+      450,
+      0,
+      700,
+      925
+     ]
+    }
+   ],
+   "ours": "쿠팡 94817 상품 사진: 농심 새우깡 묶음(다가감) → 언박싱 영상: 탁자 위 새우깡 봉지(왼쪽 아래 계정 표시 밖)",
+   "why": "B 첫 줄 '쿠팡에서 새우깡을 한 묶음' — 같은 제품"
+  },
+  {
+   "src": "uVdmaYlcc9s.mp4",
+   "ss": 4.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "uVdmaYlcc9s.mp4",
+     "ss": 4.5,
+     "dur": 1.8,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      700,
+      925
+     ]
+    },
+    {
+     "src": "C6OZwh-jNHU.mp4",
+     "ss": 30.5,
+     "dur": 1.66,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "언박싱: 새우깡 봉지를 뜯음 → 먹방(주전부리): 새우깡을 집어 먹음",
+   "why": "'봉지를 뜯자마자 새우 향이 확, 짭짤하게 바삭해서'"
+  },
+  {
+   "src": "1mjJhpzz1eQ.mp4",
+   "ss": 3.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "1mjJhpzz1eQ.mp4",
+     "ss": 3.0,
+     "dur": 1.24,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "uVdmaYlcc9s.mp4",
+     "ss": 15.6,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      0,
+      700,
+      925
+     ]
+    }
+   ],
+   "ours": "농심 공식 광고: 가게에서 새우깡 노래를 부르는 모델 → 언박싱: 쏟아 놓은 새우깡을 손으로 집음(오른쪽 아래 계정 표시 밖)",
+   "why": "'광고 노래 그대로, 손이 자꾸 가더라고요'"
+  },
+  {
+   "src": "bBOAjke11bs.mp4",
+   "ss": 10.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "bBOAjke11bs.mp4",
+     "ss": 10.6,
+     "dur": 4.23,
+     "fit": "cover",
+     "src_crop": [
+      660,
+      0,
+      760,
+      1004
+     ]
+    }
+   ],
+   "ours": "농심기획 공식 2006 광고: 바닷가 가족과 꼬마 딸, 새우깡 봉지(농심 로고 밖)",
+   "why": "끝 줄 '꼬마의 노래 실수 하나가, 오십오 년째 국민 과자' — 훅(꼬마 딸) 되받기"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 0,
+   "dt": 1.9,
+   "db": -3,
+   "why": "닉 영 ??? 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 2,
+   "dt": 2.72,
+   "db": -4,
+   "why": "질색 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 3,
+   "dt": 0.0,
+   "db": -4,
+   "why": "꼬마 딸 공개 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 4,
+   "dt": 0.0,
+   "db": -3,
+   "why": "새우깡 이름 띵"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 2.57,
+   "db": -3,
+   "why": "마인드 블로운 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  }
+ ]
+}

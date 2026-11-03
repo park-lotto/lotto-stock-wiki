@@ -1,0 +1,130 @@
+{
+ "topic": "킹스미스 워킹패드 C2(접이식 걷기 러닝머신) — 미국 Inside Ilona's World 가 처음 올라가 걸어 보고 'This is so nice'·멈추니 'oh, it just stops' + 킹스미스(WalkingPad BeNeLux) 공식 소개 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "Rpfk8Yn0Y-c",
+ "bench_note": "벤치 '요즘 미국에서 난리 난 운동'(33.2만, 핫템리포트 20위, 책상 아래 워킹패드 몽타주 나레만 — 단일 원본 없음, 2차 '원음 약함'). 같은 꼴 제품(킹스미스 워킹패드 C2)을 처음 걸어 보는 유튜브 Inside Ilona's World tl2UJa_MA9E(2024-12-17, 설명란 'KingSmith WalkingPad C2') 원음형. 벤치 '식후혈당관리에 좋다'(효능)·'실리콘밸리 개발자 유행'(근거 없음)·'잔고장 없이 오래'(근거 없음)는 안 씀",
+ "sources": {
+  "il": {
+   "file": "il.mp4",
+   "who": "유튜브 Inside Ilona's World 'Minimalist Fitness? WalkingPad C2 Unboxing & First Walk' tl2UJa_MA9E 전체(1080p30, 영어 원음 140 — 더빙 트랙 없음)",
+   "views": 1144,
+   "dur": 201.1,
+   "res": "1920x1080"
+  },
+  "ks2": {
+   "file": "ks2.mp4",
+   "who": "유튜브 WalkingPad BeNeLux 'WalkingPad C2 - Introduction Video' VDxQvA1su4g(공식 소개 영상, 음악만)",
+   "views": 8575,
+   "dur": 88.56,
+   "res": "1920x1012"
+  },
+  "iz": {
+   "file": "ilz.mp4",
+   "who": "il 90~110초 사본 — 101.5초부터 천천히 다가감(멈춤 방지, 소리 그대로)",
+   "dur": 20.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "걷다 멈추면\n알아서 서는 러닝머신"
+ },
+ "facts": {
+  "f1": {
+   "text": "Ilona 원본(스피치매틱스) 72.64~79.56 'I could see myself watching a movie or a TV show for an hour and a half to get my 10,000 steps every morning' · Garage Gym Reviews Everything NzZ_2qVYQlo 99~110 'this does actually fold in half … can easily be stored like under a bed in a closet' · 공식 소개 영상 12.6~14.0 화면 글 'Folding design 180°'",
+   "kind": "본인 말·리뷰·공식"
+  },
+  "f2": {
+   "text": "Ilona 원본 81.16~84.08 'And then if I stop walking it starts slowing down' · 98.44~103.32 'And if I just stop walking altogether oh oh it just stops'",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "Ilona 원본 49.04~53.28 'This is so nice. I like this.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Ilona 원본 98.44~103.32 'And if I just stop walking altogether, oh, oh, it just stops'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "집에서 드라마 틀어 놓고 걷는, 반으로 접히는 러닝머신이 있는데요.",
+    "caps": [
+     "집에서 드라마 틀어 놓고 걷는",
+     "반으로 접히는",
+     "러닝머신이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "근데 걷다가 멈추면, 벨트도 알아서 멈춘다는데요.",
+    "caps": [
+     "근데 걷다가 멈추면",
+     "벨트도 알아서 멈춘다는데요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "il",
+    "span": [
+     48.95,
+     53.4
+    ],
+    "en": "This is so nice. I like this.",
+    "caps": [
+     "이거 너무 좋다",
+     "완전 마음에 들어요"
+    ],
+    "check": "This 49.04 · this 52.60~53.28 · 다음 It's 54.60 · 화면 한 샷 41.51~132.70"
+   },
+   {
+    "id": "O2",
+    "src": "iz",
+    "span": [
+     8.38,
+     13.45
+    ],
+    "en": "And if I just stop walking altogether, oh, oh, it just stops.",
+    "caps": [
+     "아예 걸음을 멈추면…",
+     "어, 어!",
+     "그냥 멈춰 버리네!"
+    ],
+    "check": "원본 초 98.38~103.45(= iz +90) · And 98.44 · stops 102.80~103.32 · 앞 here 90.36 · 다음 I 113.56 · 화면 한 샷 41.51~132.70(100.3초 벨트 뒤로 내려섬)"
+   }
+  ],
+  "dropped": {
+   "벤치 '식후혈당관리에 좋다'": "효능 — 안 씀",
+   "벤치 '실리콘밸리 개발자들 사이에서 유행'": "근거 없음 — 안 씀",
+   "벤치 '잔고장 없이 오래 쓴다'": "근거 없음 — 안 씀",
+   "Ilona '만 보'·'cardio best'": "숫자·효능 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "slug": "foreignshowshow",
+ "ref": "https://www.youtube.com/@foreignshowshow",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": null,
+   "at": "2026-10-18",
+   "outputs": {
+    "ids": [
+     "QMJtjJz4M6w",
+     "kmQGQNJgSVo",
+     "2jJoIbdciDY",
+     "vbxJ_v132ao",
+     "hZgCO9PEnO8",
+     "mVzrvBpMu3E"
+    ]
+   },
+   "note": "뜯기 8편은 10-18 analyze.py 1판(kal.py 밖) — 06 워커가 rules 단계용 ids 만 적음(10-25)"
+  },
+  "rules": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-25 03:09",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\foreignshowshow\\_kal\\스타일분석_초안.md",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\foreignshowshow\\_kal\\foreignshowshow판_초안.json"
+   },
+   "note": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "샥탬스토리",
+ "n": 6,
+ "hybrid": "아니오"
+}

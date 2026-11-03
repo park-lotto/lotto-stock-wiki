@@ -1,0 +1,2226 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/foreignshowshow/mp4/./HI--3fL7nt4.mp4",
+ "measured_at": "2026-10-18 00:55",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 29.3,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 879,
+   "duration": 29.3,
+   "duration_container": 29.314,
+   "vcodec": "vp9",
+   "has_audio": true,
+   "asr": 48000,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   437,
+   1080,
+   1046
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   0,
+   0,
+   0
+  ],
+  "ink_polarity": "bright",
+  "caption_pos": "inside",
+  "caption_band": [
+   929,
+   988
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    150,
+    234
+   ],
+   [
+    259,
+    376
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    437,
+    1080,
+    1046
+   ],
+   "bg_rgb": [
+    0,
+    0,
+    0
+   ],
+   "bg_lum": 0.0,
+   "caption": {
+    "pos": "inside",
+    "band": [
+     929,
+     988
+    ],
+    "ink": "bright"
+   },
+   "above_bands": [
+    [
+     150,
+     234
+    ],
+    [
+     259,
+     376
+    ]
+   ],
+   "n_samples": 59,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "inside",
+    "band": [
+     929,
+     988
+    ],
+    "ink": "bright",
+    "score": 14.89,
+    "spans": 21,
+    "persist": 0.764,
+    "coverage": 0.928,
+    "change": 0.954,
+    "static": 0.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     151,
+     233
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.994,
+    "coverage": 1.0,
+    "change": 0.0,
+    "static": 0.87
+   },
+   {
+    "pos": "above",
+    "band": [
+     259,
+     375
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.999,
+    "coverage": 1.0,
+    "change": 0.0,
+    "static": 0.997
+   },
+   {
+    "pos": "above",
+    "band": [
+     151,
+     375
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.996,
+    "coverage": 1.0,
+    "change": 0.0,
+    "static": 0.958
+   },
+   {
+    "pos": "inside",
+    "band": [
+     613,
+     697
+    ],
+    "ink": "bright",
+    "score": 0.46,
+    "spans": 6,
+    "persist": 0.11,
+    "coverage": 0.703,
+    "change": 0.949,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1112,
+     1158
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.048,
+    "coverage": 0.771,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     775,
+     810
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.033,
+    "coverage": 0.662,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1121,
+     1184
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.046,
+    "coverage": 0.706,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1277,
+     1402
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.148,
+    "coverage": 0.631,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1443,
+     1483
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.0,
+    "coverage": 0.249,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1277,
+     1483
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.116,
+    "coverage": 0.635,
+    "change": 0.0,
+    "static": 0.0
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   889,
+   1028
+  ],
+  "changes": [
+   1.1,
+   1.6,
+   3.1,
+   4.7,
+   6.0,
+   6.6,
+   7.8,
+   8.4,
+   9.5,
+   10.5,
+   11.1,
+   12.4,
+   13.5,
+   14.6,
+   16.1,
+   18.2,
+   19.0,
+   20.3,
+   24.3,
+   26.0,
+   26.7,
+   27.9
+  ],
+  "spans": [
+   [
+    1.1,
+    1.6
+   ],
+   [
+    1.6,
+    3.1
+   ],
+   [
+    3.1,
+    4.7
+   ],
+   [
+    4.7,
+    6.0
+   ],
+   [
+    6.0,
+    6.6
+   ],
+   [
+    6.6,
+    7.8
+   ],
+   [
+    7.8,
+    8.4
+   ],
+   [
+    8.4,
+    9.5
+   ],
+   [
+    9.5,
+    10.5
+   ],
+   [
+    10.5,
+    11.1
+   ],
+   [
+    11.1,
+    12.4
+   ],
+   [
+    12.4,
+    13.5
+   ],
+   [
+    13.5,
+    14.6
+   ],
+   [
+    14.6,
+    16.1
+   ],
+   [
+    16.1,
+    18.2
+   ],
+   [
+    18.2,
+    19.0
+   ],
+   [
+    19.0,
+    20.3
+   ],
+   [
+    24.3,
+    26.0
+   ],
+   [
+    26.0,
+    26.7
+   ],
+   [
+    26.7,
+    27.9
+   ],
+   [
+    27.9,
+    29.3
+   ]
+  ],
+  "n_spans": 21,
+  "items": [
+   {
+    "i": 0,
+    "t0": 1.1,
+    "t1": 1.6,
+    "lines": 2,
+    "widths": [
+     698,
+     810
+    ],
+    "top_y": 918,
+    "leading": 40,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 1,
+    "t0": 1.6,
+    "t1": 3.1,
+    "lines": 1,
+    "widths": [
+     1017
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 2,
+    "t0": 3.1,
+    "t1": 4.7,
+    "lines": 1,
+    "widths": [
+     274
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 3,
+    "t0": 4.7,
+    "t1": 6.0,
+    "lines": 1,
+    "widths": [
+     495
+    ],
+    "top_y": 927,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 4,
+    "t0": 6.0,
+    "t1": 6.6,
+    "lines": 2,
+    "widths": [
+     118,
+     228
+    ],
+    "top_y": 930,
+    "leading": 34,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 5,
+    "t0": 6.6,
+    "t1": 7.8,
+    "lines": 1,
+    "widths": [
+     230
+    ],
+    "top_y": 930,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 6,
+    "t0": 7.8,
+    "t1": 8.4,
+    "lines": 1,
+    "widths": [
+     339
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 7,
+    "t0": 8.4,
+    "t1": 9.5,
+    "lines": 1,
+    "widths": [
+     190
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 8,
+    "t0": 9.5,
+    "t1": 10.5,
+    "lines": 1,
+    "widths": [
+     205
+    ],
+    "top_y": 930,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 9,
+    "t0": 10.5,
+    "t1": 11.1,
+    "lines": 1,
+    "widths": [
+     476
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 10,
+    "t0": 11.1,
+    "t1": 12.4,
+    "lines": 1,
+    "widths": [
+     943
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 11,
+    "t0": 12.4,
+    "t1": 13.5,
+    "lines": 1,
+    "widths": [
+     623
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 12,
+    "t0": 13.5,
+    "t1": 14.6,
+    "lines": 3,
+    "widths": [
+     727,
+     854,
+     847
+    ],
+    "top_y": 890,
+    "leading": 38,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 13,
+    "t0": 14.6,
+    "t1": 16.1,
+    "lines": 2,
+    "widths": [
+     737,
+     994
+    ],
+    "top_y": 889,
+    "leading": 39,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 14,
+    "t0": 16.1,
+    "t1": 18.2,
+    "lines": 1,
+    "widths": [
+     977
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 15,
+    "t0": 18.2,
+    "t1": 19.0,
+    "lines": 1,
+    "widths": [
+     568
+    ],
+    "top_y": 928,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 16,
+    "t0": 19.0,
+    "t1": 20.3,
+    "lines": 1,
+    "widths": [
+     850
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   },
+   {
+    "i": 17,
+    "t0": 24.3,
+    "t1": 26.0,
+    "lines": 1,
+    "widths": [
+     892
+    ],
+    "top_y": 906,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 18,
+    "t0": 26.0,
+    "t1": 26.7,
+    "lines": 1,
+    "widths": [
+     1055
+    ],
+    "top_y": 912,
+    "leading": null,
+    "mark": true,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 19,
+    "t0": 26.7,
+    "t1": 27.9,
+    "lines": 1,
+    "widths": [
+     1029
+    ],
+    "top_y": 994,
+    "leading": null,
+    "mark": false,
+    "text": null,
+    "truncated": true
+   },
+   {
+    "i": 20,
+    "t0": 27.9,
+    "t1": 29.3,
+    "lines": 1,
+    "widths": [
+     846
+    ],
+    "top_y": 929,
+    "leading": null,
+    "mark": true,
+    "text": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 109,
+    "stroke": 3.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 0,
+    "anim": "이동"
+   },
+   {
+    "line_h": 99,
+    "stroke": 11.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 4,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 59,
+    "stroke": 8.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 8,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 24,
+    "stroke": 2.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 12,
+    "anim": "없음"
+   },
+   {
+    "line_h": 60,
+    "stroke": 10.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 16,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 59,
+    "stroke": 1.0,
+    "outline": true,
+    "outline_px": 2,
+    "shadow": [
+     2,
+     2
+    ],
+    "i": 20,
+    "anim": "확대/축소"
+   }
+  ],
+  "unstable": [
+   [
+    0.0,
+    1.1
+   ],
+   [
+    20.3,
+    24.3
+   ]
+  ],
+  "ocr": {
+   "asked": 21,
+   "read": 0,
+   "errors": [
+    "quota",
+    "quota",
+    "quota"
+   ],
+   "models": [],
+   "failed": "quota"
+  }
+ },
+ "fonts": {
+  "failed": "OCR 글자가 없음",
+  "method": "gap_collapse+bbox_fit_iou×aspect×density",
+  "usable": 0,
+  "title": {
+   "failed": "quota"
+  },
+  "brand": {
+   "failed": "quota"
+  },
+  "title_bands": {
+   "method": "layout above_bands 크롭 → gemini OCR → fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density) + fontmatch.slant_deg",
+   "frame_t": 1.35,
+   "bands": [
+    {
+     "k": 0,
+     "band": [
+      150,
+      234
+     ],
+     "role": "brand",
+     "ink": "bright",
+     "text": [],
+     "color": {
+      "fill_rgb": [
+       255,
+       195,
+       0
+      ],
+      "outline_px": 0,
+      "outline_rgb": null,
+      "shadow": null
+     },
+     "failed": "quota"
+    },
+    {
+     "k": 1,
+     "band": [
+      259,
+      376
+     ],
+     "role": "title",
+     "ink": "bright",
+     "text": [],
+     "color": {
+      "fill_rgb": [
+       255,
+       255,
+       255
+      ],
+      "outline_px": 0,
+      "outline_rgb": null,
+      "shadow": null
+     },
+     "failed": "quota"
+    }
+   ],
+   "models": [],
+   "title": {
+    "failed": "quota"
+   },
+   "brand": {
+    "failed": "quota"
+   },
+   "channel_name_ocr": {
+    "text": null,
+    "color": null,
+    "source": "브랜드 띠 없음"
+   },
+   "failed": "제목·브랜드 띠 대조 못 함: quota; quota"
+  }
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [],
+  "glyph": [
+   {
+    "line_h": 109,
+    "stroke": 3.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 0,
+    "anim": "이동"
+   },
+   {
+    "line_h": 99,
+    "stroke": 11.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 4,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 59,
+    "stroke": 8.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 8,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 24,
+    "stroke": 2.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 12,
+    "anim": "없음"
+   },
+   {
+    "line_h": 60,
+    "stroke": 10.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 16,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 59,
+    "stroke": 1.0,
+    "outline": true,
+    "outline_px": 2,
+    "shadow": [
+     2,
+     2
+    ],
+    "i": 20,
+    "anim": "확대/축소"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   4,
+   8,
+   12,
+   16,
+   20
+  ],
+  "failed": "글꼴 대조에 쓴 크롭이 없음(OCR·줄 수 불일치)"
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 0,
+    "t0": 1.1,
+    "anim": "이동",
+    "curve": [
+     {
+      "t": 0.8,
+      "bbox": [
+       37,
+       889,
+       1043,
+       139
+      ],
+      "ink": 1596
+     },
+     {
+      "t": 0.833,
+      "bbox": [
+       66,
+       889,
+       1014,
+       139
+      ],
+      "ink": 1578
+     },
+     {
+      "t": 0.867,
+      "bbox": [
+       25,
+       889,
+       1055,
+       139
+      ],
+      "ink": 1486
+     },
+     {
+      "t": 0.9,
+      "bbox": [
+       46,
+       889,
+       1034,
+       139
+      ],
+      "ink": 1495
+     },
+     {
+      "t": 0.933,
+      "bbox": [
+       180,
+       889,
+       900,
+       139
+      ],
+      "ink": 1519
+     },
+     {
+      "t": 0.967,
+      "bbox": [
+       187,
+       889,
+       816,
+       139
+      ],
+      "ink": 1602
+     },
+     {
+      "t": 1.0,
+      "bbox": [
+       189,
+       889,
+       809,
+       139
+      ],
+      "ink": 1648
+     },
+     {
+      "t": 1.033,
+      "bbox": [
+       192,
+       889,
+       805,
+       139
+      ],
+      "ink": 1674
+     },
+     {
+      "t": 1.067,
+      "bbox": [
+       162,
+       889,
+       832,
+       139
+      ],
+      "ink": 1705
+     },
+     {
+      "t": 1.1,
+      "bbox": [
+       155,
+       889,
+       837,
+       139
+      ],
+      "ink": 1764
+     },
+     {
+      "t": 1.133,
+      "bbox": [
+       152,
+       889,
+       836,
+       139
+      ],
+      "ink": 1768
+     },
+     {
+      "t": 1.167,
+      "bbox": [
+       154,
+       889,
+       832,
+       139
+      ],
+      "ink": 1726
+     },
+     {
+      "t": 1.2,
+      "bbox": [
+       193,
+       889,
+       791,
+       139
+      ],
+      "ink": 1688
+     },
+     {
+      "t": 1.233,
+      "bbox": [
+       187,
+       889,
+       791,
+       139
+      ],
+      "ink": 1664
+     },
+     {
+      "t": 1.267,
+      "bbox": [
+       180,
+       889,
+       796,
+       139
+      ],
+      "ink": 1682
+     },
+     {
+      "t": 1.3,
+      "bbox": [
+       175,
+       889,
+       802,
+       139
+      ],
+      "ink": 1650
+     },
+     {
+      "t": 1.333,
+      "bbox": [
+       139,
+       889,
+       832,
+       139
+      ],
+      "ink": 1658
+     },
+     {
+      "t": 1.367,
+      "bbox": [
+       136,
+       889,
+       833,
+       139
+      ],
+      "ink": 1719
+     },
+     {
+      "t": 1.4,
+      "bbox": [
+       151,
+       889,
+       816,
+       139
+      ],
+      "ink": 1711
+     }
+    ]
+   },
+   {
+    "caption": 10,
+    "t0": 11.1,
+    "anim": "확대/축소",
+    "curve": [
+     {
+      "t": 10.8,
+      "bbox": [
+       70,
+       889,
+       608,
+       119
+      ],
+      "ink": 1606
+     },
+     {
+      "t": 10.833,
+      "bbox": [
+       69,
+       889,
+       609,
+       121
+      ],
+      "ink": 1612
+     },
+     {
+      "t": 10.867,
+      "bbox": [
+       73,
+       889,
+       646,
+       117
+      ],
+      "ink": 1614
+     },
+     {
+      "t": 10.9,
+      "bbox": [
+       76,
+       889,
+       643,
+       111
+      ],
+      "ink": 1620
+     },
+     {
+      "t": 10.933,
+      "bbox": [
+       79,
+       889,
+       640,
+       108
+      ],
+      "ink": 1583
+     },
+     {
+      "t": 10.967,
+      "bbox": [
+       82,
+       889,
+       637,
+       105
+      ],
+      "ink": 1576
+     },
+     {
+      "t": 11.0,
+      "bbox": [
+       85,
+       889,
+       634,
+       103
+      ],
+      "ink": 1579
+     },
+     {
+      "t": 11.033,
+      "bbox": [
+       88,
+       891,
+       631,
+       98
+      ],
+      "ink": 1579
+     },
+     {
+      "t": 11.067,
+      "bbox": [
+       0,
+       925,
+       680,
+       103
+      ],
+      "ink": 743
+     },
+     {
+      "t": 11.1,
+      "bbox": [
+       1,
+       925,
+       596,
+       102
+      ],
+      "ink": 402
+     },
+     {
+      "t": 11.133,
+      "bbox": [
+       1,
+       925,
+       604,
+       102
+      ],
+      "ink": 480
+     },
+     {
+      "t": 11.167,
+      "bbox": [
+       1,
+       925,
+       901,
+       102
+      ],
+      "ink": 1373
+     },
+     {
+      "t": 11.2,
+      "bbox": [
+       1,
+       925,
+       950,
+       102
+      ],
+      "ink": 3203
+     },
+     {
+      "t": 11.233,
+      "bbox": [
+       1,
+       926,
+       950,
+       102
+      ],
+      "ink": 3216
+     },
+     {
+      "t": 11.267,
+      "bbox": [
+       2,
+       925,
+       949,
+       103
+      ],
+      "ink": 3205
+     },
+     {
+      "t": 11.3,
+      "bbox": [
+       2,
+       925,
+       949,
+       103
+      ],
+      "ink": 3208
+     },
+     {
+      "t": 11.333,
+      "bbox": [
+       2,
+       925,
+       949,
+       103
+      ],
+      "ink": 3208
+     },
+     {
+      "t": 11.367,
+      "bbox": [
+       2,
+       925,
+       949,
+       103
+      ],
+      "ink": 3205
+     },
+     {
+      "t": 11.4,
+      "bbox": [
+       2,
+       925,
+       949,
+       103
+      ],
+      "ink": 3199
+     }
+    ]
+   },
+   {
+    "caption": 20,
+    "t0": 27.9,
+    "anim": "확대/축소",
+    "curve": [
+     {
+      "t": 27.6,
+      "bbox": [
+       0,
+       889,
+       1080,
+       139
+      ],
+      "ink": 575
+     },
+     {
+      "t": 27.633,
+      "bbox": [
+       0,
+       889,
+       1051,
+       139
+      ],
+      "ink": 566
+     },
+     {
+      "t": 27.667,
+      "bbox": [
+       0,
+       889,
+       1051,
+       139
+      ],
+      "ink": 550
+     },
+     {
+      "t": 27.7,
+      "bbox": [
+       0,
+       889,
+       1051,
+       139
+      ],
+      "ink": 514
+     },
+     {
+      "t": 27.733,
+      "bbox": [
+       0,
+       889,
+       1051,
+       139
+      ],
+      "ink": 513
+     },
+     {
+      "t": 27.767,
+      "bbox": [
+       0,
+       889,
+       1051,
+       139
+      ],
+      "ink": 507
+     },
+     {
+      "t": 27.8,
+      "bbox": [
+       0,
+       889,
+       1052,
+       139
+      ],
+      "ink": 576
+     },
+     {
+      "t": 27.833,
+      "bbox": [
+       0,
+       889,
+       1052,
+       139
+      ],
+      "ink": 570
+     },
+     {
+      "t": 27.867,
+      "bbox": [
+       0,
+       889,
+       1052,
+       139
+      ],
+      "ink": 550
+     },
+     {
+      "t": 27.9,
+      "bbox": [
+       0,
+       889,
+       1052,
+       139
+      ],
+      "ink": 666
+     },
+     {
+      "t": 27.933,
+      "bbox": [
+       0,
+       889,
+       1052,
+       139
+      ],
+      "ink": 2509
+     },
+     {
+      "t": 27.967,
+      "bbox": [
+       118,
+       929,
+       856,
+       99
+      ],
+      "ink": 3887
+     },
+     {
+      "t": 28.0,
+      "bbox": [
+       118,
+       929,
+       856,
+       99
+      ],
+      "ink": 3882
+     },
+     {
+      "t": 28.033,
+      "bbox": [
+       118,
+       929,
+       855,
+       99
+      ],
+      "ink": 3852
+     },
+     {
+      "t": 28.067,
+      "bbox": [
+       118,
+       929,
+       847,
+       99
+      ],
+      "ink": 3835
+     },
+     {
+      "t": 28.1,
+      "bbox": [
+       118,
+       929,
+       847,
+       99
+      ],
+      "ink": 3842
+     },
+     {
+      "t": 28.133,
+      "bbox": [
+       118,
+       929,
+       847,
+       98
+      ],
+      "ink": 3842
+     },
+     {
+      "t": 28.167,
+      "bbox": [
+       118,
+       929,
+       847,
+       99
+      ],
+      "ink": 3810
+     },
+     {
+      "t": 28.2,
+      "bbox": [
+       118,
+       929,
+       847,
+       99
+      ],
+      "ink": 3816
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -8.0,
+   "LRA": 1.5,
+   "TP": 1.0,
+   "S_spread": 1.2,
+   "S_n": 264,
+   "open3s_M": -7.9,
+   "rest_M": -8.1,
+   "hf_8k16k_dbfs": -30.13,
+   "openvoice": {
+    "floor_db": -20.23,
+    "open": 12.59,
+    "body": 12.62
+   }
+  },
+  "ok": true,
+  "transcript": {
+   "failed": "quota"
+  },
+  "composition": {
+   "failed": "받아쓰기 실패(quota)"
+  }
+ },
+ "script_tone": {
+  "failed": "받아쓰기 실패(quota)"
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   6.0,
+   7.633,
+   10.533,
+   11.066,
+   12.366,
+   13.533,
+   18.233,
+   19.033,
+   20.266,
+   22.3,
+   23.133,
+   24.2,
+   25.133,
+   27.966
+  ],
+  "shots": 15,
+  "shot_len": {
+   "median": 1.3,
+   "p10": 0.81,
+   "p90": 3.98
+  },
+  "first_cut": 6.0,
+  "cut_per_min": 28.7,
+  "cut_eq_sub": [
+   11,
+   14
+  ],
+  "cut_eq_sub_rate": 0.786,
+  "zoom": {
+   "n": 118,
+   "median_rate_pct_s": -0.08,
+   "p90_abs_rate_pct_s": 4.05,
+   "zoomin_frac": 0.127,
+   "zoomout_frac": 0.22
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    4.733,
+    6.0,
+    6.5,
+    7.633,
+    7.733,
+    7.833,
+    9.433,
+    10.533,
+    11.066,
+    12.366,
+    12.466,
+    13.533,
+    17.7,
+    18.233,
+    19.033,
+    20.266,
+    22.3,
+    23.133,
+    24.2,
+    25.133,
+    27.966
+   ],
+   "raw_stats": {
+    "shots": 22,
+    "first_cut": 4.73,
+    "cut_std": 1.17,
+    "cut_eq_sub": [
+     17,
+     21
+    ]
+   },
+   "candidates": [
+    4.733,
+    6.0,
+    6.5,
+    7.633,
+    7.833,
+    9.433,
+    10.533,
+    11.066,
+    12.366,
+    13.533,
+    17.7,
+    18.233,
+    19.033,
+    20.266,
+    22.3,
+    23.133,
+    24.2,
+    25.133,
+    27.966
+   ],
+   "corr": [
+    0.785,
+    0.187,
+    0.982,
+    0.274,
+    0.687,
+    0.766,
+    -0.031,
+    -0.059,
+    -0.104,
+    0.198,
+    0.947,
+    0.238,
+    0.403,
+    0.091,
+    0.091,
+    0.24,
+    0.054,
+    0.142,
+    0.157
+   ],
+   "cuts": [
+    6.0,
+    7.633,
+    10.533,
+    11.066,
+    12.366,
+    13.533,
+    18.233,
+    19.033,
+    20.266,
+    22.3,
+    23.133,
+    24.2,
+    25.133,
+    27.966
+   ],
+   "bg_gray": null,
+   "detected": [
+    4.733,
+    6.0,
+    6.5,
+    7.633,
+    7.733,
+    7.833,
+    9.433,
+    10.533,
+    11.066,
+    12.366,
+    12.466,
+    13.533,
+    17.7,
+    18.233,
+    19.033,
+    20.266,
+    22.3,
+    23.133,
+    24.2,
+    25.133,
+    27.966
+   ],
+   "moved": [],
+   "merged_out": [
+    7.733,
+    12.466
+   ],
+   "rejected": [
+    4.733,
+    6.5,
+    7.833,
+    9.433,
+    17.7
+   ],
+   "shots": 15,
+   "shot_median": 1.3,
+   "shot_min": 0.53,
+   "shot_max": 6.0,
+   "first_cut": 6.0,
+   "cut_std": 1.51,
+   "cut_per_min": 28.7,
+   "cut_eq_sub": [
+    11,
+    14
+   ],
+   "longest_still": 2.1,
+   "event_gap_med": 1.1,
+   "zoom": {
+    "n": 118,
+    "median_rate_pct_s": -0.08,
+    "p90_abs_rate_pct_s": 4.05,
+    "zoomin_frac": 0.127,
+    "zoomout_frac": 0.22
+   }
+  },
+  "picture_boxes": {
+   "per_shot": [
+    {
+     "shot": 0,
+     "t": [
+      0.0,
+      6.0
+     ],
+     "box": [
+      0,
+      435,
+      1080,
+      1050
+     ]
+    },
+    {
+     "shot": 1,
+     "t": [
+      6.0,
+      7.63
+     ],
+     "box": [
+      0,
+      438,
+      504,
+      573
+     ]
+    },
+    {
+     "shot": 2,
+     "t": [
+      7.63,
+      10.53
+     ],
+     "box": [
+      0,
+      438,
+      957,
+      1044
+     ]
+    },
+    {
+     "shot": 3,
+     "t": [
+      10.53,
+      11.07
+     ],
+     "box": [
+      0,
+      438,
+      348,
+      369
+     ]
+    },
+    {
+     "shot": 4,
+     "t": [
+      11.07,
+      12.37
+     ],
+     "box": [
+      138,
+      438,
+      942,
+      696
+     ]
+    },
+    {
+     "shot": 5,
+     "t": [
+      12.37,
+      13.53
+     ],
+     "box": [
+      0,
+      579,
+      1080,
+      906
+     ]
+    },
+    {
+     "shot": 6,
+     "t": [
+      13.53,
+      18.23
+     ],
+     "box": [
+      72,
+      750,
+      777,
+      306
+     ]
+    },
+    {
+     "shot": 7,
+     "t": [
+      18.23,
+      19.03
+     ],
+     "box": [
+      0,
+      852,
+      1035,
+      342
+     ]
+    },
+    {
+     "shot": 8,
+     "t": [
+      19.03,
+      20.27
+     ],
+     "box": [
+      462,
+      585,
+      393,
+      426
+     ]
+    },
+    {
+     "shot": 9,
+     "t": [
+      20.27,
+      22.3
+     ],
+     "box": [
+      0,
+      438,
+      1080,
+      1044
+     ]
+    },
+    {
+     "shot": 10,
+     "t": [
+      22.3,
+      23.13
+     ],
+     "box": [
+      177,
+      723,
+      822,
+      249
+     ]
+    },
+    {
+     "shot": 11,
+     "t": [
+      23.13,
+      24.2
+     ],
+     "box": [
+      0,
+      438,
+      1080,
+      621
+     ]
+    },
+    {
+     "shot": 12,
+     "t": [
+      24.2,
+      25.13
+     ],
+     "box": [
+      0,
+      438,
+      1080,
+      1044
+     ]
+    },
+    {
+     "shot": 13,
+     "t": [
+      25.13,
+      27.97
+     ],
+     "box": [
+      342,
+      438,
+      663,
+      288
+     ]
+    },
+    {
+     "shot": 14,
+     "t": [
+      27.97,
+      29.3
+     ],
+     "box": [
+      0,
+      438,
+      1080,
+      744
+     ]
+    }
+   ],
+   "mode": [
+    0,
+    440,
+    1080,
+    1040
+   ],
+   "mode_share": 0.2,
+   "range": {
+    "x": [
+     0,
+     462
+    ],
+    "y": [
+     435,
+     852
+    ],
+    "w": [
+     348,
+     1080
+    ],
+    "h": [
+     249,
+     1050
+    ]
+   },
+   "kinds": 13,
+   "method": "bench.layout.picture_box(컷 가운데 프레임, 바탕색과 다른 화소 행·열 50%)"
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     6.0
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 1,
+    "t": [
+     6.0,
+     7.63
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 2,
+    "t": [
+     7.63,
+     10.53
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 3,
+    "t": [
+     10.53,
+     11.07
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 4,
+    "t": [
+     11.07,
+     12.37
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 5,
+    "t": [
+     12.37,
+     13.53
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 6,
+    "t": [
+     13.53,
+     18.23
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 7,
+    "t": [
+     18.23,
+     19.03
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 8,
+    "t": [
+     19.03,
+     20.27
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 9,
+    "t": [
+     20.27,
+     22.3
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 10,
+    "t": [
+     22.3,
+     23.13
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 11,
+    "t": [
+     23.13,
+     24.2
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 12,
+    "t": [
+     24.2,
+     25.13
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 13,
+    "t": [
+     25.13,
+     27.97
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   },
+   {
+    "shot": 14,
+    "t": [
+     27.97,
+     29.3
+    ],
+    "kind": null,
+    "why": null,
+    "model": null,
+    "failed": "quota"
+   }
+  ],
+  "share_by_time": {},
+  "share_by_count": {},
+  "models": [],
+  "failed": "quota",
+  "errors": [
+   "quota",
+   "quota"
+  ]
+ },
+ "sfx_rules": {
+  "failed": "받아쓰기 실패(quota)"
+ },
+ "bgm_rules": {
+  "failed": "제미나이 배경음악 판독 없음",
+  "end": {
+   "fade": false,
+   "last0.5s_db": -11.6,
+   "prev_db": -11.4,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  }
+ },
+ "voice_rules": {
+  "failed": "받아쓰기 실패(quota)"
+ },
+ "overlay_rules": {
+  "failed": "quota",
+  "method": "gemini_free.ask 1초 프레임"
+ },
+ "unknown": [
+  "자막 OCR 일부 실패: ['quota', 'quota', 'quota']",
+  "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 10개: [0, 1, 3, 6, 12, 13, 14, 17, 18, 19]",
+  "자막 글자 못 읽음 21/21개",
+  "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+  "글꼴: OCR 글자가 없음",
+  "받아쓰기 실패: quota",
+  "소리 구성 실패: 받아쓰기 실패(quota)",
+  "제작법 판독 실패: 컷 0 (quota)",
+  "제작법 판독 실패: 컷 1 (quota)",
+  "제작법 판독 실패: 컷 2 (quota)",
+  "제작법 판독 실패: 컷 3 (quota)",
+  "제작법 판독 실패: 컷 4 (quota)",
+  "제작법 판독 실패: 컷 5 (quota)",
+  "제작법 판독 실패: 컷 6 (quota)",
+  "제작법 판독 실패: 컷 7 (quota)",
+  "제작법 판독 실패: 컷 8 (quota)",
+  "제작법 판독 실패: 컷 9 (quota)",
+  "제작법 판독 실패: 컷 10 (quota)",
+  "제작법 판독 실패: 컷 11 (quota)",
+  "제작법 판독 실패: 컷 12 (quota)",
+  "제작법 판독 실패: 컷 13 (quota)",
+  "제작법 판독 실패: 컷 14 (quota)",
+  "sfx_rules: 받아쓰기 실패(quota)",
+  "bgm_rules: 제미나이 배경음악 판독 없음",
+  "voice_rules: 받아쓰기 실패(quota)",
+  "overlay_rules: quota"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr0",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "ocr1",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "ocr2",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "title0",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "asr",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "mat0",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "mat1",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "ov0",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "ov1",
+   "failed": "quota",
+   "day": "2026-10-17"
+  },
+  {
+   "tag": "ov2",
+   "failed": "quota",
+   "day": "2026-10-17"
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.1,
+  "layout": 169.8,
+  "captions": 13.6,
+  "fonts_fx": 0.8,
+  "caption_motion": 1.9,
+  "audio_tone": 1.0,
+  "cuts_materials": 14.1,
+  "rules": 8.9,
+  "total": 210.3
+ }
+}

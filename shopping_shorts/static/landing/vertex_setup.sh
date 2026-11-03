@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 숏템메이커 — 구글 버텍스 API 자동 설정 (관제 096, 2026-10-03)
 # 구글 클라우드 셸에서 한 줄로 실행한다:
-#   curl -fsSL https://shoppingshorts.duckdns.org/landing/vertex_setup.sh | bash
+#   curl -fsSL https://stmaker.kr/landing/vertex_setup.sh | bash
 # 설명서 ⑧의 2~4단계(API 사용 · 서비스 계정 · 역할 · 키 생성 차단 풀기 · 키 만들기)를 대신 한다.
 # 1단계(무료 체험 가입 = 결제 계정)는 본인 확인이라 대신 못 한다 — 없으면 안내하고 멈춘다.
 # 만든 것은 전부 이 스크립트 전용 프로젝트(라벨 shortsmaker=1) 안에만 둔다. 다른 프로젝트는 건드리지 않는다.
@@ -40,8 +40,12 @@ main() {
 
   # ── 2. 전용 프로젝트 ───────────────────────────────────────
   say "2/5 숏템메이커 전용 프로젝트 준비"
-  local PID
-  PID=$(gcloud projects list --filter="labels.$LABEL lifecycleState=ACTIVE" --format='value(projectId)' 2>/dev/null | head -1)
+  local PID="" p
+  # 전용 프로젝트가 여럿이면(예전 실패로 생긴 것) 결제가 붙은 것을 먼저 쓴다
+  for p in $(gcloud projects list --filter="labels.$LABEL lifecycleState=ACTIVE" --format='value(projectId)' 2>/dev/null); do
+    [ -z "$PID" ] && PID="$p"
+    if [ "$(gcloud billing projects describe "$p" --format='value(billingEnabled)' 2>/dev/null)" = "True" ]; then PID="$p"; break; fi
+  done
   if [ -n "$PID" ]; then
     ok "이미 만든 프로젝트를 씁니다: $PID"
   else
@@ -57,8 +61,30 @@ main() {
   LINKED=$(gcloud billing projects describe "$PID" --format='value(billingEnabled)' 2>/dev/null)
   if [ "$LINKED" != "True" ]; then
     if ! gcloud billing projects link "$PID" --billing-account="$BA" >/dev/null 2>/tmp/ss_err; then
-      cat /tmp/ss_err
-      die "프로젝트에 결제 계정을 붙이지 못했습니다(위 메시지)."; return 1
+      if ! grep -qi 'quota' /tmp/ss_err; then
+        cat /tmp/ss_err
+        die "프로젝트에 결제 계정을 붙이지 못했습니다(위 메시지)."; return 1
+      fi
+      # 무료 체험 결제 계정은 붙일 수 있는 프로젝트 수가 적다 → 이미 결제가 붙은 프로젝트를 쓴다
+      warn "결제 계정에 붙일 수 있는 프로젝트 수가 꽉 찼습니다 — 이미 결제가 붙은 프로젝트를 씁니다"
+      local -a LP=()
+      mapfile -t LP < <(gcloud billing projects list --billing-account="$BA" --format='value(projectId)' 2>/dev/null)
+      if [ ${#LP[@]} -eq 0 ]; then
+        die "결제가 붙은 프로젝트가 없어 이어갈 수 없습니다. 아래 주소에서 한도 늘리기를 신청해 주세요:
+     https://support.google.com/code/contact/billing_quota_increase"; return 1
+      fi
+      local pick=1 i
+      if [ ${#LP[@]} -gt 1 ]; then
+        printf '\n  숏템메이커에 쓸 프로젝트 번호를 고르세요(모르면 그냥 엔터):\n'
+        for i in "${!LP[@]}"; do printf '    %d) %s\n' $((i+1)) "${LP[$i]}"; done
+        { read -r -p "  번호 [1]: " pick </dev/tty 2>/dev/tty; } 2>/dev/null || pick=1
+        [[ "$pick" =~ ^[0-9]+$ ]] && [ "$pick" -ge 1 ] && [ "$pick" -le ${#LP[@]} ] || pick=1
+      fi
+      gcloud projects update "$PID" --remove-labels=shortsmaker --quiet >/dev/null 2>&1
+      PID="${LP[$((pick-1))]}"
+      gcloud projects update "$PID" --update-labels="$LABEL" --quiet >/dev/null 2>&1
+      gcloud config set project "$PID" >/dev/null 2>&1
+      ok "이 프로젝트를 씁니다: $PID"
     fi
   fi
   ok "결제 연결됨"

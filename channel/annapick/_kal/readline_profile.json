@@ -1,0 +1,13 @@
+{
+ "_what": "안나픽(annapick) 줄판독 build_lr 채널 값 — 06 워커 10-25(관제 263). readline_tools/profiles 는 tools/ 라 손대지 않고(지시서 06 '만질 파일') 이 파일을 --profile 로 넘긴다. 07/13 이 profiles/annapick.json 으로 옮기면 된다.",
+ "_bands": "자막 자리가 편마다 다르다(뜯기 caption_band 1049~1410) → capseg 띠 = 편마다 뜯기 caption_band±100(창 아래 끝 1500 에서 자름, spec MEASURE_BAND) · cutdet 창 420~1500(영상 창 0,419,1080×1082)",
+ "layer": "안나픽",
+ "measure_band": [1166, 1449],
+ "font": {"name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다", "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"},
+ "hand_font": {"name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)", "basis": "눈"},
+ "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+ "hand_outline": "검정 약 2px(눈)",
+ "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+ "made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 30fps·cutdet --v2·px·rangesheet 0.2초/1프레임 등장 시트) 2026-10-25 (관제 263 지시서 06)",
+ "cutdet_window": [420, 1500]
+}

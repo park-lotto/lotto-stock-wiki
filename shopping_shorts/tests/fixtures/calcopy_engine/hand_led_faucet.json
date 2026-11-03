@@ -1,0 +1,85 @@
+{
+ "name": "hand_led_faucet",
+ "who": "hand",
+ "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+ "slug": "sseolpulda",
+ "mode": "captions",
+ "topic": "LED 세면대 수도꼭지(Kaiping Austler 'LED Basin Faucet' — 꼭대기 원판이 당기면 호스째 빠지는 헤드, 곧은 물·아치·샤워 물줄기, 몸통에 불 들어옴)",
+ "title": null,
+ "lines": [
+  {
+   "fn": "발견 맥락(어디서 보고 알게 됐나)",
+   "text": "해외 댓글이 블루투스 물이라고 난리길래",
+   "facts": [
+    "f1",
+    "f1b"
+   ]
+  },
+  {
+   "fn": "의심(처음엔 안 믿음)",
+   "text": "그냥 장식인가 싶었는데",
+   "facts": [
+    "f2"
+   ]
+  },
+  {
+   "fn": "반전 시연(그냥 대기만 하면)",
+   "text": "위 뚜껑을 쭉 당기면",
+   "facts": [
+    "f3"
+   ]
+  },
+  {
+   "fn": "결과 과장(평범한 물건이 뭐로 변함)",
+   "text": "숨어 있던 호스 샤워기로 변신함;;",
+   "facts": [
+    "f3"
+   ]
+  },
+  {
+   "fn": "감탄",
+   "text": "분수처럼 솟는 것도 미쳤네",
+   "facts": [
+    "f4"
+   ]
+  },
+  {
+   "fn": "인정·댓글유도",
+   "text": "이거 갖고 싶은 거 인정?",
+   "facts": [
+    "f5"
+   ]
+  }
+ ],
+ "facts": {
+  "f1": {
+   "text": "최다 조회 영상 1위 댓글(좋아요 1,500) 'Bro has Bluetooth water 😭' · 'I thought that was wireless water for a second'(170) · 'The Bluetooth water have been successfully connected'(64)",
+   "url": "https://www.youtube.com/shorts/imWT_7NJJZ0"
+  },
+  "f1b": {
+   "text": "같은 농담이 다른 편에도: 'Water transmitted via Bluetooth'(16) · 'The Bluetooth has connected successful'",
+   "url": "https://www.youtube.com/shorts/0eYIz21Eqeo · https://www.youtube.com/shorts/FoGNFCbgpuc"
+  },
+  "f2": {
+   "text": "꼭대기 원판이 뚜껑처럼 얹혀 있음(영상 첫 화면 — 장식인가 하는 건 화자의 첫인상, 사실 주장 아님) · 댓글 'Since when did a faucet need to have an led in it'(22)",
+   "url": "https://www.youtube.com/shorts/R6UXZIOrraQ"
+  },
+  "f3": {
+   "text": "손으로 원판을 위로 당기면 호스가 딸려 나오는 헤드(영상 6.2~7.2초, 같은 회사 다른 편 7.2초)",
+   "url": "https://www.youtube.com/shorts/R6UXZIOrraQ · https://www.youtube.com/shorts/nY1rpnWvrvs"
+  },
+  "f4": {
+   "text": "같은 헤드에서 곧은 물·위로 솟는 아치 물줄기·샤워 물줄기가 나옴(imWT 0.7/3.7/6.2초, xL5R 1.7~3.7초)",
+   "url": "https://www.youtube.com/shorts/imWT_7NJJZ0 · https://www.youtube.com/shorts/xL5RlHymHaQ"
+  },
+  "f5": {
+   "text": "갖고 싶다는 반응: 'I low-key need this'(59) · 'My mom needs that'(30) · 'Want one now!'(13) · 'I need this for my washbasin'(45)",
+   "url": "https://www.youtube.com/shorts/imWT_7NJJZ0 · https://www.youtube.com/shorts/MIabJzrvWzA · https://www.youtube.com/shorts/UVrvD3OOrJA"
+  }
+ },
+ "bench": {
+  "points": {},
+  "texts": []
+ },
+ "from": "channel/sseolpulda/새소재_ledfaucet/대본.json"
+}

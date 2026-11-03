@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/25_IWalk/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "pat.mp4",
+   "ss": 13.0,
+   "cuts": [
+    {
+     "src": "pat.mp4",
+     "ss": 13.0,
+     "dur": 3.188,
+     "block": "N1",
+     "src_crop": [
+      253,
+      0,
+      794,
+      1000
+     ]
+    },
+    {
+     "src": "kr.mp4",
+     "ss": 46.0,
+     "dur": 6.25,
+     "block": "O1",
+     "src_crop": [
+      680,
+      180,
+      572,
+      720
+     ]
+    },
+    {
+     "src": "pat.mp4",
+     "ss": 43.55,
+     "dur": 3.226,
+     "block": "N2",
+     "src_crop": [
+      190,
+      0,
+      794,
+      1000
+     ]
+    },
+    {
+     "src": "kr.mp4",
+     "ss": 79.0,
+     "dur": 5.8,
+     "block": "O2",
+     "src_crop": [
+      730,
+      180,
+      572,
+      720
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "pat",
+   "ss": 13.0,
+   "vs": 0.0,
+   "src_crop": [
+    253,
+    0,
+    794,
+    1000
+   ],
+   "why": "Pat 이 iWALK3.0 을 끼고 카메라 쪽으로 걸어옴(12.0~21.29 한 샷) — 무릎 받침·외다리 전체가 보임, 오른아래 표식 crop 밖",
+   "ve": 3.188,
+   "src_end": 16.188
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "kr",
+   "ss": 46.0,
+   "vs": 3.188,
+   "src_crop": [
+    680,
+    180,
+    572,
+    720
+   ],
+   "why": "Kristi 첫 걸음 + 'this isn't so bad … pretty easy'(8.27~78.2 한 샷, 그림 상자 안)",
+   "ve": 9.438,
+   "src_end": 52.25
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "pat",
+   "ss": 43.55,
+   "vs": 9.438,
+   "src_crop": [
+    190,
+    0,
+    794,
+    1000
+   ],
+   "why": "Pat 이 iWALK 끼고 서서 두 손으로 식기세척기 정리(43.51~47.25 한 샷, 얼굴 거의 안 보임)",
+   "ve": 12.664,
+   "src_end": 46.776
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "kr",
+   "ss": 79.0,
+   "vs": 12.664,
+   "src_crop": [
+    730,
+    180,
+    572,
+    720
+   ],
+   "why": "Kristi 가 두 팔을 벌리고 걸으며 'No hands and my cup of coffee'(78.95 디졸브 끝~102.0 한 샷)",
+   "ve": 18.464,
+   "src_end": 84.8
+  }
+ ]
+}

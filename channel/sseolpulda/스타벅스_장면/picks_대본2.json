@@ -1,0 +1,9 @@
+{"lines":[
+ {"i":0,"kind":"photo","src":"cand/04/p0.jpg","zoom":true,"meme":"놀람"},
+ {"i":1,"kind":"photo","src":"cand/04/p1.jpg","zoom":true},
+ {"i":2,"kind":"photo","src":"cand/01/p3.jpg","zoom":true},
+ {"i":3,"kind":"photo","src":"cand/03/p0.jpg","zoom":true,"bw":true},
+ {"i":4,"kind":"photo","src":"cand/04/p2.jpg","zoom":true},
+ {"i":5,"kind":"photo","src":"cand/01/p2.jpg","zoom":true},
+ {"i":6,"kind":"video","src":"cand/v_DD0NQBw--Qs.mp4","start":25.0,"meme":"웃음"}
+]}

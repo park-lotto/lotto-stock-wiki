@@ -1,0 +1,487 @@
+{
+ "slug": "kkultemnote",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "꿀템노트",
+ "brand": null,
+ "brand_note": "우리 채널 = 얜샷템(꿀템노트판)",
+ "format": "연예인쇼핑형",
+ "subformat": "대화형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/calcopy/hybrid/styles/꿀템노트판.json",
+  "style_error": null,
+  "renderer": "bench",
+  "entry": "tools/calcopy/hybrid/run.py <키> render --version 꿀템노트판",
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/kkultemnote/하이브리드_성시경/render_kkt.py(옛)"
+  ],
+  "caption_pack": "kkultemnote",
+  "voice": "박창수",
+  "bgm": "honwaka_puppu"
+ },
+ "sample": {
+  "line_reads": 8,
+  "line_reads_strict_errors": 300,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": true,
+  "sfx_events": false,
+  "tteutgi": 9,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
+   "confidence": "판"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm○",
+   "confidence": "측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm○ sfx○",
+   "confidence": "측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme○ pointer○",
+   "confidence": "측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "꿀템노트",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "○",
+  "scene_fit": "×",
+  "bgm": "○",
+  "sfx": "○",
+  "meme": "○",
+  "sticker": "×",
+  "pointer": "○",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json caption.pack",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json placement.rules.variants",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A1"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 1.2초 · p90 1.97초",
+   "k": 9,
+   "n": 9,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/kkultemnote/뜯기 9편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "꿀템노트판.json cuts",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A5"
+  },
+  {
+   "element": "bgm",
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 7,
+   "n": 8,
+   "rate": 0.88,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/kkultemnote/뜯기 9편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "꿀템노트판.json bgm.db_below_voice",
+   "engine_support": "△",
+   "engine_gap": "A4"
+  },
+  {
+   "element": "sfx",
+   "cond": "편 단위",
+   "action": "효과음 후보 중앙 0.134 발/초",
+   "k": 8,
+   "n": 9,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/kkultemnote/뜯기 9편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "꿀템노트판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "meme",
+   "cond": "전체 줄",
+   "action": "짤 스티커",
+   "k": 0,
+   "n": 149,
+   "rate": 0.0,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/kkultemnote/줄판독 8편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "pointer",
+   "cond": "전체 줄",
+   "action": "원·화살표 스티커 (기타(원본박힘 손글씨 )",
+   "k": 1,
+   "n": 149,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/kkultemnote/줄판독 8편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "render_bench thumb.stamp_video(판 칸 없음)",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json cps_target",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-kkultemnote",
+   "engine_cell": "꿀템노트판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "연예인형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "line_reads": 8,
+  "line_reads_strict_errors": 300,
+  "rules_freq": false,
+  "style_analysis": true,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": "tools/calcopy/hybrid/styles/꿀템노트판.json",
+  "style_file_exists": true,
+  "renderer": "bench",
+  "caption_pack": "kkultemnote",
+  "caption_pack_ok": true,
+  "counted_n": 8,
+  "no_why": [
+   "caption.chunk_max_chars",
+   "cps_target",
+   "cuts.push_orig",
+   "cuts.push_tts",
+   "frame.bg",
+   "frame.comment.bottom",
+   "frame.comment.px",
+   "frame.credit.ink_top",
+   "frame.credit.px",
+   "frame.title.0.ink_top",
+   "frame.title.0.max_w",
+   "frame.title.0.px",
+   "frame.title.1.ink_top",
+   "frame.title.1.max_w",
+   "frame.title.1.px",
+   "frame.window",
+   "length.max",
+   "length.min",
+   "loudness.lufs",
+   "loudness.tp",
+   "sfx_files.gain_db",
+   "timing.gap_after_orig",
+   "timing.gap_after_tts",
+   "timing.tail"
+  ],
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/kkultemnote/하이브리드_성시경/render_kkt.py(옛)"
+  ],
+  "unmeasured": 10,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "연예인형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/kkultemnote/뜯기/2wJTffElmjk/뜯기.json": "27e6709d509b",
+  "channel/kkultemnote/뜯기/653bTRm8p6E/뜯기.json": "2cf853360187",
+  "channel/kkultemnote/뜯기/BpUOIUwkoG4/뜯기.json": "4a6c07a641b6",
+  "channel/kkultemnote/뜯기/KCxJ5qJft38/뜯기.json": "8fa25580b0e7",
+  "channel/kkultemnote/뜯기/Oppj-2LxcrM/뜯기.json": "6423a4c43893",
+  "channel/kkultemnote/뜯기/_dzncUms1yQ/뜯기.json": "ac1cbff56484",
+  "channel/kkultemnote/뜯기/cLk6fJly6OY/뜯기.json": "f1cd89a3fa18",
+  "channel/kkultemnote/뜯기/m0Ex0y1DN5s/뜯기.json": "ea9414950b67",
+  "channel/kkultemnote/뜯기/znHaConczpE/뜯기.json": "632928a1b120",
+  "channel/kkultemnote/줄판독/2wJTffElmjk.json": "8a6b45b67e23",
+  "channel/kkultemnote/줄판독/653bTRm8p6E.json": "6d5157787eaf",
+  "channel/kkultemnote/줄판독/BpUOIUwkoG4.json": "969a838f9d4e",
+  "channel/kkultemnote/줄판독/KCxJ5qJft38.json": "7a5cedb2dcd2",
+  "channel/kkultemnote/줄판독/_dzncUms1yQ.json": "fce96e09183d",
+  "channel/kkultemnote/줄판독/cLk6fJly6OY.json": "4de6877e6194",
+  "channel/kkultemnote/줄판독/m0Ex0y1DN5s.json": "b18275200e2a",
+  "channel/kkultemnote/줄판독/znHaConczpE.json": "40027876d7ac",
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
+  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
+  "tools/calcopy/hybrid/styles/꿀템노트판.json": "e1c06a89381f"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "팔레트",
+   "sfx_events",
+   "숫자칸 why",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측"
+  ],
+  "rule_unmeasured": 10,
+  "measure_tasks": [
+   "06-kkultemnote"
+  ],
+  "complete": false
+ }
+}

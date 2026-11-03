@@ -1,0 +1,268 @@
+{
+ "_note": "관문 ⑤ 컷 길이(render_bench.cut_length_gate) 표본 — 계획 34편·감사 eps 41편 컷 중 0.62초 미만이고 원본이 남아 있는 21컷을 앞뒤 4프레임과 함께 시트로 보고 오푸스가 갈랐다(10-25). flash = 컷이 너무 짧아 번쩍/되감김으로 보임, ok = 장면이 읽힘. unseen = 원본이 지워져 눈으로 못 본 0.4 미만 계획 컷(정밀도·재현율에 안 넣음).",
+ "bench": {
+  "how": "판 18개 bench.src_dir 줄판독 편 원본(창 크롭) render_bench._src_cuts 샷 길이(끝 샷 뺌)",
+  "shots": 2072,
+  "under_0_4": 0.09,
+  "itemlog_under_0_4": "16/164 — 5 = 맨 앞 썸네일 카드 2프레임, 나머지 = 같은 인물 펀치 줌 몰아치기(J7GxfaVdwSU 4.2~5.1)·실제 짧은 샷 몇 개"
+ },
+ "plans": {
+  "cuts": 511,
+  "under_0_4": 5
+ },
+ "rows": [
+  {
+   "ep": "banggu_썰템홈샷_하이브리드_02_노트핀",
+   "k": 2,
+   "line": "shot5",
+   "src": "ADlf9lJzjew.mp4",
+   "ss": 13.5,
+   "dur": 0.6,
+   "frames": 18,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "banggu_썰템홈샷_하이브리드_03_골든카레",
+   "k": 1,
+   "line": "shot0",
+   "src": "Mqo50OEuj1Q.mp4",
+   "ss": 18.85,
+   "dur": 0.42,
+   "frames": 13,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_11편_CopperCow",
+   "k": 13,
+   "line": "shot13",
+   "src": "Ij6BNYohK2o.mp4",
+   "ss": 144.6,
+   "dur": 0.44,
+   "frames": 13,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_11편_CopperCow",
+   "k": 24,
+   "line": "shot24",
+   "src": "Ij6BNYohK2o.mp4",
+   "ss": 524.82,
+   "dur": 0.58,
+   "frames": 17,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_11편_CopperCow",
+   "k": 25,
+   "line": "shot25",
+   "src": "Ij6BNYohK2o.mp4",
+   "ss": 582.5,
+   "dur": 0.42,
+   "frames": 13,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_12편_ChillSystems",
+   "k": 0,
+   "line": "shot0",
+   "src": "ULws5gyPTHY.mp4",
+   "ss": 104.95,
+   "dur": 0.615,
+   "frames": 18,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_1편_STORMBAG",
+   "k": 0,
+   "line": "shot0",
+   "src": "8UW-es-eTl0.mp4",
+   "ss": 67.25,
+   "dur": 0.5,
+   "frames": 15,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_4편_Spikeball",
+   "k": 0,
+   "line": "shot0",
+   "src": "cnbc15a.mp4",
+   "ss": 27.42,
+   "dur": 0.4,
+   "frames": 12,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_5편_BalaBangles",
+   "k": 2,
+   "line": "shot2",
+   "src": "RADCBcHJO_k.mp4",
+   "ss": 109.1,
+   "dur": 0.6,
+   "frames": 18,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_7편_WallDoctor",
+   "k": 1,
+   "line": "shot1",
+   "src": "h99r2Xmp-Xg.mp4",
+   "ss": 23.0,
+   "dur": 0.583,
+   "frames": 17,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_7편_WallDoctor",
+   "k": 3,
+   "line": "shot3",
+   "src": "h99r2Xmp-Xg.mp4",
+   "ss": 25.125,
+   "dur": 0.425,
+   "frames": 13,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_7편_WallDoctor",
+   "k": 8,
+   "line": "shot8",
+   "src": "h99r2Xmp-Xg.mp4",
+   "ss": 54.875,
+   "dur": 0.575,
+   "frames": 17,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_8편_Flipstik",
+   "k": 1,
+   "line": "shot1",
+   "src": "MJO3kI8D974.mp4",
+   "ss": 88.7,
+   "dur": 0.522,
+   "frames": 16,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_9편_PNuffCrunch",
+   "k": 3,
+   "line": "shot3",
+   "src": "vr3dPT0wnrY.mp4",
+   "ss": 20.45,
+   "dur": 0.418,
+   "frames": 13,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_9편_PNuffCrunch",
+   "k": 7,
+   "line": "shot7",
+   "src": "wp45o5i7zhE.mp4",
+   "ss": 46.28,
+   "dur": 0.52,
+   "frames": 16,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "foreignshowshow_9편_PNuffCrunch",
+   "k": 18,
+   "line": "shot18",
+   "src": "IozegR4FmTA.mp4",
+   "ss": 30.71,
+   "dur": 0.467,
+   "frames": 14,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "ititemlog_ep13_salmon_cream_v3",
+   "k": 10,
+   "line": "N5",
+   "src": "mkA.mp4",
+   "ss": 6.787,
+   "dur": 0.3,
+   "frames": 9,
+   "label": "flash",
+   "eye": "통 화면 0.3초 뒤 다음 컷이 같은 통을 0.3초 앞부터 다시(되감김) — 13_salmon_cream_1024_1037 납품본 21.8~22.1초 눈 확인"
+  },
+  {
+   "ep": "ititemlog_ep13_salmon_cream_v3",
+   "k": 13,
+   "line": "N6",
+   "src": "mkA.mp4",
+   "ss": 6.0,
+   "dur": 0.467,
+   "frames": 14,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "plan:ep13_salmon_cream_v3/ititemlog",
+   "k": 10,
+   "line": "N5",
+   "src": "mkA.mp4",
+   "ss": 6.787,
+   "dur": 0.275,
+   "frames": 8,
+   "label": "flash",
+   "eye": "계획 0.275초(9프레임) — 16 과 같은 자리(snap_ss 가 7.12→6.787 로 옮겨 통 화면)"
+  },
+  {
+   "ep": "plan:ep13_salmon_cream_v3/ititemlog",
+   "k": 11,
+   "line": "N6",
+   "src": "mkA.mp4",
+   "ss": 6.49,
+   "dur": 0.576,
+   "frames": 17,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  },
+  {
+   "ep": "plan:ep13_salmon_cream_v3/ititemlog",
+   "k": 13,
+   "line": "N6",
+   "src": "mkA.mp4",
+   "ss": 6.0,
+   "dur": 0.453,
+   "frames": 14,
+   "label": "ok",
+   "eye": "앞 4·컷 전체·뒤 4프레임 시트 눈 확인 — 장면이 읽힘"
+  }
+ ],
+ "unseen": [
+  {
+   "ep": "yanshottem/하이브리드_이혜정_레시피/연예인레시피판",
+   "line": "O1",
+   "dur": 0.16
+  },
+  {
+   "ep": "yanshottem/하이브리드_김나영/꿀템노트판",
+   "line": "O3",
+   "dur": 0.27
+  },
+  {
+   "ep": "yanshottem/하이브리드_김나영/키치잇판",
+   "line": "O3",
+   "dur": 0.27
+  },
+  {
+   "ep": "yanshottem/하이브리드_김가연_레시피/연예인레시피판",
+   "line": "O1",
+   "dur": 0.34
+  }
+ ]
+}

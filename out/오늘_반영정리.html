@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>오늘 반영 정리</title>
+<style>
+:root{--bg:#14161b;--card:#1d2028;--line:#2c313c;--txt:#e8eaf0;--sub:#9aa3b2;--cap:#2b4a7a;--c1:#2fbf71;--c2:#f2a33a;--c3:#b07cff}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:21px;margin:36px 0 10px;display:flex;align-items:center;gap:10px}
+.sub{color:var(--sub)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.box h3{margin:0 0 6px;font-size:17px}
+.st{display:inline-block;padding:3px 12px;border-radius:999px;font-size:13px;font-weight:800}
+.live{background:#173a2a;color:#9be7bf}.wait{background:#3a2e14;color:#ffe0a8}.todo{background:#2a2f3a;color:#cfd5e0}.plan{background:#2b2350;color:#d6c8ff}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.lab{width:46px;flex:0 0 46px;color:var(--sub);font-size:13px;text-align:right}
+.track{position:relative;flex:1;height:34px}
+.seg{position:absolute;top:0;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0b0d10;overflow:hidden;white-space:nowrap}
+.cap{background:var(--cap);color:#cfe0ff;font-weight:600}
+.k1{background:var(--c1)}.k2{background:var(--c2)}.k3{background:var(--c3)}
+.mark{position:absolute;top:-5px;bottom:-5px;width:0;border-left:2px dashed #ffd27a}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:9px 12px;border-radius:9px;background:#3a2e14;border:1px solid #8a6a2a;color:#ffe0a8;font-size:14px;margin-top:8px}
+.bar span.b{background:#2a2f3a;color:#e8eaf0;border-radius:7px;padding:3px 9px;font-size:13px}
+.bar span.b.on{background:var(--c2);color:#2a1d05;font-weight:800}
+.badge{display:inline-block;background:var(--c2);color:#3a2a08;font-weight:800;border-radius:6px;padding:1px 7px;font-size:12px}
+.badge.g{background:var(--c1);color:#04201b}
+ul{margin:6px 0;padding-left:20px}
+</style></head><body><main>
+<h1>오늘 반영한 것 · 할 것 — 한 장 정리</h1>
+<div class="sub">2026-10-14 · 3단계 장면 편집</div>
+
+<h2><span class="st live">✅ 라이브</span> 이미 올라가 있는 것</h2>
+<div class="box"><h3>1. 성우 「유라」 추가</h3><span class="sub">타입캐스트 젊은 여성 · 3가지 톤</span></div>
+<div class="box"><h3>2. 빠르게 맞추기 (강병주님)</h3>
+  박스로 길게 고른 장면이 잘리면 → <b>[빠르게 맞추기]</b> 누르면 영상만 빠르게 틀어 끝까지 보여줌<br>
+  <span class="sub">렌더 영상에서 끝 장면까지 나오는 것 확인함</span></div>
+<div class="box"><h3>3. 장면 띠 휠로 넘기기 (이윤정님)</h3>맨 위 장면 띠에서 마우스 휠 → 옆으로 넘어감</div>
+
+<h2><span class="st wait">⏳ 올리는 중</span> 병합 끝, 서버 재시작 기다리는 중</h2>
+<div class="box"><h3>4. 위 컷 띠가 늘 필름처럼</h3>
+  한 장짜리 카드 없이 처음부터 여러 장 그림으로 보임 · <b>카드 가운데 누르면</b> 빨간 막대가 그 자리로 가서 재생</div>
+<div class="box"><h3>5. 카드에 「뒤에 더 있어요」 표시</h3>
+  고른 장면이 잘리면 카드에 <span class="badge">+0.2초 ▶</span> → 누르면 끝까지 <span class="badge g">끝까지 ✓</span></div>
+<div class="box"><h3>6. 컷 끝 잡아 길이 조절 + 빈칸 고르기 <span class="sub">(새로 만드는 작업부터)</span></h3>
+  <div class="row"><div class="lab">장면</div><div class="track">
+    <div class="seg k1" style="left:0;width:38%">카드1 (줄임)</div>
+    <div class="seg" style="left:38.5%;width:12%;background:repeating-linear-gradient(45deg,#3a3f4b 0 7px,#2a2e37 7px 14px);color:#cfd5e0">빈칸</div>
+    <div class="seg k2" style="left:51%;width:49%">카드2</div></div></div>
+  <div class="bar">0.4초 비었어요 <span class="b on">✓ 옆 장면 더 보여줌</span><span class="b">1번만 느리게</span><span class="b">전부 같이 느리게</span><span class="b">되돌리기</span></div>
+  <span class="sub">누르면 바로 재생 · 너무 느려지는 버튼은 숨기고 「장면 하나 더 넣기」 · 기존 손님 영상은 그대로(242작업 대조 변화 0)</span></div>
+<div class="box"><span class="st todo">재시작 후 할 일</span> 내 테스트 작업으로 <b>렌더 영상·캡컷</b> 실제 대조 → 이상하면 바로 끔</div>
+
+<h2><span class="st plan">📝 다음에 할 것</span> 오늘 정한 방향</h2>
+<div class="box"><h3>7. 구절 맞춤에서 끝 잡아 줄이면 — 자막과 안 어긋나게</h3>
+  구절 맞춤 줄은 기본을 <b>「그 카드만 느리게」</b>로 → 장면 바뀌는 자리가 그대로라 자막과 계속 맞음<br>
+  <span class="sub">너무 느려지면 자동으로 「옆 장면 더 보여줌」</span></div>
+<div class="box"><h3>8. 안내 줄 하나로 합치기</h3>
+  지금 빨간 줄 여러 개·「전체 늘리기」 체크박스 → <b>줄마다 한 줄</b>만:
+  <div class="bar">1.4초 넘쳐요 <span class="b on">✓ 그냥 두기</span><span class="b">카드2 빠르게</span><span class="b">전부 같이 빠르게</span><span class="b">되돌리기</span></div>
+  <div class="bar">0.4초 비었어요 <span class="b on">✓ 옆 장면 더</span><span class="b">카드2 느리게</span><span class="b">전부 같이 느리게</span><span class="b">장면 붙이기</span><span class="b">되돌리기</span></div>
+  <span class="sub">「장면 붙이기」는 너무 느려질 때만 나옴</span></div>
+<div class="box"><h3>9. 위 컷에 주황 박스</h3>아래 소스 필름처럼 · 양 끝 당기면 길이 · <b>가운데 잡고 밀면</b> 원본의 어느 부분을 쓸지 바뀜</div>
+<div class="box"><h3>10. 처음 배치를 자막 줄에 맞추기 <span class="sub">(조사부터)</span></h3>
+  지금은 카드 2장이 자막 3줄을 나눠 맡아 한 장면이 길어짐 →
+  <div class="row"><div class="lab">자막</div><div class="track">
+    <div class="seg cap" style="left:0;width:43%">매일 아침 간식 고민하던 1.4초</div>
+    <div class="seg cap" style="left:44%;width:27%">주부들 사이에서 0.9초</div>
+    <div class="seg cap" style="left:72%;width:28%">난리가 났다는데 0.9초</div>
+    <div class="mark" style="left:43.5%"></div></div></div>
+  <div class="row"><div class="lab">카드</div><div class="track">
+    <div class="seg k1" style="left:0;width:43%">카드1</div>
+    <div class="seg k2" style="left:44%;width:56%">카드2 (짧은 두 줄은 함께)</div>
+    <div class="mark" style="left:43.5%"></div></div></div>
+  <ul>
+    <li><b>긴 자막 줄(1.2초 이상)</b>은 카드 한 장씩</li>
+    <li><b>짧은 줄</b>은 옆 줄과 묶어 카드 한 장 (0.9초짜리 번쩍 컷 방지)</li>
+    <li>맞는 장면이 모자라면 억지로 안 채움</li>
+    <li>손님이 카드를 빼거나 길이를 바꾸는 건 지금과 똑같이 됨</li>
+  </ul>
+  <span class="sub">서버 2단계(처음 배치) 코드는 아직 안 열어 봄 — 고칠 곳은 확인 후 말씀드림</span></div>
+</main></body></html>

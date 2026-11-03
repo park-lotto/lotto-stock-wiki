@@ -1,0 +1,606 @@
+{
+ "topic": "Snactiv(스낵티브) — 검지·중지 사이에 끼워 과자를 집는 손가락 젓가락. 소품 만들던 창업자가 기름 묻은 손으로 키보드 만지는 게 싫어 만듦, 한국에 이미 판매처 → 게스트 샤크·로리 반반 제안 → 성사",
+ "product": "Snactiv finger chopsticks(스낵티브 손가락 젓가락)",
+ "bench": {
+  "id": "jo1QTw7GCWs",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "이제 게임하면서 과자 먹을수 있다고?! (화면 제목: 이제 게임하면서 / 과자 먹을수 있다고?!)",
+  "dur": 46.324,
+  "views": 83000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "0.5초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '약 2억 7천만원에 지분 20%'·'연간 57억'(금액) → 금액 없이 반반 제안·결정만",
+  "벤치 4~16초 남의 광고·리뷰 영상(게임 화면·초록 화면) — 이 원본 밖 → 원본 안 시연으로",
+  "벤치 0초 투자자 얼굴 원 → R3 물건 원(진열대 스낵티브 상자)"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "너 내 다음 남편감이야!"
+    ],
+    "cap_at": [
+     174.98
+    ],
+    "span": [
+     174.98,
+     176.38
+    ],
+    "orig_en": "You might be my next husband.",
+    "text": "너 내 다음 남편감이야!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 진열대 가운데 빨간 스낵티브 상자) — 벤치 0~1.0 투자자 얼굴 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "너 내 다음 남편감이야!",
+      "span": "너 내 다음 남편감이야!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "과자 먹다가",
+     "기름 묻은 손으로",
+     "키보드를 만지면",
+     "다들 찝찝하다는데"
+    ],
+    "text": "과자 먹다가 기름 묻은 손으로 키보드를 만지면 다들 찝찝하다는데",
+    "tts": "과자 먹다가, 기름 묻은 손으로 키보드를 만지면, 다들 찝찝하다는데",
+    "fx": "빨강 번쩍 — 벤치 4.5('게임하면서 과자를 먹고 싶은데')",
+    "emph": [
+     {
+      "cap": "과자 먹다가",
+      "span": "과자 먹다가",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "기름 묻은 손으로",
+      "span": "묻은 손으로",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "키보드를 만지면",
+      "span": "키보드를 만지면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 찝찝하다는데",
+      "span": "찝찝하다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(반응)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "으, 진짜 더럽다"
+    ],
+    "cap_at": [
+     46.76
+    ],
+    "span": [
+     46.76,
+     48.64
+    ],
+    "orig_en": "Oh, it's disgusting man.",
+    "text": "으, 진짜 더럽다",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "으, 진짜 더럽다",
+      "span": "진짜 더럽다",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "그래서 소품 만들던 사람이",
+     "손가락에 끼우는",
+     "젓가락을",
+     "만들어 버렸다는데"
+    ],
+    "text": "그래서 소품 만들던 사람이 손가락에 끼우는 젓가락을 만들어 버렸다는데",
+    "tts": "그래서 소품 만들던 사람이, 손가락에 끼우는 젓가락을 만들어 버렸다는데",
+    "fx": "초록 번쩍 — 벤치 8.0('이걸 중지와 약지 사이에')",
+    "emph": [
+     {
+      "cap": "그래서 소품 만들던 사람이",
+      "span": "만들던 사람이",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손가락에 끼우는",
+      "span": "손가락에 끼우는",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "젓가락을",
+      "span": "젓가락을",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만들어 버렸다는데",
+      "span": "버렸다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "시연(끼우기)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "검지랑 중지 사이에 끼우면",
+     "손이 완전히 자유로워져요"
+    ],
+    "cap_at": [
+     105.57,
+     108.01
+    ],
+    "span": [
+     105.57,
+     110.61
+    ],
+    "orig_en": "It installs between your pointer and middle finger and keeps your hands completely mobile and free.",
+    "text": "검지랑 중지 사이에 끼우면 손이 완전히 자유로워져요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 10.5('완벽하게 자유로워 집니다')",
+    "emph": [
+     {
+      "cap": "검지랑 중지 사이에 끼우면",
+      "span": "사이에 끼우면",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손이 완전히 자유로워져요",
+      "span": "자유로워져요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(차별점)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "끼운 채로 타자도 치고",
+     "폰도 만지면서",
+     "과자를 바로 집어 먹는다는데"
+    ],
+    "text": "끼운 채로 타자도 치고 폰도 만지면서 과자를 바로 집어 먹는다는데",
+    "tts": "끼운 채로 타자도 치고 폰도 만지면서, 과자를 바로 집어 먹는다는데",
+    "fx": "초록 번쩍 — 벤치 13.0 '이걸 끼고서도'",
+    "emph": [
+     {
+      "cap": "끼운 채로 타자도 치고",
+      "span": "타자도 치고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "폰도 만지면서",
+      "span": "폰도 만지면서",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "과자를 바로 집어 먹는다는데",
+      "span": "집어 먹는다는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "반응(투자자 체험)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "과자가 바로 집히네"
+    ],
+    "cap_at": [
+     145.5
+    ],
+    "span": [
+     145.5,
+     147.02
+    ],
+    "orig_en": "Pick up your snack like instantly.",
+    "text": "과자가 바로 집히네",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "과자가 바로 집히네",
+      "span": "바로 집히네",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "반응(투자자)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "나 방금 행복해졌어"
+    ],
+    "cap_at": [
+     147.02
+    ],
+    "span": [
+     147.02,
+     148.0
+    ],
+    "orig_en": "I just got happy.",
+    "text": "나 방금 행복해졌어",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "나 방금 행복해졌어",
+      "span": "행복해졌어",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "잉?(한국)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "심지어 한국에도",
+     "벌써 판매처가 있다고 해서",
+     "샤크들도 놀랐는데"
+    ],
+    "text": "심지어 한국에도 벌써 판매처가 있다고 해서 샤크들도 놀랐는데",
+    "tts": "심지어 한국에도 벌써 판매처가 있다고 해서, 샤크들도 놀랐는데",
+    "emph": [
+     {
+      "cap": "심지어 한국에도",
+      "span": "심지어 한국에도",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "벌써 판매처가 있다고 해서",
+      "span": "판매처가 있다고 해서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크들도 놀랐는데",
+      "span": "놀랐는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "지분 경쟁",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "결국 샤크 두 명이",
+     "반반 나눠서",
+     "같이 하자고 나섰는데"
+    ],
+    "text": "결국 샤크 두 명이 반반 나눠서 같이 하자고 나섰는데",
+    "tts": "결국 샤크 두 명이, 반반 나눠서 같이 하자고 나섰는데",
+    "fx": "빨강 번쩍 — 벤치 지분 경쟁",
+    "emph": [
+     {
+      "cap": "결국 샤크 두 명이",
+      "span": "두 명이",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "반반 나눠서",
+      "span": "반반 나눠서",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "같이 하자고 나섰는데",
+      "span": "하자고 나섰는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "그 제안 받을게요!"
+    ],
+    "cap_at": [
+     412.45
+    ],
+    "span": [
+     412.45,
+     413.33
+    ],
+    "orig_en": "We'll take your deal.",
+    "text": "그 제안 받을게요!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 42.0 '거래할게요'",
+    "emph": [
+     {
+      "cap": "그 제안 받을게요!",
+      "span": "그 제안 받을게요!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "결정(반응)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "우리 이거 제대로 터뜨려 보자"
+    ],
+    "cap_at": [
+     485.05
+    ],
+    "span": [
+     485.05,
+     486.25
+    ],
+    "orig_en": "We're going to blow this up.",
+    "text": "우리 이거 제대로 터뜨려 보자",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "우리 이거 제대로 터뜨려 보자",
+      "span": "제대로 터뜨려 보자",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "기름 묻은 손가락 때문에",
+     "만든 젓가락이",
+     "샤크 두 명을 잡았다는데"
+    ],
+    "text": "기름 묻은 손가락 때문에 만든 젓가락이 샤크 두 명을 잡았다는데",
+    "tts": "기름 묻은 손가락 때문에 만든 젓가락이, 샤크 두 명을 잡았다는데",
+    "emph": [
+     {
+      "cap": "기름 묻은 손가락 때문에",
+      "span": "손가락 때문에",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만든 젓가락이",
+      "span": "만든 젓가락이",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크 두 명을 잡았다는데",
+      "span": "두 명을",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "손가락에 끼우는",
+  "line2": "젓가락이 있다고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '이제 게임하면서 / 과자 먹을수 있다고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 174.98~176.38 'You might be my next husband.'(스피치매틱스 enhanced 영어 — 투자자 원음, 화자 이름은 자막에 안 씀) · 화면은 같은 원본 104.25초 진열대 스낵티브 상자(cover)",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=174s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 74.21~82.01 'I love to enjoy a snack while I'm gaming or working, but keeping your hands and devices clean all at the same time is a challenge.' · 166.26~174.66 'I found myself licking my fingers… I was touching my mouse, my keyboard. It was disgusting.' · 46.76~48.64 'Oh, it's disgusting man.' · 화면 31~48 콩트",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=74s",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 51.56~54.08 'As a prop maker, I became my own problem solver.' · 56.28~59.76 'created a snacking tool of the future' · 105.57~110.61 손가락 사이에 끼움",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=51s",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 105.57~110.61 'It installs between your pointer and middle finger and keeps your hands completely mobile and free.' · 화면 89~120 시연",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=105s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 96.29~104.97 'keeps your hands and devices clean while you're working gaming, typing, texting, or swiping' · 139.94~147.02 투자자 체험 'Pick up your snack like instantly.' · 147.02~148.10 'I just got happy.'",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=96s",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 233.10~247.66 'We have plans for retail… we actually put in place an international dealer in Korea. We put in Taiwan and we're working with a Hong Kong distributor.' · 247.74 'World domination.'",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=233s",
+   "kind": "방송 원음"
+  },
+  "f8": {
+   "text": "원본 266.99~283.29 케빈 오리어리 로열티 제안 · 351.04~360.72 게스트 샤크 '200K and we just want 20%… for two of us… we'll go ten and ten'(로리 'Ten and ten') · 412.45~413.97 창업자 'We'll take your deal.' · 483.33~486.25 로리 'I am happy to be your partner. We're going to blow this up.' — 금액은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=nlVhx46TQFg&t=351s",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

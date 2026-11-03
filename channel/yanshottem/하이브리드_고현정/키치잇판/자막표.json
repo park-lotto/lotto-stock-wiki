@@ -1,0 +1,375 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.274,
+   "text": "옷 갈아입기 귀찮다던",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "귀찮다던"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.274,
+   "t1": 1.985,
+   "text": "고현정이",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "고현정이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.985,
+   "t1": 2.726,
+   "text": "입을 때마다",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.726,
+   "t1": 3.326,
+   "text": "신난다네요?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "신난다네요?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.326,
+   "t1": 4.656,
+   "text": "원래 옷 갈아입는 걸",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.656,
+   "t1": 6.226,
+   "text": "별로 안 좋아해서",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "좋아해서"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    4.656,
+    4.756,
+    4.856,
+    4.956,
+    5.056,
+    5.156,
+    5.256
+   ]
+  },
+  {
+   "line": "N2",
+   "t0": 6.226,
+   "t1": 7.43,
+   "text": "대체 어떤 옷이길래?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "옷이길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 7.43,
+   "t1": 9.43,
+   "text": "근데 퀄리티가",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "퀄리티가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 9.43,
+   "t1": 10.85,
+   "text": "너무 좋다",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 10.85,
+   "t1": 11.64,
+   "text": "입을 때마다",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 11.64,
+   "t1": 12.36,
+   "text": "신이 나네요",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "신이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 12.36,
+   "t1": 13.17,
+   "text": "여기 옷은",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 13.17,
+   "t1": 14.087,
+   "text": "저도 가죽 칼라에",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "가죽"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.087,
+   "t1": 14.606,
+   "text": "반해서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.606,
+   "t1": 15.832,
+   "text": "바로 따라 사 봤는데요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 15.832,
+   "t1": 17.032,
+   "text": "엉덩이까지 덮는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "엉덩이까지"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.032,
+   "t1": 17.951,
+   "text": "넉넉한 기장이라",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "넉넉한"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.951,
+   "t1": 19.295,
+   "text": "담요처럼 포근하더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 19.295,
+   "t1": 20.465,
+   "text": "무려 랄프 로렌 출신",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "랄프"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 20.465,
+   "t1": 21.769,
+   "text": "디자이너가 뉴욕에서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "뉴욕에서"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.769,
+   "t1": 22.603,
+   "text": "차린 브랜드래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 22.603,
+   "t1": 24.099,
+   "text": "그래서 국내 공식 몰에선",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "공식"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 24.099,
+   "t1": 25.267,
+   "text": "벌써 품절이래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "품절이래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = oTi41R74WIY",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 18, 'typing': 1, 'cut': 3, 'fade': 1} · 강조 15/23"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "oTi41R74WIY",
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 1.0
+    },
+    "ours": {
+     "pop": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 1.0
+    },
+    "ours": {
+     "pop": 1.0
+    },
+    "bench_emph": 0.64,
+    "ours_emph": 0.6,
+    "n": 10
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

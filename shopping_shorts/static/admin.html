@@ -130,6 +130,23 @@ tbody tr:hover{background:#1b1b22}
 <!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
      끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
 <div class=alertBoard id=alertBoard></div>
+<!-- 클로드형 경보(관제 234, 숏템MCP 설계 §7-9) — 고객 PC 라이선스·임대·자산 이상 행동. 판정은 claude_portal.anomaly_check 하나, 여기는 그리기·해제만. -->
+<div class=alertBoard id=claudeAlertBoard></div>
+<!-- 숏클 기기 교체·Claude 계정 변경 승인(관제 296) — 판단은 claude_portal.decide_change, 여기는 그리기만. -->
+<div class=alertBoard id=claudeChangeBoard></div>
+<!-- 숏클 실시간(관제 304) — 회원 Claude ↔ 서버 ↔ 사장님 PC 대기실. 판단(무엇이 긴급인가·전달 표시)은 claude_live 한 곳, 여기는 그리기·보내기만. -->
+<details class=card id=claudeLiveCard ontoggle="if(this.open) renderClaudeLive()">
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🛰 숏클 실시간 <span id=claudeLiveSummary style="font-weight:400;color:#8a8a92"></span></summary>
+<div id=claudeLiveMembers style="font-size:12px;margin-top:10px"></div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin:10px 0">
+  <input id=claudeLiveCid placeholder="회원 번호" style="width:90px">
+  <textarea id=claudeLiveText rows=2 maxlength=1000 placeholder="회원 Claude 에게 보낼 말(1000자까지) — 1분 안에 다음 도구 응답에 실립니다" style="flex:1"></textarea>
+  <button onclick="sendClaudeLive()">보내기</button>
+  <span id=claudeLiveMsg class=msg></span>
+</div>
+<div id=claudeLiveEvents style="font-size:12px;max-height:360px;overflow:auto"></div>
+<pre id=claudeLiveFix style="display:none;font-size:11px;white-space:pre-wrap;max-height:420px;overflow:auto;background:#101014;border:1px solid #2a2a30;border-radius:8px;padding:10px;margin-top:10px"></pre>
+</details>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -143,6 +160,8 @@ tbody tr:hover{background:#1b1b22}
   <!-- 제작 현황판(2026-09-02) — 회원이 오늘 뭘 만들고 있나 + 실제 영상. /ops와 형제. -->
   <a href="/admin/checks" target="_blank" rel="noopener" class="qbtn hot">🩺 관리점검표<small>오늘 어디가 아픈가</small></a>
   <a href="/admin/production" target="_blank" rel="noopener" class="qbtn hot">🎬 오늘 제작 현황<small>회원이 만든 영상</small></a>
+  <a href="/admin/calcopy" target="_blank" rel="noopener" class="qbtn hot">🧬 칼카피 홈<small>창고·채널프리셋·엔진·작업기록·결과물</small></a>
+  <a href="/shortem_preset" target="_blank" rel="noopener" class="qbtn hot">🧬 숏템프리셋<small>브랜드·스타일·결과물</small></a>
   <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
   <a href="/apiwatch" target="_blank" rel="noopener" class="qbtn hot">🔑 API 관측판<small>키가 버티나</small></a>
   <!-- 크롤링 관측판(2026-09-01) — /ops와 형제. 저긴 서버 자원, 여긴 매일 도는 크롤이다.
@@ -188,12 +207,12 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
 </details>
 
-<h2 class=grouphead>✍ 대본 생성 규칙</h2>
 
 <!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "그냥 모든 대본에 앞에 감탄사 켜고 끄기 버튼").
      코드가 첫 문장 앞에 "와, "/"여러분 "을 얹는다(add_hook_opener) — 그 강제만 끈다.
      모델이 스스로 쓴 감탄사는 그대로다. 반영은 다른 서버 프로세스 기준 최대 1분(캐시). -->
-<div class=card>
+<details class=card>
+  <summary style="cursor:pointer;font-weight:800">✍ 대본 생성 규칙</summary>
   <h2>훅 감탄사 자동 붙이기 <span id=hoMsg class=msg></span></h2>
   <p style="color:#8b95a3;font-size:13px;margin:6px 0 10px">
     켜면 대본 첫 문장 앞에 <b>"와, "</b>(서술형 절반) 또는 <b>"여러분 "</b>(권유형)을 코드가 얹습니다.
@@ -201,14 +220,15 @@ tbody tr:hover{background:#1b1b22}
     (모델이 스스로 쓴 감탄사는 그대로).
   </p>
   <button id=hoBtn class=btn onclick="toggleHookOpener()">불러오는 중…</button>
-</div>
+</details>
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
 <!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
      묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
      ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
-<div class="card wait" id="probeCard">
+<details class="card wait" id="probeCard">
+  <summary style="cursor:pointer;font-weight:800">🎞 1단계 정확도 측정</summary>
   <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
     <span style="float:right;font-size:13px;font-weight:400">
       소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
@@ -220,17 +240,18 @@ tbody tr:hover{background:#1b1b22}
   <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
   <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
   <tbody id=prows></tbody></table></details>
-</div>
+</details>
 
 <!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
-<div class="card wait" id="diagCard">
+<details class="card wait" id="diagCard">
+  <summary style="cursor:pointer;font-weight:800">🩺 작업 진단</summary>
   <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
     <span style="float:right;font-size:13px;font-weight:400">
       <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
       <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
     </span></h2>
   <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
-</div>
+</details>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
@@ -249,18 +270,27 @@ tbody tr:hover{background:#1b1b22}
      ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
 <div class="card wait">
   <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
-  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
-  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>상품</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
-<div class="card wait">
-  <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
+<details class="card wait" data-pend>
+  <summary style="cursor:pointer;font-weight:800">🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></summary>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
   <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
-</div>
+</details>
 
 <div class=mask id=cmask onclick="if(event.target===this)closeCust()">
   <div class=modal id=cmodal></div>
+</div>
+
+<h2 class=grouphead>💳 결제 내역</h2>
+<!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
+<div class=card>
+  <h2>결제 내역 <span id=plSum class=wlnote></span>
+    <select id=plFilter onchange="renderLedger()" style="margin-left:8px"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select></h2>
+  <table><thead><tr><th>시각</th><th>가입 프로그램</th><th>상품</th><th>금액</th><th class=mini>수단</th><th class=mini>상태</th><th>결제자</th><th>연락처</th><th>이메일</th><th class=mini>계정</th></tr></thead>
+  <tbody id=plrows><tr><td colspan=10 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <h2 class=grouphead>👥 고객 관리</h2>
@@ -269,6 +299,12 @@ tbody tr:hover{background:#1b1b22}
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
     <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="renderCustomers()">
+    <select id=progFilter onchange="renderCustomers()">
+      <option value="">전체 프로그램</option>
+      <option value="shortem">숏템메이커</option>
+      <option value="shortcl">숏클메이커</option>
+      <option value="moved">숏템에서 숏클로 이동</option>
+    </select>
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -368,7 +404,9 @@ async function renderAlertBoard(){
   const TH={'고객영향':{c:'cust',l:'🚨 고객 영향 사고 — 지금 확인'},
             '정보':{c:'info',l:'ℹ️ 알림'},
             '운영주의':{c:'ops',l:'⚠️ 운영 주의 — 자동 우회됨, 서비스 정상'}};
-  box.innerHTML=open.map(a=>{
+  // 알림은 접어 둔다(사장님 11-01). 다시 그려도 펼친 상태는 유지한다.
+  const nCust=open.filter(a=>a.grade==='고객영향').length;
+  const list=open.map(a=>{
     const t=TH[a.grade]||TH['운영주의'];
     return '<div class="ab '+t.c+'"><div style="flex:1;min-width:0">'
       + '<div class=abl>'+t.l+'</div>'
@@ -381,6 +419,8 @@ async function renderAlertBoard(){
       + '</div>'
       + '<button class=abx onclick="closeAlert('+JSON.stringify(a.id)+')">닫기</button></div>';
   }).join('');
+  box.innerHTML='<details class=abAll ontoggle="window._abOpen=this.open"'+(globalThis._abOpen?' open':'')+'><summary style="cursor:pointer;font-weight:800;font-size:14px;padding:10px 14px;border:1px solid #33353b;border-radius:10px;color:'
+    +(nCust?'#ff8080':'#ffc85c')+'">🔔 알림 '+open.length+'건'+(nCust?' · 고객 영향 '+nCust+'건':'')+' — 눌러서 보기</summary><div style="margin-top:8px">'+list+'</div></details>';
 }
 // ── 관제 보드(2026-09-30, 카드 004) — 카드 파싱·상태는 서버(/api/admin/control/board → tools/control.py) 한 곳. 여기선 그리기만.
 const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'로컬검증':5,'병합':6,'서버반영':7,'라이브실측':8,'완료':9};
@@ -451,14 +491,93 @@ async function closeAlert(id){
         headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
   renderAlertBoard();
 }
+// 클로드형 경보(관제 234) — 미해제만. 해제 = 확인함(정지 경보면 그 고객 정지도 풀린다 — 서버 resolve_alert).
+async function renderClaudeAlerts(){
+  const box=document.getElementById('claudeAlertBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/alerts'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const open=(d&&d.alerts)||[];
+  if(!open.length){ box.innerHTML=''; return; }
+  const LV={warn:'경고',throttle:'속도 제한',suspend:'일시 정지',alert:'관리자 확인'};
+  box.innerHTML=open.map(a=>'<div class="ab '+(a.level==='suspend'||a.level==='alert'?'cust':'ops')+'"><div style="flex:1;min-width:0">'
+    + '<div class=abl>🛡 클로드형 경보 · '+_abEsc(a.rule)+' '+_abEsc(LV[a.level]||a.level)+'</div>'
+    + '<div class=abt>'+_abEsc(a.title)+' · 고객 '+_abEsc(a.cid)+' · '+_abEsc(a.count)+'회</div>'
+    + '<div class=abm>'+_abEsc(a.detail)+' · '+_abEsc(new Date((a.ts||0)*1000).toLocaleString())+'</div></div>'
+    + '<button class=abx onclick="closeClaudeAlert('+JSON.stringify(a.id)+')">'+(a.level==='suspend'?'정지 풀기':'해제')+'</button></div>').join('');
+}
+async function renderClaudeChanges(){
+  const box=document.getElementById('claudeChangeBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/changes'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const open=(d&&d.changes)||[];
+  box.innerHTML=open.map(a=>'<div class="ab ops"><div style="flex:1;min-width:0">'
+    + '<div class=abl>🖥 숏클 '+(a.kind==='device'?'기기 교체':'Claude 계정 변경')+' 요청</div>'
+    + '<div class=abt>'+_abEsc(a.member||('고객 '+a.cid))+(a.kind==='device'?' · '+_abEsc(a.old_name)+' → '+_abEsc(a.name):'')+'</div>'
+    + '<div class=abm>최근 30일 승인 '+_abEsc(a.done_30d)+'회 · '+_abEsc(new Date((a.created||0)*1000).toLocaleString())+'</div></div>'
+    + '<button class=abx onclick="decideClaudeChange('+a.id+',true)">승인</button>'
+    + '<button class=abx onclick="decideClaudeChange('+a.id+',false)">거절</button></div>').join('');
+}
+async function decideClaudeChange(id,approve){
+  try{ await fetch('/api/admin/claude/changes/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,approve:approve})}); }catch(e){}
+  renderClaudeChanges();
+}
+// 숏클 실시간(관제 304) — 회원별 진행판·사건·메시지 보내기·code_fix 내용 보기. 판단은 서버 claude_live, 여기는 그리기만.
+function _liveTime(ts){ return ts?new Date(ts*1000).toLocaleString():'—'; }
+async function renderClaudeLive(){
+  const box=document.getElementById('claudeLiveEvents'); if(!box||document.hidden) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/live/events?limit=100'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const ev=(d&&d.events)||[], ms=(d&&d.members)||[], w=(d&&d.watch)||{};
+  const on=ms.filter(m=>m.online).length, hot=ev.filter(e=>e.urgent&&Date.now()/1000-e.ts<3600).length;
+  document.getElementById('claudeLiveSummary').textContent='접속 '+on+'명 · 최근 1시간 긴급 '+hot+'건 · 대기실 '+(w.alive?'켜짐':(w.last_ping?'끊김':'안 켬'));
+  document.getElementById('claudeLiveMembers').innerHTML=ms.length?'<table style="width:100%;border-collapse:collapse"><tr style="color:#8a8a92;text-align:left"><th>회원</th><th>접속</th><th>최근 단계</th><th>마지막</th><th>마지막 사건</th><th>미전달</th><th></th></tr>'
+    + ms.map(m=>'<tr><td>'+_abEsc(m.member||'회원')+' ('+_abEsc(m.cid)+')</td><td>'+(m.online?'🟢 '+_abEsc(m.device):'—')+'</td><td>'+_abEsc(m.stage)+' <span style="color:#8a8a92">'+_abEsc(m.status)+'</span></td><td>'+_abEsc(_liveTime(m.last_ts))+'</td>'
+      + '<td>'+_abEsc(m.kind)+' '+_abEsc(m.text)+'</td><td>'+_abEsc(m.undelivered)+'</td><td><button onclick="pickClaudeLive('+Number(m.cid)+')">메시지</button></td></tr>').join('')+'</table>'
+    : '<div style="color:#8a8a92">아직 활동한 회원이 없습니다</div>';
+  box.innerHTML=ev.length?ev.slice().reverse().map(e=>'<div style="padding:4px 0;border-bottom:1px solid #23232a'+(e.urgent?';color:#ffd479':'')+'">'
+    + '<b>'+_abEsc(e.kind)+'</b> · '+_abEsc(e.member||'회원')+' ('+_abEsc(e.cid)+') · '+_abEsc(e.stage)+' · '+_abEsc(_liveTime(e.ts))
+    + ((e.kind==='code_fix'||e.kind==='bug')&&e.ref?' <button onclick="showClaudeFix('+Number(e.ref)+')">내용 보기</button>':'')
+    + '<div style="white-space:pre-wrap">'+_abEsc(e.text)+'</div></div>').join(''):'<div style="color:#8a8a92">사건이 없습니다</div>';
+}
+function pickClaudeLive(cid){ document.getElementById('claudeLiveCid').value=cid; document.getElementById('claudeLiveText').focus(); }
+async function sendClaudeLive(){
+  const c=document.getElementById('claudeLiveCid'), t=document.getElementById('claudeLiveText'), m=document.getElementById('claudeLiveMsg');
+  let d={};
+  try{ const r=await fetch('/api/admin/claude/live/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:c.value,text:t.value})}); d=await r.json(); }catch(e){ d={msg:'서버에 연결하지 못했습니다'}; }
+  m.textContent=d.ok?'보냈습니다':(d.msg||d.error||'보내지 못했습니다');
+  if(d.ok){ t.value=''; renderClaudeLive(); }
+}
+async function showClaudeFix(id){
+  const b=document.getElementById('claudeLiveFix');
+  let d={};
+  try{ d=await (await fetch('/api/admin/claude/live/feedback?id='+id)).json(); }catch(e){ d={msg:'서버에 연결하지 못했습니다'}; }
+  b.style.display='block';
+  b.textContent=d.ok?(d.feedback.kind+' · '+(d.feedback.member||'회원')+' ('+d.feedback.cid+') · '+_liveTime(d.feedback.ts)+'\n\n'+d.feedback.text):(d.msg||'불러오지 못했습니다');
+}
+async function shortclDevices(cid){
+  const d=await (await fetch('/api/admin/claude/devices?cid='+cid)).json();
+  const ds=d.devices||[];
+  if(!ds.length){ alert('등록된 숏클 PC 가 없습니다.'); return; }
+  const ans=prompt(ds.map(x=>x.slot+'번: '+(x.name||'이름 없음')).join('\n')+'\n\n뺄 PC 번호를 입력하세요','');
+  if(ans===null||ans.trim()==='') return;
+  const pick=ds.find(x=>String(x.slot)===ans.trim());
+  if(!pick){ alert('없는 번호입니다.'); return; }
+  await fetch('/api/admin/claude/devices/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:cid,device_id:pick.id})});
+  alert(pick.slot+'번 PC 를 뺐습니다.');
+}
+async function closeClaudeAlert(id){
+  try{ await fetch('/api/admin/claude/alerts/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
+  renderClaudeAlerts();
+}
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
-  const d=await r.json(); CURRENT=d.settings||{}; window._CUST=d.customers||[];
+  const d=await r.json(); CURRENT=d.settings||{}; window._TUTORS=d.shortcl_tutors||[]; window._CUST=d.customers||[];
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
   loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
+  loadLedger();          // 결제 내역(숏템·숏클 구분)
   renderControlBoard();  // 관제 보드(별도 API — 실패해도 이 화면은 계속 뜬다)
   // ★대기명단 판정 = acked_at(2026-08-30 사장님 "가입하면 자동으로 체험판 랭킹만으로").
   //   가입이 acked_at을 바로 채우므로 이 목록은 **상시 0건이 정상**이다.
@@ -656,13 +775,37 @@ function _onlineMatch(c,mode){
   if(mode==='off')    return !_isOnline(c);
   return true;
 }
+function _programTags(p,esc){
+  p=p||{}; let s='';
+  if(p.shortem) s+=' <span style="color:#7ee787;font-size:11px">숏템</span>';
+  if(p.shortcl) s+=` <b style="color:#ffd479;font-size:11px">숏클${p.plan?' '+esc(p.plan):''}</b>`;
+  const m={free:'무료 이동',paid:'추가금 업그레이드'}[p.move];
+  if(m||p.tutor) s+=`<div style="font-size:11px;color:#b7a77a">${m?'숏템→숏클 '+m:''}${m&&p.tutor?' · ':''}${p.tutor?'조교 '+esc(p.tutor):''}</div>`;
+  return s;
+}
+async function saveProgram(cid,btn){
+  return _lockWhile(btn, async()=>{
+    const v=i=>document.getElementById(i);
+    const r=await fetch('/api/admin/program_member',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:cid,shortem:v('pgShortem').checked,shortcl:v('pgShortcl').checked,
+                           plan:v('pgPlan').value,move:v('pgMove').value,tutor:v('pgTutor').value})});
+    if(!r.ok){ const d=await r.json().catch(()=>({})); alertLine(d.error||'저장하지 못했습니다'); return; }
+    await load(); openCust(cid);
+  });
+}
+function alertLine(t){ const m=document.getElementById('cMsg'); if(m) m.textContent=t; }
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
+  const prog=(document.getElementById('progFilter')||{}).value||'';
   const onl=(document.getElementById('onlineFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.acked_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
+    const pg=c.program||{};
+    if(prog==='shortcl' && !pg.shortcl) return false;
+    if(prog==='shortem' && !pg.shortem) return false;
+    if(prog==='moved' && !pg.move) return false;
     if(onl && !_onlineMatch(c,onl)) return false;
     if(q && !_custMatch(c,q)) return false;
     return true;
@@ -706,8 +849,9 @@ function renderCustomers(){
     // ★이름을 누르면 상세 시트로 간다(2026-08-29). 모달은 빠른 조작용으로 그대로 두고,
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
     const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
-        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>`;
-    return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}</td><td>${esc(c.phone)}</td>
+        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${_programTags(c.program,esc)}`;
+    const scBtn = `<button class="mini" style="margin-left:6px" onclick="setShortcl(${c.id},${!c.shortcl_open})">${c.shortcl_open?'숏클 승인됨 · 해제':'숏클 승인'}</button>${c.shortcl_open?`<button class="mini" style="margin-left:6px" onclick="shortclDevices(${c.id})">숏클 PC</button>`:''}`;
+    return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}${scBtn}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
       <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
@@ -729,6 +873,35 @@ function renderCustomers(){
 // ── 입금 신고 (2026-08-23) ──────────────────────────────────
 // 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
 // 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
+let ledgerItems=[];
+async function setShortcl(cid,on){
+  const r=await fetch('/api/admin/claude/member',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:cid,on:on})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok){ console.warn(d.msg||'숏클 승인 실패'); return; }
+  await load();
+}
+async function loadLedger(){
+  try{
+    const r=await fetch('/api/admin/pay_ledger');
+    if(!r.ok) return;
+    ledgerItems=(await r.json()).items||[];
+    renderLedger();
+  }catch(e){}
+}
+function renderLedger(){
+  const esc=s=>(s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const g=document.getElementById('plFilter').value;
+  const items=ledgerItems.filter(x=>!g||x.group===g);
+  const cl=ledgerItems.filter(x=>x.group==='숏클').length;
+  document.getElementById('plSum').textContent=`숏템 ${ledgerItems.length-cl}건 · 숏클 ${cl}건`;
+  document.getElementById('plrows').innerHTML=items.length?items.map(x=>{
+    const t=x.at?new Date(x.at).toLocaleString('ko-KR'):'-';
+    const tag=x.group==='숏클'
+      ?`<b style="color:#ffd479">숏클메이커 ${esc(x.plan)}${x.upgrade?' (숏템에서 이동)':''}</b>`:'<span style="color:#7ee787">숏템메이커</span>';
+    return `<tr><td>${esc(t)}</td><td>${tag}</td><td>${esc(x.name)}</td><td>${x.amount==null?'-':Number(x.amount).toLocaleString('ko-KR')+'원'}</td>`
+      +`<td>${esc(x.method)}</td><td>${esc(x.status)}</td><td><b>${esc(x.payer)}</b></td><td>${esc(x.phone)||'-'}</td><td>${esc(x.email)||'-'}</td><td>${x.customer_id==null?'비회원':esc(x.customer_id)}</td></tr>`;
+  }).join(''):'<tr><td colspan=10 class=empty>결제 내역이 없습니다.</td></tr>';
+}
 async function loadDepositClaims(){
   try{
     const r=await fetch('/api/admin/deposit_claims');
@@ -739,10 +912,10 @@ async function loadDepositClaims(){
     const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
     document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
       const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
-      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td><td>${esc(c.product)||'-'}</td>`
         +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
         +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
-    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+    }).join('') : '<tr><td colspan=6 class=empty>새 입금 신고가 없습니다.</td></tr>';
   }catch(e){}
 }
 async function closeClaim(id){
@@ -916,6 +1089,17 @@ function drawCust(){
          <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
          <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
        </span></div></div>
+
+   <div class=msec><h3>가입 프로그램</h3>
+     <div class=mrow>
+       <label style="margin-right:14px"><input type=checkbox id=pgShortem ${(c.program||{}).shortem?'checked':''}> 숏템 회원</label>
+       <label><input type=checkbox id=pgShortcl ${(c.program||{}).shortcl?'checked':''}> 숏클 회원</label></div>
+     <div class=mrow style="flex-wrap:wrap;gap:8px">
+       <select id=pgPlan><option value="">숏클 반 선택</option>${['기본반','고급반','프리미엄반'].map(p=>`<option ${(c.program||{}).plan===p?'selected':''}>${p}</option>`).join('')}</select>
+       <select id=pgMove><option value="">이동 없음</option><option value="free" ${(c.program||{}).move==='free'?'selected':''}>무료 이동</option><option value="paid" ${(c.program||{}).move==='paid'?'selected':''}>추가금 업그레이드</option></select>
+       <input id=pgTutor list=pgTutors placeholder="숏클 조교" maxlength=40 value="${esc((c.program||{}).tutor||'').replace(/"/g,'&quot;')}" style="width:130px">
+       <datalist id=pgTutors>${(window._TUTORS||[]).map(t=>`<option value="${esc(t).replace(/"/g,'&quot;')}">`).join('')}</datalist>
+       <button class=bok onclick="saveProgram(${c.id},this)">저장</button></div></div>
 
    <div class=msec><h3>포인트</h3>
      <div class=mrow><span class=k>잔액</span>
@@ -1282,6 +1466,15 @@ else loadBugs();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderAlertBoard);
 else renderAlertBoard();
 setInterval(renderAlertBoard, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeAlerts);
+else renderClaudeAlerts();
+setInterval(renderClaudeAlerts, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeChanges);
+else renderClaudeChanges();
+setInterval(renderClaudeChanges, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeLive);
+else renderClaudeLive();
+setInterval(renderClaudeLive, 20000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;

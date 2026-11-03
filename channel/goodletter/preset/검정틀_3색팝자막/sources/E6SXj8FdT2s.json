@@ -1,0 +1,143 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 6,
+   "y": 478,
+   "w": 1068,
+   "h": 1066,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 168,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 96,
+   "line_h": 124,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     240,
+     113,
+     6
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "멸치볶음 킥이라는\n김가연 베트남 간장"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1356,
+   "w": 1020,
+   "align": "center",
+   "lines": 1,
+   "font": "BinggraeBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 9,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 170
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1790,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 40,
+   "line_h": 48,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처: 게임부부 김가연"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "E6SXj8FdT2s"
+}

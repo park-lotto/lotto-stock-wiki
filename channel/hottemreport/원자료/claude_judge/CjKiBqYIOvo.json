@@ -1,0 +1,68 @@
+{
+ "id": "CjKiBqYIOvo",
+ "views": 199000,
+ "title": "딱 보는 순간 쎄한 사람 특징 #웃긴짤",
+ "style": "웃긴짤 재업(무나레)",
+ "style_why": "남의 짤에 위아래 문구",
+ "topic": "청소 바닥에 발자국 남기는 할머니",
+ "known_target": 3,
+ "surprise": 3,
+ "fun": 7,
+ "story": 3,
+ "gain": 1,
+ "hook": {
+  "text": "피해야 할 사람은 보면 안다고",
+  "why": "단정형 문구"
+ },
+ "beats": [
+  {
+   "t0": 0,
+   "t1": 19.1,
+   "fn": "기타",
+   "text": "단일 영상"
+  }
+ ],
+ "script": "잠베개 안베개배기유자 붙일려면 한달",
+ "tone": {
+  "endings": [],
+  "honorific": "없음"
+ },
+ "voice": "나레 없음(받아쓰기 노이즈)",
+ "frame": "흰 배경, 위 TinyDose 로고+검정 제목, 아래 '엄마가 그랬거든..' 고정",
+ "cuts": [
+  {
+   "t0": 0,
+   "t1": 1.5,
+   "media": "영상",
+   "motion": "없음",
+   "color": "원색",
+   "overlay": ""
+  },
+  {
+   "t0": 1.5,
+   "t1": 16.5,
+   "media": "영상",
+   "motion": "없음",
+   "color": "원색",
+   "overlay": "롱테이크"
+  },
+  {
+   "t0": 16.5,
+   "t1": 19.1,
+   "media": "영상",
+   "motion": "없음",
+   "color": "원색",
+   "overlay": ""
+  }
+ ],
+ "edit_summary": {
+  "photo_ratio": 0.0,
+  "ai_image_ratio": 0.0,
+  "zoom_ratio": 0.0,
+  "bw_count": 0,
+  "cut_len_median": 8.0,
+  "memes": 0
+ },
+ "why_viral": "짤 웃음으로 19.9만, 본류 아님",
+ "note": "컷 경계·확대 여부는 0.5초 시트 기준 근사(추측 포함)"
+}

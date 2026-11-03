@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>숏템프리셋 현황</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1b1f24;--sub:#5b6470;--line:#e3e6ea;--ok:#1a7f4b;--okbg:#e6f4ec;--warn:#9a5b00;--warnbg:#fdf1dc;--bad:#b42318;--badbg:#fde8e6;--acc:#2f5bea}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1b1e23;--ink:#e8eaed;--sub:#9aa3ad;--line:#2c3138;--ok:#5fd394;--okbg:#17301f;--warn:#f0b54d;--warnbg:#33270f;--bad:#ff8a80;--badbg:#3a1a17;--acc:#7c9bff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:34px 0 10px}
+.sub{color:var(--sub);font-size:13px}
+.alert{background:var(--badbg);border:1px solid var(--bad);border-radius:10px;padding:14px 16px;margin:18px 0}
+.alert b{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:16px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .n{font-size:26px;font-weight:700}.kpi .l{color:var(--sub);font-size:13px}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+th{background:var(--bg);color:var(--sub);font-weight:600;font-size:13px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.bad{background:var(--badbg);color:var(--bad)}
+.note{color:var(--sub);font-size:13px}
+ul{margin:6px 0 0;padding-left:20px}
+.chips span{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px 10px;margin:3px 4px 3px 0;font-size:13px}
+footer{margin-top:36px;color:var(--sub);font-size:12px}
+</style>
+</head>
+<body><main>
+<h1>숏템프리셋 현황 — 지금 만들 수 있는 것</h1>
+<div class="sub">2026-10-24 기준 · 근거: 영상 엔진 트랙(칼카피숏템엔진) 최신 커밋 2693d5856(10-24 10:57)의 판 설정·장부 · 라이브 서버 회원용 꾸러미 직접 조회</div>
+
+<div class="alert"><b>회원 반영 상태:</b> 회원 PC가 빌려 쓰는 프리셋 꾸러미 16개는 <b>10-20 23:46</b>에 올린 그대로이고, 설치본은 <b>1.0.10</b>입니다. 그 뒤 만든 판(잇템로그·트롯파파 등)과 고친 내용은 <b>회원에게 아직 안 갔습니다</b>. 반영하려면 숏템MCP·엔진 트랙 병합 → 꾸러미 재업로드가 필요합니다(사장님 승인).</div>
+
+<div class="kpis">
+<div class="kpi"><div class="n">8</div><div class="l">하이브리드 판 (연예인·제품형, 엔진 판 설정)</div></div>
+<div class="kpi"><div class="n">8</div><div class="l">채널 칼카피 브랜드</div></div>
+<div class="kpi"><div class="n">5</div><div class="l">분석·틀만 있는 것 (아직 양산 전)</div></div>
+<div class="kpi"><div class="n">16</div><div class="l">회원용 꾸러미 (서버, 10-20 기준)</div></div>
+</div>
+
+<h2>① 하이브리드 판 — 원본(연예인·해외 영상) + 우리 나레 + 쿠팡 제품</h2>
+<p class="note">엔진 <code>tools/calcopy/hybrid/styles.py list</code>가 정답 목록입니다. 한 편 만드는 순서는 <code>channel/칼카피_제작순서/</code> 12단계.</p>
+<div class="tw"><table>
+<tr><th>판</th><th>벤치(따라 한 채널)</th><th>어떤 영상</th><th>목소리</th><th>길이</th><th>작업 기간 · 커밋</th><th>상태</th></tr>
+<tr><td><b>잇썸홈판</b></td><td>두유노홈디노</td><td>얜샷템 1번 판 — 연예인 쇼핑</td><td>미나</td><td>28~38초</td><td>10-16~10-18 · 43</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>재미썸홈판</b></td><td>이븐쇼핑</td><td>얜샷템 2번 판 — 연예인 쇼핑</td><td>박창수</td><td>25~35초</td><td>10-16~10-22 · 47</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>키치잇판</b></td><td>키치잇</td><td>연예인 상품 후기형(선우용여 눈청결티슈 등)</td><td>미나</td><td>25~30초</td><td>10-18~10-21 · 22</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>꿀템노트판</b></td><td>꿀템노트</td><td>나레가 묻고 연예인 원음이 답하는 가짜 대화</td><td>박창수</td><td>15~22초</td><td>10-18~10-23 · 11</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>스타픽룸판</b></td><td>스타픽룸</td><td>원음 훅 → 타이핑 나레 다리 → 체험 나레 → 원음 끝</td><td>미나</td><td>28~38초</td><td>10-18~10-21 · 9</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>연예인레시피판</b></td><td>스타픽룸 변형</td><td>연예인 레시피 — 뼈대는 스타픽룸, 겉모양만 바꿈. 채널 이름 미정</td><td>미나</td><td>28~38초</td><td>10-19~10-21 · 11</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>잇템로그판</b></td><td>잇템로그</td><td>외국인이 한국 제품 쓰고 놀라는 반응(해외 원본 재편집)</td><td>유라</td><td>26~31초</td><td>10-20~10-24 · 14</td><td><span class="tag warn">1차 판 · 회원 미반영</span></td></tr>
+<tr><td><b>굿레터판</b></td><td>굿레터</td><td>연예인 레시피 — 원음 과정·맛 반응, 빠른 팝 자막</td><td>미나</td><td>24~30초</td><td>10-20 · 1</td><td><span class="tag warn">초안</span></td></tr>
+</table></div>
+
+<h2>② 채널 칼카피 브랜드 — 벤치 채널 하나를 통째로 따라 만든 우리 채널</h2>
+<p class="note">장부 <code>channel/브랜드.json</code> 8개. '장부 완성본'은 <code>channel/결과물.json</code>에 등록된 편 수(10-20까지 등록분 — 그 뒤 만든 편은 아직 장부에 없음).</p>
+<div class="tw"><table>
+<tr><th>우리 브랜드</th><th>벤치</th><th>틀(프리셋)</th><th>스타일</th><th>장부 완성본</th><th>작업 기간 · 커밋</th><th>상태</th></tr>
+<tr><td><b>숏템리폿</b></td><td>핫템리포트</td><td>검정띠</td><td>현장썰</td><td>7편</td><td>10-17~<b>10-24</b> · 47</td><td><span class="tag ok">양산 · 3차 진행 중</span></td></tr>
+<tr><td><b>썰템홈샷</b></td><td>방구석 친구들</td><td>게시글형</td><td>— (하이브리드 시험 중)</td><td>3편</td><td>10-17~<b>10-24</b> · 26</td><td><span class="tag ok">양산 · 하이브리드 시험</span></td></tr>
+<tr><td><b>샥탬스토리</b></td><td>해외쇼츠 샤크탱크</td><td>샤크탱크_검정띠2줄</td><td>현장썰(+하이브리드)</td><td>10편</td><td>10-18~10-20 · 107</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>썰템쇼</b></td><td>재밌쇼</td><td>썰템쇼_화자썰</td><td>화자대사줄 옵션</td><td><b>18편</b></td><td>10-18~10-21 · 49</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>재미썸홈</b></td><td>이븐쇼핑</td><td>숏템템플릿</td><td>—</td><td>9편</td><td>10-16~10-22 · 47</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>잇썸홈</b></td><td>두유노홈디노</td><td>전체화면_가운데자막</td><td>—</td><td>9편</td><td>10-16~10-18 · 43</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>도파민썰템</b></td><td>썰풀다</td><td>A_흰바탕창 · B_검정띠</td><td>자막썰·나레썰·현장썰</td><td>6편</td><td>10-08~10-18 · 39</td><td><span class="tag ok">양산</span></td></tr>
+<tr><td><b>맛템썰템</b></td><td>yummyknow</td><td>게시글형</td><td>—</td><td>3편</td><td>10-16~10-17 · 19</td><td><span class="tag ok">양산</span></td></tr>
+</table></div>
+
+<h2>③ 분석·틀만 있는 것 — 아직 양산 전</h2>
+<div class="tw"><table>
+<tr><th>벤치</th><th>있는 것</th><th>마지막 작업</th><th>상태</th></tr>
+<tr><td><b>트롯파파</b>(울지마트로트)</td><td>10편 줄판독·스타일분석 1판, 시니어판 말속도, 새 소재 2편 시험(고추장 기계·조나단 시계)</td><td>10-23</td><td><span class="tag warn">새 판 시험 중</span></td></tr>
+<tr><td><b>안나픽</b></td><td>틀 검정띠2줄_출처</td><td>10-17</td><td><span class="tag bad">틀만</span></td></tr>
+<tr><td><b>신박</b></td><td>틀 연회색틀_둥근창_창아래자막</td><td>10-21</td><td><span class="tag bad">틀만</span></td></tr>
+<tr><td><b>아이템홈</b></td><td>틀 검정띠2줄</td><td>10-17</td><td><span class="tag bad">틀만</span></td></tr>
+<tr><td><b>얜샷템</b>(맨템 틀)</td><td>하이브리드 판들이 올라가는 우리 채널 — 판은 ①에</td><td>10-21</td><td><span class="tag ok">①로 운영</span></td></tr>
+</table></div>
+
+<h2>④ 고를 수 있는 스타일 · 옵션</h2>
+<p class="note">장부 <code>channel/스타일.json</code></p>
+<div><b>스타일 4개</b></div>
+<div class="chips"><span>현장썰 — 한국어 나레 + 해외 원음 + 원본 속 제품</span><span>대사썰</span><span>나레썰</span><span>자막썰</span></div>
+<div style="margin-top:10px"><b>옵션 12개</b></div>
+<div class="chips"><span>화자대사줄</span><span>따옴표인용반전</span><span>연예인보증컷</span><span>조회수줄</span><span>AI캐릭터감정</span><span>AI장면재연</span><span>AI고지문구</span><span>감정효과</span><span>인포그래픽모션</span><span>밈감정짤</span><span>진짜는여기서부터</span><span>끝줄혼잣말웃음</span></div>
+
+<h2>읽는 법 · 한계</h2>
+<ul class="note">
+<li>'작업 기간 · 커밋'은 엔진 트랙 커밋 메시지에 그 이름이 나온 날짜 범위와 횟수입니다. 활동량을 보는 숫자이고, 완성 편 수가 아닙니다.</li>
+<li>'양산'은 판 설정·완성본이 있고 최근에도 만든 것입니다. 편마다 눈 검수를 통과했는지는 이 표에서 다시 세지 않았습니다.</li>
+<li>회원용 꾸러미 16개가 위 목록 중 정확히 어느 것인지는 파일 이름이 번호(p_…)라 이 표에서 짝을 맞추지 않았습니다.</li>
+</ul>
+<footer>만든 곳: 칼카피숏템엔진 트랙 · 숏템MCP 트랙 · 라이브 서버 shopping_shorts/data/claude_store</footer>
+</main></body></html>

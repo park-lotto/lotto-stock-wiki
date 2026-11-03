@@ -1,0 +1,146 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 184,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "SBAggroB",
+   "size": 102.2,
+   "line_h": 107,
+   "rgb": [
+    253,
+    250,
+    252
+   ],
+   "line_rgb": [
+    [
+     252,
+     185,
+     206
+    ],
+    [
+     0,
+     145,
+     253
+    ]
+   ],
+   "line_scale": [
+    0.968,
+    1.031
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -4.7,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "버터 풍미 미쳐버린\n최화정 커피용 간식"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1364,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "Kkubulim",
+   "size": 90,
+   "line_h": 74,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 0
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1612,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 40,
+   "line_h": 46,
+   "rgb": [
+    250,
+    250,
+    250
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : $per_video"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "cLk6fJly6OY"
+}

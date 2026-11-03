@@ -1,0 +1,239 @@
+{
+ "topic": "딸 안고 한 손으로 파울볼 잡은 아빠(2016 필라델피아, 케빈 필라 파울)",
+ "facts": {
+  "f1": {
+   "text": "MLB 설명(2016-06-17): A fan makes a fantastic one-handed catch on Kevin Pillar's foul ball while holding his daughter in his other arm",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+  },
+  "c1": {
+   "text": "댓글 1위(좋아요 5.8만): \"Dad reflexes are real...\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "c2": {
+   "text": "댓글(좋아요 2.6만): \"A man who catches the ball in one hand while holding a kid and some hotdogs.\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "c3": {
+   "text": "댓글(좋아요 2.6만): \"Guy on the staircase: My disappointment is immeasurable and my day is ruined\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "v1": {
+   "text": "MLB 영상 0~3.5초 투수 근접 → 4.0~6.4초 경기장 넓게(투구·타격, 외야 벽 'Citizens Bank Park' 글자, 점수판 TOR 3 · PHI 0 · 1회 초 2아웃) → 6.5초부터 카메라가 관중석으로 따라감",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v2": {
+   "text": "MLB 영상 8.2~11.4초 관중석 넓게(카메라가 내려오며 확대): 대부분 앉아 있고 가운데 몇 명(빨간 옷 등)이 일어서 있음",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v3": {
+   "text": "MLB 영상 12.7~14.6초 근접: 분홍 옷 딸을 한 팔에 안은 아빠가 다른 손으로 공을 들어 보임, 무릎 앞 은박 음식 접시",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v4": {
+   "text": "MLB 영상 15.0~17.4초 근접: 아빠가 웃으며 주위를 돌아보고 딸을 안고 있음",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v5": {
+   "text": "MLB 영상 16.3~20.3초 근접: 아빠가 두 팔로 딸을 끌어안음(20.4초부터 CSN 로고 전환)",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v6": {
+   "text": "MLB 영상 25.5~27.95초 느린 다시보기: 하늘색 셔츠 남성이 계단으로 내려와 빈손을 뻗음, 아빠는 딸을 안은 채 한 손으로 공을 들어 보임(28.0초부터 CSN 로고)",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "상황",
+    "text": "필라델피아 야구장에서 경기가 한창이던 때, 투수가 던진 공을 타자가 받아쳤는데 그 파울볼이 관중석 쪽으로 날아갔어요.",
+    "facts": [
+     "f1",
+     "v1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "긴장",
+    "text": "공이 떨어진 관중석에선 몇몇이 벌떡 일어났는데요.",
+    "facts": [
+     "v2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "반전",
+    "text": "그 공을 잡은 건 어린 딸을 한 팔에 안고 있던 아빠였던 거예요.",
+    "facts": [
+     "f1",
+     "v3"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "디테일",
+    "text": "그것도 남은 한 손만으로요.",
+    "facts": [
+     "f1",
+     "c1",
+     "v6"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "반응",
+    "text": "아빠는 별일 아니라는 듯 씩 웃어 보였고요.",
+    "facts": [
+     "v4"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "마무리",
+    "text": "그러고는 딸을 꼭 끌어안았답니다.",
+    "facts": [
+     "v5"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   }
+  ],
+  "model": "오푸스 손 작성 2판(10-16 저녁): 재료 한 편(29초)에 맞춰 줄 순서를 소스 흐름대로 — 1판(147자)은 줄↔장면이 3곳 어긋나고(1줄 아빠 장면=잡은 뒤 화면, 6줄 '공을 딸 손에 쥐여 줌' 화면 확인 불가) 자막 조각 최대 17자 · 3판(페이블 조건부 OK 반영): 2줄 화면 맞춤('몇몇이 벌떡'), 4줄 1.95초 화면에 맞게 줄임, 1줄 늘려 길이 −7%",
+  "check": {
+   "letters_no_space_punct": [
+    49,
+    21,
+    24,
+    11,
+    17,
+    14
+   ],
+   "total_letters": 136,
+   "chunk": 10,
+   "caption_mode": "replace",
+   "pieces": [
+    [
+     "필라델피아 야구장에서",
+     10
+    ],
+    [
+     "경기가 한창이던 때",
+     8
+    ],
+    [
+     "투수가 던진 공을 타자가",
+     10
+    ],
+    [
+     "받아쳤는데 그 파울볼이",
+     10
+    ],
+    [
+     "관중석 쪽으로 날아갔어요.",
+     12
+    ],
+    [
+     "공이 떨어진 관중석에선",
+     10
+    ],
+    [
+     "몇몇이 벌떡",
+     5
+    ],
+    [
+     "일어났는데요.",
+     7
+    ],
+    [
+     "그 공을 잡은 건 어린 딸을",
+     10
+    ],
+    [
+     "한 팔에 안고 있던",
+     7
+    ],
+    [
+     "아빠였던 거예요.",
+     8
+    ],
+    [
+     "그것도 남은 한 손만으로요.",
+     12
+    ],
+    [
+     "아빠는 별일 아니라는 듯",
+     10
+    ],
+    [
+     "씩 웃어 보였고요.",
+     8
+    ],
+    [
+     "그러고는 딸을",
+     6
+    ],
+    [
+     "꼭 끌어안았답니다.",
+     9
+    ]
+   ],
+   "piece_max": 12,
+   "n_pieces": 16,
+   "est_sec": 20.86,
+   "orig_sec": 22.52,
+   "orig_cps": 6.52,
+   "orig_pieces": 19,
+   "orig_piece_max": 11,
+   "est_note": "6.52자/초는 쉼 포함(4호 122자/18.71초 방식)"
+  }
+ },
+ "titles": {
+  "hook": "아빠 반사신경은\n진짜다 ㄷㄷ"
+ },
+ "gate": {
+  "scores": {
+   "원본 mY(하키 퍽)": {
+    "아는 대상": 5,
+    "몰랐던": 6,
+    "재미": 6,
+    "이야기": 8,
+    "얻는 것": 3,
+    "보여줄 수 있나": 9
+   },
+   "5호 한 손 파울볼 아빠": {
+    "아는 대상": 7,
+    "몰랐던": 5,
+    "재미": 8,
+    "이야기": 6,
+    "얻는 것": 2,
+    "보여줄 수 있나": 9
+   }
+  },
+  "score_note": "오푸스 판정(10-16). 재미 8 = 딸·음식 접시를 든 채 한 손 캐치 + 계단 아저씨 허탈. 이야기 6 = 사건이 한 순간이라 반응(계단 아저씨)·마무리(공을 딸에게)로 이음. 조회 1,545만·댓글 8,000.",
+  "angle": "'아빠 반사신경은 진짜다'(댓글 1위 5.8만) — 두 손이 다 찬 아빠가 한 손으로 잡아낸 파울볼",
+  "twist": "3번 줄 '그 공을 잡은 건 … 딸을 안고 있던 아빠' + 4번 줄 '남은 한 손만 뻗어서'(MLB 설명 one-handed catch while holding his daughter)",
+  "twist_orig": "원본 mY: 우는 소녀 → 선수 아내가 퍽을 건넴",
+  "bench_note": "같은 사건 쇼츠 2편 이상은 확인 못 함(검색 3개 중 이 사건은 MLB 1편만). B(2009 딸이 공 던짐)는 소스가 480p 이하라 제외 — 조율자 지시대로 A · 10-16 저녁 2판: 같은 사건 다른 각도 재료는 찾지 못함(WDEF 2011 다른 사건 480p 제외)."
+ },
+ "note": "후보 검색: 구체 검색어 6+확인 3. 댓글은 yt-dlp comment_sort=top 20개. · 2판 근거는 근거.md(줄별)."
+}

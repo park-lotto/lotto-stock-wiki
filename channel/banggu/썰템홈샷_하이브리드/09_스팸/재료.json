@@ -1,0 +1,478 @@
+{
+ "_note": "09 스팸 — 훅 = SPAM 공식(영국 officialspamuk) 광고 속 SPAM 캔 로고(장면 자체가 '스팸이 무슨 뜻?' 질문) + 두리번거리는 트래볼타 짤 · 옛 호멜 = 'This is Hormel'(1964, 미국 의회도서관 보존 필름 · National Film Preservation Foundation 공개) 호멜 화물칸·편지 읽는 직원·호멜 로고(hormel_zoom = 191.6~194.1 을 천천히 다가가게 구운 것) · 브랜드 = SPAM 공식(호주 SPAM Brand Australia) · 명절 선물 = 삼대장 선물세트 영상(사람 없는 상자 컷만) · 뒤 = 쿠팡 8244032757 사진 + 스팸 굽기(박주현의 내요랑, 아래 자막 밖) + 흰쌀밥 먹방(봉길이)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/09_스팸/src",
+ "shots": [
+  {
+   "src": "uO7GFoW1N8M.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "uO7GFoW1N8M.mp4",
+     "ss": 0.0,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      320,
+      0,
+      1023,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_travolta.mp4",
+     "ss": 0.0,
+     "dur": 2.05,
+     "fit": "cover",
+     "kind": "짤",
+     "src_crop": [
+      440,
+      0,
+      521,
+      550
+     ]
+    }
+   ],
+   "ours": "SPAM 공식(영국) 광고: 탁자 위 SPAM 캔 로고 → 두리번거리는 트래볼타 짤",
+   "why": "훅 = SPAM 로고 = '스팸이 무슨 뜻?' 질문 + ??? 짤"
+  },
+  {
+   "src": "opzvMOPQQEw.mp4",
+   "ss": 39.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "opzvMOPQQEw.mp4",
+     "ss": 39.0,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "opzvMOPQQEw.mp4",
+     "ss": 106.6,
+     "dur": 1.83,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "'This is Hormel'(1964 보존 필름): HORMEL 화물칸이 지나감 → 회사로 온 편지를 뜯어 읽는 직원",
+   "why": "'처음 이 통조림이 나왔을 땐, 이름이 없어서 공모를 했다고' — 그 회사·응모 편지"
+  },
+  {
+   "src": "hormel_zoom.mp4",
+   "ss": 0.03,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "hormel_zoom.mp4",
+     "ss": 0.03,
+     "dur": 2.44,
+     "fit": "cover",
+     "src_crop": [
+      311,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 필름: Hormel 로고(다가감)",
+   "why": "'근데 뽑힌 사람이, 하필 회사 부사장의' — 그 회사 호멜(사람 얼굴 없음 — 누가 그 동생인지 오해 금지)"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_krabs.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_krabs.mp4",
+     "ss": 0.0,
+     "dur": 1.04,
+     "fit": "cover",
+     "kind": "짤",
+     "src_crop": [
+      78,
+      0,
+      484,
+      640
+     ]
+    }
+   ],
+   "ours": "빙글빙글 도는 집게사장 멘붕 짤",
+   "why": "'친동생이었고' — 멘붕"
+  },
+  {
+   "src": "uO7GFoW1N8M.mp4",
+   "ss": 1.9,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "uO7GFoW1N8M.mp4",
+     "ss": 1.9,
+     "dur": 3.01,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "SPAM 공식(영국): 햄 한 장을 지글지글 굽는 근접",
+   "why": "'스파이스드 햄을 줄였다는 말이 돌았지만'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homerhedge.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homerhedge.mp4",
+     "ss": 0.3,
+     "dur": 0.94,
+     "fit": "cover",
+     "kind": "짤",
+     "src_crop": [
+      150,
+      0,
+      545,
+      720
+     ]
+    }
+   ],
+   "ours": "덤불 속으로 숨는 호머 짤",
+   "why": "'끝내 안 밝혔고' — 숨김"
+  },
+  {
+   "src": "VsliEkutNgM.mp4",
+   "ss": 11.45,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "VsliEkutNgM.mp4",
+     "ss": 11.45,
+     "dur": 1.16,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "jk_can_zoom.mp4",
+     "ss": 0.03,
+     "dur": 2.77,
+     "fit": "cover",
+     "src_crop": [
+      1020,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "SPAM 공식(호주): 화면을 채우는 SPAM 글자 → SPAM 캔(공식 문구 SIZZLE PORK AND MMM 옆)",
+   "why": "'지금도 공식 홈페이지에, 진짜 뜻은 몇 사람만 안다고' — 공식 브랜드 화면"
+  },
+  {
+   "src": "-npTwnALcik.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "-npTwnALcik.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "fRQo-usHmDY.mp4",
+     "ss": 0.3,
+     "dur": 1.63,
+     "fit": "cover",
+     "src_crop": [
+      581,
+      80,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "SPAM 공식(호주): 미국식 부엌에서 SPAM 캔을 엶 → 스팸 명절 선물세트 상자(사람 없음)",
+   "why": "'미국에선 값싼 통조림인데, 우리나라에선 명절 선물'"
+  },
+  {
+   "src": "fRQo-usHmDY.mp4",
+   "ss": 18.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fRQo-usHmDY.mp4",
+     "ss": 18.0,
+     "dur": 1.32,
+     "fit": "cover",
+     "src_crop": [
+      581,
+      80,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "스팸 명절 선물세트 상자(사람 없음)",
+   "why": "'단골이 됐다는 얘기'"
+  },
+  {
+   "src": "still_coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_coupang.jpg",
+     "ss": 0,
+     "dur": 2.32,
+     "fit": "cover",
+     "src_crop": [
+      60,
+      40,
+      620,
+      819
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 8244032757 상품 사진: 스팸 클래식 200g 묶음(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 스팸 클래식을' — 같은 제품"
+  },
+  {
+   "src": "HLopNKK4_mU.mp4",
+   "ss": 0.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "HLopNKK4_mU.mp4",
+     "ss": 0.5,
+     "dur": 1.29,
+     "fit": "cover",
+     "src_crop": [
+      581,
+      0,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "스팸 굽기 영상: 스팸 캔을 엶(아래 자막 밖)",
+   "why": "'한 묶음 시켜 봤는데'"
+  },
+  {
+   "src": "HLopNKK4_mU.mp4",
+   "ss": 9.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "HLopNKK4_mU.mp4",
+     "ss": 9.0,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      581,
+      0,
+      757,
+      1000
+     ]
+    },
+    {
+     "src": "HLopNKK4_mU.mp4",
+     "ss": 87.0,
+     "dur": 1.63,
+     "fit": "cover",
+     "src_crop": [
+      581,
+      0,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "스팸을 도톰하게 썲 → 팬에서 노릇하게 구워진 스팸",
+   "why": "'도톰하게 썰어서 노릇하게 구우니까, 겉은 바삭하고'"
+  },
+  {
+   "src": "HLopNKK4_mU.mp4",
+   "ss": 117.75,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "HLopNKK4_mU.mp4",
+     "ss": 117.75,
+     "dur": 1.22,
+     "fit": "cover",
+     "src_crop": [
+      490,
+      200,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "구운 스팸을 접시에 한 장씩 집어 올림(아래 자막 밖)",
+   "why": "'속은 촉촉해서' — 구운 스팸 근접"
+  },
+  {
+   "src": "HDKEmowlxMM.mp4",
+   "ss": 97.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "HDKEmowlxMM.mp4",
+     "ss": 97.0,
+     "dur": 2.21,
+     "fit": "cover",
+     "src_crop": [
+      1350,
+      0,
+      1635,
+      2160
+     ]
+    }
+   ],
+   "ours": "먹방: 흰쌀밥 한 젓가락과 스팸 한 점을 같이 먹음",
+   "why": "'흰쌀밥에 한 점 올리니까, 밥 한 공기가 그냥'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_owenwow.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_owenwow.mp4",
+     "ss": 0.0,
+     "dur": 1.19,
+     "fit": "cover",
+     "kind": "짤",
+     "src_crop": [
+      168,
+      0,
+      303,
+      400
+     ]
+    }
+   ],
+   "ours": "'와우' 오언 윌슨 짤",
+   "why": "'사라지더라고요'"
+  },
+  {
+   "src": "fJOAQ0N5Dc8.mp4",
+   "ss": 2.4,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fJOAQ0N5Dc8.mp4",
+     "ss": 2.4,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      370,
+      0,
+      545,
+      720
+     ]
+    },
+    {
+     "src": "np_can_zoom.mp4",
+     "ss": 0.03,
+     "dur": 2.32,
+     "fit": "cover",
+     "src_crop": [
+      1020,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "미네소타 오스틴 SPAM 박물관 정면 큰 SPAM 간판 → SPAM 공식(호주) 캔",
+   "why": "'뜻은 몇 사람만 알아도, 맛은 온 국민이 다 아는 이름' — 훅(SPAM 로고) 되받기"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 0,
+   "dt": 1.9,
+   "db": -3,
+   "why": "트래볼타 ??? 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 2,
+   "dt": 2.44,
+   "db": -3,
+   "why": "원숭이 인형 민망 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 3,
+   "dt": 3.01,
+   "db": -4,
+   "why": "호머 숨기 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 4,
+   "dt": 0.0,
+   "db": -4,
+   "why": "공식 홈페이지 공개 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 8,
+   "dt": 2.21,
+   "db": -3,
+   "why": "와우 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 0.0,
+   "db": -3,
+   "why": "SPAM 간판 되받기 띵"
+  }
+ ]
+}

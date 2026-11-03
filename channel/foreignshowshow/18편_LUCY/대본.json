@@ -1,0 +1,543 @@
+{
+ "topic": "LUCY 드로잉 도구(루시 — 거울·렌즈로 앞의 물건이 종이 위에 겹쳐 보여 따라 그리게 해 주는 카메라 루시다를 되살린 그림 도구) — 시즌2 '멀미 턱받이' 창업자가 다시 나옴, 케빈이 직접 그려 봄 → 넷 거절·데이먼드와 15% 거래",
+ "product": "LUCY drawing tool(루시 드로잉 도구)",
+ "bench": {
+  "id": "0HbV-PW3ivw",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "Can this thing actually make you a pro at drawing?! (화면 제목: 이것만 있으면 그림을 / 잘 그릴 수 있다고?!)",
+  "dur": 54.766,
+  "views": 4100000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.2,
+  "_cut_median_how": "1초 시트 눈 측정(컷 약 45) — 10-27"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '140억'·'가격 18만원'·'제작비 3만 5천원'·'1년간 32억'·'4억 투자'(금액) → 금액 없이 기능·지분만",
+  "벤치 2~5초 정원 광고·빔프로젝터 비교·남의 그림 영상 — 이 원본 밖 → 원본 안 홍보 영상·케빈 시연으로",
+  "벤치 0초 창업자 얼굴 원 → R3 물건 원(루시 본체)"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "놀랍지 않아요?"
+    ],
+    "cap_at": [
+     189.52
+    ],
+    "span": [
+     189.52,
+     190.68
+    ],
+    "orig_en": "Isn't that amazing?",
+    "text": "놀랍지 않아요?",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 무대 TV 홍보 영상 속 루시 본체) — 벤치 0~1.0 창업자 얼굴 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "놀랍지 않아요?",
+      "span": "놀랍지 않아요?",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "그림 못 그리는 사람도",
+     "바로 화가로",
+     "만들어 준다는 이 물건"
+    ],
+    "text": "그림 못 그리는 사람도 바로 화가로 만들어 준다는 이 물건",
+    "tts": "그림 못 그리는 사람도 바로 화가로 만들어 준다는 이 물건",
+    "fx": "빨강 번쩍 — 벤치 1.5('140억 벌었다는 이 제품')",
+    "emph": [
+     {
+      "cap": "그림 못 그리는 사람도",
+      "span": "그리는 사람도",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 흰 종이 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바로 화가로",
+      "span": "바로 화가로",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만들어 준다는 이 물건",
+      "span": "준다는 이 물건",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 민트가 흰 종이 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(원리)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "들여다보는 창을 보면서",
+     "비친 모습 위에",
+     "따라 그리면 돼요"
+    ],
+    "cap_at": [
+     103.48,
+     105.52,
+     106.48
+    ],
+    "span": [
+     103.48,
+     107.48
+    ],
+    "orig_en": "Look down to the viewing window and draw over the reflected image.",
+    "text": "들여다보는 창을 보면서 비친 모습 위에 따라 그리면 돼요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 7.0('이 거울과 렌즈로 구성된')",
+    "emph": [
+     {
+      "cap": "들여다보는 창을 보면서",
+      "span": "창을 보면서",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황이 주황·분홍 과일 그림 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비친 모습 위에",
+      "span": "모습 위에",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍이 분홍 과일 그림 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "따라 그리면 돼요",
+      "span": "그리면 돼요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(차별점)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "몇백 년 전 거장들이",
+     "몰래 쓰던 도구를",
+     "되살린 거라는데"
+    ],
+    "text": "몇백 년 전 거장들이 몰래 쓰던 도구를 되살린 거라는데",
+    "tts": "몇백 년 전 거장들이 몰래 쓰던 도구를 되살린 거라는데",
+    "fx": "초록 번쩍 — 벤치 16.0('수세기 전부터 거장들이')",
+    "emph": [
+     {
+      "cap": "몇백 년 전 거장들이",
+      "span": "거장들이",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "몰래 쓰던 도구를",
+      "span": "쓰던 도구를",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 흰 종이 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "되살린 거라는데",
+      "span": "되살린 거라는데",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강이 살색 얼굴 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "시연(투자자)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "그냥 상어를 따라 그리는 거예요",
+     "봐요 로리, 이렇게 쉬워요"
+    ],
+    "cap_at": [
+     184.04,
+     186.72
+    ],
+    "span": [
+     184.04,
+     188.92
+    ],
+    "orig_en": "I'm just tracing around the shark. Observe, Lori. How easy that was.",
+    "text": "그냥 상어를 따라 그리는 거예요 봐요 로리, 이렇게 쉬워요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "그냥 상어를 따라 그리는 거예요",
+      "span": "따라 그리는 거예요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 민트가 흰 종이 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "봐요 로리, 이렇게 쉬워요",
+      "span": "이렇게 쉬워요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "반전(창업자)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "알고 보니 이 창업자",
+     "예전에 멀미 턱받이로",
+     "나왔던 그 사람이었는데"
+    ],
+    "text": "알고 보니 이 창업자 예전에 멀미 턱받이로 나왔던 그 사람이었는데",
+    "tts": "알고 보니 이 창업자, 예전에 멀미 턱받이로 나왔던 그 사람이었는데",
+    "fx": "빨강 번쩍 — 벤치 4.5 반전 자리",
+    "emph": [
+     {
+      "cap": "알고 보니 이 창업자",
+      "span": "이 창업자",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "예전에 멀미 턱받이로",
+      "span": "멀미 턱받이로",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "나왔던 그 사람이었는데",
+      "span": "사람이었는데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "지분 경쟁",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "결국 샤크 넷이",
+     "줄줄이 빠지고",
+     "데이먼드 혼자 남았는데"
+    ],
+    "text": "결국 샤크 넷이 줄줄이 빠지고 데이먼드 혼자 남았는데",
+    "tts": "결국 샤크 넷이 줄줄이 빠지고 데이먼드 혼자 남았는데",
+    "fx": "초록 번쩍 — 벤치 41.5 지분 컷",
+    "emph": [
+     {
+      "cap": "결국 샤크 넷이",
+      "span": "샤크 넷이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 빠지고",
+      "span": "줄줄이 빠지고",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "데이먼드 혼자 남았는데",
+      "span": "혼자 남았는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "지분 경쟁(원음)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "17.5%!"
+    ],
+    "cap_at": [
+     627.67
+    ],
+    "span": [
+     627.67,
+     628.87
+    ],
+    "orig_en": "17.5.",
+    "text": "17.5%!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "17.5%!",
+      "span": "17.5%!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "결정(역제안)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "제가 줄 수 있는 최대는",
+     "15%예요"
+    ],
+    "cap_at": [
+     632.91,
+     635.31
+    ],
+    "span": [
+     632.91,
+     636.11
+    ],
+    "orig_en": "The highest I can go is 15.",
+    "text": "제가 줄 수 있는 최대는 15%예요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "제가 줄 수 있는 최대는",
+      "span": "있는 최대는",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "15%예요",
+      "span": "15%예요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "딱 내가 원하던 거야!"
+    ],
+    "cap_at": [
+     638.87
+    ],
+    "span": [
+     638.87,
+     640.47
+    ],
+    "orig_en": "That's exactly where I wanted to land.",
+    "text": "딱 내가 원하던 거야!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 50.5 '그게 내가 원하던 거였어'",
+    "emph": [
+     {
+      "cap": "딱 내가 원하던 거야!",
+      "span": "딱 내가 원하던 거야!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "멀미 턱받이 아저씨가",
+     "그림 도구 하나로",
+     "샤크를 잡았다는데"
+    ],
+    "text": "멀미 턱받이 아저씨가 그림 도구 하나로 샤크를 잡았다는데",
+    "tts": "멀미 턱받이 아저씨가 그림 도구 하나로 샤크를 잡았다는데",
+    "emph": [
+     {
+      "cap": "멀미 턱받이 아저씨가",
+      "span": "턱받이 아저씨가",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그림 도구 하나로",
+      "span": "도구 하나로",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크를 잡았다는데",
+      "span": "잡았다는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "그림 못 그려도",
+  "line2": "화가가 된다고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '이것만 있으면 그림을 / 잘 그릴 수 있다고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 184.04~190.68 'I'm just tracing around the shark. Observe, Lori. How easy that was. Isn't that amazing?'(스피치매틱스 enhanced 영어, 케빈 오리어리) — 화면 184~192 케빈이 루시로 상어를 따라 그림",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 95.40~101.52 'At Lucid Art, we sell the Lucy drawing tool that can make anyone an artist and any artist a master.'",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 101.56~109.68 'Whatever you want to draw in front of the Lucy, look down to the viewing window and draw over the reflected image to start your masterpiece in minutes.' · 화면 98~126 무대 TV 홍보 영상",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 109.96~117.76 'The Lucy is my reinvention of a classic art tool that has been used by artists for centuries. That's right, the old masters had help.' · 170.20~176.08 'camera lucida, which was first patented in like 1807'",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "원본 184.04~188.92 'I'm just tracing around the shark. Observe, Lori. How easy that was.'",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 43.12~60.12 'this isn't even the first time I've been on Shark Tank… It's Les Cookson, the carsick bib guy from season two… The carsick bib is the smart hands free barf bag for kids.' · 화면 43~47 턱받이를 건 창업자·64~69 마네킹",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 433~532 투자자 넷 'I'm out' · 592.43~595.91 'I'll offer you the $300,000 for 20%.' · 620.67 'Would you do it for 12%?' · 627.67 '17.5.' · 632.91~636.11 'the highest I can go is 15.' · 638.87~640.47 'That's exactly where I wanted to land.' · 646~650 포옹 — 금액은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

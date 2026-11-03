@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏템팩 · 숏템메이커</title>
+<!-- 숏템팩(관제 222, 2026-10-17 사장님 "좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 관리자 전용.
+     ★여기엔 팩 목록을 적지 않는다. 서버 팩(효과음·서랍·배경음·성우·짤·글꼴·견본)은 /api/admin/shortem_packs 가 주인 함수에서 읽어 주고,
+       편집기 팩(자막 스타일·등장 효과팩·모션그래픽·스티커·배지·도형·템플릿)은 그 팩의 JS 파일을 그대로 싣는다. -->
+<style>
+  :root{--bg:#0a0f0d;--panel:#0f1512;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#37e0bd;--warn:#e0b23a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1500px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 12px}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;display:flex;gap:7px;flex-wrap:wrap}
+  nav a{color:var(--txt);text-decoration:none;font-size:13px;padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+  nav a:hover{border-color:var(--accent)}
+  nav a b{color:var(--accent);font-weight:700;margin-left:4px}
+  section{padding:24px 0 6px;scroll-margin-top:64px}
+  h2{margin:0;font-size:19px} h2 small{color:var(--sub);font-weight:400;font-size:13px;margin-left:8px}
+  h3{margin:16px 0 6px;font-size:14px;color:#bfe9ff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+  .card b{display:block;font-weight:700;margin-bottom:4px}
+  .card small{color:var(--sub);display:block}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{border:1px solid var(--line);background:#0b1210;color:var(--txt);border-radius:99px;padding:3px 9px;font-size:12px;cursor:pointer}
+  .chip:hover{border-color:var(--accent)} .chip.playing{background:var(--accent);color:#06221b}
+  .sample{font-size:22px;padding:10px 8px;border-radius:8px;background:#26343a;text-align:center;margin:6px 0;line-height:1.3;word-break:keep-all}
+  .sample.light{background:#eef1ee}
+  .thumb{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000;display:block}
+  .posters{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:6px}
+  .posters img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:4px;background:#000}
+  .emo{font-size:30px;line-height:1.4}
+  .slotrow{display:grid;grid-template-columns:70px 1fr;gap:2px 8px;font-size:12px;margin-top:4px} .slotrow span:nth-child(odd){color:var(--sub)}
+  .mg{width:120px;height:120px;margin:4px auto;position:relative}
+  canvas.shape{width:96px;height:72px;display:block;margin:4px auto}
+  .badge{display:inline-block;color:#fff;border-radius:99px;padding:4px 12px;font-weight:800;font-size:13px;margin:3px}
+  .err{color:#ff8a8a}
+  a.more{color:var(--accent);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧳 숏템팩</h1>
+  <p class="lead">숏템메이커에 들어 있는 팩 전부 — 소리·자막·장면 효과·모션그래픽·꾸밈·템플릿·짤·글꼴. 개수는 서버·편집기가 실제로 쓰는 목록을 그대로 읽은 값이다. 칩을 누르면 들어 본다.</p>
+  <nav id="nav"></nav>
+  <div id="root"></div>
+</div>
+<script src="/sidebar.js"></script>
+<script src="/caption-motions.js"></script>
+<script src="/scene-decoration-catalog.js"></script>
+<script src="/motion-graphics-pack.js"></script>
+<script src="/api/produce/scene-style/assets/out/precision20-data.js"></script>
+<script src="/api/produce/scene-style/assets/out/continuous20-data.js"></script>
+<script>
+const __shortemT0=performance.now();
+(async()=>{
+const ASSET='/api/produce/scene-style/assets/out/';
+const root=document.getElementById('root'),nav=document.getElementById('nav');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let audio=null,playing=null;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-play]');if(!b)return;
+  if(audio){audio.pause();playing?.classList.remove('playing');if(playing===b){audio=null;playing=null;return;}}
+  audio=new Audio(b.dataset.play);playing=b;b.classList.add('playing');audio.onended=()=>b.classList.remove('playing');audio.play().catch(()=>b.classList.remove('playing'));});
+const sections=[];
+function section(id,title,count,html){sections.push({id,title,count});root.insertAdjacentHTML('beforeend',`<section id="${id}" data-pack="${id}" data-count="${count}"><h2>${title}<small>${esc(count)}</small></h2>${html}</section>`);}
+
+let data={};
+try{data=await (await fetch('/api/admin/shortem_packs')).json();}catch(e){data={ok:false};}
+if(!data.ok)root.insertAdjacentHTML('beforeend','<p class="err">서버 팩 목록을 못 읽었습니다(관리자 로그인 필요).</p>');
+// ★보일 때만 받는다(관제 222 라이브 실측: 글꼴 60개 = 197MB 를 한꺼번에 받아 목록이 80초 밀렸다).
+//   그림은 data-src, 글꼴 견본은 data-font — 칸이 화면에 가까워지면 그때 단다. (브라우저 기본 지연 로딩은 격자 칸에서 요청이 아예 안 가서 금지 — 그래서 직접 관찰한다)
+const seen=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;seen.unobserve(el);
+  if(el.dataset.src){el.src=el.dataset.src;delete el.dataset.src;}
+}),{rootMargin:'600px 0px'});
+// 글꼴 견본은 눌렀을 때만 받는다 — 한글 글꼴은 하나에 수 MB(60개 197MB)라 보일 때 받아도 그림·소리 요청을 막는다(라이브 실측: 그림 95장 33초 안에 못 뜸)
+document.addEventListener('click',e=>{const el=e.target.closest('[data-font]');if(!el)return;
+  el.textContent='불러오는 중…';try{const ff=new FontFace(el.dataset.fontName,`url("/fonts/${el.dataset.font}")`);document.fonts.add(ff);
+    ff.load().then(()=>{el.textContent='숏템 123 Aa';}).catch(()=>{el.textContent='못 불러옴';});}catch(err){}delete el.dataset.font;el.style.cursor='';});
+const watch=()=>document.querySelectorAll('[data-src]').forEach(el=>seen.observe(el));
+
+
+// ── 🔊 소리 ──
+if(data.sfx_packs){section('sfx','🔊 효과음팩',`${data.sfx_packs.length}팩 × ${data.sfx_packs[0]?.slots.length||0}칸`,
+  `<p class="lead">썰 대본에 자동으로 깔리는 효과음 한 벌. 회원마다 팩이 배정되고 영상별로 바꿀 수 있다.</p><div class="grid">`+data.sfx_packs.map(p=>`<div class="card"><b>${p.no}. ${esc(p.name)}</b><div class="chips">${p.slots.map(s=>`<button class="chip" data-play="/api/produce/sfx_pack/sound/${p.no}/${s.slot}">${esc(s.label)}</button>`).join('')}</div></div>`).join('')+'</div>');}
+if(data.sfx_drawer){const total=data.sfx_drawer.reduce((n,c)=>n+c.count,0);section('drawer','🧰 효과음 서랍',`${data.sfx_drawer.length}분류 · ${total}개`,
+  `<p class="lead">스토리보드에서 장면마다 골라 넣는 효과음(분류별 앞 12개만 보임).</p><div class="grid">`+data.sfx_drawer.map(c=>`<div class="card"><b>${esc(c.cat)} <small style="display:inline">${c.count}개</small></b><div class="chips">${c.items.map(a=>`<button class="chip" data-play="/api/sfx/${a.id}/media" title="${esc(a.title)}">${esc((a.title||'#'+a.id).slice(0,14))}</button>`).join('')}</div></div>`).join('')+'</div>');}
+if(data.bgm){section('bgm','🎵 배경음',`${data.bgm.length}곡`,
+  `<div class="grid">`+data.bgm.map(t=>`<div class="card"><b>${esc(t.title)}</b><small>${esc(t.artist)}</small><div class="chips"><button class="chip" data-play="/api/produce/bgm_lib/sound/${encodeURIComponent(t.id)}">▶ 듣기</button></div></div>`).join('')+'</div>');}
+if(data.voices){section('voice','🎙 성우',`${data.voices.count}개 프리셋`,`<p class="lead">엔진별: ${Object.entries(data.voices.engines).map(([k,v])=>esc(k)+' '+v).join(' · ')} — 아래는 4단계 성우 목록 그대로.</p><div class="grid" id="voiceGrid"></div>`);
+  fetch('/api/voice-presets').then(r=>r.json()).then(v=>{const groups=v.groups||v.presets||v.items||[];document.getElementById('voiceGrid').innerHTML=groups.map(g=>{const vs=Object.values(g.variants||{});const url=vs.find(x=>x.sample_url)?.sample_url;return `<div class="card"><b>${esc(g.name)}</b><small>${esc(g.one_liner||'')} · ${esc(g.engine||'')}</small>${url?`<div class="chips"><button class="chip" data-play="${esc(url)}">▶ 들어 보기</button></div>`:''}</div>`}).join('')||'<p class="lead">성우 목록을 못 읽었습니다.</p>';}).catch(()=>{});}
+
+// 장면꾸미기 글꼴 = 편집기 화면의 @font-face 그대로(주인: out/scene-style-ui-showcase.html) — 자막 스타일 견본이 편집기와 같은 글꼴로 나오게
+try{const html=await (await fetch(ASSET+'scene-style-ui-showcase.html')).text();
+  const faces=(html.match(/@font-face\{[^}]*\}/g)||[]).map(f=>f.replace(/url\("\.\.\/shopping_shorts\/static\/fonts\//g,'url("/fonts/'));
+  const st=document.createElement('style');st.textContent=faces.join('\n');document.head.append(st);}catch(e){}
+
+// ── 💬 자막 ── (주인: static/caption-motions.js)
+const CP=window.CAPTION_PACKS||{},CM=window.CAPTION_MOTIONS||{},MP=window.CAPTION_MOTION_PACKS||[],WF=window.CAPTION_WORD_FX||{};
+// 글자색이 어두운 스타일은 밝은 바탕에서 보여 준다(어두운 바탕에 묻히지 않게)
+const dark=c=>{const m=/^#([0-9a-f]{6})$/i.exec(c||'');if(!m)return false;const n=parseInt(m[1],16);return ((n>>16)*299+((n>>8)&255)*587+(n&255)*114)/1000<110;};
+section('caption','💬 자막 스타일(자막팩)',`${Object.keys(CP).length}개`,`<p class="lead">글꼴·색·상자·단어 강조 한 벌. 장면꾸미기 본문 모션 칸 맨 위 카드.</p><div class="grid">`+Object.values(CP).map(v=>{const st=v.text?.style||{};const css=`font-family:'${v.font}',sans-serif;color:${v.text?.color||'#fff'};${st.WebkitTextStroke?`-webkit-text-stroke:${st.WebkitTextStroke};paint-order:stroke fill;`:''}${st.textShadow?`text-shadow:${st.textShadow};`:''}`;
+  return `<div class="card"><b>${esc(v.label)}</b><div class="sample${dark(v.text?.color)?' light':''}" style="${esc(css)}">이거 진짜 <span style="color:${esc(v.wordFx?.color||'')}">대박</span>이에요</div><small>${esc(v.desc||'')} · 단어 강조 ${esc(WF[v.wordFx?.style]?.label||v.wordFx?.style||'없음')}</small></div>`}).join('')+'</div>');
+const label=k=>CM[k]?.label||k;
+// 장면 효과 이름 — 편집기 효과 탭 버튼 이름(out/scene-style-connect.js SCENE_FX)과 같다. 어긋나면 test_shortem_packs 가 잡는다.
+const SCENE_FX_LABEL={in:'0.5초 확대',pull:'쭉 당기기',inout:'확대→복귀',dim:'어둡게+글자',shock:'흑백 충격',lens:'돋보기',spot:'스포트라이트'};
+const SLOT={first:'첫 줄',body:'일반 줄',price:'가격',problem:'문제',reveal:'제품 공개',end:'마무리',emph:'강조 자막'},MOM={hook:'훅',problem:'문제',reveal:'공개',peak:'고조',cta:'CTA'};
+section('motion','✨ 등장 효과팩',`${MP.length}개`,`<p class="lead">번호 하나 = 칸별 자막 등장 + 장면 성격별 장면 효과. 회원마다 자동 번호(새 영상).</p><div class="grid">`+MP.map((p,i)=>`<div class="card"><b>${i+1}번</b><div class="slotrow">${Object.entries(SLOT).map(([k,n])=>`<span>${n}</span><span>${esc([].concat(p[k]||[]).map(label).join(' · '))}</span>`).join('')}${Object.entries(MOM).map(([k,n])=>`<span>🎬 ${n}</span><span>${esc((p.fx?.[k]||[]).map(x=>SCENE_FX_LABEL[x]||x).join(' + '))}</span>`).join('')}</div></div>`).join('')+'</div>');
+section('caption-parts','🅰 자막 등장 · 단어 강조 (낱개)',`등장 ${Object.keys(CM).length}종 · 강조 ${Object.keys(WF).length}종`,`<h3>본문 자막 등장</h3><div class="chips">${Object.values(CM).map(v=>`<span class="chip">${esc(v.label)}</span>`).join('')}</div><h3>단어 강조</h3><div class="chips">${Object.values(WF).map(v=>`<span class="chip">${esc(v.label)}</span>`).join('')}</div><h3>장면 효과</h3><div class="chips">${Object.values(SCENE_FX_LABEL).map(v=>`<span class="chip">${esc(v)}</span>`).join('')}</div>`);
+
+// ── 🎞 모션그래픽팩 ── (주인: static/motion-graphics-pack.js)
+const MG=window.MOTION_GRAPHICS,CAT=window.SCENE_DECORATION_CATALOG;
+if(MG){const n=MG.groups.reduce((a,g)=>a+g.items.length,0);section('mograph','🎞 모션그래픽팩',`${MG.groups.length}분류 · ${n}개`,`<p class="lead">레퍼런스 영상을 실측해 옮긴 움직이는 그래픽(가리키기·강조는 기존 도형 중 쓰이는 것을 옮겨 옴).</p>`+MG.groups.map(g=>`<h3>${esc(g.name)}</h3><div class="grid">`+g.items.map(it=>{
+    if(it.mograph){const item=MG.items[it.mograph];return `<div class="card"><div class="mg" data-mg="${it.mograph}"></div><b>${esc(item.label)}</b><small>${esc(item.moment)}</small><small><a class="more" href="${esc(item.src.url)}" target="_blank">레퍼런스 ${esc(item.src.span)}</a></small></div>`;}
+    const def=CAT.shapes.find(s=>s.key===it.graphic);return `<div class="card"><canvas class="shape" width="96" height="72" data-shape="${it.graphic}"></canvas><b>${esc(def?.label||it.graphic)}</b><small>기존 도형${it.legacy?' · 레퍼런스 오면 교체':''}</small></div>`}).join('')+'</div>').join(''));
+  document.querySelectorAll('[data-mg]').forEach(el=>{el.className+=' scene-decoration';MG.poster(el,{mograph:el.dataset.mg,w:100},120);MG.clock(el,{mograph:el.dataset.mg},0);});
+  document.querySelectorAll('canvas[data-shape]').forEach(c=>{const def=CAT.shapes.find(s=>s.key===c.dataset.shape);if(!def)return;const ctx=c.getContext('2d');ctx.translate(48,36);CAT.shapeDraw[def.key](ctx,26,def.color);});}
+
+// ── 😀 꾸밈 ── (주인: static/scene-decoration-catalog.js)
+if(CAT){const stickers=CAT.emoji.reduce((n,c)=>n+c[1].length,0);section('deco','😀 스티커 · 배지 · 도형',`스티커 ${CAT.emoji.length}분류 ${stickers}개 · 배지 ${CAT.thumbnailBadges.length+CAT.badges.length} · 도형 ${CAT.shapes.length}`,
+  CAT.emoji.map(([name,list])=>`<h3>${esc(name)} 스티커</h3><div class="emo">${list.map(esc).join(' ')}</div>`).join('')+
+  `<h3>배지</h3><div>${[...CAT.thumbnailBadges,...CAT.badges.filter(t=>!CAT.thumbnailBadges.some(b=>b.label===t)).map(label=>({label,color:'#FF2D5E'}))].map(b=>`<span class="badge" style="background:${esc(b.color)}">${esc(b.label)}</span>`).join('')}</div>`+
+  `<h3>도형(옛 탭 — 모션그래픽 스위치를 켜면 쓰이는 것만 모션그래픽으로)</h3><div class="grid">${CAT.shapes.map(s=>`<div class="card"><canvas class="shape" width="96" height="72" data-shape2="${s.key}"></canvas><b>${esc(s.label)}</b></div>`).join('')}</div>`);
+  document.querySelectorAll('canvas[data-shape2]').forEach(c=>{const def=CAT.shapes.find(s=>s.key===c.dataset.shape2);const ctx=c.getContext('2d');ctx.translate(48,36);CAT.shapeDraw[def.key](ctx,26,def.color);});}
+
+// ── 🖼 템플릿 ── (주인: out/precision20-data.js · out/continuous20-data.js)
+const P20=window.PRECISION20||[],C20=window.CONTINUOUS20||[];
+section('template','🖼 템플릿',`썰 스타일 ${P20.length} · 고정 스타일 ${C20.length}`,`<h3>썰 스타일</h3><div class="grid">${P20.map(t=>`<div class="card">${t.hook_image?`<img class="thumb" data-src="${ASSET}${esc(t.hook_image)}" alt="">`:''}<b>${esc(t.name)}</b><small>${esc(t.hook?.design_label||'')}</small></div>`).join('')}</div><h3>고정 스타일</h3><div class="grid">${C20.map(t=>`<div class="card">${t.frame_image?`<img class="thumb" data-src="${ASSET}${esc(t.frame_image)}" alt="">`:''}<b>${esc(t.name)}</b></div>`).join('')}</div>`);
+
+// ── 😂 짤 ──
+if(data.memes){section('meme','😂 감정짤팩',`${data.memes.emotions.length}감정 · ${data.memes.total}개`,`<p class="lead">감정별 앞 8개 표지. 전체·⭐ 우선 짤 고르기는 <a class="more" href="/meme_pack">밈팩 화면</a>.</p>`+data.memes.emotions.map(e=>`<h3>${esc(e.emotion)} <small style="color:var(--sub)">${e.count}개</small></h3><div class="posters">${e.sample.map(id=>`<img data-src="/api/meme/${id}/poster" alt="">`).join('')}</div>`).join(''));}
+
+// ── 🔤 글꼴 ── (파일: static/fonts · 이름: static/fonts.json)
+if(data.fonts){let names={};try{(await (await fetch('/fonts.json')).json()).forEach(f=>names[f.file]=f.name);}catch(e){}
+  section('font','🔤 글꼴',`${data.fonts.length}개`,`<div class="grid">${data.fonts.map((f,i)=>`<div class="card"><div class="sample" data-font="${esc(f)}" data-font-name="SP${i}" style="font-family:'SP${i}',sans-serif;cursor:pointer;font-size:15px;color:var(--sub)">눌러서 글꼴 보기</div><b>${esc(names[f]||f.replace(/\.(ttf|otf)$/,''))}</b><small>${esc(f)}</small></div>`).join('')}</div>`);
+}
+
+// ── 🔒 관리자·연구용 ──
+if(data.fx_samples)section('fxsample','🔒 효과 견본(에펙)',`${data.fx_samples.groups}묶음 · ${data.fx_samples.items}개`,`<p class="lead">에펙으로 뽑은 견본 영상 — 편집기에서 바로 쓰는 팩이 아니라 고르는 참고용. <a class="more" href="/fx_samples">효과 견본 화면 열기</a></p>`);
+
+nav.innerHTML=sections.map(s=>`<a href="#${s.id}">${esc(s.title.replace(/^\S+\s/,''))}<b>${esc(String(s.count).split(' · ')[0])}</b></a>`).join('');
+if(location.hash){const t=document.querySelector(location.hash);if(t)t.scrollIntoView();}
+watch();
+window.__shortemReadyMs=Math.round(performance.now()-__shortemT0);
+window.__shortemPacksReady=sections;
+})();
+</script>
+</body>
+</html>

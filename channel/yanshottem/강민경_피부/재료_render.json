@@ -1,0 +1,157 @@
+{
+ "_note": "make_render.py — 페이지 1 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/강민경_피부/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "kmk_WmEjrZFVRB4.mp4",
+   "ss": 638.3,
+   "src_crop": [
+    770,
+    0,
+    780,
+    780
+   ],
+   "cuts": [
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 638.3,
+     "src_crop": [
+      770,
+      0,
+      780,
+      780
+     ],
+     "dur": 2.09,
+     "plan_i": 0
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 640.39,
+     "src_crop": [
+      555,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.46,
+     "plan_i": 1
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 643.1,
+     "src_crop": [
+      760,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.1,
+     "plan_i": 2
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 667.0,
+     "src_crop": [
+      480,
+      0,
+      720,
+      720
+     ],
+     "dur": 1.32,
+     "plan_i": 3
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 615.9,
+     "src_crop": [
+      700,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.32,
+     "plan_i": 4
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 536.62,
+     "src_crop": [
+      650,
+      0,
+      760,
+      760
+     ],
+     "dur": 1.93,
+     "plan_i": 5
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 609.8,
+     "src_crop": [
+      800,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.475,
+     "plan_i": 6
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 621.3,
+     "src_crop": [
+      300,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.475,
+     "plan_i": 7
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 652.25,
+     "src_crop": [
+      810,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.8,
+     "plan_i": 8
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 661.1,
+     "src_crop": [
+      480,
+      0,
+      780,
+      780
+     ],
+     "dur": 2.07,
+     "plan_i": 9
+    },
+    {
+     "src": "kmk_WmEjrZFVRB4.mp4",
+     "ss": 631.1,
+     "src_crop": [
+      660,
+      0,
+      780,
+      780
+     ],
+     "dur": 1.95,
+     "plan_i": 10
+    }
+   ],
+   "t_final": [
+    0.0,
+    17.988
+   ]
+  }
+ ]
+}

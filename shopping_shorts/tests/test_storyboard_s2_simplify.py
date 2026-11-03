@@ -115,13 +115,13 @@ def test_picks가_초를_다시잰다(env):
 
 
 def test_화면이_고칠때마다_picks로_다시잰다():
-    for f in ("sbRowMove", "sbRowDel", "sbRowAdd"):
+    for f in ("sbRowMove", "sbRowDel", "sbRowAddGo"):   # sbRowAdd 는 칸 종류 고르기만 연다(관제 200)
         assert "sbPicksSync(ek,bd)" in _fn(f), f
     for f in ("sbMv", "sbRmCard", "sbAddCand"):
         assert "sbResync(ek)" in _fn(f), f
     ps = _fn("sbPicksSync")
     assert "ids:sbLiveIds(ek,k,x)" in ps and "line:sbLine(ek,k,x)" in ps and "bd.check=r.check" in ps
-    assert 'onblur="sbEditDone()"' in HTML
+    assert 'onblur="sbEditDone(event)"' in HTML
 
 
 # ── ⑥ 장면 구간 미리보기 ──

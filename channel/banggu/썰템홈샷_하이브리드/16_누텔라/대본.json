@@ -1,0 +1,144 @@
+{
+ "topic": "누텔라 × 처음엔 칼로 썰어 빵에 얹어 먹는 덩어리였다 — 2차 대전 뒤 코코아가 귀해 피에몬테의 피에트로 페레로가 헤이즐넛을 듬뿍·코코아는 조금 넣은 반죽(1946 Giandujot, 빵처럼 덩어리로 빚어 썰어 먹음) → 1951 Supercrema(바르기 쉬운 크림) → 1964 첫 누텔라 병 · 2007 세계 누텔라의 날은 블로거 Sara Rosso 가 시작(전부 누텔라 공식 누리집 History) · 뒤 체험: 쿠팡 페레로 누텔라 헤이즐넛 코코아 스프레드(9789228173, 같은 제품)",
+ "brand": "Nutella",
+ "scene_query": "Nutella history Giandujot loaf sliced",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "nu",
+  "why": "빵에 바르는 잼으로만 아는 누텔라 — 첫 제품(1946 Giandujot)은 빵처럼 덩어리로 빚어 칼로 썰어 빵에 얹어 먹었다(누텔라 공식 History 'shaped into a loaf that could be sliced'). 훅 장면 = 누텔라 공식 광고의 병+빵 → 덩어리 잔두야 반죽을 칼로 써는 장면 — '누텔라를 썰어 먹었다고?'"
+ },
+ "hook": [
+  "누텔라가 원래,",
+  "썰어 먹는 덩어리?"
+ ],
+ "post": "누텔라는 원래 칼로 썰어 먹는 덩어리였다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "nu": {
+   "text": "누텔라 공식 누리집 History(2026-10-28 확인): 1946 Giandujot — 'After World War II, cocoa was extremely scarce.' In Piedmont, Pietro Ferrero 'creating a sweet paste predominantly from locally available hazelnuts, and just a little of the precious cocoa' · 'The sweet paste of the first recipe was shaped into a loaf that could be sliced and spread on bread' · 1951 'transformed into a creamy new product that was easier to spread, named Supercrema' · 1964 'the first-ever jar of a new hazelnut and cocoa cream was created … Nutella' · 2007 'On February 5th 2007, all Nutella lovers were called to unite by the Italo-American blogger Sara Rosso'",
+   "url": "https://www.nutella.com/us/en/history"
+  },
+  "lb": {
+   "text": "Nutella UK & Ireland 공식 유튜브 'Nutella Loves Bread'(9iAhJT0XRJ4) — 누텔라 병과 빵(훅 첫 화면)",
+   "url": "https://www.youtube.com/watch?v=9iAhJT0XRJ4"
+  },
+  "p1": {
+   "text": "쿠팡 9789228173 '페레로 누텔라 헤이즐넛 코코아 스프레드' — 파트너스 API 2026-10-28, 상품 사진을 열어 누텔라 병(HAZELNUT-COCOA SPREAD) 확인",
+   "url": "https://www.coupang.com/vp/products/9789228173"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(썰어 먹던 덩어리 = 질문)",
+    "seg": "A",
+    "text": "빵에 발라 먹는 누텔라, 처음엔 칼로 썰어 먹는 덩어리였다는데",
+    "facts": [
+     "nu",
+     "lb"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history",
+     "https://www.youtube.com/watch?v=9iAhJT0XRJ4"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "전쟁이 막 끝난 이탈리아는, 코코아가 너무 귀했대요",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "그래서 피에몬테 지방의 페레로라는 사람이, 동네에 흔한 헤이즐넛을 듬뿍 넣고",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "해결(이어)",
+    "seg": "A",
+    "text": "코코아는 아주 조금만 넣은, 달콤한 반죽을 만들었는데",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "이걸 빵처럼 덩어리로 빚어서, 칼로 썰어 빵에 얹어 먹었다고",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "그 뒤",
+    "seg": "A",
+    "text": "그러다 잘 발리는 크림으로 바뀌고, 지금 같은 누텔라 병은 그 뒤에 나왔대요",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "쐐기(누텔라의 날)",
+    "seg": "A",
+    "text": "심지어 세계 누텔라의 날은, 회사가 아니라 한 블로거가 만든 날이래요",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도, 쿠팡에서 누텔라를 하나 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9789228173"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "뚜껑 열고 칼로 크게 떠서, 식빵에 쓱 펴 바르니까",
+    "facts": [],
+    "sources": []
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "이걸 썰어 먹던 시절이 있었다는 게, 도무지 상상이 안 가더라고요",
+    "facts": [
+     "nu"
+    ],
+    "sources": [
+     "https://www.nutella.com/us/en/history"
+    ]
+   }
+  ]
+ }
+}

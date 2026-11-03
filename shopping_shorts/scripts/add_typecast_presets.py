@@ -40,6 +40,9 @@ VOICES = [
     # 2026-09-22 사장님 추가 지목. /v2/voices 실측: API 이름 Jihoon · male · young_adult ·
     # Conversational. 한줄설명은 그 메타데이터만 옮겼다(청취 전이라 음색 형용사는 안 붙임).
     ("tc-jihoon",   "지훈",   "대화체에 맞는 젊은 남성",       "tc_61f0859907085fc68561c9a1", "M"),
+    # 2026-10-13 사장님 지목. /v2/voices 실측: API 이름 Yura · female · young_adult ·
+    # Ads/Promotion·Documentary. 한줄설명은 메타데이터만 옮겼다(청취 전).
+    ("tc-yura",     "유라",   "광고·내레이션에 맞는 젊은 여성", "tc_61130d6cf89dd58a4c13295d", "F"),
 ]
 
 # 일레븐랩스의 변형과 **같은 이름**에 타입캐스트 축(emotion/intensity)을 태운다.

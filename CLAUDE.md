@@ -123,6 +123,17 @@ py tools/live_admin.py setting <키> <값>                       # 관리자 설
 □ 스위치 켜기·관리자 화면 확인·렌더/캡컷 대조 = 전부 Claude 몫. "콘솔에 붙여 넣으세요" 같은 안내 금지
 □ 경로는 `produce`처럼 앞 / 없이(git bash 가 /produce 를 파일 경로로 바꾼다)
 
+### 구글(폼·Apps Script·콘솔)도 Claude가 직접 한다 — 크롬 확장 끊겨도 (2026-10-14 사장님)
+
+사장님: **"플레이라이트 크롬확장 매일 너가 직접 하고 있는데 왜 매번 그러냐."** → "붙여넣고 실행하세요" 안내 금지.
+```
+py tools/google_browser.py check                 # 로그인 살아있나
+py tools/google_browser.py gs <파일.gs> <함수>     # Apps Script 붙여넣기+실행(권한 '허용'만 사장님)
+py tools/google_browser.py open <url>            # 로그인된 창으로 열기
+```
+□ 로그인 프로필 = `~/.claude/google_browser_profile` (한 번 로그인하면 유지). check 가 False 일 때만 `login` 띄우고 사장님께 "창에서 로그인만" 부탁
+□ 비밀번호는 Claude가 치지 않는다 — 로그인·권한 허용 클릭만 사장님 몫
+
 ---
 
 ## 🚫 0순위-A1 — **무슨 일이든 "다 됐다"는 라이브에서 끝까지 돌려본 뒤에만** (2026-09-04 → 2026-09-17 확대)
@@ -446,6 +457,15 @@ py tools/track.py park-idle         # 7일 넘게 안 쓴 트랙 폴더를 전�
     (`M tools/track.py`) 다음 병합이 "Please commit/stash before merge"로 **깨진다**(2026-07-24 실사고).
     락은 정상 병합으로 main에 들어가고 `_sync_main_folder`가 알아서 main 폴더를 갱신한다.
 - ⚠️ **오래 끌지 마라.** 태스크 단위로 병합한다. `list`가 5커밋 이상 밀리면 경고한다.
+- 🚫 **병합은 모아서 한 번 (2026-10-16 사장님 "병합을 몇 번 하는 것보다 푼 다음에 한 번에 병합이 빠른 거 아니야? / 관문규칙에 확실하게 넣어").**
+  ```
+  □ 사장님이 요청한 일이 여러 개면 **전부 고치고 검증한 뒤 finish 한 번**. 하나 끝날 때마다 finish 금지
+  □ ★작업 중에 사장님이 **추가 요구를 하면 병합을 멈춘다**(10-16 사장님 "작업중에 내가 추가요구하면 멈추고 한번에 병합한다") —
+    걸려던 finish 는 걸지 않고, 줄에만 서 있으면 빼고, 추가 요구까지 다 고친 뒤 **한 번에** 건다
+  □ 먼저 내보내야 할 급한 것(사고 수습·고객 장애)만 예외 — 그때는 "이것만 먼저 넣는다"고 사장님께 말한다
+  □ 관문 시험이 이미 돌고 있을 때 멈출지는 사장님께 한 줄로 묻는다(끊으면 그동안 돈 시험을 버린다)
+  ```
+  실사고(10-15~16 구간빠르게): 고칠 때마다 finish → 하루 병합 4번·관문 대기 수 시간. 박스 수정 하나만 먼저 올려 뒤 요청 2개가 다음 병합까지 밀렸다.
 
 ### 🤖 Claude가 지켜야 할 것 (사용자에게 창 바꾸라고 시키지 마라)
 
@@ -686,6 +706,68 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 
 > 직전 산출물이 템플릿 원본이다: `out/숏템하우스_2편_대본.html` · `out/숏템하우스_2편_녹화콜시트.html`
 > 주식 채널(STOCK BRAIN) 정보형 영상은 `channel/strategy/영상제작_규칙.md`를 따른다(다른 문서).
+
+---
+
+## 🧩 회원 PC(클로드형) 숏템 = 프리셋 원본 그대로 + 사람 손 단계도 자동으로 (2026-10-20 사장님)
+
+사장님: **"기본 디폴트값은 모든 프리셋영상에 맞춘다고 명시를 해 / 나중에 회원이 변경할 수 있게."**
+
+```
+□ 기본값 = 그 프리셋의 원본 영상 — **모든 프리셋**. 회원이 설정에서 바꾼 칸만 회원 값
+    주인 = tools/calcopy/preview_request.preset_defaults
+      글꼴·자막 외곽선 = 프리셋 frame.json(편마다 값은 per_video.fill_defaults 중앙값)
+      목소리·빠르기·배경음악·자막 쌓기 = 프리셋 폴더 defaults.json(_from 에 근거 파일:줄)
+    회원 PC 합치기 = shortem_client local_settings.packFor(엔진 기본 팩 ← 프리셋 기본값 ← 회원 칸)
+    ★새 프리셋을 만들면 defaults.json 도 같이 만든다(없으면 엔진 기본 팩 목소리로 나간다)
+    ★필재 금지(10-20) — 기본값·팩 어디에도 쓰지 않는다(남 = 박창수·지훈 / 여 = 문정·유라, 회원 PC 는 타입캐스트만)
+□ 칼카피 지침서(channel/production_start.md)·편마다 make.py 에서 **사람(오푸스)이 손으로 하던 단계는 회원 PC 엔진에 없다**
+    10-20 실측: 사장님 편은 컷마다 자를 칸을 골라 '박힌 자막 y≈930 크롭 밖'으로 뺐는데(yanshottem/장윤정 build_plan.py),
+    회원 PC 는 자동 초안(모든 컷 가운데 자르기)이라 남의 쇼츠 자막·제목 띠가 우리 자막과 두 겹으로 나왔다.
+    → 지침서에 손 단계를 새로 넣으면 '회원 PC 자동 단계에도 있나'를 같이 확인한다. 없으면 회원 결과물은 집 PC 결과물과 다르다
+□ ★회원 PC 노하우 = **서버 지시서 `tools/calcopy/hybrid/flow.py` 한 곳**(볼케이노형, 사장님 10-21 "볼케이노처럼 단계별로 착착").
+    회원 PC 는 손(runner_ops 가 do 실행)·눈(회원 Claude 가 review 답)만. 제작순서 문서에 손 판단·함정을 넣으면 **같은 커밋에 flow.py 질문·반려에도** 넣는다.
+    서버 창구 = 숏템MCP 트랙 shopping_shorts/claude_flow.py(POST /api/claude/step) · 고리 = shortem_client/server/flow_driver.js · 문서 = channel/production_guide/99_member_pc_mcp.md
+    개발 완주 = tools/calcopy/hybrid/flow_dev.py · 정답지 대조 = tools/calcopy/hybrid/answer_key.py
+□ ★연예인 장면은 **반드시 찾은 원본(연예인 본인 채널·방송사 공식)에서만** — 다른 채널(벤치 쇼츠·재편집·리뷰)의 연예인 영상을 그대로 가져다 쓰면 **절대 안 된다**(사장님 10-21).
+    원본을 못 찾으면 그 편은 만들지 않는다. 제품 컷도 원본 안 제품 장면이 먼저, 남의 영상은 연예인 없는 제품 컷·장면 전환 없는 구간만
+    주인 = tools/calcopy/hybrid/rules.source_rule_static(서버 지시서가 대본·계획 때 부른다) + runner_ops.source_rule_scan(장면 전환 — 회원 PC 가 계획·렌더 때 잰다) · 시험 shopping_shorts/tests/test_source_rule.py
+    문서 = channel/production_guide/00_common·02_find_source·05_material · briefs/screen_pick·script
+    10-21 실사고: 이미도 편 17초 별 전환·장갑 손 = 리뷰여왕 영상에서 딸려 옴(원본 전체 862초에는 별 0번, 원본 672~675초에 튜브 근접이 있었다)
+□ ★만들다 난 오류는 그날 바로 channel/production_guide/98_error_log.md 표에 적는다(무엇이·왜·고친 곳·장치) — 편 시작 전에 훑는다(사장님 10-21)
+□ 회원 PC 결과물 확인 = shortem_client/test/live_episode.js --say "<회원이 친 한 줄>"(설치본·라이브 서버·진짜 키) → 완성본을 눈으로
+□ ★렌더 인코딩 = 그래픽카드 우선, 없으면 CPU — 우리 PC·회원 PC 같은 코드(사장님 10-25 "화질 같게, GPU 있으면 우선, 없으면 CPU")
+    주인 = tools/calcopy/engine/encoder.venc() 하나. 렌더 코드에 '-c:v libx264' 를 새로 적지 마라 — venc() 를 부른다
+    NVENC 가 실제로 돌면 GPU(cq22 = x264 crf16 과 VMAF 같거나 높음), 아니면 CPU 그대로. GPU 가 실패하면 같은 명령을 CPU 로 한 번 더(경보 1줄)
+    강제 = 환경변수 SHORTEM_ENCODER=cpu|gpu · 회원 PC 는 shortem_setup 의 video_encoder 와 flow env 단계 encoder 로 알린다
+    근거 = 98 #79(기미크림 편 CPU 607초 → GPU 254초, 서로 VMAF 96.6, 자동검사 둘 다 통과)
+```
+
+---
+
+## 🧬 칼카피 → 숏템프리셋 페이지 반영 = 트랙에 각자 기록, 병합은 요청 때나 새벽 2시 한 번에 (2026-10-18 사장님)
+
+사장님(10-18): **"커밋하면 트랙에 모두 각자 기록을 다 하고, 내가 요청하거나 아니면 새벽 2시에 저장된 모든 거 한 번에 병합 후 라이브 간다."**
+(10-17 "마지막 커밋 후 이곳에 업데이트"를 대체 — 창이 여럿이라 세션마다 병합하면 관문 줄만 길어진다)
+화면 이름은 **"숏템프리셋"**이다 — 사장님께 보이는 글에 "칼카피"라고 쓰지 마라(10-17 사장님 "칼카피라고 하지 말고").
+
+페이지(`/shortem_preset`, 관리자 사이드바 '숏템프리셋')는 **main 에 있는 장부만** 읽는다(`calcopy_board.preset_home`).
+
+```
+□ 각 세션: 장부(channel/브랜드.json·스타일.json·결과물.json)·분석 문서를 바꾸면 **자기 트랙에 커밋만** 한다.
+    ★세션이 직접 sync·finish 숏템프리셋 하지 마라 — 반영은 아래 한 곳이 모아서 한다
+□ 반영(한 번에): py tools/calcopy/preset_publish.py
+    = 숏템프리셋 트랙 살리기 → 엔진 마지막 커밋의 장부·근거 문서 중 main 과 다른 것만 옮겨 커밋 → 있으면 finish 숏템프리셋
+    · 사장님이 "반영해/올려" 하면 그때 실행
+    · 아니면 매일 02:00 작업 스케줄러 '숏템_숏템프리셋_반영'이 실행(로그 .tracks/_finish_logs/preset_publish.log)
+□ 반영 뒤 라이브 확인: py tools/live_admin.py shot shortem_preset out.png (서버 배포창 2~6시)
+□ 얼마나 밀렸나만 볼 때: py tools/calcopy/sync_preset_ledgers.py --check (바꾸지 않음)
+□ 새 결과물·브랜드·스타일 강점(strengths)은 장부 파일에 적는다 — 페이지 HTML 에 직접 적지 마라(주인 = 장부).
+  근거 문서는 장부에 'channel/…/이름.md' 꼴로 적으면 화면에서 열리고 반영 때 같이 간다(calcopy_board.referenced_docs)
+```
+
+> ⚠️ 엔진 트랙을 통째로 finish 하지 마라 — 고객 영상 라인(video_assemble·mix_pipeline 등) 코드가 같이 간다. 장부만 이 도구로 옮긴다.
+> ⚠️ 새벽 2시 실행은 **이 PC가 켜져 있어야** 돈다. 꺼져 있었으면 다음 날 사장님 요청 때 반영된다.
 
 ---
 

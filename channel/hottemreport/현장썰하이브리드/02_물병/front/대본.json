@@ -1,0 +1,208 @@
+{
+ "topic": "초대형 스테인리스 물병(Manna Titan) — 아빠(@theclawedjoker)가 상자를 열고, 집에 있는 물병 네 개를 차례로 부어 보는 시연, 끝에 딸 반응",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": {
+  "id": "Mp6LPm9qbLo",
+  "channel": "썰풀다",
+  "views": 30040,
+  "note": "같은 원본(대사 일치). 벤치 = '딸 물병 검사하다가 아빠가 더 신남' 부녀 갈등. 우리는 제품 쪽으로 각색: 라벨 원음(2,900개)·네 병 붓기 증거·딸/아빠 끝 한 마디(벤치 안 쓴 아빠 대답)"
+ },
+ "sources": {
+  "main": {
+   "file": "tt_7665448745386970398.mp4",
+   "who": "틱톡 @theclawedjoker",
+   "views": 2200000,
+   "dur": 49.27,
+   "res": "720x1280"
+  }
+ },
+ "titles": {
+  "hook": "물병 4개가 다 들어간\n초대형 물병"
+ },
+ "facts": {
+  "f1": {
+   "text": "0~3초 흰 대형 물병으로 마심 · 2.1~4.55 'There's (only) supposed to be a water bottle in that box. That box is massive.' · 6~8초 큰 상자에서 꺼냄(8초 'TITAN' 포장)",
+   "kind": "원본 화면+본인 말"
+  },
+  "f2": {
+   "text": "9~12초 라벨 '1 REFILL PER DAY CAN SAVE OVER 2920 PLASTIC BOTTLES EACH YEAR' · 8.1~11.45 'If you fill this up once a day you save 2900 water bottles.'",
+   "kind": "화면 글자+본인 말"
+  },
+  "f3": {
+   "text": "12.8~14.1 'We're going to see how much this actually holds.' · 15~19 분홍 물병, 20~23 크림 텀블러, 24~29 보라 물병, 31~39 분홍 물병 — 네 번 부음(0.5초 시트 실측)",
+   "kind": "화면"
+  },
+  "f4": {
+   "text": "28.7~30.3 'I still got room for another (one).' (끝 낱말은 받아쓰기마다 one/Owala/Luau 로 갈림 — 자막은 '한 병 더')",
+   "kind": "본인 말"
+  },
+  "f5": {
+   "text": "41~45초 뚜껑 닫힌 물병·옆 손잡이·MANNA 로고 · 47.1~48.0 딸 'That's my water bottle!' · 48.1~48.95 아빠 대답(받아쓰기 'No it's not'·'Not anymore'·'Not gonna happen' 로 갈림 → 자막은 공통 뜻 '이젠 아니야')",
+   "kind": "화면+본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2",
+   "N3",
+   "N4",
+   "O3",
+   "N5",
+   "N6",
+   "O4"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품+~있는데요)",
+    "text": "물병 여러 개를 부어도, 다 들어간다는 초대형 물병이 있는데요.",
+    "caps": [
+     "물병 여러 개를 부어도",
+     "다 들어간다는",
+     "초대형 물병이 있는데요"
+    ],
+    "facts": [
+     "f1",
+     "f3"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거1(라벨)",
+    "text": "상자에서 꺼낸 물병엔, 이런 문구가 붙어 있었대요.",
+    "caps": [
+     "상자에서 꺼낸 물병엔",
+     "이런 문구가 붙어 있었대요"
+    ],
+    "facts": [
+     "f1",
+     "f2"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "시연 시작",
+    "text": "진짜 얼마나 들어가나, 집에 있는 물병을 하나씩 부어 봤는데요.",
+    "caps": [
+     "진짜 얼마나 들어가나",
+     "집에 있는 물병을",
+     "하나씩 부어 봤는데요"
+    ],
+    "facts": [
+     "f3"
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "불러냄 → 원음 증거2",
+    "text": "한 병, 두 병, 세 병을 다 붓고도.",
+    "caps": [
+     "한 병, 두 병",
+     "세 병을 다 붓고도"
+    ],
+    "facts": [
+     "f3"
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "장점 몰아치기",
+    "text": "네 번째 물병까지 콸콸 들어갔대요.",
+    "caps": [
+     "네 번째 물병까지",
+     "콸콸 들어갔대요"
+    ],
+    "facts": [
+     "f3"
+    ]
+   },
+   {
+    "id": "N6",
+    "fn": "끝 전언(~다고 하네요)",
+    "text": "손잡이까지 달린 이 물병을 보고, 딸이 한마디 했다고 하네요.",
+    "caps": [
+     "손잡이까지 달린",
+     "이 물병을 보고",
+     "딸이 한마디 했다고 하네요"
+    ],
+    "facts": [
+     "f5"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "mn",
+    "span": [
+     2.08,
+     4.62
+    ],
+    "en": "There's supposed to be a water bottle in that box. That box is massive.",
+    "caps": [
+     "물병 하나 들었다는 상자가",
+     "이렇게 크다고?!"
+    ],
+    "check": "어절 받아쓰기 1.5~5.8 단독 + 소리 크기(2.1 시작·4.55 끝, 4.6 이후 −48dB)"
+   },
+   {
+    "id": "O2",
+    "src": "mn",
+    "span": [
+     8.05,
+     11.5
+    ],
+    "en": "If you fill this up once a day you save 2900 water bottles.",
+    "caps": [
+     "하루 한 번만 채워도",
+     "페트병 2,900개 아낀대!"
+    ],
+    "check": "어절 받아쓰기 0~12 + 무음 검출 8.13~11.41"
+   },
+   {
+    "id": "O3",
+    "src": "mn",
+    "span": [
+     28.68,
+     30.35
+    ],
+    "en": "I still got room for another one.",
+    "caps": [
+     "아직 한 병 더",
+     "들어간다고!"
+    ],
+    "check": "받아쓰기 27~31.5 두 번('…another Luau/Owala' — 끝 낱말만 흔들림) · 소리 28.74~30.3"
+   },
+   {
+    "id": "O4",
+    "src": "mn",
+    "span": [
+     47.05,
+     49.0
+    ],
+    "en": "(딸) That's my water bottle! (아빠) No, it's not.",
+    "caps": [
+     "그거 내 물병인데?!",
+     "이젠 아니야ㅋㅋ"
+    ],
+    "check": "46.9~49.25 단독 두 모델 교차(소리·영상): 딸 문장 일치, 아빠 대답만 갈림 · 소리 47.1~48.95(48.0 쉼)"
+   }
+  ],
+  "dropped": {
+   "Owala·Stanley·Hydro Jug(14.5~26.6)": "다른 회사 물병 이름 — 자막·나레에 안 씀(소재표 규칙), 원음 구간에도 안 넣음",
+   "We're going to see how much this actually holds(12.8~14.1)": "N3 나레와 뜻이 겹쳐 뺌",
+   "가격·할인 문구(설명란)": "금액 언급 금지·구매 유도 0"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 필재 tc_68257f68bc6e3c161ab5078d · tools/calcopy/engine/tts_pause.py(쉼표 0.22·마침표 0.30) 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

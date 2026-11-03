@@ -1,0 +1,792 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.209
+   ],
+   "O1": [
+    2.289,
+    5.089
+   ],
+   "N2": [
+    5.169,
+    7.843
+   ],
+   "N3": [
+    7.923,
+    10.481
+   ],
+   "O2": [
+    10.561,
+    11.721
+   ],
+   "N4": [
+    11.801,
+    14.127
+   ],
+   "O3": [
+    14.207,
+    18.487
+   ],
+   "N5": [
+    18.567,
+    21.009
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 핫도그를",
+    "t0": 0.0,
+    "t1": 0.857,
+    "show": [
+     0.0,
+     0.857
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "처음 먹어 본 외국인이 있는데요",
+    "t0": 0.857,
+    "t1": 2.209,
+    "show": [
+     0.857,
+     2.289
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "좋아, 가 보자",
+    "t0": 2.289,
+    "t1": 3.489,
+    "show": [
+     2.289,
+     3.529
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "무지개 핫도그래",
+    "t0": 3.529,
+    "t1": 5.089,
+    "key": "무지개",
+    "show": [
+     3.529,
+     5.169
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "겉에는 알록달록한",
+    "t0": 5.169,
+    "t1": 6.312,
+    "show": [
+     5.169,
+     6.312
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시리얼 가루가 잔뜩 묻어 있었는데요",
+    "t0": 6.312,
+    "t1": 7.843,
+    "show": [
+     6.312,
+     7.923
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한 입 베어 물자",
+    "t0": 7.923,
+    "t1": 8.78,
+    "show": [
+     7.923,
+     8.78
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈가 끝도 없이 늘어났는데요",
+    "t0": 8.78,
+    "t1": 10.481,
+    "key": "치즈",
+    "show": [
+     8.78,
+     10.561
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "맛있다",
+    "t0": 10.561,
+    "t1": 11.721,
+    "show": [
+     10.561,
+     11.801
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "눈이 휘둥그레져서",
+    "t0": 11.801,
+    "t1": 12.944,
+    "show": [
+     11.801,
+     12.944
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈를 계속 잡아당겼는데요",
+    "t0": 12.944,
+    "t1": 14.127,
+    "show": [
+     12.944,
+     14.207
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "안에 치즈가 들었어",
+    "t0": 14.207,
+    "t1": 15.247,
+    "key": "치즈",
+    "show": [
+     14.207,
+     15.287
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "맛이 완전 제대로야",
+    "t0": 15.287,
+    "t1": 18.487,
+    "show": [
+     15.287,
+     18.567
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 영상은 조회수 1억 7천만 회를",
+    "t0": 18.567,
+    "t1": 20.567,
+    "key": "1억 7천만",
+    "show": [
+     18.567,
+     20.567
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넘겼다고 하네요",
+    "t0": 20.567,
+    "t1": 21.009,
+    "show": [
+     20.567,
+     21.3
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 6.0,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 늘어남 눈 동그래짐",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.145,
+    "dur": 1.145,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 7.0,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 늘어남",
+    "line": "N1",
+    "t0": 1.145,
+    "kind": "tts",
+    "t1": 2.289,
+    "dur": 1.144,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O1",
+    "ss": 0.56,
+    "src": "-Kay5ATKKSY.mp4",
+    "t0": 2.289,
+    "kind": "orig",
+    "t1": 5.169,
+    "dur": 2.88,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 1.0,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "알록달록 핫도그",
+    "line": "N2",
+    "t0": 5.169,
+    "kind": "tts",
+    "t1": 6.546,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 2.2,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "핫도그 근접",
+    "line": "N2",
+    "t0": 6.546,
+    "kind": "tts",
+    "t1": 7.923,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 3.6,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "한 입",
+    "line": "N3",
+    "t0": 7.923,
+    "kind": "tts",
+    "t1": 9.242,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 5.2,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 늘어남",
+    "line": "N3",
+    "t0": 9.242,
+    "kind": "tts",
+    "t1": 10.561,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O2",
+    "ss": 4.84,
+    "src": "-Kay5ATKKSY.mp4",
+    "t0": 10.561,
+    "kind": "orig",
+    "t1": 11.801,
+    "dur": 1.24,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 7.8,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 잡아당김",
+    "line": "N4",
+    "t0": 11.801,
+    "kind": "tts",
+    "t1": 13.004,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 9.0,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 늘어남",
+    "line": "N4",
+    "t0": 13.004,
+    "kind": "tts",
+    "t1": 14.207,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O3",
+    "ss": 13.0,
+    "src": "-Kay5ATKKSY.mp4",
+    "t0": 14.207,
+    "kind": "orig",
+    "t1": 18.567,
+    "dur": 4.36,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 10.2,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 핫도그",
+    "line": "N5",
+    "t0": 18.567,
+    "kind": "tts",
+    "t1": 19.934,
+    "dur": 1.367,
+    "over": 0.0
+   },
+   {
+    "src": "-Kay5ATKKSY.mp4",
+    "ss": 12.0,
+    "w": 1,
+    "crop": [
+     20,
+     0,
+     680,
+     903
+    ],
+    "see": "치즈 핫도그 근접",
+    "line": "N5",
+    "t0": 19.934,
+    "kind": "tts",
+    "t1": 21.3,
+    "dur": 1.366,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "-Kay5ATKKSY.mp4",
+    "span": [
+     0.56,
+     3.36
+    ],
+    "t0": 2.289,
+    "t1": 5.089
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "-Kay5ATKKSY.mp4",
+    "span": [
+     4.84,
+     6.0
+    ],
+    "t0": 10.561,
+    "t1": 11.721
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "-Kay5ATKKSY.mp4",
+    "span": [
+     13.0,
+     17.28
+    ],
+    "t0": 14.207,
+    "t1": 18.487
+   }
+  ],
+  "end": 21.3
+ },
+ "placement": {
+  "reference": "ro1l3u734v4",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 핫도그를",
+    "t0": 0.0,
+    "t1": 0.857,
+    "show": [
+     0.0,
+     0.857
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "처음 먹어 본 외국인이 있는데요",
+    "t0": 0.857,
+    "t1": 2.209,
+    "show": [
+     0.857,
+     2.289
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "좋아, 가 보자",
+    "t0": 2.289,
+    "t1": 3.489,
+    "show": [
+     2.289,
+     3.529
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "무지개 핫도그래",
+    "t0": 3.529,
+    "t1": 5.089,
+    "key": "무지개",
+    "show": [
+     3.529,
+     5.169
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "겉에는 알록달록한",
+    "t0": 5.169,
+    "t1": 6.312,
+    "show": [
+     5.169,
+     6.312
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시리얼 가루가 잔뜩 묻어 있었는데요",
+    "t0": 6.312,
+    "t1": 7.843,
+    "show": [
+     6.312,
+     7.923
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한 입 베어 물자",
+    "t0": 7.923,
+    "t1": 8.78,
+    "show": [
+     7.923,
+     8.78
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈가 끝도 없이 늘어났는데요",
+    "t0": 8.78,
+    "t1": 10.481,
+    "key": "치즈",
+    "show": [
+     8.78,
+     10.561
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "맛있다",
+    "t0": 10.561,
+    "t1": 11.721,
+    "show": [
+     10.561,
+     11.801
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "눈이 휘둥그레져서",
+    "t0": 11.801,
+    "t1": 12.944,
+    "show": [
+     11.801,
+     12.944
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈를 계속 잡아당겼는데요",
+    "t0": 12.944,
+    "t1": 14.127,
+    "show": [
+     12.944,
+     14.207
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "안에 치즈가 들었어",
+    "t0": 14.207,
+    "t1": 15.247,
+    "key": "치즈",
+    "show": [
+     14.207,
+     15.287
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "맛이 완전 제대로야",
+    "t0": 15.287,
+    "t1": 18.487,
+    "show": [
+     15.287,
+     18.567
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 영상은 조회수 1억 7천만 회를",
+    "t0": 18.567,
+    "t1": 20.567,
+    "key": "1억 7천만",
+    "show": [
+     18.567,
+     20.567
+    ],
+    "first": true,
+    "lex": [
+     "lux",
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넘겼다고 하네요",
+    "t0": 20.567,
+    "t1": 21.009,
+    "show": [
+     20.567,
+     21.3
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = ro1l3u734v4",
+   "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+   "효과음 0발(본보기 0) []",
+   "등장 {'cut': 15} · 강조 0/15"
+  ]
+ }
+}

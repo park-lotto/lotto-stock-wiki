@@ -1,0 +1,1346 @@
+[
+ {
+  "id": 1,
+  "통념": "무릎 아프면 걷지 마라",
+  "영역": "관절",
+  "유튜브검색어": "무릎 아플 때 걷기",
+  "조회수_합": 12996098,
+  "조회수_중앙": 264190,
+  "검색상위": [
+   {
+    "제목": "A beginner's lower body workout routine that will relieve knee pain and make walking easier! [20-...",
+    "조회수": 3829397
+   },
+   {
+    "제목": "허리·무릎 통증의 시작은 ‘뻣뻣함’입니다. 100세까지 두 발로 걷는 법  | 김범수 교수 몰아보기",
+    "조회수": 1795283
+   },
+   {
+    "제목": "[Knee Special] My knee pain disappeared after following along for 10 minutes a day!",
+    "조회수": 1718252
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "무릎이 아플 때 걷는 건 정말 무릎을 닳게 할까?",
+  "반대·한계": "같은 코호트에서 목적 없는 일상 걸음(unintentional)은 오히려 발생 증가와 연관. 뒤로 걷기 RCT라 앞으로 걷기 효과는 분리 안 됨.",
+  "근거": [
+   {
+    "pmid": "40393378",
+    "연도": "2025",
+    "설계·측정": "메타분석, 걷기 개입 연구 13개(경증~중등도 무릎 관절염): 관절 하중 지표 변화 극소(KAM 최고치 SMD 0.18, KAM 충격량 -0.01)",
+    "인용": "predominantly support increased walking without detrimental effects to knee joint health",
+    "제목": "The effect of walking interventions on biomechanical knee osteoarthritis outcomes: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "30967128",
+    "연도": "2019",
+    "설계·측정": "RCT, 무릎 관절염 68명(평균 55.6세), 주 3일 6주, 뒤로 걷기 vs 앞으로 걷기 vs 대조",
+    "인용": "resulted in greater reduction in pain and functional disability",
+    "제목": "Effect of 6-week retro or forward walking program on pain, functional disability, quadriceps muscle strength, and performance in individuals with knee osteoarthritis: a randomized controlled trial (retro-walking trial)."
+   },
+   {
+    "pmid": "40216502",
+    "연도": "2025",
+    "설계·측정": "영국 바이오뱅크 코호트, 평균 6.85년 추적, 증상성 무릎 관절염 2,711명 발생",
+    "인용": "More daily purposeful walking steps were associated with lower incident SKOA",
+    "제목": "Association of walking with incident knee osteoarthritis: a prospective cohort study using data from the UK Biobank."
+   }
+  ],
+  "pubmed검색": "knee osteoarthritis[tiab] AND walking[tiab] AND pain[tiab]"
+ },
+ {
+  "id": 2,
+  "통념": "계단이 무릎에 나쁘다",
+  "영역": "관절",
+  "유튜브검색어": "계단 오르기 무릎 연골",
+  "조회수_합": 6620641,
+  "조회수_중앙": 34606,
+  "검색상위": [
+   {
+    "제목": "[Show Recap] Skip the Elevator and Escalator for the Stairs? The Amazing Benefits of Stair Climbi...",
+    "조회수": 2486767
+   },
+   {
+    "제목": "\"Even people with bad knees can do it\" Stair climbing that will get rid of middle-aged belly fat ...",
+    "조회수": 1601565
+   },
+   {
+    "제목": "잘못된 계단 운동은 무릎 부상을 가져 올 수 있어요. 올바르게 계단을 오르내리는 운동 자세를 알려드립니다. │ 클래스e │ 뇌벨업",
+    "조회수": 790374
+   }
+  ],
+  "판정": "근거 약함",
+  "한편": "짧은 편",
+  "훅": "계단 오르기, 무릎에 정말 독일까?",
+  "반대·한계": "반대 방향 연구는 찾지 못함. 관찰연구라 인과 아님.",
+  "근거": [
+   {
+    "pmid": "39271150",
+    "연도": "2024",
+    "설계·측정": "영국 바이오뱅크 코호트 398,939명, 3,621,735 인-년 추적, OA 31,940명 발생",
+    "인용": "A higher frequency of stair climbing was positively associated with the risk of knee OA but not hip OA",
+    "제목": "Stair Climbing, Genetic Predisposition, and the Risk of Hip/Knee Osteoarthritis."
+   }
+  ],
+  "pubmed검색": "stair climbing[tiab] AND knee[tiab]"
+ },
+ {
+  "id": 3,
+  "통념": "스쿼트하면 무릎 망가진다",
+  "영역": "관절",
+  "유튜브검색어": "스쿼트 무릎 나간다",
+  "조회수_합": 8410752,
+  "조회수_중앙": 5034,
+  "검색상위": [
+   {
+    "제목": "모든걸 잃은 장첸이 타고난 운동신경으로 싸움판에 뛰어들면 벌어지는 일들ㄷㄷ(feat. 장첸의 엘레베이터신은 새로웠다...) 1-8합본",
+    "조회수": 4721541
+   },
+   {
+    "제목": "하루 1분이면 충분♨ 빠르게 근력 키워 골다공증 예방하는 '1분 벽 스쿼트' | 나는 몸신이다 360 회",
+    "조회수": 1436662
+   },
+   {
+    "제목": "한 손에 아령 30kg씩... 헬창들 기어서 나간다는 태릉선수촌 근력운동의 비밀...!│KBS 130827 방송",
+    "조회수": 1296976
+   }
+  ],
+  "판정": "부분",
+  "한편": "짧은 편",
+  "훅": "스쿼트가 무릎을 망친다는 말, 어디까지 맞을까?",
+  "반대·한계": "두 연구 모두 연골 손상을 직접 재지 않음: SR은 슬개대퇴 통증 증후군(PFPS) 위험 요인, RCT는 근육·힘 적응.",
+  "근거": [
+   {
+    "pmid": "35954598",
+    "연도": "2022",
+    "설계·측정": "체계적 고찰 37편(주로 운동선수 집단): PFPS와 무릎 굽힘 각도 관계",
+    "인용": "all squat exercises can cause tension overload in the knee",
+    "제목": "Patellofemoral Pain Syndrome Risk Associated with Squats: A Systematic Review."
+   },
+   {
+    "pmid": "23604798",
+    "연도": "2013",
+    "설계·측정": "RCT, 남학생 17명, 12주 점진 스쿼트: 깊은 스쿼트(0-120도) vs 얕은 스쿼트",
+    "인용": "Training deep squats elicited favourable adaptations on knee extensor muscle size and function compared to training shallow squats.",
+    "제목": "Effect of range of motion in heavy load squatting on muscle and tendon adaptations."
+   }
+  ],
+  "pubmed검색": "squat[tiab] AND knee[tiab] AND cartilage[tiab]"
+ },
+ {
+  "id": 4,
+  "통념": "달리기는 무릎 연골을 닳게 한다",
+  "영역": "관절",
+  "유튜브검색어": "달리기 무릎 연골 관절염",
+  "조회수_합": 3099107,
+  "조회수_중앙": 33282,
+  "검색상위": [
+   {
+    "제목": "퇴행성관절염에 좋은운동과 나쁜운동? (조기현 정형외과 전문의)",
+    "조회수": 1301280
+   },
+   {
+    "제목": "명의가 알려주는 무릎 건강을 위해 꼭 따라 해야 하는 운동ㅣ무릎 안 아프고 오래 쓰기 위해 해야 하는 운동ㅣ덤벨X 층간소음Xㅣ#명의",
+    "조회수": 646373
+   },
+   {
+    "제목": "5/2 Raw Live Broadcast",
+    "조회수": 290454
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "달리면 무릎 연골이 닳는다? 연구는 갈린다",
+  "반대·한계": "메타분석 3개가 확정 못 함, 코호트 1개는 달리기가 통증을 악화시키지 않음. 방향이 엇갈림 자체가 소재.",
+  "근거": [
+   {
+    "pmid": "28504066",
+    "연도": "2017",
+    "설계·측정": "메타분석, 연구 25개(n=125,810명, 이 중 17개 메타분석)",
+    "인용": "it was not possible to determine whether these associations were causative or confounded by other risk factors",
+    "제목": "The Association of Recreational and Competitive Running With Hip and Knee Osteoarthritis: A Systematic Review and Meta-analysis."
+   },
+   {
+    "pmid": "36809693",
+    "연도": "2023",
+    "설계·측정": "메타분석, 사례-대조 9개 12,273명(러너 1,272명)",
+    "인용": "It is unclear whether running volume is associated with increased knee osteoarthritis prevalence",
+    "제목": "The association between running volume and knee osteoarthritis prevalence: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "29728929",
+    "연도": "2018",
+    "설계·측정": "OAI 코호트, 50세 이상 무릎 관절염, 48개월 추적",
+    "인용": "self-selected running is associated with improved knee pain and not with worsening knee pain or radiographically defined structural progression",
+    "제목": "Running does not increase symptoms or structural progression in people with knee osteoarthritis: data from the osteoarthritis initiative."
+   }
+  ],
+  "pubmed검색": "running[tiab] AND knee[tiab] AND osteoarthritis[tiab]"
+ },
+ {
+  "id": 5,
+  "통념": "허리 아프면 누워 쉬어야 한다",
+  "영역": "관절",
+  "유튜브검색어": "허리 디스크 안정 누워있기",
+  "조회수_합": 13790368,
+  "조회수_중앙": 5888,
+  "검색상위": [
+   {
+    "제목": "[Morning Stretching Special] Posture Correction Exercises: Starting and Ending Lying Down",
+    "조회수": 7002475
+   },
+   {
+    "제목": "과학적으로 검증된 허리 스트레칭! 8분이면 그냥 끝! 허리 아프신 분들 필독!",
+    "조회수": 3084765
+   },
+   {
+    "제목": "허리통증 치료되는 수면자세 이방법만 따라하세요!! 통증이 싹 없어집니다!!",
+    "조회수": 1672728
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "허리 삐끗했을 때, 누워 쉬는 게 정말 빨리 낫게 할까?",
+  "반대·한계": "두 근거 모두 2002~2005년 자료. 만성 요통은 해당 안 됨(급성 한정).",
+  "근거": [
+   {
+    "pmid": "15738787",
+    "연도": "2005",
+    "설계·측정": "코크란 체계적 고찰(2005 갱신), 급성 요통·좌골신경통에서 침상안정 vs 활동 유지",
+    "인용": "For people with acute low back pain, advice to rest in bed is less effective than advice to stay active",
+    "제목": "The updated cochrane review of bed rest for low back pain and sciatica."
+   },
+   {
+    "pmid": "11797655",
+    "연도": "2002",
+    "설계·측정": "RCT, 급성 좌골신경통 250명, 6개월 추적: 6개월 치료실패 OR 1.6(95% CI 0.8-3.5)",
+    "인용": "Bed rest and physiotherapy are not more effective in acute sciatica than continuation of ADLs",
+    "제목": "Westeinde sciatica trial: randomized controlled study of bed rest and physiotherapy for acute sciatica."
+   }
+  ],
+  "pubmed검색": "bed rest[tiab] AND low back pain[tiab]"
+ },
+ {
+  "id": 6,
+  "통념": "허리 아플 때 걷기가 낫게 한다",
+  "영역": "관절",
+  "유튜브검색어": "허리 통증 걷기 효과",
+  "조회수_합": 16443088,
+  "조회수_중앙": 386741,
+  "검색상위": [
+   {
+    "제목": "Exercise Thought to Be Good for Your Back, But It Actually Turns Out to Be Bad│Daily Care Tips fo...",
+    "조회수": 3381906
+   },
+   {
+    "제목": "What You Must Check Every Morning If You Have Back Pain",
+    "조회수": 2956510
+   },
+   {
+    "제목": "Fix Your Walking Posture to Relieve Back Pain | How to Heal Disc Pain Without Surgery with 'Spine...",
+    "조회수": 1821160
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "허리가 아플 때 걷기는 약일까 독일까?",
+  "반대·한계": "다른 중재(운동·요가 등)보다 덜 효과적이라는 결과도 같이 있음.",
+  "근거": [
+   {
+    "pmid": "34783263",
+    "연도": "2022",
+    "설계·측정": "메타분석, 비특이적 요통 만성/재발 19개 시험 2,362명",
+    "인용": "walking/running was slightly more effective than minimal/no intervention",
+    "제목": "Walking, Cycling, and Swimming for Nonspecific Low Back Pain: A Systematic Review With Meta-analysis."
+   },
+   {
+    "pmid": "38908392",
+    "연도": "2024",
+    "설계·측정": "RCT(WalkBack), 요통에서 회복한 성인, 6개월 걷기+교육 6회 vs 무처치",
+    "인용": "significantly reduced low back pain recurrence",
+    "제목": "Effectiveness and cost-effectiveness of an individualised, progressive walking and education intervention for the prevention of low back pain recurrence in Australia (WalkBack): a randomised controlled trial."
+   },
+   {
+    "pmid": "40512494",
+    "연도": "2025",
+    "설계·측정": "코호트, 11,194명(평균 55.3세), 걷기 강도 상위 RR 0.82(95% CI 0.72-0.93)",
+    "인용": "daily walking volume and walking intensity were inversely associated with the risk of chronic LBP",
+    "제목": "Volume and Intensity of Walking and Risk of Chronic Low Back Pain."
+   }
+  ],
+  "pubmed검색": "walking[tiab] AND low back pain[tiab]"
+ },
+ {
+  "id": 7,
+  "통념": "글루코사민이 연골을 재생시킨다",
+  "영역": "관절",
+  "유튜브검색어": "글루코사민 관절 연골 효과",
+  "조회수_합": 2257378,
+  "조회수_중앙": 12986,
+  "검색상위": [
+   {
+    "제목": "관절 영양제 이거 하나만 드셔도 충분합니다!! (허리, 어깨, 손목 등 관절 통증, 염증, 부종, 뻣뻣함, 불편한 증상을 개선 시켜주는 관절 영양제)",
+    "조회수": 1537694
+   },
+   {
+    "제목": "How to Choose Chondroitin for Joint Health Like a Pro, According to a Pharmacist",
+    "조회수": 208125
+   },
+   {
+    "제목": "[관절 영양제ㅣ진짜 효과] 연골 좋아질까?ㅣ이 영상으로 싹 다 정리해 드립니다!! #콘드로이친 #보스웰리아",
+    "조회수": 129959
+   }
+  ],
+  "판정": "근거 약함",
+  "한편": "가능",
+  "훅": "관절에 좋다는 글루코사민, 연골을 되살릴까?",
+  "반대·한계": "통증 완화는 일부 메타분석에서 소폭, 구조 진행 억제는 못 봄.",
+  "근거": [
+   {
+    "pmid": "29713967",
+    "연도": "2018",
+    "설계·측정": "메타분석(2018), 무릎 관절염 글루코사민 vs 위약(JKOM)",
+    "인용": "glucosamine has the potential to alleviate knee OA pain",
+    "제목": "Effects of glucosamine in patients with osteoarthritis of the knee: a systematic review and meta-analysis."
+   },
+   {
+    "pmid": "16495392",
+    "연도": "2006",
+    "설계·측정": "RCT, 증상성 무릎 관절염 1,583명(평균 59세): 글루코사민 1,500mg/일 등",
+    "인용": "did not reduce pain effectively in the overall group of patients with osteoarthritis of the knee",
+    "제목": "Glucosamine, chondroitin sulfate, and the two in combination for painful knee osteoarthritis."
+   },
+   {
+    "pmid": "37492361",
+    "연도": "2022",
+    "설계·측정": "개방 라벨 전향 연구, 111명, 12개월 추적",
+    "인용": "failed to delay the progression of knee OA",
+    "제목": "GLUCOSAMINE SULFATE EFFICACY IN TREATING KNEE OSTEOARTHRITIS: A FOLLOW-UP STUDY."
+   }
+  ],
+  "pubmed검색": "glucosamine[tiab] AND osteoarthritis[tiab] AND pain[tiab]"
+ },
+ {
+  "id": 8,
+  "통념": "우두둑 소리 내면 관절염 온다",
+  "영역": "관절",
+  "유튜브검색어": "손가락 관절 꺾기 우두둑 관절염",
+  "조회수_합": 3551287,
+  "조회수_중앙": 2615,
+  "검색상위": [
+   {
+    "제목": "Is It Okay to Crack Your Knuckles?",
+    "조회수": 3381437
+   },
+   {
+    "제목": "손가락에서 '우두둑' 하고 뼈 소리내다간... (말잇못)",
+    "조회수": 60599
+   },
+   {
+    "제목": "Why you should never crack your fingers and make a 'thud' sound!!",
+    "조회수": 58940
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "손가락 우두둑, 정말 관절염으로 이어질까?",
+  "반대·한계": "두 연구 모두 소규모(215명, 40명). 장기 추적 RCT 없음.",
+  "근거": [
+   {
+    "pmid": "21383216",
+    "연도": "2011",
+    "설계·측정": "후향 사례-대조, 50~89세 215명(환자 135, 대조 80): 꺾기 유병 20%",
+    "인용": "does not seem to be a risk factor for hand OA",
+    "제목": "Knuckle cracking and hand osteoarthritis."
+   },
+   {
+    "pmid": "28050816",
+    "연도": "2017",
+    "설계·측정": "전향 연구, 무증상 성인 40명(상습 꺾기 30명), 중수지관절 400개",
+    "인용": "no evidence of immediate adverse physical examination findings after knuckle cracking",
+    "제목": "\"Knuckle Cracking\": Can Blinded Observers Detect Changes with Physical Examination and Sonography?"
+   }
+  ],
+  "pubmed검색": "knuckle[tiab] AND cracking[tiab] AND arthritis[tiab]"
+ },
+ {
+  "id": 9,
+  "통념": "거북목 자세가 목 통증의 원인",
+  "영역": "관절",
+  "유튜브검색어": "거북목 일자목 통증",
+  "조회수_합": 30287762,
+  "조회수_중앙": 1741714,
+  "검색상위": [
+   {
+    "제목": "Stretches for neck and shoulder (with 3 mins effective massage)",
+    "조회수": 6468867
+   },
+   {
+    "제목": "수술 없이 이것만 했을뿐인데 목 디스크가 치료 됐다!│단 2주의 기적│간단히 집에서 따라하기 쉬운 교정 운동법│명의가 알려주는 치료법│귀하신 몸│#골라듄다큐",
+    "조회수": 3241966
+   },
+   {
+    "제목": "Neck Pain Relief Exercises in 10 min",
+    "조회수": 2846573
+   }
+  ],
+  "판정": "근거 약함",
+  "한편": "짧은 편",
+  "훅": "거북목, 정말 목 통증의 원인일까?",
+  "반대·한계": "숫자 있는 연구는 1개. 청소년 메타분석(30629325)의 표본수는 이 세션에서 확인 못 함.",
+  "근거": [
+   {
+    "pmid": "30107937",
+    "연도": "2018",
+    "설계·측정": "메타분석, RCT 7개 627명: 운동으로 머리-목 각도(CVA) 큰 개선, 통증 중등도 개선",
+    "인용": "The precise nature of the relationship between FHP and musculoskeletal pain",
+    "제목": "Effectiveness of Therapeutic Exercise on Forward Head Posture: A Systematic Review and Meta-analysis."
+   },
+   {
+    "pmid": "30629325",
+    "연도": "2019",
+    "설계·측정": "메타분석, 청소년 목 통증",
+    "인용": "very limited to limited evidence that there is no difference in posture between adolescents with and without NP",
+    "제목": "A systematic review with meta-analysis on functional changes associated with neck pain in adolescents."
+   }
+  ],
+  "pubmed검색": "forward head posture[tiab] AND neck pain[tiab]"
+ },
+ {
+  "id": 10,
+  "통념": "하루 만보를 걸어야 건강",
+  "영역": "걷기",
+  "유튜브검색어": "하루 만보 걷기 효과",
+  "조회수_합": 27462610,
+  "조회수_중앙": 277655,
+  "검색상위": [
+   {
+    "제목": "1만보 걸으면서 살이 쭉쭉 빠지는 운동 [걸쭉빠 만보]",
+    "조회수": 17352066
+   },
+   {
+    "제목": "10,000-Step Walking Diet That Melts the Fat Away (feat. Guaranteed Weight Loss)",
+    "조회수": 2570982
+   },
+   {
+    "제목": "[ENG SUB]걸으면 근육에서 '이것'이 나온다고?  - 따뜻한 명의 #12 #운동 #걷기",
+    "조회수": 2101583
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "하루 만보, 정말 만 보여야 효과가 있을까?",
+  "반대·한계": "만보 아닌 지점에서 이득이 먼저 나타남(연령별 상한이 다름). 관찰연구.",
+  "근거": [
+   {
+    "pmid": "35247352",
+    "연도": "2022",
+    "설계·측정": "메타분석, 코호트 15개: 걸음 수와 전체 사망 위험",
+    "인용": "Taking more steps per day was associated with a progressively lower risk of all-cause mortality, up to a level that varied by age",
+    "제목": "Daily steps and all-cause mortality: a meta-analysis of 15 international cohorts."
+   },
+   {
+    "pmid": "38901742",
+    "연도": "2024",
+    "설계·측정": "우산 고찰+메타분석(2024)",
+    "인용": "a minimum protective dose of 3000 steps/day",
+    "제목": "Daily steps and all-cause mortality: An umbrella review and meta-analysis."
+   }
+  ],
+  "pubmed검색": "steps per day[tiab] AND mortality[tiab]"
+ },
+ {
+  "id": 11,
+  "통념": "걷기 30분 넘어야 지방이 탄다",
+  "영역": "걷기",
+  "유튜브검색어": "걷기 30분 지방 연소 시간",
+  "조회수_합": 17233940,
+  "조회수_중앙": 449357,
+  "검색상위": [
+   {
+    "제목": "러닝머신 30분 프로그램 준비했어요!!!! 경사도X, 신나는bgm, 체지방태우실 분???",
+    "조회수": 3333066
+   },
+   {
+    "제목": "🔥하자마자 -0.5kg 빠짐 보장🔥전신 지방 칼로리 다 날려버리는 핵폭탄급 30분 걷기운동 (전신운동 다이어트, 유산소운동, 홈트)",
+    "조회수": 3070797
+   },
+   {
+    "제목": "40 MIN WALKING WORKOUT for WEIGHT LOSS - Full Body Fat Burn",
+    "조회수": 2478714
+   }
+  ],
+  "판정": "근거 약함",
+  "한편": "짧은 편",
+  "훅": "걷기 30분이 지나야 지방이 탄다는 말, 근거가 있을까?",
+  "반대·한계": "30분 문턱을 직접 검증한 연구는 못 찾음. 찾은 것은 강도 중심.",
+  "근거": [
+   {
+    "pmid": "20175430",
+    "연도": "2009",
+    "설계·측정": "RCT 3개 실험(각 n=7), 운동 강도·시간·방식이 운동 후 지방산화에 미치는 영향",
+    "인용": "energy expenditure and fat oxidation can be augmented by increasing exercise intensity",
+    "제목": "Postexercise fat oxidation: effect of exercise duration, intensity, and modality."
+   },
+   {
+    "pmid": "41732883",
+    "연도": "2026",
+    "설계·측정": "메타분석(2026), FATmax 강도 운동: 신체조성 이득 최대 총 운동량 약 2446분",
+    "인용": "exercise training at FATmax can effectively improve body composition and cardiometabolic health",
+    "제목": "Exercise Training at Maximal Fat Oxidation Intensity for Body Composition and Cardiometabolic Health in People With Overweight and Obesity: A Systematic Review With Meta-Analysis Focusing on Prescription Dosage and Potential Moderators."
+   }
+  ],
+  "pubmed검색": "exercise duration[tiab] AND fat oxidation[tiab]"
+ },
+ {
+  "id": 12,
+  "통념": "식후 걷기가 혈당을 잡는다",
+  "영역": "걷기",
+  "유튜브검색어": "식후 걷기 혈당",
+  "조회수_합": 6440340,
+  "조회수_중앙": 148718,
+  "검색상위": [
+   {
+    "제목": "걷기보다 강력한 식후 7분 루틴, 단 2주면 뱃살이 ‘쏙’ 빠집니다 [혈당관리O 층간소음X 관절부담X]",
+    "조회수": 2068992
+   },
+   {
+    "제목": "A must-watch for diabetes! Learn about the 5-minute exercise that will help you control your bloo...",
+    "조회수": 1716550
+   },
+   {
+    "제목": "When you don't feel like walking after a meal, do this for just 5 minutes a day. Your blood sugar...",
+    "조회수": 538372
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "밥 먹고 걸으면 혈당이 정말 잡힐까?",
+  "반대·한계": "건강한 고령자는 걷기와 가만히 쉬기 차이 없음, 제2형 당뇨는 소폭 감소. 메타분석은 못 찾음.",
+  "근거": [
+   {
+    "pmid": "31318033",
+    "연도": "2019",
+    "설계·측정": "교차 RCT, 남녀 26명(70±5세), 식후 걷기 vs 휴식",
+    "인용": "Data revealed no relevant differences regarding the effects of postmeal walking and resting",
+    "제목": "Moderate Postmeal Walking Has No Beneficial Effects Over Resting on Postprandial Lipemia, Glycemia, Insulinemia, and Selected Oxidative and Inflammatory Parameters in Older Adults with a Cardiovascular Disease Risk Phenotype: A Randomized Crossover Trial."
+   },
+   {
+    "pmid": "32236116",
+    "연도": "2020",
+    "설계·측정": "RCT, 제2형 당뇨, 하루 한 끼 식후 15~20분 걷기 6주(프룩토사민 3주 -17.5, 6주 -10 μmol/L)",
+    "인용": "the magnitude of reduction was small",
+    "제목": "Glycemic effect of post-meal walking compared to one prandial insulin injection in type 2 diabetic patients treated with basal insulin: A randomized controlled cross-over study."
+   }
+  ],
+  "pubmed검색": "postprandial[tiab] AND walking[tiab] AND glucose[tiab]"
+ },
+ {
+  "id": 13,
+  "통념": "빨리 걸어야 건강에 좋다",
+  "영역": "걷기",
+  "유튜브검색어": "빠르게 걷기 천천히 걷기 수명",
+  "조회수_합": 1251747,
+  "조회수_중앙": 4019,
+  "검색상위": [
+   {
+    "제목": "[풀버전] 30대, 40대! 오늘부터 걸어야 합니다! (ft.만보의 기적) | 정희원 | 걷기운동 | 건강 | 만보",
+    "조회수": 581001
+   },
+   {
+    "제목": "걷기의 숨겨진 효능, 언제 어떻게 얼마나 걸어야 최고로 좋을까? 걸어서 체중 감량까지!",
+    "조회수": 380820
+   },
+   {
+    "제목": "The Benefits of a 10-Minute Post-Meal Walk🚶‍♂️ - Ep. 725 (02/05/20) Blood Sugar Spikes: The Fast ...",
+    "조회수": 117073
+   }
+  ],
+  "판정": "지지",
+  "한편": "가능",
+  "훅": "빨리 걷는 사람이 오래 산다, 속도 때문일까?",
+  "반대·한계": "걷기 속도는 건강 수준을 반영하는 지표일 수 있어 인과는 이 초록들로 판단 불가.",
+  "근거": [
+   {
+    "pmid": "39133765",
+    "연도": "2024",
+    "설계·측정": "메타분석, 13개 연구 530,841명: 걷기 속도 0.1 m/s 증가당 사망 위험 6% 감소(HR 0.94, 0.92-0.96)",
+    "인용": "for every 0.1 m/s increment in walking speed, the risk of mortality decreased by 6%",
+    "제목": "Dose-response association between walking speed and all-cause mortality: A systematic review and meta-analysis of cohort studies."
+   },
+   {
+    "pmid": "30303933",
+    "연도": "2019",
+    "설계·측정": "코호트, 평균 5.0년 추적, 사망 5,890명",
+    "인용": "Walking pace is associated with lower risk of a wide range of important health conditions, independently of overall time spent walking",
+    "제목": "Walking Pace Is Associated with Lower Risk of All-Cause and Cause-Specific Mortality."
+   }
+  ],
+  "pubmed검색": "walking pace[tiab] AND mortality[tiab]"
+ },
+ {
+  "id": 14,
+  "통념": "걷기만 해도 살이 빠진다",
+  "영역": "걷기",
+  "유튜브검색어": "걷기만으로 다이어트 체중 감량",
+  "조회수_합": 17004134,
+  "조회수_중앙": 495123,
+  "검색상위": [
+   {
+    "제목": "10,000-Step Walking Diet That Melts the Fat Away (feat. Guaranteed Weight Loss)",
+    "조회수": 2570982
+   },
+   {
+    "제목": "집에서 살빠지는 걷기 다이어트",
+    "조회수": 2527814
+   },
+   {
+    "제목": "※30분 걷기운동※ 집에서 3km 걸으면서 전신칼로리 불태우기!!  (Walking workout)",
+    "조회수": 2135441
+   }
+  ],
+  "판정": "부분",
+  "한편": "짧은 편",
+  "훅": "걷기만으로 살이 얼마나 빠질까?",
+  "반대·한계": "숫자 있는 연구 1개(2008, 만보계 기반).",
+  "근거": [
+   {
+    "pmid": "18195317",
+    "연도": "2008",
+    "설계·측정": "메타분석, 만보계 걷기 코호트 9개 307명: 평균 -1.27 kg(95% CI -1.85~-0.70), 주당 0.05 kg",
+    "인용": "Pedometer-based walking programs result in a modest amount of weight loss",
+    "제목": "A meta-analysis of pedometer-based walking interventions and weight loss."
+   }
+  ],
+  "pubmed검색": "walking[tiab] AND weight loss[tiab] AND body fat[tiab]"
+ },
+ {
+  "id": 15,
+  "통념": "공복 유산소가 지방을 더 태운다",
+  "영역": "몸속변화",
+  "유튜브검색어": "공복 유산소 지방",
+  "조회수_합": 14353742,
+  "조회수_중앙": 652838,
+  "검색상위": [
+   {
+    "제목": "전신 칼로리 다이어트 최고의 운동",
+    "조회수": 4103987
+   },
+   {
+    "제목": "체지방 확실히 태워주는 논스톱 30분 유산소 운동 - 다이어트 홈트레이닝",
+    "조회수": 1558695
+   },
+   {
+    "제목": "과학적으로 체지방 분해 '극대화' 하고, 최고 효율로 달리는 방법 (23년 달린 서울대 의사 2부)",
+    "조회수": 1459092
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "공복 유산소가 지방을 더 태운다? 연구마다 말이 다르다",
+  "반대·한계": "두 메타분석 모두 운동 중/직후 대사를 잰 것이며, 장기 체지방 감소는 이 초록들로 판단 불가.",
+  "근거": [
+   {
+    "pmid": "27609363",
+    "연도": "2016",
+    "설계·측정": "메타분석, 연구 27개 273명",
+    "인용": "aerobic exercise performed in the fasted state induces higher fat oxidation than exercise performed in the fed state",
+    "제목": "Effects of aerobic exercise performed in fasted v. fed state on fat and carbohydrate metabolism in adults: a systematic review and meta-analysis."
+   },
+   {
+    "pmid": "39921164",
+    "연도": "2025",
+    "설계·측정": "메타분석(2025), 28개 연구 302명(운동 36~150분)",
+    "인용": "our results do not suggest that acute fasted exercise is necessarily better for glucose or lipid metabolism",
+    "제목": "The effects of acute bouts of exercise in fasted vs. fed states on glucose and lipid metabolism in healthy adults: A systematic review and meta-analysis of randomized clinical trials."
+   }
+  ],
+  "pubmed검색": "fasted[tiab] AND aerobic exercise[tiab] AND fat loss[tiab]"
+ },
+ {
+  "id": 16,
+  "통념": "땀 많이 흘리면 살이 빠진다",
+  "영역": "몸속변화",
+  "유튜브검색어": "땀 많이 흘리면 살 빠진다",
+  "조회수_합": 55289,
+  "조회수_중앙": 788,
+  "검색상위": [
+   {
+    "제목": "(Shocking) ※ Sauna & Sweat Suit ※ Do They Actually Help You Lose Weight? | TV Doctor Dr. J.Ba.Go ...",
+    "조회수": 32096
+   },
+   {
+    "제목": "땀복으로 흘리는 땀 다이어트에 도움이 될까? TV CHOSUN 210825 방송 | [굿모닝 정보세상] 473회 | TV조선",
+    "조회수": 5743
+   },
+   {
+    "제목": "[스마트 리빙] '땀복' 입고 운동하면 살 빠진다? '탈수' 주의! (2020.04.02/뉴스투데이/MBC)",
+    "조회수": 4690
+   }
+  ],
+  "판정": "확인 불가",
+  "한편": "불가",
+  "훅": "땀을 많이 흘리면 살이 빠질까?",
+  "반대·한계": "PubMed에서 사람 대상 체계적 고찰·RCT를 찾지 못함(검색 3회, 관련 초록 0건).",
+  "근거": [],
+  "pubmed검색": "sweat[tiab] AND body weight[tiab] AND sauna[tiab]"
+ },
+ {
+  "id": 17,
+  "통념": "근육통은 젖산 때문",
+  "영역": "몸속변화",
+  "유튜브검색어": "근육통 젖산 원인",
+  "조회수_합": 4230452,
+  "조회수_중앙": 1754,
+  "검색상위": [
+   {
+    "제목": "Can I continue exercising when I have muscle pain?",
+    "조회수": 2888685
+   },
+   {
+    "제목": "마그네슘 결핍이 의심되는 10가지 징후들, 여러분은 어떤가요?",
+    "조회수": 573610
+   },
+   {
+    "제목": "Why do I have muscle soreness the next day? [The relationship between muscle soreness and muscle ...",
+    "조회수": 320709
+   }
+  ],
+  "판정": "확인 불가",
+  "한편": "불가",
+  "훅": "근육통의 진짜 원인은 젖산일까?",
+  "반대·한계": "검색 3회에서 젖산-근육통을 직접 다룬 고찰을 찾지 못함(보충제 연구만 나옴). 검색어를 다시 설계하면 나올 가능성은 남음(미확인).",
+  "근거": [],
+  "pubmed검색": "lactate[tiab] AND muscle soreness[tiab]"
+ },
+ {
+  "id": 18,
+  "통념": "스트레칭하면 부상을 막는다",
+  "영역": "몸속변화",
+  "유튜브검색어": "스트레칭 부상 예방",
+  "조회수_합": 8945429,
+  "조회수_중앙": 139252,
+  "검색상위": [
+   {
+    "제목": "운동 전/후 스탠딩 스트레칭 (부상예방, 가동범위 및 운동효과 증가)",
+    "조회수": 2779314
+   },
+   {
+    "제목": "10-minute stretches to relieve neck and shoulder pain! Let's loosen up those tight muscles in a s...",
+    "조회수": 2258409
+   },
+   {
+    "제목": "6 Min Pre workout Stretches - Warm up routine before a workout",
+    "조회수": 1624330
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "스트레칭하면 부상을 막을까?",
+  "반대·한계": "근력 훈련이 스트레칭보다 부상률이 낮았다는 RCT도 있음(야구 투수 대상).",
+  "근거": [
+   {
+    "pmid": "18785063",
+    "연도": "2008",
+    "설계·측정": "체계적 고찰, 7개 연구",
+    "인용": "static stretching does not reduce overall injury rates",
+    "제목": "A systematic review into the efficacy of static stretching as part of a warm-up for the prevention of exercise-related injury."
+   },
+   {
+    "pmid": "25933060",
+    "연도": "2015",
+    "설계·측정": "RCT, 고교 축구 22팀: 동적 스트레칭 17건 vs 동적+정적 20건(P=.33)",
+    "인용": "Static stretching does not provide any added benefit to dynamic stretching in the prevention of injury",
+    "제목": "Effects of Static and Dynamic Stretching on Injury Prevention in High School Soccer Athletes: A Randomized Trial."
+   },
+   {
+    "pmid": "36543874",
+    "연도": "2022",
+    "설계·측정": "RCT, 고교 야구 투수: 부상률 스트레칭 22.6%(14명) vs 근력 9.8%(5명)",
+    "인용": "external rotation muscle strength training is not inferior to stretching for preventing baseball-related arm injuries",
+    "제목": "Shoulder stretching versus shoulder muscle strength training for the prevention of baseball-related arm injuries: a randomized, active-controlled, open-label, non-inferiority study."
+   }
+  ],
+  "pubmed검색": "stretching[tiab] AND injury prevention[tiab]"
+ },
+ {
+  "id": 19,
+  "통념": "운동 후 30분 안에 단백질 먹어야",
+  "영역": "몸속변화",
+  "유튜브검색어": "운동 후 30분 단백질 골든타임",
+  "조회수_합": 2172970,
+  "조회수_중앙": 741,
+  "검색상위": [
+   {
+    "제목": "운동의학 박사가 말하는 근성장 영양전략 | 전용관 교수 3부 - 감량 식단, 단백질 섭취, 탄수화물 제한, 공복 운동, QnA [EN/KR]",
+    "조회수": 1907492
+   },
+   {
+    "제목": "단백질 보충제는 언제 먹어야 할까? 공복, 취침 전, 운동 후? 프로틴 섭취 시기 분석!",
+    "조회수": 185734
+   },
+   {
+    "제목": "운동 후 30분 안에 단백질 쉐이크?? 100% 잘못된 정보입니다",
+    "조회수": 56759
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "운동 직후 30분 단백질, 놓치면 손해일까?",
+  "반대·한계": "운동 후/야간 시점이 낫다는 보고도 있음(38039960).",
+  "근거": [
+   {
+    "pmid": "32232404",
+    "연도": "2020",
+    "설계·측정": "메타분석, 65개 연구 2,907명",
+    "인용": "independently of intake timing",
+    "제목": "The Role of Protein Intake and its Timing on Body Composition and Muscle Function in Healthy Adults: A Systematic Review and Meta-Analysis of Randomized Controlled Trials."
+   },
+   {
+    "pmid": "38830547",
+    "연도": "2024",
+    "설계·측정": "메타분석(2024), 65세 이상 RCT: 지역사회 28편 n=3,204명 포함",
+    "인용": "the effect did not differ between subgroups of dose, frequency and timing",
+    "제목": "The effect of dose, frequency, and timing of protein supplementation on muscle mass in older adults: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "38039960",
+    "연도": "2024",
+    "설계·측정": "체계적 고찰(2024)",
+    "인용": "key recommended times of protein intake",
+    "제목": "Effects of Timing and Types of Protein Supplementation on Improving Muscle Mass, Strength, and Physical Performance in Adults Undergoing Resistance Training: A Network Meta-Analysis."
+   }
+  ],
+  "pubmed검색": "protein timing[tiab] AND muscle hypertrophy[tiab]"
+ },
+ {
+  "id": 20,
+  "통념": "매일 운동하면 근손실",
+  "영역": "몸속변화",
+  "유튜브검색어": "매일 운동 근손실 휴식",
+  "조회수_합": 12922445,
+  "조회수_중앙": 44666,
+  "검색상위": [
+   {
+    "제목": "운동을 얼마나 쉬어야 근손실이 일어날까?",
+    "조회수": 6313504
+   },
+   {
+    "제목": "Is it stupid to exercise all week without rest?",
+    "조회수": 2299533
+   },
+   {
+    "제목": "Why you should work out every day without stopping!?",
+    "조회수": 1544314
+   }
+  ],
+  "판정": "근거 약함",
+  "한편": "가능",
+  "훅": "운동을 매일 하면 근손실? 주 몇 회가 맞을까?",
+  "반대·한계": "매일/휴식 없음에 따른 근손실을 직접 검증한 연구는 못 찾음. 빈도 연구만 있어 소재를 주 몇 회로 바꿔야 함.",
+  "근거": [
+   {
+    "pmid": "27102172",
+    "연도": "2016",
+    "설계·측정": "메타분석(2016), 부피 맞춤 시 주 2회가 주 1회보다 비대 우수",
+    "인용": "frequencies of training twice a week promote superior hypertrophic outcomes to once a week",
+    "제목": "Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis."
+   },
+   {
+    "pmid": "30558493",
+    "연도": "2019",
+    "설계·측정": "메타분석(2019), 25개 연구",
+    "인용": "resistance training frequency does not significantly or meaningfully impact muscle hypertrophy when volume is equated",
+    "제목": "How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency."
+   },
+   {
+    "pmid": "32948100",
+    "연도": "2021",
+    "설계·측정": "메타회귀, 60세 이상 14편",
+    "인용": "For muscle hypertrophy, no significant effect of frequency was found",
+    "제목": "A meta-regression of the effects of resistance training frequency on muscular strength and hypertrophy in adults over 60 years of age."
+   }
+  ],
+  "pubmed검색": "training frequency[tiab] AND muscle hypertrophy[tiab]"
+ },
+ {
+  "id": 21,
+  "통념": "운동 쉬면 근육이 다 빠진다 / 근육 기억",
+  "영역": "몸속변화",
+  "유튜브검색어": "운동 쉬면 근육 빠지는 시간 근육 기억",
+  "조회수_합": 17495319,
+  "조회수_중앙": 282530,
+  "검색상위": [
+   {
+    "제목": "운동을 얼마나 쉬어야 근손실이 일어날까?",
+    "조회수": 6313504
+   },
+   {
+    "제목": "“하루에 딱 세 번만 해보세요” 생존 근육 지키는 법, 이론부터 생활 속 실천 방법까지 총정리! | 홍정기 교수 (차의과학대 스포츠의학대학원장) 빅퀘스천 통합본 #건강 #근육",
+    "조회수": 2478458
+   },
+   {
+    "제목": "\"아니, 식단만 바꿨을 뿐인데...\" 운동해도 생기지 않던 근육이 맞춤 식단을 통해 근감소증이 해결 됐다!│귀하신 몸│#EBS건강",
+    "조회수": 2406309
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "운동 쉬면 근육은 얼마나 빨리 빠질까, 근육 기억은 진짜일까?",
+  "반대·한계": "근육 기억의 근핵 영구 보존 설은 메타분석에서 지지 못 받음.",
+  "근거": [
+   {
+    "pmid": "36360927",
+    "연도": "2022",
+    "설계·측정": "메타분석, 노인 훈련 9~24주 후 중단 12~52주",
+    "인용": "training cessation is associated with a decrease in muscle size",
+    "제목": "Use It or Lose It? A Meta-Analysis on the Effects of Resistance Training Cessation (Detraining) on Muscle Size in Older Adults."
+   },
+   {
+    "pmid": "35961635",
+    "연도": "2022",
+    "설계·측정": "메타분석(인체+동물), 근핵 영구성",
+    "인용": "myonuclei are not permanent but are lost during periods of atrophy",
+    "제목": "Myonuclear permanence in skeletal muscle memory: a systematic review and meta-analysis of human and animal studies."
+   },
+   {
+    "pmid": "34510028",
+    "연도": "2022",
+    "설계·측정": "메타분석, 중년·노년 하체 근력 유지(휴지기 4-6주 SMD 0.71, 8-16주 1.35)",
+    "인용": "the RT benefits were still significantly maintained even with medium and low intensity",
+    "제목": "Training Session and Detraining Duration Affect Lower Limb Muscle Strength Maintenance in Middle-Aged and Older Adults: A Systematic Review and Meta-Analysis."
+   }
+  ],
+  "pubmed검색": "muscle memory[tiab] AND resistance training[tiab]"
+ },
+ {
+  "id": 22,
+  "통념": "아침 운동이 저녁보다 낫다",
+  "영역": "몸속변화",
+  "유튜브검색어": "아침 운동 저녁 운동 효과",
+  "조회수_합": 6166561,
+  "조회수_중앙": 17954,
+  "검색상위": [
+   {
+    "제목": "뇌과학자가 추천하는 최적의 운동-학습 루틴 | 1분 운동법, 아침 운동 vs 저녁 운동, 운동과 집중력&학습 능력",
+    "조회수": 2257239
+   },
+   {
+    "제목": "너무 간단해서 안믿는 '이 루틴'의 효과 \"근육이 달라집니다\" (홍정기 교수 2부)",
+    "조회수": 1711248
+   },
+   {
+    "제목": "[논란 종결] 아침 운동 vs 저녁 운동",
+    "조회수": 839111
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "운동은 아침이 정답? 시간대 연구를 모아봤다",
+  "반대·한계": "12주 RCT 중에는 아침이 체지방 감소에 유리했다는 결과도 있음.",
+  "근거": [
+   {
+    "pmid": "37458979",
+    "연도": "2023",
+    "설계·측정": "메타분석, 9개 연구 450명(2주 초과)",
+    "인용": "Morning training does not show superior effects to afternoon exercise in any of the analyzed outcomes",
+    "제목": "Metabolic Adaptations to Morning Versus Afternoon Training: A Systematic Review and Meta-analysis."
+   },
+   {
+    "pmid": "41032147",
+    "연도": "2025",
+    "설계·측정": "메타분석(2025), 14개 연구 716명",
+    "인용": "no significant association between the timing of exercise and health outcomes",
+    "제목": "Effects of evening exercise on anthropometric indices, metabolic profiles, and sleep health: a systematic review and meta-analysis."
+   },
+   {
+    "pmid": "40419564",
+    "연도": "2025",
+    "설계·측정": "RCT 12주, 좌식 성인: 아침(6-8시) vs 저녁(6-8시) 유산소",
+    "인용": "Morning exercise (6-8 a.m.) is particularly effective for rapid body fat reduction",
+    "제목": "Differential benefits of 12-week morning vs. evening aerobic exercise on sleep and cardiometabolic health: a randomized controlled trial."
+   }
+  ],
+  "pubmed검색": "morning[tiab] AND evening[tiab] AND exercise[tiab] AND training[tiab]"
+ },
+ {
+  "id": 23,
+  "통념": "복근 운동하면 뱃살이 빠진다",
+  "영역": "몸속변화",
+  "유튜브검색어": "복근 운동 뱃살 빠진다",
+  "조회수_합": 66782397,
+  "조회수_중앙": 656668,
+  "검색상위": [
+   {
+    "제목": "무.조.건! 뱃살 빠지는 운동 베스트5",
+    "조회수": 28303226
+   },
+   {
+    "제목": "뱃살 빠지는 최고의 운동 BEST",
+    "조회수": 9582526
+   },
+   {
+    "제목": "Standing Workout For Weight Loss - No Talking, No Jumping, No Equipment",
+    "조회수": 8311848
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "복근 운동하면 뱃살이 빠진다? 두 실험 결과가 엇갈렸다",
+  "반대·한계": "두 RCT 모두 소규모(24명, 16명). 국소 감량은 후자만 지지.",
+  "근거": [
+   {
+    "pmid": "21804427",
+    "연도": "2011",
+    "설계·측정": "RCT, 건강한 성인 24명, 주 5일 6주 복근 운동",
+    "인용": "Six weeks of abdominal exercise training alone was not sufficient to reduce abdominal subcutaneous fat",
+    "제목": "The effect of abdominal exercise on abdominal fat."
+   },
+   {
+    "pmid": "38010201",
+    "연도": "2023",
+    "설계·측정": "RCT, 과체중 남성 16명(43±9세)",
+    "인용": "Abdominal endurance exercise utilized more local fat than treadmill running",
+    "제목": "Abdominal aerobic endurance exercise reveals spot reduction exists: A randomized controlled trial."
+   }
+  ],
+  "pubmed검색": "spot reduction[tiab] AND abdominal[tiab] AND fat[tiab]"
+ },
+ {
+  "id": 24,
+  "통념": "유산소하면 근육이 빠진다",
+  "영역": "몸속변화",
+  "유튜브검색어": "유산소 하면 근손실",
+  "조회수_합": 6284832,
+  "조회수_중앙": 268201,
+  "검색상위": [
+   {
+    "제목": "유산소 할 시간에 웨이트 하는게 몸 더 빨리 좋아지는데.. l 운동이야기 32화",
+    "조회수": 861581
+   },
+   {
+    "제목": "유산소 운동 하면 근손실. 과연 사실일까!?",
+    "조회수": 802086
+   },
+   {
+    "제목": "근손실 없이 지방만 뺄 수 있나요?",
+    "조회수": 744947
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "유산소 하면 근육이 빠진다? 메타분석이 말하는 조건",
+  "반대·한계": "결과는 유산소 방식·빈도·시간에 달림. 근비대 직접 효과 수치는 이 세션에서 초록 끝까지 확인 못 함.",
+  "근거": [
+   {
+    "pmid": "22002517",
+    "연도": "2012",
+    "설계·측정": "메타분석(2012), 21개 연구 422 효과크기",
+    "인용": "interference effects of endurance training are a factor of the modality, frequency, and duration of the endurance training selected",
+    "제목": "Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises."
+   },
+   {
+    "pmid": "37847373",
+    "연도": "2024",
+    "설계·측정": "메타분석(2024), 59개 연구 1,346명",
+    "인용": "Untrained, but not trained or highly trained endurance athletes demonstrated impaired improvements",
+    "제목": "Concurrent Strength and Endurance Training: A Systematic Review and Meta-Analysis on the Impact of Sex and Training Status."
+   },
+   {
+    "pmid": "34638141",
+    "연도": "2022",
+    "설계·측정": "메타분석, 21개 연구 796명",
+    "인용": "cardiorespiratory capacity is not impaired by concurrent training",
+    "제목": "Effects of Concurrent Training on 1RM and VO2 in Adults: Systematic Review with Meta-analysis."
+   }
+  ],
+  "pubmed검색": "concurrent training[tiab] AND hypertrophy[tiab]"
+ },
+ {
+  "id": 25,
+  "통념": "HIIT가 저강도보다 지방을 더 뺀다",
+  "영역": "몸속변화",
+  "유튜브검색어": "HIIT 고강도 인터벌 지방 감량",
+  "조회수_합": 46442096,
+  "조회수_중앙": 1164271,
+  "검색상위": [
+   {
+    "제목": "하루만에 1kg가 빠지는 최강 전신유산소 HIIT와 복근운동 / LOSE 1KG in 35 min HIIT Workout",
+    "조회수": 14127081
+   },
+   {
+    "제목": "Lv.4 층간소음없이 딱! 15분 체지방 100% 녹여버리는 루틴  [Noise Free 15mins Fat Burning Workout]",
+    "조회수": 6267935
+   },
+   {
+    "제목": "전신 칼로리 다이어트 최고의 운동",
+    "조회수": 4103987
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "HIIT가 정말 지방을 더 뺄까?",
+  "반대·한계": "메타분석 3개가 비슷~소폭 우세로 갈림. 전향 RCT 1개는 HIIT가 지방 분포 개선 못함(24669314).",
+  "근거": [
+   {
+    "pmid": "36981649",
+    "연도": "2023",
+    "설계·측정": "메타분석(2023), 29개 연구",
+    "인용": "similar to or better than MICT",
+    "제목": "Effect of High-Intensity Interval Training vs. Moderate-Intensity Continuous Training on Fat Loss and Cardiorespiratory Fitness in the Young and Middle-Aged a Systematic Review and Meta-Analysis."
+   },
+   {
+    "pmid": "28401638",
+    "연도": "2017",
+    "설계·측정": "메타분석(2017), 과체중·비만 18~45세 13개 시험",
+    "인용": "HIIT and MICT show similar effectiveness across all body composition measures",
+    "제목": "The effects of high-intensity interval training vs. moderate-intensity continuous training on body composition in overweight and obese adults: a systematic review and meta-analysis."
+   },
+   {
+    "pmid": "30765340",
+    "연도": "2019",
+    "설계·측정": "메타분석(2019), 36개 연구",
+    "인용": "Interval training provided 28.5% greater reductions in total absolute fat mass (kg) than MOD",
+    "제목": "Is interval training the magic bullet for fat loss? A systematic review and meta-analysis comparing moderate-intensity continuous training with high-intensity interval training (HIIT)."
+   }
+  ],
+  "pubmed검색": "high-intensity interval[tiab] AND fat loss[tiab] AND continuous[tiab]"
+ },
+ {
+  "id": 26,
+  "통념": "운동 후 냉수욕이 회복에 좋다",
+  "영역": "몸속변화",
+  "유튜브검색어": "운동 후 냉수 샤워 얼음 회복",
+  "조회수_합": 1786450,
+  "조회수_중앙": 4674,
+  "검색상위": [
+   {
+    "제목": "논란 종결! 운동 후 샤워 어떻게 해야할까?",
+    "조회수": 1168110
+   },
+   {
+    "제목": "폭발적인 근성장을 위해 운동 후 반드시 해야하는 4가지!",
+    "조회수": 198015
+   },
+   {
+    "제목": "Science can't explain how the ice bath works",
+    "조회수": 137633
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "운동 후 냉수욕, 회복에 좋을까 근육 성장을 막을까?",
+  "반대·한계": "회복엔 유리, 장기 근비대엔 불리할 수 있다는 서로 다른 결과.",
+  "근거": [
+   {
+    "pmid": "36527593",
+    "연도": "2023",
+    "설계·측정": "메타분석(2023), 급성 격한 운동 후 CWI vs 다른 회복법",
+    "인용": "CWI is effective for promoting recovery from acute strenuous exercise in physically active populations compared with other common recovery methods",
+    "제목": "Effects of Cold-Water Immersion Compared with Other Recovery Modalities on Athletic Performance Following Acute Strenuous Exercise in Physically Active Participants: A Systematic Review, Meta-Analysis, and Meta-Regression."
+   },
+   {
+    "pmid": "26174323",
+    "연도": "2015",
+    "설계·측정": "RCT, 신체활동 남성 21명, 12주(주 2회) 근력운동 후 냉수 10분 vs 능동 회복",
+    "인용": "CWI attenuates the acute changes in satellite cell numbers and activity of kinases that regulate muscle hypertrophy",
+    "제목": "Post-exercise cold water immersion attenuates acute anabolic signalling and long-term adaptations in muscle to strength training."
+   }
+  ],
+  "pubmed검색": "cold water immersion[tiab] AND recovery[tiab] AND muscle[tiab]"
+ },
+ {
+  "id": 27,
+  "통념": "폼롤러가 근육을 풀어준다",
+  "영역": "몸속변화",
+  "유튜브검색어": "폼롤러 근막 이완 효과",
+  "조회수_합": 17335311,
+  "조회수_중앙": 494194,
+  "검색상위": [
+   {
+    "제목": "한번만 따라 해도 시원함에 중독되는 폼롤러 마사지!! (근막이완 마사지, 폼롤러운동)ㅣ다노티비",
+    "조회수": 5061230
+   },
+   {
+    "제목": "[ENG] 부종 OUT!!!!! 힙으뜸 전신순환 폼롤러 마사지 (혈액순환, 근막이완, 라인정리)",
+    "조회수": 2971647
+   },
+   {
+    "제목": "[Latest Version] Foam Roller Stretching Routine for Joint Pain Relief and Muscle Flexibility! (25...",
+    "조회수": 1914899
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "폼롤러, 근육을 풀어주는 걸까 기분만 시원한 걸까?",
+  "반대·한계": "ROM 개선은 4주 초과 개입에서, 통증 감소 효과는 즉시는 작고 24시간 이후 뚜렷.",
+  "근거": [
+   {
+    "pmid": "35616852",
+    "연도": "2022",
+    "설계·측정": "메타분석(2022), 11개 연구 46 효과크기",
+    "인용": "Longer duration interventions (> 4 weeks) are needed to induce ROM gains",
+    "제목": "Foam Rolling Training Effects on Range of Motion: A Systematic Review and Meta-Analysis."
+   },
+   {
+    "pmid": "39593540",
+    "연도": "2024",
+    "설계·측정": "메타분석(2024), 16개 연구 515명",
+    "인용": "Using foam rolling after exercise has a certain preventive effect on muscle soreness",
+    "제목": "Preventive effect of foam rolling on muscle soreness after exercise: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "32825976",
+    "연도": "2020",
+    "설계·측정": "체계적 고찰+메타분석(2020), 32개 연구",
+    "인용": "Foam rolling does not appear to cause harm",
+    "제목": "A systematic review and meta-analysis of the effects of foam rolling on range of motion, recovery and markers of athletic performance."
+   }
+  ],
+  "pubmed검색": "foam rolling[tiab] AND range of motion[tiab]"
+ },
+ {
+  "id": 28,
+  "통념": "근육 키우려면 무거운 무게여야",
+  "영역": "몸속변화",
+  "유튜브검색어": "가벼운 무게 많이 vs 무거운 무게 근성장",
+  "조회수_합": 1310718,
+  "조회수_중앙": 2686,
+  "검색상위": [
+   {
+    "제목": "Why can't I build my biceps like an idiot...? The fastest way to build forearms that 90% of peopl...",
+    "조회수": 902817
+   },
+   {
+    "제목": "전신 - 50일 덤벨 홈트 프로그램 - Day 31",
+    "조회수": 127707
+   },
+   {
+    "제목": "전신 - 50일 덤벨 홈트 프로그램 - Day 26",
+    "조회수": 115811
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "근육을 키우려면 무거운 무게여야 한다?",
+  "반대·한계": "12주 RCT는 20% 1RM이 최적 아님, 근력은 고중량이 우세.",
+  "근거": [
+   {
+    "pmid": "28834797",
+    "연도": "2017",
+    "설계·측정": "메타분석(2017), 21개 연구",
+    "인용": "muscle hypertrophy can be equally achieved across a spectrum of loading ranges",
+    "제목": "Strength and Hypertrophy Adaptations Between Low- vs. High-Load Resistance Training: A Systematic Review and Meta-analysis."
+   },
+   {
+    "pmid": "33874848",
+    "연도": "2021",
+    "설계·측정": "메타분석(2021), 45개 연구",
+    "인용": "Higher- and lower-load RT therefore induce similar muscle hypertrophy",
+    "제목": "Influence of resistance training load on measures of skeletal muscle hypertrophy and improvements in maximal strength and neuromuscular task performance: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "29564973",
+    "연도": "2018",
+    "설계·측정": "RCT 12주, 부피 맞춤 20/60/80% 1RM",
+    "인용": "20% 1RM was suboptimal in this regard",
+    "제목": "Effects of different intensities of resistance training with equated volume load on muscle strength and hypertrophy."
+   }
+  ],
+  "pubmed검색": "low-load[tiab] AND resistance training[tiab] AND hypertrophy[tiab]"
+ },
+ {
+  "id": 29,
+  "통념": "마라톤 같은 달리기는 심장에 해롭다",
+  "영역": "몸속변화",
+  "유튜브검색어": "마라톤 심장 해롭다 달리기 심장",
+  "조회수_합": 2373945,
+  "조회수_중앙": 10426,
+  "검색상위": [
+   {
+    "제목": "🚨 When Running for Your Health Becomes Toxic... The Warning Signs a Cardiologist Wants You to Kno...",
+    "조회수": 1971874
+   },
+   {
+    "제목": "The Secret of Life and Death: Painful Symptoms Caused by Excessive Running and the Correct Way to...",
+    "조회수": 167799
+   },
+   {
+    "제목": "[심층리포트] ‘중년의 마라톤’ 오히려 심장에 독…왜?",
+    "조회수": 65351
+   }
+  ],
+  "판정": "부분",
+  "한편": "가능",
+  "훅": "마라톤 같은 달리기, 심장에 정말 해로울까?",
+  "반대·한계": "선수 대상 메타분석은 AF 위험 증가, 일반 신체활동 메타분석은 증가 없음. 대상이 다름.",
+  "근거": [
+   {
+    "pmid": "30544416",
+    "연도": "2018",
+    "설계·측정": "메타분석(2018), 연구 9개: 운동선수 2,308명 vs 일반 6,593명",
+    "인용": "the risk of AF was significantly higher in athletes than in general population",
+    "제목": "Atrial fibrillation in athletes and general population: A systematic review and meta-analysis."
+   },
+   {
+    "pmid": "25443248",
+    "연도": "2014",
+    "설계·측정": "메타분석(2014), 신체활동 강도·양과 AF: RR 1.00(0.82-1.22), 8개 연구 152,925명",
+    "인용": "we found no significant increase in AF with a higher level of physical activity",
+    "제목": "Physical activity and incidence of atrial fibrillation: a systematic review and meta-analysis."
+   }
+  ],
+  "pubmed검색": "endurance exercise[tiab] AND atrial fibrillation[tiab]"
+ },
+ {
+  "id": 30,
+  "통념": "오래 앉으면 운동해도 소용없다",
+  "영역": "몸속변화",
+  "유튜브검색어": "오래 앉아있기 운동해도 소용없다",
+  "조회수_합": 2116894,
+  "조회수_중앙": 29712,
+  "검색상위": [
+   {
+    "제목": "Common Myths About Obesity That Make Me Want to Throw Hands",
+    "조회수": 1441712
+   },
+   {
+    "제목": "Tailbone Pain When Sitting, Pelvic Pain While Driving, Sciatica, and Gluteal Pain!! Especially If...",
+    "조회수": 177234
+   },
+   {
+    "제목": "Escape cannon-fodder fate by breaking up. Who knew I'd fall for an older boss's love! #sweetdrama",
+    "조회수": 101534
+   }
+  ],
+  "판정": "반대증거 있음",
+  "한편": "가능",
+  "훅": "오래 앉아 있어도 운동하면 괜찮을까?",
+  "반대·한계": "TV 시청 시간은 높은 활동량에서도 위험이 완전히 사라지지 않음.",
+  "근거": [
+   {
+    "pmid": "27475271",
+    "연도": "2016",
+    "설계·측정": "메타분석, 16개 연구",
+    "인용": "this high activity level attenuates, but does not eliminate the increased risk associated with high TV-viewing time",
+    "제목": "Does physical activity attenuate, or even eliminate, the detrimental association of sitting time with mortality? A harmonised meta-analysis of data from more than 1 million men and women."
+   },
+   {
+    "pmid": "31023430",
+    "연도": "2019",
+    "설계·측정": "코호트, 149,077명, 중앙 8.9년 추적, 사망 8,689명",
+    "인용": "moderate-to-vigorous physical activity doses equivalent to meeting the current recommendations attenuate or effectively eliminate such associations",
+    "제목": "Sitting Time, Physical Activity, and Risk of Mortality in Adults."
+   },
+   {
+    "pmid": "38241049",
+    "연도": "2024",
+    "설계·측정": "코호트, 481,688명, 직업상 좌식",
+    "인용": "attenuated the harms of prolonged occupational sitting",
+    "제목": "Occupational Sitting Time, Leisure Physical Activity, and All-Cause and Cardiovascular Disease Mortality."
+   }
+  ],
+  "pubmed검색": "sitting time[tiab] AND physical activity[tiab] AND mortality[tiab]"
+ }
+]

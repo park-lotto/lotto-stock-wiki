@@ -1,0 +1,401 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.218,
+   "text": "요즘 설화수 모델",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.218,
+   "t1": 2.996,
+   "text": "최화정이 성시경한테도",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "최화정이"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    1.218,
+    1.318,
+    1.418,
+    1.518,
+    1.618,
+    1.718,
+    1.818,
+    1.918,
+    2.018,
+    2.118
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 2.996,
+   "t1": 4.104,
+   "text": "발라 보라던 크림이",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    2.996,
+    3.096,
+    3.196,
+    3.296,
+    3.396,
+    3.496,
+    3.596,
+    3.696
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 4.104,
+   "t1": 4.602,
+   "text": "있다네요?",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "있다네요?"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    4.104,
+    4.189,
+    4.273,
+    4.358,
+    4.443
+   ]
+  },
+  {
+   "line": "O1",
+   "t0": 4.602,
+   "t1": 5.882,
+   "text": "이것저것 다 써봤는데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "이것저것"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 5.882,
+   "t1": 7.182,
+   "text": "이거는 진짜 찐이야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "찐이야"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "찐이야"
+    }
+   ]
+  },
+  {
+   "line": "N2",
+   "t0": 7.182,
+   "t1": 9.013,
+   "text": "바르면 어떤 느낌이길래?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 9.013,
+   "t1": 10.333,
+   "text": "이걸 딱 바르면",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "바르면"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 10.333,
+   "t1": 11.603,
+   "text": "뭔가 이 고밀도로",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 11.603,
+   "t1": 12.813,
+   "text": "쫙 달라붙어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "달라붙어"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 12.813,
+   "t1": 14.109,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.109,
+   "t1": 15.693,
+   "text": "하나 사서 따라 발라 봤어요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 15.693,
+   "t1": 17.049,
+   "text": "크림이 버터처럼",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.049,
+   "t1": 17.878,
+   "text": "묵직해서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.878,
+   "t1": 19.475,
+   "text": "손끝에 착 감기더라고요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "감기더라고요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 19.475,
+   "t1": 21.453,
+   "text": "1966년 인삼 크림에서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.453,
+   "t1": 21.838,
+   "text": "시작해",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "시작해"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.838,
+   "t1": 23.725,
+   "text": "올해로 60주년이래요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "60주년이래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 23.725,
+   "t1": 25.347,
+   "text": "성시경 채널 이 영상은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.347,
+   "t1": 26.829,
+   "text": "조회수 147만이",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 26.829,
+   "t1": 28.2,
+   "text": "넘을 만큼 인기래요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "인기래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = Ks5kYYKAUlQ",
+  "스티커 spark_lines → O1「이거는 진짜 찐이야」",
+  "스티커 spark_lines 본보기 2개 중 1개만(조건 맞는 덩어리 모자람)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 7, 'typing': 3, 'fade': 9, 'cut': 2} · 강조 11/21"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "Ks5kYYKAUlQ",
+  "worst_slot_diff": 0.167,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "fade": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "fade": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 0.33,
+     "pop": 0.33,
+     "typing": 0.33
+    },
+    "ours": {
+     "typing": 0.3,
+     "fade": 0.4,
+     "pop": 0.3
+    },
+    "bench_emph": 0.67,
+    "ours_emph": 0.7,
+    "n": 10
+   },
+   "orig.first": {
+    "bench": {
+     "fade": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "fade": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.33,
+     "pop": 0.33,
+     "fade": 0.17,
+     "typing": 0.17
+    },
+    "ours": {
+     "cut": 0.33,
+     "pop": 0.33,
+     "fade": 0.33
+    },
+    "bench_emph": 0.5,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2
+    },
+    "ours": {
+     "spark_lines": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

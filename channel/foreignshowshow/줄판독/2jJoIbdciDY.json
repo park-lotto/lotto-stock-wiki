@@ -1,0 +1,2687 @@
+{
+ "id": "2jJoIbdciDY",
+ "dur": 55.794,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "땅콩잼을 이제는",
+   "colors": [
+    {
+     "word": "땅콩잼을 이제는",
+     "hex": "#FFFA7A"
+    }
+   ]
+  },
+  {
+   "text": "안 긁어도 된다고?!",
+   "colors": [
+    {
+     "word": "안 긁어도 된다고?!",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   436,
+   1080,
+   1048
+  ],
+  "caption_band": [
+   929,
+   988
+  ],
+  "caption_band_2line": [
+   [
+    895,
+    953
+   ],
+   [
+    963,
+    1022
+   ]
+  ],
+  "title_y": [
+   [
+    199,
+    306
+   ],
+   [
+    320,
+    415
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "위 검정 띠 제목 2줄(1줄 연노랑·2줄 흰, 끝 '?!' 꼴) · 가운데 가로 원본 확대 창 · 아래 검정 · 자막은 창 가운데(y≈930~1020)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.2,
+   "speaker": "나레",
+   "text": "펌프로 땅콩버터를",
+   "layer": "해외쇼츠",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    931,
+    986
+   ],
+   "fill_hex": "#F4E749",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "펌프로 땅콩버터를",
+     "hex": "#F4E749",
+     "color": "노랑",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "빨간원",
+     "t_in": 0.0,
+     "t_out": 1.8,
+     "x": 481,
+     "y": 818,
+     "w": 487,
+     "anim": "가는 원이 제품(손바닥 위 땅콩버터)을 따라 커짐 r188→304·이동 185px(bench_rings 30fps)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "펌프를 눌러 손바닥에 땅콩버터를 짬(빨간 원)",
+   "fit": 9,
+   "cut_at": [
+    1.1
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "줄 안 1.1초 색 번쩍(빨강)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     55
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     265,
+     815
+    ]
+   }
+  },
+  {
+   "t0": 1.2,
+   "t1": 2.067,
+   "speaker": "나레",
+   "text": "짜는 남자",
+   "layer": "해외쇼츠",
+   "role": "훅",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "줄 전체 한 색(민트)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    930,
+    986
+   ],
+   "fill_hex": "#51FFE8",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "짜는 남자",
+     "hex": "#51FFE8",
+     "color": "민트",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손바닥 위 땅콩버터",
+   "fit": 8,
+   "cut_at": [
+    1.833
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(빨강 덮기 → 0.45초 사라짐)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     56
+    ],
+    "blur_in": 1,
+    "blur_out": 0,
+    "x_span": [
+     395,
+     684
+    ]
+   }
+  },
+  {
+   "t0": 2.067,
+   "t1": 2.6,
+   "speaker": "원음",
+   "text": "오 와우",
+   "layer": "해외쇼츠",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(민트)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    922,
+    991
+   ],
+   "fill_hex": "#4FFFF5",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "오 와우",
+     "hex": "#4FFFF5",
+     "color": "민트",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 투자자(로버트 꼴)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     69
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     401,
+     870
+    ]
+   }
+  },
+  {
+   "t0": 2.6,
+   "t1": 3.934,
+   "speaker": "나레",
+   "text": "꺼낼 때마다 손에 묻고",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    928,
+    988
+   ],
+   "fill_hex": "#FBF9F7",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "손에 묻고",
+     "hex": "#50FF5A",
+     "color": "초록"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "병 속 땅콩버터를 칼로 긁음",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     60
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     213,
+     867
+    ]
+   }
+  },
+  {
+   "t0": 3.934,
+   "t1": 5.267,
+   "speaker": "나레",
+   "text": "불편한 기존통 대신",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    933,
+    987
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "불편한 기존통",
+     "hex": "#D93F56",
+     "color": "빨강"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "병을 기울여 긁어내는 손",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     54
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     162,
+     920
+    ]
+   }
+  },
+  {
+   "t0": 5.267,
+   "t1": 6.633,
+   "speaker": "원음",
+   "text": "빠르고 깨끗하고",
+   "layer": "해외쇼츠",
+   "role": "증거",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    930,
+    987
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "빠르고",
+     "hex": "#F080C4",
+     "color": "분홍"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "시연",
+   "scene_desc": "펌프로 짜는 시연(초록 번쩍)",
+   "fit": 8,
+   "cut_at": [
+    5.333,
+    6.567
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "원음 = 홍보 영상 목소리(영어 'quicker, cleaner, and easier…' 받아쓰기)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     57
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     314,
+     781
+    ]
+   }
+  },
+  {
+   "t0": 6.633,
+   "t1": 8.434,
+   "speaker": "원음",
+   "text": "어느 때보다 훨씬 쉬워지죠",
+   "layer": "해외쇼츠",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FDF9F7",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "훨씬 쉬워지죠",
+     "hex": "#F3E74A",
+     "color": "노랑"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여성 투자자 → 펌프 짜는 손",
+   "fit": 6,
+   "cut_at": [
+    7.433
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "줄 안 7.433초 색 번쩍(빨강)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     154,
+     932
+    ]
+   }
+  },
+  {
+   "t0": 8.434,
+   "t1": 10.5,
+   "speaker": "나레",
+   "text": "훨씬 쉽고 빠르게 쓸 수 있다는데",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    928,
+    988
+   ],
+   "fill_hex": "#FAF9FC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "훨씬 쉽고 빠르게",
+     "hex": "#51FFE8",
+     "color": "민트"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "시연",
+   "scene_desc": "주방에서 펌프로 빵에 짜는 남성(초록 번쩍)",
+   "fit": 8,
+   "cut_at": [
+    9.7,
+    10.433
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     60
+    ],
+    "blur_in": 1,
+    "blur_out": 0,
+    "x_span": [
+     61,
+     1017
+    ]
+   }
+  },
+  {
+   "t0": 10.5,
+   "t1": 14.133,
+   "speaker": "원음",
+   "text": "마지막 땅콩 버터까지 / 짜낼 수 있도록 설계했습니다",
+   "layer": "해외쇼츠",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    895,
+    1022
+   ],
+   "fill_hex": "#FAF9FC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "마지막 땅콩 버터까지",
+     "hex": "#D83E54",
+     "color": "빨강"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "시연",
+   "scene_desc": "무대 시연대 → 설계도 판넬",
+   "fit": 8,
+   "cut_at": [
+    11.3,
+    14.067
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "줄 안 14.067초 색 번쩍(빨강)",
+   "y_measured": [
+    900,
+    1042
+   ],
+   "y_basis": "틀값(preset/_hand/measure_caps.json 1줄 929~988·2줄 895~1022·크게 921~995) — 이 줄 픽셀 측정이 장면 잡음·색 번짐으로 빗나감",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     48,
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     111,
+     969
+    ]
+   }
+  },
+  {
+   "t0": 14.133,
+   "t1": 14.967,
+   "speaker": "나레",
+   "text": "누르기만 하면",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰, 강조 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    987
+   ],
+   "fill_hex": "#FBFAF9",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자 얼굴(분홍 번쩍)",
+   "fit": 4,
+   "cut_at": [
+    14.9
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(빨강 덮기 → 0.45초 사라짐)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     331,
+     747
+    ]
+   }
+  },
+  {
+   "t0": 14.967,
+   "t1": 16.2,
+   "speaker": "나레",
+   "text": "벽면까지 싹 긁어서",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FAF9FC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "벽면까지",
+     "hex": "#EE9A49",
+     "color": "주황"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 투자자(마크 큐반 꼴)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     179,
+     822
+    ]
+   }
+  },
+  {
+   "t0": 16.2,
+   "t1": 16.734,
+   "speaker": "나레",
+   "text": "짜준다고",
+   "layer": "해외쇼츠",
+   "role": "본문",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "줄 전체 한 색(파랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    987
+   ],
+   "fill_hex": "#4BABF0",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "짜준다고",
+     "hex": "#4BABF0",
+     "color": "파랑",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자(데이먼드 존 꼴)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     75,
+     672
+    ]
+   }
+  },
+  {
+   "t0": 16.734,
+   "t1": 19.334,
+   "speaker": "원음",
+   "text": "난 진짜 땅콩버터 애호가야",
+   "layer": "해외쇼츠",
+   "role": "다리",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "땅콩버터 애호가야",
+     "hex": "#F4E749",
+     "color": "노랑"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "말하는 투자자(케빈 꼴, 초록 번쩍)",
+   "fit": 7,
+   "cut_at": [
+    17.3,
+    18.633
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     147,
+     936
+    ]
+   }
+  },
+  {
+   "t0": 19.334,
+   "t1": 20.133,
+   "speaker": "나레",
+   "text": "그런데 이 때",
+   "layer": "해외쇼츠",
+   "role": "이음",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "줄 전체 한 색(초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    930,
+    987
+   ],
+   "fill_hex": "#50FF5A",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "그런데 이 때",
+     "hex": "#50FF5A",
+     "color": "초록",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자 얼굴(초록 번쩍)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     57
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     355,
+     724
+    ]
+   }
+  },
+  {
+   "t0": 20.133,
+   "t1": 22.5,
+   "speaker": "나레",
+   "text": "땅콩버터를 / 직접 만들어먹기까지 한다는",
+   "layer": "해외쇼츠",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    895,
+    1020
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "직접 만들어먹기까지 한다는",
+     "hex": "#F07FC4",
+     "color": "분홍"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자 상반신",
+   "fit": 6,
+   "cut_at": [
+    20.233,
+    21.4
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58,
+     51
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     131,
+     950
+    ]
+   }
+  },
+  {
+   "t0": 22.5,
+   "t1": 23.467,
+   "speaker": "나레",
+   "text": "투자자가 나서는데",
+   "layer": "해외쇼츠",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    987
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "투자자가",
+     "hex": "#4BACF1",
+     "color": "파랑"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "말하는 다른 사람(수염 남성, 창업자 꼴)",
+   "fit": 5,
+   "cut_at": [
+    23.4
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "줄 안 23.4초 색 번쩍(초록)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     265,
+     814
+    ]
+   }
+  },
+  {
+   "t0": 23.467,
+   "t1": 26.634,
+   "speaker": "원음",
+   "text": "그 펌프가 땅콩 크런치에 / 막히진 않겠지 ?",
+   "layer": "해외쇼츠",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    894,
+    1022
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "그 펌프가 땅콩 크런치에",
+     "hex": "#F59B48",
+     "color": "주황",
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)"
+    },
+    {
+     "word": "막히진 않겠지 ?",
+     "hex": "#D83E54",
+     "color": "빨강"
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 24.74,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +22.9dB(유성 0.08·고립 0.95) — 귀 확인 못 함"
+   },
+   "scene": "얼굴",
+   "scene_desc": "질문하는 투자자(초록 번쩍)",
+   "fit": 7,
+   "cut_at": [
+    24.167
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     60,
+     53
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     120,
+     899
+    ]
+   }
+  },
+  {
+   "t0": 26.634,
+   "t1": 29.3,
+   "speaker": "원음",
+   "text": "그리고 땅콩 버터 커뮤니티에선 / 논쟁이 뜨거운데",
+   "layer": "해외쇼츠",
+   "role": "질문",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    895,
+    1022
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "땅콩 버터 커뮤니티에선",
+     "hex": "#F59B48",
+     "color": "주황",
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)"
+    },
+    {
+     "word": "논쟁이 뜨거운데",
+     "hex": "#50FF5A",
+     "color": "초록"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "기타(초록 오른쪽 화살표)",
+     "t_in": 29.233,
+     "t_out": 31.667,
+     "x": 378,
+     "y": 786,
+     "w": 200,
+     "anim": "좌우 흔들림(fxdet 200×128, 이동 10px) — 펌프 용기를 가리킴"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "말하는 투자자(빨강 번쩍)",
+   "fit": 7,
+   "cut_at": [
+    29.233
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(빨강 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59,
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     24,
+     998
+    ]
+   }
+  },
+  {
+   "t0": 29.3,
+   "t1": 31.667,
+   "speaker": "원음",
+   "text": "저 용기를 / 냉장고에 넣어도 되는거겠지 ?",
+   "layer": "해외쇼츠",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    896,
+    1022
+   ],
+   "fill_hex": "#FBFAFA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "냉장고에 넣어도 되는거겠지 ?",
+     "hex": "#F3E749",
+     "color": "노랑"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "땅콩버터 병+펌프 근접(초록 오른쪽 화살표)",
+   "fit": 8,
+   "cut_at": [
+    31.6
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     57,
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     31,
+     988
+    ]
+   }
+  },
+  {
+   "t0": 31.667,
+   "t1": 32.6,
+   "speaker": "나레",
+   "text": "진짜 애호가 다운",
+   "layer": "해외쇼츠",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(주황)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    986
+   ],
+   "fill_hex": "#EE9A49",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "진짜 애호가 다운",
+     "hex": "#EE9A49",
+     "color": "주황",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수염 창업자 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     57
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     289,
+     791
+    ]
+   }
+  },
+  {
+   "t0": 32.6,
+   "t1": 33.967,
+   "speaker": "나레",
+   "text": "냉철한 질문들을 던지고",
+   "layer": "해외쇼츠",
+   "role": "이음",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FBF9FC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "냉철한 질문들을",
+     "hex": "#52FFE7",
+     "color": "민트"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수염 창업자 → 투자자",
+   "fit": 5,
+   "cut_at": [
+    32.9,
+    33.9
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 0,
+    "x_span": [
+     190,
+     890
+    ]
+   }
+  },
+  {
+   "t0": 33.967,
+   "t1": 34.433,
+   "speaker": "원음",
+   "text": "아니",
+   "layer": "해외쇼츠",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(빨강)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    922,
+    991
+   ],
+   "fill_hex": "#D93E54",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "아니",
+     "hex": "#D93E54",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "답하는 수염 창업자",
+   "fit": 7,
+   "cut_at": [
+    34.367
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     19,
+     69
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     473,
+     620
+    ]
+   }
+  },
+  {
+   "t0": 34.433,
+   "t1": 36.534,
+   "speaker": "원음",
+   "text": "냉장고에 안넣은 / 땅콩버터만 가능해",
+   "layer": "해외쇼츠",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    963,
+    1022
+   ],
+   "fill_hex": "#FCE23D",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "냉장고에 안넣은 땅콩버터만 가능해",
+     "hex": "#FCE23D",
+     "color": "노랑",
+     "whole": true,
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)",
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 35.2,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +26.3dB(유성 0.21·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "Jif 땅콩버터 병·빵 사진",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     265,
+     814
+    ]
+   }
+  },
+  {
+   "t0": 36.534,
+   "t1": 38.334,
+   "speaker": "나레",
+   "text": "중대한 문제를 발견하게 되는데",
+   "layer": "해외쇼츠",
+   "role": "반전",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    928,
+    988
+   ],
+   "fill_hex": "#FBFAFA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "중대한 문제를",
+     "hex": "#D94258",
+     "color": "빨강"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자 → 창업자(빨강 번쩍)",
+   "fit": 6,
+   "cut_at": [
+    37.367
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "flash(빨강 덮기 → 0.45초 사라짐)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     60
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     87,
+     998
+    ]
+   }
+  },
+  {
+   "t0": 38.334,
+   "t1": 39.8,
+   "speaker": "원음",
+   "text": "땅콩버터인들의 30%는 / 건더기를 원해 !",
+   "layer": "해외쇼츠",
+   "role": "반전",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    894,
+    1022
+   ],
+   "fill_hex": "#FBF9F9",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "건더기를 원해 !",
+     "hex": "#F2E74A",
+     "color": "노랑"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "말하는 투자자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59,
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 0,
+    "x_span": [
+     10,
+     895
+    ]
+   }
+  },
+  {
+   "t0": 39.8,
+   "t1": 41.767,
+   "speaker": "원음",
+   "text": "이건 모두가 아는 논쟁이야 !",
+   "layer": "해외쇼츠",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    928,
+    988
+   ],
+   "fill_hex": "#FAF9FC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "이건 모두가 아는",
+     "hex": "#50FF5A",
+     "color": "초록"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자 → 수염 창업자",
+   "fit": 6,
+   "cut_at": [
+    39.867,
+    40.867
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     60
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     134,
+     953
+    ]
+   }
+  },
+  {
+   "t0": 41.767,
+   "t1": 44.167,
+   "speaker": "원음",
+   "text": "그리고 난 꼭 / 냉장고에 보관해야해",
+   "layer": "해외쇼츠",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    895,
+    1022
+   ],
+   "fill_hex": "#FDF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "냉장고에 보관해야해",
+     "hex": "#D83E54",
+     "color": "빨강"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "창업자 → 투자자",
+   "fit": 6,
+   "cut_at": [
+    41.867,
+    44.1
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "notes": "줄 안 44.1초 색 번쩍(초록)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58,
+     48
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     53,
+     846
+    ]
+   }
+  },
+  {
+   "t0": 44.167,
+   "t1": 46.6,
+   "speaker": "원음",
+   "text": "그 커뮤니티 리더는 / 대체 누구야",
+   "layer": "해외쇼츠",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    895,
+    1022
+   ],
+   "fill_hex": "#FBF9FA",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "그 커뮤니티 리더는",
+     "hex": "#51FFE8",
+     "color": "민트"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 투자자(초록 번쩍)",
+   "fit": 7,
+   "cut_at": [
+    46.5
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": "2줄: 잉크 895~953/963~1022 → 줄 간격 약 68px(preset/_hand/measure_caps.json)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "flash(초록 덮기 → 0.45초 사라짐)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58,
+     59
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     255,
+     1035
+    ]
+   }
+  },
+  {
+   "t0": 46.6,
+   "t1": 48.533,
+   "speaker": "원음",
+   "text": "..내가 리더다 왜",
+   "layer": "해외쇼츠",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(약 ×1.25, 잉크 높이 73px)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    921,
+    994
+   ],
+   "fill_hex": "#D83E52",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "..내가 리더다 왜",
+     "hex": "#D83E52",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자석 → 크게 웃는 투자자",
+   "fit": 7,
+   "cut_at": [
+    47.6
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 85,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     73
+    ],
+    "blur_in": 0,
+    "blur_out": 0,
+    "x_span": [
+     75,
+     840
+    ]
+   }
+  },
+  {
+   "t0": 48.533,
+   "t1": 49.467,
+   "speaker": "나레",
+   "text": "결국 남은 넷도",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    987
+   ],
+   "fill_hex": "#FCF9F7",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "남은 넷도",
+     "hex": "#EA8447",
+     "color": "주황"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "손 흔드는 여성 투자자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     58
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     85,
+     758
+    ]
+   }
+  },
+  {
+   "t0": 49.467,
+   "t1": 50.133,
+   "speaker": "나레",
+   "text": "모두 아웃",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "줄 전체 한 색(빨강)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    930,
+    986
+   ],
+   "fill_hex": "#D83E55",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "모두 아웃",
+     "hex": "#D83E55",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "창업자 얼굴",
+   "fit": 6,
+   "cut_at": [
+    50.067
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     56
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     410,
+     682
+    ]
+   }
+  },
+  {
+   "t0": 50.133,
+   "t1": 50.9,
+   "speaker": "원음",
+   "text": "행운을 빌어 ..",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "줄 전체 한 색(주황)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    930,
+    986
+   ],
+   "fill_hex": "#ED9769",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "행운을 빌어 ..",
+     "hex": "#ED9769",
+     "color": "주황",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "투자자석 전경",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     56
+    ],
+    "blur_in": 0,
+    "blur_out": 1,
+    "x_span": [
+     335,
+     1067
+    ]
+   }
+  },
+  {
+   "t0": 50.9,
+   "t1": 52.467,
+   "speaker": "나레",
+   "text": "그렇게 빈손으로 돌아갔고",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#F9FAFC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "빈손으로",
+     "hex": "#42FC51",
+     "color": "초록",
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "돌아서 나가는 창업자",
+   "fit": 8,
+   "cut_at": [
+    50.967
+   ],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     155,
+     923
+    ]
+   }
+  },
+  {
+   "t0": 52.467,
+   "t1": 53.8,
+   "speaker": "나레",
+   "text": "한 대도 배송 못한 채",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FAFAFB",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "한 대도",
+     "hex": "#42FC51",
+     "color": "초록",
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "주방 위 펌프 땅콩버터 병",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "가로흐림(1프레임)",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 1,
+    "x_span": [
+     322,
+     842
+    ]
+   }
+  },
+  {
+   "t0": 53.8,
+   "t1": 55.767,
+   "speaker": "나레",
+   "text": "2024년 생산이 멈췄다고..",
+   "layer": "해외쇼츠",
+   "role": "끝",
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
+   "variant": "기본(흰+형광 낱말)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    929,
+    988
+   ],
+   "fill_hex": "#FAFAFC",
+   "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
+   "glow": {
+    "hex": "글자와 같은 색",
+    "sec": null,
+    "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
+   },
+   "emph": [
+    {
+     "word": "2024년",
+     "hex": "#50FF5A",
+     "color": "초록"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "펌프 병 — 끝 CTA 없음",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(추정)",
+    "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
+   },
+   "letter_gap_px": "미측정(글꼴 기본 자간으로 봄 — 1줄 잉크 폭/글자 수 대조 안 함)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
+   "max_w": 1000,
+   "size_px": 68,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "alpha": 0.75,
+    "basis": "QMJ 3.25 확대 실측(rules.json caption.shadow)"
+   },
+   "_meas": {
+    "line_h": [
+     59
+    ],
+    "blur_in": 1,
+    "blur_out": 0,
+    "x_span": [
+     139,
+     938
+    ]
+   }
+  }
+ ],
+ "no_caption": [],
+ "beats": "제품 시연 훅(0~2.6 '펌프로 땅콩버터를 짜는 남자' 빨간 원 + '오 와우') → 기존 불편(2.6~5.3) → 홍보 원음·나레 장점(5.3~16.7) → 다리(16.7 '난 진짜 땅콩버터 애호가야' → '직접 만들어먹기까지 한다는 투자자가 나서는데') → 질문 공세(23.4~31.6, 초록 화살표) → 답·반전(33.9~44 '중대한 문제'·'건더기를 원해') → 리더 웃음(44~48.5) → 전원 아웃·후일담 '2024년 생산이 멈췄다고..', CTA 없음(실패 결말)",
+ "narr_share": "나레 줄 19/35, 나레 24.1초/55.794초",
+ "notes": [
+  "실패 결말 편(투자 무산) — 쇼핑 편 중 결과가 나쁜 꼴.",
+  "받아쓰기 시각이 깨져 있음(asr 2jJ 시작 시각이 전부 0) → 화자는 받아쓰기 글(나레 한국어/원음 영어) 대조로만 가름, sfx 받아쓰기 거름은 나레 줄 구간으로 대신.",
+  "효과음: 귀로 못 들음 — sfx_events 신호만."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "땅콩버터 펌프로 손바닥에 짜는 손 근접 + 빨간 실선 원(제품 따라 커짐) + 노랑 '펌프로 땅콩버터를'",
+  "face_frac": "0(얼굴 없음, 눈)",
+  "text": "펌프로 땅콩버터를"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 덩어리 시트·0.1초 띠 + 픽셀: 30fps 자막 마스크·cutdet·색 번쩍·꾸밈 색 덩어리·bench_rings) 2026-10-25 (관제 263 지시서 06 foreignshowshow)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr + C:/숏템_칼카피/foreignshowshow/work/tools/{fsseg,mkfs,fxdet,chunks,strip}.py(이 채널용 — 외곽선 없는 자막이라 capseg 대신)",
+ "flashes": [
+  {
+   "t": 1.1,
+   "color": "빨강",
+   "jump": 60.4
+  },
+  {
+   "t": 5.233,
+   "color": "초록",
+   "jump": 141.0
+  },
+  {
+   "t": 7.433,
+   "color": "빨강",
+   "jump": 25.9
+  },
+  {
+   "t": 8.4,
+   "color": "초록",
+   "jump": 142.8
+  },
+  {
+   "t": 14.067,
+   "color": "빨강",
+   "jump": 80.0
+  },
+  {
+   "t": 16.7,
+   "color": "초록",
+   "jump": 149.2
+  },
+  {
+   "t": 19.3,
+   "color": "초록",
+   "jump": 141.2
+  },
+  {
+   "t": 23.4,
+   "color": "초록",
+   "jump": 150.5
+  },
+  {
+   "t": 26.6,
+   "color": "빨강",
+   "jump": 60.4
+  },
+  {
+   "t": 36.5,
+   "color": "빨강",
+   "jump": 63.6
+  },
+  {
+   "t": 44.1,
+   "color": "초록",
+   "jump": 142.4
+  }
+ ]
+}

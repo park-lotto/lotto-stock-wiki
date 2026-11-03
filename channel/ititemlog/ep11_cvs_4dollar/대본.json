@@ -1,0 +1,194 @@
+{
+ "_note": "잇템로그판 해외반응 2차 — 한국 편의점 4달러(2026-10-22). 원본 = Aylen Park 'sYOGLQFqeUI'(5,102만, 채널 중앙 72만의 70배). 불닭(10~31초) 장면·대사는 안 씀 — 우유 종류·김치·총액(가격 충격). 사실 근거 = Speechmatics 영어 낱말 시각 + 1초 시트.",
+ "slug": "ititemlog_ep11_cvs_4dollar",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "바나나우유·딸기우유(쿠팡: 바나나맛 우유 멸균팩 류)",
+ "title_lines": [
+  [
+   [
+    "한국 편의점 털고"
+   ]
+  ],
+  [
+   [
+    "4달러에 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "0.20~5.44 'Hey guys, it's 1 a.m. in Korea and I forgot to eat dinner again. So let's go to 7-Eleven and see what we can find'",
+  "f2": "40.36~49.76 'strawberry or banana milk. They have coffee milk, chocolate milk, mint chocolate milk, peach milk, strawberry milk, watermelon milk. And here banana milk'",
+  "f3": "52.28~54.84 'I found kimchi. Let's get kimchi'",
+  "f4": "54.88~57.84 'Everything was $4. Y'all got the good'"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "새벽 한 시에 한국 편의점을 턴 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "새벽 1시에"
+    },
+    {
+     "text": "한국 편의점을 턴 외국인이 있는데요",
+     "key": "편의점"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(시작)",
+   "src": "sYOGLQFqeUI.mp4",
+   "spans": [
+    [
+     0.2,
+     5.44
+    ]
+   ],
+   "said": "Hey guys, it's 1 a.m. in Korea and I forgot to eat dinner again. So let's go to 7-Eleven and see what we can find",
+   "caps_rel": [
+    [
+     "한국 새벽 1시인데",
+     0.0,
+     1.52
+    ],
+    [
+     "저녁을 또 깜빡했어",
+     1.64,
+     2.96
+    ],
+    [
+     "편의점 가서 뭐 있나 보자",
+     2.96,
+     5.24
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "가장 먼저 놀란 건 우유 종류였는데요.",
+   "caps": [
+    {
+     "text": "가장 먼저 놀란 건"
+    },
+    {
+     "text": "우유 종류였는데요",
+     "key": "우유"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "sYOGLQFqeUI.mp4",
+   "spans": [
+    [
+     42.04,
+     49.76
+    ]
+   ],
+   "said": "They have coffee milk, chocolate milk, mint chocolate milk, peach milk, strawberry milk, watermelon milk. And here banana milk",
+   "caps_rel": [
+    [
+     "커피 우유, 초코 우유",
+     0.0,
+     1.84
+    ],
+    [
+     "민트초코 우유, 복숭아 우유",
+     1.84,
+     4.04
+    ],
+    [
+     "딸기 우유, 수박 우유",
+     4.04,
+     6.28,
+     "수박"
+    ],
+    [
+     "그리고 바나나 우유",
+     6.28,
+     7.72,
+     "바나나 우유"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "결국 바나나우유를 고르고 김치까지 장바구니에 담았는데요.",
+   "caps": [
+    {
+     "text": "결국 바나나우유를 고르고",
+     "key": "바나나우유"
+    },
+    {
+     "text": "김치까지 담았는데요"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 공개",
+   "tts": "그런데 계산대에서 금액을 보고 깜짝 놀랐는데요.",
+   "caps": [
+    {
+     "text": "그런데 계산대에서"
+    },
+    {
+     "text": "금액을 보고 깜짝 놀랐는데요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응(정점)",
+   "src": "sYOGLQFqeUI.mp4",
+   "spans": [
+    [
+     54.88,
+     57.84
+    ]
+   ],
+   "said": "Everything was $4. Y'all got the good",
+   "caps_rel": [
+    [
+     "다 해서 4달러였어",
+     0.0,
+     1.28,
+     "4달러"
+    ],
+    [
+     "완전 득템이야",
+     1.28,
+     2.96
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "새벽에도 이렇게 싸게 장을 볼 수 있다니 부럽다는 댓글이 많았다고 하네요.",
+   "caps": [
+    {
+     "text": "새벽에도 이렇게 싸게 장을 볼 수 있다니"
+    },
+    {
+     "text": "부럽다는 댓글이 많았다고 하네요"
+    }
+   ]
+  }
+ ]
+}

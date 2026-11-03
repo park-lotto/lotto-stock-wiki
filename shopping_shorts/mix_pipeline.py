@@ -60,7 +60,7 @@ MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 _PINNED_TTS_SEED = 7
 
 
-def _beat_words(mp3_path, dur=None, removed=None):
+def _beat_words(mp3_path, dur=None, removed=None, text=None):
     """자막 싱크용 단어 타임스탬프. TTS가 준 것을 먼저 쓰고, 없으면 ASR로 폴백한다(2026-07-31).
 
     ①TTS 타임스탬프 — 우리가 보낸 원문 그대로의 시각이라 맞출 대상이 없다(정렬 실패 없음).
@@ -71,11 +71,12 @@ def _beat_words(mp3_path, dur=None, removed=None):
 
     removed: 후처리가 잘라낸 무음 구간(원본 타임라인). 주면 rescale이 조각별로 갚는다
     — 속도감 모드 내부 무음 제거는 선형사상으로 못 맞춘다(2026-08-06).
+    text: 그 칸 나레이션 — ASR 폴백의 언어 힌트(일본어·영어, 2026-10-21 관제 248). 없으면 종전(ko).
     """
-    return _beat_words_src(mp3_path, dur, removed)[0]
+    return _beat_words_src(mp3_path, dur, removed, text=text)[0]
 
 
-def _beat_words_src(mp3_path, dur=None, removed=None):
+def _beat_words_src(mp3_path, dur=None, removed=None, text=None):
     """_beat_words + **어느 단에서 나온 시각인지**(2026-08-29 설계 ⑦a).
 
     "precise"  TTS가 준 정밀 타임스탬프(사이드카) — 정렬 실패 없음
@@ -88,7 +89,15 @@ def _beat_words_src(mp3_path, dur=None, removed=None):
     if words:
         # 합성 뒤 audio_post가 배속·무음트림으로 파일을 고쳤을 수 있다 → 최종 길이로 되맞춤.
         return tts_timestamps.rescale(words, dur, removed=removed), "precise"
-    w = asr_check.transcribe_words(mp3_path)
+    # ASR 폴백 언어 = 나레이션 언어(일본어를 language="ko"로 받아쓰면 엉터리가 된다 — 관제 248).
+    #   판정은 script_translate.asr_language 한 곳. 한국어(또는 text 없음)는 종전 호출 모양 그대로 둔다
+    #   (language 기본값 "ko"와 같다 — 테스트 스텁 `lambda p:` 들도 그대로 돈다).
+    from shopping_shorts.script_translate import asr_language
+    _lang = asr_language(text) if text else "ko"
+    if _lang == "ko":
+        w = asr_check.transcribe_words(mp3_path)
+    else:
+        w = asr_check.transcribe_words(mp3_path, language=_lang)
     return w, ("asr" if w else "estimate")
 
 
@@ -397,7 +406,8 @@ def finalize_beat_audio(beat, out, *, trim_tail=True):
     beat["cap_durs"] = None
     beat["cap_lead"] = 0.0
     _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)),
+                                   text=beat.get("narration"))
     _timing = None
     if words:
         _timing = _apply_cap_timing(beat, beat["narration"], words, _ad)
@@ -584,7 +594,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0, script_endings=False, dialogue=None):
+                      customer_id=0, script_endings=False, dialogue=None, joined=True):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
 
     script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
@@ -640,7 +650,9 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
     #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
     #   생길 자리가 없다. 실패하면 아래 비트별 경로로 그대로 내려간다(라이브 안전).
     #   기본 off — TTS_JOINED=1로 켠다(검증 안 된 플래그를 라이브에 켜지 않는다).
-    if tts_joined.enabled() and _try_joined(
+    # joined=False: 플랫폼별 CTA 판의 'CTA 칸만' 방식(cta_variants) — 통짜는 한 칸만 바뀌어도 전 칸을 다시 구워
+    #   본편 목소리·자막 타이밍이 판마다 달라졌다(2026-10-18 서버 사본 실측). 그 칸만 칸별 경로로 굽는다.
+    if joined and tts_joined.enabled() and _try_joined(
             beats, tts_dir, voice=voice, skip_existing=skip_existing,
             global_pron=global_pron, customer_id=customer_id,
             script_endings=script_endings):
@@ -709,10 +721,15 @@ def _ensure_breath_lines(beat):
     except (TypeError, ValueError):
         mx = 0
     lines = None
+    # ★일본어 칸은 AI 호흡 끊기를 부르지 않는다(관제 248) — 그 프롬프트는 "한국어 쇼츠 내레이션·조사 앞" 규칙이라
+    #   일본어엔 맞지 않는다. None = 규칙 폴백(_caption_segments → _caption_segments_ja), 상한 칸은 아래 simple_caption_split.
+    from shopping_shorts.script_translate import lang_of as _lang_of
+    _skip_ai = _lang_of(beat.get("narration")) in ("ja", "zh")   # 중국어도 한국어 호흡 규칙을 안 탄다(관제 254)
     try:
         from shopping_shorts import script_generate
-        lines = (script_generate.ai_breath_lines(beat.get("narration"), max_chars=mx) if mx
-                 else script_generate.ai_breath_lines(beat.get("narration")))   # 표식 없으면 종전 호출 그대로
+        if not _skip_ai:
+            lines = (script_generate.ai_breath_lines(beat.get("narration"), max_chars=mx) if mx
+                     else script_generate.ai_breath_lines(beat.get("narration")))   # 표식 없으면 종전 호출 그대로
     except Exception:      # noqa: BLE001 — 호흡 끊기 실패로 합성을 죽이지 않는다
         traceback.print_exc(file=sys.stderr)
     # ★글자 상한 칸(2026-09-26): AI가 넘긴 줄은 단순 규칙으로 다시 나누고, AI가 못 하면 원문을 단순 규칙으로.
@@ -886,7 +903,8 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)),
+                                       text=new_n)
         _t = None
         if words:
             _t = _apply_cap_timing(beat, new_n, words, new_dur)
@@ -1923,6 +1941,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     plan["cut_rule"] = _CUT_RULE
     from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
     plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
+    from shopping_shorts.config import HAND_CUT as _HAND_CUT
+    plan["hand_cut"] = _HAND_CUT              # 관제 204 — 새 작업만 손 길이·빈칸 메우기
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
@@ -2095,6 +2115,26 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
             _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
+from shopping_shorts.edit_plan import EXTRA_SRC_RE as _EXTRA_SRC_RE  # 판정 한 곳(edit_plan)
+
+
+def extra_source_paths(work):
+    """3단계 '장면 보충'(관제 209)으로 더한 영상 {x1: mp4경로, …} — 번호순. 판단 주인은 이 함수 하나."""
+    out = []
+    try:
+        dirs = list(Path(work).iterdir())
+    except OSError:
+        return {}
+    for d in dirs:
+        m = _EXTRA_SRC_RE.match(d.name)
+        if not m or not d.is_dir():
+            continue
+        mp4 = next(d.glob("*.mp4"), None)
+        if mp4 is not None:
+            out.append((int(m.group(1)), d.name, str(mp4)))
+    return {vid: p for _, vid, p in sorted(out)}
+
+
 def _resolve_sources(job, work):
     """다운로드된 소스 mp4 경로 맵 {video_id: path}.
 
@@ -2108,6 +2148,10 @@ def _resolve_sources(job, work):
         mp4 = next((work / vid).glob("*.mp4"), None)
         if mp4 is not None:
             source_video_paths[vid] = str(mp4)
+    # ★3단계 '장면 보충'으로 나중에 더한 영상(관제 209) — work/x{n}/*.mp4. job["urls"]엔 넣지 않는다:
+    #   urls가 바뀌면 2단계가 '담은 영상이 바뀌었어요'로 유료 재매칭을 돌려 편집이 날아간다(_sources_hash).
+    #   렌더·캡컷·필름·청소본이 전부 이 표를 읽으므로 여기 한 곳에서 더하면 모든 길이 같이 본다.
+    source_video_paths.update(extra_source_paths(work))
     if not source_video_paths:
         raise RuntimeError("소스 영상을 하나도 찾지 못했습니다 (다운로드 디렉터리에 mp4 없음)")
     return source_video_paths
@@ -2501,7 +2545,8 @@ def _meme_words_of(b):
     if not mp3 or not Path(mp3).exists():
         return None, None
     d = _probe_duration(str(mp3))
-    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)),
+                                  text=b.get("narration"))
     return words, _va._beat_effective_dur(b, mp3)
 
 
@@ -3397,6 +3442,22 @@ def _hold_beat(i, beat):
     return (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
 
 
+def _caption_groups(narr, secs, min_sec=1.2):
+    """처음 카드 수용 자막 묶음 수 — 줄 길이를 글자 수로 어림(음성 전이라)하고 1.2초 미만 줄은 옆 줄과 묶는다."""
+    from shopping_shorts.video_assemble import simple_caption_split
+    lines = simple_caption_split(narr, _CAPTION_MAX_CHARS_DEFAULT) if narr else []
+    chars = [len(str(x).replace(" ", "")) for x in lines]
+    tot = sum(chars)
+    if not tot or secs <= 0:
+        return 1
+    n, acc = 0, 0.0
+    for c in chars:
+        acc += secs * c / tot
+        if acc >= min_sec:
+            n, acc = n + 1, 0.0
+    return max(1, n)
+
+
 def _trim_for_cut_rhythm(plan):
     """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
     n = 0
@@ -3426,6 +3487,8 @@ def _trim_for_cut_rhythm(plan):
         #   종전 round(secs/2.5)는 3.7초 줄까지 1컷이라, 2단계가 준 장면을 깎아 같은 장면이 조각나고(구절 맞춤) 모자라 멈췄다
         #   (실측 24시간: 2.5초↑ 칸 35%가 한 장면, 멈춤 18%). 2.5초까지 1 · 5초까지 2 · 7.5초까지 3 · 최대 4.
         want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(math.ceil(secs / 2.5 - 1e-6)))))
+        if not hold:   # ★자막 묶음 수보다 적게 놓지 않는다(2026-10-15 사장님 "다해" — 10번 1안). 홀드는 그대로 1장
+            want = max(want, min(4, _caption_groups(narr, secs)))
         from shopping_shorts.ai_match import is_pinned as _is_pinned
         if _is_pinned(b):   # 스토리보드에서 사람이 고른 장면은 깎지 않는다(관제 120)
             want = 1 + len(alts)
@@ -5703,6 +5766,9 @@ def run_preview(job_id, db_path, work_root):
         #   곡→파일은 렌더·캡컷과 같은 resolve_deco_media 한 곳. 나머지 꾸미기는 종전대로 뺀다(4단계 소관).
         _pv_bgm = (job.get("deco") or {}).get("bgm")
         _pv_deco = resolve_deco_media({"bgm": _pv_bgm}, work) if _pv_bgm else {}
+        # 🔊 원음 깔기(관제 097)도 소리라 배경음처럼 싣는다 — 판단(크기·덕킹)은 video_assemble.source_audio_settings 한 곳.
+        if (job.get("deco") or {}).get("source_audio"):
+            _pv_deco = {**_pv_deco, "source_audio": (job.get("deco") or {})["source_audio"]}
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
@@ -6251,7 +6317,7 @@ def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_
     return plan2, _cpaths, base
 
 
-INTRO_SEC_DEFAULT = 1.2      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
+INTRO_SEC_DEFAULT = 0.1      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
 
 
 def _intro_thumb(thumb):
@@ -6608,6 +6674,35 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
             store.update_mix_job(job_id, status="ready_for_review", video_path=None)
             return
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
+        # 📣 플랫폼별 CTA 판(2026-10-18 F1) — 본편이 끝난 **뒤** 같은 재료로 판마다 한 번 더 조립한다.
+        #   판단은 cta_variants 한 곳. 과금 없음(본편 1회에 포함). 실패해도 본편은 이미 done.
+        try:
+            from shopping_shorts import cta_variants as _cv
+            _cvcfg = _cv.load_config(store, job_id, job.get("customer_id", 0))
+            if _cv.chosen(_cvcfg):
+                def _cv_synth(vp, tts_dir, full):
+                    _synthesize_beats(vp["beats"], tts_dir, voice=job.get("voice"), skip_existing=not full,
+                                      global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                                      script_endings=job_script_endings(job), dialogue=_dialogue_of(job),
+                                      joined=full)
+
+                def _cv_render(vp, vout):
+                    _vwav = (work / f"cta_audio_{vout.stem}.wav") if (_intro_on and _intro_png is not None) else None
+                    assemble(vp, tts_paths_of(vp), source_video_paths, str(vout), clean_fn=final_clean_fn,
+                             headcopy=job.get("headcopy"), caption_style=caption_style,
+                             deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                             **({"audio_wav_out": str(_vwav)} if _vwav else {}))
+                    if _vwav is not None:
+                        try:
+                            prepend_still(str(vout), str(_intro_png), seconds=_intro_sec, audio_wav=str(_vwav))
+                        finally:
+                            _vwav.unlink(missing_ok=True)
+                    ensure_faststart(vout)
+
+                _cv.render_variants(cfg=_cvcfg, plan=_cv.marked_plan(plan_used, job), work=work,
+                                    render_one=_cv_render, synth=_cv_synth)
+        except Exception:      # noqa: BLE001 — 판 때문에 본편을 잃지 않는다
+            traceback.print_exc(file=sys.stderr)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
@@ -6711,7 +6806,8 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, sp
         except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
             _rdur = None
         _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-        words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)),
+                                       text=beat.get("narration"))
         _t = None
         if words:
             _t = _apply_cap_timing(beat, beat["narration"], words, _rdur)

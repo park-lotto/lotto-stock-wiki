@@ -1,0 +1,991 @@
+{
+ "topic": "Spikeball(스파이크볼) — 샤크탱크에서 데이먼드와 50만 달러/20% 딜을 맺었지만 방송 전 무산, 그런데도 2019년 연 1,900만 달러 회사로 성장",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.47,
+  "views": 12000000,
+  "upload": "2026-08-29",
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ]
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막, 번갈아",
+ "titles": {
+  "line1": "딜 깨지고 오히려",
+  "line2": "대박 난 공놀이?!",
+  "rule": "벤치 틀 그대로: 위 검정 띠 2줄, 1줄 노랑·2줄 흰, 끝 '~?!'. 벤치 '홍수를 막을 수 있는 / 역대급 모래 주머니?!'와 겹치는 말 없음",
+  "length_rule": "줄당 ≤12자(shark/rules.json title.line_chars_max) — 옛 ('샤크탱크 딜 깨지고', '오히려 대박 난 공놀이?!') 는 [10, 14]자로 글자가 작아져(TITLE ×) 품질 담당이 줄임(페이블 허락 10-18), 숫자 근거.md L14(방송 전 딜 무산)·L17(2019년 연 1,900만 달러)"
+ },
+ "facts": {
+  "f1": {
+   "text": "CNBC 클립 220.0~222.2초 투자자(화면 이름 자막 없음 — 이름 불명) 'a ball and a net'(vtt) — 받아쓰기 3/3 'a ball in a net' (앞 216.1 'you're asking me to pay 20 times your cash flow for')",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음(영어 자막 vtt)"
+  },
+  "f2": {
+   "text": "CNBC 199.9~203.6초 'so last year your total gross sales 1.4 million dollars' · 위키 'by 2013 the company was earning more than $1 million in annual revenue'",
+   "url": "https://en.wikipedia.org/wiki/Spikeball_(company)",
+   "kind": "방송 원음+위키"
+  },
+  "f3": {
+   "text": "CNBC 20.9~24.2초 창업자(5초 화면 이름 자막 'CHRIS RUDER · SPIKEBALL') 'very easy to learn, but really, really difficult to master'(받아쓰기 4/4)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "CNBC 53.0~70.0초 'serve the ball basically just by bouncing it off the net … has up to three hits … before they have to spike it back on the net' · 72~77초 'once the ball is in play there are no sides, all four players can run absolutely anywhere'",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "CNBC 32.6~37.1초 창업자 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(받아쓰기 2모델) · 72~77초 'there are no sides' · 공식 'Spikeball: Rally Anywhere' 6pC9CovZuBY 화면 = 눈밭(38~42초)·분수대 물 속(10~14초)에서 경기",
+   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "kind": "방송 원음+공식 영상 화면"
+  },
+  "f7": {
+   "text": "CNBC 174.9~178.3초 'what does one cost — 59.99 plus shipping' · 192.4~195.4초 창업자 'We've sold 29,000 units'(화면 = 투자자·상자 → 원음 안 쓰고 나레) · 197.5~199.3초 창업자 'A little over fourteen'(원음, 화면 = 본인)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f8": {
+   "text": "CNBC 234.8~237.2초 'I'll give you the 500,000' · 249.4~253.8초 'interested in, for 25% of the whole company' · 화면 자막 255~260초 'Daymond's offer: $500k for a 25% stake' · 275~281초 'Counter offer: $500k for a 15% stake' · 269.6~273.6초 창업자 'Would you consider 500k at 15%?'(받아쓰기 2모델) — 데이먼드 이름 = 화면 자막으로 확인",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 화면 자막"
+  },
+  "f9": {
+   "text": "CNBC 303.7~305.75초 '(is) one of those moments that you can lose it all'(받아쓰기 4/4, 화자 이름 자막 없음 — 자막·나레에 이름 안 씀)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f10": {
+   "text": "CNBC 313.3~314.2초 'call it even at 20' · 321.6초 'we're done' · 루퍼 'settling with John at 20%' · 위키 'Daymond John offered him $500,000 but wanted 20% … Ruder accepted'",
+   "url": "https://www.looper.com/860212/whatever-happened-to-spikeball",
+   "kind": "방송 원음+기사"
+  },
+  "f11": {
+   "text": "위키 'the deal fell apart before the episode aired due to differences in strategy' · 루퍼(2017 포브스 인터뷰 인용) Ruder 'our deal was dead before the show aired'",
+   "url": "https://en.wikipedia.org/wiki/Spikeball_(company)",
+   "kind": "기사(전언체)"
+  },
+  "f12": {
+   "text": "CNBC 324~334초 결말 글자 카드 'the deal did not close due to creative differences involving a Spider-Man Spikeball set, which CEO Chris Ruder was against. Ruder wanted Spikeball to be seen as a sport, not a toy.' · 루퍼 'John and Marvel Comics wanted to make a Spider-Man Spikeball set' · Ruder 'my fear was that people would think it was a toy'",
+   "url": "https://www.looper.com/860212/whatever-happened-to-spikeball",
+   "kind": "방송 글자 카드+기사(전언체)"
+  },
+  "f13": {
+   "text": "CNBC 329~334초 글자 카드 'As of 2019, the company brought in $19 million per year' · 루퍼 'As of 2019, Forbes reported that the company brings in $19 million per year'",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 글자 카드+기사"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "L1",
+    "kind": "원음",
+    "fn": "0초 투자자 반응(벤치 '뭐라고?!' 자리)",
+    "orig_en": "a ball in a net",
+    "text": "공이랑 그물 하나에?!",
+    "sub": [
+     "공이랑 그물 하나에?!"
+    ],
+    "hl": [
+     "그물 하나"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "est_sec": 1.77,
+    "asr": "받아쓰기 3/3 'a ball in a net'",
+    "orig_span_clip": [
+     220.4,
+     222.17
+    ],
+    "orig_span": [
+     50.4,
+     52.17
+    ],
+    "caps": [
+     "공이랑 그물 하나에?!"
+    ],
+    "emph": [
+     {
+      "cap": "공이랑 그물 하나에?!",
+      "span": "공이랑 그물 하나에?!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L2",
+    "kind": "나레",
+    "fn": "정체+숫자",
+    "text": "공 하나랑 그물 하나로, 한 해 140만 달러어치를 판 게임이 있는데",
+    "tts": "공 하나랑 그물 하나로, 한 해 백사십만 달러어치를 판 게임이 있는데",
+    "sub": [
+     "공 하나랑 그물 하나로",
+     "한 해 140만 달러어치를",
+     "판 게임이 있는데"
+    ],
+    "hl": [
+     "140만 달러"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 3.71,
+    "caps": [
+     "공 하나랑 그물 하나로",
+     "한 해 140만 달러어치를",
+     "판 게임이 있는데"
+    ],
+    "emph": [
+     {
+      "cap": "공 하나랑 그물 하나로",
+      "span": "그물 하나로",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 해 140만 달러어치를",
+      "span": "한 해 140만 달러어치를",
+      "color": "빨강",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "판 게임이 있는데",
+      "span": "판 게임이",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L3",
+    "kind": "원음",
+    "fn": "시연 말(어디든 들고 감)",
+    "orig_en": "All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere",
+    "text": "공이랑 그물, 가방 하나면 어디든 들고 갈 수 있어요",
+    "sub": [
+     "이 공이랑 그물,",
+     "가방 하나면 돼요",
+     "어디든 들고 갈 수 있어요"
+    ],
+    "hl": [
+     "가방 하나",
+     "어디든"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "est_sec": 4.5,
+    "asr": "받아쓰기 4/4 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(v3)",
+    "orig_span_clip": [
+     32.6,
+     37.1
+    ],
+    "orig_span": [
+     17.6,
+     22.1
+    ],
+    "caps": [
+     "이 공이랑 그물,",
+     "가방 하나면 돼요",
+     "어디든 들고 갈 수 있어요"
+    ],
+    "emph": [
+     {
+      "cap": "이 공이랑 그물,",
+      "span": "공이랑 그물,",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "가방 하나면 돼요",
+      "span": "하나면 돼요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "어디든 들고 갈 수 있어요",
+      "span": "갈 수 있어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L4",
+    "kind": "나레",
+    "fn": "시연(규칙)",
+    "text": "그물에 공을 튕겨 서브하면, 상대는 세 번 안에 다시 내리꽂아야 하고",
+    "tts": "그물에 공을 튕겨 서브하면, 상대는 세 번 안에 다시 내리꽂아야 하고",
+    "sub": [
+     "그물에 공을 튕겨",
+     "서브하면",
+     "상대는 세 번 안에",
+     "다시 내리꽂아야 하고"
+    ],
+    "hl": [
+     "세 번"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "est_sec": 3.71,
+    "caps": [
+     "그물에 공을 튕겨",
+     "서브하면",
+     "상대는 세 번 안에",
+     "다시 내리꽂아야 하고"
+    ],
+    "emph": [
+     {
+      "cap": "그물에 공을 튕겨",
+      "span": "공을 튕겨",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "서브하면",
+      "span": "서브하면",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "상대는 세 번 안에",
+      "span": "세 번",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다시 내리꽂아야 하고",
+      "span": "내리꽂아야 하고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L5",
+    "kind": "원음",
+    "fn": "창업자 한마디(쉽지만 어렵다)",
+    "orig_en": "very easy to learn, but really, really difficult to master",
+    "text": "배우긴 쉬운데 마스터하긴 진짜 어려워요",
+    "sub": [
+     "배우긴 쉬운데",
+     "마스터하긴 진짜 어려워요"
+    ],
+    "hl": [
+     "쉬운데",
+     "어려워요"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "est_sec": 3.25,
+    "asr": "받아쓰기 4/4",
+    "orig_span_clip": [
+     20.95,
+     24.2
+    ],
+    "orig_span": [
+     5.95,
+     9.2
+    ],
+    "caps": [
+     "배우긴 쉬운데",
+     "마스터하긴 진짜 어려워요"
+    ],
+    "emph": [
+     {
+      "cap": "배우긴 쉬운데",
+      "span": "배우긴 쉬운데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "마스터하긴 진짜 어려워요",
+      "span": "진짜 어려워요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L6",
+    "kind": "나레",
+    "fn": "기존 경기와 다른 점(편 없음·어디서나)",
+    "text": "편 가를 필요도 없어서, 눈밭이든 물속이든 다 된다고",
+    "tts": "편 가를 필요도 없어서, 눈밭이든 물속이든 다 된다고",
+    "sub": [
+     "편 가를 필요도 없어서",
+     "눈밭이든 물속이든",
+     "다 된다고"
+    ],
+    "hl": [
+     "눈밭",
+     "물속"
+    ],
+    "facts": [
+     "f4",
+     "f5"
+    ],
+    "est_sec": 2.93,
+    "caps": [
+     "편 가를 필요도 없어서",
+     "눈밭이든 물속이든",
+     "다 된다고"
+    ],
+    "emph": [
+     {
+      "cap": "편 가를 필요도 없어서",
+      "span": "필요도 없어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "눈밭이든 물속이든",
+      "span": "물속이든",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다 된다고",
+      "span": "다 된다고",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L7",
+    "kind": "나레",
+    "fn": "숫자(판매량·원가 질문)",
+    "text": "올해만 2만 9천 개를 팔았다는데, 만드는 데 드는 돈은",
+    "tts": "올해만 이만 구천 개를 팔았다는데, 만드는 데 드는 돈은",
+    "sub": [
+     "올해만 2만 9천 개를",
+     "팔았다는데",
+     "만드는 데 드는 돈은"
+    ],
+    "caps": [
+     "올해만 2만 9천 개를",
+     "팔았다는데",
+     "만드는 데 드는 돈은"
+    ],
+    "hl": [
+     "2만 9천 개"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 3.06,
+    "emph": [
+     {
+      "cap": "올해만 2만 9천 개를",
+      "span": "2만 9천 개를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "팔았다는데",
+      "span": "팔았다는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "만드는 데 드는 돈은",
+      "span": "드는 돈은",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L8",
+    "kind": "원음",
+    "fn": "숫자(원가) — 창업자 답",
+    "orig_en": "A little over fourteen",
+    "text": "14달러 조금 넘어요",
+    "sub": [
+     "14달러 조금 넘어요"
+    ],
+    "caps": [
+     "14달러 조금 넘어요"
+    ],
+    "hl": [
+     "14달러"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "orig_span_clip": [
+     197.5,
+     199.3
+    ],
+    "orig_span": [
+     27.5,
+     29.3
+    ],
+    "est_sec": 1.8,
+    "emph": [
+     {
+      "cap": "14달러 조금 넘어요",
+      "span": "14달러",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L9",
+    "kind": "나레",
+    "fn": "숫자(가격)",
+    "text": "그걸 59달러 99센트에 팔고 있었는데",
+    "tts": "그걸 오십구 달러 구십구 센트에 팔고 있었는데",
+    "sub": [
+     "그걸 59달러 99센트에",
+     "팔고 있었는데"
+    ],
+    "hl": [
+     "59달러 99센트"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 2.67,
+    "caps": [
+     "그걸 59달러 99센트에",
+     "팔고 있었는데"
+    ],
+    "emph": [
+     {
+      "cap": "그걸 59달러 99센트에",
+      "span": "59달러 99센트에",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "팔고 있었는데",
+      "span": "팔고 있었는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L10",
+    "kind": "나레",
+    "fn": "지분 제안",
+    "text": "이때 데이먼드가 50만 달러를 내걸면서",
+    "tts": "이때 데이먼드가 오십만 달러를 내걸면서",
+    "sub": [
+     "이때 데이먼드가",
+     "50만 달러를 내걸면서"
+    ],
+    "hl": [
+     "50만 달러"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 2.41,
+    "caps": [
+     "이때 데이먼드가",
+     "50만 달러를 내걸면서"
+    ],
+    "emph": [
+     {
+      "cap": "이때 데이먼드가",
+      "span": "이때 데이먼드가",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "50만 달러를 내걸면서",
+      "span": "50만 달러를",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L11",
+    "kind": "원음",
+    "fn": "지분 제안(원음)",
+    "orig_en": "interested in, for 25% of the whole company",
+    "text": "회사 전체 지분 25%를 원해요",
+    "sub": [
+     "회사 전체 지분",
+     "25%를 원해요"
+    ],
+    "hl": [
+     "25%"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 4.51,
+    "asr": "받아쓰기 3/3 '…interested in, for 25% of the whole company'(v3, 1회는 첫머리 'rested' — 소리 시작 249.30 으로 0.1초 당김, 재확인은 TTS 뒤)",
+    "orig_span_clip": [
+     249.37,
+     253.88
+    ],
+    "orig_span": [
+     79.37,
+     83.88
+    ],
+    "caps": [
+     "회사 전체 지분",
+     "25%를 원해요"
+    ],
+    "emph": [
+     {
+      "cap": "회사 전체 지분",
+      "span": "전체 지분",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "25%를 원해요",
+      "span": "25%를 원해요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L12",
+    "kind": "원음",
+    "fn": "창업자 역제안",
+    "orig_en": "Would you consider 500k at 15%?",
+    "text": "50만 달러에 15%는 어떠세요?",
+    "sub": [
+     "50만 달러에 15%는",
+     "어떠세요?"
+    ],
+    "hl": [
+     "15%"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 4.0,
+    "asr": "받아쓰기 4/4 'Would you consider 500k at 15%'(v3)",
+    "orig_span_clip": [
+     269.6,
+     273.6
+    ],
+    "orig_span": [
+     99.6,
+     103.6
+    ],
+    "caps": [
+     "50만 달러에 15%는",
+     "어떠세요?"
+    ],
+    "emph": [
+     {
+      "cap": "50만 달러에 15%는",
+      "span": "50만 달러에 15%는",
+      "color": "주황",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "어떠세요?",
+      "span": "어떠세요?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L13",
+    "kind": "원음",
+    "fn": "투자자 압박",
+    "orig_en": "(is) one of those moments that you can lose it all",
+    "text": "다 잃을 수도 있는 순간이에요",
+    "sub": [
+     "다 잃을 수도 있는",
+     "순간이에요"
+    ],
+    "hl": [
+     "다 잃을"
+    ],
+    "facts": [
+     "f9"
+    ],
+    "est_sec": 2.05,
+    "asr": "받아쓰기 4/4",
+    "orig_span_clip": [
+     303.7,
+     305.75
+    ],
+    "orig_span": [
+     133.7,
+     135.75
+    ],
+    "caps": [
+     "다 잃을 수도 있는",
+     "순간이에요"
+    ],
+    "emph": [
+     {
+      "cap": "다 잃을 수도 있는",
+      "span": "수도 있는",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "순간이에요",
+      "span": "순간이에요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L14",
+    "kind": "나레",
+    "fn": "딜 성사",
+    "text": "결국 20%에 손을 잡으면서 투자가 성사됐는데",
+    "tts": "결국 이십 퍼센트에 손을 잡으면서 투자가 성사됐는데",
+    "sub": [
+     "결국 20%에",
+     "손을 잡으면서",
+     "투자가 성사됐는데"
+    ],
+    "hl": [
+     "20%",
+     "성사"
+    ],
+    "facts": [
+     "f10"
+    ],
+    "est_sec": 3.06,
+    "caps": [
+     "결국 20%에",
+     "손을 잡으면서",
+     "투자가 성사됐는데"
+    ],
+    "emph": [
+     {
+      "cap": "결국 20%에",
+      "span": "결국 20%에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "손을 잡으면서",
+      "span": "손을 잡으면서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "투자가 성사됐는데",
+      "span": "성사됐는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L15",
+    "kind": "나레",
+    "fn": "반전(무산)",
+    "text": "알고 보니 방송이 나가기도 전에 이 딜이 깨졌다고",
+    "tts": "알고 보니 방송이 나가기도 전에 이 딜이 깨졌다고",
+    "sub": [
+     "알고 보니 방송이",
+     "나가기도 전에",
+     "이 딜이 깨졌다고"
+    ],
+    "hl": [
+     "딜이 깨졌다고"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 2.8,
+    "caps": [
+     "알고 보니 방송이",
+     "나가기도 전에",
+     "이 딜이 깨졌다고"
+    ],
+    "emph": [
+     {
+      "cap": "알고 보니 방송이",
+      "span": "보니 방송이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "나가기도 전에",
+      "span": "나가기도 전에",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이 딜이 깨졌다고",
+      "span": "깨졌다고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L16",
+    "kind": "나레",
+    "fn": "무산 이유(전언)",
+    "text": "스파이더맨 세트를 내자는 말에, 장난감처럼 보일까 봐 창업자가 반대했다는 거야",
+    "tts": "스파이더맨 세트를 내자는 말에, 장난감처럼 보일까 봐 창업자가 반대했다는 거야",
+    "sub": [
+     "스파이더맨 세트를",
+     "내자는 말에",
+     "장난감처럼 보일까 봐",
+     "창업자가 반대했다는 거야"
+    ],
+    "hl": [
+     "스파이더맨",
+     "장난감"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 4.49,
+    "caps": [
+     "스파이더맨 세트를",
+     "내자는 말에",
+     "장난감처럼 보일까 봐",
+     "창업자가 반대했다는 거야"
+    ],
+    "emph": [
+     {
+      "cap": "스파이더맨 세트를",
+      "span": "세트를",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "내자는 말에",
+      "span": "내자는 말에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "장난감처럼 보일까 봐",
+      "span": "장난감처럼",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "창업자가 반대했다는 거야",
+      "span": "반대했다는 거야",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L17",
+    "kind": "나레",
+    "fn": "후일담(2019년 기준)",
+    "text": "그래도 2019년엔 한 해 1,900만 달러를 버는 회사가 됐다고",
+    "tts": "그래도 이천십구 년엔 한 해 천구백만 달러를 버는 회사가 됐다고",
+    "sub": [
+     "그래도 2019년엔",
+     "한 해 1,900만 달러를",
+     "버는 회사가 됐다고"
+    ],
+    "hl": [
+     "2019년",
+     "1,900만 달러"
+    ],
+    "facts": [
+     "f13"
+    ],
+    "est_sec": 3.58,
+    "caps": [
+     "그래도 2019년엔",
+     "한 해 1,900만 달러를",
+     "버는 회사가 됐다고"
+    ],
+    "emph": [
+     {
+      "cap": "그래도 2019년엔",
+      "span": "2019년엔",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 해 1,900만 달러를",
+      "span": "한 해 1,900만 달러를",
+      "color": "분홍",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "버는 회사가 됐다고",
+      "span": "회사가 됐다고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   }
+  ],
+  "est_total_sec": 54.15,
+  "tts_rate_assumed": "7.7자/초(공백·쉼표 뺀 tts 글자) + 줄당 0.2초 — 벤치 4편 실측 7.71~8.78자/초(1편 plan/voice_measure.json). 실측 아님",
+  "check": {
+   "copy3": [],
+   "sub_max_chars_nospace": 11,
+   "narr_chars": 234,
+   "narr_sec_est": 29.36,
+   "orig_sec": 21.73,
+   "lines": 17
+  },
+  "cps_target": 7.7,
+  "cps_note": "벤치 QMJtjJz4M6w 나레 7.71자/초(1편 plan/voice_measure.json)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "채널 공통 성우(페이블 10-18)"
+ }
+}

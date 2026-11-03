@@ -1,0 +1,198 @@
+{
+ "_note": "샥탬스토리 하이브리드 26편 Blinger 뒤 재료 — 쿠팡의 같은 상표 블링거와 블링거 공식 영상 3편 + B2 방송 성사 장면. 창 1080x1052. 진행자·광고 모델 얼굴 없는 손·도구·머리카락 컷만.",
+ "_dur_note": "컷 길이 = 1차 렌더 render_info 의 실제 줄 길이(B1 5.09·B2 4.72·B3 4.60·B4 4.39·B5 4.19)에 맞춤 · B2 바바라 컷 2.36초 = 자막 '샤크 바바라가 손을 잡은'(6.20~7.41) 끝까지 바바라 화면(98 #186 ①)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/26편_Blinger/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "dcHHFbYpxdA": {
+   "채널": "blinger(공식)",
+   "url": "https://www.youtube.com/watch?v=dcHHFbYpxdA",
+   "제목": "Official Blinger How-To",
+   "해상도": "1920x1080 24fps",
+   "남의 글자": "아래 저작권 줄(왼아래 'All rights reserved')·오른아래 WCT(제조사) 표식 = 화면 맨 아래 y≈990~1050 → 크롭 높이 960(y 0~960)으로 밖 · 진행자 얼굴 컷 안 씀"
+  },
+  "wz104": {
+   "채널": "blinger(공식) 사본",
+   "url": "https://www.youtube.com/watch?v=dcHHFbYpxdA",
+   "제목": "dcHHFbYpxdA 104.00초 구간을 천천히 다가가게 구운 사본(zoomclip.py)",
+   "해상도": "1920x1080 30fps"
+  },
+  "BlnNQhztrHY": {
+   "채널": "blinger(공식)",
+   "url": "https://www.youtube.com/watch?v=BlnNQhztrHY",
+   "제목": "Bling It Up! Gold Bling Hair Tutorial",
+   "해상도": "1920x1080",
+   "남의 글자": "0~13초 제목 카드·46초 뒤 끝 카드 안 씀"
+  },
+  "c0oY2Is2H20": {
+   "채널": "blinger(공식)",
+   "url": "https://www.youtube.com/watch?v=c0oY2Is2H20",
+   "제목": "Bling It Up - DIY Sparkling Instant Camera with Blinger On The Go",
+   "해상도": "1920x1080",
+   "남의 글자": "0~13초 제목 카드·64초 뒤 끝 카드 안 씀"
+  },
+  "xZZ-uy34x1I": {
+   "채널": "Sony Pictures Television(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "698~701초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "dcHHFbYpxdA.mp4",
+   "ss": 48.2,
+   "dur": 2.54,
+   "src_crop": [
+    407,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "블링거 공식 'Official Blinger How-To'(dcHHFbYpxdA, 1080p 24fps): 빨간 블링거를 두 손에 든 모습(샷 46.50~61.90, 손만 · 오른아래 WCT 표식은 크롭 밖)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "c0oY2Is2H20.mp4",
+   "ss": 19.3,
+   "dur": 2.55,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "블링거 공식 'Bling It Up - Blinger On The Go'(c0oY2Is2H20, 1080p): 쿠팡과 같은 On The Go 미니 블링거를 두 손으로 여는 모습(샷 18.28~24.29, 손만 — 14초 컷은 카메라 'instax mini 9' 글자가 크게 보여 바꿈)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "xZZ-uy34x1I.mp4",
+   "ss": 698.3,
+   "dur": 2.36,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(xZZ-uy34x1I): 창업자들과 끌어안는 바바라(샷 698.16~701.17, 띠 없음 · '샤크 바바라가 손을 잡은' 칸)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "dcHHFbYpxdA.mp4",
+   "ss": 62.1,
+   "dur": 2.36,
+   "src_crop": [
+    407,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "공식 How-To: 블링거에 보석을 끼우는 손(샷 61.90~70.78, 손만)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "BlnNQhztrHY.mp4",
+   "ss": 21.0,
+   "dur": 2.65,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "블링거 공식 'Gold Bling Hair Tutorial'(BlnNQhztrHY, 1080p): 금발 머리에 블링거를 대고 누르는 손(샷 13.45~27.63, 뒷머리·손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "dcHHFbYpxdA.mp4",
+   "ss": 140.0,
+   "dur": 1.95,
+   "src_crop": [
+    407,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "공식 How-To: 머리카락에 대고 딸깍 누르는 손 근접(샷 139.76~142.60, 손·머리카락만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "c0oY2Is2H20.mp4",
+   "ss": 32.0,
+   "dur": 2.35,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "On The Go 영상: 카메라에 블링거를 대고 누르는 손(샷 31.23~49.88, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "wz104.mp4",
+   "ss": 0.0,
+   "dur": 2.04,
+   "src_crop": [
+    407,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "공식 How-To: 보라 폰 케이스에 보석을 박는 손(dcHHF 104.00~106.15 를 1.20배 다가가는 사본 wz104.mp4 — 손 들어오기 전 0.9초 멈춤 대응)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "BlnNQhztrHY.mp4",
+   "ss": 43.3,
+   "dur": 2.06,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Gold Bling 영상: 보석이 박힌 뒷머리(샷 43.24~46.11, 얼굴 없음)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "dcHHFbYpxdA.mp4",
+   "ss": 152.0,
+   "dur": 2.13,
+   "src_crop": [
+    407,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "공식 How-To: 보석이 박힌 머리카락을 넘기는 손(샷 151.48~155.91)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

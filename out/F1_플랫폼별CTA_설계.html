@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>플랫폼별 CTA 판</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;--acc:#2563eb;--hot:#ef4444;--ok:#10b981;--box:#eef2ff}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e8ebf0;--mut:#9aa3b2;--line:#2b3240;--box:#222a3d}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Malgun Gothic",system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);margin-bottom:18px}
+h2{font-size:17px;margin:26px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.step{background:var(--box);border-radius:10px;padding:10px 12px;font-size:14px;flex:1;min-width:150px}
+.step b{display:block}.arr{color:var(--mut);font-size:20px}
+.free{border:2px dashed var(--ok)}.pay{border:2px solid var(--hot)}
+.tl{display:flex;height:38px;border-radius:8px;overflow:hidden;font-size:12px;margin:6px 0}
+.tl div{display:flex;align-items:center;justify-content:center;color:#fff;white-space:nowrap;overflow:hidden}
+.body{background:#64748b;flex:5}.cta{flex:1.2}
+.lab{font-size:13px;color:var(--mut)}
+.phones{display:flex;gap:12px;flex-wrap:wrap}
+.ph{width:150px;border:2px solid var(--line);border-radius:18px;padding:8px;background:#111;color:#fff;font-size:12px}
+.ph .scr{height:220px;border-radius:10px;background:linear-gradient(#334155,#0f172a);position:relative;overflow:hidden}
+.ph .cap{position:absolute;left:6px;right:6px;bottom:26px;background:#fff;color:#111;border-radius:6px;padding:4px;font-weight:700;text-align:center}
+.ph .tag{text-align:center;margin-top:6px;font-weight:700}
+.ui{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--box)}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.row input[type=text]{flex:1;min-width:180px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.btn{background:var(--acc);color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;display:inline-block}
+.btn2{border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;display:inline-block}
+ul{margin:6px 0;padding-left:20px}
+</style></head><body><main>
+<h1>플랫폼별 CTA 판 · 설계</h1>
+<div class="sub">렌더 1번(1회 차감)에 마지막 CTA만 다른 영상을 플랫폼 수만큼 함께 뽑습니다.</div>
+
+<h2>① 흐름 — 렌더 버튼 한 번</h2>
+<div class="card"><div class="flow">
+ <div class="step pay"><b>본편 렌더</b>지금과 똑같이 final.mp4 · <span style="color:var(--hot)">1회 차감</span></div><div class="arr">→</div>
+ <div class="step free"><b>CTA 문장만 바꿔 복사</b>판마다 대본 사본, CTA 칸 문장만 플랫폼 문구로</div><div class="arr">→</div>
+ <div class="step free"><b>CTA 칸만 성우 굽기</b>같은 성우·속도·발음교정. 나머지 칸 음성은 본편 것 재사용</div><div class="arr">→</div>
+ <div class="step free"><b>같은 조립 함수로 판 렌더</b>자막·꾸밈·인트로 본편과 동일 → final_인스타.mp4 …</div>
+</div><div class="lab" style="margin-top:8px">초록 점선 = 추가 차감 없음 · 본편 final.mp4 는 건드리지 않음</div></div>
+
+<h2>② 판마다 무엇이 다른가</h2>
+<div class="card">
+ <div class="lab">본편</div><div class="tl"><div class="body">본편 (모든 판 공통)</div><div class="cta" style="background:#475569">원래 CTA</div></div>
+ <div class="lab">인스타</div><div class="tl"><div class="body">본편 그대로</div><div class="cta" style="background:#db2777">댓글에 “00” 남겨주세요</div></div>
+ <div class="lab">유튜브 수익창출</div><div class="tl"><div class="body">본편 그대로</div><div class="cta" style="background:#dc2626">영상 속 제품 스티커 클릭</div></div>
+ <div class="lab">유튜브 비수창</div><div class="tl"><div class="body">본편 그대로</div><div class="cta" style="background:#ea580c">아래 관련영상 눌러 구매링크</div></div>
+ <div class="lab">틱톡·네이버클립</div><div class="tl"><div class="body">본편 그대로</div><div class="cta" style="background:#0f766e">프로필 링크에서 확인</div></div>
+</div>
+
+<h2>③ 결과 화면(마지막 장면)</h2>
+<div class="card"><div class="phones">
+ <div class="ph"><div class="scr"><div class="cap">댓글에 “커피” 남겨주세요</div></div><div class="tag">인스타</div></div>
+ <div class="ph"><div class="scr"><div class="cap">영상 속 제품 클릭!</div></div><div class="tag">유튜브 수창</div></div>
+ <div class="ph"><div class="scr"><div class="cap">아래 관련영상 눌러보세요</div></div><div class="tag">유튜브 비수창</div></div>
+ <div class="ph"><div class="scr"><div class="cap">프로필 링크 확인!</div></div><div class="tag">틱톡·클립</div></div>
+</div><div class="lab" style="margin-top:8px">글자와 목소리가 판마다 다름. 화면 그림(장면)은 본편 CTA 장면 그대로</div></div>
+
+<h2>④ 9단계에 생길 칸</h2>
+<div class="card"><div class="ui">
+ <b>📣 플랫폼별 CTA 판</b> <span class="lab">— 렌더 한 번에 같이 만들어요 (추가 차감 없음)</span>
+ <div class="row">☑ <b style="width:110px">인스타</b><input type="text" value="댓글에 커피 남겨주시면 링크 보내드려요"></div>
+ <div class="row">☑ <b style="width:110px">유튜브 수창</b><input type="text" value="영상 속 제품 스티커를 눌러보세요"></div>
+ <div class="row">☐ <b style="width:110px">유튜브 비수창</b><input type="text" value="아래 관련 영상을 눌러 구매링크 확인하세요"></div>
+ <div class="row">☐ <b style="width:110px">틱톡·클립</b><input type="text" value="프로필 링크에서 확인하세요"></div>
+ <div class="row" style="margin-top:8px"><b>🎙 CTA 목소리</b>
+   <label><input type="radio" name="tts" checked> CTA 칸만 새로 굽기 (빠름)</label>
+   <label><input type="radio" name="tts"> 판마다 전체 목소리 다시 굽기 (느림)</label></div>
+ <div class="lab" style="background:var(--card);border-radius:8px;padding:8px 10px;line-height:1.7">
+   ⏱ <b>시간</b>: 판마다 영상을 다시 조립해요 — 판 2개를 고르면 렌더 시간이 약 3배가 됩니다.<br>
+   🎙 <b>목소리</b>: ‘CTA 칸만’은 그 부분만 새로 구워 앞말과 이어지는 곳의 톤이 살짝 다를 수 있어요.
+   자연스럽게 이어지길 원하면 ‘전체 다시 굽기’를 고르세요 — 대신 시간이 더 들어요.<br>
+   💳 판을 몇 개 골라도 렌더 1회만 차감돼요.</div>
+ <div class="row" style="margin-top:10px">렌더 뒤 → <span class="btn">⬇ 인스타 판</span> <span class="btn">⬇ 유튜브 수창 판</span> <span class="btn2">본편</span></div>
+</div></div>
+
+<h2>⑤ 알고 계실 것</h2>
+<div class="card"><ul>
+ <li><b>시간</b>: 판마다 영상을 다시 조립 → 판 2개면 렌더 시간이 약 3배(추정, 실측 예정)</li>
+ <li><b>톤</b>: CTA 칸만 구우면 이음매 톤이 살짝 다를 수 있음 → 고객이 ‘전체 다시 굽기’를 고를 수 있음(시간 더 듦). 첫 판에서 직접 들어 확인</li>
+ <li><b>1단계 범위</b>: mp4만. 캡컷 판·플랫폼별 화살표 세트는 다음 단계</li>
+ <li><b>주인 함수</b>: 판 만들기 = mix_pipeline 한 곳 · 검사 = 판 영상의 CTA 구간 자막·음성 길이를 본편과 대조하는 도구</li>
+</ul></div>
+</main></body></html>

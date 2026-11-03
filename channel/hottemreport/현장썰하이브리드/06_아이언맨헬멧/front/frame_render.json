@@ -1,0 +1,262 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1 · 숏템리폿 v3(샘플B)",
+ "source": "칼카피_OE11/frame_숏템리폿.json(숏템리폿 v3) 그대로 — 제목 글만 이 편",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    8,
+    8,
+    12
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 560,
+   "w": 1080,
+   "h": 1360,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 608,
+   "rgb": [
+    8,
+    8,
+    12
+   ],
+   "radius": 0,
+   "fade": [
+    0,
+    48
+   ]
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 62,
+   "w": 700,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    255,
+    230,
+    245
+   ],
+   "outline": null,
+   "shadow": null,
+   "glow": {
+    "px": 30,
+    "rgb": [
+     255,
+     50,
+     165
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 62,
+   "w": 700,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    255,
+    230,
+    245
+   ],
+   "outline": null,
+   "shadow": null,
+   "glow": {
+    "px": 16,
+    "rgb": [
+     255,
+     50,
+     165
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 62,
+   "w": 700,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    255,
+    230,
+    245
+   ],
+   "outline": null,
+   "shadow": null,
+   "glow": {
+    "px": 7,
+    "rgb": [
+     255,
+     50,
+     165
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 62,
+   "w": 700,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    255,
+    230,
+    245
+   ],
+   "outline": null,
+   "shadow": null,
+   "glow": {
+    "px": 2,
+    "rgb": [
+     255,
+     50,
+     165
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "band",
+   "x": 470,
+   "y": 172,
+   "w": 140,
+   "h": 3,
+   "rgb": [
+    255,
+    50,
+    165
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "text": "AI 주작 논란 터진\n아이언맨 헬멧",
+   "x": 540,
+   "y": 212,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "BlackHanSans",
+   "size": 136,
+   "line_h": 126,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     255,
+     130,
+     195
+    ]
+   ],
+   "line_scale": [
+    0.6911764705882353,
+    1.0
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 5,
+    "blur": 0,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "glow": null
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1500,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 62,
+   "line_h": 88,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "outline": null,
+   "shadow": null,
+   "box": {
+    "rgb": [
+     10,
+     10,
+     14
+    ],
+    "pad": 30,
+    "radius": 22
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0
+  }
+ ]
+}

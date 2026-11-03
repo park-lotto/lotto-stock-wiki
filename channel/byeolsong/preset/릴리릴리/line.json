@@ -1,0 +1,6 @@
+{
+ "_rule": "이 회원 프리셋이 쓰는 제작 라인 — 주인 한 곳. 기술 꾸러미 = tools/claude_portal/preset_pack.tech_files(변형판 base 사슬·판 그림 파일 포함)",
+ "line": "hybrid",
+ "version": "릴리릴리판",
+ "_from": "channel/프리셋.json byeolsong — 형식 해외원본(자막+배경음), member.flow_format 자막노래형 = flow.FORMAT_STAGES['자막노래형'](flow_format_of('릴리릴리판') → base 별헤는쏭판 → 자막노래형) · 판 = 릴리릴리판(별헤는쏭판 위 겉모양 변형, 사장님 10-27)"
+}

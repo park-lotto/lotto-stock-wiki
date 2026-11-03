@@ -1,0 +1,123 @@
+{
+ "topic": "인스타360 루나 울트라(Insta360 Luna Ultra) — 처음 꺼내 펼쳐 보는 James Afante 'There we go. Wow.'·'Look at this. It's detachable.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "cIuRFzUnqq0",
+ "bench_note": "벤치 'DJI가 막으려한 액션캠의 정체'(3.8만, 핫템리포트 10-27 목록 50위, 설명란 '인스타360 루나 울트라(Insta360 Luna Ultra) … DSLR급 줌') — 화면 속 제품 = 인스타360 루나 울트라 짐벌 카메라. 원음형 = 유튜브 James Afante 'Insta360 Luna Ultra First Impressions & Unboxing' FSUQkyyMp08(8.8천, 2560x1280, 자동 더빙 20개 — 원어 140-20 en-US original) 150~520초 사본 30fps(전체본 삭제, 사본 시각 = 원래 −150). 화면 보조 = Insta360 공식 'Meet Insta360 Luna Ultra' gWscweuterk(258만) 제품만 나온 컷. 벤치의 'DJI 소송'은 1차 출처로 확정 못 해 안 씀.",
+ "sources": {
+  "jm": {
+   "file": "jm.mp4",
+   "who": "유튜브 James Afante FSUQkyyMp08 150~520초 사본(원어 140-20, 30fps) — 손 근접 컷·책상 앞 본인(앞 원음형만), 뒤에는 손 컷만",
+   "views": 8806,
+   "dur": 370.0,
+   "res": "2560x1280"
+  },
+  "of": {
+   "file": "of.mp4",
+   "who": "유튜브 Insta360 공식 gWscweuterk(137, 1920x1080) — 렌즈 근접·산 배경 카메라·손에 든 카메라만(모델 얼굴 컷·아래 작은 설명 글 crop 밖)",
+   "views": 2579399,
+   "dur": 277.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "화면이 떨어지는\n카메라"
+ },
+ "facts": {
+  "f1": {
+   "text": "Insta360 공식 온라인 설명서 사양(onlinemanual.insta360.com/lunaultra/en-us/specs/specs) '8K Leica flagship dual-lens gimbal camera' · 주렌즈 1인치·망원 1/1.3인치 · James 원본 0:30 'dual Leica lens system'",
+   "kind": "제조사 사양"
+  },
+  "f2": {
+   "text": "Insta360 공식 온라인 설명서 사양 'Detachable Touchscreen Remote'(2.0인치 OLED) · James 원본 사본 332.40~335.20 'look at this. It's detachable.'",
+   "kind": "제조사 사양·리뷰"
+  },
+  "f3": {
+   "text": "James 원본 사본 44.00~45.92 'There we go. Wow.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "James 원본 사본 332.40~335.20 'look at this. It's detachable.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "손바닥만 한데, 렌즈가 두 개나 달렸다는 카메라가 있는데요.",
+    "caps": [
+     "손바닥만 한데",
+     "렌즈가 두 개나 달렸다는",
+     "카메라가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "근데 진짜 신기한 건, 이 화면을 떼어 내서 따로 들고 볼 수 있다는데요.",
+    "caps": [
+     "근데 진짜 신기한 건",
+     "이 화면을 떼어 내서",
+     "따로 들고 볼 수 있다는데요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jm",
+    "span": [
+     43.96,
+     46.2
+    ],
+    "en": "There we go. Wow.",
+    "caps": [
+     "됐다, 됐다",
+     "와!"
+    ],
+    "check": "앞 go 43.28~43.64 · There 44.00 · Wow 45.40~45.92 · 다음 Guys 47.48 · 원본 컷 43.83 뒤에서 시작(손 근접 펼침), 45.30 원본 안 컷(같은 손 근접)"
+   },
+   {
+    "id": "O2",
+    "src": "jm",
+    "span": [
+     332.35,
+     335.22
+    ],
+    "en": "look at this. It's detachable.",
+    "caps": [
+     "이것 좀 봐요",
+     "화면이 떨어져요!"
+    ],
+    "check": "앞 guys 332.12~332.40 · look 332.40 · detachable 334.28~335.20 · 다음 Meaning 335.24 · 원본 한 샷(330.83~335.30) 안 — 손으로 화면을 떼어 냄"
+   }
+  ],
+  "dropped": {
+   "벤치 'DJI가 막으려 한'(소송)": "1차 출처로 확정 못 함 — 안 씀",
+   "8K·Dolby Vision·줌 배수 숫자": "판·리뷰마다 표기가 달라 숫자는 안 씀",
+   "가격": "금액 금지",
+   "James 의 타갈로그 말": "원음 구간에 안 넣음(영어 구간만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

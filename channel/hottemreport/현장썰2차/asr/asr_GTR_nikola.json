@@ -1,0 +1,15 @@
+{
+ "music_bed": true,
+ "segments": [
+  {
+   "start": 12.0,
+   "end": 15.0,
+   "speaker": "S1",
+   "text": "[whistle]",
+   "kind": "sfx"
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "_src": "nikolamodel8_7646059328675269918.mp4",
+ "_offset": 0.0
+}

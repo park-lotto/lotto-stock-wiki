@@ -1,0 +1,897 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.442
+   ],
+   "O1": [
+    2.522,
+    5.922
+   ],
+   "O2": [
+    6.002,
+    10.222
+   ],
+   "N2": [
+    10.302,
+    12.628
+   ],
+   "N3": [
+    12.708,
+    15.15
+   ],
+   "N4": [
+    15.23,
+    17.788
+   ],
+   "N5": [
+    17.868,
+    20.542
+   ],
+   "N6": [
+    20.622,
+    23.064
+   ],
+   "N7": [
+    23.144,
+    25.353
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 쌀로 크림을 만들어",
+    "t0": 0.0,
+    "t1": 1.429,
+    "key": "쌀",
+    "show": [
+     0.0,
+     1.429
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바르는 외국인이 있는데요",
+    "t0": 1.429,
+    "t1": 2.442,
+    "show": [
+     1.429,
+     2.522
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 최고의 한국 쌀 크림 레시피야",
+    "t0": 2.522,
+    "t1": 5.922,
+    "key": "쌀 크림",
+    "show": [
+     2.522,
+     6.002
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "피부가 칙칙하거나",
+    "t0": 6.002,
+    "t1": 8.102,
+    "show": [
+     6.002,
+     8.102
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "톤이 고르지 않아서 고민이야?",
+    "t0": 8.102,
+    "t1": 10.222,
+    "show": [
+     8.102,
+     10.302
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "먼저 쌀 한 컵을 씻어서",
+    "t0": 10.302,
+    "t1": 11.588,
+    "show": [
+     10.302,
+     11.588
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하루 동안 물에 불렸는데요",
+    "t0": 11.588,
+    "t1": 12.628,
+    "show": [
+     11.588,
+     12.708
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "불린 물과 함께 곱게 갈아서",
+    "t0": 12.708,
+    "t1": 14.279,
+    "show": [
+     12.708,
+     14.279
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "두 번이나 걸러 냈는데요",
+    "t0": 14.279,
+    "t1": 15.15,
+    "show": [
+     14.279,
+     15.23
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가라앉은 진한 쌀 원액만 남기고",
+    "t0": 15.23,
+    "t1": 17.087,
+    "key": "쌀 원액",
+    "show": [
+     15.23,
+     17.087
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "물은 따라 버렸는데요",
+    "t0": 17.087,
+    "t1": 17.788,
+    "show": [
+     17.087,
+     17.868
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "여기에 알로에 젤과 코코넛 오일을",
+    "t0": 17.868,
+    "t1": 19.868,
+    "show": [
+     17.868,
+     19.868
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "세 숟갈씩 섞었는데요",
+    "t0": 19.868,
+    "t1": 20.542,
+    "show": [
+     19.868,
+     20.622
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "완성된 크림을",
+    "t0": 20.622,
+    "t1": 21.479,
+    "show": [
+     20.622,
+     21.479
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "매일 얼굴과 목에 바른다고 하는데요",
+    "t0": 21.479,
+    "t1": 23.064,
+    "show": [
+     21.479,
+     23.144
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 영상만 조회수 2천만 회를",
+    "t0": 23.144,
+    "t1": 24.858,
+    "key": "2천만",
+    "show": [
+     23.144,
+     24.858
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넘겼다고 하네요",
+    "t0": 24.858,
+    "t1": 25.353,
+    "show": [
+     24.858,
+     25.667
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 2.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "얼굴에 크림",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.261,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 5.2,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "숟가락 크림",
+    "line": "N1",
+    "t0": 1.261,
+    "kind": "tts",
+    "t1": 2.522,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O1",
+    "ss": 0.04,
+    "src": "LiaHUMJmkGI.mp4",
+    "t0": 2.522,
+    "kind": "orig",
+    "t1": 6.002,
+    "dur": 3.48,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "원음 구간 그대로",
+    "line": "O2",
+    "ss": 3.48,
+    "src": "LiaHUMJmkGI.mp4",
+    "t0": 6.002,
+    "kind": "orig",
+    "t1": 10.302,
+    "dur": 4.3,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 18.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "쌀 한 컵",
+    "line": "N2",
+    "t0": 10.302,
+    "kind": "tts",
+    "t1": 11.505,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 21.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "물에 불림",
+    "line": "N2",
+    "t0": 11.505,
+    "kind": "tts",
+    "t1": 12.708,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 26.5,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "믹서",
+    "line": "N3",
+    "t0": 12.708,
+    "kind": "tts",
+    "t1": 13.969,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 29.2,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "거름망",
+    "line": "N3",
+    "t0": 13.969,
+    "kind": "tts",
+    "t1": 15.23,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 31.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "물 따라 버림",
+    "line": "N4",
+    "t0": 15.23,
+    "kind": "tts",
+    "t1": 16.549,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 33.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "원액",
+    "line": "N4",
+    "t0": 16.549,
+    "kind": "tts",
+    "t1": 17.868,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 44.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "알로에",
+    "line": "N5",
+    "t0": 17.868,
+    "kind": "tts",
+    "t1": 19.245,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 48.2,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "코코넛 오일",
+    "line": "N5",
+    "t0": 19.245,
+    "kind": "tts",
+    "t1": 20.622,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 57.0,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "얼굴에 바름",
+    "line": "N6",
+    "t0": 20.622,
+    "kind": "tts",
+    "t1": 21.883,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 58.3,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "얼굴에 펴 바름",
+    "line": "N6",
+    "t0": 21.883,
+    "kind": "tts",
+    "t1": 23.144,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 52.2,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "섞인 크림",
+    "line": "N7",
+    "t0": 23.144,
+    "kind": "tts",
+    "t1": 24.405,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "LiaHUMJmkGI.mp4",
+    "ss": 15.2,
+    "w": 1,
+    "crop": [
+     67,
+     0,
+     587,
+     780
+    ],
+    "see": "얼굴 크림",
+    "line": "N7",
+    "t0": 24.405,
+    "kind": "tts",
+    "t1": 25.6667,
+    "dur": 1.262,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "LiaHUMJmkGI.mp4",
+    "span": [
+     0.04,
+     3.44
+    ],
+    "t0": 2.522,
+    "t1": 5.922
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "LiaHUMJmkGI.mp4",
+    "span": [
+     3.48,
+     7.7
+    ],
+    "t0": 6.002,
+    "t1": 10.222
+   }
+  ],
+  "end": 25.6667
+ },
+ "placement": {
+  "reference": "ro1l3u734v4",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 쌀로 크림을 만들어",
+    "t0": 0.0,
+    "t1": 1.429,
+    "key": "쌀",
+    "show": [
+     0.0,
+     1.429
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바르는 외국인이 있는데요",
+    "t0": 1.429,
+    "t1": 2.442,
+    "show": [
+     1.429,
+     2.522
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 최고의 한국 쌀 크림 레시피야",
+    "t0": 2.522,
+    "t1": 5.922,
+    "key": "쌀 크림",
+    "show": [
+     2.522,
+     6.002
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "피부가 칙칙하거나",
+    "t0": 6.002,
+    "t1": 8.102,
+    "show": [
+     6.002,
+     8.102
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "톤이 고르지 않아서 고민이야?",
+    "t0": 8.102,
+    "t1": 10.222,
+    "show": [
+     8.102,
+     10.302
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "먼저 쌀 한 컵을 씻어서",
+    "t0": 10.302,
+    "t1": 11.588,
+    "show": [
+     10.302,
+     11.588
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하루 동안 물에 불렸는데요",
+    "t0": 11.588,
+    "t1": 12.628,
+    "show": [
+     11.588,
+     12.708
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "불린 물과 함께 곱게 갈아서",
+    "t0": 12.708,
+    "t1": 14.279,
+    "show": [
+     12.708,
+     14.279
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "두 번이나 걸러 냈는데요",
+    "t0": 14.279,
+    "t1": 15.15,
+    "show": [
+     14.279,
+     15.23
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가라앉은 진한 쌀 원액만 남기고",
+    "t0": 15.23,
+    "t1": 17.087,
+    "key": "쌀 원액",
+    "show": [
+     15.23,
+     17.087
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "물은 따라 버렸는데요",
+    "t0": 17.087,
+    "t1": 17.788,
+    "show": [
+     17.087,
+     17.868
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "여기에 알로에 젤과 코코넛 오일을",
+    "t0": 17.868,
+    "t1": 19.868,
+    "show": [
+     17.868,
+     19.868
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "세 숟갈씩 섞었는데요",
+    "t0": 19.868,
+    "t1": 20.542,
+    "show": [
+     19.868,
+     20.622
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "완성된 크림을",
+    "t0": 20.622,
+    "t1": 21.479,
+    "show": [
+     20.622,
+     21.479
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "매일 얼굴과 목에 바른다고 하는데요",
+    "t0": 21.479,
+    "t1": 23.064,
+    "show": [
+     21.479,
+     23.144
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 영상만 조회수 2천만 회를",
+    "t0": 23.144,
+    "t1": 24.858,
+    "key": "2천만",
+    "show": [
+     23.144,
+     24.858
+    ],
+    "first": true,
+    "lex": [
+     "lux",
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넘겼다고 하네요",
+    "t0": 24.858,
+    "t1": 25.353,
+    "show": [
+     24.858,
+     25.667
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = ro1l3u734v4",
+   "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+   "효과음 0발(본보기 0) []",
+   "등장 {'cut': 17} · 강조 0/17"
+  ]
+ }
+}

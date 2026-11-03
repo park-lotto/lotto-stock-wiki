@@ -1,0 +1,1179 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.333
+   ],
+   "O1": [
+    3.433,
+    7.203
+   ],
+   "N2": [
+    7.303,
+    8.752
+   ],
+   "O2": [
+    8.852,
+    13.102
+   ],
+   "O3": [
+    13.202,
+    14.952
+   ],
+   "N3": [
+    15.052,
+    17.226
+   ],
+   "N4": [
+    17.326,
+    20.369
+   ],
+   "N5": [
+    20.469,
+    23.802
+   ],
+   "N6": [
+    23.902,
+    27.525
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입맛 까다로운",
+    "t0": 0.0,
+    "t1": 0.857,
+    "key": "까다로운",
+    "show": [
+     0.0,
+     0.857
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "신세경이 드디어 정착한",
+    "t0": 0.857,
+    "t1": 2.286,
+    "key": "정착한",
+    "show": [
+     0.857,
+     2.286
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "꿀떡이 있다네요?",
+    "t0": 2.286,
+    "t1": 3.333,
+    "key": "꿀떡이",
+    "show": [
+     2.286,
+     3.433
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "헤맸어!",
+    "t0": 3.433,
+    "t1": 4.533,
+    "key": "헤맸어!",
+    "show": [
+     3.433,
+     4.533
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "근데 이걸 만나고",
+    "t0": 4.533,
+    "t1": 6.413,
+    "show": [
+     4.533,
+     6.413
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "광명을 찾았지",
+    "t0": 6.413,
+    "t1": 7.203,
+    "key": "광명을",
+    "show": [
+     6.413,
+     7.303
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 어떤",
+    "t0": 7.303,
+    "t1": 8.017,
+    "key": "도대체",
+    "show": [
+     7.303,
+     8.017
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꿀떡이길래?",
+    "t0": 8.017,
+    "t1": 8.752,
+    "key": "꿀떡이길래?",
+    "show": [
+     8.017,
+     8.852
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "언제 어디서나",
+    "t0": 8.852,
+    "t1": 10.032,
+    "show": [
+     8.852,
+     10.032
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "누구에게 추천을 해도",
+    "t0": 10.032,
+    "t1": 11.182,
+    "key": "추천을",
+    "show": [
+     10.032,
+     11.182
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "무조건 맛있다고 할",
+    "t0": 11.182,
+    "t1": 12.322,
+    "key": "무조건",
+    "show": [
+     11.182,
+     12.322
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "그런 품목",
+    "t0": 12.322,
+    "t1": 13.102,
+    "show": [
+     12.322,
+     13.202
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "먹어보면 정말",
+    "t0": 13.202,
+    "t1": 14.162,
+    "show": [
+     13.202,
+     14.162
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "후회하지 않을 거야",
+    "t0": 14.162,
+    "t1": 14.952,
+    "key": "후회하지",
+    "show": [
+     14.162,
+     15.052
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 15.052,
+    "t1": 15.909,
+    "key": "보자마자",
+    "show": [
+     15.052,
+     15.909
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤거든요",
+    "t0": 15.909,
+    "t1": 17.226,
+    "key": "따라",
+    "show": [
+     15.909,
+     17.326
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한두 시간 상온에 두면",
+    "t0": 17.326,
+    "t1": 18.612,
+    "key": "한두",
+    "show": [
+     17.326,
+     18.612
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈처럼 쭉",
+    "t0": 18.612,
+    "t1": 19.326,
+    "key": "치즈처럼",
+    "show": [
+     18.612,
+     19.326
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "늘어나더라고요",
+    "t0": 19.326,
+    "t1": 20.369,
+    "key": "늘어나더라고요",
+    "show": [
+     19.326,
+     20.469
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "자색고구마랑 쑥으로만",
+    "t0": 20.469,
+    "t1": 21.898,
+    "key": "쑥으로만",
+    "show": [
+     20.469,
+     21.898
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "색을 내서",
+    "t0": 21.898,
+    "t1": 22.469,
+    "key": "색을",
+    "show": [
+     21.898,
+     22.469
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "미국까지 수출한대요",
+    "t0": 22.469,
+    "t1": 23.802,
+    "key": "미국까지",
+    "show": [
+     22.469,
+     23.902
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 마켓컬리에서만",
+    "t0": 23.902,
+    "t1": 25.331,
+    "key": "마켓컬리에서만",
+    "show": [
+     23.902,
+     25.331
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "후기가 3만 개 넘은",
+    "t0": 25.331,
+    "t1": 26.473,
+    "key": "3만",
+    "show": [
+     25.331,
+     26.473
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "인기 꿀떡이래요",
+    "t0": 26.473,
+    "t1": 27.525,
+    "key": "인기",
+    "show": [
+     26.473,
+     27.867
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "OObQryzR6KU.mp4",
+    "ss": 29.7,
+    "crop": [
+     560,
+     0,
+     700,
+     700
+    ],
+    "see": "신세경 정면 상반신 근접(꿀떡 봉지 들고 설명)",
+    "face": "신세경",
+    "text": "없음",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.716,
+    "dur": 1.716,
+    "over": 0.0
+   },
+   {
+    "src": "OObQryzR6KU.mp4",
+    "ss": 34.05,
+    "crop": [
+     570,
+     0,
+     850,
+     850
+    ],
+    "see": "신세경 얼굴 근접(옆얼굴 3/4, 눈·입 보임)",
+    "face": "신세경",
+    "text": "없음",
+    "line": "N1",
+    "t0": 1.716,
+    "kind": "tts",
+    "t1": 3.433,
+    "dur": 1.717,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     380,
+     20,
+     870,
+     870
+    ],
+    "see": "신세경 '헤맸어! 근데 이걸 만나고 광명을 찾았지'(입 맞음, 봉지 들어 보임)",
+    "face": "신세경",
+    "text": "없음",
+    "line": "O1",
+    "ss": 39.6,
+    "src": "OObQryzR6KU.mp4",
+    "t0": 3.433,
+    "kind": "orig",
+    "t1": 7.303,
+    "dur": 3.87,
+    "over": 0.0
+   },
+   {
+    "src": "b/UKiakIQ-0b0.mp4",
+    "ss": 26.0,
+    "crop": [
+     740,
+     0,
+     1080,
+     1080
+    ],
+    "see": "마음이가 모둠 꿀떡 350g 파우치와 꿀떡 접시(공식 영상)",
+    "face": "없음",
+    "text": "포장 글자만",
+    "line": "N2",
+    "t0": 7.303,
+    "kind": "tts",
+    "t1": 8.852,
+    "dur": 1.549,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     380,
+     0,
+     880,
+     880
+    ],
+    "see": "신세경 봉지 들고 '누구에게 추천을 해도 무조건 맛있다고 할'(입 맞음)",
+    "face": "신세경",
+    "text": "없음",
+    "line": "O2",
+    "ss": 48.8,
+    "src": "OObQryzR6KU.mp4",
+    "t0": 8.852,
+    "kind": "orig",
+    "t1": 13.202,
+    "dur": 4.35,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     420,
+     0,
+     880,
+     880
+    ],
+    "see": "신세경 봉지 열며 '먹어보면 정말 후회하지 않을 거야'(입 맞음)",
+    "face": "신세경",
+    "text": "없음",
+    "line": "O3",
+    "ss": 66.1,
+    "src": "OObQryzR6KU.mp4",
+    "t0": 13.202,
+    "kind": "orig",
+    "t1": 15.052,
+    "dur": 1.85,
+    "over": 0.0
+   },
+   {
+    "src": "b/w3NrrdR3s3c.mp4",
+    "ss": 3.2,
+    "crop": [
+     0,
+     100,
+     1080,
+     1080
+    ],
+    "see": "마음이가 모둠 꿀떡 봉지(1.4kg — 쿠팡 같은 상품 8244756913 옵션), '100% 국내산 우리쌀'",
+    "face": "없음",
+    "text": "포장 글자만",
+    "line": "N3",
+    "t0": 15.052,
+    "kind": "tts",
+    "t1": 17.326,
+    "dur": 2.274,
+    "over": 0.0
+   },
+   {
+    "src": "b/EYQoyE6QJ9M.mp4",
+    "ss": 7.08,
+    "w": 0.7,
+    "crop": [
+     0,
+     100,
+     1080,
+     1080
+    ],
+    "see": "해동 중인 삼색 꿀떡",
+    "face": "없음",
+    "text": "없음",
+    "line": "N4",
+    "t0": 17.326,
+    "kind": "tts",
+    "t1": 18.548,
+    "dur": 1.222,
+    "over": 0.0
+   },
+   {
+    "src": "b/EYQoyE6QJ9M.mp4",
+    "ss": 14.05,
+    "w": 1.1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1080
+    ],
+    "see": "꿀떡을 양손으로 쭉 늘림",
+    "face": "없음",
+    "text": "없음",
+    "line": "N4",
+    "t0": 18.548,
+    "kind": "tts",
+    "t1": 20.469,
+    "dur": 1.921,
+    "over": 0.0
+   },
+   {
+    "src": "b/UKiakIQ-0b0.mp4",
+    "ss": 16.2,
+    "crop": [
+     420,
+     0,
+     1080,
+     1080
+    ],
+    "see": "자색 꿀떡을 손가락으로 집어 보임(공식 영상)",
+    "face": "없음",
+    "text": "없음",
+    "line": "N5",
+    "t0": 20.469,
+    "kind": "tts",
+    "t1": 22.186,
+    "dur": 1.717,
+    "over": 0.0
+   },
+   {
+    "src": "b/UKiakIQ-0b0.mp4",
+    "ss": 19.5,
+    "crop": [
+     420,
+     0,
+     1080,
+     1080
+    ],
+    "see": "흰·쑥·자색 꿀떡 쌓은 접시, 반 갈라 꿀 보임(공식 영상)",
+    "face": "없음",
+    "text": "없음",
+    "line": "N5",
+    "t0": 22.186,
+    "kind": "tts",
+    "t1": 23.902,
+    "dur": 1.716,
+    "over": 0.0
+   },
+   {
+    "src": "b/w3NrrdR3s3c.mp4",
+    "ss": 20.3,
+    "crop": [
+     0,
+     300,
+     1080,
+     1080
+    ],
+    "see": "접시 가득 삼색 꿀떡(위에서)",
+    "face": "없음",
+    "text": "없음",
+    "line": "N6",
+    "t0": 23.902,
+    "kind": "tts",
+    "t1": 25.884,
+    "dur": 1.982,
+    "over": 0.0
+   },
+   {
+    "src": "b/w3NrrdR3s3c.mp4",
+    "ss": 30.0,
+    "crop": [
+     0,
+     250,
+     1080,
+     1080
+    ],
+    "see": "꿀떡 속 꿀 근접",
+    "face": "없음",
+    "text": "없음",
+    "line": "N6",
+    "t0": 25.884,
+    "kind": "tts",
+    "t1": 27.8667,
+    "dur": 1.983,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "OObQryzR6KU.mp4",
+    "span": [
+     39.6,
+     43.37
+    ],
+    "t0": 3.433,
+    "t1": 7.203
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "OObQryzR6KU.mp4",
+    "span": [
+     48.8,
+     53.05
+    ],
+    "t0": 8.852,
+    "t1": 13.102
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "OObQryzR6KU.mp4",
+    "span": [
+     66.1,
+     67.85
+    ],
+    "t0": 13.202,
+    "t1": 14.952
+   }
+  ],
+  "end": 27.8667
+ },
+ "placement": {
+  "reference": "Nv99RyxmrfU",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입맛 까다로운",
+    "t0": 0.0,
+    "t1": 0.857,
+    "key": "까다로운",
+    "show": [
+     0.0,
+     0.857
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "신세경이 드디어 정착한",
+    "t0": 0.857,
+    "t1": 2.286,
+    "key": "정착한",
+    "show": [
+     0.857,
+     2.286
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "꿀떡이 있다네요?",
+    "t0": 2.286,
+    "t1": 3.333,
+    "key": "꿀떡이",
+    "show": [
+     2.286,
+     3.433
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "꿀떡이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "헤맸어!",
+    "t0": 3.433,
+    "t1": 4.533,
+    "key": "헤맸어!",
+    "show": [
+     3.433,
+     4.533
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "근데 이걸 만나고",
+    "t0": 4.533,
+    "t1": 6.413,
+    "show": [
+     4.533,
+     6.413
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "광명을 찾았지",
+    "t0": 6.413,
+    "t1": 7.203,
+    "key": "광명을",
+    "show": [
+     6.413,
+     7.303
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 어떤",
+    "t0": 7.303,
+    "t1": 8.017,
+    "key": "도대체",
+    "show": [
+     7.303,
+     8.017
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꿀떡이길래?",
+    "t0": 8.017,
+    "t1": 8.752,
+    "key": "꿀떡이길래?",
+    "show": [
+     8.017,
+     8.852
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "언제 어디서나",
+    "t0": 8.852,
+    "t1": 10.032,
+    "show": [
+     8.852,
+     10.032
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "누구에게 추천을 해도",
+    "t0": 10.032,
+    "t1": 11.182,
+    "key": "추천을",
+    "show": [
+     10.032,
+     11.182
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "무조건 맛있다고 할",
+    "t0": 11.182,
+    "t1": 12.322,
+    "key": "무조건",
+    "show": [
+     11.182,
+     12.322
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "그런 품목",
+    "t0": 12.322,
+    "t1": 13.102,
+    "show": [
+     12.322,
+     13.202
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "먹어보면 정말",
+    "t0": 13.202,
+    "t1": 14.162,
+    "show": [
+     13.202,
+     14.162
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "후회하지 않을 거야",
+    "t0": 14.162,
+    "t1": 14.952,
+    "key": "후회하지",
+    "show": [
+     14.162,
+     15.052
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 15.052,
+    "t1": 15.909,
+    "key": "보자마자",
+    "show": [
+     15.052,
+     15.909
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤거든요",
+    "t0": 15.909,
+    "t1": 17.226,
+    "key": "따라",
+    "show": [
+     15.909,
+     17.326
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한두 시간 상온에 두면",
+    "t0": 17.326,
+    "t1": 18.612,
+    "key": "한두",
+    "show": [
+     17.326,
+     18.612
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "치즈처럼 쭉",
+    "t0": 18.612,
+    "t1": 19.326,
+    "key": "치즈처럼",
+    "show": [
+     18.612,
+     19.326
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "늘어나더라고요",
+    "t0": 19.326,
+    "t1": 20.369,
+    "key": "늘어나더라고요",
+    "show": [
+     19.326,
+     20.469
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "늘어나더라고요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "자색고구마랑 쑥으로만",
+    "t0": 20.469,
+    "t1": 21.898,
+    "key": "쑥으로만",
+    "show": [
+     20.469,
+     21.898
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "색을 내서",
+    "t0": 21.898,
+    "t1": 22.469,
+    "key": "색을",
+    "show": [
+     21.898,
+     22.469
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "미국까지 수출한대요",
+    "t0": 22.469,
+    "t1": 23.802,
+    "key": "미국까지",
+    "show": [
+     22.469,
+     23.902
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "미국까지"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 마켓컬리에서만",
+    "t0": 23.902,
+    "t1": 25.331,
+    "key": "마켓컬리에서만",
+    "show": [
+     23.902,
+     25.331
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "후기가 3만 개 넘은",
+    "t0": 25.331,
+    "t1": 26.473,
+    "key": "3만",
+    "show": [
+     25.331,
+     26.473
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "인기 꿀떡이래요",
+    "t0": 26.473,
+    "t1": 27.525,
+    "key": "인기",
+    "show": [
+     26.473,
+     27.867
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "인기"
+     }
+    ],
+    "variant": "pop"
+   }
+  ],
+  "sfx": [
+   {
+    "t": 0.857,
+    "kind": "ding",
+    "why": "cap"
+   }
+  ],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = Nv99RyxmrfU",
+   "효과음 1발(본보기 1) [(0.857, 'cap')]",
+   "등장 {'pop': 13, 'cut': 12} · 강조 5/25"
+  ]
+ }
+}

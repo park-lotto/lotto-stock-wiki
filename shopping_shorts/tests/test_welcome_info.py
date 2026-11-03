@@ -116,7 +116,7 @@ def test_new_google_user_is_routed_to_welcome_and_can_submit(tmp_path, monkeypat
 
     r = cl.post("/api/welcome",
                 data={"name": "홍길동", "phone": "010-1234-5678",
-                      "gender": "남성", "age_band": "30대"}, cookies=ck)
+                      "gender": "남성", "age_band": "30대", "content_agree": "1"}, cookies=ck)
     assert r.status_code == 303 and r.headers["location"] == "/"
     c = s.get_customer(cid)
     assert c["name"] == "홍길동" and c["phone"] == "010-1234-5678"
@@ -131,7 +131,7 @@ def test_welcome_rejects_blank_name_and_bad_phone(tmp_path, monkeypatch):
     cid, _ = s.get_or_create_by_google("sub-B", "b@y.com", return_created=True)
     cl = TestClient(appmod.app, follow_redirects=False)
     ck = _cookie(cid)
-    ok = {"name": "홍길동", "phone": "010-1234-5678", "gender": "남성", "age_band": "30대"}
+    ok = {"name": "홍길동", "phone": "010-1234-5678", "gender": "남성", "age_band": "30대", "content_agree": "1"}
     for bad in ({**ok, "name": ""},                            # 이름 없음
                 {**ok, "phone": ""},                           # 전화 없음
                 {**ok, "phone": "123"},                        # 전화 형식 이상
@@ -165,7 +165,7 @@ def test_id_signup_requires_name_and_phone(tmp_path, monkeypatch):
 
     cl.post("/api/signup",
             content=f"user=good1&pass=pw12&name=%ED%99%8D&phone=010-1111-2222"
-                    f"&gender={G}&age_band={A}", headers=hdr)
+                    f"&gender={G}&age_band={A}&content_agree=1", headers=hdr)
     cid = s.verify_customer("good1", "pw12")
     assert cid is not None
     c = s.get_customer(cid)
@@ -173,3 +173,17 @@ def test_id_signup_requires_name_and_phone(tmp_path, monkeypatch):
     assert c["gender"] == "남성" and c["age_band"] == "30대"
     # ★가입폼에서 다 받았으니 /welcome으로 또 끌려가면 안 된다(두 번 묻는 꼴)
     assert appmod._needs_welcome(cid) is False
+
+
+def test_content_notice_agree_required(tmp_path, monkeypatch):
+    """콘텐츠 운영 안내(관제 199): 화면 4곳에 같은 문구, 아이디 가입은 동의 없이 막힌다."""
+    from fastapi.testclient import TestClient
+    import shopping_shorts.app as appmod
+    first = appmod._CONTENT_NOTICE_ITEMS[1][:20]
+    c = TestClient(appmod.app)
+    assert first in c.get("/signup").text and "name=content_agree" in c.get("/signup").text
+    assert first in c.get("/terms").text
+    assert first in appmod._PENDING_HTML
+    r = c.post("/api/signup", data={"user": "noagree", "pass": "pw12", "name": "홍",
+               "phone": "010-1111-2222", "gender": "남성", "age_band": "30대"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/signup?e=")

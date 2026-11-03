@@ -1,0 +1,384 @@
+{
+ "_note": "샥탬스토리 하이브리드 7편 Wall Doctor Rx — 앞 0~12.82초(N1~O4) = 칼카피(새 엔진 재렌더, 끝 원음 '특수 반죽이 담긴 틀이에요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(잇썸홈판 존댓말 — 사장님 10-19 §12 14-0). CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Vtech 벽 수리 월패치 + 충진제 퍼티필러 세트(쿠팡 7529694507, 로켓 — 석고 묻은 메쉬 패치 VT-027 + 퍼티 VT-460) · 방송 제품 Wall Doctor Rx 는 쿠팡에 없음(렌즈 3장·API 검색 8개) → 비슷한 제품(같은 원리: 구멍 위에 대고 손으로 메움, 두 가지 구성), 대본 B1 '똑같은 건 없어서 비슷한 걸'",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "끝"
+ },
+ "흥미이음": {
+  "원본흥미": "망치로 뚫은 벽 구멍을 공구 없이 '받침 판 + 반죽 든 틀' 딱 두 가지로, 손으로 쓱 펴 발라 메운다(앞 N2 '딱 두 가지뿐' · O3 '구멍 위에 딱 올려' · N3 받침 판 · O4 '특수 반죽이 담긴 틀')",
+  "뒤흥미": "Vtech 월패치(석고 묻은 메쉬)를 구멍 위에 붙이고 분무기로 물 뿌려 손으로 문지르면 구멍이 메워지는 게 영상에 그대로 보임(boriali 4V0D3dMExiE 56~74초 '분무기로 물을 뿌려 문질러주세요'·'그럼 구멍이 메꿔지시는게 보일꺼에요') + 퍼티 통 뚜껑에 헤라가 붙어 있어 패치+퍼티 두 가지로 끝(98~104초)",
+  "판정": "같음",
+  "근거": "신기한 점(구멍 위에 대고 손으로 문질러 공구 없이 메움, 구성 두 가지)이 같다 — 받침 판+반죽 틀 대신 반죽 묻은 패치+퍼티라는 모양만 다름. 같은 제품(Wall Doctor Rx/WallRx)은 쿠팡에 없음(c0). 시트 C:/숏템_칼카피/foreignshowshow/하이브리드/7편_WallDoctor/sheet_4V0D_a.jpg·sheet_4V0D_b.jpg·sheet_4V0D_c.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../7편_WallDoctor",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/7편_WallDoctor/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/7편_WallDoctor/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/7편_WallDoctor/엔진v2",
+  "cut_after": "O4",
+  "cut_why": "O4 원음 'with your special compound → 특수 반죽이 담긴 틀이에요' 끝(12.816) — 다음 N4(손으로 펴 바름) 나레 전. '정말 손으로 되나'라는 궁금증에서 끊고 '근데 진짜 손으로 쓱 메워지나 싶어서'로 잇는다. N4~N6 사실(펴 바름·말려 사포·공구 없음)은 뒤가 체험으로 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "하이브리드 3~12편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "공구 없이 벽 구멍",
+  "line2": "메워 준다는 제품?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2 사장님 10-19 지훈 확정)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 7.73,
+  "cps_note": "앞 7편 엔진v2 render_info narr.cps_out 7.73",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "공개(이음+잉?)",
+    "text": "근데 진짜 손으로 메워지나 싶어서 쿠팡을 뒤졌는데 똑같은 건 없어서 비슷한 걸 샀거든요",
+    "tts": "근데 진짜 손으로 메워지나 싶어서 쿠팡을 뒤졌는데 똑같은 건 없어서 비슷한 걸 샀거든요",
+    "caps": [
+     "근데 진짜",
+     "손으로 메워지나 싶어서",
+     "쿠팡을 뒤졌는데",
+     "똑같은 건 없어서",
+     "비슷한 걸 샀거든요"
+    ],
+    "facts": [
+     "c0",
+     "c1"
+    ],
+    "emph_words": [
+     "비슷한 걸"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph": [
+     {
+      "cap": "근데 진짜",
+      "span": "근데 진짜",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손으로 메워지나 싶어서",
+      "span": "메워지나 싶어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡을 뒤졌는데",
+      "span": "쿠팡을 뒤졌는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없어서",
+      "span": "건 없어서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 걸 샀거든요",
+      "span": "샀거든요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게 15센티 패치에 반죽이 미리 발려 있어서 구멍만큼 잘라 붙이면 돼요",
+    "tts": "이게 말도 안 되는 게 15센티 패치에 반죽이 미리 발려 있어서 구멍만큼 잘라 붙이면 돼요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "15센티 패치에",
+     "반죽이 미리 발려 있어서",
+     "구멍만큼",
+     "잘라 붙이면 돼요"
+    ],
+    "facts": [
+     "f_mesh",
+     "f_size",
+     "v1"
+    ],
+    "emph_words": [
+     "15센티",
+     "미리 발려"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "15센티 패치에",
+      "span": "15센티 패치에",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "반죽이 미리 발려 있어서",
+      "span": "발려 있어서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "구멍만큼",
+      "span": "구멍만큼",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잘라 붙이면 돼요",
+      "span": "붙이면 돼요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데 물 뿌리고 손으로 문지르니까 구멍이 스르르 메워지더라고요",
+    "tts": "진짜 핵심은 이건데 물 뿌리고 손으로 문지르니까 구멍이 스르르 메워지더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "물 뿌리고",
+     "손으로 문지르니까",
+     "구멍이 스르르",
+     "메워지더라고요"
+    ],
+    "facts": [
+     "v1"
+    ],
+    "emph_words": [
+     "손으로"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "물 뿌리고",
+      "span": "물 뿌리고",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손으로 문지르니까",
+      "span": "문지르니까",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "구멍이 스르르",
+      "span": "구멍이 스르르",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "메워지더라고요",
+      "span": "메워지더라고요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 퍼티 뚜껑에 헤라까지 붙어 있어서 공구를 따로 안 샀어요",
+    "tts": "심지어 이게 대박인 게 퍼티 뚜껑에 헤라까지 붙어 있어서 공구를 따로 안 샀어요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "퍼티 뚜껑에",
+     "헤라까지 붙어 있어서",
+     "공구를 따로 안 샀어요"
+    ],
+    "facts": [
+     "c1",
+     "v2"
+    ],
+    "emph_words": [
+     "헤라까지"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "퍼티 뚜껑에",
+      "span": "퍼티 뚜껑에",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "헤라까지 붙어 있어서",
+      "span": "붙어 있어서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "공구를 따로 안 샀어요",
+      "span": "따로 안 샀어요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "말려서 사포로 갈았더니 집주인이 구멍 어디 있었냐고 난리였어요",
+    "tts": "말려서 사포로 갈았더니 집주인이 구멍 어디 있었냐고 난리였어요",
+    "caps": [
+     "말려서 사포로 갈았더니",
+     "집주인이",
+     "구멍 어디 있었냐고",
+     "난리였어요"
+    ],
+    "facts": [
+     "v3",
+     "창작"
+    ],
+    "emph_words": [
+     "난리"
+    ],
+    "emph": [
+     {
+      "cap": "말려서 사포로 갈았더니",
+      "span": "사포로 갈았더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "집주인이",
+      "span": "집주인이",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "구멍 어디 있었냐고",
+      "span": "있었냐고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리였어요",
+      "span": "난리였어요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c0": "같은 제품 없음: 구글 렌즈 3장(lens_src 7_a 판매사 광고 13.5초 포장 · 7_b 24.5초 키트 전체 · 7_c 67.5초 포장, C:/숏템_칼카피/foreignshowshow/하이브리드/lens/렌즈_샥탬7_WallDoctor.json) hits 2/3장 = Wall RX Drywall Repair Kit(lowes·canadiantire)·WALL DOCTOR(sharktank.com.tw), 쿠팡 상품 0개 · 쿠팡 파트너스 API 검색 '월닥터'·'Wall Doctor 벽 보수'·'WallRx'·'벽 구멍 보수 키트'·'석고보드 구멍 보수 패치'·'벽 구멍 메우기 퍼티'·'벽구멍 보수 리페어 플레이트'·'드라이월 패치 셀프'(2026-10-20, 쿠팡API_7편*.json) 결과에 Wall Doctor/WallRx 없음",
+  "c1": "쿠팡 API '브이텍 월패치'(2026-10-20, C:/숏템_칼카피/foreignshowshow/하이브리드/쿠팡API_7편c_2026-10-20.json) → 7529694507 'Vtech 벽 수리 월패치 + 충진제 퍼티필러 세트, 1세트' 로켓 · 대표 이미지 = 'Plastered Mesh Wall Patch VT-027' + 'Instant Putty Filler VT-460'(vtech_set.jpg) · 같은 줄 5966016941 'Vtech 월패치 VT-027 2p'. 상품평 글·리뷰 수는 API 에 없음(이 PC 쿠팡 페이지 IP 차단)",
+  "f_mesh": "포장 글자 'Instant Wall Patch VT-027 · PLASTERED MESH'(4V0D3dMExiE 14~15초 프레임) · 쿠팡 대표 이미지 'Plastered Mesh Wall Patch' — '반죽이 미리 발린'= plastered mesh(석고 입힌 메쉬)를 쉬운 말로",
+  "v1": "boriali 4V0D3dMExiE '브이텍 월패치 벽보수셀프 시공하기'(2020-05-19, 1080p) 화면 글자: 20~22초 'WALL PATCH를 열어보면 비닐에 포장된 종이가 있습니다 가위로 내가 필요한 만큼만 잘라줍니다' · 44~54초 '맨들맨들한 면이 벽과 부착되게 해주세요' · 56~58초 '분무기로 물을 뿌려 문질러주세요' · 60~62초 '그럼 구멍이 메꿔지시는게 보일꺼에요' · 64~66초 '고루고루 잘 펴서 문질러 주세요' — '스르르'는 체감 표현(창작)",
+  "v2": "같은 영상 98~102초 '위에 헤라도 부착되어 있는 제품입니다'(퍼티필러 통 뚜껑) · 92~96초 '이제 이 위에 퍼티를 바를꺼에요' — '공구를 따로 안 샀어요'= 세트(패치+퍼티, 헤라 부착)만 썼다는 화자 체험(창작, 근거는 구성)",
+  "v3": "같은 영상 78~90초 '드라이기로 말려줍니다·자연건조 시켜도 되지만' · 128~134초 '경화가 완료되면 사포를 이용해 표면을 매끄럽게' · 168~172초 '감쪽 같죠?' · 182초 Before/After",
+  "창작": "B1 화자 설정·B3 '스르르'·B4 '공구를 따로 안 샀어요'·B5 '집주인이 … 난리' = 화자 감상·사회 반응(설명서 §4 창작 허용선)",
+  "f_size": "쿠팡 7529694507·5966016941 대표 이미지 포장 'Size: 15cm x 15cm / 2pcs'(VT-027) · 퍼티 통 '500 g'(VT-460) — vtech_set.jpg·coupang_sheet.jpg"
+ }
+}

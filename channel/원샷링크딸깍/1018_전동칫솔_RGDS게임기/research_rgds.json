@@ -1,0 +1,176 @@
+{
+ "product": "Anbernic RG DS (원조, 2025-12 출시, 4인치 640x480 x2, RK3568, 3GB, 안드로이드 14, 약 $94~100)",
+ "facts": [
+  {
+   "text": "Anbernic RG DS는 DS형 접이식(클램쉘) 듀얼스크린 안드로이드 게임기로, 2025년 12월(12/7경 출하 예정)에 나왔다.",
+   "kind": "스펙",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  {
+   "text": "화면은 4인치 IPS 두 장, 장당 640x480(4:3), 둘 다 터치 되고 정전식 스타일러스도 지원한다.",
+   "kind": "스펙",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "칩셋은 록칩 RK3568(쿼드코어 Cortex-A55 최대 2.0GHz, Mali-G52 2EE), 램 3GB, 저장 32GB + microSD 최대 2TB.",
+   "kind": "스펙",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "OS는 안드로이드 14(리눅스 구성도 있음), 배터리 4000mAh로 약 6시간, 완충 약 3.5시간.",
+   "kind": "스펙",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "무게 321g, 크기 160x91x21.5mm, 아날로그 스틱 2개, 6축 자이로, 진동, 스테레오 스피커.",
+   "kind": "스펙",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  {
+   "text": "정가 99.99달러, 사전주문 12/9까지 93.99달러. 리뷰 매체는 실거래가 94~100달러로 정리. 원화 가격은 미확인.",
+   "kind": "가격",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "두 화면이 터치되는 진짜 위/아래 구성이라 DS 게임은 melonDS로 대부분 잘 돈다. PS1·PSP 일부·N64도 가능, PS2·GameCube·3DS는 실사용상 어렵다(Heldgames 평가 3.5/5).",
+   "kind": "수치",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "위아래 화면에 서로 다른 앱을 동시에 띄우는 것이 가능한지는 이 출처들에서 미확인(영상 자막 주장은 별도 검증 필요). 비DS 앱에서 둘째 화면은 메뉴·박스아트·컨트롤 오버레이로 쓰이고 앱마다 지원이 다르다.",
+   "kind": "스펙",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  {
+   "text": "흥미: 일부 리뷰어 샘플에서 듀얼스크린 게임 때 두 화면이 어긋나는(비동기) 문제가 나왔고, 앤버닉이 출하 전 펌웨어 1.4 업데이트로 위 화면 주사율 저하 등을 고쳤다.",
+   "kind": "흥미",
+   "url": "https://www.notebookcheck.net/Anbernic-rolls-out-an-update-to-fix-the-RG-DS-ahead-of-shipping.1179922.0.html"
+  },
+  {
+   "text": "흥미: 칩 예상은 H700·Unisoc T618이었지만 실제는 RK3568 — 레트로 핸드헬드로는 처음 쓴 칩으로 소개됐다.",
+   "kind": "흥미",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  {
+   "text": "흥미: 앤버닉 최초의 완전 투명 모델(투명 화이트, '얼음 같다')이 있고, 공식 공개는 유출 몇 주 뒤 앤버닉 유튜브에서 먼저 했다.",
+   "kind": "흥미",
+   "url": "https://retrododo.com/anbernic-officially-reveals-sub-100-rg-ds-handheld-emulator/"
+  },
+  {
+   "text": "권위: 앤버닉은 2017년 중국 선전에서 Shenzhen YangLiMing Electronic Technology가 상표를 등록해 시작, 첫 제품 RG. RG351P·RG353V·RG35XX로 레트로 핸드헬드 대표 브랜드가 됐고 자체 사이트는 30개+ 모델을 냈다고 밝힌다.",
+   "kind": "권위",
+   "url": "https://en.wikipedia.org/wiki/Anbernic"
+  },
+  {
+   "text": "흥미: 2018년 래퍼 술자보이(Soulja Boy)의 'SouljaGame 콘솔'이 앤버닉 기기를 리브랜딩한 것으로 알려졌고 출시 한 달도 안 돼 중단됐다(위키 기준).",
+   "kind": "흥미",
+   "url": "https://en.wikipedia.org/wiki/Anbernic"
+  },
+  {
+   "text": "후속작 RG DS Plus(2026-09-15 판매, 첫 72시간 84.99달러·이후 94.99달러)는 4.3인치 1024x768 화면, 같은 RK3568 칩. 영상 속 기기는 640x480 원조 RG DS(검은색, 스틱 있음)로 보임. Plus 정보는 단일 출처(retrohandhelds)라 재확인 필요.",
+   "kind": "수치",
+   "url": "https://retrohandhelds.gg/tag/anbernic-rg-ds-plus/"
+  }
+ ],
+ "videos": [
+  {
+   "id": "x5sbGCcQwQI",
+   "title": "Nintendo is going to sue - Anbernic RG DS",
+   "channel": "ShortCircuit",
+   "dur": 905,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "MFu4goCqEko",
+   "title": "Anbernic RG DS Review: Better, but Flawed",
+   "channel": "Retro Game Corps",
+   "dur": 1648,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "J-RIMA10yU4",
+   "title": "Some Thoughts on the Anbernic RG DDS",
+   "channel": "Retro Game Corps",
+   "dur": 954,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "YfnYDISeZIE",
+   "title": "ANBERNIC RG DDS | Dream Dual-Screen",
+   "channel": "ANBERNIC(공식)",
+   "dur": 208,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "yhfxeP-eFyY",
+   "title": "ANBERNIC RG DDS First Look",
+   "channel": "ANBERNIC(공식)",
+   "dur": 242,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "Fx4pWNG3bhw",
+   "title": "Anbernic RG DS Plus In-Depth Review",
+   "channel": "Retro Game Corps",
+   "dur": 2354,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "hi-vycbhlXw",
+   "title": "Anbernic RG DS Plus: Better than Expected",
+   "channel": "Retro Game Corps",
+   "dur": 2188,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "orWKUTvEUME",
+   "title": "Anbernic RG DS Plus: Quick Look",
+   "channel": "Joey's Retro Handhelds",
+   "dur": 1220,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "Eu9lDHT09e4",
+   "title": "27 DS Games Tested! Retroid Pocket Duo Lite vs RG DS Plus",
+   "channel": "Handheld Showdown",
+   "dur": 1725,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  },
+  {
+   "id": "g3Os7kBH0fw",
+   "title": "Anbernic RG DS PLUS: Now We're Talking",
+   "channel": "retrotastic",
+   "dur": 615,
+   "orient": "가로/세로 미확인(flat 검색에선 NA, 리뷰 대부분 가로)"
+  }
+ ],
+ "queries": {
+  "en": [
+   "Anbernic RG DS unboxing",
+   "Anbernic RG DS dual screen gameplay DS games",
+   "Anbernic RG DS hands on stylus touch screen"
+  ],
+  "ko": [
+   "앤버닉 RG DS 언박싱",
+   "앤버닉 RG DS 닌텐도 DS 에뮬 후기",
+   "앤버닉 RG DS 듀얼스크린 안드로이드 게임기"
+  ],
+  "zh": [
+   "安伯尼克 RG DS 开箱",
+   "Anbernic RG DS 双屏 掌机 评测",
+   "安伯尼克 RG DS 模拟器 NDS 体验"
+  ]
+ },
+ "seed": [
+  "Anbernic RG DS",
+  "Anbernic RG DS review",
+  "RG DS anbernic gameplay"
+ ],
+ "exclude_title": [
+  "RG DS Plus",
+  "DS Plus",
+  "RG DDS",
+  "Retroid",
+  "RGLauncher"
+ ]
+}

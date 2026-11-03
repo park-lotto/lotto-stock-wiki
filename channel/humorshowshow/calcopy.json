@@ -1,0 +1,25 @@
+{
+ "steps": {
+  "1": {
+   "state": "done",
+   "date": "2026-10-18",
+   "note": "조회 상위 20편 + 최근 1편 받기(쇼츠 134편, 조회 중앙 24.6만)",
+   "files": []
+  },
+  "2": {
+   "state": "done",
+   "date": "2026-10-18",
+   "note": "21편 줄판독(클로드 눈) 356줄 — 새 스타일 화자썰, 브랜드 썰템쇼",
+   "files": [
+    "channel/humorshowshow/대본스타일_줄판독_2026-10-17.md",
+    "channel/humorshowshow/스타일분석_2026-10-17.md"
+   ]
+  }
+ },
+ "name": "재밌쇼 humorshowshow",
+ "url": "https://www.youtube.com/@humorshowshow",
+ "stats": {
+  "subs": 24100,
+  "total": 134
+ }
+}

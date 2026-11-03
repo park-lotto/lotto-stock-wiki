@@ -1,0 +1,442 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.381,
+   "text": "모델 장윤주가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "장윤주가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.381,
+   "t1": 2.729,
+   "text": "요즘 자주 손이 간다는",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "자주"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.729,
+   "t1": 3.785,
+   "text": "베이스가 있다네요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "베이스가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.785,
+   "t1": 5.235,
+   "text": "커버력도 좋고요",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 5.235,
+   "t1": 6.835,
+   "text": "밀착력도 좋고",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "밀착력도"
+    }
+   ],
+   "sticker": "heart",
+   "stickers": [],
+   "chars": [
+    5.235,
+    5.335,
+    5.435,
+    5.535,
+    5.635,
+    5.735
+   ]
+  },
+  {
+   "line": "N2",
+   "t0": 6.835,
+   "t1": 8.598,
+   "text": "대체 어떤 제품이길래?",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "제품이길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 8.598,
+   "t1": 9.948,
+   "text": "GIK",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 9.948,
+   "t1": 11.898,
+   "text": "시선 크림입니다",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [],
+   "sticker": "heart",
+   "stickers": [],
+   "chars": [
+    9.948,
+    10.048,
+    10.148,
+    10.248,
+    10.348,
+    10.448,
+    10.548
+   ]
+  },
+  {
+   "line": "O3",
+   "t0": 11.898,
+   "t1": 14.198,
+   "text": "수정해야 될 때 있잖아요",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 14.198,
+   "t1": 15.848,
+   "text": "그런 일이 없더라고요",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "없더라고요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 15.848,
+   "t1": 17.026,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 17.026,
+   "t1": 18.503,
+   "text": "하나 사서 따라 해 봤어요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 18.503,
+   "t1": 20.56,
+   "text": "근데 이 크림",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "크림"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 20.56,
+   "t1": 21.725,
+   "text": "진짜 이름은",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "진짜"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "진짜"
+    }
+   ],
+   "chars": [
+    20.56,
+    20.66,
+    20.76,
+    20.86,
+    20.96
+   ]
+  },
+  {
+   "line": "N4",
+   "t0": 21.725,
+   "t1": 22.909,
+   "text": "허스킨 파운데이션!",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "허스킨"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    21.725,
+    21.825,
+    21.925,
+    22.025,
+    22.125,
+    22.225,
+    22.325,
+    22.425,
+    22.525
+   ]
+  },
+  {
+   "line": "N5",
+   "t0": 22.909,
+   "t1": 24.294,
+   "text": "메이크업 실장님도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "실장님도"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 24.294,
+   "t1": 25.173,
+   "text": "피부 표현이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "피부"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 25.173,
+   "t1": 26.456,
+   "text": "진짜 예쁘다고 했대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "예쁘다고"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "예쁘다고"
+    }
+   ]
+  },
+  {
+   "line": "N6",
+   "t0": 26.456,
+   "t1": 28.127,
+   "text": "구독자들 사이에서도",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "구독자들"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 28.127,
+   "t1": 28.851,
+   "text": "따라 샀다는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 28.851,
+   "t1": 30.1,
+   "text": "후기가 달렸대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "후기가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [
+  {
+   "t": 1.381,
+   "kind": "ding",
+   "why": "cap"
+  }
+ ],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = BRa5Iv4A3Y8",
+  "스티커 gem 본보기 3개 중 0개만(조건 맞는 덩어리 모자람)",
+  "스티커 spark_lines → N4「진짜 이름은」",
+  "스티커 spark_lines → N5「진짜 예쁘다고 했대요」",
+  "효과음 1발(본보기 1) [(1.381, 'cap')]",
+  "등장 {'pop': 7, 'cut': 10, 'typing': 4} · 강조 17/21"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "BRa5Iv4A3Y8",
+  "worst_slot_diff": 0.103,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 0.4,
+     "cut": 0.4,
+     "typing": 0.2
+    },
+    "ours": {
+     "pop": 0.44,
+     "cut": 0.33,
+     "typing": 0.22
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 9
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "typing": 0.69,
+     "cut": 0.23,
+     "pop": 0.08
+    },
+    "ours": {
+     "typing": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 0.77,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2,
+     "heart": 3,
+     "gem": 3
+    },
+    "ours": {
+     "heart": 2,
+     "spark_lines": 2
+    }
+   },
+   "sfx": {
+    "bench": 1,
+    "ours": 1
+   }
+  }
+ }
+}

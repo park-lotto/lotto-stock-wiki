@@ -1,0 +1,57 @@
+{
+ "name": "방구석 친구들",
+ "url": "https://www.youtube.com/@방구석친구들D",
+ "concept": "게시글 썰(이유 숨김)",
+ "stats": {
+  "subs": 21600,
+  "total": 107
+ },
+ "steps": {
+  "1": {
+   "state": "done",
+   "date": "2026-10-15",
+   "note": "전체 107편 중 조회 상위 50편(10,000,000~39,000)",
+   "files": []
+  },
+  "2": {
+   "state": "doing",
+   "date": "2026-10-15",
+   "note": "1차 분석 멈춤 — 사장님: 버텍스·제미나이 말고 클로드로 분석",
+   "files": []
+  },
+  "3": {
+   "state": "done",
+   "date": "2026-10-06",
+   "note": "6박자·전언 말투·39편 갈래",
+   "files": [
+    "channel/banggu/역분석_2026-10-05.md"
+   ]
+  },
+  "4": {
+   "state": "done",
+   "date": "2026-10-07",
+   "note": "씨앗 흐름(seedflow)·조사 썰·커뮤니티 소재",
+   "files": [
+    "channel/banggu/방향_커뮤니티소재_썰쇼핑_2026-10-07.md"
+   ]
+  },
+  "5": {
+   "state": "doing",
+   "date": "2026-10-06",
+   "note": "channel_presets/banggu 뼈대 있음(말맛 부족 판정)",
+   "files": [
+    "shopping_shorts/channel_presets/banggu"
+   ]
+  },
+  "6": {
+   "state": "doing",
+   "date": "2026-10-08",
+   "note": "픽션 썰 라이브 렌더(원블레이드) 시청 판정 대기",
+   "files": []
+  },
+  "7": {
+   "state": "todo"
+  }
+ },
+ "next": "② 썰풀다 다음: 상위 50편 1차 분석(analyze50)"
+}

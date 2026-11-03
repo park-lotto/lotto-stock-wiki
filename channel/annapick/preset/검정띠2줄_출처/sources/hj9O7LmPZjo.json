@@ -1,0 +1,163 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 201,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 99.5,
+   "line_h": 103,
+   "rgb": [
+    251,
+    252,
+    251
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -5.1,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "허연~ 발뒤꿈치\n5천원으로 아기발 되기"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1324,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcNanumGothic-Bold",
+   "size": 70.3,
+   "line_h": 81,
+   "rgb": [
+    252,
+    252,
+    251
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : 백지영 Baek Z Young"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "w": 960,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "hj9O7LmPZjo"
+}

@@ -1,0 +1,165 @@
+{
+ "topic": "하겐다즈 × 이름이 아무 뜻 없는 지어낸 말 — 덴마크 말처럼 들리게 창업자 Reuben Mattus 가 지어냄, 시작은 뉴욕 브롱크스(말 수레로 얼음과자 팔던 집안), ä 같은 점은 덴마크어에 없음, 처음 통에 덴마크 지도(HuffPost 2015 · NYT 2006 부고 · Wikipedia · 공식 영국 사이트 '1960·Reuben Mattus') · 뒤 체험: 쿠팡 하겐다즈 파인트 마카다미아 넛(116375921, 같은 제품)",
+ "brand": "Häagen-Dazs",
+ "scene_query": "Haagen-Dazs pint commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "nm",
+  "why": "누구나 아는 고급 아이스크림 하겐다즈 — 유럽 말 같지만 아무 뜻 없는 지어낸 이름이고 시작은 뉴욕 브롱크스. 훅 = 숟가락으로 뜨는 공식 장면 → 놀라는 짤"
+ },
+ "hook": [
+  "하겐다즈,",
+  "무슨 나라 말이게?"
+ ],
+ "post": "하겐다즈는 아무 뜻 없이 지어낸 이름",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "nm": {
+   "text": "HuffPost 'Häagen-Dazs Doesn't Come From Where You Think It Comes From'(2015-05-13): Mattus 'invented the Danish-sounding Häagen-Dazs name' to suggest old-world craftsmanship · New York Sun 부고 'Rose Mattus, 90, Co-Founder of Häagen-Dazs'(2006): 'the brand was invented in 1959 by … Reuben Mattus, at his kitchen table' · Wikipedia 'Häagen-Dazs': 'an invented pseudo-Scandinavian phrase'",
+   "url": "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+  },
+  "bx": {
+   "text": "HuffPost(2015): the company 'comes from the Bronx' · Mattus first sold 'fruit ice and ice cream pops from a horse-drawn wagon in the bustling streets of the Bronx, New York' · Wikipedia 'Reuben and Rose Mattus': 'selling them around South Bronx from a horse-drawn wagon'(Rose Mattus 회고록 2004·Tablet 2012 인용) · 하겐다즈 영국 공식 'Our Story': 'since 1960. Our founder, Reuben Mattus'",
+   "url": "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+  },
+  "um": {
+   "text": "HuffPost(2015): umlaut — 'that punctuation mark doesn't exist in the Danish language' · Wikipedia 'Reuben and Rose Mattus': 'adding an umlaut which does not exist in Danish'(NYT 2006-12-01 부고 인용)",
+   "url": "https://en.wikipedia.org/wiki/Reuben_and_Rose_Mattus"
+  },
+  "mp": {
+   "text": "HuffPost(2015) NYT 인용: 'the original ice cream cartons carried a map of Denmark to give the impression that the product was European' · Wikipedia 'Reuben and Rose Mattus': 'even put a map of Denmark on the carton'(NYT 2006-12-01 인용)",
+   "url": "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+  },
+  "p1": {
+   "text": "쿠팡 116375921 '하겐다즈 파인트 마카다미아 넛 (냉동)'(파트너스 API 2026-10-28 — 상품 사진을 열어 Häagen-Dazs MACADAMIA NUT 파인트 확인)",
+   "url": "https://www.coupang.com/vp/products/116375921"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(아무 뜻 없음)",
+    "seg": "A",
+    "text": "유럽에서 온 것 같은 하겐다즈라는 이름, 사실 아무 의미도 없는 말이래요",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "시작은 유럽이 아니라, 미국 뉴욕의 브롱크스였는데",
+    "facts": [
+     "bx"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "덤(수레)",
+    "seg": "A",
+    "text": "창업자는 원래 말이 끄는 수레로, 동네에서 얼음과자를 팔던 사람이었대요",
+    "facts": [
+     "bx"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "한계",
+    "seg": "A",
+    "text": "비싼 아이스크림을 팔려면, 왠지 유럽 느낌이 나야 한다고 생각해서",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "덴마크 말처럼 들리는 이름을, 아예 직접 만들어 냈다는 거죠",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "근데 글자 위에 찍힌 점 두 개는, 정작 덴마크 말에는 없는 표시래요",
+    "facts": [
+     "um"
+    ],
+    "sources": [
+     "https://en.wikipedia.org/wiki/Reuben_and_Rose_Mattus"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "심지어 처음 아이스크림 통에는, 덴마크 지도까지 그려 넣었다는데",
+    "facts": [
+     "mp"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "사회 반응",
+    "seg": "A",
+    "text": "그 덕에 다들 진짜, 유럽에서 건너온 아이스크림인 줄 알았다는 거예요",
+    "facts": [
+     "mp"
+    ],
+    "sources": [
+     "https://www.huffpost.com/entry/haagen-dazs-comes-from_n_7266208"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 이야기 듣고 궁금해서, 쿠팡에서 하겐다즈를 한 통 시켰는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/116375921"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "마카다미아 맛인데, 고소한 견과류가 사이사이에 콕콕 박혀 있고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/116375921"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "뚜껑 열 때마다, 그 점 두 개가 자꾸 눈에 들어오더라고요",
+    "facts": [
+     "um"
+    ],
+    "sources": [
+     "https://en.wikipedia.org/wiki/Reuben_and_Rose_Mattus"
+    ]
+   }
+  ]
+ }
+}

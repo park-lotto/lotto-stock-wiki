@@ -1,0 +1,139 @@
+{
+ "tt_abbyhappel_7341570855383698730.mp4": {
+  "segments": [],
+  "_model": "gemini-3.5-flash"
+ },
+ "tt_mobilepixelsinc_7473116602452479274.mp4": {
+  "segments": [],
+  "_model": "gemini-flash-lite-latest"
+ },
+ "tt_jsetups.by.jae_7302598240283757856.mp4": {
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 1.1,
+    "text": "",
+    "music": true
+   },
+   {
+    "start": 1.1,
+    "end": 2.0,
+    "text": "What is this?",
+    "music": false
+   },
+   {
+    "start": 2.0,
+    "end": 28.0,
+    "text": "",
+    "music": true
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ },
+ "tt_ijustine_7128233156808920366.mp4": {
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 5.0,
+    "text": "",
+    "music": true
+   },
+   {
+    "start": 5.0,
+    "end": 6.0,
+    "text": "Mix",
+    "music": false
+   },
+   {
+    "start": 6.0,
+    "end": 8.0,
+    "text": "",
+    "music": true
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ },
+ "ij_118_148.m4a": {
+  "items": [
+   {
+    "start": 0.0,
+    "end": 1.8,
+    "text": "So this is giving me is a",
+    "music": false
+   },
+   {
+    "start": 1.8,
+    "end": 4.2,
+    "text": "completely new way of working.",
+    "music": false
+   },
+   {
+    "start": 4.2,
+    "end": 6.1,
+    "text": "Whether I'm sitting, whether I'm standing,",
+    "music": false
+   },
+   {
+    "start": 6.1,
+    "end": 8.0,
+    "text": "I'm able to adjust,",
+    "music": false
+   },
+   {
+    "start": 8.0,
+    "end": 9.3,
+    "text": "adjust this.",
+    "music": false
+   },
+   {
+    "start": 9.3,
+    "end": 13.2,
+    "text": "I can't even tell you how cool it is to work like this.",
+    "music": false
+   },
+   {
+    "start": 13.2,
+    "end": 16.8,
+    "text": "Because I love having the entire top be set up with my timeline",
+    "music": false
+   },
+   {
+    "start": 16.8,
+    "end": 18.5,
+    "text": "and my viewer, and down",
+    "music": false
+   },
+   {
+    "start": 18.5,
+    "end": 20.5,
+    "text": "here I have all of my files.",
+    "music": false
+   },
+   {
+    "start": 20.5,
+    "end": 22.3,
+    "text": "Like this is, it's game changing,",
+    "music": false
+   },
+   {
+    "start": 22.3,
+    "end": 23.7,
+    "text": "to be honest with you.",
+    "music": false
+   },
+   {
+    "start": 23.7,
+    "end": 27.3,
+    "text": "Now if I wanted to do this with my Pro Display XDRs or other monitors,",
+    "music": false
+   },
+   {
+    "start": 27.3,
+    "end": 30.1,
+    "text": "I don't even know how I would go about doing that, especially the ease",
+    "music": false
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ }
+}

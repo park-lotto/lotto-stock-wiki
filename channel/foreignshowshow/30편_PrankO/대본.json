@@ -1,0 +1,292 @@
+{
+ "topic": "Prank-O(프랭크오) — 세상에 없는 황당한 가짜 상품이 인쇄된 선물 포장 상자. 창업자가 선물을 돌림 → 뜯어 보니 고양이 VR·아기 젖병 매달이 같은 황당한 물건 → '진짜 회사는 장난 선물 상자' → 진짜 선물은 안에 숨기고 표정 구경 → 마크와 성사",
+ "product": "Prank-O prank gift box(장난 선물 포장 상자)",
+ "bench": {
+  "id": "Jlo0i1kEtkQ",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "선물 없는 선물 박스?! (화면 제목: 안에 있는 선물이랑 / 선물 박스가 다르다고?!)",
+  "dur": 45.3,
+  "views": 432000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "1초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '제조원가 1000원에 판매는 1만 1000원'(금액) → 쓰지 않음",
+  "벤치 '박스 하나당 디자인만 40시간'·'빚더미'(출처 약한 숫자·과장) → 쓰지 않음",
+  "벤치 남의 영상(이스라엘 방송 등) — 이 원본 밖 → 원본 무대·상자 컷으로"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "아기 밥 먹이는 기계?",
+     "고양이용 VR 헤드셋?!"
+    ],
+    "cap_at": [
+     131.85,
+     133.3
+    ],
+    "span": [
+     131.85,
+     136.37
+    ],
+    "orig_en": "I got a baby feeder for the... Virtual reality headset for... a cat.",
+    "text": "아기 밥 먹이는 기계? 고양이용 VR 헤드셋?!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 투자자가 뜯은 'Crib Dribbler' 가짜 상품 상자 속 젖병 그림) — 벤치 0~1.0 '기상천외한 물건을 받은 투자자들'(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "아기 밥 먹이는 기계?",
+      "span": "아기 밥 먹이는 기계?",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고양이용 VR 헤드셋?!",
+      "span": "고양이용 VR 헤드셋?!",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "창업자가 샤크들한테",
+     "선물을 하나씩 돌렸는데",
+     "포장을 뜯어 보니"
+    ],
+    "text": "창업자가 샤크들한테 선물을 하나씩 돌렸는데 포장을 뜯어 보니",
+    "tts": "창업자가 샤크들한테, 선물을 하나씩 돌렸는데, 포장을 뜯어 보니",
+    "fx": "빨강 번쩍 — 벤치 0.8('기상천외한 물건을 받은')",
+    "emph": [
+     {
+      "cap": "창업자가 샤크들한테",
+      "span": "샤크들한테",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "선물을 하나씩 돌렸는데",
+      "span": "하나씩 돌렸는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "포장을 뜯어 보니",
+      "span": "뜯어 보니",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(반전 예고)",
+    "facts": [
+     "f1",
+     "f3"
+    ],
+    "caps": [
+     "세상에 없는",
+     "황당한 물건 상자들이",
+     "줄줄이 나오는데"
+    ],
+    "text": "세상에 없는 황당한 물건 상자들이 줄줄이 나오는데",
+    "tts": "세상에 없는, 황당한 물건 상자들이, 줄줄이 나오는데",
+    "fx": "초록 번쩍 — 벤치 4.0('사실 이건 존재하지 않는')",
+    "emph": [
+     {
+      "cap": "세상에 없는",
+      "span": "세상에 없는",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "황당한 물건 상자들이",
+      "span": "물건 상자들이",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 나오는데",
+      "span": "줄줄이 나오는데",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(정체)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "우리 진짜 회사는 프랭크오!",
+     "장난 선물 상자를 팔아요"
+    ],
+    "cap_at": [
+     146.89,
+     149.13
+    ],
+    "span": [
+     146.89,
+     150.4
+    ],
+    "orig_en": "Our actual company is Prank-O. We sell prank gift boxes.",
+    "text": "우리 진짜 회사는 프랭크오! 장난 선물 상자를 팔아요",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "우리 진짜 회사는 프랭크오!",
+      "span": "우리 진짜 회사는 프랭크오!",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "장난 선물 상자를 팔아요",
+      "span": "상자를 팔아요",
+      "color": "초록",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(쓰는 법)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "진짜 선물은 이 상자 안에 숨기고",
+     "받는 사람 표정을",
+     "구경하는 거라는데"
+    ],
+    "text": "진짜 선물은 이 상자 안에 숨기고 받는 사람 표정을 구경하는 거라는데",
+    "tts": "진짜 선물은 이 상자 안에 숨기고, 받는 사람 표정을, 구경하는 거라는데",
+    "emph": [
+     {
+      "cap": "진짜 선물은 이 상자 안에 숨기고",
+      "span": "상자 안에 숨기고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "받는 사람 표정을",
+      "span": "사람 표정을",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "구경하는 거라는데",
+      "span": "거라는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "선물 뜯었더니",
+  "line2": "황당한 물건이?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '안에 있는 선물이랑 / 선물 박스가 다르다고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 131.85~136.37 'I got a baby feeder for the…' 'Virtual reality headset for… a cat.'(스피치매틱스 enhanced 영어 — 투자자 원음, 이름은 자막에 안 씀) · 화면 131.6~134.7 'Crib Dribbler' 상자·125~127·139~141 'PET VR' 상자",
+   "url": "https://www.youtube.com/watch?v=-hrbP_slqRI&t=131s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 103.55~119.79 'Our gifts to you.' 'Oh, presents.' … 'Go unwrap them.' · 화면 107~124 창업자가 선물을 돌리고 투자자들이 뜯음",
+   "url": "https://www.youtube.com/watch?v=-hrbP_slqRI&t=103s",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 146.89~150.57 'Our actual company is Prank-O. We sell prank gift boxes.' · 156.25~160.77 'Is there actually something in here?' 'No.' 'That's the whole point.'",
+   "url": "https://www.youtube.com/watch?v=-hrbP_slqRI&t=146s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 163.69~169.97 'Simply buy any of our prank boxes. You hide your real gift inside, and you sit back and watch as the fun unfolds.'",
+   "url": "https://www.youtube.com/watch?v=-hrbP_slqRI&t=163s",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "원본 479.34~489.72 마크 제안 · 629.37~642.61 'it's going to be a great partnership. We got a deal.' — 금액·로열티는 대본에 안 씀(앞 칼카피는 O2 뒤에서 잘려 하이브리드에 안 들어감)",
+   "url": "https://www.youtube.com/watch?v=-hrbP_slqRI&t=479s",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

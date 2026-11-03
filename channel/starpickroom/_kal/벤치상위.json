@@ -1,0 +1,808 @@
+{
+ "for": "starpickroom 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-31",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@스타픽룸"
+ ],
+ "rows": [
+  {
+   "id": "ASqFulFvhgg",
+   "views": 4000000,
+   "title": "5-Minute No-Heat Bibim-guksu! Cha Ye-ryeon's Non-Soggy Noodle Recipe #CelebrityRecommendations #R...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "21VoGAEK_pU",
+   "views": 900000,
+   "title": "Chef Nam-no Yoon’s ‘favorite’ frozen corn dogs he eats 20 of every morning #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "j5D30T2n0-w",
+   "views": 467000,
+   "title": "Squid Pancakes made with the viral SNS recipe that even Hwa-Jung Choi fell for, here’s why everyo...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "EZQlWvvnKPI",
+   "views": 445000,
+   "title": "The Ultimate Cheat Code for Bossam Used by Baek Ji-young and Chef Lee Won-il #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "VbpdNba182M",
+   "views": 389000,
+   "title": "Gong Hyo-jin's special and delicious way to eat peanut butter, as she's totally obsessed with it ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Af_dRrpUKpc",
+   "views": 376000,
+   "title": "\"It’s insane!\" The soy sauce from a 28-year master that Chef Raymon Kim raved about the moment he...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "r5XN6Eilfxs",
+   "views": 287000,
+   "title": "Gukbap Maniacs Joo Sang-wook & Cha Ye-ryun! 3 Favorite Gukbap Finds at Costco #CelebrityRecommend...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "onmwSxfco-A",
+   "views": 254000,
+   "title": "All it takes is one ripe banana! Oh Yeon-soo's super simple healthy breakfast bread🍌 #HealthyDiet...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "G3gSNz1WL5M",
+   "views": 199000,
+   "title": "Han Hye-jin's Highly Recommended Breakfast! A Perfect Macro-Balanced Meal in 5 Minutes #HealthyDi...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "dKczVzmdr00",
+   "views": 175000,
+   "title": "Lee Min-jung's Affordable $10-Range Coupang Scent Essential She Bought After Trying It at a Resta...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "vAp6CGrsTXQ",
+   "views": 129000,
+   "title": "Finished a whole bowl of rice! Kim Ga-yeon's addictive side dish recipe learned from her mom #Hea...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "2-YOaILl9vU",
+   "views": 110000,
+   "title": "Don't just eat store-bought salted seafood! Kim Ga-yeon's rice-thief seasoned seafood recipe #Cel...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "lGNHSTF15GQ",
+   "views": 110000,
+   "title": "\"This combo is irresistible!\" Chef Nam-no Yoon's favorite $9.80 convenience store hack #Celebrity...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "7wYmDbTam1I",
+   "views": 110000,
+   "title": "Chef Lee Won-il's foolproof golden ratio for Jang-jorim learned from his mother #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "mZrhy5i2QI8",
+   "views": 95000,
+   "title": "Cha Ye-ryun's Super Simple Boneless Galbi-jjim, Praised by Joo Sang-wook as the Peak of Cooking #...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "gXuB-gjU480",
+   "views": 82000,
+   "title": "Han Hye-jin’s #1 Pick: 3 Diet Essentials She Always Brings to Set #CelebrityRecommendations",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "K27l8vZh0mc",
+   "views": 76000,
+   "title": "Chef Raymon Kim's Fail-Proof Recipe for Crispy-on-the-Outside, Tender-on-the-Inside Mackerel #Hea...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8HDmSLj19CQ",
+   "views": 70000,
+   "title": "The Diet Son Ye-jin and Hyun Bin Always Eat When Staying in Shape #HealthyDiet #CelebrityPicks",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Dgih4xeO98A",
+   "views": 61000,
+   "title": "Yoon Nam-no's Dried Squid Jjamppong Recipe That Even Chef Jung Ho-young Highly Praised the Moment...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Lc8cLpD2_d4",
+   "views": 50000,
+   "title": "'This' that Kang Joo-eun, who says she always stocks up on whenever she goes to Costco, and Baekg...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "fN02n0zGE3A",
+   "views": 50000,
+   "title": "Why I haven't switched in years: Moon Chae-won's favorite fragrance item",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "psC675zpJik",
+   "views": 49000,
+   "title": "Oh Yeon-soo's simple breakfast for those serious about health #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "O1oWzCl5JGs",
+   "views": 49000,
+   "title": "The Ultimate Rice-Thief Sauce Praised by Kangnam, Choi Hwa-jung, and Park Myung-soo #CelebrityRec...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "fnewdYDieMY",
+   "views": 41000,
+   "title": "What Top Model Jang Yoon-ju Eats Every Morning #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "hZ4Nw-b_Wyo",
+   "views": 39000,
+   "title": "Baek Ji-young and Jung Suk-won’s Daily Balanced Breakfast Routine #HealthyDiet #CelebrityRecommen...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ojphaNa6O9o",
+   "views": 39000,
+   "title": "Bored of the same old egg dishes? Try Hwa-jung Choi’s super simple daily egg recipe! #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "PZM0KQRcZFA",
+   "views": 37000,
+   "title": "Lee Min-jung’s Mom-Style Zucchini Pancake Recipe That Even Zucchini-Haters Will Love #CelebrityRe...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "aWqmT4ky0NE",
+   "views": 36000,
+   "title": "Cha Ye-ryun, who spent 2 million won at Costco, reveals her absolute favorite items she stocks up...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "GgsZ0ceD2pw",
+   "views": 32000,
+   "title": "\"We should sell this!\" Cha Ye-ryun's tofu braise that completely won over Joo Sang-wook #Celebrit...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ZHqiqsdKtAU",
+   "views": 31000,
+   "title": "Oh Yeon-soo's 6-Minute Microwave Sweet Pumpkin Breakfast Recipe #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "_3jDA5uoA6E",
+   "views": 30000,
+   "title": "Kim Woo-bin's favorite food is Tteok-bokki, but what does he eat for breakfast every single day? ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "1ZAVEnj1iMw",
+   "views": 30000,
+   "title": "The Morning Routine Park Mi-sun Changed First After Her Battle With Breast Cancer #CelebrityRecom...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "iRGFp2LjZgw",
+   "views": 29000,
+   "title": "\"It's insane!\" The 10-minute thinly-sliced pork belly soup rice that even Hwang Je-sung raved abo...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "J0FxObfLODw",
+   "views": 29000,
+   "title": "Han Go-eun's ultra-simple pressure cooker recipe for the creamy roasted eggs she eats every day",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "3blDUnYUP44",
+   "views": 27000,
+   "title": "Check this first when buying kitchen knives! Chef Raymon Kim's guide to choosing a quality knife ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ABEJB12FDo8",
+   "views": 27000,
+   "title": "Chef Lee Won-il Reveals His Golden Ratio for Soy-Marinated Crab, Including Trade Secrets #ChefRecipe",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "WGetj33mLyM",
+   "views": 26000,
+   "title": "Chef Choi Kang-rok’s 10-Minute Boiled Pork Recipe That Even Yoon Nam-no Was Shocked By #FoodSpoil...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "2VKK6H2tbgo",
+   "views": 25000,
+   "title": "오연수가 아침 커피와 먹는 초간단 단호박 건강빵 레시피 #연예인추천템 #건강식단",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "0Yu3b7hL45c",
+   "views": 25000,
+   "title": "The pillow Nayeon recommended that Jeon Somi bought, and why Risabae swears by it",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "zwrm_DMOyas",
+   "views": 24000,
+   "title": "Why do we have different eyelashes with the same dad? Jeon Somi is shocked by her sister's eyelas...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "6tdDltzan10",
+   "views": 23000,
+   "title": "Everyone's raving about this simple dish! Yum Jung-ah’s super easy soy sauce zucchini noodles #Ce...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "R4ej6mRvWQk",
+   "views": 21000,
+   "title": "Chef Rayeon Kang's Super Simple Suyuk Recipe (No Boiling Required)",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "lc5jHTdZJVM",
+   "views": 21000,
+   "title": "One Ingredient Is All You Need! Cha Ye-ryun’s Super Simple Braised Chicken Recipe #CelebrityPick ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8mXLM8QzA4M",
+   "views": 21000,
+   "title": "Perfect for when you lose your appetite on a hot day! Cha Ye-ryun's super simple cold cucumber no...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "dbGgNMrjpQk",
+   "views": 21000,
+   "title": "Lee Min-jung’s favorite caramel that she eats by the tub in one sitting",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "SJSImEkfi50",
+   "views": 19000,
+   "title": "Just Like Truck Stop Stir-Fried Pork! Chef Lee Won-il's Golden Ratio Recipe #RecipeRecommendation",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "exwGt_x8SvU",
+   "views": 19000,
+   "title": "Seriously, what is this? Why Han Hye-jin hunted down the company and said they deserve an award #...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "rCbTvV_W_6M",
+   "views": 18000,
+   "title": "My husband even lost 20kg! Han Go-eun's super simple daily lemon tea recipe #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "jsj3dghgtTY",
+   "views": 17000,
+   "title": "Chef Choi Kang-rok's curry is this easy?! A super simple pressure cooker recipe #CelebrityRecipe ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "hA97yZdTOTs",
+   "views": 17000,
+   "title": "Short rib-less Galbitang in just 7 minutes? Chef Jung Ho-young's super simple Galbitang recipe #H...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "K4-fAVBX4Mo",
+   "views": 17000,
+   "title": "Son Ye-jin’s favorite bread that sold out immediately after being featured on air #CelebrityRecom...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8bQ3qh50ujs",
+   "views": 17000,
+   "title": "Park Jun-myeon's rice-thief side dish that makes you clear 2 bowls of rice instantly #HealthyDiet...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "wzBvl4BSITo",
+   "views": 17000,
+   "title": "The diet plan Ko So-young follows when losing weight down to 49kg #CelebrityRecommendedItem #Heal...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "9wKnSmYpWeg",
+   "views": 17000,
+   "title": "The Super Simple Soft Tofu Stew Recipe That Brought Back 40-Year-Old Memories for Joo Sang-wook",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "eltNizMsOmA",
+   "views": 17000,
+   "title": "Ready in 50 Minutes! Choi Hwa-jung's Rice Cooker Nurungji Chicken Soup Recipe #CelebrityRecommend...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "xUhykT_qYiQ",
+   "views": 17000,
+   "title": "The Ultimate Odor-Eliminating Must-Have Used by Yoo Jae-suk and Ko So-young That Gets Rid of Any ...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "-z7Xo4qQXVY",
+   "views": 16000,
+   "title": "No-Cook, 15-Minute Braised Chicken?! Chef Lee Yeon-bok's Super Simple Soy Sauce Braised Chicken R...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "dHEl9p0V2Zs",
+   "views": 16000,
+   "title": "Chef Rayeo Kang’s ultra-simple LA galbi recipe that tastes way better than a BBQ restaurant",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "NMnbEN35o8M",
+   "views": 16000,
+   "title": "Cha Ye-ryun's Legendary Kimchi-jjim Recipe That Joo Sang-wook Ate for 5 Meals in a Row #Food #Cel...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Z_LZuM8AzSk",
+   "views": 16000,
+   "title": "Han Go-eun’s High-Protein Diet Burrito That’s Both Delicious and Filling #HealthyDiet #CelebrityFave",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "XhexYYt6F-Y",
+   "views": 15000,
+   "title": "A Gourmet Meal from Fridge Scraps! Chef Rayo Kang's Super Simple Omelet #BreakfastMeal #HealthyMeal",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "9xlwYvb4wfg",
+   "views": 15000,
+   "title": "Eat this first! The breakfast order Son Tae-young and Kwon Sang-woo always follow #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "i2j-6PP2OIk",
+   "views": 15000,
+   "title": "The 'this' that Kang Min-kyung eats every morning, a super simple healthy meal that makes your bo...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "fn2UBv8LRso",
+   "views": 14000,
+   "title": "\"Whoever created this recipe is a genius!\" The Thin-Sliced Pork Belly Potato Stew that even a che...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "vzCXA9Su3Og",
+   "views": 14000,
+   "title": "\"Oh my God!\" 3 Trader Joe's snacks that wowed June Kang #CelebrityFavorites",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "QMutZCWKGzk",
+   "views": 13000,
+   "title": "A hearty meal for a family of 4 for under $10?! Chef Jung Ho-young's super simple spicy braised c...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "h0g_nBDNK-w",
+   "views": 13000,
+   "title": "3 Olive Young Snacks Ahn So-hee Always Stocks Up On During Sales #CelebrityRecommendedItems",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "k2TjxHpXZvo",
+   "views": 13000,
+   "title": "The reason Hwa-jung Choi, the ultimate foodie, eats watermelon the way she does #CelebrityRecomme...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "PQuebsGkkY8",
+   "views": 12000,
+   "title": "“100% Mom’s Recipe!” Chef Jung Ho-young’s Golden Ratio for Spicy Radish Salad #RecipeRecommendation",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "H5ODHy122Iw",
+   "views": 12000,
+   "title": "3 Healthy Routines Ahn So-hee Never Skips Every Morning #HealthyDiet #CelebrityFavorites",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "I-ThkA0Xmek",
+   "views": 12000,
+   "title": "I even bought white sugar, which I usually don't eat! Hwa-jung Choi's vintage toast recipe she wa...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "hiqiLrHpYXg",
+   "views": 12000,
+   "title": "Cha Ye-ryun's 3-Minute Super Simple Cucumber Salad, The 'Secret' Kick to the Flavor #CelebrityRec...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "_qFN7ntJmqI",
+   "views": 12000,
+   "title": "Chef Si-hyeon Kim’s Special Take on Kong-guksu! #ChefRecipe",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "mlYfDt9mhek",
+   "views": 11000,
+   "title": "1-Minute Prep and Eat?! Cha Ye-ryun♥Joo Sang-wook Couple's Super Simple Noodle Recipe #CelebrityR...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "c_Rr5VUd5VQ",
+   "views": 11000,
+   "title": "\"Make any vegetable taste amazing!\" Chef Lee Won-il's All-Purpose Chili Oil Dressing for Fresh Ki...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "3pgct3GNorI",
+   "views": 11000,
+   "title": "Kim Hee-ae's Secrets to Looking Ageless at 60 #HealthyDiet #BreakfastRoutine",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "I_1O99GFsdU",
+   "views": 11000,
+   "title": "Lee Young-ae’s favorite is Chapagetti, but what does she eat for breakfast to stay healthy? #Cele...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "XspS7hcUyJs",
+   "views": 11000,
+   "title": "The Diet Rice Cakes That Lee Chae-yeon and Uhm Jung-hwa Swear By #CelebrityRecommendations #Healt...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8o9qKkl-X00",
+   "views": 11000,
+   "title": "Tired of the salon cost every time you need a touch-up? Cha Ye-ryun's go-to DIY hair dye",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "psJqAQ2S2yc",
+   "views": 10000,
+   "title": "The #1 Chapagetti recipe that even Sung Si-kyung raved about instantly #CelebrityRecipe #SocialMe...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "mGUfB-iQfow",
+   "views": 10000,
+   "title": "Cha Ye-ryun's Simple and Truly Delicious 5-Minute One-Pan Tortilla #HealthyDiet #CelebrityFavorite",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "lxOmMNI3l8M",
+   "views": 10000,
+   "title": "The #1 Japanese toothbrush that Ko So-young and Cha Ye-ryun always stock up on when visiting Japa...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8Mx0b1FsK9s",
+   "views": 9500,
+   "title": "Coupang pro Eugene's fridge staples for losing 3kg: Healthy snacks she always keeps on hand #Cele...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Sbbdk2BAaC0",
+   "views": 9300,
+   "title": "Stay full with just one cup in the morning! The super simple potato soup Shin Ae-ra is obsessed w...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "TZAot7RSfxs",
+   "views": 9100,
+   "title": "2 Healthy Snacks Kang So-ra Eats to Curb Cravings During the 3–4 PM Slump #CelebrityRecommendations",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "MG-cRd3y0xg",
+   "views": 9000,
+   "title": "Why J.Y. Park started a special diet for his atopy and has stuck to it for 20 years #CelebrityRec...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ih4hbmxiyew",
+   "views": 8900,
+   "title": "Han Hye-jin's favorite, also enjoyed by Ki Sung-yueng: Her go-to morning meal #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "GHuAGDPWyDI",
+   "views": 8800,
+   "title": "맛집 그 맛이 난다고?! 김가연의 또순이네 된장찌개 레시피 #연예인레시피 #연예인추천템",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ymQoBdUebbc",
+   "views": 8300,
+   "title": "The secret to 63-year-old Hwang Shin-hye's youthful look? The breakfast she never skips, even whe...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "oFGauVXkbsA",
+   "views": 7900,
+   "title": "The Secret to 70-Year-Old Moon Sook's Health: The Almond Milk She Makes Every Morning #CelebrityF...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "w5YQobz42qk",
+   "views": 7900,
+   "title": "Choi Hwa-jung’s Frozen Tomato Noodles: Easier to Make Than Ramen and Perfect for Your Diet!",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "ve9lnAPZdKg",
+   "views": 7200,
+   "title": "Yoon Seung-a's Easy Flour-Free Pancakes for Breakfast #BreakfastMenu #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "6oueSvRD5eE",
+   "views": 6800,
+   "title": "Get Aged Kimchi Flavor from Fresh Kimchi? Chef Rayeo Kang's Secret Kimchi Stew Recipe #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "NnLvROK9Gh0",
+   "views": 6700,
+   "title": "Even Sung Si-kyung was amazed! The umami-packed Japanese-style potato salad recipe #CelebrityFavo...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "9eCH4ls1yUw",
+   "views": 6600,
+   "title": "Perfect for parents tired after Chuseok! Chef Lee Won-il's super simple pancake stew #HomeCooking...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "FBqJNHtSWk4",
+   "views": 6200,
+   "title": "Uhm Jung-hwa's One Meal a Day: How to Make That One Meal Even More Delicious? #CelebrityRecommend...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "y3ZaER8VkRA",
+   "views": 5900,
+   "title": "The truth about the must-have items in Kim Hee-ae's bag #CelebrityRecommendedItems",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "fSvnvZjDl88",
+   "views": 5800,
+   "title": "Chef Raymon Kim’s ultra-simple squid stir-fry recipe—no complex sauce required #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "XTxw1rmFOSo",
+   "views": 5800,
+   "title": "Kang Joo-eun's Essential Daily Morning Health Routine #HealthyDiet #MorningMeal #CelebrityRecomme...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "XkhdAn140ac",
+   "views": 5700,
+   "title": "\"Tastes just like a cafe drink\": Kim Jae-joong's budget-friendly latte recipe that even the staff...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Te5CFJpEy80",
+   "views": 5600,
+   "title": "Still Spry at 88: What Kim Young-ok Has Eaten Every Morning for 40 Years #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "CxqojtQHFHQ",
+   "views": 5400,
+   "title": "48-Year-Old Chae Jung-an's Essential Healthy Morning Routine #HealthyDiet #MorningMeal #Celebrity...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "kbODRiASXj8",
+   "views": 5400,
+   "title": "280,000 won just on snacks at a favorite shop of 30 years! What are the true favorite snacks pers...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "XDtXRwgjX_4",
+   "views": 5400,
+   "title": "Perfect for when you're too lazy to cook! Hwa-jung Choi's ultimate 5-minute cucumber recipe #Cele...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8cKF0KQpw5U",
+   "views": 5200,
+   "title": "3 Costco Essentials Brian, a 21-Year Shopper, Always Stocks Up On #CelebrityRecommendations",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "mm7Z4cnRMow",
+   "views": 5100,
+   "title": "Han Go-eun says she could eat this 365 days a year—her favorite high-protein meal she’s been obse...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8c6_GAhEugc",
+   "views": 4300,
+   "title": "Lee Mi-do lost 4kg in 2 months: The matcha pudding she makes whenever she gets late-night craving...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "El5BpPDpLTc",
+   "views": 3400,
+   "title": "Sunwoo Yong-nyeo's Macro-Balanced Diet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "noZx_Y2C1pY",
+   "views": 3200,
+   "title": "I wake up in the morning just to eat this! Han Ji-hye's super simple slow-aging diet #HealthyDiet",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "_dBw-uUz3K0",
+   "views": 2900,
+   "title": "The Diet Juice Recipe Cha Ye-ryun Used to Lose the Final 10kg Post-Pregnancy #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "8L-a31CfhWY",
+   "views": 2800,
+   "title": "63-year-old Hwang Shin-hye's secret to looking young: The daily lemon water recipe #CelebrityReco...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "UUwCfGIgmcs",
+   "views": 2700,
+   "title": "Lee Young-ja's Umami-Packed Special Doenjang Recipe #HealthyDiet #CelebrityFave",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "5YEpb155P_c",
+   "views": 2600,
+   "title": "The \"100 Million Won Skin\" Juice Recipe from Jang Yoon-ju's Makeup Artist #CelebrityRecommended #...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "JAg7hrMwlJg",
+   "views": 2500,
+   "title": "Spent all day walking? Jeon Somi’s must-have travel essential #CelebrityPick #CelebrityRecommenda...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "MuyqvHG9tcE",
+   "views": 2400,
+   "title": "3 Late-Night Snacks Han Hye-jin Eats at 10 PM to Maintain Her Iconic Figure #CelebrityRecommendat...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "mBw_Yklx8ms",
+   "views": 2400,
+   "title": "Kang Ju-eun's Super Simple Healthy Meal Prepared Especially for Choi Min-soo, Who Has Diabetes #H...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "JN80bs1KF7M",
+   "views": 2300,
+   "title": "Choi Hwa-jung’s go-to rice cake shop for 15 years: Her Chuseok gift pick and why people line up f...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "070_zzsbbbo",
+   "views": 2100,
+   "title": "\"If it's not delicious, slap me!\" This is what Hwa-jung Choi always brings when dining out #Celeb...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "lB2H8N-cxHw",
+   "views": 2100,
+   "title": "The Reason Nayeon Uses 3 of the Same Pillow, Nayeon's Favorite Pillow",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "aXuvgqLjPco",
+   "views": 2000,
+   "title": "Cha Ye-ryun's Top 3 Must-Have Kurly Picks That Everyone Recommends #CelebrityFavorites",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "uOO5tGlTpMA",
+   "views": 1900,
+   "title": "Choi Hwa-jung’s Ultimate One-Egg Protein Bomb Meal #HealthyDiet #BreakfastMenu #CelebrityFavorites",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "bKtIFnBuIQ8",
+   "views": 1800,
+   "title": "The semi-dried persimmons Han Ga-in has been gifting for 8 years—want to know the best way to eat...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "5E5kqheRQd0",
+   "views": 1800,
+   "title": "The Soy Sauce Egg Rice That Even Kangnam Loves, the Ultimate Combo Highly Praised by Lee Jang-woo...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "OdkC54Ccr3o",
+   "views": 1700,
+   "title": "Done in 10 minutes! Yano Shiho's super easy sukiyaki that she raved about for its authentic Japan...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "EXBJCDhMHqk",
+   "views": 1700,
+   "title": "Why Yoon Eun-hye makes sure to drink this during a diet plateau #CelebrityRecommended",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "x7j_oMsKLSM",
+   "views": 1400,
+   "title": "과식한 다음 날 오연수가 꼭 챙겨 먹는 가벼운 아침 식단 #건강식단 #아침식단 #연예인추천템",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "B_zW5i6MDGM",
+   "views": 1400,
+   "title": "Moon Chae-won's skincare essentials for when her sensitive, combination skin acts up #CelebrityRe...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "vLXoiCrLnhY",
+   "views": 1400,
+   "title": "Eyelash serum on your part? Why Ahn Sun-young swears by this nightly routine at 50 #CelebrityReco...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "YV52u5wRegU",
+   "views": 1300,
+   "title": "5kg 감량할 때 먹었다는 소이현·인교진 부부의 뱃살 관리 아침식단 #연예인추천템",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "d0UnHK2l188",
+   "views": 1100,
+   "title": "The secret to getting rid of fishy odors?! Chef Jung Ho-young's Braised Mackerel Recipe #Celebrit...",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "SblxTvJ2xuY",
+   "views": 1100,
+   "title": "aespa Ningning's Favorite Snack, The Reason TWICE Stocks Up On It Too #CelebrityPick",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "2uq_hUiVREU",
+   "views": 434,
+   "title": "Top 3 Cleaning Must-Haves Brian Cleared Out from Daiso (They're All Actually That Good)",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  },
+  {
+   "id": "Lg18dQmnl98",
+   "views": 317,
+   "title": "Why Yoon Hye-jin doesn't wear base makeup... I only use 'this' for blemishes",
+   "ch": "https://www.youtube.com/@스타픽룸"
+  }
+ ]
+}

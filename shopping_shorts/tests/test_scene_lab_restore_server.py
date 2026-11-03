@@ -47,7 +47,7 @@ def _run(beats, call):
     harness = """
 const DATA = %s;
 let lists = null, mode = 'live';
-const FIXLEN = {}, STRETCH = {}, PHRASE_SYNC = {}, PHRASE_EXACT = {}, CUTS = {}, SLOW = {}, TRIMS = {}, MERGES = {};
+const FIXLEN = {}, STRETCH = {}, PHRASE_SYNC = {}, PHRASE_EXACT = {}, CUTS = {}, SLOW = {}, TRIMS = {}, MERGES = {}, FILLMODE = {};
 let rendered = 0, said = '';
 function render(){ rendered++; }
 function nsay(m){ said = m; }
