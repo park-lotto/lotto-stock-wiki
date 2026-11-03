@@ -600,6 +600,10 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             return "ok"
         if c.get("kind") != "tts" or c.get("no_snap") or not (c.get("over") or c.get("reuse_unfixed") or c.get("jumpy") or c.get("frozen")):
             return "ok"
+        # 재사용(B13)만 남은 컷은 다른 샷으로 옮기지 않는다 — B13 은 경고(ADVISORY_GATES)인데 옮기면 고른 장면 내용이 바뀐다
+        #   (11-03 김만기·김형관: 팥 장면을 고쳐 넣었더니 B13 이 다른 샷의 크림 장면으로 옮김 — 대사↔화면 어긋남). 같은 샷 안 피하기는 respace_reuse 가 이미 했고,
+        #   같은 줄 다른 컷이 이어받는 빼기(장면 그대로)만 남긴다
+        reuse_only = bool(c.get("reuse_unfixed")) and not (c.get("over") or c.get("jumpy") or c.get("frozen"))
         src = Path(src_dir) / c["src"]
         if c["src"] not in spans_of:
             st0 = shot_starts(src)
@@ -610,7 +614,7 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
         ss0 = float(c.get("ss_planned", c["ss"]))
         others = [x for x in vid if x is not c and x in cuts]
         got = None
-        for a_, b_ in sorted(spans, key=lambda sp_: min(abs(sp_[0] - ss0), abs(sp_[1] - ss0))):
+        for a_, b_ in sorted([] if reuse_only else spans, key=lambda sp_: min(abs(sp_[0] - ss0), abs(sp_[1] - ss0))):
             if b_ - a_ < d + 2 * EDGE:
                 continue
             m = REACH if b_ - a_ >= d + 2 * REACH else EDGE           # 뒤 fit_cut 이 ±REACH 옮겨도 구간 안(디졸브는 fit 이 모른다 — 10-27 TV L0)
