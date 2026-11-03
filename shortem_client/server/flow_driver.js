@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { api, ApiError } from './api.js';
-import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
+import { runOps, aiRootDir, dataDir, engineRoot, lastRunMove } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { packFile, PID_RE } from './local_settings.js';
 import { refreshCookies } from './logins.js';
@@ -19,7 +19,10 @@ import { addMine, keepMine } from './my_presets.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
-const endHooks = new Map();   // sid → 흐름이 끝났을 때 한 번(채널 벤치마킹 2판: 빌린 엔진 묶음 돌려주기·내 프리셋 올리기 — benchmark.js)
+// 채널 벤치마킹 2판 손(benchmark.js 가 켤 때 한 번 건다) — before(f) = 실행기 일 전에 엔진 묶음을 빌려 둠, end(f) = 흐름 끝 정리.
+//   끝 정리를 했나는 디스크(flow.json 의 bench.ended)에 남긴다 — 프로그램을 다시 켜도 같은 판단(메모리 고리는 재시작에 사라졌다, 과제 8 검토 1).
+let benchHand = null;
+export const setBenchHand = h => { benchHand = h; };
 export const flowRoot = () => ensureDir(dataDir(), 'flow');
 const stFile = sid => path.join(flowRoot(), sid, 'flow.json');
 
@@ -112,12 +115,24 @@ function trialIn(f, q, j) {
   if (!src || !fs.existsSync(path.join(src, 'final.mp4'))) return bad('그 편 결과 폴더에 완성본이 없다');
   const leaf = `t${q.task.try || 0}_${sid}`;
   try {
-    const dst = path.join(W, 'trial', leaf);
-    fs.rmSync(dst, { recursive: true, force: true });
-    fs.cpSync(src, dst, { recursive: true });
+    const T = path.join(W, 'trial');
+    fs.rmSync(T, { recursive: true, force: true });     // 지난 시도는 지운다(새 과제가 나왔다 = 서버가 지난 시도의 bm_side·bm_match 를 끝냈다) — 늘 한 벌
+    fs.mkdirSync(T, { recursive: true });
+    moveDir(src, path.join(T, leaf));                   // 복사가 아니라 옮긴다 — 회원 PC 에 두 벌 쌓이지 않게(관리자 Ruling 13)
   } catch (e) { return bad('결과 폴더를 옮기지 못했다: ' + String((e && e.code) || e).slice(0, 80)); }
   return { ...j, work_dir: `trial/${leaf}` };
 }
+// 같은 드라이브면 이름만 바꾸고, 다른 드라이브(EXDEV)면 복사한 뒤 원본을 지운다(복사가 끝난 뒤에만 지운다)
+export function moveDir(src, dst) {
+  try { fs.renameSync(src, dst); return 'rename'; }
+  catch (e) {
+    if (!e || e.code !== 'EXDEV') throw e;
+    fs.cpSync(src, dst, { recursive: true });
+    fs.rmSync(src, { recursive: true, force: true });
+    return 'copy';
+  }
+}
+export const trialRoot = sid => path.join(flowRoot(), sid, 'job', 'trial');
 
 // 답 모으기 — 모양이 틀리면(필요 칸 없음) error.json 으로 다시 묻는다(두 번까지)
 function collect(f) {
@@ -192,6 +207,13 @@ async function runWithPreset(f) {
   if (Date.now() - cookiesAt > COOKIE_EVERY_MS) { cookiesAt = Date.now(); await refreshCookies(); }
   const job = path.join(flowRoot(), f.sid, 'job');
   let rental = null;
+  if (f.bench && benchHand && benchHand.before) {   // 벤치 흐름 — 이 프로그램이 엔진 묶음을 안 빌렸으면(다시 켠 뒤 이어 하기) 다시 빌린다
+    try { await benchHand.before(f); }
+    catch (e) {
+      const why = '벤치마킹 엔진을 받지 못했다: ' + String((e && (e.code || e.message)) || e).slice(0, 120);
+      return Object.fromEntries((f.do || []).map(d => [String(d.id || d.cmd), { error: why }]));
+    }
+  }
   if (f.preset && !f.bench) {      // 채널 벤치마킹 흐름은 서버 프리셋이 없다 — 엔진 묶음은 benchmark.js 가 흐름 내내 빌려 둔다
     try { rental = await rentPreset({ engineRoot: engineRoot(), presetId: f.preset }); }
     catch (e) {
@@ -246,15 +268,22 @@ async function pump(f) {
   await runEnd(f);
 }
 
-// 흐름이 끝났나(완성·회원이 멈춤·다시 시도할 수 없는 멈춤) — 다시 시도할 수 있는 멈춤은 끝이 아니다(빌린 것을 쥐고 있는다)
-const flowEnded = f => f.status === 'done' || !!f.cancelled || !!(f.fail && !f.fail.retry_ok);
-async function runEnd(f) {
-  const h = endHooks.get(f.sid);
-  if (!h || !flowEnded(f)) return;
-  endHooks.delete(f.sid);
-  try { await h(f); }
-  catch (e) { reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `흐름 끝 정리 실패: ${String((e && e.message) || e).slice(0, 200)}` }); }
+// (판단 주인) 흐름이 끝났나(완성·회원이 멈춤·다시 시도할 수 없는 멈춤) — 다시 시도할 수 있는 멈춤은 끝이 아니다(빌린 것을 쥐고 있는다). benchmark.js 도 이것을 부른다
+export const flowEnded = f => f.status === 'done' || !!f.cancelled || !!(f.fail && !f.fail.retry_ok);
+// 벤치 흐름 끝 정리 — 끝났고 아직 안 한 흐름만 한 번. 다 하면 디스크에 bench.ended 를 남긴다(실패면 남기지 않아 다음에 켤 때 다시 한다)
+export function endFlow(f) {
+  if (!f || !f.bench || f.bench.ended || !flowEnded(f) || !benchHand) return Promise.resolve(false);
+  if (ending.has(f.sid)) return ending.get(f.sid);   // 두 곳(pump 끝·cancel)에서 같이 불려도 한 번
+  const p = (async () => {
+    try { await benchHand.end(f); f.bench.ended = Date.now(); save(f); return true; }
+    catch (e) { reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `흐름 끝 정리 실패: ${String((e && e.message) || e).slice(0, 200)}` }); return false; }
+    finally { ending.delete(f.sid); }
+  })();
+  ending.set(f.sid, p);
+  return p;
 }
+const ending = new Map();   // sid → 도는 끝 정리(디스크에 안 쓴다)
+const runEnd = endFlow;
 
 // 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
 export const STALL_MS = () => Number(process.env.SHORTEM_STALL_MS) || 20 * 60 * 1000;
@@ -263,15 +292,25 @@ function lastMove(f) {
   try { t = Math.max(t, fs.statSync(path.join(flowRoot(), f.sid, 'job', 'progress.json')).mtimeMs); } catch { /* 진행 파일 없음 */ }
   return t;
 }
+// 회원 과제(시험 편)를 기다리는 중인가 — 그동안은 회원 Claude 판정 대기가 아니라 shortem_make 제작이 도는 시간이다(30~50분)
+const onTask = f => (f.status === 'review' || f.status === 'reject') && (f.asks || []).some(q => q.task && !fs.existsSync(path.join(q.dir, 'answer.json')));
+// 시험 편 제작의 마지막 움직임 = 엔진 실행(make.py) 출력 · 엔진 편 기록(창고/calcopy/make/*.json) 갱신
+function trialMove() {
+  let t = lastRunMove();
+  const mk = path.join(dataDir(), 'calcopy', 'make');
+  try { for (const n of fs.readdirSync(mk)) if (n.endsWith('.json')) { try { t = Math.max(t, fs.statSync(path.join(mk, n)).mtimeMs); } catch { /* 지워짐 */ } } } catch { /* 아직 편 없음 */ }
+  return t;
+}
 export function flowStall(now = Date.now()) {
   for (const f of flows.values()) {
     if (f.cancelled || f.fail || !['execute', 'review', 'reject', 'wait_user'].includes(f.status)) continue;
-    const moved = lastMove(f);
+    const task = onTask(f);
+    const moved = task ? Math.max(lastMove(f), trialMove()) : lastMove(f);
     if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
     f.stallSaid = moved;
     const min = Math.round((now - moved) / 60000);
     return { kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text,
-      text: f.status === 'execute' ? `실행기 일이 ${min}분째 안 끝난다` : `회원 Claude 답을 ${min}분째 기다린다(사용 한도·창 닫힘일 수 있다)` };
+      text: f.status === 'execute' ? `실행기 일이 ${min}분째 안 끝난다` : task ? `시험 편 제작(shortem_make)이 ${min}분째 움직이지 않는다(회원 Claude 사용 한도·창 닫힘일 수 있다)` : `회원 Claude 답을 ${min}분째 기다린다(사용 한도·창 닫힘일 수 있다)` };
   }
   return null;
 }
@@ -323,8 +362,8 @@ export async function startFlow({ preset, video, product }) {
 }
 
 // 채널 벤치마킹 2판(관제 319) — 제작과 같은 고리. 반 판단은 서버(claude_flow bench_start → member_tier)
-//   onEnd = 흐름이 끝났을 때 한 번(benchmark.js: 빌린 엔진 묶음 돌려주기·내 프리셋 올리기)
-export async function startBenchFlow({ channel, videos, name, n, dryRun, onEnd }) {
+//   끝 정리(빌린 엔진 묶음 돌려주기·내 프리셋 올리기)는 setBenchHand 로 건 손이 endFlow 에서 한다 — 흐름마다 메모리에 걸지 않는다
+export async function startBenchFlow({ channel, videos, name, n, dryRun }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 돌고 있는 작업이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   if (!dryRun) await refreshCookies();
@@ -332,7 +371,6 @@ export async function startBenchFlow({ channel, videos, name, n, dryRun, onEnd }
   const res = await api.step({ step: 'bench_start', source: { url: channel || '', videos: videos || [] }, name: label, n: n || 3 });
   const f = { sid: res.sid, preset: 'bench', bench: { name: label, channel: channel || '' }, created: Date.now() };
   flows.set(f.sid, f);
-  if (onEnd) endHooks.set(f.sid, onEnd);
   if (dryRun) return f;
   await absorb(f, res);
   f.running = pump(f);

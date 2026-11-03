@@ -9,7 +9,7 @@ import { freshDirs } from './helpers.js';
 
 freshDirs('bench_v2');
 const { api } = await import('../server/api.js');
-const { startBenchFlow, waitFlow, flowRoot, cancelFlow } = await import('../server/flow_driver.js');
+const { startBenchFlow, waitFlow, flowRoot, cancelFlow, setBenchHand, flowStall, STALL_MS } = await import('../server/flow_driver.js');
 const { pending, answer, dataDir } = await import('../server/engine_bridge.js');
 const M = await import('../server/my_presets.js');
 const keepStep = api.step;
@@ -60,6 +60,7 @@ test('답한 편 sid 의 결과 폴더(W 밖)가 W 안으로 들어오고, 서�
   for (const n of ['final.mp4', 'timeline.json', 'remake_log.json']) fs.writeFileSync(path.join(out, n), n);
   fs.writeFileSync(path.join(out, '대조', 'verdict.json'), '{}');
   fs.writeFileSync(path.join(mk, `${ESID}.json`), JSON.stringify({ sid: ESID, topic_id: 7 }));
+  fs.mkdirSync(path.join(W(), 'trial', 't9_aaaaaaaaaaaa'), { recursive: true });   // 지난 시도(판볶이 전) — 새 시도가 들어오면 지운다
   const p = pending().find(x => x.req.tag === 'bm_trial');
   assert.equal(answer(p.id, { work_dir: ESID, ok: true }).ok, true);
   await waitFlow(SID, 3000);
@@ -70,6 +71,8 @@ test('답한 편 sid 의 결과 폴더(W 밖)가 W 안으로 들어오고, 서�
   assert.equal(wd, `trial/t0_${ESID}`);
   assert.ok(!path.isAbsolute(wd));
   for (const n of ['final.mp4', 'timeline.json', 'remake_log.json', '대조/verdict.json']) assert.ok(fs.existsSync(path.join(W(), wd, n)), n);
+  assert.equal(fs.existsSync(out), false, '복사가 아니라 옮긴다(두 벌 안 쌓임)');
+  assert.deepEqual(fs.readdirSync(path.join(W(), 'trial')), [`t0_${ESID}`], '지난 시도 폴더는 지우고 하나만 둔다');
 });
 
 test('없는 편 sid 를 답하면 ok:false 와 이유로 서버에 간다(조용히 넘어가지 않음)', async () => {
@@ -114,7 +117,8 @@ test('멈추면(cancel) 끝 고리가 한 번 불리고, 임시본을 지우면 
   fs.writeFileSync(path.join(pd, 'frame.json'), '"시험"');
   api.step = async () => ({ sid: S4, status: 'review', message: 'x', review: [{ ...TASK, meta: { ...TASK.meta, preset: { slug: 'my_k', style: 'frm', dir: 'channel/my_k/preset/frm' } } }], next_payload: 's1' });
   let ends = 0;
-  await startBenchFlow({ channel: '', videos: ['https://youtu.be/abcdefghijk'], name: '원래 틀', n: 1, onEnd: () => { ends++; M.dropMine('my_k'); } });
+  setBenchHand({ end: () => { ends++; M.dropMine('my_k'); } });
+  await startBenchFlow({ channel: '', videos: ['https://youtu.be/abcdefghijk'], name: '원래 틀', n: 1 });
   await waitFlow(S4, 500);
   assert.equal(M.listMine().find(p => p.slug === 'my_k').name, '원래 틀 시험');
   const c = cancelFlow(S4);
@@ -124,4 +128,30 @@ test('멈추면(cancel) 끝 고리가 한 번 불리고, 임시본을 지우면 
   assert.deepEqual(back.map(p => [p.id, p.name]), [[orig.id, '원래 틀']]);
   assert.equal(fs.readFileSync(path.join(M.myRoot(), 'my_k', 'preset', 'frm', 'frame.json'), 'utf8'), '"원래"');
   assert.equal(fs.existsSync(path.join(M.myRoot(), '_keep', 'my_k')), false);
+  assert.ok(JSON.parse(fs.readFileSync(path.join(flowRoot(), S4, 'flow.json'), 'utf8')).bench.ended, '끝 정리 표식은 디스크에(다시 켜도 같은 판단)');
+  setBenchHand(null);
+});
+
+test('시험 편을 만드는 동안(회원 과제 대기)은 회원 Claude 답 기다림 경보를 안 내고, 제작이 정말 멈췄을 때만 알린다', async () => {
+  const S5 = '0123456789af';
+  const pd = path.join(flowRoot(), S5, 'job', 'channel', 'my_t', 'preset', 'frm');
+  fs.mkdirSync(pd, { recursive: true });
+  fs.writeFileSync(path.join(pd, 'frame.json'), '{}');
+  api.step = async () => ({ sid: S5, status: 'review', message: '시험 영상 만들기 중', review: [TASK], next_payload: 't1' });
+  await startBenchFlow({ channel: 'https://www.youtube.com/@abc', name: '내 틀', n: 3 });
+  await waitFlow(S5, 300);
+  const t0 = Date.now();
+  const mk = path.join(dataDir(), 'calcopy', 'make');
+  fs.mkdirSync(mk, { recursive: true });
+  const rec = path.join(mk, 'cafecafecafe.json');            // 시험 편 엔진 기록 — 제작이 도는 동안 갱신된다
+  fs.writeFileSync(rec, '{}');
+  const at = t0 + STALL_MS() + 10 * 60000;                     // 과제를 낸 지 30분, 엔진 기록은 10분 전까지 움직였다
+  fs.utimesSync(rec, new Date(at - 10 * 60000), new Date(at - 10 * 60000));
+  const s1 = flowStall(at);
+  assert.equal(s1 && s1.sid === S5 ? s1.text : null, null, '시험 편이 움직이는 동안은 경보 없음');
+  const s2 = flowStall(at - 10 * 60000 + STALL_MS() + 60000);  // 엔진 기록이 21분째 그대로
+  assert.equal(s2 && s2.sid, S5);
+  assert.match(s2.text, /시험 편 제작/);
+  assert.doesNotMatch(s2.text, /회원 Claude 답을/);
+  cancelFlow(S5);
 });

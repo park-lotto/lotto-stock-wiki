@@ -124,9 +124,87 @@ test('고급반은 빌려 지시서 고리로 돌리고, 시험 편 과제·완�
   assert.equal(readSettings().current, mine.id);
   assert.match(mine.id, /^p_[0-9a-f]{10}$/);
   assert.equal(fs.existsSync(path.join(M.myRoot(), '_keep')), false, '둔 벌이 남지 않는다');
+  assert.equal(fs.existsSync(path.join(W, 'trial')), false, '시험 편 폴더는 끝 정리 때 지운다');
+  assert.equal(fs.existsSync(path.join(mk, ESID, 'work', '3', '제작')), false, '엔진 쪽 원본은 옮겨져 없다(두 벌 아님)');
   const v = M.withMine({ presets: [{ id: 'p_0000000000', name: '서버판' }], entitled_presets: ['p_0000000000'] });
   assert.deepEqual(v.presets.map(p => p.name), ['서버판', '내 틀']);
   assert.ok(v.entitled_presets.includes(mine.id));
+});
+
+// 다시 켬 시험 — 앞 프로그램이 디스크에 남긴 흐름 상태만 있고 메모리(흐름 목록·끝 고리·빌림)는 비어 있다
+function origAndTrial(slug, origName, trialName) {
+  const src = path.join(root, 'src_' + slug);
+  fs.mkdirSync(path.join(src, 'channel', slug, 'preset', '틀'), { recursive: true });
+  fs.writeFileSync(path.join(src, 'channel', slug, 'preset', '틀', 'frame.json'), '"원래"');
+  const [orig] = M.addMine(src, { slug, name: origName, presets: [{ style: '틀', sources: ['a'] }] }, '');
+  assert.equal(M.keepMine(slug), true);
+  fs.writeFileSync(path.join(src, 'channel', slug, 'preset', '틀', 'frame.json'), '"시험"');
+  M.addMine(src, { slug, name: trialName, presets: [{ style: '틀', sources: [] }] }, '');
+  return orig;
+}
+function diskFlow(sid, f) {
+  const { flowRoot } = F_;
+  fs.mkdirSync(path.join(flowRoot(), sid, 'job'), { recursive: true });
+  fs.writeFileSync(path.join(flowRoot(), sid, 'flow.json'), JSON.stringify({ sid, preset: 'bench', created: Date.now(), ...f }));
+}
+const F_ = await import('../server/flow_driver.js');
+
+test('다시 켰을 때 끝난 흐름·주인 없는 둔 벌 → 원래 내 프리셋을 되살리고 임시본을 지운다', async () => {
+  const o1 = origAndTrial('my_r', '원래 r', '원래 r 시험');
+  const o2 = origAndTrial('my_o', '원래 o', '원래 o 시험');         // 흐름 기록도 없이 둔 벌만 남은 경우
+  const RS = 'c1c1c1c1c1c1';
+  diskFlow(RS, { status: 'stop', fail: { why: '멈춤', retry_ok: false, server_stop: true }, bench: { name: '원래 r', channel: URL_CH, trial_slug: 'my_r' } });
+  fs.mkdirSync(path.join(F_.flowRoot(), RS, 'job', 'trial', 't0_x'), { recursive: true });
+  assert.equal(B.benchNow(), null, '메모리는 비어 있다(다시 켬)');
+  await B.recoverBench();
+  for (const [slug, o] of [['my_r', o1], ['my_o', o2]]) {
+    assert.deepEqual(M.listMine().filter(p => p.slug === slug).map(p => [p.id, p.name]), [[o.id, o.name]], slug);
+    assert.equal(fs.readFileSync(path.join(M.myRoot(), slug, 'preset', '틀', 'frame.json'), 'utf8'), '"원래"');
+    assert.equal(fs.existsSync(path.join(M.myRoot(), '_keep', slug)), false);
+  }
+  assert.equal(M.listMine().some(p => /시험$/.test(p.name)), false, '임시본이 목록에 남지 않는다');
+  assert.ok(JSON.parse(fs.readFileSync(path.join(F_.flowRoot(), RS, 'flow.json'), 'utf8')).bench.ended);
+  assert.equal(fs.existsSync(path.join(F_.flowRoot(), RS, 'job', 'trial')), false);
+  assert.equal(B.benchNow(), null);
+});
+
+test('다시 켰을 때 살아 있는 흐름은 이어 가고, 완성되면 정식 내 프리셋으로 한 번 올린다', async () => {
+  const { aiRootDir, dataDir } = await import('../server/engine_bridge.js');
+  const orig = origAndTrial('my_s', '복귀 틀', '복귀 틀 시험');
+  const RS = 'c2c2c2c2c2c2';
+  const E2 = 'e2e2e2e2e2e2';
+  const W = path.join(F_.flowRoot(), RS, 'job');
+  fs.mkdirSync(path.join(W, 'channel', 'my_s', 'preset', '틀'), { recursive: true });
+  fs.writeFileSync(path.join(W, 'channel', 'my_s', 'preset', '틀', 'frame.json'), '"정식"');
+  fs.mkdirSync(path.join(W, 'out'), { recursive: true });
+  fs.writeFileSync(path.join(W, 'out', 'my_s_틀.zip'), 'zip2');
+  const mk = path.join(dataDir(), 'calcopy', 'make');
+  fs.mkdirSync(path.join(mk, E2, 'work', '5', '제작'), { recursive: true });
+  fs.writeFileSync(path.join(mk, E2, 'work', '5', '제작', 'final.mp4'), 'v');
+  fs.writeFileSync(path.join(mk, `${E2}.json`), JSON.stringify({ sid: E2, topic_id: 5 }));
+  const q = path.join(aiRootDir(), 'flow_' + RS, 'req1');
+  fs.mkdirSync(q, { recursive: true });
+  fs.writeFileSync(path.join(q, 'answer.json'), JSON.stringify({ work_dir: E2, ok: true }));   // 꺼져 있는 동안 회원 Claude 가 답했다
+  diskFlow(RS, { status: 'review', payload: 'r1', bench: { name: '복귀 틀', channel: URL_CH, trial_slug: 'my_s' },
+    asks: [{ rid: 'bm_trial', dir: q, need: ['work_dir', 'ok'], task: { kind: 'member_task', try: 0, slug: 'my_s', preset_id: orig.id } }] });
+  steps.length = 0;
+  fake.state.stepHandler = body => { steps.push(body);
+    return { code: 200, json: { ok: true, sid: RS, status: 'done', message: '완성', next_payload: 'r2', preset: { slug: 'my_s', style: '틀', name: '복귀 틀', zip: 'out/my_s_틀.zip', other_styles: [] } } }; };
+  const r = await B.recoverBench();
+  assert.equal(r.resumed, RS, '살아 있는 흐름은 지금 벤치마킹으로 다시 잡는다');
+  assert.ok(fs.existsSync(path.join(M.myRoot(), '_keep', 'my_s')), '살아 있는 흐름의 둔 벌은 그대로(아직 끝나지 않음)');
+  const o = await B.benchWait(RS);
+  assert.equal(o.need, 'done', JSON.stringify(o));
+  assert.deepEqual(steps.map(b => b.step), ['go']);
+  assert.deepEqual(steps[0].replies, { bm_trial: { work_dir: `trial/t0_${E2}`, ok: true } });
+  const mine = M.listMine().filter(p => p.slug === 'my_s');
+  assert.deepEqual(mine.map(p => p.name), ['복귀 틀'], '정식본 한 벌');
+  assert.equal(fs.readFileSync(path.join(M.myRoot(), 'my_s', 'preset', '틀', 'frame.json'), 'utf8'), '"정식"');
+  assert.equal(fs.existsSync(path.join(M.myRoot(), '_keep', 'my_s')), false);
+  assert.equal(fs.readFileSync(path.join(process.env.SHORTEM_HOME, '내 프리셋', 'my_s', 'my_s_틀.zip'), 'utf8'), 'zip2');
+  assert.equal(readSettings().current, mine[0].id);
+  assert.equal(fs.existsSync(path.join(W, 'trial')), false);
+  assert.equal(B.benchNow(), null);
 });
 
 test('프로그램이 죽어 남은 파일은 다음에 켤 때 지운다 — 목록에 없는 파일은 안 지운다', () => {

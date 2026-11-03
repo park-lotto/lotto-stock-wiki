@@ -41,15 +41,23 @@ export function keepMine(slug) {
 export function forgetKept(slug) { if (SLUG_RE.test(String(slug || ''))) fs.rmSync(keepDir(slug), { recursive: true, force: true }); }
 export function dropMine(slug) {
   if (!SLUG_RE.test(String(slug || ''))) return false;
-  fs.rmSync(path.join(myRoot(), slug), { recursive: true, force: true });
+  const dst = path.join(myRoot(), slug);
   let back = [];
-  if (fs.existsSync(path.join(keepDir(slug), 'list.json'))) {
+  if (fs.existsSync(path.join(keepDir(slug), 'list.json'))) {   // 되살리기가 지우기보다 먼저 — 둔 벌을 옆에 다 옮겨 놓은 뒤에만 임시본을 지운다
     back = JSON.parse(fs.readFileSync(path.join(keepDir(slug), 'list.json'), 'utf8'));
-    fs.cpSync(path.join(keepDir(slug), 'files'), path.join(myRoot(), slug), { recursive: true });
-  }
+    const tmp = dst + '.restore';
+    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.cpSync(path.join(keepDir(slug), 'files'), tmp, { recursive: true });
+    fs.rmSync(dst, { recursive: true, force: true });
+    fs.renameSync(tmp, dst);
+  } else fs.rmSync(dst, { recursive: true, force: true });
   writeFileIn(homeDir(), FILE, JSON.stringify({ presets: [...listMine().filter(p => p.slug !== slug), ...back] }));
   forgetKept(slug);
   return true;
+}
+// 둔 벌이 남은 slug 들 — 켤 때 주인 흐름이 없으면 되살린다(benchmark.recoverBench)
+export function keptSlugs() {
+  try { return fs.readdirSync(path.join(myRoot(), '_keep')).filter(n => SLUG_RE.test(n)); } catch { return []; }
 }
 
 // 서버 프리셋 목록(profiles.json 꼴) + 내 프리셋 — 프리셋 이름을 다루는 곳은 이 합친 목록만 본다

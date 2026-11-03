@@ -9,10 +9,10 @@ import { z } from 'zod';
 import { api, ApiError } from './api.js';
 import { audit } from './audit.js';
 import { activeRuns, engineRoot } from './engine_bridge.js';
-import { anyFlowBusy, loadFlow, startBenchFlow, waitFlow } from './flow_driver.js';
-import { Lease } from './lease.js';
+import { anyFlowBusy, endFlow, flowEnded, loadFlow, setBenchHand, startBenchFlow, trialRoot, waitFlow } from './flow_driver.js';
+import { Lease, freeDeadLeases } from './lease.js';
 import { VIDEO, YT_CHANNEL, waitMs } from './make_flow.js';
-import { addMine, dropMine, forgetKept } from './my_presets.js';
+import { addMine, dropMine, forgetKept, keptSlugs } from './my_presets.js';
 import { ensureDir, homeDir, jail } from './paths.js';
 import { flowRoot } from './flow_driver.js';
 import { openPack, readZip, renting } from './preset_rent.js';
@@ -21,7 +21,8 @@ import { select } from './local_settings.js';
 const MARK = '.bench_rented.json';                       // 이번에 푼 파일 목록 — 프로그램이 죽어도 다음에 켤 때 이것만 지운다(개발 PC 의 진짜 코드는 목록에 없다)
 const ROOTS = ['tools/', 'shopping_shorts/'];
 const FAIL = { tier_locked: '숏클 페이지에서 고급반으로 올리면 바로 쓸 수 있어요', not_ready: '잠시 뒤 다시 해 주세요', busy_other_device: '다른 PC 작업이 끝난 뒤 다시 해 주세요', lease_lost: '다른 작업이 끝난 뒤 다시 해 주세요', no_key: '숏템 설치를 다시 확인해 주세요' };
-let cur = null;                                          // 지금 도는 벤치마킹(한 번에 하나) — { sid }
+let cur = null;                                          // 지금 도는 벤치마킹(한 번에 하나) — { sid, lease }. sid 가 아직 없으면(띄우는 중) 이 프로그램이 막 빌린 것
+const ours = f => !!cur && (cur.sid === f.sid || !cur.sid);
 
 function wipe(root) {
   const mark = path.join(root, MARK);
@@ -68,9 +69,13 @@ async function rentEngine(root) {
   }
 }
 
-// 흐름이 끝났을 때 한 번(flow_driver endHooks) — 완성이면 내 프리셋으로 올리고(임시 시험본은 같은 slug 라 addMine 이 갈아 끼운다),
-//   아니면 임시 시험본을 지운다. 어느 쪽이든 푼 엔진 파일만 지우고 빌림을 돌려준다.
-async function endBench(f, root, lease, channel) {
+// 흐름이 끝났을 때 한 번(flow_driver.endFlow — 끝냈나는 디스크 bench.ended) — 완성이면 내 프리셋으로 올리고(임시 시험본은 같은 slug 라 addMine 이 갈아 끼운다),
+//   아니면 임시 시험본을 지우고 원래 것을 되살린다. 어느 쪽이든 시험 편 폴더(W/trial)·푼 엔진 파일을 지우고 빌림을 돌려준다.
+//   다시 켠 뒤라 이 프로그램이 빌린 게 없으면(lease 없음) 주인이 죽은 임대 장부를 서버에 돌려준다(freeDeadLeases).
+async function endBench(f) {
+  const root = engineRoot();
+  const lease = ours(f) ? cur.lease : null;
+  const channel = (f.bench && f.bench.channel) || '';
   try {
     const d = f.status === 'done' && f.bench && f.bench.done;
     if (d && d.slug && d.style) {
@@ -89,13 +94,50 @@ async function endBench(f, root, lease, channel) {
       if (slug) dropMine(slug);
       audit('benchmark', { result: f.cancelled ? 'cancelled' : 'stopped', v: 2 });
     }
+    fs.rmSync(trialRoot(f.sid), { recursive: true, force: true });   // 시험 편 결과(서버 bm_side·bm_match 가 다 읽었다 — 흐름이 끝났다)
   } finally {
-    if (cur && cur.sid === f.sid) cur = null;
+    if (ours(f)) cur = null;
     wipe(root);
-    await lease.release();
+    if (lease) await lease.release(); else await freeDeadLeases().catch(() => 0);
   }
 }
+
+// 실행기 일 전 — 이 흐름의 엔진 묶음을 이 프로그램이 쥐고 있나. 다시 켠 뒤 이어 하기면 지난 묶음을 지우고 새로 빌린다(빌린 파일은 프로그램보다 오래 안 남긴다)
+async function beforeBench(f) {
+  if (ours(f) && cur.lease) { cur.sid = f.sid; return; }
+  if (cur && cur.sid !== f.sid) throw new Error('다른 벤치마킹이 돌고 있다');
+  const root = engineRoot();
+  wipe(root);
+  const lease = await rentEngine(root);
+  cur = { sid: f.sid, lease };
+}
+setBenchHand({ before: beforeBench, end: endBench });
+
+// 켤 때 한 번(index.js, sweepBench 다음) — 끝 정리 판단을 디스크 흐름 상태로 다시 세운다(과제 8 검토 1).
+//   끝났는데 정리 안 한 벤치 흐름 → 끝 정리(임시본 지우고 원래 것 되살림·완성이면 정식 저장). 아직 살아 있는 흐름 → 지금 벤치마킹으로 다시 잡는다(이어 하기 — 완성 때 endBench).
+//   주인 흐름이 없는데 둔 벌(_keep)이 남았으면 되살린다(조용히 숨겨 두지 않는다).
+export async function recoverBench() {
+  let names = [];
+  try { names = fs.readdirSync(flowRoot()); } catch { names = []; }
+  const alive = [];
+  for (const sid of names) {
+    const f = loadFlow(sid);
+    if (!f || !f.bench || f.bench.ended) continue;
+    if (flowEnded(f)) { await endFlow(f); audit('benchmark_recover', { result: 'ended', sid }); }
+    else alive.push(f);
+  }
+  alive.sort((a, b) => (b.created || 0) - (a.created || 0));
+  if (alive.length && !cur) { cur = { sid: alive[0].sid, lease: null }; audit('benchmark_recover', { result: 'resume', sid: alive[0].sid }); }
+  const held = new Set(alive.map(f => f.bench.trial_slug).filter(Boolean));
+  for (const slug of keptSlugs()) {
+    if (held.has(slug)) continue;
+    dropMine(slug);
+    audit('benchmark_recover', { result: 'restored', slug });
+  }
+  return { resumed: cur ? cur.sid : null };
+}
 const trialSlug = f => (f.bench && f.bench.trial_slug) || '';
+export const benchNow = () => (cur ? { sid: cur.sid, leased: !!cur.lease } : null);   // 시험·점검용
 
 // 흐름 응답(flow_driver.shapeFlow 꼴) → 벤치마킹 응답. 완성만 내 프리셋 안내로 바꾸고, 나머지는 그대로(단계 한 줄·멈춤 두 줄)
 async function shaped(sid, s) {
@@ -117,19 +159,18 @@ export async function benchStart({ channel, videos, name, n }) {
   if (activeRuns().length || anyFlowBusy() || renting()) return { fail: { where: '벤치마킹', why: '지금 만드는 편이 있습니다', fix: '끝난 뒤 다시 해 주세요', retry_ok: true } };
   const root = engineRoot();
   let lease;
-  try { sweepBench(root); lease = await rentEngine(root); }
+  try { sweepBench(root); lease = await rentEngine(root); cur = { sid: null, lease }; }
   catch (e) { return { fail: { where: '벤치마킹', why: e instanceof ApiError ? (e.msg || e.code) : '벤치마킹을 받지 못했습니다', fix: FAIL[e.code] || '잠시 뒤 다시 해 주세요', retry_ok: e.code !== 'tier_locked' } }; }
   const label = String(name || '내 프리셋').trim().slice(0, 30) || '내 프리셋';
   let f;
-  try { f = await startBenchFlow({ channel, videos, name: label, n: n || 3, onEnd: fl => endBench(fl, root, lease, channel || '') }); }
+  try { f = await startBenchFlow({ channel, videos, name: label, n: n || 3 }); }
   catch (e) {
-    wipe(root); await lease.release();
+    cur = null; wipe(root); await lease.release();
     return { fail: { where: '벤치마킹', why: e instanceof ApiError ? (e.msg || e.code) : '벤치마킹을 시작하지 못했습니다', fix: FAIL[e.code] || '잠시 뒤 다시 해 주세요', retry_ok: e.code !== 'tier_locked' } };
   }
-  if (!flowGone(f)) cur = { sid: f.sid };
+  if (cur && !cur.sid) cur.sid = f.sid;          // 띄우는 사이 끝났으면 endBench 가 이미 비웠다
   return shaped(f.sid, await waitFlow(f.sid, waitMs()));
 }
-const flowGone = f => f.status === 'done' || f.cancelled || !!(f.fail && !f.fail.retry_ok);
 
 export async function benchWait(sid) {
   const id = sid || (cur && cur.sid);
