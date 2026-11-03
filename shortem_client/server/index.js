@@ -37,7 +37,7 @@ import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
-import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, voiceServiceFor, VOICE_SERVICES } from './local_settings.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -155,10 +155,8 @@ export function buildServer(ctx = makeCtx()) {
     // 목소리 키 = 엔진이 이 채널에서 쓸 목소리(local_settings.memberVoice — 회원 선택 > 프리셋 > 다른 채널 > 키 있는 회사 기본 성우)의 회사.
     //   채널을 아직 안 골랐으면 셋(타입캐스트·일레븐랩스·피쉬) 중 하나면 된다(사장님 11-03 — 일레븐 키만 있는 회원이 '타입캐스트 키 없음'으로 막혔다)
     const hasKey = k => keyStatus(k).present;
-    const s0 = readSettings();
-    let presetTts = null;
-    if (s0.current) { try { presetTts = (await packFor(s0.current)).tts; } catch { /* 프리셋 표 못 읽음 = 셋 중 아무 키 */ } }
-    const voiceKey = voiceServiceFor(s0, presetTts, hasKey);
+    const ev = await engineVoice(hasKey);                    // 목소리 시험(selftest.testVoice)과 같은 한 값
+    const voiceKey = ev && readSettings().current ? providerOf(ev) : null;
     if (voiceKey ? !hasKey(voiceKey) : !VOICE_SERVICES.some(hasKey)) {
       const lab = voiceKey && KEY_SERVICES[voiceKey] ? KEY_SERVICES[voiceKey] : { label: '목소리 키(타입캐스트·일레븐랩스·피쉬오디오 중 하나)', where: VOICE_SERVICES.map(k => KEY_SERVICES[k].where).join(' / ') };
       fails.push({ where: '키', why: `${lab.label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${lab.where})`, retry_ok: true });

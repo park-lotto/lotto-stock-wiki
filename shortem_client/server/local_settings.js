@@ -176,6 +176,18 @@ export function memberVoice(settings, pid, presetTts, hasKey) {
   return pick ? { ...Object.fromEntries(VOICE_KEYS.filter(k => pick[k] != null).map(k => [k, pick[k]])), ...own } : own;
 }
 
+// 지금 채널에서 엔진이 실제로 쓸 목소리 {voice_id, provider…} — 시작 점검(키·목소리 시험·일레븐 요금제)이 이것 하나만 본다(엔진 팩 packFile 과 같은 memberVoice).
+//   채널을 안 골랐으면 키가 있는 회사 기본 성우, 키도 없으면 null.
+export async function engineVoice(hasKey = s => keyStatus(s).present, settings = readSettings()) {
+  const pid = (settings || {}).current;
+  let presetTts = null;
+  if (pid) { try { presetTts = (await packFor(pid)).tts || null; } catch { /* 프리셋 표 못 읽음 */ } }
+  const t = pid ? memberVoice(settings, pid, presetTts, hasKey) : {};
+  if (t.voice_id) return t;
+  if (presetTts && presetTts.voice_id) return presetTts;
+  return DEFAULT_VOICES[['elevenlabs', 'fish', 'typecast'].find(k => hasKey(k))] || null;
+}
+
 // 시작 점검이 볼 목소리 회사 — 지금 채널에서 엔진이 쓸 목소리(memberVoice)의 회사. 프리셋 목소리를 모르면(채널 안 고름) null = 셋 중 아무 키
 export function voiceServiceFor(settings, presetTts, hasKey) {
   const pid = (settings || {}).current;

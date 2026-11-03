@@ -11,7 +11,7 @@ import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
-import { readSettings, providerOf } from './local_settings.js';
+import { readSettings, providerOf, engineVoice } from './local_settings.js';
 import { engineRoot } from './engine_bridge.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
@@ -84,18 +84,7 @@ async function testRender(dir) {
   return { file: out, duration: Number(pr.duration.toFixed(2)), size: `${pr.width}x${pr.height}` };
 }
 
-// 회원이 고른 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 지금 채널 먼저, 없으면 고른 적 있는 채널, 그래도 없으면 타입캐스트.
-//   다른 채널 목소리를 이 채널이 빌려 쓰는 판단은 local_settings.memberVoice(엔진 팩) — 회사 판정은 같은 providerOf.
-export function voiceProvider(settings) {
-  const of = c => providerOf(((c || {}).pack || {}).tts);
-  const ch = (settings || {}).channels || {};
-  return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
-}
-
-function currentVoiceId() {
-  const s = readSettings() || {};
-  return ((((s.channels || {})[s.current] || {}).pack || {}).tts || {}).voice_id || '';
-}
+// 점검이 볼 목소리 = 엔진이 실제로 쓸 목소리 하나(local_settings.engineVoice → memberVoice) — 점검과 제작이 따로 정하던 두 벌을 합쳤다(11-03)
 
 // 일레븐 목소리 id(프리셋 이름 또는 20자 id) → 일레븐 목소리 id. 프리셋 표 = 엔진 voice_presets.json(엔진 narr_align.eleven_direct 와 같은 표)
 export function elevenBaseId(voiceId, presets) {
@@ -133,10 +122,11 @@ async function elevenGet(p, key) {
 }
 
 async function testVoice(dir) {
-  const provider = voiceProvider(readSettings());
+  const v = await engineVoice(s => !!readKey(s));
+  const provider = (v && providerOf(v)) || 'typecast';
   if (provider !== 'typecast') {   // 시험 합성은 타입캐스트 길뿐이다 — 다른 회사는 키만 보고, 실제 합성은 제작 때 엔진(voice_synth)이 한다
     if (!readKey(provider)) return { skipped: true, why: `고른 목소리(${provider}) 키 없음` };
-    if (provider === 'elevenlabs') await elevenUsable(readKey('elevenlabs'), currentVoiceId());
+    if (provider === 'elevenlabs') await elevenUsable(readKey('elevenlabs'), v.voice_id);
     return { provider, key_only: true };
   }
   if (!readKey('typecast')) return { skipped: true, why: '타입캐스트 키 없음(~/.shortem/keys/typecast)' };
