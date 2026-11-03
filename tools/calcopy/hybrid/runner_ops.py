@@ -2525,6 +2525,14 @@ def c_bm_fill(W, d):
             if isinstance(i, int) and 0 <= i < len(lines):
                 lines[i].update({k: v for k, v in row.items() if k != "i"})
         doc.update({k: v for k, v in (fx.get("doc") or {}).items() if k in ("beats", "narr_share", "title_lines", "source_label", "notes", "name_evidence")})
+        if fx.get("eye") is not None:          # 전환·0초 화면 눈 판정(Ruling 17) — 넣기 규칙 = kal_analyze.apply_eye 한 곳(우리 편도 같은 함수)
+            try:
+                doc["frame0"] = K.apply_eye(lines, fx["eye"])
+            except ValueError as e:
+                bad[vid] = [str(e)[:200]]
+                if dst.exists():
+                    dst.unlink()
+                continue
         need_line = ("speaker", "layer", "enter")      # check_doc 이 null 을 거절하는 눈 칸 — 남으면 _todo 에 남는다
         doc["_todo"] = sorted({k for l in lines for k in need_line if l.get(k) is None} | {k for k in ("beats", "narr_share") if doc.get(k) is None})
         doc["_unread"] = sorted({k for l in lines for k in ("sfx", "scene", "role", "fit", "fill_hex") if l.get(k) is None})   # 비어도 검사는 넘지만 판독 안 된 칸(정직하게 남긴다)
@@ -2545,10 +2553,27 @@ def c_bm_match(W, d):
     from tools.calcopy.engine import kal_analyze as K
     src = W / "src"
     return K.bench_match([str(_inside(W, p)) for p in d.get("line_reads") or []], _inside(W, d["work"]),
-                         _inside(W, f"channel/{d['slug']}/preset/{d['style']}"), src if src.is_dir() else None)
+                         _inside(W, f"channel/{d['slug']}/preset/{d['style']}"), src if src.is_dir() else None, d.get("eye"))
 
 
-CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match})
+def c_bm_eye_frames(W, d):
+    """눈 판정 그림 뽑기(Ruling 17 — 판단 없음, 주인 = kal_analyze.eye_frames). videos = [{id, mp4, win_doc}] — win_doc = 창(layout.window)이 든 줄판독(뼈대).
+    그림은 작업 폴더 eye/<id>/ 에(영문 경로), 결과 경로는 작업 폴더 기준 상대. 한 편 실패는 failed 에(판정은 서버)."""
+    from tools.calcopy.engine import kal_analyze as K
+    out, failed = {}, []
+    rel = lambda p: Path(p).resolve().relative_to(W.resolve()).as_posix()
+    for v in d.get("videos") or []:
+        try:
+            vid = re.sub(r"[^A-Za-z0-9_-]", "_", str(v["id"]))[:40]
+            win = K._win_arg(None, [jload(_inside(W, v["win_doc"]))]) if v.get("win_doc") else None
+            r = K.eye_frames(str(_inside(W, v["mp4"])), _inside(W, f"eye/{vid}"), win)
+            out[str(v["id"])] = {**r, "frame0": rel(r["frame0"]), "cuts": [{"t": c["t"], "img": rel(c["img"])} for c in r["cuts"]]}
+        except (OSError, ValueError, KeyError, RuntimeError) as e:
+            failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"frames": out, "failed": failed}
+
+
+CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames})
 CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
 
 
@@ -2590,7 +2615,7 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
              "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
-             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}

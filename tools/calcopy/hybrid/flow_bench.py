@@ -14,7 +14,8 @@ FABLE_MAX = 2        # 한 채널에서 페이블(bm_confirm·bm_verdict)을 부
 ALARM_KEYS = ("kind", "why", "at")
 ASKS = {   # 질문별 모델 — 페이블은 두 곳만(D6), 소넷·하이쿠 0곳(D5)
     "bm_read": {"id": "bm_read", "model": "opus"},
-    "bm_trial": {"id": "bm_trial", "model": "opus"},      # 시험 편 = 회원 과제(Ruling 10) — 회원 Claude 가 shortem_make 로 1편 만들고 작업 폴더를 올린다
+    "bm_trial": {"id": "bm_trial", "model": "opus"},
+    "bm_eye": {"id": "bm_eye", "model": "opus"},          # 전환·0초 화면 눈 판정(Ruling 17) — 벤치 편(bm_eye_<id>)·시험 편(bm_eye_trial) 같은 질문(EYE_ASK)      # 시험 편 = 회원 과제(Ruling 10) — 회원 Claude 가 shortem_make 로 1편 만들고 작업 폴더를 올린다
     "bm_confirm": {"id": "bm_confirm", "model": "fable"},
     "bm_verdict": {"id": "bm_verdict", "model": "fable"},
 }
@@ -29,11 +30,23 @@ LINE_SCHEMA = {"type": "object", "properties": {"i": {"type": "integer"}, "speak
 READ_SCHEMA["properties"]["lines"] = {"type": "array", "items": LINE_SCHEMA}
 LINE_VOCAB = ("줄마다 칸: speaker = 나레 | 원음:<이름> | 제3자 | 불명 (이름은 화면 글자에 보일 때만, 아니면 불명) · layer = 채널(벤치 채널 자막) | 원본박힘(원본 영상에 박힌 글) · "
               "enter = instant | append | typing | pop | glitch | wipe | slide | rainbow | fade | shake | 기타 (꾸밈 없으면 instant) · sfx = 그 줄에 나는 효과음(없으면 null) · scene = 그 줄 화면 한마디")
+# 전환·0초 첫 화면(Ruling 17): 시각 = 프로그램(kal_analyze.eye_frames — scene_cuts 컷 + 프레임 띠), 종류 = 오푸스 눈. 판정 기준 문구 = 여기 한 곳.
+#   벤치 편·시험 편 모두 이 질문 하나로 — 넣기 규칙도 한 곳(kal_analyze.apply_eye: 벤치 = bm_fill, 우리 = ours_from_remake).
+EYE_ASK = """## 화면 전환·첫 화면 판정(프레임 그림)
+그림 1 = 0초 첫 프레임 0·1·2·3번(2×2, 읽는 순서 = 왼쪽→오른쪽·위→아래). 그림 2부터 = 컷마다 컷 0.2초 앞부터 0.4초 동안 이어진 프레임 전부(4칸씩 줄 바꿈, 같은 읽는 순서 — 가운데쯤이 컷).
+판정 기준:
+- frame0: 0번·1~2번 프레임이 본 영상과 다른 표지(썸네일처럼 글을 크게 얹은 화면 — 그 뒤 프레임에서 본 장면으로 바뀐다)면 kind="card", text=표지 글 그대로.
+  0번 프레임부터 본 장면이면 kind="scene", text="" (영상 위 늘 있는 제목 띠·자막·채널 표시는 표지가 아니다).
+- cuts: 컷마다 kind 하나 — cut(앞뒤 프레임이 바로 바뀜) | flash(사이에 흰 번쩍임 프레임) | zoomblur(확대·흐림으로 넘어감) | black(검은 화면을 거침) | 기타(밀기·디졸브 등 위 넷이 아닌 전환).
+컷 목록(i · 컷 시각 · 그림 번호):
+{cuts}
+답: {{"frame0": {{"kind": "card|scene", "text": "…"}}, "cuts": [{{"i": 0, "kind": "cut"}}, …]}} — 컷 목록의 i 를 하나도 빠짐없이."""
 REREAD_MAX = 1       # check_doc 를 못 넘은 줄판독을 다시 읽는 횟수 — 넘으면 통과한 편만 쓰고, 0편이면 멈춘다
 
 STAGES = [("setup", "준비 확인"), ("bm_fetch", "벤치 영상 받기"), ("bm_tear", "영상 뜯기"), ("bm_read", "영상 보기"), ("bm_trial", "시험 영상 만들기"),
           ("bm_pan", "판볶이"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
 PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_reread": "bm_read", "bm_trial": "bm_read",
+               "bm_eye_ask": "bm_read", "bm_trial_frames": "bm_pan", "bm_trial_eye": "bm_pan", "bm_trial_eye_got": "bm_pan",
                "bm_trial_got": "bm_trial", "bm_compare": "bm_pan", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
                "bm_verdict": "bm_confirm", "bm_verdict_got": "bm_confirm", "bm_brief": "bm_make", "bm_done": "done"}
 
@@ -109,7 +122,48 @@ def bm_skel_got(st, m, rp, u):
     b["skel_lines"] = {vid: d.get("lines") or [] for vid, d in docs.items()}
     if k.get("failed"):
         st["log"].append("줄판독 뼈대 못 만든 편: " + json.dumps(k["failed"], ensure_ascii=False, default=str)[:300])
-    return {"do": _read_do(b, list(docs)), "then": "bm_read_got"}
+    return {"do": _read_do(b, list(docs)) + _eye_do(b, list(docs)), "then": "bm_read_got"}
+
+
+def _eye_do(b: dict, ids: list) -> list:
+    """벤치 편 눈 판정 그림 뽑기(실행기 bm_eye_frames) — 이미 판정이 있거나 그림이 있으면 다시 뽑지 않는다."""
+    if b.get("eye") or b.get("eye_frames"):
+        return []
+    vs = [{"id": v["id"], "mp4": v["mp4"], "win_doc": f"channel/{b['slug']}/줄판독_뼈대/{v['id']}.json"} for v in b["videos"] if v["id"] in ids]
+    return [{"id": "eye_b", "cmd": "bm_eye_frames", "videos": vs}] if vs else []
+
+
+def _eye_rv(rid: str, fr: dict) -> dict:
+    """눈 판정 질문 하나(EYE_ASK) — 그림 = 0초 한 장 + 컷마다 띠 한 장. 벤치 편·시험 편 같은 문구."""
+    F = _F()
+    cuts = fr.get("cuts") or []
+    lst = "\n".join(f"- i={i} · {c['t']}초 · 그림 {i + 2}" for i, c in enumerate(cuts)) or "- (컷 없음 — cuts 는 [])"
+    return F._rv(rid, EYE_ASK.format(cuts=lst), [F._img(fr["frame0"])] + [F._img(c["img"]) for c in cuts],
+                 model=ASKS["bm_eye"]["model"], need=("frame0", "cuts"))
+
+
+def _eye_of(a, fr: dict) -> tuple:
+    """(판단 주인 — 눈 답 → 판정 꼴) 답의 컷 i 를 그림 뽑을 때 잰 시각에 붙인다. 꼴 검사 = kal_analyze.eye_check(한 곳)."""
+    from tools.calcopy.engine import kal_analyze as K
+    if not isinstance(a, dict):
+        return None, ["눈 판정 답 없음"]
+    cuts = fr.get("cuts") or []
+    by_i = {int(c["i"]): c.get("kind") for c in a.get("cuts") or [] if isinstance(c, dict) and isinstance(c.get("i"), int)}
+    eye = {"cuts": [{"t": c["t"], "kind": by_i.get(i)} for i, c in enumerate(cuts) if i in by_i], "frame0": a.get("frame0")}
+    return eye, K.eye_check(eye, len(cuts))
+
+
+def _eye_frames_got(r, ids: list):
+    """실행기 bm_eye_frames 결과 → {id: 그림 묶음}. 오류·빠진 편이 있으면 None(멈춤은 부르는 쪽 — 조용히 넘어가지 않음)."""
+    if not isinstance(r, dict) or r.get("error"):
+        return None
+    fr = r.get("frames") or {}
+    return fr if fr and all(i in fr for i in ids) else None
+
+
+def _eye_stop(detail: str, retry: str):
+    F = _F()
+    return F._Stop("화면 전환을 확인하지 못했어요", "잠시 뒤 다시 해 주세요", retry=retry, ask_member=True, detail=detail[:400])
 
 
 def bm_read_got(st, m, rp, u):
@@ -123,7 +177,19 @@ def bm_read_got(st, m, rp, u):
            "agy 가 적은 값이 서로 다른데 프로그램 숫자(뜯기.json)로 확인할 수 있는 칸은 숫자를 믿어라.\n" + json.dumps(rows, ensure_ascii=False)[:12000])
     ask += ("\n\n줄판독 눈 칸도 확정해라 — lines = {편 id: [{i, speaker, layer, enter, sfx, scene}, …]}. agy 가 적은 줄 값을 보고 틀린 것만 고친다. "
             "이름(원음:<이름>)은 화면 글자에 보일 때만, 아니면 불명. 시각·글은 적지 마라(프로그램 값).\n" + LINE_VOCAB)
-    return {"review": [F._rv("bm_read", ask, model=ASKS["bm_read"]["model"], need=("rules", "per_video", "lines"))], "then": "bm_measure"}
+    rvs = [F._rv("bm_read", ask, model=ASKS["bm_read"]["model"], need=("rules", "per_video", "lines"))]
+    b = st["bm"]
+    if not b.get("eye"):             # 전환·0초 화면 눈 판정(Ruling 17) — 줄판독을 만들 때 같이 받는다(다시 읽기 때는 이미 있어 다시 묻지 않는다)
+        ids = list(b.get("skel") or {})
+        if "eye_b" in m:
+            got = _eye_frames_got(m["eye_b"], ids)
+            if got is None:
+                raise _eye_stop("bm_eye_frames: " + json.dumps(m["eye_b"], ensure_ascii=False, default=str)[:300], "bm_reread")
+            b["eye_frames"] = {k: got[k] for k in ids}
+        if not b.get("eye_frames"):
+            raise _eye_stop("벤치 편 눈 판정 그림 없음", "bm_reread")
+        rvs += [_eye_rv(f"bm_eye_{vid}", fr) for vid, fr in b["eye_frames"].items()]
+    return {"review": rvs, "then": "bm_measure"}
 
 
 def _fill_of(vid: str, rows: list, per: dict) -> dict:
@@ -139,13 +205,36 @@ def bm_measure(st, m, rp, u):
     """줄판독 채우기 — 뼈대(bm_skel) + 눈 칸(bm_read 오푸스 확정) → 실행기가 넣고 kal_analyze.check_doc 으로 검사(bm_fill)."""
     F = _F()
     b = st["bm"]
+    if "bm_read" not in rp and b.get("read_reply"):     # 눈 판정만 다시 물은 뒤(bm_eye_ask) — 받아 둔 판독 답으로 이어 간다
+        rp = {**rp, "bm_read": b["read_reply"]}
     r = F._reply(rp, "bm_read", ("rules", "per_video", "lines"))
+    if not b.get("eye"):
+        b["read_reply"] = r
+        eyes, bad = {}, {}
+        for vid, fr in (b.get("eye_frames") or {}).items():
+            e, errs = _eye_of(rp.get(f"bm_eye_{vid}"), fr)
+            if errs:
+                bad[vid] = errs
+            else:
+                eyes[vid] = e
+        if bad or not eyes:
+            raise _eye_stop("눈 판정 답 불합격: " + json.dumps(bad or "그림 없음", ensure_ascii=False)[:300], "bm_eye_ask" if b.get("eye_frames") else "bm_reread")
+        b["eye"] = eyes
+        b.pop("read_reply", None)
     b.setdefault("rules", {k: r[k] for k in ("rules", "per_video")})      # 다시 읽기(못 넘은 편만)의 답이 처음 규칙을 덮지 않게
     per, rows = r.get("per_video") or {}, r.get("lines") or {}
-    fills = {vid: _fill_of(vid, rows.get(vid) or [], per) for vid in b.get("skel") or {} if vid in rows}
+    fills = {vid: {**_fill_of(vid, rows.get(vid) or [], per), "eye": b["eye"].get(vid)} for vid in b.get("skel") or {} if vid in rows}
     if not fills:
         raise F._Stop("벤치 영상 판독이 비었어요", "잠시 뒤 다시 해 주세요", retry="bm_read_got", auto=True, detail="오푸스 답 lines 에 편이 없음")
     return {"do": [{"id": "fill", "cmd": "bm_fill", "slug": b["slug"], "fills": fills}], "then": "bm_measure_got"}
+
+
+def bm_eye_ask(st, m, rp, u):
+    """눈 판정 답이 비거나 틀려 멈춘 뒤 다시 시도 — 저장된 그림으로 눈 판정만 다시 묻는다(판독 답은 st 에 있다)."""
+    b = st["bm"]
+    if not b.get("eye_frames"):
+        raise _eye_stop("저장된 눈 판정 그림 없음", "bm_reread")
+    return {"review": [_eye_rv(f"bm_eye_{vid}", fr) for vid, fr in b["eye_frames"].items()], "then": "bm_measure"}
 
 
 def bm_measure_got(st, m, rp, u):
@@ -180,7 +269,7 @@ def bm_reread(st, m, rp, u):
     if not ids:
         raise F._Stop("벤치 영상 판독을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_setup", ask_member=True, detail="저장된 줄판독 뼈대 없음")
     b["reread"] = 0
-    return {"do": _read_do(b, ids), "then": "bm_read_got"}
+    return {"do": _read_do(b, ids) + _eye_do(b, ids), "then": "bm_read_got"}
 
 
 TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 판볶이용)
@@ -221,7 +310,8 @@ def _compare_do(st):
     b = st["bm"]
     n = int(st.get("pan_n") or 0)       # 시도 번호를 넣어 같은 입력 반복으로 오해받지 않게(flow._watch)
     return [{"id": "side", "cmd": "bm_side", "bench": b["videos"][0]["v360"], "ours": b["trial"], "try": n},
-            {"id": "pan", "cmd": "bm_match", "slug": b["slug"], "style": b["style"], "work": b.get("trial_dir"), "line_reads": b.get("line_reads") or [], "try": n}]
+            {"id": "pan", "cmd": "bm_match", "slug": b["slug"], "style": b["style"], "work": b.get("trial_dir"), "line_reads": b.get("line_reads") or [],
+             "eye": b.get("trial_eye"), "try": n}]
 
 
 def bm_trial_got(st, m, rp, u):
@@ -234,15 +324,48 @@ def bm_trial_got(st, m, rp, u):
                       detail="회원 과제 답: " + json.dumps(a or "없음", ensure_ascii=False, default=str)[:300])
     b = st["bm"]
     b["trial_dir"], b["trial"] = wd, f"{wd}/final.mp4"
+    b.pop("trial_frames", None)          # 새 시험 편 = 눈 판정도 새로(벤치 쪽 판정은 그대로)
+    b.pop("trial_eye", None)
     st["log"].append(f"시험 편 받음: {wd}")
+    return {"goto": "bm_trial_frames"}
+
+
+def bm_trial_frames(st, m, rp, u):
+    """시험 편 완성본 눈 판정 그림(벤치 편과 같은 실행기 명령·같은 창 = 벤치 줄판독 layout.window)."""
+    b = st["bm"]
+    lr = b.get("line_reads") or []
+    v = {"id": "trial", "mp4": b["trial"], **({"win_doc": lr[0]} if lr else {})}
+    return {"do": [{"id": "eye_t", "cmd": "bm_eye_frames", "videos": [v], "try": int(st.get("pan_n") or 0)}], "then": "bm_trial_eye"}
+
+
+def bm_trial_eye(st, m, rp, u):
+    b = st["bm"]
+    if "eye_t" in m:
+        got = _eye_frames_got(m["eye_t"], ["trial"])
+        if got is None:
+            raise _eye_stop("bm_eye_frames(시험 편): " + json.dumps(m["eye_t"], ensure_ascii=False, default=str)[:300], "bm_trial_frames")
+        b["trial_frames"] = got["trial"]
+    if not b.get("trial_frames"):
+        raise _eye_stop("시험 편 눈 판정 그림 없음", "bm_trial_frames")
+    return {"review": [_eye_rv("bm_eye_trial", b["trial_frames"])], "then": "bm_trial_eye_got"}
+
+
+def bm_trial_eye_got(st, m, rp, u):
+    b = st["bm"]
+    e, errs = _eye_of(rp.get("bm_eye_trial"), b.get("trial_frames") or {})
+    if errs:
+        raise _eye_stop("시험 편 눈 판정 답 불합격: " + " / ".join(errs)[:300], "bm_trial_eye")
+    b["trial_eye"] = e
     return {"do": _compare_do(st), "then": "bm_panbokki"}
 
 
 def bm_compare(st, m, rp, u):
-    """대조(bm_side·bm_match)만 다시 — 받은 시험 편(st.bm.trial_dir)을 그대로 쓴다. 시험 편이 없으면 만들기부터."""
+    """대조(bm_side·bm_match)만 다시 — 받은 시험 편(st.bm.trial_dir)을 그대로 쓴다. 시험 편이 없으면 만들기부터, 눈 판정이 없으면 그것부터."""
     F = _F()
     if not st["bm"].get("trial_dir"):
         raise F._Stop("시험 영상을 만들지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", ask_member=True, detail="저장된 시험 편 없음")
+    if not st["bm"].get("trial_eye"):
+        return {"goto": "bm_trial_frames"}
     return {"do": _compare_do(st), "then": "bm_panbokki"}
 
 
@@ -359,5 +482,6 @@ def bm_done(st, m, rp, u):
 
 PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch_got": bm_fetch_got, "bm_tear_got": bm_tear_got, "bm_skel_got": bm_skel_got, "bm_read_got": bm_read_got,
           "bm_measure": bm_measure, "bm_measure_got": bm_measure_got, "bm_reread": bm_reread, "bm_trial": bm_trial, "bm_trial_got": bm_trial_got,
+          "bm_eye_ask": bm_eye_ask, "bm_trial_frames": bm_trial_frames, "bm_trial_eye": bm_trial_eye, "bm_trial_eye_got": bm_trial_eye_got,
           "bm_compare": bm_compare, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,
           "bm_verdict": bm_verdict, "bm_verdict_got": bm_verdict_got, "bm_brief": bm_brief, "bm_done": bm_done}

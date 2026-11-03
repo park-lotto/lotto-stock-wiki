@@ -17,6 +17,19 @@ def _st(phase, **bm):
     return {"fmt": "벤치마킹", "phase": phase, "log": [], "tries": {}, "bm": {"slug": "s", "style": "틀", "name": "n", **bm}}
 
 
+def _fr(n=1, tag="a"):
+    """실행기 bm_eye_frames 가 돌려주는 한 편 그림 묶음 꼴."""
+    return {"dur": 3.0, "fps": 30.0, "n_cuts_all": n, "frame0": f"eye/{tag}/frame0.jpg", "cuts": [{"t": 1.0 + i, "img": f"eye/{tag}/cut_{i:02d}.jpg"} for i in range(n)]}
+
+
+def _eye_ans(n=1, kind="cut", f0="scene", text=""):
+    return {"frame0": {"kind": f0, "text": text}, "cuts": [{"i": i, "kind": kind} for i in range(n)]}
+
+
+def _done_eye(n=1):
+    return {"cuts": [{"t": 1.0 + i, "kind": "cut"} for i in range(n)], "frame0": {"kind": "scene", "text": ""}}
+
+
 def test_start_goes_to_env_check():
     st = flow.start_bench("https://www.youtube.com/@abc", [], "내프리셋", "a" * 12)
     r = _go(st)
@@ -47,7 +60,7 @@ def test_no_sonnet_or_haiku():
 
 
 def test_review_requests_use_asks_models():
-    st = _st("bm_read_got", videos=[_vid("a")])
+    st = _st("bm_read_got", videos=[_vid("a")], eye={"a": _done_eye()})
     r = _go(st, {"read_a": {"answer": {"voice": "여"}}})
     assert r["status"] == "review" and r["review"][0]["model"] == "opus"
     assert _go(_st("bm_confirm", side="side/x.mp4", rules={}))["review"][0]["model"] == "fable"
@@ -189,7 +202,10 @@ def _eye(n=2, speaker="나레"):
 def test_skel_then_reads_carry_lines():
     st = _st("bm_skel_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"])
     r = _go(st, {"skel": {"docs": {"a": _skel(), "b": _skel()}, "failed": []}})
-    assert [d["id"] for d in r["do"]] == ["read_a", "read_b"] and r["do"][0]["video"] == "src/a_360.mp4"
+    assert [d["id"] for d in r["do"]] == ["read_a", "read_b", "eye_b"] and r["do"][0]["video"] == "src/a_360.mp4"
+    e = r["do"][2]
+    assert e["cmd"] == "bm_eye_frames" and [v["mp4"] for v in e["videos"]] == ["src/a.mp4", "src/b.mp4"]      # 원본(360 아님 — 2프레임 번쩍임)
+    assert e["videos"][0]["win_doc"] == "channel/s/줄판독_뼈대/a.json"
     assert "줄1" in r["do"][0]["ask"] and "lines" in r["do"][0]["schema"]["properties"]
 
 
@@ -201,13 +217,15 @@ def test_skel_none_stops():
 
 def test_read_then_fill_takes_only_eye_slots():
     st = _st("bm_read_got", videos=[_vid("a")], keep=["a"], skel={"a": 2})
-    r = _go(st, {"read_a": {"answer": {"voice": "여", "lines": _eye()}}})
+    r = _go(st, {"read_a": {"answer": {"voice": "여", "lines": _eye()}}, "eye_b": {"frames": {"a": _fr(1)}, "failed": []}})
     assert r["review"][0]["id"] == "bm_read" and "lines" in r["review"][0]["need"] and r["review"][0]["model"] == "opus"
-    r = _go(st, rp={"bm_read": {"rules": {"자막": "노랑"}, "per_video": {"a": {"story_order": ["훅", "공개"]}}, "lines": {"a": _eye()}}})
+    assert [q["id"] for q in r["review"]] == ["bm_read", "bm_eye_a"]
+    r = _go(st, rp={"bm_read": {"rules": {"자막": "노랑"}, "per_video": {"a": {"story_order": ["훅", "공개"]}}, "lines": {"a": _eye()}}, "bm_eye_a": _eye_ans(1, "flash")})
     assert r["status"] == "execute" and r["do"][0]["cmd"] == "bm_fill"
     f = r["do"][0]["fills"]["a"]
     assert all("t0" not in l and "text" not in l for l in f["lines"])       # 기계값(시각·글)은 뼈대 그대로 — 눈 칸만 채운다
     assert f["doc"]["narr_share"] == 1.0 and f["doc"]["beats"] == ["훅", "공개"]
+    assert f["eye"] == {"cuts": [{"t": 1.0, "kind": "flash"}], "frame0": {"kind": "scene", "text": ""}}      # 시각 = 그림 뽑을 때 잰 값
     assert st["bm"]["rules"]["rules"] == {"자막": "노랑"}
 
 
@@ -234,9 +252,9 @@ def test_flow_read_measure_trial_order():
     assert st["phase"] == "bm_skel_got"
     _go(st, {"skel": {"docs": {"a": _skel()}, "failed": []}})
     assert st["phase"] == "bm_read_got"
-    _go(st, {"read_a": {"answer": {"lines": _eye()}}})
+    _go(st, {"read_a": {"answer": {"lines": _eye()}}, "eye_b": {"frames": {"a": _fr(1)}, "failed": []}})
     assert st["phase"] == "bm_measure"
-    _go(st, rp={"bm_read": {"rules": {}, "per_video": {}, "lines": {"a": _eye()}}})
+    _go(st, rp={"bm_read": {"rules": {}, "per_video": {}, "lines": {"a": _eye()}}, "bm_eye_a": _eye_ans(1)})
     assert st["phase"] == "bm_measure_got"
     r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
     assert st["phase"] == "bm_trial_got" and r["status"] == "review" and r["review"][0]["id"] == "bm_trial"
@@ -313,12 +331,24 @@ def test_trial_got_missing_or_failed_stops_two_lines():
         assert "_task" not in r["state"]
 
 
+def _trial_eye(st, n=1):
+    """시험 편 눈 판정 두 걸음(그림 뽑기 → 같은 질문 review)을 지나 대조(bm_side·bm_match)까지."""
+    r = _go(st, {"eye_t": {"frames": {"trial": _fr(n, "trial")}, "failed": []}})
+    assert r["status"] == "review" and [q["id"] for q in r["review"]] == ["bm_eye_trial"]
+    return _go(st, rp={"bm_eye_trial": _eye_ans(n)})
+
+
 def test_trial_got_runs_side_and_match():
     st = _st("bm_trial_got", videos=[_vid("a")], keep=["a"], line_reads=["channel/s/줄판독/a.json"])
     r = _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames"] and st["phase"] == "bm_trial_eye"
+    assert r["do"][0]["videos"] == [{"id": "trial", "mp4": "make/t1/final.mp4", "win_doc": "channel/s/줄판독/a.json"}]
+    assert "화면 전환 확인" in R.CMD_LABEL["bm_eye_frames"] and "칼카피" not in R.CMD_LABEL["bm_eye_frames"]
+    r = _trial_eye(st)
     assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"] and st["phase"] == "bm_panbokki"
     side, pan = r["do"]
     assert side["ours"] == "make/t1/final.mp4" and pan["work"] == "make/t1" and pan["line_reads"] == ["channel/s/줄판독/a.json"]
+    assert pan["eye"] == {"cuts": [{"t": 1.0, "kind": "cut"}], "frame0": {"kind": "scene", "text": ""}}
 
 
 def test_flow_trial_to_match_to_fix_and_back(monkeypatch):
@@ -327,6 +357,7 @@ def test_flow_trial_to_match_to_fix_and_back(monkeypatch):
     _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
     assert st["phase"] == "bm_trial_got"
     _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
+    _trial_eye(st)
     assert st["phase"] == "bm_panbokki"
     cands = [{"path": "p1", "value": 1, "why": "a"}, {"path": "p2", "value": 2, "why": "b"}]
     r = _go(st, {"pan": {"match_ok": False, "fails": ["enter.mode.나레", "chunk.sec"], "cands": cands, "gate_ok": True}, "side": {"side": "side/x.mp4"}})
@@ -456,7 +487,8 @@ def test_env_command_error_is_retry_stop_not_agy_missing():
 
 def test_measure_zero_pass_retry_rereads_not_dead_end():
     lines = _skel()["lines"]
-    st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, skel_lines={"a": lines, "b": lines}, reread=1)
+    st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, skel_lines={"a": lines, "b": lines}, reread=1,
+             eye={"a": _done_eye(), "b": _done_eye()})        # 눈 판정은 이미 받았다 — 다시 시도는 판독만(그림을 다시 뽑지 않는다)
     r = _go(st, {"fill": {"ok": [], "bad": {"a": ["줄0 speaker 미기입"]}, "dir": "channel/s/줄판독"}})
     assert r["status"] == "stop" and r["retry_ok"] is True
     for _ in range(2):                    # 다시 시도할 때마다 같은 막다른 길이 아니라 판독을 새로
@@ -471,7 +503,8 @@ def test_measure_zero_pass_retry_rereads_not_dead_end():
 
 def test_match_error_retry_reruns_compare_with_same_trial():
     st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"])
-    r = _go(st, rp={"bm_trial": {"work_dir": "trial/t0_abcdefabcdef", "ok": True}})
+    _go(st, rp={"bm_trial": {"work_dir": "trial/t0_abcdefabcdef", "ok": True}})
+    r = _trial_eye(st)
     assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"]
     st["_asker_in"] = None                # 받은 입력을 못 둔 경우(ASKER_IN_MAX 넘음)에도 같은 시험 편으로
     r = _go(st, {"side": {"side": "side/a.mp4"}, "pan": {"error": "ValueError: remake 관문 기록 없음"}})
@@ -528,14 +561,166 @@ def test_skel_fill_match_on_real_remake_shape(tmp_path):
     shutil.copy2(X / "48PbLQ5az6k_뜯기.json", t / "뜯기.json")
     sk = R.run_do(tmp_path, [{"id": "skel", "cmd": "bm_skel", "slug": "s", "ids": ["v1"]}])["skel"]
     assert not sk["failed"] and len(sk["docs"]["v1"]["lines"]) == 12
-    fills = {"v1": {"lines": [{"i": l["i"], "speaker": "나레", "layer": "채널", "enter": "pop", "sfx": None, "scene": "장면"} for l in sk["docs"]["v1"]["lines"]],
-                    "doc": {"beats": ["훅", "본론"], "narr_share": 1.0}}}
+    L = sk["docs"]["v1"]["lines"]
+    beye = {"cuts": [{"t": L[2]["t0"], "kind": "cut"}, {"t": L[5]["t0"], "kind": "flash"}], "frame0": {"kind": "card", "text": "표지 글"}}
+    fills = {"v1": {"lines": [{"i": l["i"], "speaker": "나레", "layer": "채널", "enter": "pop", "sfx": None, "scene": "장면"} for l in L],
+                    "doc": {"beats": ["훅", "본론"], "narr_share": 1.0}, "eye": beye}}
     f = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": fills}])["fill"]
     assert f["ok"] == ["v1"] and not f["bad"]
-    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1", "line_reads": [f"{f['dir']}/v1.json"]}])["pan"]
+    doc = json.loads((tmp_path / f["dir"] / "v1.json").read_text(encoding="utf-8"))
+    assert doc["frame0"]["kind"] == "card" and [l["transition"] for l in doc["lines"]][:6] == ["none", "none", "cut", "none", "none", "flash"]
+    oeye = {"cuts": [{"t": 3.0, "kind": "cut"}], "frame0": {"kind": "scene", "text": ""}}
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1", "line_reads": [f"{f['dir']}/v1.json"], "eye": oeye}])["pan"]
     assert "error" not in out, out
     rows = {r["key"]: r for r in out["table"]["rows"]}
-    assert {k for k, r in rows.items() if r["judge"] == "failed"} == {"cut.median", "mix.lufs", "transition.rate", "thumb.frame0"}   # 영상 없이 못 재는 칸
+    assert {k for k, r in rows.items() if r["judge"] == "failed"} == {"cut.median", "mix.lufs"}   # 영상 없이 못 재는 칸(전환·0초 화면은 눈 판정으로 잰다 — Ruling 17)
+    assert rows["thumb.frame0"]["bench"] == "card" and rows["thumb.frame0"]["ours"] == "scene" and rows["thumb.frame0"]["judge"] == "out"
+    assert rows["transition.rate"]["ours"] == {"cut": 1.0} and rows["transition.rate"]["judge"] in ("in", "out")
     assert rows["enter.mode.나레"]["ours"] == "instant" and rows["enter.mode.나레"]["judge"] == "out"
     assert [c["path"] for c in out["cands"]] == ["frames[body].layers[text:caption].enter"]
     assert out["gate_ok"] is False and any(x.startswith("관문:") for x in out["fails"]) and out["match_ok"] is False
+
+
+# ── 전환·0초 첫 화면(Ruling 17) — 시각은 프로그램, 종류는 같은 눈. 넣기 규칙 = kal_analyze.apply_eye 한 곳 ──
+def test_apply_eye_puts_cut_on_line_starting_at_it_and_frame0():
+    from tools.calcopy.engine import kal_analyze as K
+    lines = [{"t0": 0.0, "t1": 1.0}, {"t0": 1.0, "t1": 2.0}, {"t0": 2.0, "t1": 3.0}, {"t0": 5.0, "t1": 6.0}]
+    f0 = K.apply_eye(lines, {"cuts": [{"t": 1.0, "kind": "cut"}, {"t": 2.02, "kind": "cut"}, {"t": 2.5, "kind": "흰 번쩍임"}, {"t": 4.2, "kind": "black"}],
+                             "frame0": {"kind": "card", "text": " 표지 "}})
+    assert [l["transition"] for l in lines] == ["none", "cut", "flash", "black"]       # 경계 컷 = 그 컷에서 시작하는 줄 · 한 줄 여럿 = cut 아닌 것 · 창 밖 = 가까운 줄
+    assert f0["text"] == "표지" and K.frame0_kind({"frame0": f0}) == "card"
+    assert K.frame0_kind({"frame0": K.apply_eye([], {"cuts": [], "frame0": {"kind": "scene", "text": "무시"}})}) == "scene"
+    assert all(K.cut_in_line(c, 1.0, 2.0) == (0.9 <= c < 2.1) for c in (0.89, 0.9, 1.5, 2.09, 2.1))
+
+
+def test_eye_check_rejects_bad_shapes():
+    import pytest
+    from tools.calcopy.engine import kal_analyze as K
+    ok = {"cuts": [{"t": 1.0, "kind": "zoom blur"}], "frame0": {"kind": "scene", "text": ""}}
+    assert K.eye_check(ok, 1) == []
+    assert K.eye_check(ok, 2)                                                        # 컷 빠짐
+    assert K.eye_check({"cuts": [{"t": 1.0, "kind": "none"}], "frame0": {"kind": "scene"}}, 1)    # 전환 없음은 컷 판정이 아니다
+    assert K.eye_check({"cuts": [], "frame0": {"kind": "card", "text": ""}}, 0)       # card 인데 글 없음
+    assert K.eye_check({"cuts": [], "frame0": {"kind": "표지"}}, 0) and K.eye_check(None)
+    with pytest.raises(ValueError):
+        K.apply_eye([{"t0": 0, "t1": 1}], {"cuts": [], "frame0": None})
+
+
+def test_ours_from_remake_with_eye_same_rule(tmp_path):
+    from tools.calcopy.engine import kal_analyze as K
+    out = _remake_out(tmp_path)
+    o = K.ours_from_remake(out)
+    assert o["frame0_kind"] is None and all("transition" not in l for l in o["lines"])        # 눈 판정 없으면 그대로 미측정
+    o = K.ours_from_remake(out, eye={"cuts": [{"t": 2.0, "kind": "flash"}], "frame0": {"kind": "scene", "text": ""}})
+    assert [l["transition"] for l in o["lines"]] == ["none", "none", "flash"] and o["frame0_kind"] == "scene"
+    T = K.match_table([_bench_doc("a")], o, None, None)
+    rows = {r["key"]: r for r in T["rows"]}
+    assert rows["thumb.frame0"]["judge"] == "failed"          # 벤치 쪽 frame0 이 없으면 여전히 못 잰 칸(원칙 그대로)
+    assert rows["transition.rate"]["judge"] == "failed"
+
+
+def test_eye_frames_command_on_real_video(tmp_path):
+    """실제 ffmpeg 로 빨강 1초 → 흰 2프레임 → 파랑 1초 영상을 만들어 그림 뽑기(0초 한 장 + 컷마다 띠)."""
+    import subprocess
+    from tools.calcopy.engine import kal_analyze as K
+    src = tmp_path / "src"
+    src.mkdir()
+    mp4 = src / "v.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=red:s=180x320:r=30:d=1", "-f", "lavfi", "-i", "color=white:s=180x320:r=30:d=0.0667",
+                    "-f", "lavfi", "-i", "color=blue:s=180x320:r=30:d=1", "-filter_complex", "[0][1][2]concat=n=3:v=1[v]", "-map", "[v]",
+                    "-pix_fmt", "yuv420p", str(mp4)], check=True)
+    out = R.run_do(tmp_path, [{"id": "e", "cmd": "bm_eye_frames", "videos": [{"id": "v", "mp4": "src/v.mp4"}]}])["e"]
+    assert not out["failed"], out
+    fr = out["frames"]["v"]
+    assert fr["frame0"] == "eye/v/frame0.jpg" and (tmp_path / fr["frame0"]).is_file()
+    assert fr["cuts"] and abs(fr["cuts"][0]["t"] - 1.0) < 0.1 and all((tmp_path / c["img"]).is_file() for c in fr["cuts"])
+    assert len(fr["cuts"]) <= K.EYE_CUTS_MAX
+    bad = R.run_do(tmp_path, [{"id": "e", "cmd": "bm_eye_frames", "videos": [{"id": "x", "mp4": "src/없음.mp4"}]}])["e"]
+    assert bad["failed"] and not bad["frames"]
+
+
+def test_bench_eye_reviews_same_question_as_trial():
+    st = _st("bm_read_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2})
+    r = _go(st, {"read_a": {"answer": {"voice": "여"}}, "eye_b": {"frames": {"a": _fr(2), "b": _fr(0, "b")}, "failed": []}})
+    qs = {q["id"]: q for q in r["review"]}
+    assert set(qs) == {"bm_read", "bm_eye_a", "bm_eye_b"} and qs["bm_eye_a"]["model"] == "opus"
+    assert qs["bm_eye_a"]["show"] == [{"file": "eye/a/frame0.jpg"}, {"file": "eye/a/cut_00.jpg"}, {"file": "eye/a/cut_01.jpg"}]
+    head = FB.EYE_ASK.split("{cuts}")[0]
+    assert qs["bm_eye_a"]["ask"].startswith(head) and qs["bm_eye_b"]["ask"].startswith(head)
+    t = _st("bm_trial_eye", trial="make/t1/final.mp4")
+    q = _go(t, {"eye_t": {"frames": {"trial": _fr(1, "trial")}, "failed": []}})["review"][0]
+    assert q["ask"].startswith(head) and q["model"] == "opus"        # 벤치·시험 편 같은 판정 기준 문구(한 곳)
+    assert "칼카피" not in head and FB.ASKS["bm_eye"]["model"] == "opus"
+
+
+def test_bench_eye_frames_error_or_missing_stops_two_lines():
+    for m in ({"read_a": {"answer": {"voice": "여"}}, "eye_b": {"error": "RuntimeError: 프레임 뽑기 실패"}},
+              {"read_a": {"answer": {"voice": "여"}}, "eye_b": {"frames": {}, "failed": [{"video": "a"}]}},
+              {"read_a": {"answer": {"voice": "여"}}}):
+        st = _st("bm_read_got", videos=[_vid("a")], keep=["a"], skel={"a": 2})
+        r = _go(st, m)
+        assert r["status"] == "stop" and r["why"] == "화면 전환을 확인하지 못했어요" and r["fix"] and r["retry_ok"] is True, r
+
+
+def test_bench_eye_bad_answer_stops_then_asks_eye_only_and_keeps_read_reply():
+    st = _st("bm_read_got", videos=[_vid("a")], keep=["a"], skel={"a": 2})
+    _go(st, {"read_a": {"answer": {"voice": "여"}}, "eye_b": {"frames": {"a": _fr(2)}, "failed": []}})
+    read = {"rules": {"x": 1}, "per_video": {}, "lines": {"a": _eye()}}
+    r = _go(st, rp={"bm_read": read, "bm_eye_a": {"frame0": {"kind": "scene", "text": ""}, "cuts": [{"i": 0, "kind": "cut"}]}})   # 컷1 빠짐
+    assert r["status"] == "stop" and r["why"] == "화면 전환을 확인하지 못했어요" and r["retry_ok"] is True
+    r = _retry(st)
+    assert r["status"] == "review" and [q["id"] for q in r["review"]] == ["bm_eye_a"]          # 판독은 다시 묻지 않는다
+    r = _go(st, rp={"bm_eye_a": _eye_ans(2, "zoomblur")})
+    assert r["status"] == "execute" and r["do"][0]["cmd"] == "bm_fill"
+    assert r["do"][0]["fills"]["a"]["eye"]["cuts"] == [{"t": 1.0, "kind": "zoomblur"}, {"t": 2.0, "kind": "zoomblur"}]
+    assert st["bm"]["rules"]["rules"] == {"x": 1} and "read_reply" not in st["bm"]
+
+
+def test_reread_does_not_ask_eye_again():
+    st = _st("bm_read_got", videos=[_vid("a")], keep=["a"], skel={"a": 2}, eye={"a": _done_eye()})
+    r = _go(st, {"read_a": {"answer": {"voice": "여"}}})
+    assert [q["id"] for q in r["review"]] == ["bm_read"]
+
+
+def test_trial_eye_bad_answer_stops_and_retry_reasks():
+    st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"])
+    _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
+    _go(st, {"eye_t": {"frames": {"trial": _fr(1, "trial")}, "failed": []}})
+    r = _go(st, rp={"bm_eye_trial": {"frame0": {"kind": "card", "text": ""}, "cuts": [{"i": 0, "kind": "cut"}]}})    # card 인데 글 없음
+    assert r["status"] == "stop" and r["why"] == "화면 전환을 확인하지 못했어요" and r["retry_ok"] is True
+    r = _retry(st)
+    assert r["status"] == "review" and [q["id"] for q in r["review"]] == ["bm_eye_trial"]
+    r = _go(st, rp={"bm_eye_trial": _eye_ans(1)})
+    assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"]
+
+
+def test_trial_frames_error_stops():
+    st = _st("bm_trial_eye", trial="make/t1/final.mp4")
+    r = _go(st, {"eye_t": {"error": "RuntimeError: 프레임 뽑기 실패"}})
+    assert r["status"] == "stop" and r["why"] == "화면 전환을 확인하지 못했어요" and r["retry_ok"] is True
+
+
+def test_new_trial_rejudges_trial_eye_only():
+    st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"], eye={"a": _done_eye()}, trial_eye=_done_eye(), trial_frames=_fr(1, "trial"))
+    r = _go(st, rp={"bm_trial": {"work_dir": "make/t2", "ok": True}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames"] and "trial_eye" not in st["bm"] and st["bm"]["eye"] == {"a": _done_eye()}
+
+
+def test_compare_retry_reuses_trial_eye():
+    st = _st("bm_compare", trial_dir="make/t1", trial="make/t1/final.mp4", videos=[_vid("a")], trial_eye=_done_eye())
+    r = _go(st)
+    assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"] and r["do"][1]["eye"] == _done_eye()
+    st = _st("bm_compare", trial_dir="make/t1", trial="make/t1/final.mp4", videos=[_vid("a")])
+    assert [d["cmd"] for d in _go(st)["do"]] == ["bm_eye_frames"]
+
+
+def test_bm_fill_bad_eye_is_bad_not_written(tmp_path):
+    _tear_file(tmp_path)
+    R.run_do(tmp_path, [{"id": "skel", "cmd": "bm_skel", "slug": "s", "ids": ["a"]}])
+    good = {"lines": [{"i": i, "speaker": "나레", "layer": "채널", "enter": "instant", "sfx": None, "scene": "제품"} for i in range(2)],
+            "doc": {"beats": ["훅"], "narr_share": 1.0}}
+    res = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": {"a": {**good, "eye": {"cuts": [], "frame0": {"kind": "x"}}}}}])["fill"]
+    assert res["ok"] == [] and "frame0" in res["bad"]["a"][0]
+    res = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": {"a": {**good, "eye": {"cuts": [{"t": 1.0, "kind": "black"}], "frame0": {"kind": "scene", "text": ""}}}}}])["fill"]
+    doc = json.loads((tmp_path / "channel" / "s" / "줄판독" / "a.json").read_text(encoding="utf-8"))
+    assert res["ok"] == ["a"] and [l["transition"] for l in doc["lines"]] == ["none", "black"] and doc["frame0"]["kind"] == "scene"

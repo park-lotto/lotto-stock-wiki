@@ -231,7 +231,7 @@ def skeleton(vid: str, tteutgi: dict, vtt: str | None = None) -> dict:
         lines.append({"t0": t0, "t1": t1, "speaker": None, "text": text, "layer": None, "role": None,
                       "enter": None, "y": [it.get("top_y"), None] if it.get("top_y") else None, "fill_hex": None,
                       "emph": [], "sticker": [], "sfx": None, "scene": None, "fit": None,
-                      "cut_at": [round(c, 2) for c in cuts if t0 - 0.1 <= c < t1 + 0.1],
+                      "cut_at": [round(c, 2) for c in cuts if cut_in_line(c, t0, t1)],
                       "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)"})
     todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share"]
     return {"id": vid, "dur": pr.get("duration"), "fps": pr.get("fps"), "size": [pr.get("w"), pr.get("h")],
@@ -703,6 +703,111 @@ def scene_cuts(mp4: str, win: tuple | None = None, th: float = SCENE_T, merge_s:
     return out
 
 
+
+# ---------------------------------------------------------------- 눈 판정 칸(전환 종류·0초 첫 화면) — 관제 319 Ruling 17
+# 시각은 프로그램(scene_cuts), 종류는 눈(오푸스 review — flow_bench.EYE_ASK 한 곳). 벤치 편·시험 편을 같은 자·같은 넣기 규칙으로.
+CUT_LINE_PAD = 0.1      # 컷이 그 줄 몫인 창: t0-0.1 ≤ c < t1+0.1 (skeleton cut_at 과 같은 자 — 한 곳)
+EYE_CUTS_MAX = 12       # 한 편에서 눈으로 볼 컷 수 상한 — 넘으면 고르게 뽑는다(그림 수가 review 를 무겁게 하지 않게)
+EYE_PRE_S = 0.2         # 컷 그림 = 컷 0.2초 앞부터
+EYE_WIN_S = 0.4         # 0.4초 동안 이어진 프레임 전부(2프레임 흰 번쩍임·검은 화면도 보이게 — agy 초당 1장으로는 못 본다)
+EYE_FRAME_H = 240       # 띠 그림 한 칸 높이(px)
+EYE_F0_H = 480          # 0초 그림 한 칸 높이 — 표지 글을 읽을 수 있게
+EYE_COLS = 4            # 띠 그림 가로 칸 수 — 넘으면 다음 줄로(한 줄 12칸은 1만 px 넘게 길어져 보는 쪽에서 작게 줄어든다 · 실측 13896×240)
+F0_KINDS = ("card", "scene")
+
+
+def cut_in_line(c: float, t0: float, t1: float) -> bool:
+    """(판단 주인) 컷 시각 c 가 그 줄(t0~t1) 몫인가 — skeleton cut_at·apply_eye 가 같이 쓴다."""
+    return t0 - CUT_LINE_PAD <= c < t1 + CUT_LINE_PAD
+
+
+def _ff(args: list) -> None:
+    import subprocess
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", *args], capture_output=True)
+    if r.returncode != 0:
+        raise RuntimeError("프레임 뽑기 실패: " + (r.stderr or b"").decode("utf-8", "replace")[-300:])
+
+
+def eye_frames(mp4: str, out_dir, win: tuple | None = None) -> dict:
+    """(프로그램 — 판단 없음) 눈 판정용 그림. 0초 첫 프레임 0~3번(표지 2프레임 + 그 뒤 바뀌나)을 가로로 한 장, scene_cuts 컷마다 컷 EYE_PRE_S 앞부터
+    EYE_WIN_S 동안 이어진 프레임을 가로 띠 한 장. 컷이 EYE_CUTS_MAX 넘으면 고르게 뽑는다. 프레임 뽑기라 인코딩(venc)과 무관.
+    → {"dur", "fps", "n_cuts_all", "frame0": <그림>, "cuts": [{"t", "img"}]} (경로는 out_dir 안 절대 경로 — 부르는 쪽이 상대로 바꾼다)."""
+    import shutil
+    from shopping_shorts.channelkit.bench import probe
+    out = Path(out_dir)
+    if out.exists():
+        shutil.rmtree(out)          # 지난 시험 편 그림이 섞이지 않게
+    out.mkdir(parents=True)
+    meta = probe.info(mp4)
+    fps = float(meta.get("fps") or 30) or 30.0
+    dur = float(meta.get("duration") or 0)
+    crop = f"crop={win[2]}:{win[3]}:{win[0]}:{win[1]}," if win else ""
+    f0 = out / "frame0.jpg"
+    _ff(["-i", mp4, "-vf", f"{crop}scale=-2:{EYE_F0_H},tile=2x2", "-frames:v", "1", "-q:v", "3", str(f0)])
+    cuts = [c for c in scene_cuts(mp4, win) if c > 0.05]
+    allc = len(cuts)
+    if len(cuts) > EYE_CUTS_MAX:
+        step = len(cuts) / EYE_CUTS_MAX
+        cuts = [cuts[int(i * step)] for i in range(EYE_CUTS_MAX)]
+    n = max(8, min(24, round(fps * EYE_WIN_S)))
+    n = -(-n // EYE_COLS) * EYE_COLS          # 칸을 꽉 채우는 수(남는 칸이 있으면 tile 이 뒤 프레임을 더 끌어온다)
+    items = []
+    for k, c in enumerate(cuts):
+        img = out / f"cut_{k:02d}.jpg"
+        _ff(["-ss", f"{max(0.0, c - EYE_PRE_S):.3f}", "-i", mp4, "-vf", f"{crop}scale=-2:{EYE_FRAME_H},tile={EYE_COLS}x{n // EYE_COLS}",
+             "-frames:v", "1", "-q:v", "3", str(img)])
+        items.append({"t": round(float(c), 3), "img": str(img)})
+    return {"dur": round(dur, 2), "fps": round(fps, 3), "n_cuts_all": allc, "frame0": str(f0), "cuts": items,
+            "made_by": "kal_analyze.eye_frames(scene_cuts + ffmpeg 프레임 띠)"}
+
+
+def eye_check(eye, n_cuts: int | None = None) -> list[str]:
+    """(판단 주인) 눈 판정 꼴 검사 — {"cuts": [{"t", "kind"}], "frame0": {"kind": card|scene, "text"}}. 빈 목록 = 통과."""
+    if not isinstance(eye, dict):
+        return ["눈 판정이 없다"]
+    errs = []
+    cs = eye.get("cuts")
+    if not isinstance(cs, list):
+        errs.append("cuts 칸 없음")
+        cs = []
+    if n_cuts is not None and len(cs) != n_cuts:
+        errs.append(f"컷 {n_cuts}개 중 {len(cs)}개만 판정")
+    for i, c in enumerate(cs):
+        if not isinstance(c, dict) or not isinstance(c.get("t"), (int, float)):
+            errs.append(f"컷{i} 시각 없음")
+        elif transition_key(c.get("kind")) is None:
+            errs.append(f"컷{i} 종류 어휘 밖: {c.get('kind')!r} ({'|'.join(TRANS_VOCAB)})")
+    f0 = eye.get("frame0")
+    if not isinstance(f0, dict) or f0.get("kind") not in F0_KINDS:
+        errs.append("frame0.kind 는 card | scene")
+    elif f0["kind"] == "card" and not str(f0.get("text") or "").strip():
+        errs.append("frame0 card 인데 표지 글(text)이 비었다")
+    return errs
+
+
+def apply_eye(lines: list[dict], eye: dict) -> dict:
+    """(판단 주인 — 넣기 규칙 한 곳) 눈 판정 → 줄 transition + 문서 frame0. 벤치 줄판독(bm_fill)·우리 편(ours_from_remake)이 같이 부른다.
+    컷 → 그 컷이 cut_in_line 인 줄 중 가장 늦게 시작하는 줄(= 그 컷에서 시작하는 줄), 그런 줄이 없으면 가장 가까운 줄.
+    한 줄에 컷이 여럿이면 cut 아닌 종류를 먼저(드문 전환이 묻히지 않게). 컷 없는 줄 = 'none'(전환 없음 — strict 검사의 null 금지).
+    frame0 = {"text", "kind"} — card 면 표지 글, scene 이면 '' (frame0_kind 가 읽는 꼴). 꼴이 틀리면 ValueError(조용히 넣지 않는다)."""
+    errs = eye_check(eye)
+    if errs:
+        raise ValueError("눈 판정 꼴 오류: " + " / ".join(errs[:4]))
+    got: dict[int, list[str]] = defaultdict(list)
+    for c in eye["cuts"]:
+        t, k = float(c["t"]), transition_key(c["kind"])
+        if not lines:
+            break
+        inn = [i for i, l in enumerate(lines) if cut_in_line(t, float(l["t0"]), float(l["t1"]))]
+        i = max(inn, key=lambda j: float(lines[j]["t0"])) if inn else \
+            min(range(len(lines)), key=lambda j: min(abs(t - float(lines[j]["t0"])), abs(t - float(lines[j]["t1"]))))
+        got[i].append(k)
+    for i, l in enumerate(lines):
+        ks = got.get(i) or []
+        l["transition"] = next((k for k in ks if k != "cut"), "cut") if ks else "none"
+    f0 = eye["frame0"]
+    return {"kind": f0["kind"], "text": str(f0.get("text") or "").strip() if f0["kind"] == "card" else "", "_by": "눈 판정(eye_frames 그림)"}
+
 def media_of(mp4: str, win: tuple | None = None) -> dict:
     from shopping_shorts.channelkit.bench import audio, probe
     meta = probe.info(mp4)
@@ -911,11 +1016,12 @@ def _sfx_times(audio: dict) -> list[float]:
     return out
 
 
-def ours_from_remake(out_dir, frame: dict | None = None) -> dict:
+def ours_from_remake(out_dir, frame: dict | None = None, eye: dict | None = None) -> dict:
     """(어댑터) remake.py 결과 폴더 → _ours_lines 의 lines 꼴. 판정은 match_table 한 곳(여기서 판정하지 않는다).
     시각 = timeline.json — narr_video steps[{text,t0,t1}](누적형 둘째 단계는 새로 붙은 마지막 줄만) · remake_video beats[{t0,dur,caption_lines}](빈 줄 뺌).
     화자 = remake_log.kind(tts·human → 나레, none → 모름 None — 원음만 꼴은 줄마다 화자를 기록하지 않는다).
-    등장 = 프리셋 frame 자막 enter(렌더가 그 값으로 그린다 · frame 을 안 주면 None). 효과음 = audio.json sfx 시각. 줄 꾸밈(강조·스티커)·전환·0초 화면은 기록이 없어 비운다(→ 미측정)."""
+    등장 = 프리셋 frame 자막 enter(렌더가 그 값으로 그린다 · frame 을 안 주면 None). 효과음 = audio.json sfx 시각. 줄 꾸밈(강조·스티커)은 기록이 없어 비운다(→ 미측정).
+    전환·0초 화면 = eye(완성본 프레임 눈 판정 — 벤치 줄판독과 같은 apply_eye)를 주면 넣고, 안 주면 비운다(→ 미측정)."""
     out = Path(out_dir)
     T = json.loads((out / "timeline.json").read_text(encoding="utf-8"))
     lp, ap = out / "remake_log.json", out / "audio.json"
@@ -935,7 +1041,9 @@ def ours_from_remake(out_dir, frame: dict | None = None) -> dict:
     sfx = _sfx_times(json.loads(ap.read_text(encoding="utf-8"))) if ap.is_file() else None
     lines = [{"t0": a, "t1": b, "text": t, "speaker": sp, "enter": enter, "layer": "채널",
               "sfx": next((f"{x}" for x in sfx or [] if a <= x < b), None)} for a, b, t in rows]
-    return {"lines": lines, "dur": dur, "sfx_rate": round(len(sfx) / dur, 3) if sfx is not None and dur else None, "kind": kind}
+    f0 = apply_eye(lines, eye) if eye is not None else None
+    return {"lines": lines, "dur": dur, "sfx_rate": round(len(sfx) / dur, 3) if sfx is not None and dur else None, "kind": kind,
+            "frame0_kind": frame0_kind({"frame0": f0}) if f0 else None}
 
 
 def fix_cands(T: dict, frame: dict) -> list[dict]:
@@ -960,7 +1068,7 @@ def fix_cands(T: dict, frame: dict) -> list[dict]:
     return out
 
 
-def bench_match(line_reads: list[str], work, preset_dir, bench_src=None) -> dict:
+def bench_match(line_reads: list[str], work, preset_dir, bench_src=None, eye: dict | None = None) -> dict:
     """(판단 주인) 벤치마킹 시험 편 대조 — 줄 자 = match_table(벤치 줄판독 ↔ ours_from_remake), 관문 = remake.gate_of(픽셀·이음매 기록).
     픽셀 대조는 remake 가 이미 돌린 compare 기록을 읽는다(with_pixel 로 다시 돌리지 않는다 — 같은 compare 두 번, Jev 0.92).
     match_ok = 줄 판정 통과 + 관문 통과. fails = 기준 칸 중 통과 아닌 것(미측정 포함) + '관문:<칸>'. cands = fix_cands."""
@@ -970,7 +1078,7 @@ def bench_match(line_reads: list[str], work, preset_dir, bench_src=None) -> dict
     if not docs:
         raise ValueError("벤치 줄판독이 없다")
     frame = json.loads((preset_dir / "frame.json").read_text(encoding="utf-8"))
-    ours = ours_from_remake(work, frame)
+    ours = ours_from_remake(work, frame, eye)     # eye = 시험 편 눈 판정(전환·0초 화면 — 벤치 줄판독과 같은 넣기 규칙)
     win = _win_arg(None, docs)
     fin = work / "final.mp4"
     om = media_of(str(fin), win) if fin.is_file() else None          # 완성본이 없으면 컷·LUFS 는 못 잰다(match_table 이 미측정으로)
