@@ -2398,6 +2398,88 @@ CMDS["origin_dups"] = c_origin_dups      # 표(CMDS) 정의 뒤라 여기서 등
 CMDS["clean_take"] = c_clean_take
 
 
+# ── 채널 벤치마킹 2판 명령(관제 319) — 판단 없음. 재는 일은 bench_member·preset_save·agy·preset_brief 가 한다 ──
+def _inside(W: Path, rel: str) -> Path:
+    p = (W / rel).resolve()
+    if W.resolve() not in p.parents and p != W.resolve():
+        raise ValueError("작업 폴더 밖 경로")
+    return p
+
+
+def c_bm_env(W, d):
+    from tools.calcopy.engine import agy
+    return {"agy": bool(agy.find()), "agy_login": bool(agy.logged_in()), "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1)}
+
+
+def c_bm_fetch(W, d):
+    from tools.calcopy.engine import bench_member as BM
+    from tools.calcopy.engine.agy_check import to360
+    picked = BM.given_videos(d.get("videos") or [])[:BM.MAX_VIDEOS] if d.get("videos") else BM.pick_videos(d["url"], int(d.get("n") or 3))
+    (W / "src").mkdir(parents=True, exist_ok=True)
+    out = []
+    for v in picked:
+        mp4 = Path(BM.fetch(v, W / "src")).resolve()
+        if W.resolve() not in mp4.parents:      # 내 PC 파일을 그대로 준 경우 — 작업 폴더로 복사(이후 명령은 W 안 경로만 받는다)
+            shutil.copy2(mp4, W / "src" / f"{v['id']}.mp4")
+            mp4 = (W / "src" / f"{v['id']}.mp4").resolve()
+        v360 = to360(mp4, W / "src" / f"{v['id']}_360.mp4")
+        out.append({**v, "mp4": mp4.relative_to(W.resolve()).as_posix(), "v360": Path(v360).resolve().relative_to(W.resolve()).as_posix()})
+    return {"videos": out}
+
+
+def c_bm_tear(W, d):
+    from tools.calcopy.engine import bench_member as BM, preset_save as P
+    ch = W / "channel" / d["slug"]
+    groups, failed = {}, []
+    llm = BM.member_llm()
+    for v in d["videos"]:
+        try:
+            J, frame, _ = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
+            key = BM.shape_key(frame)
+            g = groups.setdefault(key, {"style": "틀" if not groups else f"틀{len(groups) + 1}", "sources": []})
+            P.save(J, frame, ch / "preset" / g["style"], v["id"], f"channel/{d['slug']}/뜯기/{v['id']}/뜯기.json")
+            g["sources"].append(v["id"])
+        except Exception as e:  # noqa: BLE001 — 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
+            failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed}
+
+
+def c_agy_read(W, d):
+    from tools.calcopy.engine import agy
+    return agy.ask_video(_inside(W, d["video"]), str(d.get("ask") or ""), d.get("schema") or {"type": "object"})
+
+
+def c_bm_side(W, d):
+    from tools.calcopy.engine.encoder import venc
+    a, b = _inside(W, d["bench"]), _inside(W, d["ours"])
+    out = W / "side" / f"{a.stem}__{b.stem}.mp4"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(a), "-i", str(b), "-filter_complex",
+                        "[0:v]scale=-2:360[l];[1:v]scale=-2:360[r];[l][r]hstack=inputs=2[v]", "-map", "[v]", "-map", "1:a?", "-shortest",
+                        *venc(crf=28), str(out)], capture_output=True)
+    if r.returncode != 0 or not out.is_file():
+        raise StageError("나란히 놓기 실패: " + (r.stderr or b"").decode("utf-8", "replace")[-300:])
+    return {"side": out.resolve().relative_to(W.resolve()).as_posix()}
+
+
+def c_bm_brief(W, d):
+    import zipfile
+    from tools.calcopy.engine import preset_brief as B
+    p = W / "channel" / d["slug"] / "preset" / d["style"]
+    r = B.render(p, p, str(d.get("name") or d["slug"]))
+    z = W / "out" / f"{d['slug']}_{d['style']}.zip"
+    z.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in ("frame.json", "manifest.json", "프리셋.md", "CLAUDE.md"):
+            if (p / f).exists():
+                zf.write(p / f, f)
+    return {**r, "zip": z.resolve().relative_to(W.resolve()).as_posix()}
+
+
+CMDS.update({"bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
+
+
+
 HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
 EMPTY_OK = ("jumps", "dups")     # 비어 있어야 좋은 칸(원본 규칙 위반 목록) — '결과 0'으로 세지 않는다(10-27 run4 렌더마다 HOLLOW(jumps) 오경보)
 
@@ -2426,13 +2508,15 @@ def hollow(r: dict) -> str:
 #   ★plan 120→600(기미크림 10-26): 위 plan 실측 17개는 --plan 이 TTS·줄별 받아쓰기(관문 7a95600f8)를 하기 전 — 지금 계획은 바뀐 줄 합성+스피치매틱스+긴 원본 장면 경계(524초 원본)까지 해 120초에 두 번 잘렸다(회원 마스크편). 진짜 멈춤은 STALL_SEC 180초가 잡는다.
 BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
-          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "clean_take": 1800, "thumb_auto": 300}
+          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "clean_take": 1800, "thumb_auto": 300,
+          "bm_fetch": 900, "bm_tear": 1800, "agy_read": 700}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
-             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
+             "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}
