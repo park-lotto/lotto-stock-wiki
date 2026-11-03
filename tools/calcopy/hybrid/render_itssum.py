@@ -123,6 +123,18 @@ def read_names(S, log=print) -> list:
     return got
 
 
+def member_voice(S, st) -> None:
+    """회원이 고른 목소리 칸(styles.member_frame 의 member_voice)을 대본 voice 에 덮고, 말 빠르기를 정했으면 S['member_tempo'] 로 make_sentences 에 알린다(#1893).
+    render_bench.render·runner_ops.tts_cache_miss 가 같이 부른다."""
+    from tools.calcopy.hybrid import styles as ST
+    S["voice"].update(st.get("member_voice") or {})
+    mt = ST.member_tempo(st)
+    if mt:
+        S["member_tempo"] = mt
+    else:
+        S.pop("member_tempo", None)
+
+
 def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
     """Typecast 1회(캐시 열쇠 = 글·목소리·배속 — 글이 바뀌면 다시 합성) → (narr_full.mp3, 글자 시각 align|None). 주인 engine/narr_align."""
     from tools.calcopy.engine import narr_align as NA
@@ -315,7 +327,11 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None,
         return (b - a) - sum(e - s for s, e, _ in P.get(l["id"], [])) + sum(t * tempo for _, _, t in P.get(l["id"], []))
     tempo = NA.fixed_tempo(S["voice"]["voice_id"])   # 일레븐랩스(미나)는 서비스 배속 그대로(1.35) — 10-18 사장님 '잇썸홈판은 미나'
     fixed = bool(tempo)
-    if not tempo:
+    mt = S.get("member_tempo")
+    if mt:   # 회원이 정한 빠르기가 판 cps_target 을 이긴다(#1893) — 합성이 이미 그 빠르기면(타입캐스트) 더 걸지 않고, 1.0 으로 받은 목소리는 그 배속으로
+        tempo = 1.0 if NA.synth_takes_tempo(S["voice"]["voice_id"], S["voice"].get("provider")) else round(float(mt), 4)
+        log(f"[말 빠르기] 회원이 정한 {mt}배 — 판 말속도 목표({S.get('cps_target')}자/초) 맞춤은 건너뛴다(atempo 기본 {tempo})")
+    elif not tempo:
         tempo = 1.1
         for _ in range(5):
             speech = sum(eff(l, a, b, tempo) for l, (a, b) in zip(L, spans))

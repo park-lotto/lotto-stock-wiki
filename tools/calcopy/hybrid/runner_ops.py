@@ -1558,7 +1558,7 @@ def tts_cache_miss(W: Path, v: str) -> str:
         return ""
     st = STY.load(v)
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id") if k in st["voice"]})
-    S["voice"].update(st.get("member_voice") or {})
+    RI.member_voice(S, st)
     key = NA.voice_key(RI.tts_text({**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}), S["voice"]["voice_id"], S["voice"].get("tempo"), NA.TTS_MODEL, **RI.voice_args(S))
     sc = W / v / "render" / "narr_full.mp3.tts.json"
     have = json.loads(sc.read_text(encoding="utf-8")).get("key") if sc.exists() else None

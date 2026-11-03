@@ -172,6 +172,12 @@ def fixed_tempo(voice_id: str) -> float | None:
     return float(p["default_speed"])
 
 
+def synth_takes_tempo(voice_id: str, provider: str | None = None) -> bool:
+    """합성이 배속(tempo)을 소리에 이미 넣나 — 타입캐스트만(audio_tempo · typecast_tts speed). 일레븐·피쉬는 1.0 으로 받고 렌더러 atempo 가 맞춘다(voice_synth._make_synth)."""
+    prov, _ = voice_of(voice_id, provider)
+    return not is_eleven(voice_id) and prov in (None, "typecast")
+
+
 def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | None:
     """회원 PC(사장님 10-21 '미나 = 회원 본인 일레븐랩스 키'): 회원 키로 일레븐랩스를 직접 — 요청 꼴은 서버 서비스와 같다
     (shopping_shorts/tts.py synthesize_tts: POST /v1/text-to-speech/<voice>/with-timestamps · xi-api-key · {text, model_id, voice_settings}, v3 는 use_speaker_boost 뺌).

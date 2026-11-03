@@ -206,6 +206,14 @@ def member_font_file(name: str) -> str:
     return sorted(hit)[0]
 
 
+def member_tempo(st: dict) -> float | None:
+    """(판단 주인 — 회원이 말 빠르기를 정했나) 회원이 바꾼 칸(member_voice.tempo)만 본다 — 프리셋 기본값은 회원 팩 member 에 없다(local_settings.packFile).
+    정했으면 렌더가 판 cps_target 에 맞추지 않고 그 빠르기로 내고, 길이가 판 범위 밖이어도 경고만 한다(#1893 김만기 1.05 → 판 8.6자/초 맞춤 1.2288 이 덮음 ·
+    사장님 11-02 '회원 요청이 판·검사를 이긴다')."""
+    t = (st.get("member_voice") or {}).get("tempo")
+    return float(t) if t else None
+
+
 def member_frame(st: dict) -> dict:
     """회원 '꾸미기' 값 → 판 틀(주인 한 곳 — 렌더·썸네일·캡컷·관문이 모두 load 로 받는다). SHORTEM_MEMBER_PACK = local_settings.packFile. 없으면 그대로."""
     f = os.environ.get("SHORTEM_MEMBER_PACK")

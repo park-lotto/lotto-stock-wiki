@@ -3883,7 +3883,8 @@ def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str
     return out
 
 
-ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용"}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
+LENGTH_MEMBER = "⑧ 길이 · 회원 빠르기"     # 회원이 말 빠르기를 정한 편의 길이 관문 — 경고만(#1893, styles.member_tempo)
+ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용", LENGTH_MEMBER}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
@@ -3903,7 +3904,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
             out += [("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])), ("사진", photo_gate(T, st, M)), ("사진 연속", photo_run_gate(T, M)), ("B13 재사용", plan_reuse_gate(T, M, st))]
         return soften(out, log)
     out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
-           ("⑧ 길이", plan_length_gate(T, st, measured)),
+           (length_gate_name(st), plan_length_gate(T, st, measured)),
            ("⑥ 카드 글", TR.card_text_gate(doc)),
            ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
            ("③ 경계", cut_boundary_gate(T, M, st)),
@@ -3946,6 +3947,12 @@ def voice_plan(S: dict, st: dict, R: Path, log=print) -> tuple[list, dict | None
 
 
 LENGTH_TOL = 0.5      # 판 length 허용 폭(초) — bench_check '길이'·계획 length.ok 와 같은 범위
+
+
+def length_gate_name(st: dict) -> str:
+    """길이 관문 이름 — 회원이 말 빠르기를 정했으면 권고(LENGTH_MEMBER ∈ ADVISORY_GATES, 막는가는 soften 한 곳)."""
+    from tools.calcopy.hybrid import styles as ST
+    return LENGTH_MEMBER if ST.member_tempo(st) else "⑧ 길이"
 
 
 def plan_length_gate(T: dict, st: dict, measured: bool) -> list[str]:
@@ -4083,8 +4090,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     doc, work = Path(doc), Path(work)
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
-    S["voice"].update(st.get("member_voice") or {})
-    RI.voice_args(S, check=True)          # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
+    RI.member_voice(S, st)                # 회원 목소리 칸 + 회원이 정한 말 빠르기(#1893 — 판 cps_target 맞춤을 건너뛴다)
+    RI.voice_args(S, check=True)         # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
     RI.read_names(S, log)                 # 이름 발음 사전(engine/name_dict — preset_make.tts 와 같은 주인 apply_all, 그 목소리로 확인한 표기만)
     S.setdefault("cps_target", st.get("cps_target", 7.0))
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
@@ -4118,8 +4125,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         for c in T["cuts"]:
             log(f"  {c['line']:4s} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c.get('max')} {c['src']}@{c.get('ss')}")
         LD = st["length"]
-        length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(tts),
-                  "ok": LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
+        inside = LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL      # 판정 = bench_check '길이'와 같은 범위(±0.5)
+        member = length_gate_name(st) in ADVISORY_GATES      # 회원이 정한 빠르기 = 길이는 경고만 — flow 가 대본을 다시 쓰게 하지 않는다(#1893)
+        length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(tts), "ok": inside or member,
+                  **({"warn": "회원이 정한 말 빠르기 — 판 길이 밖이어도 그대로 만든다"} if member and not inside else {})}
         log(f"{'목소리 실측' if tts else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
