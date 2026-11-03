@@ -18,6 +18,8 @@
 판독 모델: 옛 연결기가 engine/ 을 통째로 바꾸므로, 옛 판 회원은 engine/models 로 실린 판을 한 번 받아야 하고 새 프로그램이 그것을 설치 폴더 models/ 로
   옮긴다(updater.adoptModels). MODELS_LAST 가 그 마지막 판이다 — 정하기 전까지는 모든 판에 싣는다.
 결과물 검사: shortem_client/test/update.test.js — 받은 묶음을 풀어 바꾼 뒤 서버가 새 판으로 뜨는가.
+판 번호 규칙(사장님 11-03 "큰변화.기능추가.작은수정"): X.Y.Z — X 큰 변화(설치 다시·옛 판과 안 맞음) / Y 기능 추가(Z 는 0 으로) / Z 작은 수정·수리.
+  1.0.62 까지는 순번으로 올렸다(마지막 숫자만). 비교는 숫자 세 칸(claude_portal._semver)이라 1.0.62 → 1.1.0 도 새 판으로 받는다.
 """
 from __future__ import annotations
 
