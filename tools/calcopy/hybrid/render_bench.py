@@ -798,7 +798,7 @@ def _draw_post(im, P: dict, S: dict):
             _draw_text(im, BB["text"], SP.get("body") or BB["text"].get("text"))
     for key, sk in (("author_line", "author"), ("views_line", "views")):
         if P.get(key):
-            _draw_text(im, P[key], SP.get(sk) or P[key].get("text"))
+            _draw_text(im, P[key], P[key]["text"] if P[key].get("member") else (SP.get(sk) or P[key].get("text")))      # 회원이 정한 글이 대본보다 먼저(styles.member_frame)
     MS = P.get("meme_slot")
     if MS and SP.get("meme") and Path(SP["meme"]).exists():      # 반응 짤 자리(채워 자르기)
         x, y, w, h = MS["box"]

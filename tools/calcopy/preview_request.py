@@ -222,7 +222,7 @@ def preset_defaults_table() -> dict:
 
 
 EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color"),
-            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "orig_text"),
+            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "orig_text", "post_author"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -246,6 +246,9 @@ def check(pack: dict, cat: dict | None = None) -> list:
     for key in ("title_font", "caption_font"):
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
+    pa = tx.get("post_author")
+    if pa is not None and (not isinstance(pa, str) or len(pa) > 20 or re.search(r"[<>{}$\\]", pa)):
+        err.append("게시글 작성자 줄은 20자 이하 글자여야 합니다('' = 안 그림)")
     if tx.get("orig_text") not in (None, "", "auto", "vmake", "blur"):      # 원본 박힌 글자: auto(VMake 키 있으면 지우기·없으면 흐림) | vmake | blur — 사장님 10-30(vmake_clean.style_mode)
         err.append(f"모르는 글자 처리: {tx.get('orig_text')} (auto·vmake·blur)")
     tc = tx.get("title_colors")

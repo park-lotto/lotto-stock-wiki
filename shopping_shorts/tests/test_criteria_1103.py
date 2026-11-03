@@ -185,3 +185,20 @@ def test_eleven_free_plan_library_voice_message(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError) as e:
         NA.eleven_direct("안녕", "A" * 20, tmp_path / "a.mp3", "sk_x")
     assert "무료 요금제" in str(e.value) and "크레딧" not in str(e.value)
+
+
+def test_member_post_author(tmp_path, monkeypatch):
+    """게시글형 작성자 줄: 회원 '' = 안 그림, 글 = 그 글로 고정(11-03 강태경 '익명' 빼기)."""
+    import json as _j
+    from tools.calcopy.hybrid import styles as STY
+    from tools.calcopy import preview_request as PR
+    base = {"frame": {"post": {"author_line": {"text": "익명", "x": 1}}}}
+    p = tmp_path / "pack.json"
+    for v, want in (("", None), ("주스픽", "주스픽")):
+        p.write_text(_j.dumps({"member": {"text": {"post_author": v}}}), encoding="utf-8")
+        monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(p))
+        st = STY.member_frame(_j.loads(_j.dumps(base)))
+        got = st["frame"]["post"].get("author_line")
+        assert (got or {}).get("text") == want
+    assert any("작성자" in e for e in PR.check({"text": {"post_author": "<x>"}}))
+    assert PR.check({"text": {"post_author": ""}}) == [] and PR.check({"text": {"post_author": "주스픽"}}) == []

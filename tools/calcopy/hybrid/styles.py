@@ -277,6 +277,12 @@ def member_frame(st: dict) -> dict:
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)
+    PA = (F.get("post") or {}).get("author_line")
+    if PA and isinstance(text.get("post_author"), str):     # 게시글형 작성자 줄 — '' = 그리지 않음, 글 = 그 글로 고정(대본 post.author 보다 먼저, 11-03 강태경 '익명' 빼기)
+        if text["post_author"].strip():
+            F["post"]["author_line"] = {**PA, "text": text["post_author"].strip(), "member": True}
+        else:
+            del F["post"]["author_line"]
     colors = text.get("title_colors") or []
     for i, T in enumerate(F.get("title") or []):
         if text.get("title_font"):
