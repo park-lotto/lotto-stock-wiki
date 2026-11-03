@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>유튜브 4회차 숏클 대본</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1d1d1f;--sub:#6b6b70;--line:#e4e2dc;--acc:#d97757;--mint:#14b8a0;--yel:#f5b800;--red:#e5484d;--blue:#3b6fd8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Pretendard","Malgun Gothic",sans-serif}
+header{position:sticky;top:0;z-index:10;background:#1d1d1f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+header h1{font-size:17px;margin:0 12px 0 0}
+.tab{background:#333;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer}
+.tab.on{background:var(--acc)}
+.tools{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tools button{border:0;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer;background:#444;color:#fff}
+.tools button.on{background:var(--mint)}
+#saveState{font-size:13px;color:#bbb;margin-right:6px}
+#saveState.saved{color:#7ee0c9}
+main{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+section.view{display:none}section.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:0 0 16px}
+h2{font-size:21px;margin:0 0 10px}h3{font-size:17px;margin:14px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{background:#f0eee9;font-weight:700}
+.tag{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:1px 7px;margin-right:4px;white-space:nowrap}
+.t-res{background:#ffe9e0;color:#b4471f}.t-mg{background:#e3ecff;color:#2a56b8}.t-hand{background:#fff3c4;color:#8a6500}
+.thumb{width:100%;border-radius:10px;border:1px solid var(--line)}
+.note{color:var(--sub);font-size:14px}
+.m{background:#fff0c2;border-radius:4px;padding:0 4px;font-weight:700}
+/* 대본 */
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 18px;overflow:hidden}
+.step-head{display:flex;gap:10px;align-items:center;padding:12px 18px;background:#1d1d1f;color:#fff}
+.step-no{background:var(--acc);border-radius:8px;padding:2px 9px;font-weight:800}
+.step-head h2{font-size:18px;margin:0;color:#fff}
+.step-head .time{margin-left:auto;font-size:13px;color:#ccc}
+.sub{padding:12px 18px;border-top:1px solid var(--line)}
+.sub h3{margin:2px 0 8px}
+.sub h3 .time{font-size:12px;color:var(--sub);font-weight:400;margin-left:6px}
+.screen,.line,.cap{border-radius:8px;padding:8px 12px;margin:6px 0;position:relative}
+.screen{background:#eef3fb;font-size:14.5px;color:#25406e}
+.screen::before{content:"화면";font-size:11px;font-weight:800;color:#5a7bb8;display:block}
+.line{background:#fff;border:1px solid var(--line);font-size:17px}
+.line::before{content:"대사";font-size:11px;font-weight:800;color:var(--acc);display:block}
+.cap{background:#f2fbf8;font-size:14.5px;color:#0d6b5c}
+.cap::before{content:"자막";font-size:11px;font-weight:800;color:var(--mint);display:block}
+body.editing .screen,body.editing .line,body.editing .cap{outline:1px dashed transparent}
+body.editing .screen:hover,body.editing .line:hover,body.editing .cap:hover{outline-color:#bbb}
+.dirty::after{content:"수정";position:absolute;top:6px;right:8px;background:var(--red);color:#fff;font-size:11px;font-weight:800;border-radius:5px;padding:0 6px}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:16px}
+#modal.show{display:flex}
+#modal .box{background:#fff;border-radius:14px;max-width:820px;width:100%;padding:16px}
+#exportText{width:100%;height:55vh;font:13px/1.5 monospace;border:1px solid var(--line);border-radius:8px;padding:10px}
+#modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+#modal button{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;background:#1d1d1f;color:#fff}
+/* 단계 탭 */
+.steprow{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;border-top:1px solid #333}
+.steprow .tab{background:#2a2a2d;font-size:13px;padding:5px 10px}.steprow .tab.on{background:var(--acc)}
+.stepnav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 12px;font-size:14px}
+.stepnav a{cursor:pointer;color:var(--blue);font-weight:700}
+.pickbar button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:1px 9px;margin-left:3px;cursor:pointer;font-weight:700}
+.pickbar button.on{background:var(--ink);color:#fff}
+.sum{background:#fff6f2;border-radius:8px;padding:8px 12px;margin:6px 0 10px;font-size:14.5px}
+ul.chk{list-style:none;padding-left:0}ul.chk li{padding:4px 0}ul.chk input{margin-right:8px;transform:scale(1.2)}
+/* 대본 오른쪽 — 다음 단계 패널 */
+aside#pipe{display:none}
+body.wide main{max-width:1440px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+body.wide aside#pipe{display:block;position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+#pipe h2{font-size:17px;margin:0 0 4px}
+#pipe .legend{font-size:12px;color:var(--sub);margin-bottom:8px}
+.ps{border-left:3px solid var(--line);padding:6px 0 8px 10px;margin:0 0 4px}
+.ps.done{border-color:var(--mint)}.ps.now{border-color:var(--acc);background:#fff6f2}.ps.new{border-color:var(--blue)}.ps.ask{border-color:var(--yel)}
+.ps .h{font-weight:800;font-size:14.5px}
+.ps .h small{font-weight:700;font-size:11px;border-radius:5px;padding:0 5px;margin-left:4px;color:#fff;vertical-align:1px}
+.st-done{background:var(--mint)}.st-now{background:var(--acc)}.st-next{background:#888}.st-new{background:var(--blue)}.st-ask{background:#c99500}
+.ps .d{font-size:13px;color:#444;line-height:1.55}
+.ps code{font-size:12px;background:#f3f1ec;border-radius:4px;padding:0 3px;word-break:break-all}
+#pipe .auto{margin-top:10px;font-size:12.5px;background:#eef3fb;border-radius:8px;padding:8px 10px;color:#25406e}
+@media (max-width:1100px){body.wide main{display:block}body.wide aside#pipe{position:static;max-height:none;margin-top:16px}}
+@media (max-width:640px){body{font-size:15px}.line{font-size:16px}th,td{padding:5px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>유튜브 4회차 · 숏클 "한마디면 끝"</h1>
+  <button class="tab on" data-v="plan">기획</button>
+  <button class="tab" data-v="script">대본 A · 실연</button>
+  <button class="tab" data-v="scriptB">대본 B · 딸깍 시대</button>
+  <div class="tools">
+    <span id="saveState">수정 없음</span>
+    <button id="btnEdit" class="on">편집 켜짐</button>
+    <button id="btnExport">수정본 뽑기</button>
+    <button id="btnRevert">원본으로</button>
+  </div>
+</header>
+
+<main>
+<!-- ───────────── 기획 ───────────── -->
+<section class="view on" id="v-plan">
+
+<div class="card">
+  <h2>확정 썸네일</h2>
+  <img class="thumb" src="유튜브4회차_썸네일_시안5.png" alt="썸네일 시안5">
+  <p class="note">레퍼런스: 홍아름 AI 「클로드로 쇼핑쇼츠 자동화!」 15:46 · 40만 회 · 자막 정리 <code>out/유튜브4회차_레퍼런스_자막정리.txt</code></p>
+</div>
+
+<div class="card">
+  <h2>한 줄 방향</h2>
+  <p><b>3회는 과장, 4회는 실연.</b> 숏클로 쇼츠 한 편이 태어나는 걸 <b>처음부터 끝까지 자르지 않고</b> 보여준다.
+  관통 키워드 = <span class="m">한마디</span> (1단계 등장 → 5단계 대안 배제 근거 → 6단계 회수).</p>
+  <h3>썸네일 회수표</h3>
+  <table>
+    <tr><th>썸네일 약속</th><th>대본에서 갚는 곳</th></tr>
+    <tr><td>"쇼핑쇼츠 만들어줘!!" 한마디면 끝</td><td>0:00~0:35 안에 실제로 그 한마디를 치는 화면</td></tr>
+    <tr><td>캡컷 노가다 전혀없음</td><td>2단계 손편집 8칸 → 6-③에서 그 8칸이 하나씩 지워짐 (본편에선 앱 이름·화면 안 씀 → "편집 앱")</td></tr>
+    <tr><td>클로드가 진짜 일냈다</td><td>6-③ 진행 줄 13단계가 스스로 넘어가는 장면</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>레퍼런스에서 가져올 것 / 버릴 것</h2>
+  <table>
+    <tr><th>가져올 것 (40만 회가 증명)</th><th>우리 버전</th></tr>
+    <tr><td>첫 30초 완성 쇼츠 몽타주 + "AI가 만든 것"</td><td>숏클 완성편 몽타주 + "사람 편집 0"</td></tr>
+    <tr><td>돈 구조 한 줄 (조회수 + 판매 수수료 = 두 번)</td><td>그대로</td></tr>
+    <tr><td>반론 선제 차단 ("모델·촬영 필요?")</td><td>"편집 앱 안 열어도 됩니다"</td></tr>
+    <tr><td>"창 여러 개 안 띄웁니다, 클로드 하나"</td><td>그대로 — 우리 메시지와 같다</td></tr>
+    <tr><td>준비물 카운트 "링크 하나 + 사진 몇 장"</td><td><b>"한마디"</b> — 더 적다 = 우리가 이기는 지점</td></tr>
+    <tr><td>단계마다 꿀팁 1개</td><td>6단계 각 구간에 1개</td></tr>
+    <tr><td>아쉬운 점 솔직하게</td><td>6-⑥ — <b>3회와 가장 다른 장면</b></td></tr>
+    <tr><td>정리 → 쓰는 사람 2부류 → CTA</td><td>그대로</td></tr>
+  </table>
+  <p class="note">버릴 것: 다른 도구 이름·가입 링크(레퍼런스는 협찬 홍보) · AI 가짜 모델 생성 시연(우리는 해외 원본 + 대본 + 성우 + 자막) · 요금 설명(금액은 CTA 한 줄만)</p>
+</div>
+
+<div class="card">
+  <h2>7단계 구성 + 시간 (목표 15분)</h2>
+  <p class="note"><span class="tag t-res">🎬 결과물</span>실제 녹화·완성본 <span class="tag t-mg">🟦 모션</span>리모션 <span class="tag t-hand">✏️ 손그림</span>획이 그려지는 설명</p>
+  <table>
+    <tr><th>#</th><th>단계</th><th>시간</th><th>내용</th><th>화면</th></tr>
+    <tr><td>0</td><td>콜드오픈</td><td>0:00–0:35</td><td>완성 쇼츠 몽타주 → "쇼핑쇼츠 만들어줘" 타이핑</td><td><span class="tag t-res">🎬</span></td></tr>
+    <tr><td>1</td><td>문제 인식</td><td>0:35–1:20</td><td>돈 두 번 구조 → 그런데 한 편 손편집에 몇 시간</td><td><span class="tag t-mg">🟦</span><span class="tag t-hand">✏️</span></td></tr>
+    <tr><td>2</td><td>일반 해결책</td><td>1:20–2:20</td><td>손편집 정석 8칸을 진짜로 다 알려줌</td><td><span class="tag t-hand">✏️ 핵심</span></td></tr>
+    <tr><td>3</td><td>한계</td><td>2:20–3:00</td><td>하루 2편 = 한 달 60편 = 8칸 × 60번</td><td><span class="tag t-hand">✏️</span><span class="tag t-mg">🟦</span></td></tr>
+    <tr><td>4</td><td>방향</td><td>3:00–3:20</td><td>편집 앱이 아니라 말로 시키는 비서</td><td><span class="tag t-mg">🟦</span></td></tr>
+    <tr><td>5</td><td>대안 배제</td><td>3:20–4:10</td><td>AI 영상 생성 / 템플릿 앱 / 웹 자동(숏템메이커 포함) — 한마디로 끝나는 건 없었다</td><td><span class="tag t-hand">✏️ 빨간 줄</span></td></tr>
+    <tr><td>6</td><td>숏클 실연</td><td>4:10–13:30</td><td>준비물 → 한마디 → 13단계 → 완성본 → 고치기 → 아쉬운 점 → 결과물 벽</td><td><span class="tag t-res">🎬</span>+<span class="tag t-mg">🟦</span><span class="tag t-hand">✏️</span></td></tr>
+    <tr><td>7</td><td>정리 + CTA</td><td>13:30–15:00</td><td>3줄 정리 → 쓰는 사람 2부류 → CTA</td><td><span class="tag t-mg">🟦</span></td></tr>
+  </table>
+  <p class="note">1~5단계 약 4분 10초(표준은 3분 이내 — 2단계를 녹화하며 줄여 맞춤) · 6단계 약 9분 20초 = 62%(표준: 절반 이상 ✔) · 시간은 전부 가안, 실측 낭독 5.9자/초 기준으로 다시 잰다</p>
+</div>
+
+<div class="card">
+  <h2>화면 3방식</h2>
+  <h3><span class="tag t-res">🎬 결과물</span> 진짜 화면이 증명</h3>
+  <ul>
+    <li>클로드 창 원테이크 녹화: 한마디 → 진행 줄 → 완성 (로딩은 자르지 않고 ×8 표시)</li>
+    <li>완성 쇼츠 재생 — <b>채널명·로고 전부 가림</b>, 연예인 편 제외</li>
+    <li>숏클 지식롱폼 완성본(<code>숏클_GDP착시_v3_최종.mp4</code>, 11분 51초) 한 컷 — "롱폼도 된다"</li>
+  </ul>
+  <h3><span class="tag t-mg">🟦 모션그래픽</span> 2편 리모션 엔진 재사용</h3>
+  <ul>
+    <li><code>remotion-stock/src/shottem2/fx.tsx</code> 키네틱 타이포·줌펀치·카운트업·Screen3D, 색은 <code>theme2.ts</code> 한 곳</li>
+    <li>돈 두 번 구조 · 한 달 60편 시계 · 저울 도식 · 녹화본 3D 틀 · 정리 3줄</li>
+  </ul>
+  <h3><span class="tag t-hand">✏️ 손그림</span> 이번 회차 새 무기 — 과장 톤을 빼는 장치</h3>
+  <ul>
+    <li>2단계 손편집 8칸을 그리며 설명 → 6-③에서 <b>같은 그림</b>에 체크가 하나씩 → 6-④ 완성본 위 동그라미·화살표</li>
+    <li>"손편집"의 '손'과 손그림이 같이 간다</li>
+    <li>만드는 법 (결정 필요): <b>A 리모션 획 그리기 자동(추천)</b> · B 사장님 태블릿 직접 · C AI 손그림 일러스트</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>녹화 목록 (사장님 몫)</h2>
+  <table>
+    <tr><th>#</th><th>녹화</th><th>비고</th></tr>
+    <tr><td>R1</td><td>클로드에 "쇼핑쇼츠 만들어줘" → 완성까지 원테이크</td><td>★핵심 · 고객 계정 화면 · 알림 끔 · 소요 시간 실측</td></tr>
+    <tr><td>R2</td><td>한마디 2종 더 ("○○ 스타일로", 제품 링크)</td><td>입력 부분만</td></tr>
+    <tr><td>R3</td><td>고치기 한마디 2개 → 바뀐 결과</td><td>걸린 시간 실측</td></tr>
+    <tr><td>R4</td><td>숏클 연결(설정) 화면</td><td>"한 번만 하면 된다"</td></tr>
+    <tr><td>R5</td><td>(선택) 손편집 일부 — 앱 이름·로고 가림</td><td>2단계 초시계 실측</td></tr>
+  </table>
+  <p class="note">녹화 때 말하지 않는다 → 대본 확정 후 음성 합성 → <code>tools/shottem2_timing.py</code> 타이밍 → 리모션 자동 조립 (2편과 같은 길)</p>
+</div>
+
+<div class="card">
+  <h2>확인이 필요한 사실 · 금지선</h2>
+  <ul>
+    <li>진행 13단계 이름 — <b>확인함</b> (<code>tools/calcopy/hybrid/flow.py:34</code>, 연예인형·레시피형 기준. 형식마다 다를 수 있음)</li>
+    <li>한 편 소요 시간 (빠른 PC / 느린 PC) — <span class="m">📏</span> 관제 312 "느린 PC 3~4시간" 카드 확인</li>
+    <li>"○○ 스타일로" · 제품 링크 한마디가 실제로 되는지 — R2로 확인</li>
+    <li>고치기 한마디 걸리는 시간 — R3로 확인 (운영원칙 문서상 지금은 줄 하나 고쳐도 여러 단계를 다시 돈다)</li>
+    <li>3회 대본/영상 — <b>아직 못 찾음</b>. 겹치는 문장을 피하려면 필요</li>
+  </ul>
+  <p class="note">금지선: 금액(CTA 한 줄 외) · 경쟁 도구 이름·화면 · 우리 채널명 노출 · 연예인 편 · 지어낸 수치 · 동의 없는 회원작</p>
+</div>
+</section>
+
+<!-- ───────────── 대본 ───────────── -->
+<section class="view" id="v-script">
+<p class="note">대사·화면·자막 아무 곳이나 클릭해서 고치면 자동 저장됩니다. <span class="m">📏</span> = 녹화일 실측으로 바꿀 자리. 다 고치면 <b>수정본 뽑기</b> → 복사해서 Claude에게 주세요.</p>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">0</span><h2>콜드오픈 — 한마디를 먼저 친다</h2><span class="time">0:00–0:35</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-res">🎬</span>숏클 완성 쇼츠 0.5초 컷 연타(채널명 가림) → 16분할 → 검은 화면 → 클로드 창 클로즈업, 커서 깜빡</div>
+    <div class="line">요즘 유튜브에서 이런 쇼핑쇼츠, 정말 많이 보셨죠?<br>지금 보신 영상들, <b>사람이 편집한 거 하나도 없습니다.</b> 자막도, 목소리도, 컷도요.<br>제가 한 건 딱 이것뿐입니다.</div>
+    <div class="screen"><span class="tag t-res">🎬</span>R1 시작 — "쇼핑쇼츠 만들어줘" 한 글자씩 타이핑 → 엔터 (키보드 소리)</div>
+    <div class="line"><b>쇼핑쇼츠 만들어줘.</b> 이 한마디요.<br>오늘은 이 한마디가 완성된 쇼츠가 되기까지, 처음부터 끝까지, 하나도 안 자르고 보여드리겠습니다.</div>
+    <div class="cap">사람 편집 0 / "쇼핑쇼츠 만들어줘" / 처음부터 끝까지, 안 자르고</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">1</span><h2>문제 인식 — 돈은 되는데, 손이 모자란다</h2><span class="time">0:35–1:20</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-mg">🟦</span>영상 아이콘 → 화살표 두 갈래: ①조회수 수익 ②판매 수수료. "×2" 키네틱</div>
+    <div class="line">이런 영상이 왜 이렇게 많아졌을까요? 돈이 되기 때문입니다.<br>보통 영상은 조회수 수익이 끝이죠. 그런데 쇼핑쇼츠는 하나가 더 붙습니다.<br>영상을 보고 누가 제품을 사면, 판매 수수료가 또 들어옵니다. <b>영상 하나로 두 번 버는 구조</b>예요.</div>
+    <div class="screen"><span class="tag t-hand">✏️</span>손그림: 의욕 넘치는 사람 → 편집 화면 앞에서 밤새는 사람(시계 바늘이 빙글)</div>
+    <div class="line">그래서 다들 시작합니다. 그런데 막상 해 보면, 쇼츠 한 편 만드는 데 몇 시간이 걸립니다.<br>왜 그런지, 정석부터 그대로 보여드릴게요.</div>
+    <div class="cap">영상 하나로 두 번 / 그런데 한 편에 몇 시간</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">2</span><h2>일반 해결책 — 손편집 정석 8칸, 진짜로 다 알려준다</h2><span class="time">1:20–2:20</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️ 핵심</span>화이트보드에 칸 8개가 하나씩 그려진다. 칸마다 손그림 아이콘(돋보기·가위·지우개·연필·마이크·자막줄·별·액자). ★이 그림을 6-③에서 그대로 다시 쓴다</div>
+    <div class="line">정석은 이렇습니다. 하나도 숨기지 않고 다 말씀드릴게요.<br>첫째, 터진 영상의 <b>해외 원본</b>을 찾습니다.<br>둘째, 쓸 장면만 자릅니다.<br>셋째, 원본에 박힌 글자를 지웁니다.<br>넷째, 대본을 씁니다. 처음 3초에 붙잡는 한 줄이 제일 중요합니다.<br>다섯째, 성우 목소리를 입힙니다.<br>여섯째, 말에 맞춰 자막을 한 줄씩 얹습니다.<br>일곱째, 효과음과 강조로 꾸밉니다.<br>여덟째, 썸네일을 뽑습니다.</div>
+    <div class="line">이 여덟 칸을 다 채우면, 쇼츠 한 편입니다.<br>이건 맞는 방법입니다. 실제로 이렇게 해서 잘 되는 분들도 많습니다.</div>
+    <div class="cap">원본 찾기 · 자르기 · 글자 지우기 · 대본 · 성우 · 자막 · 꾸미기 · 썸네일</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">3</span><h2>한계 — 방법이 아니라 손이 모자란다</h2><span class="time">2:20–3:00</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>8칸 그림이 복사되며 달력 위로 쌓인다 → <span class="tag t-mg">🟦</span>카운트업 "60편" · "8칸 × 60번"</div>
+    <div class="line">문제는 이걸 <b>매일</b> 해야 한다는 겁니다. 쇼츠는 많이 올려야 터지거든요.<br>하루 두 편이면, 한 달에 육십 편. 여덟 칸을 육십 번 채워야 합니다.<br>그래서 대부분 이렇게 됩니다. 저장해 둔 영상은 쌓이는데, 올린 영상은 몇 개 없죠.<br>방법을 몰라서가 아닙니다. <b>손이 모자라서</b>입니다.</div>
+    <div class="cap">하루 2편 = 한 달 60편 / 방법이 아니라 손이 모자라다</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">4</span><h2>방향 — 편집 앱이 아니라, 말로 시키는 비서</h2><span class="time">3:00–3:20</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-mg">🟦</span>저울: 왼쪽 "더 좋은 편집 앱" ↔ 오른쪽 "말로 시키는 비서" → 오른쪽으로 기운다</div>
+    <div class="line">그래서 필요한 건 더 좋은 편집 앱이 아닙니다.<br>말로 시키면 이 여덟 칸을 대신 채워 주는, <b>비서</b>가 필요합니다.</div>
+    <div class="cap">편집 앱 ✕ → 말로 시키는 비서</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">5</span><h2>대안 배제 — 한마디로 끝나는 건 없었다</h2><span class="time">3:20–4:10</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>손그림 표 3줄(제품 이름·화면 없이 유형만). 줄마다 장점 체크 ✔ → 한계에서 빨간 줄이 그어짐</div>
+    <div class="line">물론 AI 도구는 이미 많습니다. 크게 세 가지죠.<br>첫째, 글을 넣으면 영상을 그려 주는 AI. 원본이 없어도 되지만, 컷마다 얼굴과 제품이 조금씩 바뀝니다. 마음에 들 때까지 다시 뽑는 게 일입니다.<br>둘째, 템플릿 편집 앱. 빠르지만, 장면을 고르고 자르는 건 결국 내 손입니다.<br>셋째, 웹에서 돌아가는 자동 서비스. 저희가 만들었던 숏템메이커도 여기 들어갑니다. 단계는 줄었지만, 버튼을 여러 번 누르고 단계마다 지켜봐야 합니다.</div>
+    <div class="line">셋 다 좋은 도구입니다. 하지만 <b>한마디로 끝나는 건 없었습니다.</b></div>
+    <div class="cap">AI 영상 생성 · 템플릿 앱 · 웹 자동 서비스 → 한마디로 끝나는 건 없었다</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">6</span><h2>숏클 실연 — 한마디가 완성본이 되기까지</h2><span class="time">4:10–13:30</span></div>
+
+  <div class="sub"><h3>6-① 준비물<span class="time">0:30</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>R4 숏클 연결 화면 → <span class="tag t-mg">🟦</span>준비물 카운트: 레퍼런스식 "링크 + 사진 여러 장" 아이콘이 사라지고 말풍선 하나만 남음</div>
+    <div class="line">그래서 만든 게 <b>숏클</b>입니다. 준비물부터 볼게요.<br>클로드, 그리고 숏클 연결. 이건 처음에 한 번만 해 두면 됩니다.<br>그다음부터 필요한 건 딱 하나. <b>한마디</b>입니다.</div>
+    <div class="cap">준비물: 한마디</div>
+  </div>
+
+  <div class="sub"><h3>6-② 한마디 넣기<span class="time">0:40</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>R2 — 세 가지 한마디가 차례로 입력창에 떠올랐다 지워짐</div>
+    <div class="line">넣는 방법은 세 가지입니다.<br>그냥 "쇼핑쇼츠 만들어줘".<br>원하는 느낌이 있으면 "○○ 스타일로 만들어줘". <span class="m">📏 실제 되는 문장 확인</span><br>팔고 싶은 제품이 있으면, 제품 링크를 붙여 주세요.<br>꿀팁 하나. 구체적으로 말할수록 결과가 좋아집니다. 오늘은 제일 짧은 한마디로 가 보겠습니다.</div>
+    <div class="cap">① 쇼핑쇼츠 만들어줘 ② ○○ 스타일로 ③ 제품 링크</div>
+  </div>
+
+  <div class="sub"><h3>6-③ 13단계 따라가기<span class="time">2:30</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>R1 원테이크, 로딩 구간 ×8 표시(자르지 않음) · 화면 오른쪽에 <span class="tag t-hand">✏️</span>2단계의 손편집 8칸 그림 — 해당 단계가 지나갈 때마다 칸에 체크가 그려진다</div>
+    <div class="line">엔터를 누르면, 클로드가 일을 시작합니다. 화면에 한 줄씩 뜨는 게 지금 하고 있는 일입니다.<br>준비 확인. 영상 확인.<br><b>원본 영상 찾기.</b> 아까 손편집 첫 칸이죠. 터진 영상의 진짜 원본을 직접 찾아옵니다.<br>제품 확인. 자료 조사.<br>재료 영상 모으기. 원음 정리.<br><b>대본 쓰기.</b> 그리고 대본 확인. 쓰고 나서 스스로 다시 검사합니다.<br><b>장면 맞추기.</b> 대사 한 줄마다 맞는 장면을 붙입니다.<br>목소리·영상 만들기. 완성본 검사. 그리고, 완성.</div>
+    <div class="line">모두 열세 단계입니다. 아까 손으로 하던 여덟 칸이, 여기서 하나씩 지워지고 있습니다.<br>걸린 시간은 <span class="m">📏 N분</span>. 그동안 저는 <b>아무것도 누르지 않았습니다.</b></div>
+    <div class="cap">3/13 원본 영상 찾기 … 13/13 완성 / 걸린 시간 📏 / 누른 버튼 0</div>
+  </div>
+
+  <div class="sub"><h3>6-④ 완성본 공개<span class="time">1:30</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>완성 쇼츠 풀화면 그대로 재생(소리 포함) → 멈춤 → <span class="tag t-hand">✏️</span>동그라미·화살표로 훅 문장 / 자막 / 지워진 원본 글자 자리 / 썸네일 짚기</div>
+    <div class="line">자, 나왔습니다. 그대로 보시죠.</div>
+    <div class="line">다시 짚어 볼게요. 첫 3초를 붙잡는 한 줄. 말에 맞춰 올라오는 자막. 성우 목소리.<br>원본에 박혀 있던 글자는 지워졌고요. 썸네일까지 같이 나옵니다.<br>편집 앱은, 한 번도 열지 않았습니다.</div>
+    <div class="cap">훅 · 자막 · 성우 · 글자 지움 · 썸네일 — 편집 앱 0번</div>
+  </div>
+
+  <div class="sub"><h3>6-⑤ 한마디로 고치기<span class="time">1:20</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>R3 — "자막 색 바꿔줘" / "두 번째 줄 다시 써줘" 입력 → 바뀐 결과 전·후 나란히</div>
+    <div class="line">마음에 안 드는 곳이 있으면요? 처음부터 다시 만들 필요 없습니다. 그 부분만 말하면 됩니다.<br>"자막 색 바꿔줘." "두 번째 줄 다시 써줘."<br>그러면 고쳐서 다시 나옵니다. <span class="m">📏 걸린 시간</span><br>꿀팁. 고칠 땐 한 번에 하나씩 말하세요.</div>
+    <div class="cap">고칠 것도 한마디로</div>
+  </div>
+
+  <div class="sub"><h3>6-⑥ 솔직한 아쉬운 점 ★3회와 가장 다른 장면<span class="time">1:20</span></h3>
+    <div class="screen"><span class="tag t-hand">✏️</span>손글씨 메모 3장이 차례로 붙는다(과장 효과 없음, 조용한 배경)</div>
+    <div class="line">좋은 것만 말씀드리진 않겠습니다. 써 보면서 아쉬운 점도 솔직하게 말씀드릴게요.<br>첫째, 컴퓨터가 느리면 오래 걸립니다. 느린 PC에서는 한 편에 <span class="m">📏 N시간</span>까지 걸린 적이 있습니다. 대신 그동안 다른 일을 하시면 됩니다.<br>둘째, 원본을 못 찾으면 그 편은 만들지 않습니다. 남이 재편집한 영상을 그대로 가져다 쓰지 않기 때문입니다. 그럴 땐 다른 제품으로 갑니다.<br>셋째, 클로드 구독이 필요합니다. 숏클은 클로드 안에서 돌아가니까요.</div>
+    <div class="cap">① 느린 PC는 오래 걸린다 ② 원본 없으면 안 만든다 ③ 클로드 구독 필요</div>
+  </div>
+
+  <div class="sub"><h3>6-⑦ 결과물 벽<span class="time">1:30</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>숏클 완성편 16분할 벽(채널명 가림, 연예인 편 제외) → 줌아웃 → 지식롱폼 완성본 한 컷</div>
+    <div class="line">이렇게 만든 쇼츠들입니다. 제품도, 대본도, 장면도 편마다 다릅니다.<br>그리고 쇼츠만이 아닙니다. 지금 보시는 이 <b>12분 가까운 롱폼</b>도, 숏클로 만들었습니다.</div>
+    <div class="cap">쇼츠도, 롱폼도</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">7</span><h2>정리 + CTA</h2><span class="time">13:30–15:00</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-mg">🟦</span>정리 3줄 키네틱 → 쓰는 사람 2부류 카드 → CTA</div>
+    <div class="line">정리하겠습니다.<br>쇼핑쇼츠는 영상 하나로 두 번 버는 구조입니다.<br>그런데 손편집 여덟 칸을 매일 채울 수는 없습니다.<br>숏클은 그 여덟 칸을, <b>한마디</b>로 대신합니다.</div>
+    <div class="line">그럼 누가 쓰면 좋을까요.<br>내 제품을 파는 사장님은, 광고 영상을 계속 뽑아 쓰시면 됩니다.<br>부업으로 하시는 분은, 쿠팡 파트너스 링크를 거시면 됩니다.<br>그리고 지금 손편집으로 쇼츠를 만들고 계신 분. 오늘 영상은, 그분들을 위한 영상이었습니다.</div>
+    <div class="line">숏클 신청은 고정 댓글에 있습니다. <span class="m">📏 CTA 문구·조건 확정 필요</span></div>
+    <div class="cap">영상 하나로 두 번 · 손편집 8칸 · 한마디로 끝 / 신청은 고정 댓글</div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 대본 B · 딸깍 시대 ───────────── -->
+<section class="view" id="v-scriptB">
+<div class="card">
+  <h2>대본 B — "원하는 채널 전부, 내 스타일로"</h2>
+  <p><b>핵심 한 줄</b>: 시대는 클로드 딸깍 시대로 가고 있다. <b>내가 원하는 모든 채널을 벤치마킹해서 나만의 스타일로 바꿀 수 있다.</b><br>
+  관통 키워드 = <span class="m">딸깍</span> (오프닝 시대 선언 → 회원 사례의 반대말 → 시연에서 회수)</p>
+  <table>
+    <tr><th>#</th><th>흐름</th><th>설득 7단계</th></tr>
+    <tr><td>0</td><td>"이 영상을 처음 보셨다면 행운입니다" + 딸깍 시대 선언 + 약속</td><td>훅</td></tr>
+    <tr><td>1</td><td>50대 회원 사례 — 고액 강의 두 개, 결국 편집 앱 손편집 강의, 아무것도 못 했다</td><td>문제 인식</td></tr>
+    <tr><td>2</td><td>강의가 말하는 "벤치마킹하라"는 맞다 — 진짜 방법을 다 알려준다</td><td>일반 해결책</td></tr>
+    <tr><td>3</td><td>그런데 벤치마킹을 <b>손으로</b> 따라 만들게 한다 → 솔직해지자</td><td>한계</td></tr>
+    <tr><td>4</td><td>딸깍 시대: 클로드 하나</td><td>방향</td></tr>
+    <tr><td>5</td><td>강의 더 듣기 · 편집 앱 · 외주 → 셋 다 "내 손"</td><td>대안 배제</td></tr>
+    <tr><td>6</td><td>채널 하나 골라 뼈대 복사 → 채널명·템플릿 바꿔 내 채널 → 다채널 → 해외 → 그 회원의 지금</td><td>내 아이템</td></tr>
+    <tr><td>7</td><td>돈·시간 갈아 넣은 프로그램 + 강의 CTA</td><td>CTA</td></tr>
+  </table>
+  <p class="note">⚠ 금지선과 부딪히는 곳은 문장 안에 <span class="m">⚠</span>로 표시하고 바꿔 쓸 문장을 같이 적었다 — 사장님이 고르면 된다.<br>
+  ① 남의 강의 금액(300만 원) = 표준 §4 "금액 언급 금지" ② 편집 앱 이름(캡컷) = "경쟁 제품 이름 금지" ③ 회원 사례 = 본인 동의 필요 ④ "그대로 복사"는 <b>뼈대(구조)만</b>, 영상·글자·채널명은 내 것으로 — 말을 그렇게 해야 시청자도 안전하다</p>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">0</span><h2>훅 — 처음 보셨다면 행운입니다</h2><span class="time">0:00–0:40</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-res">🎬</span>여러 채널 스타일의 숏클 완성 쇼츠가 빠르게 넘어감(채널명 가림) → 클로드 창 "이 채널처럼 만들어줘" 타이핑 → 엔터 → <span class="tag t-mg">🟦</span>"딸깍" 효과음 + 큰 글자</div>
+    <div class="line">이 영상을 처음 보셨다면, 정말 운이 좋으신 겁니다.<br>지금 유튜브는 <b>클로드 딸깍 시대</b>로 넘어가고 있습니다.<br>내가 하고 싶은 채널이 있다면, 어떤 채널이든 벤치마킹해서, <b>나만의 스타일로 바꿔</b> 만들 수 있습니다. 클로드 하나로요.<br>오늘은 그게 진짜인지, 화면으로 다 보여드리겠습니다.</div>
+    <div class="cap">처음 보셨다면 행운 / 클로드 딸깍 시대 / 원하는 채널 → 내 스타일로</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">1</span><h2>회원 사례 — 50대, 고액 강의 두 개, 그리고 아무것도</h2><span class="time">0:40–1:50</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>손그림 인물(얼굴 없음, 실루엣) — 강의 결제 영수증 두 장(금액 가림) → 편집 화면 앞에서 멈춘 손 → 달력이 넘어감. ※본인 동의 받은 사례만 · 이름·얼굴 비공개</div>
+    <div class="line">저희 회원 중에 쉰 살이 넘은 분이 계십니다. 컴퓨터는 이메일 보내는 정도가 전부였던 분이에요.<br>이분이 쇼츠로 부업을 해 보겠다고, 고액 강의를 두 개나 들으셨습니다. <span class="m">⚠ 원문 "300만 원짜리 두 개" — 금액 언급 금지선. 바꿔 쓸 말: "수백만 원짜리 강의를 두 개나"</span><br>그런데 두 강의 모두, 결국 편집 앱으로 손편집하는 강의였습니다. <span class="m">⚠ 원문 "캡컷" — 앱 이름 금지선. 화면·말은 "편집 앱"</span><br>장면 자르고, 자막 하나하나 얹고, 목소리 맞추고. 몇 달이 지나도, 올린 영상은 거의 없었습니다.</div>
+    <div class="line">이분이 게을러서였을까요? 아닙니다.<br>솔직해집시다. <b>이제 그런 시대가 아니잖아요.</b></div>
+    <div class="cap">50대 회원 · 고액 강의 2개 · 결국 손편집 / 솔직해집시다 — 이제 그런 시대가 아니다</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">2</span><h2>일반 해결책 — "터진 채널을 벤치마킹하라"는 맞다</h2><span class="time">1:50–2:40</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>손그림: 잘된 채널 하나 → 돋보기로 뜯어보기 → 뼈대(첫 3초·대본 흐름·장면 순서·자막 위치) 4칸 메모</div>
+    <div class="line">공정하게 말씀드리면, 그 강의들이 말하는 방향은 맞습니다. "잘된 채널을 벤치마킹하라."<br>방법은 이렇습니다. 터진 채널 하나를 고릅니다. 첫 3초에 뭘 하는지, 대본이 어떤 순서로 흘러가는지, 장면을 어떻게 바꾸는지, 자막을 어디에 어떻게 올리는지 뜯어봅니다.<br>그리고 그 <b>뼈대</b>는 따라 하고, 영상과 말은 내 것으로 채웁니다. 이게 정석입니다.</div>
+    <div class="cap">잘된 채널 → 첫 3초 · 대본 흐름 · 장면 순서 · 자막 → 뼈대는 따라, 내용은 내 것</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">3</span><h2>한계 — 벤치마킹을 손으로 시킨다</h2><span class="time">2:40–3:20</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>뼈대 4칸 메모 옆에 손편집 작업이 끝없이 늘어나는 그림 → <span class="tag t-mg">🟦</span>채널 수 1 → 2 → 3, 작업 칸이 곱절로</div>
+    <div class="line">문제는 여기서부터입니다. 뼈대를 알아낸 다음, 그걸 <b>손으로</b> 따라 만들라고 합니다.<br>한 채널도 버거운데, 채널을 두 개, 세 개 하려면요? 손편집이 그대로 두 배, 세 배가 됩니다.<br>그래서 강의를 몇 개를 들어도, 결국 편집 화면 앞에서 멈추는 겁니다.</div>
+    <div class="cap">벤치마킹은 맞다 / 문제는 손으로 따라 만들라는 것</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">4</span><h2>방향 — 딸깍 시대</h2><span class="time">3:20–3:40</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-mg">🟦</span>편집 화면이 접히고 → 클로드 창 하나만 남는다. "딸깍"</div>
+    <div class="line">이제는 클로드 하나면 됩니다. 복잡한 프로그램, 여러 개 켜 놓을 필요 없습니다.<br>뼈대를 뜯어보는 것도, 그걸 내 스타일로 바꿔 만드는 것도, 클로드가 합니다. 이게 <b>딸깍 시대</b>입니다.</div>
+    <div class="cap">클로드 하나 · 딸깍</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">5</span><h2>대안 배제 — 셋 다 결국 "내 손"</h2><span class="time">3:40–4:20</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-hand">✏️</span>손그림 표 3줄 → 줄마다 "결국 내 손" 도장</div>
+    <div class="line">다른 길도 있죠. 강의를 더 듣는다. 결국 손편집을 더 잘하게 될 뿐입니다.<br>편집 앱을 더 좋은 걸로 바꾼다. 빨라지긴 하지만, 누르는 건 여전히 내 손입니다.<br>편집자에게 맡긴다. 채널이 늘수록 비용도 같이 늘어납니다.<br>셋 다 나쁜 길은 아닙니다. 하지만 셋 다 <b>내 손에서 벗어나지 못합니다.</b></div>
+    <div class="line">그래서 저희 방에서는 이런 말이 나옵니다. 아직도 편집 앱 붙잡고 손으로 자르고 있으면, <b>바보 소리 듣는다고요.</b> <span class="m">⚠ 원문 "캡컷 쓰면" — 앱 이름은 빼고 "편집 앱"</span></div>
+    <div class="cap">강의 더 · 앱 바꾸기 · 외주 → 결국 내 손 / 저희 방에선 바보 소리 듣습니다</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">6</span><h2>숏클 — 원하는 채널을 내 스타일로</h2><span class="time">4:20–13:00</span></div>
+
+  <div class="sub"><h3>6-① 돈과 시간을 갈아 넣은 프로그램<span class="time">0:50</span></h3>
+    <div class="screen"><span class="tag t-mg">🟦</span>개발 기록 타임라인(1회 숏템 → 2회 v2 → 3회 숏클 → 오늘) · 커밋 수 카운트업 <span class="m">📏 git log 실측</span></div>
+    <div class="line">숏클은 하루아침에 나온 프로그램이 아닙니다.<br>제가 이미 이 시장에 돈을 많이 쓰고, 시간을 갈아 넣어서 만든 프로그램입니다. 숏템메이커부터 지금까지, 고친 기록만 <span class="m">📏 N건</span>입니다.<br>그 시행착오를 회원분들이 다시 겪지 않게, 전부 이 안에 넣었습니다.</div>
+    <div class="cap">돈과 시간을 갈아 넣은 프로그램 · 고친 기록 📏 N건</div>
+  </div>
+
+  <div class="sub"><h3>6-② 채널 하나 고르기 → 뼈대 복사<span class="time">2:00</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>클로드 창에 "이 채널처럼 만들어줘" + 채널 주소 → 숏클이 그 채널의 뼈대를 정리하는 화면(첫 3초 · 대본 흐름 · 장면 · 자막) → <span class="tag t-hand">✏️</span>2단계 손그림 4칸에 체크가 하나씩 <span class="m">⚠ 핵심 주장 확인 필요 — docs/숏클_운영원칙_2026-11-02.md: "프리셋은 편마다 빌려준다 · 프리셋을 만드는 도구는 내보내지 않는다". 회원이 아무 채널 주소로 새 스타일을 직접 만드는 기능이 지금 없다면 → "숏클에 들어 있는 24개 채널 스타일 중 고른다" 또는 "강의에서 뼈대 뽑는 법을 배운다"로 바꿔야 한다</span></div>
+    <div class="line">해 볼게요. 제가 하고 싶은 채널이 하나 있습니다. 이 채널 주소를 넣고, 이렇게 말합니다. "이 채널처럼 만들어줘."<br>그러면 아까 손으로 뜯어보던 것, 첫 3초, 대본 흐름, 장면 순서, 자막 위치. 이걸 클로드가 정리합니다.<br>잘된 채널의 <b>뼈대를 그대로</b> 가져오는 겁니다.</div>
+    <div class="cap">"이 채널처럼 만들어줘" → 뼈대 4칸 자동</div>
+  </div>
+
+  <div class="sub"><h3>6-③ 채널명 바꾸고 템플릿 바꾸고 → 내 채널<span class="time">2:00</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>같은 뼈대로 만든 쇼츠 2편 나란히: 원래 스타일 ↔ 채널명·글꼴·색·성우·음악을 바꾼 내 스타일 → 완성본 재생</div>
+    <div class="line">여기서 끝이 아닙니다. 똑같이 만들면 그건 남의 채널이죠.<br>채널명을 바꾸고, 템플릿을 바꿉니다. 글꼴, 색, 목소리, 음악. 한마디씩 말하면 바뀝니다.<br><b>뼈대는 잘된 채널 그대로, 옷은 내 것으로.</b> 이게 나만의 스타일입니다.</div>
+    <div class="cap">뼈대는 그대로 · 옷은 내 것으로 — 채널명 · 글꼴 · 색 · 목소리 · 음악</div>
+  </div>
+
+  <div class="sub"><h3>6-④ 다채널 전략<span class="time">1:30</span></h3>
+    <div class="screen"><span class="tag t-mg">🟦</span>채널 카드가 한 장 → 세 장 → 여러 장으로 펼쳐짐(채널명 가림). 형식 6가지 아이콘 · 프리셋 24개 <span class="m">📏 11-04 기준 실측: 형식 6 · 프리셋 24 — 녹화일 다시 셀 것</span></div>
+    <div class="line">그럼 채널을 하나만 할 이유가 없습니다.<br>잘된 채널 하나에서 뼈대를 가져오면, 그 뼈대로 옷만 바꿔 채널을 여러 개 굴릴 수 있습니다.<br>지금 숏클 안에는 이미 형식 여섯 가지, 채널 스타일 스물네 개가 들어 있습니다. 고르기만 하면 됩니다.</div>
+    <div class="cap">하나의 뼈대 → 여러 채널 / 형식 6 · 스타일 24</div>
+  </div>
+
+  <div class="sub"><h3>6-⑤ 해외 진출<span class="time">1:00</span></h3>
+    <div class="screen"><span class="tag t-mg">🟦</span>지구본 → 한국어 쇼츠 한 편이 다른 언어 자막·목소리로 바뀌는 장면 <span class="m">⚠ 미확인 — 숏클에서 다른 언어 완성본이 실제로 나오는지 녹화 전에 확인. 일본어 번역은 숏템 쪽에 개발돼 있으나 병합 전(handoff/일본어꾸미기.md, 10-23)</span></div>
+    <div class="line">그리고 시장은 한국만 있는 게 아닙니다.<br>대본을 쓰는 것도, 목소리를 입히는 것도 클로드가 하니까, 언어만 바꿔 달라고 하면 해외 채널도 같은 방식으로 굴릴 수 있습니다. <span class="m">⚠ 기능 확인 후 문장 확정</span></div>
+    <div class="cap">언어만 바꾸면 해외 채널도</div>
+  </div>
+
+  <div class="sub"><h3>6-⑥ 그 50대 회원의 지금<span class="time">1:20</span></h3>
+    <div class="screen"><span class="tag t-res">🎬</span>회원 완성 쇼츠(본인 동의 · 채널명 가림) → <span class="tag t-hand">✏️</span>1단계의 멈춘 손 그림이 클로드 창 한 줄로 바뀜 <span class="m">📏 회원 동의 · 실제 결과(편 수·기간)</span></div>
+    <div class="line">아까 그 회원분, 지금은 어떻게 하실까요.<br>클로드 창에 한마디 넣고, 다른 일 하십니다. 편집 앱은 지우셨다고 하더라고요. <span class="m">📏 본인 확인한 사실로만</span><br>컴퓨터로 이메일만 보내던 분도 됩니다. 그게 딸깍 시대입니다.</div>
+    <div class="cap">이메일만 보내던 50대 회원 → 클로드 한마디</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="step-no">7</span><h2>CTA — 원하는 채널을 그대로, 내 것으로 만드는 강의</h2><span class="time">13:00–14:30</span></div>
+  <div class="sub">
+    <div class="screen"><span class="tag t-mg">🟦</span>정리 3줄 → 강의 카드 → 고정 댓글 화살표</div>
+    <div class="line">정리하겠습니다. 벤치마킹은 맞습니다. 다만 이제 손으로 하는 시대가 아닙니다.<br>클로드 하나면, 원하는 채널의 뼈대를 가져와 채널명 바꾸고, 템플릿 바꿔서 내 채널로 만들 수 있습니다. 채널 여러 개도, 해외도요.</div>
+    <div class="line">하고 싶은 채널이 있다면, 그 채널을 그대로 가져와 내 것으로 바꿔 만드는 방법까지, 강의에서 처음부터 다 알려드립니다.<br>이 영상을 처음 보셨다면, 행운이라고 말씀드렸죠. 신청은 고정 댓글에 있습니다. <span class="m">📏 강의 이름·조건 확정</span></div>
+    <div class="cap">원하는 채널 → 뼈대 그대로 → 내 스타일로 / 신청은 고정 댓글</div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 단계 탭 (대본 다음) — 내용은 고른 대본에서 자동 계산 ───────────── -->
+<section class="view" id="v-scene" data-step="1"><div class="stepnav"></div>
+  <div class="card"><h2>① 장면 계획</h2>
+    <p class="note">고른 대본의 씬마다 <b>대사 길이 · 화면 방식 · 쓸 소재 · 자막</b>을 한 표로 정한다. 대본을 고치면 이 표도 다시 계산된다(탭을 다시 누르면 갱신).<br>
+    예상 길이 = 대사 글자 수(공백 제외) ÷ <b>5.9자/초</b>(2편 실측 낭독 속도). 소재 번호: R=녹화 · M=모션 부품 · H=손그림 · C=완성본 클립</p>
+    <div class="sum" id="sceneSum"></div>
+    <div id="sceneTable"></div>
+  </div>
+</section>
+
+<section class="view" id="v-rec" data-step="2"><div class="stepnav"></div>
+  <div class="card"><h2>② 녹화 (사장님)</h2>
+    <p class="note">녹화 때 말하지 않는다 · 원테이크 · 로딩은 자르지 않고 편집에서 ×8 표시 · 작은 글자 앞에서 2~3초 멈춤 · 끝나면 <code>바탕화면/유튜브4회차/03_씬별재료/&lt;씬&gt;/녹화/</code>에 넣기만 하면 된다</p>
+    <h3>녹화 전 세팅</h3>
+    <ul class="chk" data-k="rec_setup">
+      <li>윈도우 알림 끄기(방해 금지)</li><li>브라우저 북마크바·확장 아이콘 정리</li><li>창 크기 1920×1080 고정 · 화면 배율 125% 고정</li>
+      <li><b>고객이 보는 계정</b>으로(관리자 메뉴 안 보이게)</li><li>채널명·회원 이름·이메일·키가 화면에 안 나오는지</li>
+      <li>마우스 커서 표시 켜기</li><li>만들 제품·한마디 문장 미리 정하기</li>
+    </ul>
+    <h3>녹화 목록 — 이 대본에서 쓰는 곳 자동 표시</h3>
+    <div id="recTable"></div>
+    <h3>📏 녹화로 채워야 할 칸 — 대본에서 자동 추출</h3>
+    <div id="measureTable"></div>
+    <p class="note">Claude가 이미 잰 값: 숏템·숏클 경로 개발 커밋 <b>3,926건</b>(08-12 이후, 병합 제외) · 숏클 경로만 <b>700건</b>(10-01 이후) · 형식 <b>6</b> · 채널 스타일 <b>24</b>(<code>channel/프리셋.json</code>) · 숏클 롱폼 완성본 <b>11분 51초</b> — 11-04 기준, 녹화일에 다시 잰다</p>
+  </div>
+</section>
+
+<section class="view" id="v-voice" data-step="3"><div class="stepnav"></div>
+  <div class="card"><h2>③ 음성 합성</h2>
+    <table>
+      <tr><th>후보</th><th>근거</th><th>특징</th></tr>
+      <tr><td><b>일레븐랩스 Liam</b> · 안정성 Robust</td><td>대본 표준 §5 (1편)</td><td>블록 통째 생성 — 문단을 쪼개면 목소리가 튄다</td></tr>
+      <tr><td><b>타입캐스트 필재</b> · 1.25배</td><td>숏템 v2 광고(10-13)</td><td>회사 키로 서버 합성 이력 있음(<code>/home/ubuntu/yt_piljae_file.py</code>)</td></tr>
+    </table>
+    <p class="note">규칙: 씬 하나 = 파일 하나(블록 통째) · 파일 이름 <code>02_음성/&lt;씬id&gt;.mp3</code> · 대사의 ⚠·📏 메모는 합성 전에 반드시 지운다(아래 검사가 잡는다)</p>
+    <h3>씬별 합성 목록 + 읽기 검사 (자동)</h3>
+    <div id="voiceTable"></div>
+    <h3>발음 메모</h3>
+    <table><tr><th>글자</th><th>읽는 법</th></tr>
+      <tr><td>숏클</td><td>숏클 (쇼클 ✕)</td></tr><tr><td>클로드</td><td>클로드</td></tr><tr><td>13단계 / 24개 / 6가지</td><td>열세 단계 / 스물네 개 / 여섯 가지 — 대본에 한글로 적는다</td></tr>
+      <tr><td>○○ 스타일</td><td>실제 스타일 이름으로 바꾼 뒤 합성</td></tr></table>
+  </div>
+</section>
+
+<section class="view" id="v-timing" data-step="4"><div class="stepnav"></div>
+  <div class="card"><h2>④ 타이밍</h2>
+    <p class="note">음성이 나오면 문단별 실제 시각을 잰다: <code>py tools/shottem2_timing.py "out/유튜브4회차_씬별/&lt;씬&gt;.txt" "&lt;음성.mp3&gt;" "remotion-stock/src/yt4/timing/&lt;씬&gt;.json"</code> — 무음 앵커 + 글자 수 배분. 앵커가 0개면 무음 임계를 -30dB에서 낮춘다.<br>
+    지금 표는 <b>음성 전 예상치</b>(5.9자/초). 음성이 나오면 실측으로 바뀐다.</p>
+    <div class="sum" id="timingSum"></div>
+    <div id="timingTable"></div>
+  </div>
+</section>
+
+<section class="view" id="v-hand" data-step="5"><div class="stepnav"></div>
+  <div class="card"><h2>⑤ 손그림</h2>
+    <h3>엔진 (새로 만든다 — 방식 A 기준)</h3>
+    <ul>
+      <li>리모션 컴포넌트 <code>HandDraw</code>: SVG 획이 펜으로 그려지듯 나타난다(획마다 길이만큼 dash 줄이기) · 살짝 떨리는 선(손맛) · 획마다 시작 프레임 지정</li>
+      <li>그림은 <b>데이터</b>로 둔다: <code>remotion-stock/src/yt4/hand/H01.json</code> = 획 목록 + 색 + 순서 → 같은 그림을 다른 씬에서 다시 부를 수 있다(손편집 8칸 → 6단계 체크)</li>
+      <li>위에 얹는 부품: <code>Check</code>(체크 그려짐) · <code>Strike</code>(빨간 줄) · <code>Circle</code>/<code>Arrow</code>(동그라미·화살표) · <code>Stamp</code>(도장)</li>
+      <li>스타일: 종이 질감 배경 · 검정 펜 6px · 강조 빨강 #e5484d · 형광 노랑 · 손글씨 글꼴 1종 · 펜 사각 소리(⑦)</li>
+    </ul>
+    <h3>이 대본의 손그림 목록 (자동)</h3>
+    <div id="handTable"></div>
+  </div>
+</section>
+
+<section class="view" id="v-build" data-step="6"><div class="stepnav"></div>
+  <div class="card"><h2>⑥ 씬 조립 (리모션)</h2>
+    <p class="note">2편 엔진 재사용: <code>remotion-stock/src/shottem2/fx.tsx</code>의 부품 — <code>BgFx · Grain · FilmScratch · Scrim · Glitch · ZoomPunch · Flash · Kinetic · Slam · BarCaption · Screen3D · Wipe · CountUp</code> (11-04 실제 export 목록). 색·글꼴은 4회차용 <code>theme</code> 한 곳에서만 정한다.</p>
+    <h3>컴포지션 목록 (자동)</h3>
+    <div id="buildTable"></div>
+    <h3>층 순서 (모든 씬 같음)</h3>
+    <ol><li>배경 <code>BgFx</code> — 검정 단독 금지(2편 규칙)</li><li>본 화면: 녹화 <code>Screen3D</code> / 모션 / 손그림 <code>HandDraw</code></li><li>강조: <code>ZoomPunch · Flash · Circle/Arrow</code></li><li>자막 <code>BarCaption</code> + 스크림 + 3px 외곽선</li><li>질감 <code>Grain</code></li></ol>
+    <p class="note">⚠ 2편 함정: 컴포지션 id는 영문·숫자만(<code>YT4-A-S00</code>) · export 이름에 <code>YT4_</code> 접두사(겹치면 길이가 조용히 틀어진다) · 녹화본 mp4는 git에 안 올린다(<code>public/</code> 아래, .gitignore)</p>
+  </div>
+</section>
+
+<section class="view" id="v-sound" data-step="7"><div class="stepnav"></div>
+  <div class="card"><h2>⑦ 음악 · 효과음</h2>
+    <h3>효과음 — 대본 화면 지시에서 자동으로 찾은 자리</h3>
+    <div id="sfxTable"></div>
+    <h3>가진 효과음 (<code>바탕화면/효과음_샘플/</code>)</h3>
+    <p>01 띠용 · 02 반짝 · 03 스와이프 · 04 붐 · 05 톡 · 06 딩 (+ 00 전체듣기)</p>
+    <p class="note">없는 것: 키보드 타이핑 · 마우스 딸깍 · 펜 사각 → 저작권 무료 소스에서 구한다</p>
+    <h3>배경음 <span class="m">결정 필요</span></h3>
+    <ul><li>저작권 확인된 곡만 — 숏클 롱폼(GDP)은 Kevin MacLeod 곡(CC BY 4.0)을 쓰고 설명란에 출처를 적었다(<code>바탕화면/숏클_GDP착시_설명란크레딧.txt</code>)</li>
+    <li>구간 분위기: 1~3단계 무겁게 → 4단계 전환 → 6단계 경쾌 → 6-⑥ 아쉬운 점은 조용히 → 7단계 마무리</li>
+    <li>대사 아래 -18~-22dB 깔기, 최종 -14 LUFS</li></ul>
+  </div>
+</section>
+
+<section class="view" id="v-render" data-step="8"><div class="stepnav"></div>
+  <div class="card"><h2>⑧ 렌더 · 합본</h2>
+    <table>
+      <tr><th>항목</th><th>값</th></tr>
+      <tr><td>규격</td><td>1920×1080 · 30fps · H.264</td></tr>
+      <tr><td>씬별 렌더</td><td><code>npx remotion render YT4-A-S00 out/yt4/A_S00.mp4</code> … (씬마다)</td></tr>
+      <tr><td>합본</td><td>ffmpeg로 씬 순서대로 이어 붙임 → <code>바탕화면/유튜브4회차/05_완성본/유튜브4회차_완성본.mp4</code></td></tr>
+      <tr><td>소리</td><td>최종 -14 LUFS로 맞춤</td></tr>
+      <tr><td>확인</td><td>완성본 길이 = 타이밍 합계 ±1초 · 씬 경계에 검은 프레임·소리 끊김 없는지</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="view" id="v-qa" data-step="9"><div class="stepnav"></div>
+  <div class="card"><h2>⑨ 완성본 검수 (Claude + 사장님)</h2>
+    <p class="note">체크는 이 브라우저에 저장된다. 완성본을 <b>눈으로 끝까지</b> 본 뒤에만 체크한다.</p>
+    <ul class="chk" data-k="qa">
+      <li>첫 35초 안에 "쇼핑쇼츠 만들어줘" 한마디를 치는 화면이 나온다(썸네일 약속)</li>
+      <li>"캡컷 노가다 전혀없음" 약속 — 손편집 칸이 비워지는 장면이 있다</li>
+      <li>채널명·로고가 보이는 프레임이 없다(완성 쇼츠·녹화 전부)</li>
+      <li>연예인 편이 없다</li>
+      <li>금액은 CTA 외 0번 · 편집 앱 이름 0번 · 다른 도구 이름 0번</li>
+      <li>📏·⚠ 메모가 대사·자막에 하나도 안 남았다</li>
+      <li>자막 오탈자 · 대사와 자막이 다른 곳 없음</li>
+      <li>회원 사례는 본인 동의를 받았고 이름·얼굴이 안 나온다</li>
+      <li>배경음 출처가 설명란에 있다</li>
+      <li>총 길이 · 챕터 시각이 업로드 설명란과 맞다</li>
+    </ul>
+  </div>
+</section>
+
+<section class="view" id="v-upload" data-step="10"><div class="stepnav"></div>
+  <div class="card"><h2>⑩ 업로드 묶음</h2>
+    <h3>제목 후보</h3>
+    <ul><li>클로드가 진짜 일냈다! "쇼핑쇼츠 만들어줘" 한마디면 끝</li><li>캡컷 노가다 끝, 클로드 한마디로 쇼핑쇼츠 완성 (숏클)</li><li>쇼츠 손편집 하는 분들만 보세요 — 클로드 딸깍 시대</li></ul>
+    <p class="note">⚠ 제목·썸네일의 앱 이름(캡컷)은 사장님 결정 — 본편에선 안 쓴다</p>
+    <h3>설명란 (챕터는 타이밍에서 자동)</h3>
+    <textarea id="descText" readonly style="width:100%;height:340px;font:13px/1.5 monospace;border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
+    <h3>고정 댓글</h3>
+    <p>숏클 신청은 여기서 👉 <span class="m">📏 신청 링크</span> — 오늘 영상에서 쓴 한마디 문장도 같이 올려 두었습니다.</p>
+  </div>
+</section>
+</main>
+
+<div id="modal"><div class="box">
+  <h3 style="margin-top:0">수정본 (바뀐 곳만)</h3>
+  <textarea id="exportText" readonly></textarea>
+  <div class="row"><button id="btnCopy">전체 복사</button><button id="btnDownload">.md 내려받기</button><button id="btnCloseModal">닫기</button></div>
+</div></div>
+
+<script>
+/* ───── 단계 탭: 고른 대본(A/B)에서 자동 계산 ───── */
+(function(){
+  var STEPS=[['plan','기획'],['script','대본 A'],['scriptB','대본 B'],['scene','① 장면 계획'],['rec','② 녹화'],['voice','③ 음성'],['timing','④ 타이밍'],['hand','⑤ 손그림'],['build','⑥ 씬 조립'],['sound','⑦ 음악·효과음'],['render','⑧ 렌더'],['qa','⑨ 검수'],['upload','⑩ 업로드']];
+  var CPS=5.9;
+  function pick(){try{return localStorage.getItem('yt4_pick')||'A';}catch(e){return 'A';}}
+  function setPick(v){try{localStorage.setItem('yt4_pick',v);}catch(e){} render();}
+  function clean(el){var c=el.cloneNode(true);c.querySelectorAll('.m,.tag').forEach(function(x){x.remove();});
+    c.querySelectorAll('br').forEach(function(b){b.replaceWith('\n');});return c.textContent.replace(/[ \t]+/g,' ').replace(/\n\s*/g,'\n').trim();}
+  function typeOf(el){var t=el.querySelector('.tag');if(!t)return '';var s=t.textContent;return s.indexOf('🎬')>=0?'🎬':s.indexOf('🟦')>=0?'🟦':s.indexOf('✏️')>=0?'✏️':'';}
+  function scenes(){
+    var root=document.getElementById(pick()==='B'?'v-scriptB':'v-script'),out=[];
+    root.querySelectorAll('.step').forEach(function(st){
+      var no=st.querySelector('.step-no').textContent.trim(),title=st.querySelector('.step-head h2').textContent.trim(),
+          tm=(st.querySelector('.step-head .time')||{}).textContent||'';
+      var subs=[].slice.call(st.querySelectorAll('.sub')),withH=subs.filter(function(s){return s.querySelector('h3');});
+      var groups=withH.length?withH.map(function(s){var h=s.querySelector('h3').cloneNode(true),t=h.querySelector('.time');var tt=t?t.textContent:'';if(t)t.remove();
+            return {id:'S'+no+'-'+(withH.indexOf(s)+1),title:h.textContent.trim(),time:tt,els:[s]};})
+          :[{id:'S'+no,title:title,time:tm,els:subs}];
+      groups.forEach(function(g){
+        var sc={id:pick()+'_'+g.id.replace('-','_'),label:g.id,title:g.title,time:g.time,lines:[],screens:[],caps:[],notes:[]};
+        g.els.forEach(function(s){
+          s.querySelectorAll('.line').forEach(function(l){sc.lines.push(clean(l));l.querySelectorAll('.m').forEach(function(m){sc.notes.push(m.textContent.trim());});});
+          s.querySelectorAll('.screen').forEach(function(l){sc.screens.push({type:typeOf(l),text:clean(l)});l.querySelectorAll('.m').forEach(function(m){sc.notes.push(m.textContent.trim());});});
+          s.querySelectorAll('.cap').forEach(function(l){sc.caps.push(clean(l));});
+        });
+        sc.chars=sc.lines.join('').replace(/\s/g,'').length; sc.sec=sc.chars/CPS; out.push(sc);
+      });
+    });
+    return out;
+  }
+  function fmt(s){s=Math.round(s);return Math.floor(s/60)+':'+('0'+s%60).slice(-2);}
+  function esc(t){return String(t).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  function tbl(head,rows){return '<table><tr>'+head.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('')+'</table>';}
+  // 소재 번호 붙이기
+  function assets(list){
+    var h=0,m=0,c=0;
+    list.forEach(function(sc){sc.assets=sc.screens.map(function(x){
+      var t=x.text,r=t.match(/R\d/g);
+      if(x.type==='🎬'){ if(r)return r.join('·')+' 녹화'; if(/완성|재생|벽|몽타주|넘어감|연타/.test(t))return 'C'+(++c)+' 완성본 클립'; return 'R? 녹화 필요'; }
+      if(x.type==='🟦'){ var k=/카운트|커밋 수|\d+편/.test(t)?'CountUp':/3D|녹화본/.test(t)?'Screen3D':/저울|도식|화살표 두 갈래|타임라인|지구본|카드/.test(t)?'도식(새로)':/딸깍|큰 글자|키네틱|정리/.test(t)?'Kinetic·Slam':'Kinetic';
+        return 'M'+(++m)+' '+k; }
+      if(x.type==='✏️')return 'H'+('0'+(++h)).slice(-2)+' 손그림';
+      return '—';});});
+    return list;
+  }
+  function render(){
+    var list=assets(scenes()),P=pick();
+    document.querySelectorAll('.pickbar b').forEach(function(b){b.textContent='대본 '+P;});
+    document.querySelectorAll('.pickbar button').forEach(function(b){b.classList.toggle('on',b.dataset.p===P);});
+    var tot=list.reduce(function(a,s){return a+s.sec;},0);
+    // ① 장면 계획
+    var cnt={'🎬':0,'🟦':0,'✏️':0};list.forEach(function(s){s.screens.forEach(function(x){if(cnt[x.type]!=null)cnt[x.type]++;});});
+    set('sceneSum','씬 <b>'+list.length+'</b>개 · 대사 예상 <b>'+fmt(tot)+'</b> (목표 15:00) · 화면 🎬 '+cnt['🎬']+' · 🟦 '+cnt['🟦']+' · ✏️ '+cnt['✏️']);
+    set('sceneTable',tbl(['씬','장면','목표','예상','화면 · 소재','자막'],list.map(function(s){
+      return ['<b>'+s.label+'</b>',esc(s.title),s.time,fmt(s.sec)+'<br><small>'+s.chars+'자</small>',
+        s.screens.map(function(x,i){return '<div style="margin-bottom:4px">'+x.type+' <b>'+esc(s.assets[i])+'</b><br><small>'+esc(x.text)+'</small></div>';}).join(''),
+        '<small>'+esc(s.caps.join(' / '))+'</small>'];})));
+    // ② 녹화
+    var R={R1:'클로드에 한마디 → 완성까지 원테이크 (★가장 먼저)',R2:'한마디 다른 종류 입력 부분',R3:'고치기 한마디 → 바뀐 결과',R4:'숏클 연결(설정) 화면',R5:'(선택) 손편집 일부 — 앱 이름·로고 가림'};
+    set('recTable',tbl(['녹화','내용','쓰는 씬'],Object.keys(R).map(function(k){
+      var used=list.filter(function(s){return s.assets.some(function(a){return a.indexOf(k)>=0;});}).map(function(s){return s.label;});
+      return ['<b>'+k+'</b>',R[k],used.join(', ')||'<span class="note">이 대본에선 안 씀</span>'];}).concat(
+      list.filter(function(s){return s.assets.some(function(a){return a.indexOf('R?')===0;});}).map(function(s){return ['<b>R?</b>','번호 없는 녹화 지시 — 정해야 함',s.label];}))));
+    var ms=[];list.forEach(function(s){s.notes.forEach(function(n){ms.push([s.label,esc(n)]);});});
+    set('measureTable',ms.length?tbl(['씬','채울 것 / 확인할 것'],ms):'<p class="note">남은 칸 없음</p>');
+    // ③ 음성
+    set('voiceTable',tbl(['파일','글자','예상','검사'],list.map(function(s){
+      var txt=s.lines.join('\n'),w=[];if(/\d/.test(txt))w.push('숫자 있음 → 한글로');if(/○○/.test(txt))w.push('○○ 채우기');if(s.notes.length)w.push('⚠/📏 메모 '+s.notes.length+'개 지우기');
+      return ['<code>02_음성/'+s.id+'.mp3</code>',s.chars,fmt(s.sec),w.length?'<span style="color:var(--red)">'+w.join(' · ')+'</span>':'✔'];})));
+    // ④ 타이밍
+    function toSec(t){var m=(t||'').match(/(\d+):(\d+)/g);return m?m.map(function(x){var p=x.split(':');return +p[0]*60+ +p[1];}):null;}
+    var acc=0;set('timingSum','예상 합계 <b>'+fmt(tot)+'</b> / 목표 15:00 → '+(tot<900?'<b style="color:var(--red)">'+fmt(900-tot)+' 모자람</b>':'<b>'+fmt(tot-900)+' 넘침</b>'));
+    set('timingTable',tbl(['씬','시작(예상)','길이(예상)','목표 구간'],list.map(function(s){var r=['<b>'+s.label+'</b> '+esc(s.title),fmt(acc),fmt(s.sec),s.time];acc+=s.sec;return r;})));
+    // ⑤ 손그림
+    var hs=[];list.forEach(function(s){s.screens.forEach(function(x,i){if(x.type==='✏️')hs.push(['<b>'+esc(s.assets[i].split(' ')[0])+'</b>',s.label,esc(x.text),/8칸|그림을 6-③|같은 그림|체크/.test(x.text)?'재사용(데이터로)':'']);});});
+    set('handTable',hs.length?tbl(['번호','씬','그릴 것','비고'],hs):'<p class="note">손그림 없음</p>');
+    // ⑥ 조립
+    set('buildTable',tbl(['컴포지션 id','파일','길이(예상)','쓰는 부품'],list.map(function(s){
+      var id='YT4-'+s.id.replace(/_/g,'-');return ['<code>'+id+'</code>','<code>src/yt4/'+s.id+'.tsx</code>',fmt(s.sec)+' · '+Math.round(s.sec*30)+'f',
+        esc(s.assets.map(function(a){return a.replace(/^[A-Z]\d+\s?/,'').replace(/^R\d(·R\d)*\s?/,'녹화 ');}).join(' · '))];})));
+    // ⑦ 효과음
+    var sfx=[];list.forEach(function(s){s.screens.forEach(function(x){var t=x.text,k=[];
+      if(/타이핑|키보드/.test(t))k.push('키보드 타이핑');if(/딸깍|엔터/.test(t))k.push('마우스 딸깍');if(/체크/.test(t))k.push('체크 "톡"(05)');
+      if(/그려|손그림|빨간 줄|도장|메모/.test(t))k.push('펜 사각');if(/플래시|연타|넘어감|전환|접히/.test(t))k.push('스와이프(03)');if(/카운트|공개|나왔/.test(t))k.push('딩(06)·반짝(02)');
+      if(k.length)sfx.push([s.label,k.join(' · '),'<small>'+esc(t.slice(0,60))+'…</small>']);});});
+    set('sfxTable',tbl(['씬','효과음','자리'],sfx));
+    // ⑩ 업로드 설명란
+    acc=0;var ch=list.filter(function(s){return /^S\d$/.test(s.label)||/-1$/.test(s.label);}).length?list.map(function(s){var r=fmt(acc)+' '+s.title.replace(/ — .*/,'');acc+=s.sec;return r;}):[];
+    var d=document.getElementById('descText');if(d)d.value=['클로드에 "쇼핑쇼츠 만들어줘" 한마디 — 숏클로 쇼핑쇼츠 한 편이 완성되는 과정을 처음부터 끝까지 보여드립니다.','','숏클 신청 👉 (📏 신청 링크)','','■ 목차 (음성 실측 후 자동 갱신)'].concat(ch).concat(['','■ 음악 출처','(📏 배경음 확정 후 — 예: Kevin MacLeod (incompetech.com), CC BY 4.0)','','#숏클 #쇼핑쇼츠 #클로드 #쇼츠자동화 #부업']).join('\n');
+  }
+  function set(id,h){var e=document.getElementById(id);if(e)e.innerHTML=h;}
+  // 머리 탭 두 줄째 + 단계 안내 줄
+  var bar=document.querySelector('header'),row=document.createElement('div');row.className='steprow';
+  STEPS.slice(3).forEach(function(s){var b=document.createElement('button');b.className='tab';b.dataset.v=s[0];b.textContent=s[1];row.appendChild(b);});
+  bar.appendChild(row);
+  document.querySelectorAll('section.view[data-step]').forEach(function(sec){
+    var i=STEPS.findIndex(function(s){return 'v-'+s[0]===sec.id;}),prev=STEPS[i-1],next=STEPS[i+1];
+    sec.querySelector('.stepnav').innerHTML=(prev?'<a data-go="'+prev[0]+'">← '+prev[1]+'</a>':'<span></span>')+
+      '<span class="pickbar">기준: <b></b> <button data-p="A">A</button><button data-p="B">B</button></span>'+(next?'<a data-go="'+next[0]+'">'+next[1]+' →</a>':'<span></span>');
+  });
+  document.addEventListener('click',function(e){
+    var g=e.target.closest&&e.target.closest('[data-go]');if(g){document.querySelector('.tab[data-v="'+g.dataset.go+'"]').click();return;}
+    var p=e.target.closest&&e.target.closest('.pickbar button');if(p){setPick(p.dataset.p);return;}
+    var t=e.target.closest&&e.target.closest('.tab');if(t)setTimeout(render,0);
+  });
+  // 체크리스트 저장
+  document.querySelectorAll('ul.chk').forEach(function(ul){var k='yt4_chk_'+ul.dataset.k,st={};try{st=JSON.parse(localStorage.getItem(k)||'{}');}catch(e){}
+    [].forEach.call(ul.children,function(li,i){var c=document.createElement('input');c.type='checkbox';c.checked=!!st[i];c.onchange=function(){st[i]=c.checked;try{localStorage.setItem(k,JSON.stringify(st));}catch(e){}};li.prepend(c);});});
+  window.YT4_render=render; render();
+})();
+</script>
+<script>
+(function(){
+  // 탭
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x===b);});
+      document.querySelectorAll('section.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+b.dataset.v);});
+      try{localStorage.setItem('yt4_tab',b.dataset.v);}catch(e){}
+      window.scrollTo(0,0);
+    };
+  });
+  try{var tv=localStorage.getItem('yt4_tab'); if(tv){var tb=document.querySelector('.tab[data-v="'+tv+'"]'); if(tb) tb.click();}}catch(e){}
+
+  var KEY='yt4_shortcl_script_v1';   // 대본 문장을 Claude가 고치면 v 를 올린다(옛 저장본이 수정을 덮지 않게)
+  var body=document.body, stateEl=document.getElementById('saveState');
+  var targets=[];
+  document.querySelectorAll('#v-script .line, #v-script .screen, #v-script .cap, #v-scriptB .line, #v-scriptB .screen, #v-scriptB .cap').forEach(function(el,i){
+    el.setAttribute('data-ed','ed'+i); el.dataset.orig=el.innerHTML; targets.push(el);
+  });
+  function labelOf(el){
+    var step=el.closest('.step'), sub=el.closest('.sub'), name='';
+    if(step){var h=step.querySelector('.step-head h2'),no=step.querySelector('.step-no');name=(no?no.textContent.trim()+' ':'')+(h?h.textContent.trim():'');}
+    if(sub){var sh=sub.querySelector('h3');if(sh){var t=sh.cloneNode(true);var tm=t.querySelector('.time');if(tm)tm.remove();name+=' › '+t.textContent.trim();}}
+    var kind=el.classList.contains('line')?'대사':el.classList.contains('screen')?'화면':'자막';
+    return {step:(el.closest('#v-scriptB')?'[대본 B] ':'[대본 A] ')+(name||'(머리말)'),kind:kind};
+  }
+  function markDirty(){targets.forEach(function(el){el.classList.toggle('dirty',el.innerHTML!==el.dataset.orig);});}
+  function save(){
+    var data={};targets.forEach(function(el){if(el.innerHTML!==el.dataset.orig)data[el.dataset.ed]=el.innerHTML;});
+    try{localStorage.setItem(KEY,JSON.stringify(data));var n=Object.keys(data).length;stateEl.textContent=n?('저장됨 · 수정 '+n+'곳'):'수정 없음';stateEl.className='saved';}
+    catch(e){stateEl.textContent='저장 실패(브라우저 저장공간)';stateEl.className='';}
+    markDirty();
+  }
+  function load(){
+    var raw=null;try{raw=localStorage.getItem(KEY);}catch(e){}
+    if(!raw){stateEl.textContent='수정 없음';markDirty();return;}
+    var data={};try{data=JSON.parse(raw)||{};}catch(e){}
+    var n=0;targets.forEach(function(el){var v=data[el.dataset.ed];if(v!=null&&v!==el.innerHTML){el.innerHTML=v;n++;}});
+    stateEl.textContent=n?('불러옴 · 수정 '+n+'곳'):'수정 없음';stateEl.className='saved';markDirty();
+  }
+  var editing=true;
+  function setEditing(on){
+    editing=on;targets.forEach(function(el){el.contentEditable=on?'true':'false';});
+    body.classList.toggle('editing',on);
+    var b=document.getElementById('btnEdit');b.textContent=on?'편집 켜짐':'편집 꺼짐';b.classList.toggle('on',on);
+  }
+  document.getElementById('btnEdit').onclick=function(){setEditing(!editing);};
+  var t=null;
+  document.addEventListener('input',function(e){
+    if(!e.target.closest||!e.target.closest('[data-ed]'))return;
+    stateEl.textContent='입력 중…';stateEl.className='';clearTimeout(t);t=setTimeout(save,600);
+  });
+  document.addEventListener('paste',function(e){
+    var host=e.target.closest&&e.target.closest('[data-ed]');if(!host)return;
+    e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text/plain'));
+  });
+  function html2text(h){
+    var d=document.createElement('div');d.innerHTML=h;
+    d.querySelectorAll('.tag').forEach(function(x){x.replaceWith(document.createTextNode('['+x.textContent.trim()+'] '));});
+    d.querySelectorAll('b,strong').forEach(function(b){b.replaceWith(document.createTextNode('**'+b.textContent+'**'));});
+    d.querySelectorAll('br').forEach(function(b){b.replaceWith(document.createTextNode('\n'));});
+    return d.textContent.split('\n').map(function(l){return l.trim();}).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+  }
+  function buildExport(){
+    var out=['# 유튜브 4회차 숏클 대본 — 사장님 수정본','','> 아래는 **바뀐 부분만** 뽑은 것입니다.',''];
+    var count=0,last=null;
+    targets.forEach(function(el){
+      if(el.innerHTML===el.dataset.orig)return;count++;
+      var L=labelOf(el);if(L.step!==last){out.push('','## '+L.step);last=L.step;}
+      out.push('','### ['+L.kind+']','','**바뀐 내용:**',html2text(el.innerHTML),'','<원래>',html2text(el.dataset.orig));
+    });
+    if(!count)return '수정한 곳이 없습니다.\n\n대본 탭에서 대사·화면·자막 아무 곳이나 클릭해서 고치시면 여기에 모입니다.';
+    out.splice(3,0,'총 '+count+'곳 수정');return out.join('\n');
+  }
+  var modal=document.getElementById('modal');
+  document.getElementById('btnExport').onclick=function(){document.getElementById('exportText').value=buildExport();modal.classList.add('show');};
+  document.getElementById('btnCloseModal').onclick=function(){modal.classList.remove('show');};
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.classList.remove('show');});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')modal.classList.remove('show');});
+  document.getElementById('btnCopy').onclick=function(){
+    var ta=document.getElementById('exportText'),self=this;
+    ta.removeAttribute('readonly');ta.select();ta.setSelectionRange(0,999999);
+    var ok=false;try{ok=document.execCommand('copy');}catch(e){}
+    ta.setAttribute('readonly','');
+    if(!ok&&navigator.clipboard)navigator.clipboard.writeText(ta.value);
+    self.textContent='복사됨 ✅';setTimeout(function(){self.textContent='전체 복사';},1600);
+  };
+  document.getElementById('btnDownload').onclick=function(){
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buildExport()],{type:'text/markdown;charset=utf-8'}));
+    a.download='유튜브4회차_숏클_대본_수정본.md';document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);
+  };
+  document.getElementById('btnRevert').onclick=function(){
+    if(!confirm('고친 내용을 전부 버리고 원본으로 되돌립니다. 계속할까요?'))return;
+    targets.forEach(function(el){el.innerHTML=el.dataset.orig;});
+    try{localStorage.removeItem(KEY);}catch(e){}
+    stateEl.textContent='원본으로 되돌림';stateEl.className='';markDirty();
+  };
+  setEditing(true);load();
+})();
+</script>
+</body>
+</html>
