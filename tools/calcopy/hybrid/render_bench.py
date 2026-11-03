@@ -2204,8 +2204,10 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             continue
         n = src_frames(c)                  # 원본에서 쓰는 프레임 — 재는 시각 = 렌더 조각이 실제로 보여 주는 원본 초(늦춘 컷이 다음 샷을 재지 않게)
         crop = cut_crop(c, src, (ww, wh))
-        regs = (M.get("blur") or {}).get(c["src"])
-        near = blur_in(regs, float(c["ss"]) - 0.5, n / FPS + 1.0)      # 지문에는 이 컷 근처 흐림만 — 다른 구간에 칸이 늘었다고 같은 원본 컷을 전부 다시 재지 않는다(관제 304)
+        # 지우는 판(erase)은 흐림 칸을 빼지 않고 잰다 — 흐림에 덮인 글자도 VMake 로 지울 글자다(vmake_clean.gate_text_cuts 와 같은 판단).
+        #   흐림 칸이 글자를 덮으면 '지울 컷 0'이 되어 VMake 를 한 번도 안 불렀다(11-04 김준용: 손으로 넣은 흐림 + vmake_cuts [])
+        regs = None if erase is not None else (M.get("blur") or {}).get(c["src"])
+        near = blur_in(regs, float(c["ss"]) - 0.5, n / FPS + 1.0) if regs else []      # 지문에는 이 컷 근처 흐림만 — 다른 구간에 칸이 늘었다고 같은 원본 컷을 전부 다시 재지 않는다(관제 304)
         key = hashlib.md5(json.dumps([c["src"], src_ident(src)[1:], round(float(c["ss"]), 3), n, crop, near, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
         jobs.append((k, c, src, n, crop, regs, key))
     todo = [j for j in jobs if j[6] not in cache]
