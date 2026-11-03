@@ -1978,6 +1978,65 @@ def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], 
     return r
 
 
+EDGE_MARGIN = 0.15         # 칸 가장자리 글자 — 자를 칸을 사방 15% 넓혀 읽어 칸에 걸쳐 잘린 글줄을 온전히 본다
+
+
+def edge_text_boxes(src: Path, c: dict, n: int, crop, win: tuple[int, int], ocr: dict | None = None) -> list[list[int]]:
+    """(판단 주인 — 칸 가장자리에 걸친 남의 글자) 자를 칸 안만 읽으면 칸 경계에 걸쳐 잘린 글줄(윗동만 남은 자막 띠)은 얇아 문턱 밖이다
+    (11-03 베이글 편 커클랜드 컷: 칸 y160~924 · 원본 자막 띠 y896~1015 — 28px 겹침이 관문을 지나 완성본에 보였다. Jev 뿌리 0.86·해결 0.80).
+    칸을 넓혀 같은 시각·같은 판정(foreign_text)으로 읽고, 높이 비율은 자를 칸 창 기준으로 되돌려(문턱 그대로) 칸과 겹치되 칸 안에 다 들지 않는 상자만.
+    반환 = 원본 px [x0, y0, x1, y1] 목록. 칸이 원본 전체면(걸칠 데가 없다) 빈 목록."""
+    if not crop or src.suffix.lower() in IMG_EXT:
+        return []
+    try:
+        sw, sh = probe(src)[:2]
+    except StageError:                 # 크기를 못 읽는 원본(깨진 파일·시험 가짜) — 가장자리는 못 잰다, 칸 안 판정은 그대로
+        return []
+    x, y, w, h = crop
+    if x <= 0 and y <= 0 and x + w >= sw and y + h >= sh:
+        return []
+    mx, my = round(w * EDGE_MARGIN), round(h * EDGE_MARGIN)
+    big = [max(0, x - mx), max(0, y - my)]
+    big += [min(sw, x + w + mx) - big[0], min(sh, y + h + my) - big[1]]
+    s = win[0] / w
+    win2 = (max(2, round(big[2] * s / 2) * 2), max(2, round(big[3] * s / 2) * 2))
+    m = cut_content_feats(src, c["ss"], n, big, win2, None, (), ocr=ocr)
+    sx, sy, out = big[2] / win2[0], big[3] / win2[1], []
+    for fr in m["text"]:
+        for f in fr:
+            if not foreign_text(dict(f, h=f["h"] * win2[1] / win[1])):
+                continue
+            b = f["box"]
+            X0, Y0, X1, Y1 = big[0] + b[0] * sx, big[1] + b[1] * sy, big[0] + b[2] * sx, big[1] + b[3] * sy
+            hit = min(X1, x + w) - max(X0, x) > 0 and min(Y1, y + h) - max(Y0, y) > 0
+            inside = X0 >= x and Y0 >= y and X1 <= x + w and Y1 <= y + h
+            if hit and not inside:
+                out.append([int(X0), int(Y0), int(X1 + 0.5), int(Y1 + 0.5)])
+    return out
+
+
+def crop_avoiding(crop, boxes, src_wh, pad: int = 6) -> list[int]:
+    """(판단 주인 — 글자 피하는 자를 칸) 걸친 글자 상자 쪽 경계를 글자 밖으로 당기고, 칸 비율·가운데는 그대로(줄인 만큼 반대쪽도 같이)."""
+    x, y, w, h = crop
+    x0, y0, x1, y1 = x, y, x + w, y + h
+    cx, cy = x + w / 2, y + h / 2
+    for X0, Y0, X1, Y1 in boxes:
+        if (X1 - X0) >= (Y1 - Y0):              # 가로 글줄 = 위나 아래에서 당긴다
+            if (Y0 + Y1) / 2 >= cy:
+                y1 = min(y1, Y0 - pad)
+            else:
+                y0 = max(y0, Y1 + pad)
+        elif (X0 + X1) / 2 >= cx:
+            x1 = min(x1, X0 - pad)
+        else:
+            x0 = max(x0, X1 + pad)
+    k = min((x1 - x0) / w, (y1 - y0) / h)       # 비율 그대로 — 더 많이 줄어든 쪽에 맞춘다
+    nw, nh = max(2, int(w * k)), max(2, int(h * k))
+    nx = int(min(max(x0, cx - nw / 2), x1 - nw))
+    ny = int(min(max(y0, cy - nh / 2), y1 - nh))
+    return [max(0, nx), max(0, ny), nw, nh]
+
+
 def ocr_key(src: Path, t: float, crop, win, regs) -> str:
     """글자 상자 캐시 열쇠 = 프레임 열쇠(원본 정체·t·crop·창·흐림) + CONTENT_VER."""
     import hashlib
@@ -2231,10 +2290,18 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 _cache_save(cp, cache, {**rows, key: r})       # 컷마다 저장 — 느린 PC 는 시간 한도에 끊겨 재시도마다 처음부터 쟀다(11-02 회원 수리 채택)
                 if len(ocr) != len(ocr0):
                     _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
+            if "edge" not in r:              # 칸 가장자리에 걸친 남의 글자 — 없는 캐시에만 덧붙인다(이미 읽은 글자 캐시는 그대로)
+                r["edge"] = edge_text_boxes(src, c, n, crop, (ww, wh), ocr)
+                _cache_save(cp, cache, {**rows, key: r})
+                if len(ocr) != len(ocr0):
+                    _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
             rows[key] = r
             nt = sum(1 for x in r["text"] if x)
             nf = sum(1 for x in r["face"] if x)
             where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
+            if r["edge"] and erase is None:
+                bad.append(f"컷 {k} {where}: 자를 칸 가장자리에 남의 박힌 글자가 걸침(원본 px {r['edge']}) — "
+                           f"재료.json 이 행 src_crop 을 {crop_avoiding(crop, r['edge'], probe(src)[:2])} 로(글자 밖·가운데 그대로)")
             if nt >= TEXT_MIN_HITS and erase is not None:
                 erase.append(k)
             elif nt >= TEXT_MIN_HITS and autoblur:
