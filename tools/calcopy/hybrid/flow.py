@@ -2973,7 +2973,8 @@ LINE_FIX_ASK = """너는 대본 작가다. 이미 통과한 대본에서 아래 
 판 규칙: {rules}
 지금 줄(id·tts·caps):
 {lines}
-{extra}JSON 하나: {{"lines": {{"<줄 id>": {{"tts": "…", "caps": ["…", "…"]}}}}}} — 바꾼 줄만 넣는다."""
+{extra}JSON 하나: {{"lines": {{"<줄 id>": {{"tts": "…", "caps": ["…", "…"]}}}}}} — 바꾼 줄만 넣는다.
+제목(화면·썸네일 제목 줄)을 바꾸라는 요청이면 "title_lines" 도 같은 꼴로 넣는다 — 지금 제목: {title}"""
 
 
 def _line_ids(st, probs) -> list[str]:
@@ -2998,18 +2999,23 @@ def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
     st["log"].append(f"줄 고치기({st['tries']['line_fix']}번째, 재료 그대로): {why[:200]}")
     lines = "\n".join(json.dumps({k: l.get(k) for k in ("id", "tts", "caps")}, ensure_ascii=False) for l in rows)
     extra = "고칠 줄은 위에서 가장 적게 골라라(전부 고치지 마라).\n" if pick else ""
-    q = LINE_FIX_ASK.format(why=why[:1200], rules=script_audit.rules_text(st["version"])[:1500], lines=lines, extra=extra)
+    q = LINE_FIX_ASK.format(why=why[:1200], rules=script_audit.rules_text(st["version"])[:1500], lines=lines, extra=extra,
+                            title=json.dumps(S.get("title_lines") or [], ensure_ascii=False))
     return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
 
 
-def _apply_lines(st, got: dict, why: str) -> dict | None:
+def _apply_lines(st, got: dict, why: str, title=None) -> dict | None:
     """(판단 주인 — 대본 줄 바꿔 끼우기: 줄 고치기·회원 고치기·장면 검수가 같이 부른다) 바뀐 줄만 tts·caps 를 바꿔 대본 검사(재료 그대로).
-    통과면 대본(+재료)을 저장하고 계획부터 — 장면 맞추기를 처음부터 다시 하지 않는다. 검사 미달·바꾼 줄 없음이면 None."""
+    title = 새 title_lines(제목도 대본 칸 — #1954 삼현정: 완성 뒤 제목 바꾸기가 줄만 받아 무시됐다). 제목은 컷을 정하지 않아 계획 지문에서 빠진다(render_bench.plan_input_sig)
+    → 제목만 바뀌면 지난 계획을 다시 쓰고 렌더만. 통과면 대본(+재료)을 저장하고 계획부터 — 장면 맞추기를 처음부터 다시 하지 않는다. 검사 미달·바꾼 것 없음이면 None."""
     v = st["version"]
     S = json.loads(json.dumps(st["script"]["S"], ensure_ascii=False))
     M = st["script"]["M"]
     by = {l["id"]: l for l in S.get("lines") or []}
     n = 0
+    if isinstance(title, list) and title and title != S.get("title_lines"):
+        S["title_lines"] = title
+        n += 1
     for lid, x in (got or {}).items():
         if lid in by and isinstance(x, dict) and by[lid].get("kind") != "orig":
             for k in ("tts", "caps"):
@@ -3022,7 +3028,7 @@ def _apply_lines(st, got: dict, why: str) -> dict | None:
         return None
     st["script"]["S"] = S
     st["_plan_fixed"] = True          # 재료는 그대로 — 계획이 엔진 검사를 통과하면 장면 검수를 다시 묻지 않는다(ph_plan_got)
-    st["log"].append(f"{why}: 줄 {sorted(k for k in got if k in by)} 바꿈(재료 그대로)")
+    st["log"].append(f"{why}: 줄 {sorted(k for k in got if k in by)}" + (" · 제목" if S.get("title_lines") is title else "") + " 바꿈(재료 그대로)")
     return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S, f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
 
@@ -3114,7 +3120,7 @@ def ph_line_fix_got(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"line_fix_{v}", ("lines",))
     got = r.get("lines") if isinstance(r.get("lines"), dict) else {}
-    done = _apply_lines(st, got, "줄 고치기")
+    done = _apply_lines(st, got, "줄 고치기", r.get("title_lines"))
     conflict = st.pop("_line_fix_conflict", None)
     if not done:
         st["tries"]["line_fix"] = LINE_FIX_MAX

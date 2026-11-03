@@ -3996,7 +3996,8 @@ def plan_input_sig(S: dict, M: dict, st: dict, tts: bool, locate: bool) -> str:
     import hashlib
     d = Path(M["cand_dir"]) if M.get("cand_dir") else None
     files = sorted(src_ident(p)[1:] + [p.name] for p in d.iterdir() if p.is_file() and p.suffix.lower() != ".json" and not p.name.startswith("_")) if d and d.is_dir() else []
-    body = [S, {k: v for k, v in M.items() if k not in ("blur", "_blur_added")}, st, bool(tts), bool(locate), files, _files_sig(*sorted(Path(__file__).parent.glob("*.py")))]
+    body = [{k: v for k, v in S.items() if k != "title_lines"},      # 제목은 틀·썸네일만 그린다(컷 안 정함, #1954)
+            {k: v for k, v in M.items() if k not in ("blur", "_blur_added")}, st, bool(tts), bool(locate), files, _files_sig(*sorted(Path(__file__).parent.glob("*.py")))]
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
 
 
