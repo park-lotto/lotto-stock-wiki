@@ -275,9 +275,11 @@ def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = 
                 out.append(f"{tag}: crop 은 'face' 또는 [x, y, w, h](원본 픽셀 정수)여야 한다({cr!r})")
             wh = (dims or {}).get(src)
             fh = fit_height(wh[0], wh[1], ar) if wh else 0
-            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < fh * ZOOM_MIN_H:
-                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {fh / max(1, cr[3]):.2f}배 확대 — 확대는 1.0(높이 {int(fh)}px 그대로), "
-                           f"원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22)")
+            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < zoom_floor(c, fh):
+                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {fh / max(1, cr[3]):.2f}배 확대 — "
+                           + (f"회원이 요청한 확대도 높이 {int(zoom_floor(c, fh))}px 이상(화질 하한)" if c.get("zoom") is True else
+                              f"확대는 1.0(높이 {int(fh)}px 그대로), 원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22). "
+                              f"회원이 확대를 요청했으면 그 컷에 \"zoom\": true"))
             if still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr):
                 iw, ih = wh
                 if cr[0] + cr[2] > iw + 2 or cr[1] + cr[3] > ih + 2:
@@ -413,6 +415,16 @@ def alt_scene_fix(S: dict, M: dict, origin_names: set, photos: list) -> list[str
 
 STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
 ZOOM_MIN_H = 0.95     # 영상 컷 crop 높이 하한(원본 높이 비율) = 확대 1.0(사장님 10-22 "확대 과다 → 확대 1.0 + 원본 글 흐림") — 여유 5%
+ZOOM_MEMBER_MIN_H = 0.6   # 회원이 확대를 요청한 컷(재료 컷 zoom: true — #1963 한정수 '박힌 자막은 흐림 말고 확대로') = 1.67배까지
+ZOOM_MIN_PX = 540         # 그래도 원본에서 이 높이(px)보다 적게 잘라 키우지 않는다 — 화질 하한(뭉개짐, 10-22 강주은 첫 컷)
+
+
+def zoom_floor(c: dict, fh: float) -> float:
+    """(판단 주인 — 영상 컷을 얼마나 잘라 키워도 되나) 기본 확대 1.0. 회원이 요청한 컷(zoom: true)은 ZOOM_MEMBER_MIN_H 까지,
+    단 원본 ZOOM_MIN_PX 높이 아래로는 안 된다(사장님 11-02 '회원 요청이 판·검사를 이긴다' — 화질 하한은 진짜 품질 값이라 남긴다)."""
+    if c.get("zoom") is True:
+        return min(fh * ZOOM_MIN_H, max(fh * ZOOM_MEMBER_MIN_H, ZOOM_MIN_PX))
+    return fh * ZOOM_MIN_H
 
 
 def text_blur(boxes: list, a: float, b: float) -> list:
