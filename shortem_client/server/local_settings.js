@@ -150,17 +150,38 @@ export function providerOf(t) {
 }
 
 const VOICE_KEYS = ['voice_id', 'name', 'provider', 'preset_id', 'emotion'];
-// (판단 주인 — 이 프리셋에서 엔진이 쓸 회원 목소리 칸) 회원이 이 프리셋 목소리를 정했으면 그대로. 안 정했고 프리셋 기본 목소리 회사 키가 없으면
-//   회원이 다른 프리셋에서 고른 목소리 중 키가 있는 것(지금 채널 먼저)을 쓴다 — 프리셋 타입캐스트가 남아 '타입캐스트 키'를 요구하던 것(#1186·#953·#1846).
+export const VOICE_SERVICES = ['typecast', 'elevenlabs', 'fish'];      // 목소리 키는 이 셋 중 하나면 된다(사장님 11-03)
+// 프리셋 목소리 회사 키가 없을 때 그 회사 기본 성우(사장님 11-03): 일레븐 = 미나·표현(숏템메이커 typecast_tts.FALLBACK_VOICE) ·
+//   피쉬 = 추천 여자 성우 일반여성2(voice_presets fs-ilban2-stable — 사장님 11-03 지정). 타입캐스트 = 프리셋에 세팅한 성우
+//   (숏템메이커 기본 필재는 숏클에서 금지 — engine/voices 사장님 10-20). 타입캐스트가 아닌 프리셋에서 타입캐스트 키만 있으면 썰템쇼 프리셋 성우(박창수).
+export const DEFAULT_VOICES = {
+  elevenlabs: { voice_id: 'kr-mina-expressive', name: '미나', provider: 'elevenlabs' },
+  fish: { voice_id: 'fs-ilban2-stable', name: '일반여성2', provider: 'fish' },
+  typecast: { voice_id: 'tc_6059dad0b83880769a50502f', name: '박창수', provider: 'typecast' },
+};
+// (판단 주인 — 이 프리셋에서 엔진이 쓸 회원 목소리 칸) 순서:
+//   ① 회원이 이 프리셋 목소리를 정했으면 그대로(설정 화면 소리 단계·shortem_settings — 회원 요청이 이긴다)
+//   ② 프리셋 목소리 회사 키가 있으면 프리셋 목소리(사장님이 세팅한 기본값)
+//   ③ 회원이 다른 프리셋에서 고른 목소리 중 키가 있는 것(지금 채널 먼저) — #1186·#953·#1846
+//   ④ 키가 있는 회사의 기본 성우(DEFAULT_VOICES, 일레븐 → 피쉬 → 타입캐스트) — 처음 세팅에 일레븐 키만 있는 회원(사장님 11-03 '셋 중 하나만')
 //   반환 = 팩 member.tts 에 넣을 칸(빈 객체 = 프리셋 목소리). hasKey(회사) 는 키 파일 판정(engine/voice.keyStatus).
 export function memberVoice(settings, pid, presetTts, hasKey) {
   const ch = (settings || {}).channels || {};
   const own = ((ch[pid] || {}).pack || {}).tts || {};
   if (own.voice_id) return own;
   if (hasKey(providerOf(presetTts) || 'typecast')) return own;
-  const other = [settings.current, ...Object.keys(ch)].filter(p => p && p !== pid)
+  const other = [(settings || {}).current, ...Object.keys(ch)].filter(p => p && p !== pid)
     .map(p => ((ch[p] || {}).pack || {}).tts).find(t => t && t.voice_id && hasKey(providerOf(t)));
-  return other ? { ...Object.fromEntries(VOICE_KEYS.filter(k => other[k] != null).map(k => [k, other[k]])), ...own } : own;
+  const pick = other || DEFAULT_VOICES[['elevenlabs', 'fish', 'typecast'].find(k => hasKey(k))];
+  return pick ? { ...Object.fromEntries(VOICE_KEYS.filter(k => pick[k] != null).map(k => [k, pick[k]])), ...own } : own;
+}
+
+// 시작 점검이 볼 목소리 회사 — 지금 채널에서 엔진이 쓸 목소리(memberVoice)의 회사. 프리셋 목소리를 모르면(채널 안 고름) null = 셋 중 아무 키
+export function voiceServiceFor(settings, presetTts, hasKey) {
+  const pid = (settings || {}).current;
+  if (!pid) return null;
+  const t = memberVoice(settings, pid, presetTts, hasKey);
+  return providerOf(t.voice_id ? t : presetTts) || null;
 }
 
 // 엔진 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩}) — 만들 때마다 지금 설정으로 새로 쓴다(웹에서 바꾼 것도 먼저 받는다)

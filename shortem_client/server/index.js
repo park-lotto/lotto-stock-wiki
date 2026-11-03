@@ -19,7 +19,7 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest, encoderCheck, voiceProvider } from './selftest.js';
+import { selftest, encoderCheck } from './selftest.js';
 import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
@@ -37,7 +37,7 @@ import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
-import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, voiceServiceFor, VOICE_SERVICES } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -152,8 +152,17 @@ export function buildServer(ctx = makeCtx()) {
     const notices = lost.optional.map(([k, pf]) => `${pf.name} 로그인이 안 됐습니다. 제작은 진행합니다. ${pf.name} 주소를 소재로 쓰면 받기가 안 될 수 있어요. 회원에게 그대로 알리고, 원하면 shortem_login(action="open", platform="${k}") 로 다시 시도`);
     const others = otherServers();
     if (others.length) notices.push(OTHERS_NOTICE(others.length));
-    const voiceKey = KEY_SERVICES[voiceProvider(readSettings())] ? voiceProvider(readSettings()) : 'typecast';   // 고른 목소리 회사의 키만 본다(11-02)
-    if (!keyStatus(voiceKey).present) fails.push({ where: '키', why: `${KEY_SERVICES[voiceKey].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[voiceKey].where})`, retry_ok: true });
+    // 목소리 키 = 엔진이 이 채널에서 쓸 목소리(local_settings.memberVoice — 회원 선택 > 프리셋 > 다른 채널 > 키 있는 회사 기본 성우)의 회사.
+    //   채널을 아직 안 골랐으면 셋(타입캐스트·일레븐랩스·피쉬) 중 하나면 된다(사장님 11-03 — 일레븐 키만 있는 회원이 '타입캐스트 키 없음'으로 막혔다)
+    const hasKey = k => keyStatus(k).present;
+    const s0 = readSettings();
+    let presetTts = null;
+    if (s0.current) { try { presetTts = (await packFor(s0.current)).tts; } catch { /* 프리셋 표 못 읽음 = 셋 중 아무 키 */ } }
+    const voiceKey = voiceServiceFor(s0, presetTts, hasKey);
+    if (voiceKey ? !hasKey(voiceKey) : !VOICE_SERVICES.some(hasKey)) {
+      const lab = voiceKey && KEY_SERVICES[voiceKey] ? KEY_SERVICES[voiceKey] : { label: '목소리 키(타입캐스트·일레븐랩스·피쉬오디오 중 하나)', where: VOICE_SERVICES.map(k => KEY_SERVICES[k].where).join(' / ') };
+      fails.push({ where: '키', why: `${lab.label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${lab.where})`, retry_ok: true });
+    }
     // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
     const coupangKey = keyStatus('coupang_access').present && keyStatus('coupang_secret').present;
     const apiTools = [

@@ -3,7 +3,7 @@
 //   판단 주인 local_settings.memberVoice — 엔진 팩 member.tts 를 정하면 엔진(styles.member_frame → need_list·합성)이 그대로 따른다.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { memberVoice, providerOf } from '../server/local_settings.js';
+import { memberVoice, providerOf, voiceServiceFor, DEFAULT_VOICES } from '../server/local_settings.js';
 
 const TC = { voice_id: 'tc_preset', name: '프리셋' };
 const FISH = { voice_id: 'fs-abc', name: '내 피쉬', provider: 'fishaudio', tempo: 1.2 };
@@ -23,6 +23,24 @@ test('회원이 이 프리셋 목소리를 정했으면 그대로 — 빌리지 
   const own = { voice_id: 'tc_mine' };
   const st = { current: 'p_a', channels: { p_a: { pack: { tts: own } }, p_b: { pack: { tts: FISH } } } };
   assert.equal(memberVoice(st, 'p_a', TC, has('fish')), own);
+});
+
+// 사장님 11-03 '시작에서 어떤 tts 를 가져와도 된다 3개 중 1개만 · 기본값은 내가 세팅한 것' — 처음 세팅(고른 목소리 없음)도
+test('처음 세팅에 일레븐 키만 = 미나, 피쉬 키만 = 일반여성2 (프리셋 타입캐스트 키 없음)', () => {
+  const st = { current: 'p_a', channels: { p_a: { pack: {} } } };
+  assert.equal(memberVoice(st, 'p_a', TC, has('elevenlabs')).voice_id, 'kr-mina-expressive');
+  assert.equal(memberVoice(st, 'p_a', TC, has('fish')).voice_id, 'fs-ilban2-stable');
+  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast', 'elevenlabs')), {}, '프리셋 회사 키가 있으면 사장님이 세팅한 프리셋 목소리');
+  assert.equal(DEFAULT_VOICES.typecast.voice_id.startsWith('tc_'), true);
+});
+
+test('시작 점검이 볼 회사 = 엔진이 쓸 목소리 회사(일레븐 키만 있으면 일레븐) · 채널 안 고름 = null(셋 중 아무 키)', () => {
+  const st = { current: 'p_a', channels: { p_a: { pack: {} } } };
+  assert.equal(voiceServiceFor(st, TC, has('elevenlabs')), 'elevenlabs');
+  assert.equal(voiceServiceFor(st, TC, has()), 'typecast', '키가 하나도 없으면 프리셋 회사 키를 요구');
+  assert.equal(voiceServiceFor({ current: null, channels: {} }, null, has('fish')), null);
+  const chose = { current: 'p_a', channels: { p_a: { pack: { tts: { voice_id: 'tc_mine' } } } } };
+  assert.equal(voiceServiceFor(chose, TC, has('elevenlabs')), 'typecast', '회원이 직접 고른 목소리는 그 회사 키를 요구');
 });
 
 test('빌릴 목소리도 키가 없으면 프리셋 그대로(점검이 프리셋 회사 키를 요구)', () => {
