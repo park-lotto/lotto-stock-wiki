@@ -9,6 +9,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "installer/install.ps1": {
+    "at": "2026-11-03 14:55",
+    "card": 311,
+    "track": "숏클설치오류"
+  },
   "out/precision20-ui.js": {
     "at": "2026-09-29 23:55",
     "card": 40,
