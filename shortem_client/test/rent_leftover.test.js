@@ -10,6 +10,7 @@ test('설치본에서 표식 없는 channel 은 반납 찌꺼기 — 개발 PC �
   const eng = path.join(home, 'engine');
   fs.mkdirSync(path.join(eng, 'channel', 'x'), { recursive: true });
   delete process.env.SHORTEM_ENGINE;
+  delete process.env.SHORTEM_DEV_TOOLS;
   const R = await import('../server/preset_rent.js?' + Date.now());
   delete process.env.SHORTEM_INSTALL;
   const dev = await R.rentPreset({ engineRoot: eng, presetId: 'p1' });          // 개발(설치본 아님) = 진짜 파일로 본다

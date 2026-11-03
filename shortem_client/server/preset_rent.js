@@ -10,6 +10,7 @@ import { Lease } from './lease.js';
 import { audit } from './audit.js';
 import { homeDir } from './paths.js';
 import { mineById, myRoot } from './my_presets.js';
+import { devMode } from './tools_paths.js';
 
 const MARK = '.rented';
 let current = null;                                       // 지금 빌린 것(PC 1대 · 작업 하나)
@@ -57,7 +58,8 @@ function wipe(engineRoot) {
   }
 }
 // 설치본 엔진에는 channel·기술 꾸러미가 없다(빌릴 때만 생긴다) — 설치본에서 표식 없는 그 폴더는 반납하다 남은 것이다
-const installedEngine = () => !!process.env.SHORTEM_INSTALL && !process.env.SHORTEM_ENGINE;
+//   개발(엔진 트랙 SHORTEM_ENGINE · 개발 도구 SHORTEM_DEV_TOOLS — 시험도 이것)은 진짜 channel 을 그대로 쓴다
+const installedEngine = () => !!process.env.SHORTEM_INSTALL && !process.env.SHORTEM_ENGINE && !devMode();
 
 // 잠긴 꾸러미(b64: nonce 12 + 암호문 + 태그 16) → zip Buffer. 덧붙임 글(cid|job)이 다르면 풀리지 않는다.
 export function openPack(r) {
