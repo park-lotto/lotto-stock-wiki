@@ -327,7 +327,16 @@ def _txt(s: str) -> dict:
 
 
 class _NeedLink(Exception):
-    """쿠팡 검색이 이 PC 에서 막힘 — 멈추지 않고 회원 Claude 에게 상품 주소를 받는다(ph_link_ask)."""
+    """쿠팡 검색으로 상품을 못 정함 — 멈추지 않고 회원 Claude 에게 상품 주소를 받는다(_link_ask). none=True = 검색은 됐는데 같은·비슷한 제품 0개."""
+    def __init__(self, why: str = "", none: bool = False):
+        super().__init__(why)
+        self.none = none
+
+
+def _no_similar() -> None:
+    """(판단 주인 — 쿠팡 검색에 같은·비슷한 제품이 없음) 편을 끝내지 않고 회원 Claude 가 웹 검색으로 상품 주소를 찾게 한다(_link_ask —
+    한도 LINK_MAX 를 넘으면 회원에게 묻는 멈춤). #1533 이만수: 다섯 자리가 각자 NO_SIMILAR 로 멈춰 '비슷한 제품도 못 찾음 → 편 종료'."""
+    raise _NeedLink("쿠팡 검색 결과에 같은·비슷한 제품 없음", none=True)
 
 
 def _coupang_down(m: dict, key: str = "coupang") -> None:
@@ -339,7 +348,9 @@ def _coupang_down(m: dict, key: str = "coupang") -> None:
 
 
 LINK_MAX = 2       # 상품 주소 받기 한도(편당)
-LINK_ASK = """너는 이 편의 제작자다. 이 PC 에서 쿠팡 검색이 막혔다(회원 쿠팡 파트너스 키가 없어 크롬으로 찾다 차단됨). 쿠팡을 다시 열지 말고:
+LINK_BLOCKED = "이 PC 에서 쿠팡 검색이 막혔다(회원 쿠팡 파트너스 키가 없어 크롬으로 찾다 차단됨)."
+LINK_NONE = "쿠팡 검색 결과에서 같은 제품도, 같은 종류의 비슷한 제품도 못 골랐다(검색어가 좁았을 수 있다)."
+LINK_ASK = """너는 이 편의 제작자다. {situation} 쿠팡을 다시 열지 말고:
 1. 웹 검색(WebSearch)으로 아래 제품의 **쿠팡 상품 주소**(https://www.coupang.com/vp/products/<숫자> …)를 찾는다 — 같은 제품이 먼저, 없으면 같은 종류 가장 비슷한 것.
 2. 회원에게 묻지 않는다 — 찾은 것으로 바로 답한다(회원이 먼저 상품 주소를 줬으면 그것).
 3. 답: 주소·상품 이름(검색 결과에 보이는 그대로)·같은 제품인지(same true/false)·종류(category)·사진 주소(검색 결과에 보이면, 없으면 "").
@@ -347,14 +358,14 @@ LINK_ASK = """너는 이 편의 제작자다. 이 PC 에서 쿠팡 검색이 막
 JSON 하나: {{"url": "https://www.coupang.com/vp/products/…", "name": "…", "same": true, "category": "…", "image": "", "why": "한 줄"}}"""
 
 
-def _link_ask(st: dict, why: str) -> dict:
+def _link_ask(st: dict, why: str, situation: str = LINK_BLOCKED) -> dict:
     st["tries"]["product_link"] = st["tries"].get("product_link", 0) + 1
     if st["tries"]["product_link"] > LINK_MAX:
         raise _Stop("쿠팡 상품을 정하지 못했어요", "다시 시도해 주시면 숏템이 쿠팡 상품을 한 번 더 찾아볼게요", retry=st.get("_asker"), ask_member=True, detail=why)
-    st["log"].append(f"쿠팡 검색 막힘({why[:80]}) → 상품 주소 받기({st['tries']['product_link']}번째)")
+    st["log"].append(f"쿠팡으로 못 정함({why[:80]}) → 상품 주소 받기({st['tries']['product_link']}번째)")
     hint = {"given": st.get("given"), "product_words": (st.get("read") or {}).get("product_words"), "queries": st.get("coupang_qs"),
             "brand": (st.get("product_pick") or {}).get("brand_words"), "subject": (st.get("read") or {}).get("subject_words")}
-    return {"review": [_rv("product_link", LINK_ASK.format(hint=json.dumps({k: v for k, v in hint.items() if v}, ensure_ascii=False)), [], need=("url", "name"))],
+    return {"review": [_rv("product_link", LINK_ASK.format(situation=situation, hint=json.dumps({k: v for k, v in hint.items() if v}, ensure_ascii=False)), [], need=("url", "name"))],
             "then": "link_got"}
 
 
@@ -467,8 +478,8 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         try:
             try:
                 r = h(st, m, rp, user)
-            except _NeedLink as nl:          # 쿠팡 검색 막힘 — 그 자리에서 상품 주소 받기(사장님 10-30)
-                r = _link_ask(st, str(nl))
+            except _NeedLink as nl:          # 쿠팡 검색 막힘·못 찾음 — 그 자리에서 상품 주소 받기(사장님 10-30 · #1533)
+                r = _link_ask(st, str(nl), LINK_NONE if nl.none else LINK_BLOCKED)
         except _Stop as e:
             st.pop("watch_keys", None)          # 멈춤 뒤 다시 시도 = 같은 일을 일부러 다시 낸다(반복 감시 대상 아님)
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
@@ -1637,7 +1648,7 @@ def ph_product_done(st, m, rp, u):
             return w
         if st.get("interest_tried"):
             raise _Stop(*NO_INTEREST, final=True)
-        raise _Stop(*NO_SIMILAR)
+        _no_similar()
     if same.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "이 소재는 여기서 마칠게요", final=True)
     pool = st.get("given_cands") if given else (st.get("named_cands") if mode == "named" else st.get("coupang_cands"))
@@ -1802,7 +1813,7 @@ def ph_best(st, m, rp, u):
         w = _best_wide(st)
         if w:
             return w
-        raise _Stop(*NO_SIMILAR)
+        _no_similar()
     if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
         st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
         return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
@@ -1821,7 +1832,7 @@ def ph_best_rated(st, m, rp, u):
             return w
         if st.get("interest_tried"):
             raise _Stop(*NO_INTEREST, final=True)
-        raise _Stop(*NO_SIMILAR)
+        _no_similar()
     return _cand_sheet_do(st, cands, "best")
 
 
@@ -4679,7 +4690,7 @@ def s_cands(st, m, rp, u):
     _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
-        raise _Stop(*NO_SIMILAR)
+        _no_similar()
     st["coupang_cands"] = cands[:16]
     st["product_shots"] = [st["bench"]["sheet"]] if st["bench"].get("sheet") else []
     st["_cand_kind"] = "shop"
@@ -4697,7 +4708,7 @@ def s_cand_look(st, m, rp, u):
 def s_product_done(st, m, rp, u):
     a = _reply(rp, "shop_same", ("product_id", "name", "category"))
     if not a.get("product_id"):
-        raise _Stop(*NO_SIMILAR)
+        _no_similar()
     if a.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "이 소재는 여기서 마칠게요", final=True)
     st["product"] = {**{k: a.get(k) for k in ("product_id", "name", "why", "category")}, "mode": "exact" if a.get("mode") != "alt" else "alt"}
