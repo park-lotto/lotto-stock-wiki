@@ -30,12 +30,21 @@ export function addMine(out, r, channel = '') {
 //   덮기 전에 원래 것을 한 벌 두고(keepMine), 완성 못 한 흐름 끝에서 임시본을 지우고 되살린다(dropMine). 완성이면 addMine 이 갈아 끼우고 둔 벌만 버린다(forgetKept).
 const SLUG_RE = /^[\w-]{1,60}$/;
 const keepDir = slug => path.join(myRoot(), '_keep', slug);
+//   완성 표식 = list.json(마지막에 쓴다). 복사는 _keep/<slug>.tmp 에서 하고 renameSync 로 확정 — 중간에 끊긴 반쪽은 완성본 자리에 남지 않는다.
+//   표식 없는 _keep/<slug>(옛 판이 남긴 반쪽)·남은 .tmp 는 '이미 둠'으로 보지 않고 지운 뒤 다시 둔다(최종 검토 — 반쪽을 믿으면 dropMine 이 원본을 잃는다).
+const keptOk = slug => fs.existsSync(path.join(keepDir(slug), 'list.json'));
 export function keepMine(slug) {
-  if (!SLUG_RE.test(String(slug || '')) || fs.existsSync(keepDir(slug))) return false;
+  if (!SLUG_RE.test(String(slug || '')) || keptOk(slug)) return false;
+  const tmp = keepDir(slug) + '.tmp';
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.rmSync(keepDir(slug), { recursive: true, force: true });       // 표식 없는 반쪽
   const old = listMine().filter(p => p.slug === slug);
   if (!old.length || !fs.existsSync(path.join(myRoot(), slug))) return false;
-  fs.cpSync(path.join(myRoot(), slug), path.join(keepDir(slug), 'files'), { recursive: true });
-  fs.writeFileSync(path.join(keepDir(slug), 'list.json'), JSON.stringify(old));
+  try {
+    fs.cpSync(path.join(myRoot(), slug), path.join(tmp, 'files'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'list.json'), JSON.stringify(old));
+    fs.renameSync(tmp, keepDir(slug));
+  } catch (e) { fs.rmSync(tmp, { recursive: true, force: true }); throw e; }   // 던진다 — 둘 곳을 못 만들었는데 임시본이 원본을 덮으면 안 된다(부르는 쪽이 멈춘다)
   return true;
 }
 export function forgetKept(slug) { if (SLUG_RE.test(String(slug || ''))) fs.rmSync(keepDir(slug), { recursive: true, force: true }); }
