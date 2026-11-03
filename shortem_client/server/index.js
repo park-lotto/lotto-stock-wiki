@@ -24,7 +24,7 @@ import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
-import { sweep as sweepRented } from './preset_rent.js';
+import { sweep as sweepRented, renting } from './preset_rent.js';
 import { withMine } from './my_presets.js';
 import { registerBenchmark, sweepBench } from './benchmark.js';
 import { retryUpdate, checkUpdate, installDir } from './updater.js';
@@ -422,7 +422,7 @@ async function main() {
   if (process.send) process.on('message', m => { if (m && m.go) process.exit(75); });
   setInterval(async () => {
     try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
-    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
+    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning() && !renting()) process.send({ swap: 1 });   // renting = 이 PC 어느 창이든 빌려 만드는 중(rent.lock) — 다른 창 제작 중 교체 금지(11-03 김효준)
   }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
   startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });

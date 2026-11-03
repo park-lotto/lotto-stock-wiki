@@ -115,7 +115,7 @@ export async function checkUpdate({ force = false } = {}) {
   fs.writeFileSync(path.join(dir, READY_MARK), r.sha256);
   writePending(pend, r.version);
   audit('update_ready', { result: r.version });
-  applyDownloaded(dir, home, activeRuns().length);
+  applyDownloaded(dir, home, activeRuns().length || renting());     // 다른 창 프로그램이 빌려 만드는 중이어도(rent.lock) 엔진을 바꾸지 않는다(11-03 김효준: 제작 중 교체로 빌린 styles 가 사라짐)
   return { update: true, ready: true, version: r.version };
 }
 
