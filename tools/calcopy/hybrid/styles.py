@@ -272,8 +272,17 @@ def member_frame(st: dict) -> dict:
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
         if not F.get("logo") and not F.get("watermark") and not bar_text:      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02) — 머리띠 글자 칸이 있으면 그게 채널명 자리(11-03 김준용 썰템쇼 두 번 찍힘)
             F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
+        wm = brand.get("watermark") if isinstance(brand.get("watermark"), dict) else {}
+        if wm:     # 회원이 정한 워터마크 자리·크기·투명도(#3951 김효준, 범위 = preview_request.watermark_errors) — 틀 워터마크를 덮거나 새로 만든다
+            base = dict(F.get("watermark") or {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name})
+            if "cx" in wm:
+                base.pop("x1", None)      # 오른쪽 맞춤 틀(x1)보다 회원 가운데 자리가 이긴다(render_bench: cx 가 있으면 cx)
+            base.update({k: int(wm[k]) for k in ("cx", "cy", "alpha") if k in wm})
+            F["watermark"] = base
         name_look([F.get("logo"), F.get("watermark")] + [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"],
                   brand.get("name_scale"), brand.get("name_color"))
+        if wm.get("px"):
+            F["watermark"]["px"] = int(wm["px"])     # 회원이 정한 크기는 그대로(채널명 배율 name_scale 을 또 곱하지 않는다)
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)

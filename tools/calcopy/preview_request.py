@@ -221,10 +221,29 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color"),
+EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color", "watermark"),
             "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "orig_text", "post_author"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
+
+
+# (판단 주인 — 회원 워터마크 값이 그릴 수 있는 값인가) #3951 김효준: 채널명 워터마크 자리·크기·투명도. 그림 = render_bench.frame_png(cx·cy·px·alpha).
+#   오른쪽 위는 광고 표시 자리(engine/ad_mark, 사장님 11-02) — 거기엔 못 둔다.
+WATERMARK_RANGE = {"cx": (0, 1080), "cy": (0, 1920), "px": (20, 200), "alpha": (20, 255)}
+
+
+def watermark_errors(wm) -> list:
+    if wm is None:
+        return []
+    if not isinstance(wm, dict) or not wm or set(wm) - set(WATERMARK_RANGE):
+        return [f"워터마크 칸은 {sorted(WATERMARK_RANGE)} 만 받습니다"]
+    err = []
+    for k, (lo, hi) in WATERMARK_RANGE.items():
+        if k in wm and not (isinstance(wm[k], (int, float)) and not isinstance(wm[k], bool) and lo <= wm[k] <= hi):
+            err.append(f"워터마크 {k} 는 {lo}~{hi} 숫자여야 합니다")
+    if not err and wm.get("cx", 540) > 860 and wm.get("cy", 110) < 200:
+        err.append("워터마크는 오른쪽 위(광고 표시 자리)에 둘 수 없습니다")
+    return err
 
 
 def check(pack: dict, cat: dict | None = None) -> list:
@@ -243,6 +262,7 @@ def check(pack: dict, cat: dict | None = None) -> list:
     b, tx, tts, bgm = pack.get("brand") or {}, pack.get("text") or {}, pack.get("tts") or {}, pack.get("bgm") or {}
     if not isinstance(b.get("channel_name", ""), str) or len(b.get("channel_name", "")) > 30 or re.search(r"[<>{}$\\]", b.get("channel_name", "")):
         err.append("채널명은 30자 이하 글자여야 합니다")
+    err += watermark_errors(b.get("watermark"))
     for key in ("title_font", "caption_font"):
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
