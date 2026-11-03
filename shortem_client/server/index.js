@@ -37,7 +37,7 @@ import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
-import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES } from './local_settings.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES, catalog } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -370,7 +370,13 @@ export function buildServer(ctx = makeCtx()) {
     }
     let pack = null;
     try { pack = await packFor(cur); } catch (e) { return reply({ fail: { where: '설정', why: String(e.message || e), fix: '숏템 설치를 확인하세요', retry_ok: true } }); }
-    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm } } });
+    // choices = 저장 검사(엔진 preview_request.check)가 받는 값 목록 그대로 — set 이 '목록 안의 값으로'라고 할 때 볼 곳(11-03 김준용: get 에 없어 자막 등장·강조를 못 골랐다)
+    let cat = {};
+    try { cat = await catalog() || {}; } catch { /* 목록 없이도 지금 설정은 보여 준다 */ }
+    const choices = { fonts: cat.fonts, caption_enter: cat.caption_enter, emphasis: cat.emphasis, caption_mode: cat.caption_mode,
+      bgm: (cat.bgm || []).map(x => (x && (x.id || x.name)) || x).slice(0, 60),
+      shape: { 'text.caption.enter': { kind: '<caption_enter 중 하나>', ms: 300 }, 'text.caption.emphasis': { words: 'auto', style: '<emphasis 중 하나>' }, 'text.post_author': "'' = 작성자 줄 안 그림 · 글 = 고정" } };
+    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm }, choices } });
   });
 
   registerBenchmark(server, reply);   // 고급반 벤치마킹(관제 304)
