@@ -75,6 +75,16 @@ export function resetPack(pid) {
 
 // 서버 '내 채널 설정'(웹 /claude/studio)과 맞추기(관제 266) — 이 PC 설정을 보내고, 서버가 합친 결과(프리셋마다 더 최근 것)를 그대로 쓴다.
 //   합치는 판단은 서버 claude_studio.sync_merge 한 곳. 서버에 못 닿으면(키 없음·오프라인) 이 PC 설정 그대로 간다.
+// 받은 결과에 합칠 때도 서버 sync_merge 와 같은 규칙(프리셋마다 더 최근에 바꾼 쪽) — 서버 저장 관문이 이 PC 칸을 거절하면(서버 엔진이 아직 모르는 칸
+//   caption_scale·name_style 등, 관문 차이) 서버는 옛 칸을 돌려준다. 그대로 쓰면 회원이 방금 바꾼 칸이 사라졌다(#1958 이성택·#1041 최일환 목소리 되돌아감).
+export function mergeChannels(server, local) {
+  const out = { ...(server || {}) };
+  for (const [pid, ch] of Object.entries(local || {})) {
+    if (!out[pid] || Number((ch || {}).updated || 0) > Number(out[pid].updated || 0)) out[pid] = ch;
+  }
+  return out;
+}
+
 let lastSync = 0;
 export async function syncFromServer({ force = false } = {}) {
   if (!force && Date.now() - lastSync < 30000) return { skipped: true };
@@ -86,7 +96,7 @@ export async function syncFromServer({ force = false } = {}) {
   const got = (r && r.settings) || null;
   if (!got || typeof got.channels !== 'object') return { ok: false, why: 'bad_reply' };
   // 꾸민 모양(looks) = 이 PC 저장(saveLook, 사장님 11-01 '로컬로') + 웹에서 꾸민 프리셋은 받아 온다
-  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels,
+  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: mergeChannels(got.channels, s.channels),
     looks: { ...((got.looks && typeof got.looks === 'object') ? got.looks : {}), ...(s.looks || {}) } };   // 이 PC 에서 꾸민 것이 먼저
   if (JSON.stringify(next) !== JSON.stringify(s)) writeSettings(next);
   return { ok: true };
