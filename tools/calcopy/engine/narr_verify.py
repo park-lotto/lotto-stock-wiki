@@ -21,7 +21,7 @@ from pathlib import Path
 
 CACHE = Path("C:/숏템_칼카피/_cache/asr_sm")
 
-KEEP = re.compile(r"[가-힣A-Za-z0-9]")
+KEEP = re.compile(r"[가-힣A-Za-z0-9぀-ヿ一-鿿]")     # 가나·한자도 센다 — 일본어 대본이 0자가 되어 말속도 평균 0 나눗셈(11-03 윤상길 일본어판)
 DIG = "영일이삼사오육칠팔구"
 
 
@@ -294,7 +294,7 @@ def slice_checks(lines, paths):
         rates[l["id"]] = len(N[l["id"]]) / talk
         res[l["id"]] = {"wav": str(p), "dur": d, "heard": " ".join(w["w"] for w in words), "ratio": round(ratio, 3), "issues": iss,
                         "talk": round(talk, 2), "words": words}
-    if rates:
+    if rates and sum(rates.values()) > 0:
         mean = sum(rates.values()) / len(rates)
         for i, r in rates.items():
             res[i]["rate"] = round(r, 2); res[i]["rate_rel"] = round(r / mean, 2)
