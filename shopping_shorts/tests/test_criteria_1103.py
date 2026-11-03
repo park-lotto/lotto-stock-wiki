@@ -28,7 +28,7 @@ def test_script_wording_not_rejected():
 
 
 def test_advisory_gates():
-    assert {"리듬", "꾸밈", "사진", "흐림 면적"} <= RB.ADVISORY_GATES
+    assert {"리듬", "꾸밈", "사진"} <= RB.ADVISORY_GATES and "흐림 면적" not in RB.ADVISORY_GATES      # 화면 품질은 막는다(11-03)
     assert not {"⑤ 컷 길이", "⑦ 멈춤", "④ 글자·얼굴", "넘침"} & RB.ADVISORY_GATES
 
 

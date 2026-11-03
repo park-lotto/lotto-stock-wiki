@@ -3883,7 +3883,7 @@ def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str
     return out
 
 
-ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "흐림 면적", "B13 재사용"}     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
+ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용"}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
