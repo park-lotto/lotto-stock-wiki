@@ -277,3 +277,39 @@ def test_clean_take_counts_only_this_bg_job(tmp_path, monkeypatch):
     monkeypatch.setattr(VC, "sent_check", lambda sent, used: [])
     R.c_clean_take(W, {"version": "v", "wait": 0})
     assert seen["t0"] == _t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(start - 1))
+
+
+def test_vmake_basic_key_remembered(tmp_path, monkeypatch):
+    """고급이 거절된 키는 '기본형'으로 기억 — 다음 편부터 처음부터 기본으로 보내 두 번 보내지 않는다(사장님 11-03)."""
+    import sys
+    import types
+    from tools.calcopy import vmake_clean as VC
+    kf = tmp_path / "vmake"
+    kf.write_text("old:key", encoding="utf-8")
+    monkeypatch.setattr(VC, "MEMBER_KEY_FILE", kf)
+    monkeypatch.setattr(VC, "TIER_FILE", tmp_path / "vmake.tier")
+    monkeypatch.setattr(VC, "paid_off", lambda: False)
+    monkeypatch.delenv("VMAKE_API_KEY", raising=False)
+    sent = []
+
+    def remove_subtitles(src, key, dst, tier="pro", resume_key=""):
+        sent.append(tier)
+        if tier != "basic":
+            raise RuntimeError("Switch to New API")
+        open(dst, "wb").write(b"x")
+    fake = types.SimpleNamespace(remove_subtitles=remove_subtitles)
+    import shopping_shorts
+    monkeypatch.setitem(sys.modules, "shopping_shorts.vmake_client", fake)
+    monkeypatch.setattr(shopping_shorts, "vmake_client", fake, raising=False)      # 앞 시험이 진짜 모듈을 불러 둔 경우(from 패키지 import 는 속성을 본다)
+    monkeypatch.setattr(VC, "swap_in", lambda f, tmp: None)
+    monkeypatch.setattr(VC, "log_entry", lambda *a, **k: None)
+    monkeypatch.setattr(VC, "_sent", lambda f: {})
+    f = tmp_path / "a.mp4"
+    f.write_bytes(b"v")
+    VC.member_clean([f], "old:key", log=lambda *_: None, tier="pro")
+    assert sent == ["pro", "basic"] and VC.key_tier() == "basic"
+    sent.clear()
+    VC.member_clean([f], "old:key", log=lambda *_: None, tier="pro")
+    assert sent == ["basic"]                      # 두 번째 편부터 기본 한 번
+    kf.write_text("new:key", encoding="utf-8")
+    assert VC.key_tier() == ""                    # 키를 바꾸면 다시 고급부터
