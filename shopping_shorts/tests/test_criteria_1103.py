@@ -256,3 +256,24 @@ def test_plan_look_member_material_add(monkeypatch):
     monkeypatch.setattr(F, "_reply", lambda rp, k, need: rp[k])
     out = F.ph_plan_look(st, {}, {"plan_썰템쇼판": {"재료_추가": ["src/ig_member.mp4"]}}, None)
     assert out["then"] == "more_sheets" and {"name": "ig_member.mp4"} in st["material"]["files"]
+
+
+def test_clean_take_counts_only_this_bg_job(tmp_path, monkeypatch):
+    """뒤 지우기 결과를 받을 때 보낸 초는 이번 뒤 작업 시작 뒤 장부만 센다(11-03 정민혜: 앞 호출까지 합쳐 편을 끝냄)."""
+    import json as _j, time as _t
+    from tools.calcopy.hybrid import runner_ops as R
+    from tools.calcopy import vmake_clean as VC
+    W = tmp_path
+    (W / "doc" / "v").mkdir(parents=True)
+    src = W / "src"
+    (src / VC.BG_DIR).mkdir(parents=True)
+    (W / "doc" / "v" / "재료.json").write_text(_j.dumps({"cand_dir": str(src)}), encoding="utf-8")
+    start = _t.time() - 60
+    (src / VC.BG_DIR / "job.json").write_text(_j.dumps({"at": start}), encoding="utf-8")
+    seen = {}
+    monkeypatch.setattr(VC, "bg_take", lambda s, w, tick=None: {"state": "done", "calls": 1, "done": {"a.mp4": [[0, 1]]}})
+    monkeypatch.setattr(VC, "plan_spans", lambda doc, a, b: (src, {}, {"a.mp4": [[0, 1]]}))
+    monkeypatch.setattr(VC, "sent_from_ledger", lambda s, t0: seen.setdefault("t0", t0) and {})
+    monkeypatch.setattr(VC, "sent_check", lambda sent, used: [])
+    R.c_clean_take(W, {"version": "v", "wait": 0})
+    assert seen["t0"] == _t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(start - 1))

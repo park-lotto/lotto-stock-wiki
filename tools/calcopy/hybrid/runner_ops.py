@@ -2328,7 +2328,13 @@ def c_clean_take(W, d):
     from tools.calcopy import vmake_clean as VC
     doc = W / "doc" / d["version"]
     src = Path(jload(doc / "재료.json").get("cand_dir") or (W / "src"))
-    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - VC.BG_MAX))
+    # 보낸 초는 '이번 뒤 작업'이 시작된 때부터 센다 — 지금-30분부터 세면 다시 만들기 전 호출까지 합쳐 '쓰지 않는 구간까지 보냄'으로
+    #   편을 끝냈다(11-03 정민혜: 22:47 첫 호출 13.2초 + 22:52 다시 만들기 뒤 0.97초를 이번 쓰는 구간과 비교). job.json 이 없으면 옛 창
+    try:
+        at = float(jload(src / VC.BG_DIR / "job.json").get("at") or 0) - 1
+    except (OSError, ValueError, TypeError):
+        at = 0
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at if at > 0 else time.time() - VC.BG_MAX))
     r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
     if r.get("state") == "done" and not r.get("error"):
         _, _, used = VC.plan_spans(doc, {}, {})
