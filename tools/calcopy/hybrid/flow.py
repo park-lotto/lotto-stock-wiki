@@ -1905,7 +1905,7 @@ def ph_research_check(st, m, rp, u):
 # ── 5 재료 영상 ───────────────────────────────────────────────────────────
 def _material_n(st) -> tuple:
     """(판단 주인 — 재료 영상 개수) 판 칸 material_n[최소, 최대], 없으면 2~4. 10-31 썰템홈샷: 납품 재료 중앙 9개 vs 회원 3개 — 뿌리는 질문에 박힌 '2~4개'."""
-    a, b = ((_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]
+    a, b = (st.get("material_n") or (_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]   # st 칸 = 형식이 정한 개수(PC제작형 2~9 — PC 썰템쇼 10편)
     return int(a), int(b)
 
 
@@ -5062,4 +5062,11 @@ PHASES = {
     "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"interest_look": "product", "interest_got": "product", "check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+    PHASE_STAGE.setdefault(_k, _v)
+
+# PC제작형(사장님 11-03 '숏클 = PC 제작 라인과 완벽히 같게') — 처리기는 flow_pm.py 한 곳(굽기·검사 = 회원 PC c_pm → engine/preset_make)
+from tools.calcopy.hybrid import flow_pm as _PM  # noqa: E402
+FORMAT_STAGES["PC제작형"] = _PM.STAGES
+FORMAT_PHASES["PC제작형"] = _PM.PHASES
+for _k, _v in _PM.PHASE_STAGE.items():
     PHASE_STAGE.setdefault(_k, _v)

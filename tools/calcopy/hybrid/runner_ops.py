@@ -2446,7 +2446,7 @@ def c_pm(W, d):
     sheets = [rel(W, p) for p in (doc / "plan" / "계획_시트_자동.jpg", doc / "plan" / "계획_접촉시트.jpg", out / "sheet_1s.jpg") if p.exists()]
     rows = jload(out / "run_log.json").get("checks") if make and (out / "run_log.json").exists() else None
     final = out / "final.mp4"
-    return {"ok": r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"final": rel(W, final)} if make and final.exists() else {}),
+    return {"ok": r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"final": str(final)} if make and final.exists() else {}),   # 절대 경로 = c_finish video 와 같은 꼴(회원 앱 keepFinal)
             **({"rows": rows} if rows else {}), "seconds": r.get("seconds")}
 
 
