@@ -492,8 +492,10 @@ def c_bench(W, d):
         from tools.calcopy.engine import yt_fetch as YF
         t0 = time.time()
         head = ["--download-sections", f"*0-{YF.FULL_MAX_SEC}"] if YF.video_seconds(url) > YF.FULL_MAX_SEC else []      # 회원이 준 긴 영상 = 앞부분만
+        # --ignore-errors: 자막은 덤 — 자막 받기가 429(요청 많음)로 실패해도 영상은 받는다(11-03 김근호: 자막 429 로 영상 받기 전에 끝나 3번 멈춤).
+        #   영상이 없으면 아래 mp4 검사가 그대로 잡는다. 자막 받기 판단(yt_fetch 자막 받기)과 같은 꼴
         yt(head + bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
-                                                      "-o", str(bd / "bench.%(ext)s"), url])
+                                                      "--ignore-errors", "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
         YF.fetch_note(mp4, "벤치 1080(재료 될 수 있음)" if d.get("material") else "벤치 720", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
