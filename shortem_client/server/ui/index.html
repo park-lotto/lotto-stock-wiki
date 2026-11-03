@@ -299,7 +299,7 @@ function render(){
   }else if(S.step==='sound'){
     // 목소리 엔진 먼저(사장님 10-25 '일레븐·타입·피쉬오디오 다 선택') → 그 엔진의 목소리. 피쉬오디오는 회원 PC 엔진에 붙이는 중
     const ENG=[['typecast','타입캐스트'],['elevenlabs','일레븐랩스'],['fishaudio','피쉬오디오']];
-    const curEng=S.eng||PROV_ENG[tts.provider]||tts.provider||(cat.voices.find(v=>v.voice_id===tts.voice_id)||{}).engine||'typecast';
+    const curEng=engNow();
     const vs=cat.voices.filter(v=>(v.engine||'typecast')===curEng);
     // 타입캐스트는 숏템처럼 열면 바로 전체 목록(빈 검색) — 추천 묶음이 따로 없다(사장님 10-25 '타입캐스트는 성우추천이 다르게 나옴')
     if(curEng==='typecast'&&S.vresEng!=='typecast'&&!S.vAuto){S.vAuto=true;setTimeout(()=>voiceSearch('typecast',''),0)}
@@ -405,6 +405,9 @@ async function voiceSearch(eng,q,mine){
 // 찾은 성우 한 줄 — 추천 성우와 같은 모양(이름 · 설명 · 듣기 · 단추). 타입캐스트는 톤 대신 그 성우의 감정 단추(누르면 성우+감정을 같이 고른다)
 // 화면 엔진 이름 ↔ 팩 tts.provider(엔진 이름) 한 곳 — 화면은 fishaudio, 엔진·키 표는 fish(11-03: fishaudio 로 저장돼 '모르는 목소리 엔진'·타입캐스트 키 요구)
 const ENG_PROV={fishaudio:'fish'},PROV_ENG={fish:'fishaudio'};
+// (판단 주인 — 지금 보이는 목소리 엔진) 화면 목록·저장·찾기가 모두 이 값 하나를 쓴다. 11-03 윤상길: 화면은 저장된 일레븐 목록을 보여 주는데
+//   저장은 S.eng||'typecast' 라 '미나'가 provider=typecast 로 저장됐다(탭을 안 누르고 고른 경우)
+function engNow(){const tts=pk().tts||{},cat=(S.st&&S.st.catalog)||{};return S.eng||PROV_ENG[tts.provider]||tts.provider||((cat.voices||[]).find(v=>v.voice_id===tts.voice_id)||{}).engine||'typecast'}
 function voiceRow(v,eng,tts,st){
   const on=v.voice_id===tts.voice_id,emo=tts.emotion||'normal';
   const info=[v.model,v.emotions&&v.emotions.length?'감정 '+v.emotions.length+'종':'',v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · ');
@@ -675,10 +678,10 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.style){const r=await api('/api/style',{style:t.dataset.style});if(r.current)preview(null,r.current);await load(true,true);return}
   if(t.dataset.eng){S.eng=t.dataset.eng;S.vres=null;S.vresEng=null;S.vAuto=false;render();return}
   // 성우 찾기 — 숏템 기존 검색 API(서버 /api/typecast/voices · /api/fish/voices)를 그대로 부른다(서버판에서만)
-  if(t.id==='vsearch'){S.vq=($('vq')||{}).value||'';t.disabled=true;t.textContent='찾는 중…';await voiceSearch(S.eng||'typecast',S.vq);return}
-  if(t.id==='tcmine'){await voiceSearch(S.eng||'typecast','',true);return}
+  if(t.id==='vsearch'){S.vq=($('vq')||{}).value||'';t.disabled=true;t.textContent='찾는 중…';await voiceSearch(engNow(),S.vq);return}
+  if(t.id==='tcmine'){await voiceSearch(engNow(),'',true);return}
   if(t.dataset.play){if(S.audio)S.audio.pause();S.audio=new Audio(t.dataset.play);S.audio.play().catch(()=>state('미리듣기를 못 틀었습니다',true));return}
-  if(t.dataset.vp){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:ENG_PROV[eng]||eng,voice_id:t.dataset.vpv,preset_id:t.dataset.vp,name:t.dataset.vpn}}});
+  if(t.dataset.vp){const eng=engNow();const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:ENG_PROV[eng]||eng,voice_id:t.dataset.vpv,preset_id:t.dataset.vp,name:t.dataset.vpn}}});
     if(!r.ok){state('이 성우는 아직 회원 PC 엔진 명단에 없습니다 — 엔진 업데이트 뒤 쓸 수 있습니다',true);return}
     await load(true);return}
   if(t.id==='makego'){const topic=(($('maketopic')||{}).value||'').trim();
@@ -688,7 +691,7 @@ $('board').addEventListener('click',async e=>{
     S.makeSent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});S.pcTried=false;state('Claude 에게 제작을 맡겼습니다');await load(true,true);render();return}
   if(t.dataset.mvdel!==undefined){S.moves.splice(+t.dataset.mvdel,1);render();return}   // 옮긴 것 하나만 되돌리기
   if(t.dataset.emo){const r=await api('/api/save',{preset:S.st.current,patch:{tts:{emotion:t.dataset.emo==='normal'?null:t.dataset.emo}}});if(r.ok===false){await load(true);state(saveErr(r),true);return}await load(true);return}   // 감정 = 팩 tts.emotion(엔진이 받는 한 곳, 타입캐스트만)
-  if(t.dataset.pickv){const eng=S.eng||'typecast';
+  if(t.dataset.pickv){const eng=engNow();
     // 감정 = 팩 tts.emotion — 고를 때만 싣고, 이미 있던 감정을 지울 때만 null(늘 싣으면 감정 칸을 모르는 옛 엔진 묶음이 모든 목소리를 거절한다 — 10-26 실측)
     const tts={provider:ENG_PROV[eng]||eng,voice_id:t.dataset.pickv,name:t.dataset.pickn};const emo=eng==='typecast'&&t.dataset.pemo!=='normal'&&t.dataset.pemo;   // '보통' = 감정 없음
     if(emo)tts.emotion=emo;else if(((S.st.pack||{}).tts||{}).emotion)tts.emotion=null;
