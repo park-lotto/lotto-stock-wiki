@@ -5011,3 +5011,17 @@ PHASES = {
 }
 for _k, _v in {"interest_look": "product", "interest_got": "product", "check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
+
+
+# ── 채널 벤치마킹 2판(관제 319) — 단계 처리기·단계표 주인 = flow_bench, 여기는 등록과 시작만 ──
+from tools.calcopy.hybrid import flow_bench as _FB   # noqa: E402
+
+FORMAT_PHASES["벤치마킹"] = _FB.PHASES
+FORMAT_STAGES["벤치마킹"] = _FB.STAGES
+PHASE_STAGE.update(_FB.PHASE_STAGE)
+
+
+def start_bench(url: str, videos: list, name: str, sid: str, n: int = 3) -> dict:
+    from tools.calcopy.engine.bench_member import slug_of
+    return {"started_at": time.time(), "sid": sid, "fmt": "벤치마킹", "phase": "bm_setup", "tries": {}, "log": [],
+            "bm": {"url": url, "videos_in": list(videos or [])[:5], "name": name[:30], "slug": slug_of(name), "n": max(1, min(int(n), 5))}}
