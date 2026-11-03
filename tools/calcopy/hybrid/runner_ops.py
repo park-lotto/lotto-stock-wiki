@@ -2296,7 +2296,8 @@ def c_clean_text(W, d):
     if d.get("replan"):                     # 재료가 계획 뒤에 바뀌었다(렌더 고치기) — 같은 계획 함수로 시간표만 새로(합성은 캐시)
         from tools.calcopy.hybrid import render_bench
         try:
-            render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)
+            with _Alive(W, "자막 지우기 — 계획 다시"):   # 느린 PC 에서 관문④ 글자 검출이 컷당 수 분 무음 — 감시가 180초로 끊었다(11-03 최성영 4번, 회원 Claude 진단)
+                render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)
         except StageError:
             pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
