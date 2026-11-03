@@ -2436,9 +2436,9 @@ def c_bm_tear(W, d):
         try:
             J, frame, _ = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
             key = BM.shape_key(frame)
-            g = groups.setdefault(key, {"style": "틀" if not groups else f"틀{len(groups) + 1}", "sources": []})
-            P.save(J, frame, ch / "preset" / g["style"], v["id"], f"channel/{d['slug']}/뜯기/{v['id']}/뜯기.json")
-            g["sources"].append(v["id"])
+            style = groups[key]["style"] if key in groups else ("틀" if not groups else f"틀{len(groups) + 1}")   # 이름만 미리 계산 — 저장이 성공한 뒤에만 틀을 확정(유령 틀·번호 소비 방지)
+            P.save(J, frame, ch / "preset" / style, v["id"], f"channel/{d['slug']}/뜯기/{v['id']}/뜯기.json")
+            groups.setdefault(key, {"style": style, "sources": []})["sources"].append(v["id"])
         except Exception as e:  # noqa: BLE001 — 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
             failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
     return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed}
