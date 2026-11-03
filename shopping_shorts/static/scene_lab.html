@@ -2157,6 +2157,9 @@ function restoreServer(msg){
 // 사람이 [💾 지금 저장]을 눌렀을 때만 결과를 알린다 — saveWork 자체는 1.2초마다
 // 자동으로도 불리므로 거기에 알림을 넣으면 4초마다 글자가 뜬다.
 function saveNow(){
+  // 사람이 직접 누른 저장은 준비 단계가 멈춰 있어도 반드시 나간다(관제 316)
+  if (_booting){ console.error('[scene_lab] 준비 단계가 끝나지 않은 채 저장 요청 — 강제로 저장 켬'); _booting = false; }
+  _lastPersistedWork = null;
   saveWork();
   saylo('💾 저장했어요 — 이 PC와 서버 양쪽에 저장됐습니다');
 }
@@ -5465,6 +5468,10 @@ async function boot(){
     el.style.display = '';
     if (DATA.picks.label) el.firstChild.textContent = DATA.picks.label + ' ';
   }
+  // ★준비 과정(복원·필름·효과음·음성)이 중간에 오류로 끊겨도 아래 '저장 켜기'는 반드시 지난다(관제 316).
+  //   예전엔 여기서 예외가 나면 _booting 이 true 로 남아 그 뒤 편집이 서버에도 이 PC에도 저장되지 않았다
+  //   (2026-11-03 박세현님 4ab8d1e0c5d3: 20:10~20:17 편집 중 /apply 0회 — 미리보기만 바뀌고 완성본은 그대로).
+  try{
   // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
   warmVideos();
   if (hasServerEdit()){
@@ -5489,8 +5496,13 @@ async function boot(){
   sfxpRefresh();                   // 미리보기 아래 효과음 | 배경음 패널(관제 086)
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  }catch(e){
+    // 조용히 넘기지 않는다 — 콘솔·화면에 남기고 저장은 켠다(0순위-C: 조용한 실패 금지)
+    console.error('[scene_lab] 준비 과정 오류 — 저장은 계속 켭니다', e);
+    try{ nsay('⚠ 화면 준비 중 일부 오류가 있었어요 — 편집은 계속 저장됩니다'); }catch(_){}
+  }
   // 여기까지는 읽기/복원이다. 이후 사람 조작으로 상태가 달라질 때만 저장한다.
-  _lastPersistedWork = JSON.stringify(snapWork());
+  try{ _lastPersistedWork = JSON.stringify(snapWork()); }catch(e){ _lastPersistedWork = null; }
   _booting = false;
   undoMark();                      // ↩ 되돌리기 기준점 — 이걸 안 박으면 **첫 편집**이 되돌려지지 않는다
   stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
