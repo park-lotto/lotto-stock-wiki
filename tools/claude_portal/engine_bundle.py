@@ -183,7 +183,10 @@ HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", 
     "tools/calcopy/oneshot/__init__.py", "tools/calcopy/oneshot/scene_fit.py",   # 완성본 검사(check)가 부른다 — 10-29 회원 12/13 ModuleNotFoundError
     "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
     "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py", "shopping_shorts/channelkit/vision/facelib_cv.py",
-    "shopping_shorts/script_translate.py", "tools/free_subclean/__init__.py", "tools/free_subclean/engine.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
+    "shopping_shorts/script_translate.py", "tools/free_subclean/__init__.py", "tools/free_subclean/engine.py",       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
+    # PC 제작 라인 손(11-04 관제 265 판단 대기 → HAND, Jev 0.78·위험 0.28): 썰템쇼 PC제작형 회원 실행기 c_pm 이 PC 와 같은 굽기·검사(preset_make·preset_gates)를 부른다.
+    #   노하우(작품·manifest = channel/, 지시서 flow_pm)는 서버·빌림 그대로, 프리셋 만드는 기술(preset_save)은 계속 서버 전용
+    "tools/calcopy/engine/preset_make.py", "tools/calcopy/engine/preset_gates.py")
 
 
 # HAND 가 부르는 hybrid 모듈 중 회원 PC 에 안 보내는 것(서버·개발 전용) — 여기도 HAND 에도 없으면 build 가 멈춘다(관제 265, 10-25:
@@ -194,8 +197,10 @@ HAND_SERVER_ONLY = {
     #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
     # 10-26 엔진 runner_ops 가 preset_make(make_synth — 회원 목소리 합성 한 곳)를 부른다 — preset_* 는 묶음 금지 꼴이라 발행 때 판단(관제 265): HAND 로 옮기거나 make_synth 를 금지 밖 파일로
-    "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
+    # 11-04 preset_gates → quality_gate → styles → preview_request → calcopy_make → topic_find 가 함수 안에서 부르는 서버 수집·접속(회원 PC 갈래 아님)
+    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",
+    "tools/live_admin.py",       # worker.py 가 함수 안에서 부르는 관리자 쿠키(서버 주소·키 이름) — 회원 PC 엔 절대 안 보낸다(검사 SECRETS 에 걸림)
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
     # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
     #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)

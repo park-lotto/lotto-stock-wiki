@@ -15,6 +15,7 @@ import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
 import { reportLive } from './live.js';
+import { audit } from './audit.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
@@ -42,7 +43,17 @@ export function loadFlow(sid) {
 export const isFlowSid = sid => !!loadFlow(sid);
 // 돌고 있는 편이 있으면 엔진을 덮지 않는다. 멈춘 편(cancelled)은 상태 칸이 그대로 남아도 돌지 않는다 — 실행기가 아직 끝나는 중(busy)만 센다
 //   (11-03 강태경: 멈춘 편의 status 가 review 로 남아 벤치마킹이 '지금 만드는 편이 있습니다'로 3번 막힘, 목록은 진행 중 0)
-export const flowBusy = f => !!f && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
+// 이 프로그램이 돌리지 않는 편(busy 아님)은 디스크가 진실이다 — 한 PC 에 Claude 창이 여럿이면 다른 창 프로그램이 같은 편을 끝내도
+//   이 창 메모리에는 옛 상태(execute)가 남는다(11-03 삼현정: 16시 완성한 편을 '실행기 일이 228분째'로 거짓 경보)
+function fresh(f) {
+  if (!f || f.busy) return f;
+  try {
+    const d = JSON.parse(fs.readFileSync(stFile(f.sid), 'utf8'));
+    for (const k of ['status', 'fail', 'cancelled', 'movedAt', 'stage', 'stallSaid']) if (k in d) f[k] = d[k]; else if (k !== 'stallSaid') delete f[k];
+  } catch { /* 파일 없음 = 메모리 그대로 */ }
+  return f;
+}
+export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
 export const anyFlowBusy = () => [...flows.values()].some(flowBusy);
 
 function reqId(tag) {
@@ -163,8 +174,28 @@ async function runWithPreset(f) {
 
 const PUMP_MAX = 200;
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
+// (판단 주인 — 이 편 진행 고리를 누가 돌리나) 한 PC 에 Claude 창이 여럿이면 프로그램도 여럿이다 — 같은 편을 둘이 돌리면
+//   한쪽은 프리셋 빌림이 busy, 다른 쪽은 서버가 'stale 옛 진행 상태'로 거절했다(11-03 김유선). 편마다 잠금(pid) 하나, 살아 있는 남의 잠금이면 돌지 않는다
+const pumpLock = sid => path.join(flowRoot(), sid, 'pump.lock');
+function lockPump(f) {
+  const p = pumpLock(f.sid);
+  try {
+    const o = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (o && o.pid && o.pid !== process.pid) { try { process.kill(o.pid, 0); return false; } catch { /* 주인 죽음 = 비어 있다 */ } }
+  } catch { /* 잠금 없음 */ }
+  try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify({ pid: process.pid, at: Date.now() })); } catch { /* 잠금 없이도 이 창 안 보호는 돈다 */ }
+  return true;
+}
+function unlockPump(f) {
+  try { const o = JSON.parse(fs.readFileSync(pumpLock(f.sid), 'utf8')); if (o.pid === process.pid) fs.rmSync(pumpLock(f.sid), { force: true }); } catch { /* 이미 없음 */ }
+}
 async function pump(f) {
   if (f.busy) return;
+  if (!lockPump(f)) { audit('flow_pump_skip', { result: 'other_window' }); return; }
+  try {          // 다른 창이 진행시킨 편일 수 있다 — 디스크의 최신 상태로 시작한다(옛 next_payload 로 보내지 않게)
+    const d = JSON.parse(fs.readFileSync(stFile(f.sid), 'utf8'));
+    for (const k of Object.keys(d)) if (!['busy', 'running'].includes(k)) f[k] = d[k];
+  } catch { /* 처음 편 = 메모리 그대로 */ }
   f.busy = true;
   let guard = 0;
   try {
@@ -195,7 +226,7 @@ async function pump(f) {
     f.status = 'error';
     save(f);
     reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리 멈춤: ${e instanceof ApiError ? `${e.code} ${e.msg}` : String((e && e.message) || e)}` });   // 서버는 이 편이 끊긴 걸 모른다(관제 304)
-  } finally { f.busy = false; save(f); }
+  } finally { f.busy = false; save(f); unlockPump(f); }
 }
 
 // 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
@@ -207,6 +238,7 @@ function lastMove(f) {
 }
 export function flowStall(now = Date.now()) {
   for (const f of flows.values()) {
+    fresh(f);
     if (f.cancelled || f.fail || !['execute', 'review', 'reject', 'wait_user'].includes(f.status)) continue;
     const moved = lastMove(f);
     if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
@@ -255,14 +287,14 @@ export function recleanFlow(sid) {
   return f;
 }
 
-export async function startFlow({ preset, video, product }) {
+export async function startFlow({ preset, video, product, topic }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
   const ending = [...flows.values()].filter(g => g.cancelled && g.busy);      // 막 멈춘 편 — 빌림을 다 돌려준 뒤 시작한다(#2027)
   if (ending.length) await Promise.race([Promise.all(ending.map(g => settled(g.sid))), new Promise(r => setTimeout(r, 15000).unref())]);
   await refreshCookies();
-  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
+  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}), ...(topic ? { topic: String(topic).slice(0, 300) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다(topic 이 있으면 그 주제로 — 받는 형식만)
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
   flows.set(f.sid, f);
   await absorb(f, res);
@@ -308,6 +340,10 @@ export async function restyleFlow(sid) {
   // 성공 = 오류·배치 충돌 없이 새 완성본을 썼다. 출처 검사(jumps)는 대본·장면이 그대로라 처음 편이 넘은 것과 같아 막지 않는다
   //   (실행기는 jumps 면 오류 문구 없이 ok:false 를 줘 runner.log 엔 render ok 인데 '다시 만들지 못했습니다'였다 — 옛 편은 원본 이름이 없어 거짓으로 걸린다)
   const made = fs.existsSync(fin) && fs.statSync(fin).mtimeMs > before;
+  if (r.ok && !r.error && !r.conflict && !made && fs.existsSync(fin)) {
+    // 실행기 성공 · 완성본 그대로 = 렌더가 바뀐 것이 없다고 본 것(입력 지문 같음) — 실패가 아니다(11-03 강태경·김형관·김준용 '다시 만들지 못했습니다' 3건)
+    return { ok: true, video: fin, title: f.title || '', unchanged: true, note: '바뀐 설정이 영상에 닿지 않아 완성본이 그대로입니다 — 바꾼 칸이 저장됐는지(shortem_settings get) 확인하세요' };
+  }
   if (r.error || r.conflict || !made) {
     const why = r.error || (r.conflict ? '자막·장면 배치가 맞지 않아 겉모습만 바꿔서는 다시 만들 수 없습니다'
       : `다시 만들지 못했습니다(실행기 결과 ${JSON.stringify(r).slice(0, 160)} · 완성본 ${made ? '새로 씀' : '안 바뀜'} · ${v}/render/final.mp4)`);   // 이유 없이 실패만 알리지 않는다(11-03 강태경 render ok 인데 실패)

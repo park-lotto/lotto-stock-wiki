@@ -79,14 +79,22 @@ test('안 끝난 편(f.video = 소재 주소)도 터지지 않고 완성본 폴�
   assert.equal(fs.readFileSync(shelf(sid), 'utf8'), 'new');
 });
 
-test('오류·충돌·완성본을 안 쓴 렌더는 실패로 답한다', async () => {
+test('오류·충돌 렌더는 실패로 답한다', async () => {
   for (const [sid, res, write] of [['d1b2c3d4e5f6', { restyle: { ok: false, error: '관문 멈춤' } }, true],
-    ['d2b2c3d4e5f6', { restyle: { ok: false, conflict: { cause: 'x' } } }, true],
-    ['d3b2c3d4e5f6', { restyle: { ok: true } }, false]]) {
+    ['d2b2c3d4e5f6', { restyle: { ok: false, conflict: { cause: 'x' } } }, true]]) {
     fakeEngine(res, { write });
     flow(sid);
     const r = await makeStep({ step: 'restyle', sid });
     assert.ok(r.fail, `${sid} ${JSON.stringify(r)}`);
     assert.equal(fs.existsSync(shelf(sid)), false);
   }
+});
+
+test('실행기 성공·완성본 그대로(바뀐 것 없음)는 실패가 아니라 안내와 함께 완성(11-03 강태경·김형관·김준용)', async () => {
+  const sid = 'd3b2c3d4e5f6';
+  fakeEngine({ restyle: { ok: true } }, { write: false });
+  flow(sid);
+  const r = await makeStep({ step: 'restyle', sid });
+  assert.ok(!r.fail, JSON.stringify(r));
+  assert.ok((r.hints || []).some(h => /그대로/.test(h)), JSON.stringify(r.hints));
 });

@@ -26,9 +26,48 @@ def speakable(text: str) -> str:
     return t or text
 
 
+def _kept_index(text: str) -> list[int] | None:
+    """speakable(text) 의 글자마다 원문 text 의 자리(None = speakable 이 원문을 그대로 돌려준 경우가 아닌데 자리를 못 맞춤)."""
+    gone = set()
+    for m in JAMO.finditer(text):
+        gone.update(range(m.start(), m.end()))
+    kept = [i for i in range(len(text)) if i not in gone]
+    while kept and text[kept[0]].isspace():
+        kept.pop(0)
+    while kept and text[kept[-1]].isspace():
+        kept.pop()
+    return kept if "".join(text[i] for i in kept) == speakable(text) else None
+
+
+def realign(align, text: str, sent: str):
+    """(판단 주인 — '돌려주는 글자 시각 = 원문 글' 약속) 뺀 낱자를 길이 0 으로 되끼워 원문과 같은 글자 시각을 만든다.
+    관제 318(11-04 #3253 임영미): 낱자를 뺀 글의 시각을 그대로 돌려주면 렌더 tts_by_line 이 대본 tts(낱자 포함) 글자 수와 비교해
+    줄 캐시가 '글자 시각이 줄 글과 안 맞는다'로 남아 다시 해도 같은 곳에서 막혔다(1회차 전체 합성은 24자 vs 27자로 소리 없이 어긋남).
+    자리를 못 맞추면 받은 그대로(옛 동작)."""
+    if not isinstance(align, dict) or sent == text:
+        return align
+    ch = align.get("characters") or []
+    st, en = align.get("character_start_times_seconds") or [], align.get("character_end_times_seconds") or []
+    kept = _kept_index(text) if sent == speakable(text) else None
+    if kept is None or len(ch) != len(sent) or len(st) != len(ch) or len(en) != len(ch):
+        return align
+    pos = {i: k for k, i in enumerate(kept)}
+    s2, e2, last = [], [], (st[0] if st else 0.0)
+    for i in range(len(text)):
+        if i in pos:
+            s2.append(st[pos[i]]); e2.append(en[pos[i]]); last = en[pos[i]]
+        else:                                   # 뺀 낱자·그 앞 띄어쓰기 = 앞 글자 끝에 길이 0(맨 앞이면 첫 글자 시작)
+            s2.append(last); e2.append(last)
+    return {**align, "characters": list(text), "character_start_times_seconds": s2, "character_end_times_seconds": e2}
+
+
 def make_synth(provider: str, voice: str, tempo, emotion):
     synth = _make_synth(provider, voice, tempo, emotion)
-    return lambda text, out: synth(speakable(text), out)
+
+    def run(text, out):
+        sent = speakable(text)
+        return realign(synth(sent, out), text, sent)
+    return run
 
 
 def _make_synth(provider: str, voice: str, tempo, emotion):

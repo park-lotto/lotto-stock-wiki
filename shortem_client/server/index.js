@@ -19,12 +19,12 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest, encoderCheck } from './selftest.js';
+import { selftest, encoderCheck, pcSpec } from './selftest.js';
 import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
-import { sweep as sweepRented } from './preset_rent.js';
+import { sweep as sweepRented, renting } from './preset_rent.js';
 import { withMine } from './my_presets.js';
 import { registerBenchmark, sweepBench } from './benchmark.js';
 import { retryUpdate, checkUpdate, installDir } from './updater.js';
@@ -37,7 +37,7 @@ import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
-import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES } from './local_settings.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES, catalog } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -169,7 +169,7 @@ export function buildServer(ctx = makeCtx()) {
       { name: '자막 지우기(VMake)', ready: keyStatus('vmake').present, merit: '있으면 박힌 글자를 지웁니다. 없으면 흐림으로 가립니다' },
       { name: '버텍스 AI', ready: keyStatus('vertex_sa').present, merit: '있으면 소리째 영상 검수와 그림 만들기를 씁니다' },
     ];
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), pc: pcSpec(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
       info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };
@@ -370,7 +370,13 @@ export function buildServer(ctx = makeCtx()) {
     }
     let pack = null;
     try { pack = await packFor(cur); } catch (e) { return reply({ fail: { where: '설정', why: String(e.message || e), fix: '숏템 설치를 확인하세요', retry_ok: true } }); }
-    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm } } });
+    // choices = 저장 검사(엔진 preview_request.check)가 받는 값 목록 그대로 — set 이 '목록 안의 값으로'라고 할 때 볼 곳(11-03 김준용: get 에 없어 자막 등장·강조를 못 골랐다)
+    let cat = {};
+    try { cat = await catalog() || {}; } catch { /* 목록 없이도 지금 설정은 보여 준다 */ }
+    const choices = { fonts: cat.fonts, caption_enter: cat.caption_enter, emphasis: cat.emphasis, caption_mode: cat.caption_mode,
+      bgm: (cat.bgm || []).map(x => (x && (x.id || x.name)) || x).slice(0, 60),
+      shape: { 'text.caption.enter': { kind: '<caption_enter 중 하나>', ms: 300 }, 'text.caption.emphasis': { words: 'auto', style: '<emphasis 중 하나>', rgb: [255, 216, 74] }, 'text.post_author': "'' = 작성자 줄 안 그림 · 글 = 고정" } };
+    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm }, choices } });
   });
 
   registerBenchmark(server, reply);   // 고급반 벤치마킹(관제 304)
@@ -422,7 +428,7 @@ async function main() {
   if (process.send) process.on('message', m => { if (m && m.go) process.exit(75); });
   setInterval(async () => {
     try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
-    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
+    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning() && !renting()) process.send({ swap: 1 });   // renting = 이 PC 어느 창이든 빌려 만드는 중(rent.lock) — 다른 창 제작 중 교체 금지(11-03 김효준)
   }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
   startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });

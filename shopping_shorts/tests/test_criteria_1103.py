@@ -202,3 +202,114 @@ def test_member_post_author(tmp_path, monkeypatch):
         assert (got or {}).get("text") == want
     assert any("작성자" in e for e in PR.check({"text": {"post_author": "<x>"}}))
     assert PR.check({"text": {"post_author": ""}}) == [] and PR.check({"text": {"post_author": "주스픽"}}) == []
+
+
+def test_plan_look_waive_when_over_budget(monkeypatch):
+    """예산을 넘긴 편은 장면 검수 답 '넘기기' 로 바로 렌더로(11-03 김미향 2시간+). 예산 안·금지선이면 안 넘긴다."""
+    import time
+    from tools.calcopy.hybrid import flow as F
+    def st_of(started, over):
+        return {"version": "v1", "tries": {}, "log": [], "started_at": started, "_plan_over": over, "script": {"S": {"lines": []}, "M": {}}}
+    rp = {"plan_v1": {"넘기기": True}}
+    monkeypatch.setattr(F, "_reply", lambda rp, k, need: rp[k])
+    st = st_of(time.time() - 200 * 60, ["L3 컷 길이 1.1초"])
+    assert F.ph_plan_look(st, {}, rp, None) == {"goto": "render"} and st["waive_gate"]
+    assert not F._over_budget(st_of(time.time() - 10 * 60, []))            # 예산 안 = 넘기기 칸을 안 받는다(그 뒤는 보통 고치기 길)
+    assert F.HARD_PLAN_RX.search("L2 원본 규칙: 다른 채널 연예인 영상")     # 금지선은 못 넘긴다
+
+
+def test_channel_name_once_when_head_bar_has_text(tmp_path, monkeypatch):
+    """머리띠 글자 칸이 있는 틀(썰템쇼)은 채널명을 그 칸에만 — 상단 워터마크를 하나 더 넣지 않는다(11-03 김준용 두 번 찍힘)."""
+    import json as _j
+    from tools.calcopy.hybrid import styles as STY
+    p = tmp_path / "pack.json"
+    p.write_text(_j.dumps({"member": {"brand": {"channel_name": "주스픽"}}}), encoding="utf-8")
+    monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(p))
+    st = STY.member_frame({"frame": {"post": {"head_bar": {"icons": [{"kind": "text", "text": "썰", "cx": 500}, {"kind": "text", "text": "템", "cx": 580}]}}}})
+    assert st["frame"].get("watermark") is None
+    assert [i["text"] for i in st["frame"]["post"]["head_bar"]["icons"]] == ["주스픽"]
+    st = STY.member_frame({"frame": {"bg": [0, 0, 0]}})      # 채널명 자리 없는 틀 = 상단 가운데 한 번
+    assert st["frame"]["watermark"]["text"] == "주스픽"
+
+
+def test_japanese_script_one_owner(monkeypatch, tmp_path):
+    """일본어 대본: 읽는 글자(SPOKEN) 한 곳 · 렌더 글꼴은 일본어 글자 있는 것 · 광고 표시 PR(11-03 윤상길 일본어판, 사장님 승인)."""
+    from tools.calcopy.hybrid import common as C
+    from tools.calcopy.engine import narr_verify as NV
+    assert C.nchar("すごい、アイテム！") == 7 and C.nchar("안녕 abc 3") == 6
+    assert NV.norm("使ってみた") == "使ってみた"
+    assert C.script_lang({"lines": [{"tts": "すごい"}]}) == "ja" and C.script_lang({"lines": [{"tts": "좋아요"}]}) == "ko"
+    monkeypatch.setenv("SHORTEM_SCRIPT_LANG", "ja")
+    from tools.calcopy.hybrid import render_bench as RB
+    assert RB._font("Pretendard-ExtraBold.otf", 40).path.replace("\\", "/").endswith(C.JP_FONT)
+    from tools.calcopy.engine import ad_mark as A
+    assert A.TEXT_BY_LANG.get(C.script_lang(), A.TEXT) == "PR"
+    monkeypatch.setenv("SHORTEM_SCRIPT_LANG", "ko")
+    assert RB._font("Pretendard-ExtraBold.otf", 40).path.replace("\\", "/").endswith("Pretendard-ExtraBold.otf")
+
+
+def test_plan_look_member_material_add(monkeypatch):
+    """장면 검수 답 '재료_추가' = 회원이 src 에 넣은 파일을 재료로 등록하고 시트부터(11-03 김유선 덮어쓰기 우회)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "썰템쇼판", "tries": {}, "log": [], "_plan_over": ["L3 맞는 장면 없음"], "material": {"files": [{"name": "a.mp4"}]},
+          "script": {"S": {"lines": []}, "M": {}}}
+    monkeypatch.setattr(F, "_reply", lambda rp, k, need: rp[k])
+    out = F.ph_plan_look(st, {}, {"plan_썰템쇼판": {"재료_추가": ["src/ig_member.mp4"]}}, None)
+    assert out["then"] == "more_sheets" and {"name": "ig_member.mp4"} in st["material"]["files"]
+
+
+def test_clean_take_counts_only_this_bg_job(tmp_path, monkeypatch):
+    """뒤 지우기 결과를 받을 때 보낸 초는 이번 뒤 작업 시작 뒤 장부만 센다(11-03 정민혜: 앞 호출까지 합쳐 편을 끝냄)."""
+    import json as _j, time as _t
+    from tools.calcopy.hybrid import runner_ops as R
+    from tools.calcopy import vmake_clean as VC
+    W = tmp_path
+    (W / "doc" / "v").mkdir(parents=True)
+    src = W / "src"
+    (src / VC.BG_DIR).mkdir(parents=True)
+    (W / "doc" / "v" / "재료.json").write_text(_j.dumps({"cand_dir": str(src)}), encoding="utf-8")
+    start = _t.time() - 60
+    (src / VC.BG_DIR / "job.json").write_text(_j.dumps({"at": start}), encoding="utf-8")
+    seen = {}
+    monkeypatch.setattr(VC, "bg_take", lambda s, w, tick=None: {"state": "done", "calls": 1, "done": {"a.mp4": [[0, 1]]}})
+    monkeypatch.setattr(VC, "plan_spans", lambda doc, a, b: (src, {}, {"a.mp4": [[0, 1]]}))
+    monkeypatch.setattr(VC, "sent_from_ledger", lambda s, t0: seen.setdefault("t0", t0) and {})
+    monkeypatch.setattr(VC, "sent_check", lambda sent, used: [])
+    R.c_clean_take(W, {"version": "v", "wait": 0})
+    assert seen["t0"] == _t.strftime("%Y-%m-%d %H:%M:%S", _t.localtime(start - 1))
+
+
+def test_vmake_basic_key_remembered(tmp_path, monkeypatch):
+    """고급이 거절된 키는 '기본형'으로 기억 — 다음 편부터 처음부터 기본으로 보내 두 번 보내지 않는다(사장님 11-03)."""
+    import sys
+    import types
+    from tools.calcopy import vmake_clean as VC
+    kf = tmp_path / "vmake"
+    kf.write_text("old:key", encoding="utf-8")
+    monkeypatch.setattr(VC, "MEMBER_KEY_FILE", kf)
+    monkeypatch.setattr(VC, "TIER_FILE", tmp_path / "vmake.tier")
+    monkeypatch.setattr(VC, "paid_off", lambda: False)
+    monkeypatch.delenv("VMAKE_API_KEY", raising=False)
+    sent = []
+
+    def remove_subtitles(src, key, dst, tier="pro", resume_key=""):
+        sent.append(tier)
+        if tier != "basic":
+            raise RuntimeError("Switch to New API")
+        open(dst, "wb").write(b"x")
+    fake = types.SimpleNamespace(remove_subtitles=remove_subtitles)
+    import shopping_shorts
+    monkeypatch.setitem(sys.modules, "shopping_shorts.vmake_client", fake)
+    monkeypatch.setattr(shopping_shorts, "vmake_client", fake, raising=False)      # 앞 시험이 진짜 모듈을 불러 둔 경우(from 패키지 import 는 속성을 본다)
+    monkeypatch.setattr(VC, "swap_in", lambda f, tmp: None)
+    monkeypatch.setattr(VC, "log_entry", lambda *a, **k: None)
+    monkeypatch.setattr(VC, "_sent", lambda f: {})
+    f = tmp_path / "a.mp4"
+    f.write_bytes(b"v")
+    VC.member_clean([f], "old:key", log=lambda *_: None, tier="pro")
+    assert sent == ["pro", "basic"] and VC.key_tier() == "basic"
+    sent.clear()
+    VC.member_clean([f], "old:key", log=lambda *_: None, tier="pro")
+    assert sent == ["basic"]                      # 두 번째 편부터 기본 한 번
+    kf.write_text("new:key", encoding="utf-8")
+    assert VC.key_tier() == ""                    # 키를 바꾸면 다시 고급부터

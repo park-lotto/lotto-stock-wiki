@@ -190,6 +190,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     }
     else if (step === 'restyle') {
       const r = await restyleFlow(sid);
+      if (r.ok && r.unchanged) return { ...(await flowOut({ need: 'done', sid, video: r.video, title: r.title })), hints: [r.note] };   // 바뀐 것 없음 = 실패 아님
       return r.ok ? flowOut({ need: 'done', sid, video: r.video, title: r.title }) : { fail: { why: r.error } };   // 완성본 폴더까지 새 겉모습으로(keepFinal)
     }
     return flowOut(await waitFlow(sid, waitMs()));
@@ -212,9 +213,10 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     channel = channel || mine.channel;
     if (!channel) return { hints: ['이 프리셋은 영상으로 만들었습니다 — 만들 영상 주소를 video 로 주세요'] };
   }
-  if (step === 'start' && preset && !mine && !topic && !channel && !process.env.SHORTEM_DEV_PRESET) {
+  // 주제(topic)도 단계 진행으로 보낸다 — 주제로 시작할 수 있는 형식인지는 서버가 정하고, 못 하면 '단계 진행' 거절로 아래 옛 길(#3207 썰템쇼 주제 시작이 옛 길로 가 멈춤)
+  if (step === 'start' && preset && !mine && !channel && !process.env.SHORTEM_DEV_PRESET) {
     try {
-      const f = await startFlow({ preset, video: video || '', product });
+      const f = await startFlow({ preset, video: video || '', product, topic: video ? '' : topic });
       return flowOut(await waitFlow(f.sid, waitMs()));
     } catch (e) {
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다

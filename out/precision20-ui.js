@@ -1332,9 +1332,13 @@
         c.querySelectorAll('*').forEach(e=>{e.className='';e.style.cssText=`color:${col};background:none;-webkit-text-stroke:0;text-shadow:none;transform:none;translate:none;opacity:1;clip-path:none`;});
         Object.assign(c.style,{position:'absolute',zIndex:String((parseInt(getComputedStyle(text).zIndex,10)||0)+1),color:col,webkitTextStroke:'0',textShadow:'none',pointerEvents:'none',opacity:'0',animation:'none',transition:'none'});return c};
       let tail=text;
+      // 복사본도 원래 글자의 크기 변화(scale 키프레임)를 같이 탄다 — 팝+잔상(잇템로그 itlHookPop)에서 다 큰 복사본이 작게 시작한 글자 위에 두 벌로 겹쳤다
+      //   (11-04 #3580·#3702 임수정 · 우리 ep16 1.50~1.65초 재현, Jev 뿌리 0.91·해결 0.85). scale 없는 효과(rgbGlitch 스타픽룸)는 그림 그대로
+      const popK=(motion.frames||[]).some(f=>f.scale!=null)?motion.frames.map(f=>({...(f.offset!=null?{offset:f.offset}:{}),scale:String(f.scale??1)})):null;
+      const pop=c=>{if(!popK)return;c.style.transformOrigin=text.style.transformOrigin||getComputedStyle(text).transformOrigin;drive(c.animate(popK,{duration:ms,easing:motion.easing||'linear',fill:'none'}));};
       g.colors.forEach(([col,mul])=>{const c=mk(col);tail.after(c);tail=c;
-        drive(c.animate(g.keys.map(([o,v])=>({offset:o,translate:`${mul*v*g.amp}em 0`,opacity:v>0?g.alpha:0})),{duration:ms,easing:'linear',fill:'none'}));});
-      const core=mk(getComputedStyle(text).color);tail.after(core);drive(core.animate([{opacity:1},{opacity:1}],{duration:ms,easing:'linear',fill:'none'}));
+        drive(c.animate(g.keys.map(([o,v])=>({offset:o,translate:`${mul*v*g.amp}em 0`,opacity:v>0?g.alpha:0})),{duration:ms,easing:'linear',fill:'none'}));pop(c);});
+      const core=mk(getComputedStyle(text).color);tail.after(core);drive(core.animate([{opacity:1},{opacity:1}],{duration:ms,easing:'linear',fill:'none'}));pop(core);
     }
     // 글자마다 무지개 돌림(스타픽룸 j5D 0.2~1.0) — 색 칸 하나 = cycle.ms, 글자 k 는 칸이 k 만큼 어긋남(공백도 한 글자)
     if(motion.cycle&&motion.unit==='char'){

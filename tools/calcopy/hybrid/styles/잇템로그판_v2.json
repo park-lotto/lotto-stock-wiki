@@ -167,6 +167,7 @@
    "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {'zoomblur': 0.016} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   }
  },
+ "sfx_level": {"db_below_voice": 6, "why": "#3631 정민혜 11-04: 효과음이 목소리보다 15dB 아래(-30dB)라 안 들림 — 파일 크기를 재 목소리 −6dB 로(render_bench.sfx_gain, Jev 해결 0.91)"},
  "placement": {
   "rules": {
    "emph_color": {

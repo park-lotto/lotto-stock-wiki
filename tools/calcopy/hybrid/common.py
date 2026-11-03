@@ -90,9 +90,26 @@ def silences(p, noise="-40dB", d=0.1, merge=0.01) -> list[tuple[float, float]]:
     return out
 
 
+# (판단 주인 — 소리 내 읽는 글자) 한글·영문·숫자 + 가나·한자. 말속도·자막 시작·글자 시각·받아쓰기 대조가 모두 이 자를 쓴다
+#   (11-03 윤상길 일본어판: 곳곳에 한글만 세는 자가 따로 있어 일본어 대본이 0자 → 나눗셈·자막 시각이 깨졌다)
+SPOKEN = r"[가-힣A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff]"
+
+
+JP_FONT = "NotoSansKR-Bold.otf"     # 일본어 글자가 다 있는 글꼴(fontTools: Pretendard 는 가나 일부 누락) — 일본어 대본이면 렌더 글꼴을 이것으로
+
+
+def script_lang(S: dict | None = None) -> str:
+    """(판단 주인 — 이 편 대본 언어) 'ja' = 나레 줄에 가나가 있다 · 아니면 'ko'. 렌더가 정해 SHORTEM_SCRIPT_LANG 에 두면
+    같은 실행의 글꼴(render_bench._font)·광고 표시(ad_mark)가 그 값을 읽는다(11-03 윤상길 일본어판 — 사장님 승인)."""
+    if S is None:
+        return os.environ.get("SHORTEM_SCRIPT_LANG") or "ko"
+    kana = re.compile(r"[\u3040-\u30ff]")
+    return "ja" if any(kana.search(str(l.get("tts") or "")) for l in S.get("lines") or []) else "ko"
+
+
 def nchar(s: str) -> int:
-    """읽는 글자 수(한글·영문·숫자만) — 말속도의 분자. 잇썸·재미썸 두 렌더러가 같은 자를 쓴다."""
-    return len(re.findall(r"[가-힣A-Za-z0-9]", s or ""))
+    """읽는 글자 수(SPOKEN) — 말속도의 분자. 잇썸·재미썸 두 렌더러가 같은 자를 쓴다."""
+    return len(re.findall(SPOKEN, s or ""))
 
 
 def md5(p) -> str:

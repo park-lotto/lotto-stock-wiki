@@ -492,7 +492,7 @@ def test_shot_at_float_boundary():
     M = {"cuts": {"O3": [{"at": 1.767, "src": "m.mp4"}]}}
     S = {"lines": [{"id": "O3", "kind": "orig", "src": "m.mp4", "spans": [[1.2, 3.24]]}]}
     RU.fill_shot_max(M, S, {"m.mp4": [1080, 1920]}, {"m": shots}, 1080 / 1434)
-    assert M["cuts"]["O3"][0]["max"] > 2
+    assert M["cuts"]["O3"][0]["src"] == "m.mp4" and "max" not in M["cuts"]["O3"][0]      # 샷 한도는 렌더 shot_cap(관제 318)
 
 
 def test_shot_at_start_just_before_boundary_is_next_shot():

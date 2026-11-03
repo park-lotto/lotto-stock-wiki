@@ -191,8 +191,17 @@ export function answer(id, obj) {
 //   띄워 두고 줄마다 부른다. 서버 설정 화면(claude_studio)도 같은 파일을 쓴다. 워커가 죽으면 다음 요청에 다시 띄운다(오류는 화면에 그대로).
 const WORKER_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'engine_worker.py');
 let W = null;
+// 엔진 파일이 바뀌면(updater.applyDownloaded) 떠 있는 워커는 옛 코드를 붙잡고 있다 — 다음 요청부터 새로 띄운다.
+//   하던 요청은 끝까지 답하고 끈다(11-03 김만기: 1.0.85 의 text.post_author 를 18:48 에 뜬 워커가 '모르는 칸'으로 거절)
+export const workerPid = () => (W && !W.dead ? W.proc.pid : null);     // 시험용
+export function resetEngineWorker() {
+  if (!W || W.dead) return false;
+  W.stale = true;
+  if (!W.q.length) { try { W.proc.kill(); } catch { /* 이미 끝 */ } }
+  return true;
+}
 function engineWorker() {
-  if (W && !W.dead) return W;
+  if (W && !W.dead && !W.stale) return W;
   const root = engineRoot();
   const proc = spawn(pythonExe(), ['-u', WORKER_FILE, root],
     { cwd: root, env: engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -208,10 +217,11 @@ function engineWorker() {
       let j; try { j = JSON.parse(line); } catch { j = { error: '엔진 미리보기 응답 모양이 다릅니다' }; }
       if (j.ready && w.onReady) { w.onReady(true); w.onReady = null; continue; }
       const cb = w.q.shift(); if (cb) cb(j);
+      if (w.stale && !w.q.length) { try { proc.kill(); } catch { /* 이미 끝 */ } }
     }
   });
   proc.stderr.on('data', d => { if (w.err.length < 20000) w.err += String(d); });
-  const die = why => { w.dead = true; if (w.onReady) { w.onReady(false); w.onReady = null; } for (const cb of w.q.splice(0)) cb({ error: why, tail: w.err.slice(-400) }); };
+  const die = why => { w.dead = true; if (W === w) W = null; if (w.onReady) { w.onReady(false); w.onReady = null; } for (const cb of w.q.splice(0)) cb({ error: why, tail: w.err.slice(-400) }); };
   proc.on('error', e => die(String(e && e.message)));
   proc.on('close', () => die('엔진 미리보기가 멈췄습니다'));
   // 워커가 MCP·시험 프로세스를 붙잡아 두지 않게(기다리는 요청은 타이머가 붙잡는다), 끝날 때 같이 끈다

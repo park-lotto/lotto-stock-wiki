@@ -2,6 +2,7 @@
 //   · 시험_다운로드.mp4(공개 영상 5초) + 자가점검_결과.md. ffmpeg -version 첫 줄 + -filters 의 ' ass ' 확인.
 //   실패 모양 {where, why, fix, retry_ok}.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { workDir, ensureDir, homeDir } from './paths.js';
 import { run, runOk, resolveTools, toolsDir } from './tools_paths.js';
@@ -186,4 +187,14 @@ export async function selftest() {
   fs.writeFileSync(report, md + '\n');
   fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
   return { items, fails, report, dir };
+}
+
+// (판단 주인 — 이 PC 가 느린 PC 인가) 회원 Claude 가 느릴 때마다 고객에게 'PC 사양 때문에 시간이 더 걸린다'고 설명하는 근거(사장님 11-04).
+//   CPU 스레드 8 미만 또는 메모리 12GB 미만 = 느린 PC. 그래픽카드 인코딩 여부는 video_encoder 가 따로 준다
+export function pcSpec(cpus = os.cpus(), mem = os.totalmem()) {
+  const threads = (cpus || []).length;
+  const ram_gb = Math.round(mem / 1e9);
+  const slow = threads < 8 || ram_gb < 12;
+  return { cpu: String((cpus[0] || {}).model || '').trim().slice(0, 60), threads, ram_gb, slow,
+    ...(slow ? { say: `이 PC 는 CPU ${threads}스레드·메모리 ${ram_gb}GB 라 영상 분석·굽기가 일반 PC 보다 2~4배 오래 걸릴 수 있어요. 고장이 아니라 사양 때문이니 조금만 기다려 주세요.` } : {}) };
 }

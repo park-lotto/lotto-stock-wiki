@@ -444,7 +444,18 @@ def source_url_problem(url: str) -> str:
     return "영상 한 편 주소를 주세요 — 유튜브 쇼츠·틱톡 영상(…/@아이디/video/숫자)·인스타 릴스(…/reel/코드)"
 
 
-def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None = None) -> dict:
+TOPIC_FMTS = ("PC제작형",)
+
+
+def takes_topic(version: str) -> bool:
+    """소재 영상 없이 주제만으로 시작할 수 있는 판인가 — 형식이 정한다(PC제작형 = PC 담당처럼 주제 → 근거 조사, #3207)."""
+    try:
+        return flow_format_of(version)[0] in TOPIC_FMTS
+    except Exception:  # noqa: BLE001 — 장부에 없는 판은 못 한다
+        return False
+
+
+def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None = None, topic: str = "") -> dict:
     """product = 고객이 정한 쿠팡 제품(이름·상품 주소) — 원본에 제품이 화면으로 안 나올 때 쓴다(사장님 10-23 '실제 올린 채널의 상품을 참고').
     fmt = 형식(서버가 넘기면 그대로 — 단 프리셋 장부와 다르면 거절). 없으면 channel/프리셋.json 에서(flow_format_of). 못 정하면 FormatError."""
     f0, slug = flow_format_of(version)
@@ -453,6 +464,10 @@ def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None =
     st = {"started_at": time.time(), "sid": sid, "ref": ref, "version": version, "fmt": f0, "slug": slug, "phase": "setup", "tries": {}, "log": []}
     if str(product or "").strip():
         st["given"] = str(product).strip()[:200]
+    if str(topic or "").strip():
+        if f0 not in TOPIC_FMTS:
+            raise FormatError(f"형식 {f0} 는 주제만으로 시작하지 않습니다")
+        st["given_topic"] = str(topic).strip()[:300]
     return st
 
 
@@ -1353,7 +1368,7 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400]}
     st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
     spent = int((time.time() - float(st.get("started_at") or time.time())) / 60)
-    over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if spent > EPISODE_BUDGET_MIN else ""
+    over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if _over_budget(st) else ""
     ask = (TASK_ASK + over + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
@@ -1431,6 +1446,14 @@ def ph_task_got(st, m, rp, u):
             return got
     raise _Stop(t.get("why") or "만드는 중에 문제가 생겼어요", t.get("fix") or AGAIN, retry=t.get("retry"), ask_member=True,
                 origin_missing=bool(t.get("origin_missing")), detail=(str(t.get("detail") or "") + f" · 제작자 과제 답 {act}: {str(a.get('note') or '')[:200]}").strip(" ·"))
+
+
+HARD_PLAN_RX = re.compile(r"출처|원본 규칙|source_rule|연예인 아닌 얼굴|지어낸")     # 장면 검수에서 넘길 수 없는 것(금지선)
+
+
+def _over_budget(st) -> bool:
+    """(판단 주인 — 편 예산 시간을 넘었나) 제작자 과제 안내(★예산 넘음)와 같은 기준."""
+    return (time.time() - float(st.get("started_at") or time.time())) / 60 > EPISODE_BUDGET_MIN
 
 
 def _waive(st: dict, stage: str) -> dict | None:
@@ -1897,7 +1920,7 @@ def ph_research_check(st, m, rp, u):
 # ── 5 재료 영상 ───────────────────────────────────────────────────────────
 def _material_n(st) -> tuple:
     """(판단 주인 — 재료 영상 개수) 판 칸 material_n[최소, 최대], 없으면 2~4. 10-31 썰템홈샷: 납품 재료 중앙 9개 vs 회원 3개 — 뿌리는 질문에 박힌 '2~4개'."""
-    a, b = ((_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]
+    a, b = (st.get("material_n") or (_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]   # st 칸 = 형식이 정한 개수(PC제작형 2~9 — PC 썰템쇼 10편)
     return int(a), int(b)
 
 
@@ -2504,7 +2527,9 @@ def _mark_new(st: dict, over: list) -> list:
 WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 끊김도 이것으로): \"대본줄\": {\"<줄 id>\": {\"tts\": \"…\", \"caps\": [\"…\"]}} "
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
-                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
+                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다."
+                  "\n★회원이 직접 준 영상은 이 PC 의 src 폴더에 넣고 \"재료_추가\": [\"파일이름.mp4\", …] 로 답하면 재료로 등록된다(기존 재료 파일을 덮어쓰지 마라)."
+                  "\n★편 예산 시간을 넘었고 남은 것이 작은 품질 걸림뿐이면 \"넘기기\": true 로 답해 경고로 남기고 렌더로 간다(지어낸 사실·금지 출처는 못 넘긴다).")
 FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
                   "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
                   "\n★썸네일을 고쳐야 하면 답에 \"썸네일\": {\"options\":[…]} 를 넣어라.")
@@ -2581,9 +2606,16 @@ def ph_plan_look(st, m, rp, u):
         if st.get("line_table") and _process(st).get("line_table"):
             return {"do": [{"id": "save_table", "cmd": "write_doc", "files": {f"{v}/대조표.json": st["line_table"]}, "version": v}], "then": "thumb"}
         return {"goto": "thumb"}
+    if r.get("넘기기") is True and _over_budget(st) and not any(HARD_PLAN_RX.search(str(o)) for o in over):
+        # 예산을 넘긴 편 — 회원 Claude 가 검수 답에서 바로 권고 넘기기(제작자 과제가 올 때까지 10~15분짜리 고치기를 더 돌지 않는다, 11-03 김미향 2시간+)
+        st["log"].append("장면 검수 넘기기(예산 초과): " + "; ".join(str(o) for o in over)[:300])
+        return _waive(st, "plan")
     voice = [str(o) for o in over if VOICE_RX.search(str(o))]
     if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
         return _voice_rewrite(st, voice)
+    add = [Path(str(x)).name for x in (r.get("재료_추가") or []) if isinstance(x, str) and str(x).strip()][:6]
+    if add:          # 회원이 직접 준 영상(이 PC src 에 넣은 파일)을 재료로 등록 — 과제 답 action=material 과 같은 뒷길(11-03 김유선: 덮어쓰기 우회)
+        return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in add]}}, {}, {})
     more = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
     if more and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:     # 맞는 장면이 재료에 없다 — 그 자리에서 재료만 더(대본·앞 단계 그대로, 숏클 지침 4②)
         return _more_material(st, more)
@@ -5055,4 +5087,11 @@ PHASES = {
     "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"interest_look": "product", "interest_got": "product", "check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+    PHASE_STAGE.setdefault(_k, _v)
+
+# PC제작형(사장님 11-03 '숏클 = PC 제작 라인과 완벽히 같게') — 처리기는 flow_pm.py 한 곳(굽기·검사 = 회원 PC c_pm → engine/preset_make)
+from tools.calcopy.hybrid import flow_pm as _PM  # noqa: E402
+FORMAT_STAGES["PC제작형"] = _PM.STAGES
+FORMAT_PHASES["PC제작형"] = _PM.PHASES
+for _k, _v in _PM.PHASE_STAGE.items():
     PHASE_STAGE.setdefault(_k, _v)

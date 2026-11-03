@@ -98,6 +98,19 @@ def will_erase(version: str | None) -> bool:
     return ready(style_mode(version))["mode"] != "blur"
 
 
+def erase_why(version: str | None) -> str:
+    """계획 기록용 한 줄 — 지우나/안 지우나와 그 이유(어느 칸이 방식을 정했나). 판단은 will_erase 그대로(여기는 읽기만)."""
+    m = (os.environ.get("SHORTEM_TEXT_MODE") or "").strip().lower()
+    src = f"회원 설정 {m}" if m in ("vmake", "blur") else "회원 설정 없음 → 판 칸"
+    mode = style_mode(version)
+    if not _flow_erases(version):
+        return f"안 지움 — 이 형식에 지우기 단계 없음({src} {mode})"
+    if mode == "blur":
+        return f"안 지움(흐림) — {src} blur"
+    r = ready(mode)
+    return f"{'지움' if r['mode'] != 'blur' else '안 지움(흐림)'} — {src} {mode} · 준비 {r['mode']}{(' · ' + str(r.get('why'))) if r.get('why') else ''}"
+
+
 def _flow_erases(version: str | None) -> bool:
     e = os.environ.get("CALCOPY_ERASE")          # 회원 PC = 지시서가 계획·렌더 명령에 실어 보낸 값(runner_ops 가 그 일 동안만 둔다 — 회원 엔진엔 flow.py 가 없다)
     if e in ("0", "1"):
@@ -159,6 +172,28 @@ def note_hard(text: str) -> str:
     BAD_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
     BAD_KEY_FILE.write_text(json.dumps({"fp": _key_fp(member_key()), "kind": k}), encoding="utf-8")
     return k
+
+
+TIER_FILE = MEMBER_KEY_FILE.with_name("vmake.tier")     # 이 회원 키로 되는 등급(지문·등급, 값 아님) — 기본형 키면 처음부터 기본으로
+
+
+def key_tier() -> str:
+    """(판단 주인 — 이 회원 키의 VMake 등급) 'basic' = 고급이 거절된 적이 있는 키(옛 방식·Pro 아님) → 처음부터 기본으로 보낸다.
+    '' = 모름(고급 먼저). 키를 바꾸면 지문이 달라 다시 모름(사장님 11-03 '기본형은 기본으로, 두 번 할 필요 없게')."""
+    try:
+        j = json.loads(TIER_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    k = member_key()
+    return str(j.get("tier") or "") if k and j.get("fp") == _key_fp(k) else ""
+
+
+def note_tier(tier: str) -> None:
+    k = member_key()
+    if not k:
+        return
+    TIER_FILE.parent.mkdir(parents=True, exist_ok=True)
+    TIER_FILE.write_text(json.dumps({"fp": _key_fp(k), "tier": tier}), encoding="utf-8")
 
 
 def bad_key() -> str:
@@ -687,6 +722,9 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
     from concurrent.futures import ThreadPoolExecutor
     out = {"cleaned": [], "calls": 0, "fail": {}}
     lock = threading.Lock()
+    if tier != "basic" and key_tier() == "basic":      # 이 키는 고급이 안 된다고 이미 안다 — 고급을 다시 보내 거절받지 않는다
+        log("[vmake] 이 키는 기본형 — 처음부터 기본으로")
+        tier = "basic"
 
     def one(f):
         f = Path(f)
@@ -700,7 +738,8 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
             except Exception as e:  # noqa: BLE001 — 고급이 안 되는 키면 기본으로(사장님 11-03 '고급 있음 고급으로, 없음 기본으로')
                 if tier == "basic" or hard_fail(str(e)) not in ("new_api", "not_pro"):
                     raise
-                log(f"[vmake] {f.name}: 고급 안 됨({hard_fail(str(e))}) → 기본으로")
+                log(f"[vmake] {f.name}: 고급 안 됨({hard_fail(str(e))}) → 기본으로(이 키는 다음부터 처음부터 기본)")
+                note_tier("basic")
                 with lock:
                     out["calls"] += 1
                 VC.remove_subtitles(str(f), api_key, str(tmp), tier="basic", resume_key=f"calcopy:{f.name}:{f.stat().st_size}")

@@ -10,7 +10,7 @@ import { ENGINE_VERSION } from './license.js';
 import { toolsDir, devMode } from './tools_paths.js';
 import { readZip, renting, holdPending } from './preset_rent.js';
 import { audit } from './audit.js';
-import { activeRuns } from './engine_bridge.js';
+import { activeRuns, resetEngineWorker } from './engine_bridge.js';
 
 const OK_PATH = /^(server|engine)\/[^\0]+$|^app_version\.json$/;
 export const installDir = () => path.resolve(toolsDir(), '..');
@@ -115,7 +115,7 @@ export async function checkUpdate({ force = false } = {}) {
   fs.writeFileSync(path.join(dir, READY_MARK), r.sha256);
   writePending(pend, r.version);
   audit('update_ready', { result: r.version });
-  applyDownloaded(dir, home, activeRuns().length);
+  applyDownloaded(dir, home, activeRuns().length || renting());     // 다른 창 프로그램이 빌려 만드는 중이어도(rent.lock) 엔진을 바꾸지 않는다(11-03 김효준: 제작 중 교체로 빌린 styles 가 사라짐)
   return { update: true, ready: true, version: r.version };
 }
 
@@ -126,6 +126,7 @@ export function applyDownloaded(dir, home, running) {   // 관제 304 합치기�
   try {
     fs.cpSync(path.join(dir, 'engine'), path.join(home, 'engine'), { recursive: true, force: true });
     audit('update_engine_now', { result: path.basename(dir) });
+    resetEngineWorker();          // 설정 검사·미리보기 워커도 새 엔진으로(편마다 뜨는 실행기와 달리 떠 있다)
     return true;
   } catch (e) {
     audit('update_fail', { result: 'engine_now ' + String(e && e.message || e).slice(0, 70) });
