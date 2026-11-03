@@ -29,3 +29,25 @@ def test_no_key_raises_jevdown(monkeypatch):
     monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
     with pytest.raises(J.JevDown):
         J.decide("p", [], ["A", "B"])
+
+def _ans(choice, conf=0.9):
+    return {"fixroot_0": Ans(type="noul", noul=0.5), "fixroot_1": Ans(type="noul", noul=0.5),
+            "best_fix": Ans(type="choice", choice=choice, confidence=conf)}
+
+def test_none_choice():
+    r = J.decide("p", [], ["A", "B"], client=FakeClient(_ans("none")))
+    assert r["pick"] is None and r["ok"] is False
+
+def test_client_exception_is_jevdown():
+    class Boom:
+        def system_one(self, **kw): raise RuntimeError("x")
+    with pytest.raises(J.JevDown):
+        J.decide("p", [], ["A", "B"], client=Boom())
+
+def test_missing_best_fix_bad_answer():
+    with pytest.raises(J.JevDown, match="bad_answer"):
+        J.decide("p", [], ["A", "B"], client=FakeClient({"fixroot_0": Ans(noul=0.5), "fixroot_1": Ans(noul=0.5)}))
+
+def test_out_of_range_pick():
+    r = J.decide("p", [], ["A", "B"], client=FakeClient(_ans("fix_5")))
+    assert r["pick"] is None and r["ok"] is False
