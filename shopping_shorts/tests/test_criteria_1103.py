@@ -115,7 +115,9 @@ def test_vmake_bad_key_remembered(tmp_path, monkeypatch):
     monkeypatch.setattr(VC, "paid_off", lambda: False)
     monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     assert VC.ready("vmake")["mode"] == "vmake"
-    assert VC.note_hard("RuntimeError: Switch to New API") == "new_api"
+    assert VC.note_hard("RuntimeError: Switch to New API") == ""      # 고급만 막는 실패 = 기본으로 지운다(사장님 11-03) — 흐림에 묶지 않는다
+    assert VC.ready("vmake")["mode"] == "vmake"
+    assert VC.note_hard("RuntimeError: 10021 sign not equals") == "sign"
     assert VC.ready("vmake")["mode"] == "blur"
     kf.write_text("new:key", encoding="utf-8")
     assert VC.ready("vmake")["mode"] == "vmake"

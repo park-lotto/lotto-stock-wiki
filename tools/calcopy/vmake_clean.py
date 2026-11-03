@@ -154,7 +154,7 @@ def _key_fp(k: str) -> str:
 def note_hard(text: str) -> str:
     """(판단 주인 — 이 키로는 다시 보내도 같다) 회원 키 확정 실패를 기록한다. 편마다 다시 보내 같은 실패를 겪던 것(11-03 이정민·홍광수·김형관·임수정·한정수)."""
     k = hard_fail(text)
-    if not k or key_source() != "member" or not member_key():
+    if not k or k in BASIC_OK or key_source() != "member" or not member_key():
         return ""
     BAD_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
     BAD_KEY_FILE.write_text(json.dumps({"fp": _key_fp(member_key()), "kind": k}), encoding="utf-8")
@@ -168,7 +168,11 @@ def bad_key() -> str:
     except (OSError, ValueError):
         return ""
     k = member_key()
-    return str(j.get("kind") or "") if k and j.get("fp") == _key_fp(k) else ""
+    kind = str(j.get("kind") or "") if k and j.get("fp") == _key_fp(k) else ""
+    return "" if kind in BASIC_OK else kind      # 고급만 안 되는 키는 기본으로 지운다(member_clean) — 옛 기록이 흐림에 묶어 두지 않게
+
+
+BASIC_OK = ("new_api", "not_pro")      # 고급(Pro)만 막는 실패 — 기본 등급은 된다(사장님 11-03 '고급 있음 고급으로, 없음 기본으로')
 
 
 def ready(mode: str = "vmake") -> dict:
@@ -691,7 +695,15 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
         with lock:
             out["calls"] += 1
         try:
-            VC.remove_subtitles(str(f), api_key, str(tmp), tier=tier, resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
+            try:
+                VC.remove_subtitles(str(f), api_key, str(tmp), tier=tier, resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
+            except Exception as e:  # noqa: BLE001 — 고급이 안 되는 키면 기본으로(사장님 11-03 '고급 있음 고급으로, 없음 기본으로')
+                if tier == "basic" or hard_fail(str(e)) not in ("new_api", "not_pro"):
+                    raise
+                log(f"[vmake] {f.name}: 고급 안 됨({hard_fail(str(e))}) → 기본으로")
+                with lock:
+                    out["calls"] += 1
+                VC.remove_subtitles(str(f), api_key, str(tmp), tier="basic", resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
             swap_in(f, tmp)
             with lock:
                 out["cleaned"].append(f.name)
