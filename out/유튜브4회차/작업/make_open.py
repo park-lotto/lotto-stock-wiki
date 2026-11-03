@@ -1,4 +1,4 @@
-"""오프닝: 클로드 창(실사 재현)에서 한마디 타이핑 → 13단계 → 완성 카드 → 완성 쇼츠 재생. 소리 = 키보드 타다닥 + 엔터 톡 + 단계 톡 + 완성 딩 + 쇼츠 원음."""
+"""오프닝: 클로드 창(실사 재현)에서 '외국인 한국화장품 영상 만들어줘..' 타이핑 → 13단계 → 완성 카드 → 완성 쇼츠 재생. 소리 = 키보드 타다닥 + 엔터 톡 + 단계 톡 + 완성 딩 + 쇼츠 원음."""
 import json, shutil, subprocess, sys, random
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -36,15 +36,24 @@ def main():
         b.close()
     ui = W / "open_ui.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-framerate", str(FPS), "-i", str(fd / "%04d.jpg"), "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(ui)])
-    # 키 소리 한 개 합성(짧은 잡음 + 고역 강조 + 빠른 감쇠)
-    key = W / "key.wav"
-    run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.045:c=white:a=0.9:r=48000", "-af",
-         "highpass=f=1800,lowpass=f=7000,afade=t=out:st=0.004:d=0.04,volume=1.6", str(key)])
+    # 키 소리 = 효과음 팩의 실제 틱 3종(팩01~03) × 높낮이 3단 → 9가지를 돌려 쓴다(같은 소리 연속 금지)
+    A = W.parents[2] / "shopping_shorts" / "assets" / "sfx_packs"
+    keys = []
+    for pk in ("팩01", "팩02", "팩03"):
+        for j, rate in enumerate((0.92, 1.0, 1.09)):
+            kf = W / f"key_{pk}_{j}.wav"
+            run(["ffmpeg", "-y", "-v", "error", "-i", str(A / pk / "tick.wav"), "-af",
+                 f"aresample=48000,asetrate={int(48000 * rate)},aresample=48000,atrim=0:0.08,afade=t=out:st=0.05:d=0.03", str(kf)])
+            keys.append(kf)
     R = random.Random(3)
     ev = []  # (시각, 파일, 볼륨)
-    for k in range(TL["LEN"]):
-        ev.append((TL["T0"] + k * TL["CH"] + R.uniform(-0.02, 0.03), key, R.uniform(0.55, 1.0)))
-    ev.append((TL["SEND"], SFX / "05_톡.mp3", 0.9))
+    last = -1
+    for t in TL["KEYS"]:
+        k = R.randrange(len(keys))
+        if k == last: k = (k + 1) % len(keys)
+        last = k
+        ev.append((t + R.uniform(-0.008, 0.008), keys[k], R.uniform(0.7, 1.0)))
+    ev.append((TL["SEND"], keys[4], 1.0)); ev.append((TL["SEND"] + 0.03, SFX / "05_톡.mp3", 0.9))  # 엔터
     for k in range(TL["N"]):
         ev.append((TL["ST0"] + (k + 1) * TL["STEP"], SFX / "05_톡.mp3", 0.25))
     ev.append((TL["DONE"] + 1.0, SFX / "06_딩.mp3", 0.8))
@@ -66,7 +75,15 @@ def main():
     (W / "seg").mkdir(exist_ok=True)
     out = W / "seg" / "open.av.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-c:a", "aac", "-b:a", "192k", str(out)])
-    print("오프닝", out, json.dumps(TL))
+    # 배경음악(Jev 선택 0.97: 무료곡 Epic Inspiration, 상업곡 금지) — 키 소리 밑에 작게, 쇼츠 원음 구간은 더 줄이고 끝에서 사라짐
+    BGM = W.parents[2] / "shopping_shorts" / "assets" / "bgm_lib" / "epic_inspiration.mp3"
+    tot = end + SHORT_LEN
+    mixed = W / "seg" / "open.mp4"
+    run(["ffmpeg", "-y", "-v", "error", "-i", str(out), "-i", str(BGM), "-filter_complex",
+         f"[1:a]aresample=48000,atrim=0:{tot:.3f},volume='if(lt(t,{end:.3f}),0.16,0.06)':eval=frame,afade=t=in:d=0.6,afade=t=out:st={tot - 1.2:.3f}:d=1.2[b];"
+         f"[0:a][b]amix=inputs=2:normalize=0:duration=first[a]",
+         "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(mixed)])
+    print("오프닝", mixed, json.dumps({k: v for k, v in TL.items() if k != "KEYS"}), "키", len(TL["KEYS"]))
 
 
 if __name__ == "__main__":

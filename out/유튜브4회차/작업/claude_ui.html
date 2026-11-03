@@ -44,14 +44,14 @@ body{width:1536px;height:864px;overflow:hidden;background:#faf9f5;font-family:"M
     <div class="brand">Claude</div>
     <div class="newc"><b>+</b>새 채팅</div>
     <div class="sec">최근</div>
-    <div class="item on">외국인 + 한국 화장품 쇼츠</div>
+    <div class="item on">외국인 한국화장품 영상</div>
     <div class="item">썰템쇼 스타일 초코무스</div>
     <div class="item">레고 이름 유래 쇼츠</div>
     <div class="item">한국 선크림 백탁 쇼츠</div>
     <div class="item">오뚜기 숨은 제품</div>
   </div>
   <div class="main">
-    <div class="top">외국인 + 한국 화장품 쇼츠</div>
+    <div class="top">외국인 한국화장품 영상</div>
     <div class="chat"><div class="col">
       <div class="user" id="u"></div>
       <div class="bot" id="b"></div>
@@ -66,16 +66,25 @@ body{width:1536px;height:864px;overflow:hidden;background:#faf9f5;font-family:"M
   </div>
 </div>
 <script>
-var MSG="외국인 + 한국 화장품 쇼츠 만들어줘";
+var MSG="외국인 한국화장품 영상 만들어줘..";
 var STAGES=["준비 확인","영상 확인","원본 영상 찾기","제품 확인","자료 조사","재료 영상 모으기","원음 정리","대본 쓰기","대본 확인","장면 맞추기","목소리·영상 만들기","완성본 검사","완성"];
 var BOT="숏클로 만들게요. 외국인이 한국 화장품을 써 보는 쇼츠 — 해외 원본 영상부터 찾겠습니다.";
 var BOT2="완성됐습니다. 쇼츠 한 편과 썸네일이 준비됐어요.";
-var T0=0.8, CH=0.17, SEND=T0+MSG.length*CH+0.45, B1=SEND+0.5, ST0=B1+1.6, STEP=0.55, DONE=ST0+STAGES.length*STEP+0.3;
-window.TL={T0:T0,CH:CH,SEND:SEND,B1:B1,ST0:ST0,STEP:STEP,DONE:DONE,LEN:MSG.length,N:STAGES.length};
+// 키 시각: 한글은 자모 수만큼(외=ㅇㅗㅣ 3타), 띄어쓰기에서 숨 고르기 → 타다다닥 묶음
+var _r=7;function rnd(){_r=(_r*16807)%2147483647;return _r/2147483647;}
+function nkeys(ch){var c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return 1;var jung=Math.floor(c/28)%21,jong=c%28;
+  var n=2+(jong?1:0);if([9,10,11,14,15,16,19].indexOf(jung)>=0)n++;if([3,5,6,9,10,11,12,13,14,15,18].indexOf(jong)>=0)n++;return n;}
+var T0=0.8, KEYS=[], CHT=[], t_=T0;
+for(var i=0;i<MSG.length;i++){var ch=MSG[i];
+  if(ch===' '){t_+=0.16+rnd()*0.10;KEYS.push(t_);t_+=0.05;CHT.push(t_);continue;}
+  if(ch==='.'&&i>0&&MSG[i-1]!=='.')t_+=0.22;
+  var k=nkeys(ch);for(var j=0;j<k;j++){KEYS.push(t_);t_+=0.058+rnd()*0.035;}CHT.push(t_);}
+var CH=(t_-T0)/MSG.length, SEND=t_+0.55, B1=SEND+0.5, ST0=B1+1.6, STEP=0.55, DONE=ST0+STAGES.length*STEP+0.3;
+window.TL={T0:T0,CH:CH,SEND:SEND,B1:B1,ST0:ST0,STEP:STEP,DONE:DONE,LEN:MSG.length,N:STAGES.length,KEYS:KEYS};
 var st=document.getElementById('st');
 STAGES.forEach(function(s,i){var d=document.createElement('div');d.innerHTML='<i>○</i>'+(i+1)+'/13 '+s;st.appendChild(d);});
 function render(t){
-  var typed=t<T0?0:Math.min(MSG.length,Math.floor((t-T0)/CH)+1);
+  var typed=0;while(typed<MSG.length&&t>=CHT[typed]-0.03)typed++;
   var sent=t>=SEND;
   document.getElementById('in').innerHTML=sent?'<span class="ph">Claude에게 메시지 보내기</span>':(typed?MSG.slice(0,typed):'<span class="ph">Claude에게 메시지 보내기</span>');
   document.getElementById('caret').style.visibility=(Math.floor(t*2)%2===0||(typed&&!sent&&typed<MSG.length))?'visible':'hidden';
