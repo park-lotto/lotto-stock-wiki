@@ -105,7 +105,12 @@ async function absorb(f, res) {
   if (res.script) f.script = res.script;   // 지금 대본(제목·줄 id·문장) — 회원이 보자고 하면 그대로(step='script'), 고칠 줄은 reviseFlow   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
-  if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
+  if (res.status === 'execute') {
+    f.do = res.do || [];
+    const rd = f.do.find(d => d && d.cmd === 'render');
+    if (rd) f.renderDo = rd;                // 다시 만들기(restyle)가 같은 렌더 지시(글자 지우기·권고 넘기기·원본 이름)로 돌게
+    save(f); return 'run';
+  }
   if (res.status === 'review' || res.status === 'reject') { f.asks = (res.review || []).map(rv => postReview(f, rv)); save(f); return 'ask'; }
   if (res.status === 'wait_user') { f.wait = res.wait; f.approved = false; save(f); return 'user'; }   // 새 사인 요청(길이 고친 뒤 다시 사인 등) — 앞 사인 표시를 지운다(10-21 실측: 두 번째 사인을 안 묻고 wait 만 돌았다)
   if (res.status === 'done') { f.video = res.video; f.title = res.title; f.note = res.note; save(f); return 'end'; }
@@ -276,15 +281,24 @@ export async function restyleFlow(sid) {
   if (!f) return { error: '이 편 기록이 없습니다' };
   if (f.busy) return { error: '지금 만드는 중입니다' };
   const job = path.join(flowRoot(), f.sid, 'job');
-  const v = fs.readdirSync(job).find(n => fs.existsSync(path.join(job, n, 'render', 'final.mp4')));
+  const has = n => n && fs.existsSync(path.join(job, String(n), 'render', 'final.mp4'));
+  const v = [f.renderDo && f.renderDo.version].find(has) || fs.readdirSync(job).find(has);
   if (!v) return { error: '다시 만들 재료가 없습니다' };
-  f.do = [{ id: 'restyle', cmd: 'render', version: v }];
+  const fin = path.join(job, v, 'render', 'final.mp4');
+  const before = fs.statSync(fin).mtimeMs;
+  // 처음 렌더 지시 그대로 — 빼면 글자 지우기·권고 넘기기가 바뀌고 출처 검사가 원본 컷을 다른 재료로 잡는다(#749·#1553)
+  f.do = [{ ...(f.renderDo || {}), id: 'restyle', cmd: 'render', version: v }];
   f.restyling = true;
   const m = await runWithPreset(f).finally(() => { f.restyling = false; });
   const r = m.restyle || Object.values(m)[0] || {};
-  if (r.error || r.ok === false) return { error: String(r.error || '다시 만들지 못했습니다').slice(0, 300) };
-  if (f.video) fs.copyFileSync(path.join(job, v, 'render', 'final.mp4'), f.video);
-  return { ok: true, video: f.video };
+  // 성공 = 오류·배치 충돌 없이 새 완성본을 썼다. 출처 검사(jumps)는 대본·장면이 그대로라 처음 편이 넘은 것과 같아 막지 않는다
+  //   (실행기는 jumps 면 오류 문구 없이 ok:false 를 줘 runner.log 엔 render ok 인데 '다시 만들지 못했습니다'였다 — 옛 편은 원본 이름이 없어 거짓으로 걸린다)
+  const made = fs.existsSync(fin) && fs.statSync(fin).mtimeMs > before;
+  if (r.error || r.conflict || !made) {
+    return { error: String(r.error || (r.conflict ? '자막·장면 배치가 맞지 않아 겉모습만 바꿔서는 다시 만들 수 없습니다' : '다시 만들지 못했습니다')).slice(0, 300) };
+  }
+  // 회원이 보는 완성본 폴더 복사는 make_flow.flowOut(keepFinal) 한 곳. f.video 는 마무리가 준 이 파일이거나, 안 끝난 편이면 소재 주소다(#1042 거기로 복사하다 ENOENT)
+  return { ok: true, video: fin, title: f.title || '' };
 }
 
 export function approveFlow(sid) { const f = loadFlow(sid); if (!f) return null; f.approved = true; save(f); f.running = pump(f); return f; }
