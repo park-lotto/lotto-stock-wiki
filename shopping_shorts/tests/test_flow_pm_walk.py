@@ -49,6 +49,11 @@ def _to_rows(st):
     out = _go(st, {"mats": {"sheets": ["_sheet_abc.jpg"]}})
     assert out["review"][0]["id"] == "pm_script" and "frame_vars" in out["review"][0]["ask"]
     S = json.loads((EX / "대본.json").read_text(encoding="utf-8"))
+    bare = json.loads(json.dumps(S))
+    out = _go(st, rp={"pm_script": {"대본": bare}})          # 줄마다 장면 증거가 없으면 그 자리에서 다시
+    assert out["review"][0]["id"] == "pm_script" and "장면 증거 없음" in out["review"][0]["ask"]
+    for l in S["lines"]:
+        l["scene"] = "src_abc.mp4@1.0 — 손에 든 병"
     out = _go(st, rp={"pm_script": {"대본": S}})
     assert out["review"][0]["id"] == "pm_memes" and "fm_travolta" in out["review"][0]["ask"] or out["review"][0]["id"] == "pm_memes"
     out = _go(st, rp={"pm_memes": {"stems": ["fm_travolta", "gfr_Xh3A"]}})
@@ -89,7 +94,14 @@ def test_walk_to_done():
 def test_script_rejected_then_fixed():
     st = _start()
     st, out = _to_rows(st)
-    assert st["tries"].get("pm_script", 0) == 0           # PC 본보기 대본은 한 번에 통과
+    assert st["tries"].get("pm_script", 0) == 1           # 장면 증거 없는 첫 답만 다시(PC 본보기 대본 규칙은 통과)
+
+
+def test_scene_from_unknown_source_is_rejected():
+    from tools.calcopy.hybrid import flow_pm as PMF
+    st = {"material": {"files": [{"name": "src_abc.mp4"}]}}
+    bad = PMF.scene_problems(st, {"lines": [{"scene": "src_zzz.mp4@3 — 병"}, {"scene": "src_abc.mp4@2.5 — 병"}]})
+    assert len(bad) == 1 and "src_zzz.mp4" in bad[0]
 
 
 def test_topic_start_without_video_goes_to_research():

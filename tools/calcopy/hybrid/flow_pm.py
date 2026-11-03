@@ -177,7 +177,9 @@ SCRIPT = """너는 PC 제작 담당과 같은 대본 작가다. PC 작품과 똑
 {facts}
 소재 쇼츠 받아쓰기: {bench}
 금지선: 질병·효능·금액(가격) 말하지 않는다 · 쿠팡·구매 권유 줄 없음 · 화자 대사 줄(speaker) 1~3줄 · 훅 제목 2줄(\\n).
-답: {{"대본": {{"desktop_title": "…", "frame_vars": {{…}}, "lines": [{{"text": "…/…", "tts": "…", "speaker": "선택"}}]}}}}"""
+★줄마다 그 줄 화면이 될 원본 장면을 시트에서 찾아 scene 에 적는다: "원본 파일 이름@초 — 보이는 것". 받은 원본: {files}
+  줄이 말하는 대상(브랜드·제품·사람)이 그 장면에 실제로 보여야 한다 — 원본에 없는 대상은 말하지 않는다(장면이 없으면 그 줄을 바꾼다).
+답: {{"대본": {{"desktop_title": "…", "frame_vars": {{…}}, "lines": [{{"text": "…/…", "tts": "…", "speaker": "선택", "scene": "src_….mp4@12.4 — 보이는 것"}}]}}}}"""
 
 
 def p_script(st, m, rp, u):
@@ -190,7 +192,8 @@ def _script_ask(st, more: str = ""):
     sd = _slug_dir(st)
     ask = SCRIPT.format(form=_doc(sd / "_engine_ready.md", 5000, part="2."), style=_doc(sd / "스타일분석.md", 9000) + "\n" + _doc(sd / "대본스타일_줄판독_2026-10-17.md", 5000),
                         guide=_doc(GUIDE / "07_script.md", 7000), example=_doc(ex[0] / "대본.json", 5000) if ex else "(본보기 없음)",
-                        facts="\n".join(st["research"].get("facts") or []), bench=" / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:2000]) + more
+                        facts="\n".join(st["research"].get("facts") or []), bench=" / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:2000],
+                        files=", ".join(f["name"] for f in (st.get("material") or {}).get("files") or [])) + more
     return {"review": [F()._rv("pm_script", ask, [F()._img(x) for x in st.get("pm_sheets") or []][:4], need=("대본",))], "then": "p_script_got"}
 
 
@@ -207,6 +210,22 @@ def script_problems(st, S: dict) -> list[str]:
     e = r.get("engine")
     if e and not e.get("ok"):
         bad.append(f"대본 엔진: {(e.get('points') or {}).get('why')}")
+    return bad + scene_problems(st, S)
+
+
+def scene_problems(st, S: dict) -> list[str]:
+    """줄마다 장면 증거(scene = '원본@초 — 보이는 것') — 받은 원본 이름이어야 하고 초·보이는 것이 있어야 한다.
+    11-03 베이글 편: '트레이더조' 줄에 원본에 없는 대상 → 다른 브랜드 병(Jev 뿌리 0.86·해결 0.77). 보이는 것이 대상과 맞나는 재료·렌더 전 눈이 본다."""
+    names = {f["name"] for f in (st.get("material") or {}).get("files") or []}
+    if not names:
+        return []
+    bad = []
+    for i, l in enumerate(S.get("lines") or []):
+        m = re.match(r"\s*([^@\s]+)@(\d+(?:\.\d+)?)\s*[—\-:]\s*(\S.*)", str(l.get("scene") or ""))
+        if not m:
+            bad.append(f"줄{i + 1} 장면 증거 없음 — scene 에 '원본@초 — 보이는 것'")
+        elif m.group(1) not in names:
+            bad.append(f"줄{i + 1} 장면 원본 '{m.group(1)}' 은 받은 원본이 아니다({', '.join(sorted(names))})")
     return bad
 
 
@@ -329,11 +348,11 @@ def _plan_fix(st, probs, imgs):
 
 
 PLAN_EYE = """너는 PC 제작 담당처럼 렌더 전에 계획 접촉 시트(컷마다 구워질 칸의 시작·가운데·끝 3장 + 그 컷의 대본 줄)를 눈으로 확인한다.
-컷마다 본다(증거 = 그 컷 3장에서 본 것):
-① 컷 안에서 원본 장면이 바뀌거나 반투명하게 겹친다(3장이 서로 다른 장면) ② 칸 가장자리(특히 아래·위)에 남의 박힌 글자·자막 띠·로고가 조금이라도 걸린다
-③ 대본 줄이 말하는 대상(브랜드·제품·사람)과 화면 대상이 다르다 ④ 제품이 칸 가장자리로 밀렸다 ⑤ 같은 원본 장면이 짤 하나를 사이에 두고 다시 나온다(A-B-A)
+코드 관문이 이미 잰 것(칸 가장자리 남의 글자·A-B-A·재사용)은 보지 않는다. 코드가 못 보는 것만 컷마다 본다(증거 = 그 컷 3장에서 본 것):
+① 원본 장면 전환이 반투명하게 겹쳐 보인다(디졸브 — 두 장면이 섞인 장) ② 대본 줄이 말하는 대상(브랜드·제품·사람)과 화면 대상이 다르다 ③ 제품이 칸 가장자리로 밀렸다
+(빠른 하드컷은 이 채널의 정상 편집이다 — 벤치 샷 18%가 0.8초 미만. 걸지 않는다)
 대본: {lines}
-답: {{"ok": true/false, "cuts": [{{"no": 컷번호, "seen": "3장에서 본 것"}}], "problems": ["#컷번호 무엇(①~⑤)"]}} — cuts 는 시트의 모든 컷."""
+답: {{"ok": true/false, "cuts": [{{"no": 컷번호, "seen": "3장에서 본 것"}}], "problems": ["#컷번호 무엇(①~③)"]}} — cuts 는 시트의 모든 컷."""
 
 
 def _plan_eye_ask(st):
