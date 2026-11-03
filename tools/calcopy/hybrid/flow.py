@@ -813,8 +813,11 @@ def setup_fix(missing: list) -> str:
 def ph_setup_check(st, m, rp, u):
     env = m.get("env") or {}
     if env.get("error"):
-        st["log"].append("준비 확인 실패: " + str(env["error"])[:300])
-        raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요", ask_member=True)
+        err = str(env["error"])[:300]
+        st["log"].append("준비 확인 실패: " + err)
+        if "busy" in err or "앞 작업" in err:     # 앞 편 정리(프리셋 빌림 반납) 중 — 잠깐의 문제, 스스로 한 번 다시(#2027 cancel 직후 start · #502 3분 뒤 풀림)
+            raise _Stop("앞 편을 정리하는 중이에요", "잠시 뒤 다시 시도해 주시면 이어 갈게요", retry="setup", auto=True, detail=err)
+        raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요", retry="setup", ask_member=True, detail=err)   # 원인 원문 = detail(회원 Claude 가 본다, 회원 말은 쉬운 말)
     miss = env.get("missing") or []     # 판단 주인 = runner_ops.need_list(이 판·소재에 실제로 쓰는 도구·키·로그인만) — 여기는 멈춤/진행만
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))

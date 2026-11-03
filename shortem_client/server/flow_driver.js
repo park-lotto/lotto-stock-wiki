@@ -134,6 +134,7 @@ async function send(f, body) {
 //   빌리지 않아 렌더가 판 파일 없음 SystemExit 로 조용히 죽고 '같은 원인 3번'으로 멈췄다). 빌림 판단은 서버 claude_portal.preset_rent 한 곳.
 const COOKIE_EVERY_MS = 20 * 60 * 1000;   // 한 편이 30~50분 — 유튜브 세션이 도는 사이 끊기지 않게 일 사이마다 새로 뽑는다(사장님 11-02 "중간에 안끊기게")
 let cookiesAt = 0;
+const stops = new Map();   // sid → 지금 도는 실행기 일의 AbortController(편 객체는 JSON 으로 저장되니 밖에 둔다)
 async function runWithPreset(f) {
   if (Date.now() - cookiesAt > COOKIE_EVERY_MS) { cookiesAt = Date.now(); await refreshCookies(); }
   const job = path.join(flowRoot(), f.sid, 'job');
@@ -148,10 +149,13 @@ async function runWithPreset(f) {
   // 박힌 글자 방식(사장님 10-30 — 회원이 설정에서 바꿈: 자동·지우기·흐림) — 회원 설정 text.orig_text 를 실행기에(vmake_clean.style_mode 가 읽는다)
   let textMode = '';
   try { const pk = f.preset ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
+  const ac = new AbortController();
+  stops.set(f.sid, ac);
   try {
     const member = PID_RE.test(String(f.preset || '')) ? { SHORTEM_MEMBER_PACK: await packFile(f.preset) } : {};   // 꾸미기 값 → 렌더(엔진 styles.member_frame)
-    return await runOps(job, f.do || [], { env: { ...member, ...(f.restyling ? { SHORTEM_RESTYLE: '1' } : {}), ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
-  finally { if (rental) await rental.release(); }
+    if (f.cancelled) ac.abort();
+    return await runOps(job, f.do || [], { signal: ac.signal, env: { ...member, ...(f.restyling ? { SHORTEM_RESTYLE: '1' } : {}), ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
+  finally { if (stops.get(f.sid) === ac) stops.delete(f.sid); if (rental) await rental.release(); }
 }
 
 const PUMP_MAX = 200;
@@ -232,8 +236,13 @@ export function cancelFlow(sid) {
   f.cancelled = true;
   f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
   save(f);
+  const ac = stops.get(sid);      // 돌던 실행기를 끈다 → runWithPreset finally 가 프리셋 빌림을 바로 돌려준다(#2027 cancel 직후 start 가 '준비 덜 됨')
+  if (ac) ac.abort();
   return f;
 }
+
+// 멈춘 편이 빌림까지 다 돌려줄 때까지(새 편 시작 전) — 고리(pump)가 끝나면 runWithPreset finally 도 끝났다
+export async function settled(sid) { const f = flows.get(sid); if (f && f.running) { try { await f.running; } catch { /* 고리 오류는 편에 적혀 있다 */ } } }
 
 // 완성본은 두고 지우기부터 렌더만 다시 — 대본·재료·목소리 그대로
 export function recleanFlow(sid) {
@@ -247,6 +256,8 @@ export async function startFlow({ preset, video, product }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
+  const ending = [...flows.values()].filter(g => g.cancelled && g.busy);      // 막 멈춘 편 — 빌림을 다 돌려준 뒤 시작한다(#2027)
+  if (ending.length) await Promise.race([Promise.all(ending.map(g => settled(g.sid))), new Promise(r => setTimeout(r, 15000).unref())]);
   await refreshCookies();
   const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };

@@ -258,7 +258,7 @@ const RESULT_POLL_MS = 1000;
 //   11-03 완성본 검사 멈춤(정민혜 1.0.52·1.0.54): 산출물을 다 쓴 실행기가 스레드 1개·CPU 0 으로 10분+ 안 끝났다(종료 정리에서 멈춤으로 본다).
 //   결과 파일이 생기면 프로세스가 안 끝나도 잠깐 뒤 끄고 그 파일로 끝낸다. 옛 엔진(파일을 안 씀)은 예전처럼 stdout 마지막 줄.
 const killTree = pid => { try { if (process.platform === 'win32') spawn('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, stdio: 'ignore' }); else process.kill(pid, 'SIGKILL'); } catch { /* 이미 끝 */ } };
-export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
+export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {}, signal = null } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
   const ts = Date.now();
   const doFile = path.join(jobDir, '..', `do_${ts}.json`);
@@ -301,6 +301,9 @@ export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: ex
     poll.unref();
     proc.on('close', finish);
     proc.on('exit', () => setTimeout(finish, EXIT_GRACE_MS).unref());
+    // 편 멈춤(cancelFlow) — 돌던 실행기를 끄고 바로 끝낸다. 안 끄면 끝날 때까지 프리셋 빌림이 남아 새 편 준비 확인이 busy 로 멈췄다(#2027·#502)
+    const stop = () => { killTree(proc.pid); if (!done) { done = true; clearTimeout(t); clearInterval(poll); try { fs.unlinkSync(doFile); } catch { /* 이미 */ } resolve(fail('사용자가 멈췄다')); } };
+    if (signal) { if (signal.aborted) stop(); else signal.addEventListener('abort', stop, { once: true }); }
   });
 }
 
