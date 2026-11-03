@@ -11,7 +11,7 @@ import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
-import { readSettings } from './local_settings.js';
+import { readSettings, providerOf } from './local_settings.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
 const DEFAULT_VOICE = 'tc_68257f68bc6e3c161ab5078d';
@@ -84,12 +84,9 @@ async function testRender(dir) {
 }
 
 // 회원이 고른 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 지금 채널 먼저, 없으면 고른 적 있는 채널, 그래도 없으면 타입캐스트.
+//   다른 채널 목소리를 이 채널이 빌려 쓰는 판단은 local_settings.memberVoice(엔진 팩) — 회사 판정은 같은 providerOf.
 export function voiceProvider(settings) {
-  const of = c => {
-    const t = ((c || {}).pack || {}).tts || {};
-    const v = String(t.voice_id || '');
-    return ({ fishaudio: 'fish', fish_audio: 'fish', eleven: 'elevenlabs' })[t.provider] || t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
-  };
+  const of = c => providerOf(((c || {}).pack || {}).tts);
   const ch = (settings || {}).channels || {};
   return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
 }

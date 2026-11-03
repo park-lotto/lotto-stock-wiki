@@ -6,6 +6,7 @@ import path from 'node:path';
 import { homeDir, writeFileIn, jail } from './paths.js';
 import { engineTool } from './engine_bridge.js';
 import { api } from './api.js';
+import { keyStatus } from './engine/voice.js';
 
 const FILE = 'settings.json';
 export const PID_RE = /^p_[0-9a-f]{10}$/;
@@ -131,12 +132,37 @@ export async function saveLook(pid, snapshot) {
   return { ok: true };
 }
 
+// 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 모르면 null
+export function providerOf(t) {
+  const v = String((t || {}).voice_id || '');
+  const p = (t || {}).provider;
+  return ({ fishaudio: 'fish', fish_audio: 'fish', eleven: 'elevenlabs' })[p] || p || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
+}
+
+const VOICE_KEYS = ['voice_id', 'name', 'provider', 'preset_id', 'emotion'];
+// (판단 주인 — 이 프리셋에서 엔진이 쓸 회원 목소리 칸) 회원이 이 프리셋 목소리를 정했으면 그대로. 안 정했고 프리셋 기본 목소리 회사 키가 없으면
+//   회원이 다른 프리셋에서 고른 목소리 중 키가 있는 것(지금 채널 먼저)을 쓴다 — 프리셋 타입캐스트가 남아 '타입캐스트 키'를 요구하던 것(#1186·#953·#1846).
+//   반환 = 팩 member.tts 에 넣을 칸(빈 객체 = 프리셋 목소리). hasKey(회사) 는 키 파일 판정(engine/voice.keyStatus).
+export function memberVoice(settings, pid, presetTts, hasKey) {
+  const ch = (settings || {}).channels || {};
+  const own = ((ch[pid] || {}).pack || {}).tts || {};
+  if (own.voice_id) return own;
+  if (hasKey(providerOf(presetTts) || 'typecast')) return own;
+  const other = [settings.current, ...Object.keys(ch)].filter(p => p && p !== pid)
+    .map(p => ((ch[p] || {}).pack || {}).tts).find(t => t && t.voice_id && hasKey(providerOf(t)));
+  return other ? { ...Object.fromEntries(VOICE_KEYS.filter(k => other[k] != null).map(k => [k, other[k]])), ...own } : own;
+}
+
 // 엔진 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩}) — 만들 때마다 지금 설정으로 새로 쓴다(웹에서 바꾼 것도 먼저 받는다)
-export async function packFile(pid) {
+export async function packFile(pid, { hasKey = s => keyStatus(s).present } = {}) {
   await syncFromServer({ force: true });
   const rel = path.join('packs', `${pid}.json`);
   const st = readSettings();
   const web = { look: ((st.looks || {})[pid] || {}).snapshot || null };   // 엔진이 읽는 웹 설정(꾸민 모양) — 팩 검사 밖 칸. 감정은 팩 tts.emotion
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), member: (st.channels[pid] || {}).pack || {}, web }));   // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
+  const full = await packFor(pid);
+  const member = { ...((st.channels[pid] || {}).pack || {}) };      // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
+  const tts = memberVoice(st, pid, full.tts, hasKey);
+  if (Object.keys(tts).length) member.tts = tts;
+  writeFileIn(homeDir(), rel, JSON.stringify({ 1: tts.voice_id ? { ...full, tts: { ...full.tts, ...tts } } : full, member, web }));
   return path.join(homeDir(), rel);
 }
