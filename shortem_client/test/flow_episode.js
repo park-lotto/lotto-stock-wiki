@@ -27,6 +27,7 @@ if (arg('--cache')) env.SHORTEM_SOURCE_CACHE = path.resolve(arg('--cache'));
 for (const k of ['ORIGIN_YT_ONLY', 'SHORTEM_YT_GAP']) if (process.env[k]) env[k] = process.env[k];   // 쓸 계정·요청 간격 — MCP 서버는 부모 환경을 다 물려받지 않는다(넘길 것만 적는다)
 const cfg = path.join(dir, 'mcp.json');
 if (INST) { delete env.SHORTEM_ENGINE; delete env.SHORTEM_DEV_TOOLS; delete env.SHORTEM_DEV; env.SHORTEM_INSTALL = INST; }
+else env.SHORTEM_INSTALL = '';   // ★숏클을 설치한 PC 는 SHORTEM_INSTALL 이 사용자 환경에 있다 — 물려받으면 개발 MCP 가 설치본(옛 판)으로 갈아 탄다(index.js main → supervisor). 11-03 실측: 시험이 1.0.12 설치본으로 돌았다
 fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: INST
   ? { command: path.join(INST, 'tools', 'node', 'node.exe'), args: [path.join(INST, 'claude-plugin', 'shortem', 'launcher.js')], env }
   : { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
