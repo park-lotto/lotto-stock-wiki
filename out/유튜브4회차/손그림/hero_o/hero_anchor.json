@@ -1,0 +1,142 @@
+{
+ "g_m_hope": {
+  "ex": 496,
+  "ey": 280,
+  "top": 117,
+  "chin": 358,
+  "hpx": 241
+ },
+ "g_m_tired": {
+  "ex": 508,
+  "ey": 266,
+  "top": 119,
+  "chin": 385,
+  "hpx": 266
+ },
+ "g_f_hope": {
+  "ex": 512,
+  "ey": 319,
+  "top": 135,
+  "chin": 456,
+  "hpx": 321
+ },
+ "g_f_tired": {
+  "ex": 496,
+  "ey": 344,
+  "top": 139,
+  "chin": 469,
+  "hpx": 330
+ },
+ "g_f_night_phone": {
+  "ex": 487,
+  "ey": 330,
+  "top": 109,
+  "chin": 457,
+  "hpx": 348
+ },
+ "g_f_laptop_hope": {
+  "ex": 508,
+  "ey": 307,
+  "top": 133,
+  "chin": 442,
+  "hpx": 309
+ },
+ "g_m_point_hope": {
+  "ex": 348,
+  "ey": 279,
+  "top": 152,
+  "chin": 377,
+  "hpx": 225
+ },
+ "g_f_point_hope": {
+  "ex": 345,
+  "ey": 299,
+  "top": 156,
+  "chin": 422,
+  "hpx": 266
+ },
+ "g_f_frustr_head": {
+  "ex": 522,
+  "ey": 313,
+  "top": 139,
+  "chin": 446,
+  "hpx": 307
+ },
+ "g_m_laptop_tired": {
+  "ex": 512,
+  "ey": 299,
+  "top": 129,
+  "chin": 391,
+  "hpx": 262
+ },
+ "g_m_frustr_head": {
+  "ex": 506,
+  "ey": 279,
+  "top": 121,
+  "chin": 391,
+  "hpx": 270
+ },
+ "g_m_laptop_hope": {
+  "ex": 492,
+  "ey": 270,
+  "top": 121,
+  "chin": 377,
+  "hpx": 256
+ },
+ "g_m_excited": {
+  "ex": 487,
+  "ey": 262,
+  "top": 111,
+  "chin": 375,
+  "hpx": 264
+ },
+ "g_f_dream": {
+  "ex": 492,
+  "ey": 328,
+  "top": 115,
+  "chin": 457,
+  "hpx": 342
+ },
+ "g_f_excited": {
+  "ex": 492,
+  "ey": 309,
+  "top": 125,
+  "chin": 453,
+  "hpx": 328
+ },
+ "g_o_hope": {
+  "ex": 502,
+  "ey": 289,
+  "top": 107,
+  "chin": 387,
+  "hpx": 280
+ },
+ "g_o_laptop_blank": {
+  "ex": 499,
+  "ey": 297,
+  "top": 141,
+  "chin": 422,
+  "hpx": 281
+ },
+ "g_o_phone_wow": {
+  "ex": 499,
+  "ey": 287,
+  "top": 107,
+  "chin": 405,
+  "hpx": 298
+ },
+ "g_o_laptop_tired": {
+  "ex": 512,
+  "ey": 330,
+  "top": 172,
+  "chin": 440,
+  "hpx": 268
+ },
+ "g_o_frustr_head": {
+  "ex": 512,
+  "ey": 291,
+  "top": 112,
+  "chin": 404,
+  "hpx": 292
+ }
+}
