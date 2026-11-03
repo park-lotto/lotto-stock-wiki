@@ -154,3 +154,35 @@ def test_318_server_leaves_shot_cap_to_render(tmp_path):
     c = {"src": "o.mp4", "ss": 1.0}
     RB.shot_cap(c, v)
     assert c.get("max_auto") and c["max"] is not None and abs(c["max"] - 2.0) < 0.1, c
+
+
+def test_318_jamo_line_cache_survives_edit(tmp_path, monkeypatch):
+    """관제 318 #3253(임영미 썰템쇼 '반복 막힘'): 회원 목소리 길(make_synth)은 ㅋㅋ·ㄷㄷ 를 빼고 합성한다 — 돌려받은 글자 시각을
+    원문(대본 tts) 글자로 되끼우지 않으면 1회차는 소리 없이 어긋나고(24자 vs 27자), 다른 줄을 고친 2회차에 그 줄 캐시가
+    '글자 시각이 줄 글과 안 맞는다'로 막힌다. 진짜 tts_by_line 으로 두 번 돈다(합성만 가짜 — 받은 글의 글자 시각)."""
+    from tools.calcopy.engine import voice_synth as VS
+    from tools.calcopy.hybrid import render_bench as RB
+    monkeypatch.setenv("CALCOPY_CUSTOMER_MODE", "1")
+    sent = []
+
+    def fake_make(provider, voice, tempo, emotion):
+        def synth(text, out):
+            sent.append(text)
+            n = len(text)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"sine=f=300:d={max(0.5, n * 0.08):.2f}",
+                            "-c:a", "libmp3lame", str(out)], check=True)
+            return {"characters": list(text), "character_start_times_seconds": [i * 0.08 for i in range(n)],
+                    "character_end_times_seconds": [(i + 1) * 0.08 for i in range(n)]}
+        return synth
+    monkeypatch.setattr(VS, "_make_synth", fake_make)
+    S = {"voice": {"voice_id": "abcSearchVoice01", "provider": "elevenlabs", "tempo": 1.0},
+         "lines": [{"id": "L1", "kind": "tts", "tts": "이거 진짜 대박이다.", "caps": [{"text": "이거 진짜 대박이다."}]},
+                   {"id": "L2", "kind": "tts", "tts": "아 또 사러 가야겠다 ㅋㅋ.", "caps": [{"text": "아 또 사러 가야겠다 ㅋㅋ."}]}]}
+    R = tmp_path / "R"
+    R.mkdir()
+    _, align = RB.tts_by_line(S, R, log=lambda m: None)
+    assert "".join(align["characters"]) == " ".join(l["tts"] for l in S["lines"])      # 수리 전: 24자(낱자 빠짐) vs 27자
+    assert all("ㅋ" not in t for t in sent)                                            # 목소리에는 여전히 빼고 보낸다
+    S["lines"][0]["tts"] = "이거 진짜 대박이네."
+    _, align = RB.tts_by_line(S, R, log=lambda m: None)                                  # 수리 전: L2 줄 캐시 StageError
+    assert "".join(align["characters"]) == " ".join(l["tts"] for l in S["lines"])
