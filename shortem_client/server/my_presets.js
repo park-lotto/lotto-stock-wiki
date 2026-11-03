@@ -26,6 +26,32 @@ export function addMine(out, r, channel = '') {
   return fresh;
 }
 
+// 채널 벤치마킹 2판 시험 편 임시본(관제 319) — 임시본은 같은 slug 로 올라가 같은 이름의 원래 내 프리셋을 덮는다.
+//   덮기 전에 원래 것을 한 벌 두고(keepMine), 완성 못 한 흐름 끝에서 임시본을 지우고 되살린다(dropMine). 완성이면 addMine 이 갈아 끼우고 둔 벌만 버린다(forgetKept).
+const SLUG_RE = /^[\w-]{1,60}$/;
+const keepDir = slug => path.join(myRoot(), '_keep', slug);
+export function keepMine(slug) {
+  if (!SLUG_RE.test(String(slug || '')) || fs.existsSync(keepDir(slug))) return false;
+  const old = listMine().filter(p => p.slug === slug);
+  if (!old.length || !fs.existsSync(path.join(myRoot(), slug))) return false;
+  fs.cpSync(path.join(myRoot(), slug), path.join(keepDir(slug), 'files'), { recursive: true });
+  fs.writeFileSync(path.join(keepDir(slug), 'list.json'), JSON.stringify(old));
+  return true;
+}
+export function forgetKept(slug) { if (SLUG_RE.test(String(slug || ''))) fs.rmSync(keepDir(slug), { recursive: true, force: true }); }
+export function dropMine(slug) {
+  if (!SLUG_RE.test(String(slug || ''))) return false;
+  fs.rmSync(path.join(myRoot(), slug), { recursive: true, force: true });
+  let back = [];
+  if (fs.existsSync(path.join(keepDir(slug), 'list.json'))) {
+    back = JSON.parse(fs.readFileSync(path.join(keepDir(slug), 'list.json'), 'utf8'));
+    fs.cpSync(path.join(keepDir(slug), 'files'), path.join(myRoot(), slug), { recursive: true });
+  }
+  writeFileIn(homeDir(), FILE, JSON.stringify({ presets: [...listMine().filter(p => p.slug !== slug), ...back] }));
+  forgetKept(slug);
+  return true;
+}
+
 // 서버 프리셋 목록(profiles.json 꼴) + 내 프리셋 — 프리셋 이름을 다루는 곳은 이 합친 목록만 본다
 export function withMine(c) {
   const mine = listMine();

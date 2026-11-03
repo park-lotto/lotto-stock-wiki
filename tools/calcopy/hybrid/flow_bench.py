@@ -171,12 +171,13 @@ def bm_measure_got(st, m, rp, u):
 
 TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 판볶이용)
 지금 만든 임시 내 프리셋으로 기존 shortem_make 도구(1판 길 그대로 — AI 답 고리·소재 고르기 그대로)를 써서 영상 1편을 만든다.
-- 쓸 프리셋: 작업 폴더 {dir} (slug {slug} · 틀 {style}). 임시 내 프리셋으로 올려서 쓴다.
+- 쓸 프리셋: 작업 폴더 {dir} (slug {slug} · 틀 {style}). 회원 PC 가 임시 내 프리셋으로 올려 두었다 — 프리셋 id {{preset_id}}
+- 만들기: shortem_make(step="start", preset="{{preset_id}}") 로 시작해 그 응답의 next 대로 완성(need="done")까지 간다.
 - 소재: 1판 규칙 그대로 — {source}
 - 벤치 영상 파일은 재료로 쓰지 않는다(벤치를 베끼는 게 아니라 같은 꼴로 새 편을 만든다).
-- 끝나면 그 편의 작업 폴더(final.mp4·timeline.json·remake_log.json·대조/verdict.json 이 있는 곳)를 이 작업 폴더 기준 상대 경로로 올린다.
+- 끝나면 그 편의 sid(shortem_make 응답의 sid)를 work_dir 칸에 그대로 넣는다 — 회원 PC 가 그 편 작업 폴더를 이 작업 폴더 안으로 옮겨 상대 경로로 바꾼다.
 {again}
-답: {{"work_dir": "<작업 폴더 상대 경로>", "ok": true|false, "why": "<못 만들었으면 이유>"}}"""
+답: {{"work_dir": "<shortem_make 응답의 sid>", "ok": true|false, "why": "<못 만들었으면 이유>"}}"""
 
 
 def _trial_source(b: dict) -> dict:

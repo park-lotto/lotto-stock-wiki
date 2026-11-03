@@ -284,6 +284,14 @@ def test_trial_is_member_task_not_stop():
     assert "칼카피" not in r["message"] and "칼카피" not in q["ask"]
 
 
+def test_trial_ask_has_preset_id_slot_for_member_pc():
+    """회원 PC(flow_driver.memberTask)가 임시 내 프리셋 id 를 이 자리에 채운다 — 문구는 서버 한 곳(관제 319 과제 8)."""
+    st = _trial_st()
+    q = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})["review"][0]
+    assert 'shortem_make(step="start", preset="{preset_id}")' in q["ask"]
+    assert "sid" in q["ask"].split("답:")[1]
+
+
 def test_trial_task_has_no_bench_mp4():
     st = _trial_st()
     r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})

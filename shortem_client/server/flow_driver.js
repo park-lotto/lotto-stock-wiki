@@ -15,9 +15,11 @@ import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
 import { reportLive } from './live.js';
+import { addMine, keepMine } from './my_presets.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
+const endHooks = new Map();   // sid → 흐름이 끝났을 때 한 번(채널 벤치마킹 2판: 빌린 엔진 묶음 돌려주기·내 프리셋 올리기 — benchmark.js)
 export const flowRoot = () => ensureDir(dataDir(), 'flow');
 const stFile = sid => path.join(flowRoot(), sid, 'flow.json');
 
@@ -72,6 +74,51 @@ function postReview(f, rv) {
   return { rid: rv.id, dir: d, need: rv.need || [] };
 }
 
+// 회원 과제(채널 벤치마킹 2판 시험 편, 관제 319 Ruling 10) — 서버 review 의 meta.kind=member_task.
+//   손 1) 과제 글을 보이기 전에 W 의 프리셋 폴더(meta.preset.dir)를 임시 내 프리셋으로 올리고(addMine) 글의 {preset_id} 자리에 그 id 를 채운다.
+//   문구는 서버 flow_bench.TRIAL_ASK 한 곳 — 여기서 새로 짓지 않는다. 자리가 없거나 올리지 못하면 회원 Claude 에게 풀 수 없는 과제를 내지 않고 ok:false 로 바로 답한다(조용한 실패 금지).
+const TRIAL_SLOT = '{preset_id}';
+function memberTask(f, rv) {
+  const m = rv.meta || {};
+  const pr = m.preset || {};
+  const W = path.join(flowRoot(), f.sid, 'job');
+  const task = { kind: 'member_task', try: Number(m.try) || 0, slug: String(pr.slug || '') };
+  try {
+    if (!String(rv.ask || '').includes(TRIAL_SLOT)) throw new Error('과제 글에 프리셋 자리가 없다');
+    if (!/^[\w-]{1,60}$/.test(task.slug) || !pr.style || pr.dir !== `channel/${pr.slug}/preset/${pr.style}`) throw new Error('과제의 프리셋 칸 꼴이 다르다');
+    if (!fs.existsSync(path.join(jail(W, pr.dir), 'frame.json'))) throw new Error('작업 폴더에 프리셋이 없다');
+    if (f.bench && !f.bench.trial_slug) { keepMine(task.slug); f.bench.trial_slug = task.slug; }   // 같은 이름의 원래 내 프리셋은 한 벌 둔다(완성 못 하면 되살린다)
+    const name = `${String((f.bench && f.bench.name) || '내 프리셋').slice(0, 26)} 시험`;
+    const [p] = addMine(W, { slug: task.slug, name, presets: [{ style: String(pr.style), sources: [] }] }, String((m.source && m.source.channel) || ''));
+    task.preset_id = p.id;
+    return { rv: { ...rv, ask: String(rv.ask).split(TRIAL_SLOT).join(p.id) }, task };
+  } catch (e) {
+    return { rv, task: { ...task, prep_fail: String((e && e.message) || e).slice(0, 200) } };
+  }
+}
+
+// 손 2) 회원 Claude 가 답한 편 sid → 그 편 결과 폴더(엔진 창고/calcopy/make/<sid>/work/<topic_id>/제작 = remake 출력, W 밖)를 W/trial/ 안으로 옮기고
+//   work_dir 을 W 기준 상대 경로로 바꾼다(서버 bm_match 는 W 안만 읽는다). 못 찾으면 ok:false·이유 — 서버가 멈춤 두 줄로 알린다.
+function trialIn(f, q, j) {
+  if (!j || !j.ok) return j;
+  const W = path.join(flowRoot(), f.sid, 'job');
+  const sid = String(j.work_dir || '').trim();
+  const bad = why => ({ ...j, ok: false, work_dir: '', why });
+  if (!FLOW_SID_RE.test(sid)) return bad(`시험 편 sid 꼴이 아니다(${sid.slice(0, 40)})`);
+  const mk = path.join(dataDir(), 'calcopy', 'make');
+  let S = null;
+  try { S = JSON.parse(fs.readFileSync(path.join(mk, `${sid}.json`), 'utf8')); } catch { return bad('그 sid 의 편 기록이 없다'); }
+  const src = S && S.topic_id != null ? path.join(mk, sid, 'work', String(S.topic_id), '제작') : '';
+  if (!src || !fs.existsSync(path.join(src, 'final.mp4'))) return bad('그 편 결과 폴더에 완성본이 없다');
+  const leaf = `t${q.task.try || 0}_${sid}`;
+  try {
+    const dst = path.join(W, 'trial', leaf);
+    fs.rmSync(dst, { recursive: true, force: true });
+    fs.cpSync(src, dst, { recursive: true });
+  } catch (e) { return bad('결과 폴더를 옮기지 못했다: ' + String((e && e.code) || e).slice(0, 80)); }
+  return { ...j, work_dir: `trial/${leaf}` };
+}
+
 // 답 모으기 — 모양이 틀리면(필요 칸 없음) error.json 으로 다시 묻는다(두 번까지)
 function collect(f) {
   const out = {};
@@ -88,10 +135,22 @@ function collect(f) {
       save(f);
       return null;
     }
-    out[q.rid] = j || {};
+    out[q.rid] = q.task ? trialIn(f, q, j || {}) : (j || {});
   }
   for (const q of f.asks || []) { try { fs.writeFileSync(path.join(q.dir, 'done'), ''); } catch { /* 이미 */ } }
   return out;
+}
+
+// review 하나 → AI 요청. 회원 과제만 손을 거친다(그 밖의 review 는 꼴 그대로)
+function askOne(f, rv) {
+  if (!(rv.meta && rv.meta.kind === 'member_task')) return postReview(f, rv);
+  const { rv: r, task } = memberTask(f, rv);
+  const q = { ...postReview(f, r), task };
+  if (task.prep_fail) {          // 회원 Claude 에게 풀 수 없는 과제를 내지 않는다 — 이유를 달아 바로 답한다
+    fs.writeFileSync(path.join(q.dir, 'answer.json'), JSON.stringify({ work_dir: '', ok: false, why: task.prep_fail }));
+    reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `시험 편 과제 준비 못 함: ${task.prep_fail}` });
+  }
+  return q;
 }
 
 // 서버 응답 하나를 먹는다 → 다음 할 일(실행기면 바로 돌린다)
@@ -106,9 +165,9 @@ async function absorb(f, res) {
   f.asks = null;
   f.wait = null;
   if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
-  if (res.status === 'review' || res.status === 'reject') { f.asks = (res.review || []).map(rv => postReview(f, rv)); save(f); return 'ask'; }
+  if (res.status === 'review' || res.status === 'reject') { f.asks = (res.review || []).map(rv => askOne(f, rv)); save(f); return 'ask'; }
   if (res.status === 'wait_user') { f.wait = res.wait; f.approved = false; save(f); return 'user'; }   // 새 사인 요청(길이 고친 뒤 다시 사인 등) — 앞 사인 표시를 지운다(10-21 실측: 두 번째 사인을 안 묻고 wait 만 돌았다)
-  if (res.status === 'done') { f.video = res.video; f.title = res.title; f.note = res.note; save(f); return 'end'; }
+  if (res.status === 'done') { f.video = res.video; f.title = res.title; f.note = res.note; if (f.bench && res.preset) f.bench.done = res.preset; save(f); return 'end'; }
   f.fail = { why: res.why || res.message || '멈췄습니다', fix: res.fix || '', retry_ok: !!res.retry_ok, server_stop: true };
   save(f);
   return 'end';
@@ -133,7 +192,7 @@ async function runWithPreset(f) {
   if (Date.now() - cookiesAt > COOKIE_EVERY_MS) { cookiesAt = Date.now(); await refreshCookies(); }
   const job = path.join(flowRoot(), f.sid, 'job');
   let rental = null;
-  if (f.preset) {
+  if (f.preset && !f.bench) {      // 채널 벤치마킹 흐름은 서버 프리셋이 없다 — 엔진 묶음은 benchmark.js 가 흐름 내내 빌려 둔다
     try { rental = await rentPreset({ engineRoot: engineRoot(), presetId: f.preset }); }
     catch (e) {
       const why = '프리셋을 받지 못했다: ' + String((e && (e.code || e.message)) || e).slice(0, 120);
@@ -142,7 +201,7 @@ async function runWithPreset(f) {
   }
   // 박힌 글자 방식(사장님 10-30 — 회원이 설정에서 바꿈: 자동·지우기·흐림) — 회원 설정 text.orig_text 를 실행기에(vmake_clean.style_mode 가 읽는다)
   let textMode = '';
-  try { const pk = f.preset ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
+  try { const pk = f.preset && !f.bench ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
   try {
     const member = PID_RE.test(String(f.preset || '')) ? { SHORTEM_MEMBER_PACK: await packFile(f.preset) } : {};   // 꾸미기 값 → 렌더(엔진 styles.member_frame)
     return await runOps(job, f.do || [], { env: { ...member, ...(f.restyling ? { SHORTEM_RESTYLE: '1' } : {}), ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
@@ -184,6 +243,17 @@ async function pump(f) {
     save(f);
     reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리 멈춤: ${e instanceof ApiError ? `${e.code} ${e.msg}` : String((e && e.message) || e)}` });   // 서버는 이 편이 끊긴 걸 모른다(관제 304)
   } finally { f.busy = false; save(f); }
+  await runEnd(f);
+}
+
+// 흐름이 끝났나(완성·회원이 멈춤·다시 시도할 수 없는 멈춤) — 다시 시도할 수 있는 멈춤은 끝이 아니다(빌린 것을 쥐고 있는다)
+const flowEnded = f => f.status === 'done' || !!f.cancelled || !!(f.fail && !f.fail.retry_ok);
+async function runEnd(f) {
+  const h = endHooks.get(f.sid);
+  if (!h || !flowEnded(f)) return;
+  endHooks.delete(f.sid);
+  try { await h(f); }
+  catch (e) { reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `흐름 끝 정리 실패: ${String((e && e.message) || e).slice(0, 200)}` }); }
 }
 
 // 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
@@ -227,6 +297,7 @@ export function cancelFlow(sid) {
   f.cancelled = true;
   f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
   save(f);
+  if (!f.busy) f.ended = runEnd(f);   // 도는 중이면 pump 가 끝나며 부른다
   return f;
 }
 
@@ -246,6 +317,23 @@ export async function startFlow({ preset, video, product }) {
   const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
   flows.set(f.sid, f);
+  await absorb(f, res);
+  f.running = pump(f);
+  return f;
+}
+
+// 채널 벤치마킹 2판(관제 319) — 제작과 같은 고리. 반 판단은 서버(claude_flow bench_start → member_tier)
+//   onEnd = 흐름이 끝났을 때 한 번(benchmark.js: 빌린 엔진 묶음 돌려주기·내 프리셋 올리기)
+export async function startBenchFlow({ channel, videos, name, n, dryRun, onEnd }) {
+  const live = liveFlow();
+  if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 돌고 있는 작업이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
+  if (!dryRun) await refreshCookies();
+  const label = String(name || '내 프리셋').slice(0, 30);
+  const res = await api.step({ step: 'bench_start', source: { url: channel || '', videos: videos || [] }, name: label, n: n || 3 });
+  const f = { sid: res.sid, preset: 'bench', bench: { name: label, channel: channel || '' }, created: Date.now() };
+  flows.set(f.sid, f);
+  if (onEnd) endHooks.set(f.sid, onEnd);
+  if (dryRun) return f;
   await absorb(f, res);
   f.running = pump(f);
   return f;
@@ -315,6 +403,7 @@ export function findingLine(fd, now = Date.now()) {
 
 // MCP 응답 꼴 — 회원에게는 message 한 줄만(세부 금지). need 로 다음 할 일.
 export function shapeFlow(f) {
+  const tool = f.bench ? 'shortem_benchmark' : 'shortem_make';   // 벤치마킹 흐름은 같은 도구로 이어 기다린다
   const doing = f.status === 'execute' ? progressLine(f) : '';   // 실행기 진행 신호('원본 후보 조사 3/8') — 회원이 멈춘 줄 모르게(10-26)
   const head = f.finding && !f.fail ? `${f.finding.base} · ${findingLine(f.finding)}` : f.message;
   const base = { sid: f.sid, message: doing ? `${head} · ${doing}` : head, ...(doing ? { doing } : {}), ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
@@ -325,10 +414,10 @@ export function shapeFlow(f) {
       hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
   }
   if ((f.status === 'review' || f.status === 'reject') && f.asks && f.asks.some(q => !fs.existsSync(path.join(q.dir, 'answer.json')))) {
-    return { ...base, need: 'ai', next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", sid="${f.sid}") 를 부르세요`,
+    return { ...base, need: 'ai', next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), ${tool}(step="wait", sid="${f.sid}") 를 부르세요`,
       hints: ['판정 요청입니다 — 고객에게 묻지 말고 바로 답하세요'] };
   }
-  return { ...base, need: 'wait', next: `shortem_make(step="wait", sid="${f.sid}")`, hints: ['만드는 중입니다 — 같은 wait 를 다시 부르면 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
+  return { ...base, need: 'wait', next: `${tool}(step="wait", sid="${f.sid}")`, hints: ['만드는 중입니다 — 같은 wait 를 다시 부르면 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
 }
 
 // 기다리기 — 상태가 바뀌거나(답 필요·사인·완성·실패) waitMs 가 지날 때까지

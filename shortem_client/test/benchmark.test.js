@@ -65,20 +65,65 @@ test('기본반은 쉬운 문구로 멈추고 아무것도 받지 않는다', as
   } finally { process.env.SHORTEM_BASE = keep; }
 });
 
-test('고급반은 빌려 돌리고, 끝나면 푼 파일만 지우고 내 프리셋으로 저장한다', async () => {
-  const o = await B.benchStart({ channel: URL_CH, name: '내 틀', n: 2 });
+// 2판(관제 319): 띄우기 = 서버 지시서 고리. 가짜 지시서: bench_start → 회원 과제(시험 편) → 답 → 완성(preset·zip)
+const BSID = 'b0b0b0b0b0b0';
+const ESID = 'e0e0e0e0e0e0';
+const steps = [];
+function benchServer() {
+  steps.length = 0;
+  fake.state.stepHandler = body => {
+    steps.push(body);
+    if (body.step === 'bench_start') return { code: 200, json: { ok: true, sid: BSID, status: 'review', message: '시험 영상 만들기 중', stage: { no: 5, total: 11, text: '시험 영상 만들기' }, next_payload: 'b1',
+      review: [{ id: 'bm_trial', model: 'opus', ask: '만들기: shortem_make(step="start", preset="{preset_id}")', need: ['work_dir', 'ok'],
+        meta: { kind: 'member_task', tool: 'shortem_make', preset: { slug: 'my_abc', style: '틀', dir: 'channel/my_abc/preset/틀' }, source: { channel: URL_CH }, try: 0 } }] } };
+    return { code: 200, json: { ok: true, sid: BSID, status: 'done', message: '완성', stage: { no: 11, total: 11, text: '완성' }, next_payload: 'b2',
+      preset: { slug: 'my_abc', style: '틀', name: '내 틀', zip: 'out/my_abc_틀.zip', other_styles: [] } } };
+  };
+}
+
+test('고급반은 빌려 지시서 고리로 돌리고, 시험 편 과제·완성 뒤 푼 파일만 지우고 내 프리셋으로 저장한다', async () => {
+  const { flowRoot } = await import('../server/flow_driver.js');
+  const { pending, answer, dataDir } = await import('../server/engine_bridge.js');
+  const W = path.join(flowRoot(), BSID, 'job');
+  const pd = path.join(W, 'channel', 'my_abc', 'preset', '틀');
+  fs.mkdirSync(pd, { recursive: true });
+  fs.writeFileSync(path.join(pd, 'manifest.json'), '{"slug":"my_abc"}');
+  fs.writeFileSync(path.join(pd, 'frame.json'), '{}');
+  fs.mkdirSync(path.join(W, 'out'), { recursive: true });
+  fs.writeFileSync(path.join(W, 'out', 'my_abc_틀.zip'), 'zip');
+  const mk = path.join(dataDir(), 'calcopy', 'make');
+  fs.mkdirSync(path.join(mk, ESID, 'work', '3', '제작'), { recursive: true });
+  fs.writeFileSync(path.join(mk, ESID, 'work', '3', '제작', 'final.mp4'), 'v');
+  fs.writeFileSync(path.join(mk, `${ESID}.json`), JSON.stringify({ sid: ESID, topic_id: 3 }));
+  benchServer();
+  let o = await B.benchStart({ channel: URL_CH, name: '내 틀', n: 2 });
+  assert.equal(steps[0].step, 'bench_start');
+  assert.equal(steps[0].source.url, URL_CH);
+  assert.equal(steps[0].n, 2);
+  assert.equal(o.need, 'ai', JSON.stringify(o));
+  assert.match(o.next, /shortem_benchmark\(step="wait", sid="b0b0b0b0b0b0"\)/);
+  assert.ok(leftovers(), '흐름 동안은 빌린 엔진 파일을 둔다');
+  const tmp = M.listMine().filter(p => p.slug === 'my_abc');
+  assert.equal(tmp.length, 1);
+  const q = pending().find(x => x.req.tag === 'bm_trial');
+  assert.ok(q.req.prompt.includes(`preset="${tmp[0].id}"`));
+  assert.equal(answer(q.id, { work_dir: ESID, ok: true }).ok, true);
+  o = await B.benchWait(BSID);
   assert.equal(o.need, 'done', JSON.stringify(o));
-  assert.equal(o.info.failed_videos, 1);
+  assert.deepEqual(steps[1].replies, { bm_trial: { work_dir: `trial/t0_${ESID}`, ok: true } });
   assert.match(o.next, /preset_name="내 틀"/);
+  assert.equal(fs.readFileSync(path.join(process.env.SHORTEM_HOME, '내 프리셋', 'my_abc', 'my_abc_틀.zip'), 'utf8'), 'zip');
   for (let i = 0; i < 50 && (leftovers() || fs.existsSync(path.join(E, '.bench_rented.json'))); i++) await new Promise(r => setTimeout(r, 100));
   assert.equal(leftovers(), false, '빌린 엔진 파일이 남았다');
   assert.equal(fs.existsSync(path.join(E, '.bench_rented.json')), false);
   assert.equal(fs.readFileSync(path.join(E, 'tools', 'calcopy', 'make.py'), 'utf8'), MAKE, '이미 있던 엔진 파일을 덮으면 안 된다');
+  assert.equal(M.listMine().filter(p => p.slug === 'my_abc').length, 1, '임시 시험본은 정식본으로 갈아 끼워진다(한 벌)');
   const [mine] = M.listMine();
   assert.equal(mine.name, '내 틀');
   assert.equal(mine.channel, URL_CH);
   assert.equal(readSettings().current, mine.id);
   assert.match(mine.id, /^p_[0-9a-f]{10}$/);
+  assert.equal(fs.existsSync(path.join(M.myRoot(), '_keep')), false, '둔 벌이 남지 않는다');
   const v = M.withMine({ presets: [{ id: 'p_0000000000', name: '서버판' }], entitled_presets: ['p_0000000000'] });
   assert.deepEqual(v.presets.map(p => p.name), ['서버판', '내 틀']);
   assert.ok(v.entitled_presets.includes(mine.id));
@@ -114,7 +159,7 @@ test('내 프리셋은 서버를 안 부르고 엔진 길로 만든다 — 쓰�
 });
 
 test('이어 부르기와 주소 검사', async () => {
-  assert.match((await B.benchWait('rabcdef')).hints[0], /기다릴 벤치마킹이 없습니다/);
+  assert.match((await B.benchWait('aaaaaaaaaaaa')).hints[0], /기다릴 벤치마킹이 없습니다/);
   assert.match((await B.benchStart({ channel: 'https://tiktok.com/@x', name: 'x' })).hints[0], /채널 주소는/);
   assert.match((await B.benchStart({ name: 'x' })).hints[0], /채널 주소/);
   assert.match((await B.benchStart({ videos: ['https://evil.example/a'], name: 'x' })).hints[0], /영상 주소는/);
