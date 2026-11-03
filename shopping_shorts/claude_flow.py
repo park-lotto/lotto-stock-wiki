@@ -154,6 +154,29 @@ def knowhow(ctx: dict, body: dict, store=None) -> dict:
     return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
 
 
+def sign_memes(res: dict, cid, sid, store) -> None:
+    """지시서 do 의 memes{stems} → 받을 주소·지문(claude_assets 'meme:<번호>', 짝 = hybrid/meme_catalog.json). 회원 PC 실행기 c_memes 가 받는다.
+    목록에 없는 이름·서버에 없는 자산은 뺀다(실행기는 받은 것만 시트에 올린다). 주소 서명 주인 = claude_portal.asset_url."""
+    dos = [d for d in (res.get("do") or []) if isinstance(d, dict) and d.get("cmd") == "memes"]
+    if not dos:
+        return
+    try:
+        cat = {m["stem"]: m for m in json.loads((engine_root() / "tools/calcopy/hybrid/meme_catalog.json").read_text(encoding="utf-8"))["memes"]}
+    except (OSError, ValueError, KeyError):      # 목록이 없는 판 — 짤만 빠지고 단계는 간다(실행기는 받은 짤만 시트에 올린다)
+        CP.log.warning("claude_flow: meme_catalog.json 없음 — 짤 후보 주소를 못 붙였다")
+        cat = {}
+    with CP._tx(store) as c:
+        for d in dos:
+            items = []
+            for stem in list(d.pop("stems", None) or [])[:20]:
+                m = cat.get(str(stem))
+                a = CP._row(c, "SELECT * FROM claude_assets WHERE id=?", (m["asset"],)) if m else None
+                if a:
+                    url, _ = CP.asset_url(a, cid, sid)
+                    items.append({"stem": m["stem"], "url": url, "sha256": a["sha256"], "tone": m["tone"], "title": m["title"]})
+            d["items"] = items
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -226,6 +249,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         LIVE.flow_crash(store, cid, sid, e)
         raise
     st2 = res.pop("state")
+    sign_memes(res, cid, sid, store)      # 짤 후보 받을 주소(PC 제작 라인 짤 단계)
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",

@@ -2505,7 +2505,58 @@ def c_pm_sheet(W, d):
     return {"sheets": sheets, "rows": rows, "window": [WW, HH]}
 
 
-CMDS = {"env": c_env, "pm": c_pm, "pm_sheet": c_pm_sheet, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
+def c_memes(W, d):
+    """짤 후보 받기 + 미리보기(PC 담당이 짤 팩을 보고 2~5개 넣던 것 — PC 썰템쇼 10편 편당 2~5개). 서버(claude_flow)가 고른 후보에 받을 주소·지문을 붙여 준다.
+    d = {items: [{stem, url, sha256, tone?, title?}]} → W/memes/<stem>.mp4(지문 다르면 버림) + 시트(가운데 화면·이름·감정). 반환 {got, fail, sheet}."""
+    import hashlib
+    import urllib.parse
+    import urllib.request
+    from PIL import Image, ImageDraw
+    md = W / "memes"
+    md.mkdir(parents=True, exist_ok=True)
+    got, fail, tiles = [], {}, []
+    for it in (d.get("items") or [])[:20]:
+        stem = re.sub(r"[^\w-]", "", str(it.get("stem") or ""))
+        if not stem:
+            continue
+        p = md / f"{stem}.mp4"
+        if not (p.exists() and hashlib.sha256(p.read_bytes()).hexdigest() == it.get("sha256")):
+            try:          # 서버가 상대 주소(/api/claude/blob/…)로 준다 — 회원 앱 api.js baseUrl 과 같은 값으로 푼다
+                url = urllib.parse.urljoin((os.environ.get("SHORTEM_BASE") or "https://shoppingshorts.duckdns.org").rstrip("/") + "/", str(it["url"]))
+                with urllib.request.urlopen(url, timeout=60) as r:
+                    b = r.read()
+            except Exception as e:  # noqa: BLE001 — 그 짤만 빠진다
+                fail[stem] = f"{type(e).__name__}: {str(e)[:120]}"
+                continue
+            if it.get("sha256") and hashlib.sha256(b).hexdigest() != it["sha256"]:
+                fail[stem] = "지문 다름"
+                continue
+            p.write_bytes(b)
+        got.append(stem)
+        try:
+            im = Image.open(frame(p, max(0.0, float(dims(p)["dur"] or 0) / 2), md / f"_{stem}.jpg")).convert("RGB")
+            im.thumbnail((320, 320))
+            dr = ImageDraw.Draw(im)
+            dr.rectangle([0, 0, im.width, 22], fill=(0, 0, 0))
+            dr.text((4, 4), f"meme:{stem} {it.get('tone') or ''}", fill=(255, 255, 0))
+            tiles.append(im)
+            (md / f"_{stem}.jpg").unlink(missing_ok=True)
+        except Exception:  # noqa: BLE001 — 미리보기 못 그린 짤은 시트에서만 빠진다
+            pass
+    sheet = None
+    if tiles:
+        tw, th = max(t.width for t in tiles), max(t.height for t in tiles)
+        sh = Image.new("RGB", (tw * 4, th * ((len(tiles) + 3) // 4)), (20, 20, 20))
+        for j, t in enumerate(tiles):
+            sh.paste(t, ((j % 4) * tw, (j // 4) * th))
+        sp = W / "doc" / PM_DOC / "plan" / "짤후보.jpg"
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sh.save(sp, quality=85)
+        sheet = rel(W, sp)
+    return {"got": got, "fail": fail, "sheet": sheet}
+
+
+CMDS = {"env": c_env, "pm": c_pm, "pm_sheet": c_pm_sheet, "memes": c_memes, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
