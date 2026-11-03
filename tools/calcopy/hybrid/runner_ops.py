@@ -1778,6 +1778,11 @@ def _c_render(W, d):
     miss = tts_cache_miss(W, v)
     if miss:
         return {"ok": False, "error": miss}
+    if os.environ.get("SHORTEM_RESTYLE"):
+        # 다시 만들기 = 완성 뒤 끝난 뒤 지우기(VMake) 결과가 있으면 먼저 원본에 끼운다 — 완성 렌더가 결과를 기다리지 않고 끝났으면
+        #   다시 만들기도 받지 않아 박힌 글자가 그대로 남았다(11-03 강병주: bg_take 를 손으로 불러야 지워짐). 판단 주인 = vmake_clean.bg_take
+        tk = c_clean_take(W, {"version": v, "wait": 0})
+        sys.stderr.write(f"[다시 만들기] 뒤 지우기 결과 {tk.get('state')}\n")
     try:
         with _Alive(W, "영상 만들기"):
             info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
