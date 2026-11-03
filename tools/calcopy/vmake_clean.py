@@ -143,6 +143,34 @@ def hard_fail(text: str) -> str:
     return next((k for k, rx in HARD_FAILS if re.search(rx, str(text or ""), re.I)), "")
 
 
+BAD_KEY_FILE = MEMBER_KEY_FILE.with_name("vmake.bad")     # 확정 실패한 회원 키의 지문(값 아님) — 키가 바뀌면 다시 시도
+
+
+def _key_fp(k: str) -> str:
+    import hashlib
+    return hashlib.sha256(k.encode("utf-8")).hexdigest()[:12]
+
+
+def note_hard(text: str) -> str:
+    """(판단 주인 — 이 키로는 다시 보내도 같다) 회원 키 확정 실패를 기록한다. 편마다 다시 보내 같은 실패를 겪던 것(11-03 이정민·홍광수·김형관·임수정·한정수)."""
+    k = hard_fail(text)
+    if not k or key_source() != "member" or not member_key():
+        return ""
+    BAD_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    BAD_KEY_FILE.write_text(json.dumps({"fp": _key_fp(member_key()), "kind": k}), encoding="utf-8")
+    return k
+
+
+def bad_key() -> str:
+    """지금 회원 키가 확정 실패로 기록돼 있으면 그 종류, 아니면 ''(키를 바꾸면 지문이 달라 '' — 다시 시도한다)."""
+    try:
+        j = json.loads(BAD_KEY_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    k = member_key()
+    return str(j.get("kind") or "") if k and j.get("fp") == _key_fp(k) else ""
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
     if mode != "blur" and erase_engine() == "free":   # 돈이 안 드니 SHORTEM_NO_PAID 도 막지 않는다
@@ -153,6 +181,9 @@ def ready(mode: str = "vmake") -> dict:
         return {"mode": "vmake", "via": "server", "why": ""}
     if not member_key():                   # 키 없음 = 흐림(사장님 10-30 — 멈추고 키를 묻지 않는다)
         return {"mode": "blur", "why": "VMake 키 없음 — 흐림으로 가린다", "fix": NO_KEY_FIX}
+    bk = bad_key()
+    if bk:                                 # 이 키는 확정 실패 — 보내지 않고 흐림(돈·시간 낭비 없음), 키를 바꾸면 다시 시도
+        return {"mode": "blur", "why": f"VMake 키 확정 실패({bk}) — 흐림으로 가린다", "fix": HARD_FIX[bk]}
     return {"mode": "vmake", "via": "member", "why": ""}
 
 
@@ -478,7 +509,10 @@ def _cut_send(src_dir: Path, spans: dict, rd: dict, spots: dict | None, log=prin
     if rd["via"] == "free":
         return pieces, free_clean(files, spots or {}, log=log)
     send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
-    return pieces, send_joined(files, send, log=log)
+    r = send_joined(files, send, log=log)
+    if rd["via"] == "member":
+        note_hard(json.dumps(r.get("fail") or {}, ensure_ascii=False) + " " + str(r.get("error") or ""))
+    return pieces, r
 
 
 def _put_back(src_dir: Path, spans: dict, pieces: dict, r: dict, rd: dict) -> dict:
@@ -544,6 +578,8 @@ def bg_run(d: Path) -> None:
         out = {"pieces": {n: [[str(p), a, b] for p, a, b in ps] for n, ps in pieces.items()}, **r}
     except Exception as e:  # noqa: BLE001 — 뒤 프로세스 실패는 result 로 알린다(조용히 죽지 않는다)
         out = {"error": f"{type(e).__name__}: {str(e)[:300]}", "calls": 0, "cleaned": [], "fail": {}}
+        if (job.get("rd") or {}).get("via") == "member":
+            note_hard(str(e))
     led = d / LEDGER
     if led.exists():                  # 장부는 원본 폴더 한 곳 — 늦어서 안 쓴 호출도 센다
         rows = json.loads((src / LEDGER).read_text(encoding="utf-8")) if (src / LEDGER).exists() else []

@@ -361,6 +361,12 @@ def c_env(W, d):
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
     advice = advice_list(d.get("fmt") or "")
+    try:
+        from tools.calcopy import vmake_clean as _VC
+        if _VC.bad_key():          # 확정 실패한 VMake 키 — 시작 전에 한 번 알린다(제작 중 렌더에서야 알던 것)
+            advice.append("VMake 키가 지금 쓸 수 없는 키예요(" + _VC.HARD_FIX[_VC.bad_key()] + "). 이번 편은 박힌 글자를 흐림으로 가려서 만들게요")
+    except Exception as e:  # noqa: BLE001 — 안내만, 막지 않는다
+        sys.stderr.write(f"[env] VMake 키 확인 못 함 {type(e).__name__}\n")
     if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1" and not _cookie_ok("tiktok") and not any(x.get("id") == "login:tiktok" for x in missing):
         advice.append("틱톡 로그인이 안 됐어요. 제작은 그대로 진행하고, 틱톡 소재는 받기가 안 될 수 있고 틱톡 재료 찾기 결과가 적을 수 있어요")
     if _cp_last:

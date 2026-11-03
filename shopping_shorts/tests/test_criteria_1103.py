@@ -101,3 +101,22 @@ def test_fishaudio_name_is_fish():
     from tools.calcopy.engine import voices as VO
     assert VO.provider_of({"provider": "fishaudio", "voice_id": "a" * 32}) == "fish"
     assert not [e for e in VO.check_tts({"provider": "fishaudio", "voice_id": "0" * 32}) if "모르는 목소리 엔진" in e]
+
+
+def test_vmake_bad_key_remembered(tmp_path, monkeypatch):
+    """확정 실패한 VMake 키는 기억해 두고 다음 편부터 보내지 않는다 — 키를 바꾸면 다시 시도(11-03 회원 5명 같은 실패 반복)."""
+    from tools.calcopy import vmake_clean as VC
+    kf = tmp_path / "vmake"
+    kf.write_text("old:key", encoding="utf-8")
+    monkeypatch.setattr(VC, "MEMBER_KEY_FILE", kf)
+    monkeypatch.setattr(VC, "BAD_KEY_FILE", tmp_path / "vmake.bad")
+    monkeypatch.setattr(VC, "key_source", lambda: "member")
+    monkeypatch.setattr(VC, "erase_engine", lambda: "vmake")
+    monkeypatch.setattr(VC, "paid_off", lambda: False)
+    monkeypatch.delenv("VMAKE_API_KEY", raising=False)
+    assert VC.ready("vmake")["mode"] == "vmake"
+    assert VC.note_hard("RuntimeError: Switch to New API") == "new_api"
+    assert VC.ready("vmake")["mode"] == "blur"
+    kf.write_text("new:key", encoding="utf-8")
+    assert VC.ready("vmake")["mode"] == "vmake"
+    assert VC.note_hard("timeout") == ""
