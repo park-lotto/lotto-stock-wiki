@@ -1353,7 +1353,7 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400]}
     st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
     spent = int((time.time() - float(st.get("started_at") or time.time())) / 60)
-    over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if spent > EPISODE_BUDGET_MIN else ""
+    over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if _over_budget(st) else ""
     ask = (TASK_ASK + over + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
@@ -1431,6 +1431,14 @@ def ph_task_got(st, m, rp, u):
             return got
     raise _Stop(t.get("why") or "만드는 중에 문제가 생겼어요", t.get("fix") or AGAIN, retry=t.get("retry"), ask_member=True,
                 origin_missing=bool(t.get("origin_missing")), detail=(str(t.get("detail") or "") + f" · 제작자 과제 답 {act}: {str(a.get('note') or '')[:200]}").strip(" ·"))
+
+
+HARD_PLAN_RX = re.compile(r"출처|원본 규칙|source_rule|연예인 아닌 얼굴|지어낸")     # 장면 검수에서 넘길 수 없는 것(금지선)
+
+
+def _over_budget(st) -> bool:
+    """(판단 주인 — 편 예산 시간을 넘었나) 제작자 과제 안내(★예산 넘음)와 같은 기준."""
+    return (time.time() - float(st.get("started_at") or time.time())) / 60 > EPISODE_BUDGET_MIN
 
 
 def _waive(st: dict, stage: str) -> dict | None:
@@ -2501,7 +2509,8 @@ def _mark_new(st: dict, over: list) -> list:
 WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 끊김도 이것으로): \"대본줄\": {\"<줄 id>\": {\"tts\": \"…\", \"caps\": [\"…\"]}} "
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
-                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
+                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다."
+                  "\n★편 예산 시간을 넘었고 남은 것이 작은 품질 걸림뿐이면 \"넘기기\": true 로 답해 경고로 남기고 렌더로 간다(지어낸 사실·금지 출처는 못 넘긴다).")
 FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
                   "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
                   "\n★썸네일을 고쳐야 하면 답에 \"썸네일\": {\"options\":[…]} 를 넣어라.")
@@ -2575,6 +2584,10 @@ def ph_plan_look(st, m, rp, u):
         if st.get("line_table") and _process(st).get("line_table"):
             return {"do": [{"id": "save_table", "cmd": "write_doc", "files": {f"{v}/대조표.json": st["line_table"]}, "version": v}], "then": "thumb"}
         return {"goto": "thumb"}
+    if r.get("넘기기") is True and _over_budget(st) and not any(HARD_PLAN_RX.search(str(o)) for o in over):
+        # 예산을 넘긴 편 — 회원 Claude 가 검수 답에서 바로 권고 넘기기(제작자 과제가 올 때까지 10~15분짜리 고치기를 더 돌지 않는다, 11-03 김미향 2시간+)
+        st["log"].append("장면 검수 넘기기(예산 초과): " + "; ".join(str(o) for o in over)[:300])
+        return _waive(st, "plan")
     voice = [str(o) for o in over if VOICE_RX.search(str(o))]
     if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
         return _voice_rewrite(st, voice)

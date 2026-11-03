@@ -202,3 +202,17 @@ def test_member_post_author(tmp_path, monkeypatch):
         assert (got or {}).get("text") == want
     assert any("작성자" in e for e in PR.check({"text": {"post_author": "<x>"}}))
     assert PR.check({"text": {"post_author": ""}}) == [] and PR.check({"text": {"post_author": "주스픽"}}) == []
+
+
+def test_plan_look_waive_when_over_budget(monkeypatch):
+    """예산을 넘긴 편은 장면 검수 답 '넘기기' 로 바로 렌더로(11-03 김미향 2시간+). 예산 안·금지선이면 안 넘긴다."""
+    import time
+    from tools.calcopy.hybrid import flow as F
+    def st_of(started, over):
+        return {"version": "v1", "tries": {}, "log": [], "started_at": started, "_plan_over": over, "script": {"S": {"lines": []}, "M": {}}}
+    rp = {"plan_v1": {"넘기기": True}}
+    monkeypatch.setattr(F, "_reply", lambda rp, k, need: rp[k])
+    st = st_of(time.time() - 200 * 60, ["L3 컷 길이 1.1초"])
+    assert F.ph_plan_look(st, {}, rp, None) == {"goto": "render"} and st["waive_gate"]
+    assert not F._over_budget(st_of(time.time() - 10 * 60, []))            # 예산 안 = 넘기기 칸을 안 받는다(그 뒤는 보통 고치기 길)
+    assert F.HARD_PLAN_RX.search("L2 원본 규칙: 다른 채널 연예인 영상")     # 금지선은 못 넘긴다
