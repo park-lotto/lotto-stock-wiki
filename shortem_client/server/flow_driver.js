@@ -53,7 +53,12 @@ function fresh(f) {
   } catch { /* 파일 없음 = 메모리 그대로 */ }
   return f;
 }
-export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
+// 이 프로그램이 돌리지 않는 execute 편은 마지막 움직임이 DEAD_MS 안일 때만 돈다고 본다 — 실행기는 단계마다 최대 3×예산(가장 긴 1800초×3)에 끊기고
+//   살아 있으면 진행 신호로 progress.json 을 갱신한다. PC 가 꺼져 죽은 편이 execute 로 남아 업데이트·벤치마킹을 영영 막았다(#3954 김미화 1462분).
+//   움직임 기록이 없는 편(0)과 review(회원 Claude 답 대기 — 사용 한도 뒤 돌아온다)는 예전처럼 바쁨으로 둔다.
+export const DEAD_MS = () => Number(process.env.SHORTEM_DEAD_MS) || 2 * 60 * 60 * 1000;
+const deadExecute = f => f.status === 'execute' && !f.busy && (() => { const t = lastMove(f); return t > 0 && Date.now() - t > DEAD_MS(); })();
+export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review') && !deadExecute(f)));
 export const anyFlowBusy = () => [...flows.values()].some(flowBusy);
 
 function reqId(tag) {
