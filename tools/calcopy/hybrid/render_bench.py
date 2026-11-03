@@ -3520,7 +3520,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
         ins2, fc2, mix_in = ["-i", voice], [], "[0:a]"
         for j, e in enumerate(placed.get("sfx") or []):
             ins2 += ["-i", SFX_DIR / SF[e["kind"]]]
-            fc2.append(f"[{j + 1}:a]aresample={SR},aformat=channel_layouts=mono,volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
+            fc2.append(f"[{j + 1}:a]aresample={SR},aformat=channel_layouts=mono,volume={sfx_gain(st, SFX_DIR / SF[e['kind']], nI)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
             mix_in += f"[s{j}]"
         raw = R / "mix_raw.wav"
         if fc2:
@@ -3560,7 +3560,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     for j, e in enumerate(placed.get("sfx") or []):
         f = SFX_DIR / SF[e["kind"]]
         ins2 += ["-i", f]
-        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts={lay},volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
+        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts={lay},volume={sfx_gain(st, f, ref)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
         mix_in += f"[s{j}]"
     n_in = 2 + len(placed.get("sfx") or [])
     fc2.append(f"{mix_in}amix=inputs={n_in}:normalize=0:duration=first[o]")
@@ -3570,6 +3570,29 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     loud(raw, mix, st["loudness"])
     return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "bgm_ref": "narr" if not math.isnan(nI) else ("orig" if not math.isnan(oI) else "target"), "mix": lufs(mix),
                  "duck_narr_db": dn, "bed": bed_contrast(bed, narr_spans, [[p["t0"], p["t1"]] for p in T["opos"]], end)}
+
+
+_SFX_RMS: dict = {}
+
+
+def sfx_gain(st: dict, f: Path, ref: float) -> float:
+    """(판단 주인 — 효과음 이득 dB) 판 sfx_level.db_below_voice 가 있으면 파일 평균 크기(RMS dB — 0.2초 효과음은 LUFS 를 못 잰다)를 재
+    '목소리(ref LUFS) − 그 값'이 되게, 없으면 옛 그대로 판 sfx_files.gain_db(파일 원래 크기에 상대 감쇠).
+    #3631 정민혜: 판 16개 전부 효과음이 목소리보다 13~21dB 아래(-27.6~-35.7dB)로 나가 묻혔다 — 파일 크기 기준이 없었다(Jev 뿌리 0.87·해결 best 0.91).
+    켜는 판 = 사람이 들어 본 판부터(지금 잇템로그판_v2)."""
+    import subprocess
+    SF = st.get("sfx_files") or {}
+    lv = st.get("sfx_level") or {}
+    if lv.get("db_below_voice") is None or math.isnan(ref):
+        return float(SF.get("gain_db", -8))
+    if f not in _SFX_RMS:
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(f), "-af", "volumedetect", "-f", "null", "-"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL).stderr
+        m = re.search(r"mean_volume: (-?[\d.]+) dB", r)
+        _SFX_RMS[f] = float(m.group(1)) if m else float("nan")
+    if math.isnan(_SFX_RMS[f]):
+        return float(SF.get("gain_db", -8))
+    return round((ref - float(lv["db_below_voice"])) - _SFX_RMS[f], 2)
 
 
 def check_sfx(st: dict, placed: dict):
