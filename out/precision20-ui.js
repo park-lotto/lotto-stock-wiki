@@ -2748,7 +2748,8 @@
        if(pk&&!pk.__ov){pk.__ov=1;if(ov.font){pk.font=ov.font;if(pk.emph)pk.emph.font=ov.font}
         if(ov.color&&pk.text)pk.text.color=ov.color;
         if(ov.dy){const mv=o=>{if(o&&o.place&&typeof o.place.y==='number')o.place.y+=o.place.y<=100?ov.dy/19.2:ov.dy};mv(pk);Object.values(pk.variants||{}).forEach(mv)}
-        if(ov.color)Object.values(pk.variants||{}).forEach(o=>{if(o.text&&o.text.color)o.text.color=ov.color})}}
+        if(ov.color)Object.values(pk.variants||{}).forEach(o=>{if(o.text&&o.text.color)o.text.color=ov.color})
+        if(ov.scale>0){const sc=o=>{if(!o)return;if(typeof o.size==='number')o.size*=ov.scale;if(o.emph&&typeof o.emph.size==='number')o.emph.size*=ov.scale};sc(pk);Object.values(pk.variants||{}).forEach(sc)}}}   // 자막 크기(회원 text.caption_scale → styles.member_frame) = 팩 글자·강조 크기 배율
       sceneContext=context;adminView=context?.adminView===true;if(!saved)renderGrid();   // 관리자 전용 틀 노출은 context 를 받아야 정해진다(rowVisible)
       sceneTexts.clear();for(const k of Object.keys(shownBase))delete shownBase[k];shownAt=-1;   // 관제 219: 장면별 글은 이 작업 저장본 것만
       for(const [key,value] of Object.entries(saved?.sceneTexts||{}))if(typeof value==='string')sceneTexts.set(key,value);

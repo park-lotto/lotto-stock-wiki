@@ -1018,7 +1018,7 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
         bb = f.getbbox(WM["text"])
         wx = WM["cx"] - f.getlength(WM["text"]) / 2 if "cx" in WM else WM["x1"] - f.getlength(WM["text"])
-        dl.text((wx, WM["cy"] - (bb[1] + bb[3]) // 2), WM["text"], font=f, fill=(255, 255, 255, WM["alpha"]))
+        dl.text((wx, WM["cy"] - (bb[1] + bb[3]) // 2), WM["text"], font=f, fill=(*_rgb(WM.get("color", "#ffffff")), WM["alpha"]))   # 색 = 회원 채널명 색(styles.name_look), 없으면 흰색
         im.alpha_composite(lay)
     LI = F.get("logo_img")
     if LI:

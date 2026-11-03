@@ -202,7 +202,8 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors", "logo"), "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption", "orig_text"),
+EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color"),
+            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "orig_text"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -235,6 +236,12 @@ def check(pack: dict, cat: dict | None = None) -> list:
         err.append("제목 크기는 0.7~1.3 배입니다")
     if tx.get("caption_color") is not None and not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(tx["caption_color"])):
         err.append("자막 색은 #RRGGBB 입니다")
+    if tx.get("caption_scale") is not None and not (isinstance(tx["caption_scale"], (int, float)) and 0.6 <= tx["caption_scale"] <= 2.0):
+        err.append("자막 크기는 0.6~2.0 배입니다")
+    if b.get("name_scale") is not None and not (isinstance(b["name_scale"], (int, float)) and 0.5 <= b["name_scale"] <= 3.0):
+        err.append("채널명 크기는 0.5~3.0 배입니다")
+    if b.get("name_color") is not None and not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(b["name_color"])):
+        err.append("채널명 색은 #RRGGBB 입니다")
     if tx.get("caption_dy") is not None and not (isinstance(tx["caption_dy"], int) and -800 <= tx["caption_dy"] <= 500):
         err.append("자막 위치 값이 범위를 벗어났습니다")
     dy = tx.get("title_dy")

@@ -214,6 +214,23 @@ def member_tempo(st: dict) -> float | None:
     return float(t) if t else None
 
 
+def name_look(items: list, scale, color) -> None:
+    """(판단 주인 — 채널명 크기·색, #1631 김유선·#1950 이성택) 채널명을 그리는 세 자리(로고·워터마크·머리띠 글자)에 같은 배율·색.
+    안 정했으면 그대로(프리셋 그림). 색은 칸 꼴에 맞춰 — 로고는 rgba(투명도 그대로), 워터마크·머리띠 글자는 color."""
+    for it in items:
+        if not it:
+            continue
+        if scale and it.get("px"):
+            it["px"] = round(float(it["px"]) * float(scale))
+            if it.get("max_w"):
+                it["max_w"] = round(float(it["max_w"]) * float(scale))
+        if color:
+            if "rgba" in it:
+                it["rgba"] = [int(color[i:i + 2], 16) for i in (1, 3, 5)] + [list(it["rgba"])[3]]
+            else:
+                it["color"] = color
+
+
 def member_frame(st: dict) -> dict:
     """회원 '꾸미기' 값 → 판 틀(주인 한 곳 — 렌더·썸네일·캡컷·관문이 모두 load 로 받는다). SHORTEM_MEMBER_PACK = local_settings.packFile. 없으면 그대로."""
     f = os.environ.get("SHORTEM_MEMBER_PACK")
@@ -230,8 +247,8 @@ def member_frame(st: dict) -> dict:
         st["member_bgm"] = {"none": True}
     elif (bgm.get("candidates") or [None])[0]:      # 소리 단계에서 고른 곡(11-03: 회원 팩 bgm 이 판에 안 들어가 프리셋 곡만 나왔다)
         st["member_bgm"] = {"id": bgm["candidates"][0]}
-    cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy") if text.get(f"caption_{k}")}
-    if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기) — 자막팩 위에 덮는다(render_bench.snapshot)
+    cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy", "scale") if text.get(f"caption_{k}")}
+    if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기)·크기(#1949 이성택 — 팩 size·강조 size 배율) — 자막팩 위에 덮는다(render_bench.snapshot)
         st["member_caption"] = cap
     F = st.get("frame")
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
@@ -255,6 +272,8 @@ def member_frame(st: dict) -> dict:
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
         if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02)
             F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
+        name_look([F.get("logo"), F.get("watermark")] + [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"],
+                  brand.get("name_scale"), brand.get("name_color"))
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)
