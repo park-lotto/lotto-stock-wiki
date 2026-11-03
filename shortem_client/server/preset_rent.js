@@ -43,11 +43,21 @@ export function holdPending(on) {
   if (!process.env.SHORTEM_INSTALL) return;
   try { if (fs.existsSync(pendFile(!on))) fs.renameSync(pendFile(!on), pendFile(on)); } catch { /* 없으면 숨길 것도 없다 */ }
 }
+// 표식은 맨 마지막에 지운다 — 윈도에서 잠긴 파일 하나로 지우기가 도중에 멈추면 표식만 먼저 사라진 폴더가 남아,
+//   다음 빌리기가 그 폴더를 '개발 PC 의 진짜 파일'로 보고 빌리지 않았다(11-03 김효준: 판 '잇템로그판_v2' 이 없다 3번, styles 폴더 없음)
+function wipeDir(d) {
+  try {
+    for (const n of fs.readdirSync(d)) if (n !== MARK) fs.rmSync(path.join(d, n), { recursive: true, force: true });
+    fs.rmSync(d, { recursive: true, force: true });
+  } catch { /* 표식이 남아 다음 sweep 이 다시 지운다 */ }
+}
 function wipe(engineRoot) {
   for (const d of [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))]) {
-    if (fs.existsSync(path.join(d, MARK))) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* 다음 sweep 이 지운다 */ } }
+    if (fs.existsSync(path.join(d, MARK))) wipeDir(d);
   }
 }
+// 설치본 엔진에는 channel·기술 꾸러미가 없다(빌릴 때만 생긴다) — 설치본에서 표식 없는 그 폴더는 반납하다 남은 것이다
+const installedEngine = () => !!process.env.SHORTEM_INSTALL && !process.env.SHORTEM_ENGINE;
 
 // 잠긴 꾸러미(b64: nonce 12 + 암호문 + 태그 16) → zip Buffer. 덧붙임 글(cid|job)이 다르면 풀리지 않는다.
 export function openPack(r) {
@@ -117,7 +127,13 @@ export function sweep(engineRoot) {
 const UI_IDLE_MS = 10 * 60 * 1000;
 export async function rentPreset({ engineRoot, presetId, profileId, stepName, kind = 'make' }) {
   const root = channelDir(engineRoot);
-  if (fs.existsSync(root) && !fs.existsSync(path.join(root, MARK))) return { presetPath: null, dev: true, release: async () => {} };
+  if (fs.existsSync(root) && !fs.existsSync(path.join(root, MARK))) {
+    if (!installedEngine()) return { presetPath: null, dev: true, release: async () => {} };
+    if (!current && !otherRenting()) {          // 남은 찌꺼기 — 지우고 정상으로 빌린다
+      for (const d of [root, ...TECH_DIRS.map(x => techDir(engineRoot, x))]) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* 아래 빌리기가 덮어쓴다 */ } }
+      audit('preset_leftover', { result: 'wiped' });
+    }
+  }
   const want = presetId || profileId;
   if (current) {
     if (current.want === want && (kind === 'ui' || current.kind === 'ui')) {   // 같은 프리셋이 이미 풀려 있다 — 다시 받지 않는다
