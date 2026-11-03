@@ -171,6 +171,54 @@ def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5
     return dst
 
 
+MAT_STEP, MAT_TILES, MAT_PAGES = 2.0, 30, 4     # 재료 시트 칸 간격(초)·한 장 칸 수·한 파일 장 수 상한 — 길면 간격을 늘려 원본 전체를 덮는다
+
+
+def mat_tiles(video: Path, tmp: Path, w: int = 240) -> list[tuple[float, Path]]:
+    """재료 시트 칸 [(원본 초, 그림)] — ffmpeg 한 번. 칸 초 = 그 칸 화면의 실제 시각(showinfo pts_time − 파일 시작).
+    fps 필터는 간격 절반만큼 밀린 화면을 내고 시각도 격자로 바꿔 버린다(2초 간격 → '6초' 칸 = 7초 화면) — 옛 시트를 '칸 번호×2초'로 읽으면 1초 어긋났다.
+    select(앞 칸에서 간격 이상 지난 첫 화면)는 시각을 안 바꾼다. 렌더 `-ss ss -i` 도 파일 시작(format start_time)부터 센다."""
+    dur = float(dims(video)["dur"] or 0)
+    step = max(MAT_STEP, round(dur / (MAT_TILES * MAT_PAGES) + 0.05, 1))
+    shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    pick = f"select='isnan(prev_selected_t)+gte(t-prev_selected_t\\,{step - 0.01:.2f})'"
+    r = run(["ffmpeg", "-y", "-hide_banner", "-i", str(video), "-vf", f"{pick},showinfo,scale={w}:-2", "-fps_mode", "vfr", "-q:v", "4", str(tmp / "%05d.jpg")])
+    pts = [float(x) for x in re.findall(r"pts_time:\s*(-?[\d.]+)", r.stderr or "")]
+    pr = run(["ffprobe", "-v", "error", "-show_entries", "format=start_time", "-of", "csv=p=0", str(video)], check=False).stdout.strip()
+    t0 = float(pr) if re.fullmatch(r"-?[\d.]+", pr or "") else 0.0
+    return [(round(max(0.0, p - t0), 2), f) for p, f in zip(pts, sorted(tmp.glob("*.jpg")))]
+
+
+def mat_sheets(video: Path, dst: Path, cols: int = 6, w: int = 240) -> list[Path]:
+    """(판단 주인 — 재료 시트) 칸마다 원본 초를 적는다 — 시트 초 = 재료 ss(렌더 `-ss ss -i` 와 같은 기준: 첫 화면 = 0초).
+    옛 시트(fps=0.5 tile 6×5 한 장)는 칸에 초가 없어 '칸 번호×2초'로 읽혔고 60초 뒤는 아예 안 보였다
+    (#464 김용덕 p00 시트 초 ≠ 실제 클립 초 — 원본에서 손으로 프레임을 뽑아 맞춤). 뽑기는 옛처럼 ffmpeg 한 번(저사양 PC — 칸마다 따로 뜨면 수십 배)."""
+    from PIL import Image, ImageDraw
+    if Path(video).suffix.lower() in RU.STILL_EXT:
+        return [sheet(video, dst, w=w)]
+    tmp = dst.parent / f"{dst.stem}_t"
+    got = mat_tiles(video, tmp, w)
+    times, shots = [t for t, _ in got], [f for _, f in got]
+    out = []
+    for pg in range(0, len(times), MAT_TILES):
+        tiles = [(t, Image.open(f).convert("RGB")) for t, f in zip(times[pg:pg + MAT_TILES], shots[pg:pg + MAT_TILES])]
+        th = max(im.height for _, im in tiles)
+        rows = (len(tiles) + cols - 1) // cols
+        sh = Image.new("RGB", (cols * w, rows * th), (0, 0, 0))
+        dr = ImageDraw.Draw(sh)
+        for j, (t, im) in enumerate(tiles):
+            x, y = (j % cols) * w, (j // cols) * th
+            sh.paste(im, (x, y))
+            dr.rectangle((x, y, x + 64, y + 16), fill=(0, 0, 0))
+            dr.text((x + 3, y + 2), f"{t:.1f}s", fill=(255, 255, 0))
+        p = dst if pg == 0 else dst.with_name(f"{dst.stem}_{pg // MAT_TILES}{dst.suffix}")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        sh.save(p, quality=85)
+        out.append(p)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
 FRAME_TAIL = 0.15     # 끝 여유(초) — 영상 길이 바로 앞 시각은 디코더가 그림을 못 내 ffmpeg 가 실패한다(10-27 41.93초 영상 41.92초 → 계획 실패)
 
 
@@ -1370,7 +1418,7 @@ def c_mat_sheets(W, d):
             continue
         dur = dims(p)["dur"]
         lst.append({"file": p.name, "dur": dur})
-        sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
+        sheets += [rel(W, x) for x in mat_sheets(p, W / f"_sheet_{p.stem[:40]}.jpg")]     # 칸마다 원본 초(렌더와 같은 시계)
         if p.suffix.lower() not in render_bench.IMG_EXT and dur:   # 샷 구간 = 계획 관문이 재는 경계 그대로(shot_starts) — 처음 컷을 고를 때 넘지 않게(10-27 반려 71건)
             b = [0.0] + [x for x in render_bench.shot_starts(p) if 0 < x < dur] + [round(float(dur), 2)]
             shots[p.name] = jump_free_spans(p, [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])])   # 디졸브·끊김 자리는 검사와 같은 자로 미리 뺌
