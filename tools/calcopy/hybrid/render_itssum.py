@@ -131,7 +131,8 @@ def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
     return full, align
 
 
-END_PAD, HEAD_PAD = 0.15, 0.25      # 줄 경계 여유(초) — split_by_align 한 곳
+END_PAD, HEAD_PAD = 0.15, 0.25
+TAIL_PAD = 0.25     # 마지막 줄 끝 여유 — 글자 시각이 소리보다 일찍 끝나 마지막 음절이 잘렸다(11-03 회원 실측: 끝 '다' 시작 직후 -18dB 에서 끊김)      # 줄 경계 여유(초) — split_by_align 한 곳
 CPS_LINE_TOL = 0.35                 # 줄 말속도 허용 폭(평균 ±35%) 주인 — 넘으면 렌더를 멈춘다(문장 자르기·TTS 되풀이 의심). 품질 관문(quality_gate.cps_tol)이 이 이름을 읽는다(표준 §11 ⑤)
 
 
@@ -185,7 +186,7 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
     for k, l in enumerate(L):
         i += len(NA.punct_marks(l["tts"]))
         if k == len(L) - 1:
-            spans.append((start, tail)); break
+            spans.append((start, tail + TAIL_PAD)); break
         if i == 0 or not NA.ends_with_mark(l["tts"]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
             raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표·쉼표로")
         a, b = slots[i - 1][1], slots[i - 1][2]

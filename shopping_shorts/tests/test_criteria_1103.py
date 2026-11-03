@@ -46,3 +46,15 @@ def test_render_sends_alive_signal(tmp_path, monkeypatch):
     src = open(R.__file__, encoding="utf-8").read()
     for what in ("영상 만들기", "장면 맞추기", "완성본 확인"):      # 같은 프로세스 안 긴 계산 셋 다
         assert f'with _Alive(W, "{what}")' in src, what
+
+
+def test_last_line_keeps_tail(monkeypatch):
+    """마지막 줄도 끝 여유를 둔다(11-03 회원: 완성본 끝 음절 잘림)."""
+    from tools.calcopy.engine import narr_align as NA
+    from tools.calcopy.hybrid import render_itssum as RI
+    S = {"lines": [{"id": "N1", "kind": "tts", "tts": "첫 줄."}, {"id": "N2", "kind": "tts", "tts": "끝 줄이다."}]}
+    monkeypatch.setattr(RI, "tts_lines", lambda S: S["lines"])
+    monkeypatch.setattr(NA, "punct_slots", lambda text, align: [(0, 1.0, 1.3), (1, 3.0, 3.0)])
+    monkeypatch.setattr(NA, "speech_bounds", lambda align: (0.0, 3.0))
+    sp = RI.split_by_align(S, {"x": 1})
+    assert sp[-1][1] > 3.0
