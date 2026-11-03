@@ -13,20 +13,34 @@ export function applyUpdate(home) {            // 실패하면 되돌리고 옛 
   let p;
   try { p = JSON.parse(fs.readFileSync(pend, 'utf8')); } catch { return null; }
   if (!/^\d+\.\d+\.\d+$/.test(String(p.version)) || p.dir !== p.version) { try { fs.unlinkSync(pend); } catch { /* 없음 */ } return null; }
-  const src = path.join(up, p.dir), old = path.join(up, 'old-' + Date.now()), moved = [];
+  const src = path.join(up, p.dir), old = path.join(up, 'old-' + Date.now()), moved = [], placed = [];
   try {
     fs.mkdirSync(old, { recursive: true });
     for (const d of ['server', 'engine']) {
       if (!fs.existsSync(path.join(src, d))) throw new Error('덜 찬 업데이트: ' + d);
-      if (fs.existsSync(path.join(home, d))) { fs.renameSync(path.join(home, d), path.join(old, d)); moved.push(d); }
+      if (fs.existsSync(path.join(home, d))) {
+        try { fs.renameSync(path.join(home, d), path.join(old, d)); moved.push(d); }
+        catch (e) {   // 멈춘 실행기가 engine 을 현재 폴더로 쥐면 이름을 못 바꾼다(#1397) — 받을 때(updater.applyDownloaded)처럼 자리에 덮는다
+          if (d !== 'engine') throw e;
+          fs.cpSync(path.join(src, d), path.join(home, d), { recursive: true, force: true });
+          continue;
+        }
+      }
       fs.renameSync(path.join(src, d), path.join(home, d));
+      placed.push(d);
     }
     fs.copyFileSync(path.join(src, 'app_version.json'), path.join(home, 'app_version.json'));
-    fs.unlinkSync(pend);
+    fs.rmSync(pend, { force: true });   // 같은 설치의 다른 창이 먼저 지웠어도 바꾸기는 끝난 것
     try { fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(old, { recursive: true, force: true }); } catch { /* 다음에 */ }
     return p.version;
   } catch (e) {
-    for (const d of moved) { try { fs.rmSync(path.join(home, d), { recursive: true, force: true }); fs.renameSync(path.join(old, d), path.join(home, d)); } catch { /* 되돌리기 최선 */ } }
+    // 되돌리기 — 새 판은 지우지 않고 받은 폴더로 돌려준다(지우면 _update/<판> 에 engine 만 남아 다시 못 바꾼다 #1397)
+    for (const d of ['engine', 'server']) {
+      try {
+        if (placed.includes(d)) fs.renameSync(path.join(home, d), path.join(src, d));
+        if (moved.includes(d)) fs.renameSync(path.join(old, d), path.join(home, d));
+      } catch { /* 되돌리기 최선 */ }
+    }
     try { fs.unlinkSync(pend); } catch { /* 없음 */ }
     process.stderr.write('[숏템] 업데이트 적용 실패 — 예전 판으로 계속합니다: ' + e.message + '\n');
     return null;
