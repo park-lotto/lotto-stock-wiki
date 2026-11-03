@@ -278,7 +278,11 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
         try:      # 본문의 status·message 를 붙인다(11-03 '키 ID 를 키로 씀'이 '오류 400' 한 줄로만 보였다) — 키 값은 본문에 없다
             det = (json.loads(e.read().decode('utf-8', 'replace')) or {}).get('detail') or {}
             if isinstance(det, dict) and (det.get('status') or det.get('message')):
-                why += f" — {det.get('status') or ''} {str(det.get('message') or '')[:160]}".rstrip()
+                if e.code == 402 and "library voices" in str(det.get('message') or ""):      # 크레딧이 아니라 요금제 — 무료는 공유 목록 목소리를 API 로 못 쓴다(11-03 윤상길)
+                    why = ("일레븐랩스 무료 요금제는 공유 목록 목소리(미나 등)를 API 로 쓸 수 없습니다 — 설정 화면 소리 단계의 '내가 만든 목소리'"
+                           "(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 목소리를 고르세요")
+                else:
+                    why += f" — {det.get('status') or ''} {str(det.get('message') or '')[:160]}".rstrip()
         except Exception:  # noqa: BLE001 — 본문이 없으면 코드만
             pass
         raise RuntimeError(why) from None

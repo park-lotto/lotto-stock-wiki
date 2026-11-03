@@ -168,3 +168,20 @@ def test_rejected_script_lines_are_reasked():
     assert F._apply_lines(st, {"L9": {"tts": "b"}}, "시험") is None
     assert "L1" in st["_lines_why"]
     assert F._lines_reask(st) and F._lines_reask(st) and not F._lines_reask(st)
+
+
+def test_eleven_free_plan_library_voice_message(monkeypatch, tmp_path):
+    """일레븐 402 'library voices' = 크레딧이 아니라 무료 요금제 — 고칠 길을 알린다(11-03 윤상길)."""
+    import io
+    import json as _j
+    import urllib.error
+    import urllib.request
+    from tools.calcopy.engine import narr_align as NA
+    body = _j.dumps({"detail": {"status": "payment_required", "message": "Free users cannot use library voices via the API."}}).encode()
+    def boom(*a, **k):
+        raise urllib.error.HTTPError("u", 402, "x", {}, io.BytesIO(body))
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    import pytest
+    with pytest.raises(RuntimeError) as e:
+        NA.eleven_direct("안녕", "A" * 20, tmp_path / "a.mp3", "sk_x")
+    assert "무료 요금제" in str(e.value) and "크레딧" not in str(e.value)
