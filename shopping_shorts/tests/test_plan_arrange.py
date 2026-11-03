@@ -128,3 +128,18 @@ def test_relocate_keeps_reuse_only_cut_in_its_scene(monkeypatch, tmp_path):
     cuts = [a, b]
     MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None, end=2.0)
     assert cuts == [a, b] and b["ss"] == 1.5 and "ss_moved" not in b
+
+
+def test_relocate_keeps_frozen_only_cut_in_its_scene(monkeypatch, tmp_path):
+    """11-03 김형관: 멈춘 그림만 걸린 컷을 다른 샷(로고 화면)으로 옮기면 고른 장면 내용이 바뀐다 → 옮기지 않는다(관문 ⑦ 이 Claude 에게 알린다)."""
+    from tools.calcopy.hybrid import runner_ops as R
+    import subprocess
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=c=gray:s=64x64:d=10:r=30", "-c:v", "libx264", "-preset", "ultrafast",
+                    str(tmp_path / "v.mp4")], check=True)
+    monkeypatch.setattr(R, "jump_free_spans", lambda src, spans, **k: [[0.0, 10.0]])
+    monkeypatch.setattr(R, "_cut_jumps", lambda *a, **k: [])
+    a = {**_c("E1", 0.0, "v.mp4", 1.0), "t1": 1.0, "dur": 1.0}
+    b = {**_c("E2", 1.0, "v.mp4", 5.0), "t1": 2.0, "dur": 1.0}
+    cuts = [a, b]
+    MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None, end=2.0, still=lambda c: c is b or c.get("ss") == 5.0)
+    assert b in cuts and b["ss"] == 5.0 and "ss_moved" not in b

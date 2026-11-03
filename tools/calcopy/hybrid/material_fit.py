@@ -604,6 +604,9 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
         #   (11-03 김만기·김형관: 팥 장면을 고쳐 넣었더니 B13 이 다른 샷의 크림 장면으로 옮김 — 대사↔화면 어긋남). 같은 샷 안 피하기는 respace_reuse 가 이미 했고,
         #   같은 줄 다른 컷이 이어받는 빼기(장면 그대로)만 남긴다
         reuse_only = bool(c.get("reuse_unfixed")) and not (c.get("over") or c.get("jumpy") or c.get("frozen"))
+        # 멈춘 그림만 걸린 컷도 다른 샷으로 옮기지 않는다 — 옮긴 자리 내용을 코드는 못 본다(11-03 김형관: 사진 넘기기 컷을 같은 원본 0~4.8초 로고 화면으로 두 번).
+        #   관문 ⑦ 이 회원 Claude 에게 알리고 Claude 가 눈으로 다른 장면을 고른다. 같은 줄 다른 컷이 이어받는 빼기(장면 그대로)는 남긴다
+        reuse_only = reuse_only or (bool(c.get("frozen")) and not (c.get("over") or c.get("jumpy")))
         src = Path(src_dir) / c["src"]
         if c["src"] not in spans_of:
             st0 = shot_starts(src)
