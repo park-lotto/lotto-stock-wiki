@@ -39,6 +39,15 @@ FONTS = ROOT / "shopping_shorts/static/fonts"
 SFX_DIR = ROOT / "shopping_shorts/assets/sfx_packs"
 BGM_DIR = ROOT / "shopping_shorts/assets/bgm_lib"
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
+STILL_DROP = ("ss", "ss_planned", "max", "max_auto")     # 원본 초·샷 길이 칸 — 사진에는 없다
+
+
+def still_cut(c: dict) -> dict:
+    """(판단 주인 — 사진 컷 칸) 사진은 원본 초·샷 길이가 없다. 재료에 ss·max 를 적어 와도 시간표 입구에서 버린다 —
+    뒤 함수들이 'ss 없음 = 사진'으로 판단하고, max 만 남으면 넘침 셈(measure_over)이 c['ss'] 를 읽다 터졌다(#1567 김미향 L10 prod_*.jpg KeyError 'ss')."""
+    if Path(str(c.get("src") or "")).suffix.lower() not in IMG_EXT:
+        return c
+    return {k: v for k, v in c.items() if k not in STILL_DROP}
 CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small", "likes", "ago")   # likes·ago = 댓글카드 글 칸(card_plan)   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
 
 
@@ -295,7 +304,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
         a = lines[lid][0]
         nxt = lines[order[i + 1]][0] if i + 1 < len(order) else end
         L = Lm[lid]
-        cs = (M.get("cuts") or {}).get(lid)
+        cs = [still_cut(c) for c in (M.get("cuts") or {}).get(lid) or []] or None
         if L["kind"] == "orig":
             if not cs:
                 cs = [{"at": round(p["t0"] - a, 3), "src": p["src"], "ss": p["span"][0], "crop": "face", "see": "원음 구간(자동 얼굴 크롭)"}
