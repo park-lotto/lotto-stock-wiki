@@ -159,3 +159,12 @@ def test_blur_area_counts_overlap_once():
     assert RB._union_area([[0, 0, 50, 10], [25, 0, 50, 10]], (0, 0, 100, 100)) == 750
     assert RB._union_area([[90, 90, 50, 50]], (0, 0, 100, 100)) == 100
     assert RB._union_area([], (0, 0, 100, 100)) == 0
+
+
+def test_rejected_script_lines_are_reasked():
+    """장면 검수 대본줄이 반영 안 되면 버리지 않고 이유와 함께 되묻는다(11-03 강태경 L2 옛 문장 그대로)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "v1", "tries": {}, "log": [], "script": {"S": {"lines": [{"id": "L1", "kind": "tts", "tts": "a", "caps": ["a"]}]}, "M": {}}}
+    assert F._apply_lines(st, {"L9": {"tts": "b"}}, "시험") is None
+    assert "L1" in st["_lines_why"]
+    assert F._lines_reask(st) and F._lines_reask(st) and not F._lines_reask(st)

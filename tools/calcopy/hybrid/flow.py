@@ -2587,6 +2587,8 @@ def ph_plan_look(st, m, rp, u):
         got = _apply_lines(st, r["대본줄"], "장면 검수 — 장면에 맞게 줄 바꿈")
         if got:
             return got
+        if _lines_reask(st):        # 버리고 지나가면 화면은 새 컷·자막과 목소리는 옛 문장으로 나간다(11-03 강태경 L2)
+            return _back_to_look(st, "보낸 대본줄이 반영되지 않았다: " + st["_lines_why"] + " — 고쳐서 다시 보내라")
     _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
     if M is not None:
@@ -3018,6 +3020,19 @@ def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
     return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
 
 
+LINES_REASK_MAX = 2        # 대본줄이 대본 검사에 걸리면 이유를 들려주고 다시 받는 횟수(편당) — 넘으면 옛 길(재료만)
+
+
+def _lines_reask(st) -> bool:
+    """(판단 주인 — 반영 못 한 대본줄을 되묻나) 조용히 버리지 않는다. 한도 안이면 True(호출부가 이유와 함께 되묻는다)."""
+    n = st["tries"].get("lines_reask", 0)
+    if n >= LINES_REASK_MAX:
+        st["log"].append("대본줄 되묻기 한도 — 재료 답만 쓴다: " + str(st.get("_lines_why") or "")[:200])
+        return False
+    st["tries"]["lines_reask"] = n + 1
+    return True
+
+
 def _apply_lines(st, got: dict, why: str, title=None) -> dict | None:
     """(판단 주인 — 대본 줄 바꿔 끼우기: 줄 고치기·회원 고치기·장면 검수가 같이 부른다) 바뀐 줄만 tts·caps 를 바꿔 대본 검사(재료 그대로).
     title = 새 title_lines(제목도 대본 칸 — #1954 삼현정: 완성 뒤 제목 바꾸기가 줄만 받아 무시됐다). 제목은 컷을 정하지 않아 계획 지문에서 빠진다(render_bench.plan_input_sig)
@@ -3036,9 +3051,10 @@ def _apply_lines(st, got: dict, why: str, title=None) -> dict | None:
                 if x.get(k):
                     by[lid][k] = x[k]
                     n += 1
-    a = audit_script(st, S, M) if n else {"ok": False, "error": "바꾼 줄 없음"}
+    a = audit_script(st, S, M) if n else {"ok": False, "error": f"바꾼 줄 없음 — 줄 id 는 {sorted(by)} 중 하나(원음 줄 제외), 칸은 tts·caps"}
     if not a.get("ok"):
-        st["log"].append(f"{why}: 대본 검사 미달 → " + json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:300])
+        st["_lines_why"] = json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:600]
+        st["log"].append(f"{why}: 대본 검사 미달 → " + st["_lines_why"][:300])
         return None
     st["script"]["S"] = S
     st["_plan_fixed"] = True          # 재료는 그대로 — 계획이 엔진 검사를 통과하면 장면 검수를 다시 묻지 않는다(ph_plan_got)
@@ -3247,6 +3263,9 @@ def ph_check_fix(st, m, rp, u):
         got = _apply_lines(st, r["대본줄"], "완성본 고치기 — 줄 바꿈")
         if got:
             return got
+        if _lines_reask(st):
+            return {"review": [_fix_review(st, "보낸 대본줄이 반영되지 않았다: " + st["_lines_why"] + " — 고쳐서 다시 보내라", None, f"final_fix_{v}")],
+                    "then": "check_fix"}
     M = _take_fix(st, r)
     thumb_do = _thumb_from_fix(st, r)
     if M is None and thumb_do:           # 썸네일만 고친 답을 버리지 않는다
