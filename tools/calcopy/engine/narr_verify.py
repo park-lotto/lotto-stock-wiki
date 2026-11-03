@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import re
 import time
 from difflib import SequenceMatcher
@@ -163,6 +164,12 @@ def _md5(p) -> str:
     return h.hexdigest()
 
 
+def _whisper_words(path) -> list[dict]:
+    """이 PC 의 위스퍼 받아쓰기(스피치매틱스 키가 없거나 실패할 때 한 곳). 낱말 믿음값이 없어 1.0."""
+    from tools.calcopy.engine.check_line_sync import asr_segments
+    return [{"s": s, "e": e, "w": w, "conf": 1.0} for s, e, w in asr_segments(path)]
+
+
 def heard_words(path, lang: str = "ko") -> list[dict]:
     """[{s, e, w, conf}] — 키는 asr_local.speechmatics_key() 한 곳(값은 어디에도 찍지 않는다)."""
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -173,8 +180,7 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
     from tools.calcopy.engine.asr_local import speechmatics_key
     key = speechmatics_key()
     if not key:          # 키는 선택 — 없으면 이 PC 의 위스퍼로(사장님 11-02). 낱말 믿음값이 없어 1.0 으로 둔다
-        from tools.calcopy.engine.check_line_sync import asr_segments
-        return [{"s": s, "e": e, "w": w, "conf": 1.0} for s, e, w in asr_segments(path)]
+        return _whisper_words(path)
     H = {"Authorization": f"Bearer {key}"}
     cfg = {"type": "transcription", "transcription_config": {"language": lang, "operating_point": "enhanced"}}
     for attempt in range(3):
@@ -183,9 +189,11 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
                 r = requests.post("https://asr.api.speechmatics.com/v2/jobs", headers=H, files={"data_file": f}, data={"config": json.dumps(cfg)}, timeout=120)
             r.raise_for_status()
             break
-        except Exception as e:  # noqa: BLE001 — 3번 실패면 관문이 멈춘다(조용히 넘기지 않음)
+        except Exception as e:  # noqa: BLE001 — 3번 실패면 위스퍼로(키 없을 때와 같은 길) — 멈추지 않되 이유를 남긴다
             if attempt == 2:
-                raise RuntimeError(f"스피치매틱스 올리기 실패 {type(e).__name__}")
+                code = getattr(getattr(e, "response", None), "status_code", "")
+                sys.stderr.write(f"[받아쓰기] 스피치매틱스 올리기 실패 {type(e).__name__} {code} — 위스퍼로 받아쓴다(11-03 회원 임수정·윤주홍 멈춤)\n")
+                return _whisper_words(path)
             time.sleep(5)
     jid = r.json()["id"]
     for _ in range(200):

@@ -58,3 +58,19 @@ def test_last_line_keeps_tail(monkeypatch):
     monkeypatch.setattr(NA, "speech_bounds", lambda align: (0.0, 3.0))
     sp = RI.split_by_align(S, {"x": 1})
     assert sp[-1][1] > 3.0
+
+
+def test_speechmatics_failure_falls_back_to_whisper(monkeypatch, tmp_path):
+    """스피치매틱스가 실패해도 장면 맞추기를 멈추지 않고 위스퍼로(11-03 회원 임수정·윤주홍)."""
+    import requests
+    from tools.calcopy.engine import narr_verify as NV, asr_local
+    monkeypatch.setattr(NV, "CACHE", tmp_path)
+    monkeypatch.setattr(asr_local, "speechmatics_key", lambda: "k")
+    monkeypatch.setattr(NV.time, "sleep", lambda s: None)
+    def boom(*a, **k):
+        raise requests.HTTPError("401")
+    monkeypatch.setattr(requests, "post", boom)
+    monkeypatch.setattr(NV, "_whisper_words", lambda p: [{"s": 0.0, "e": 1.0, "w": "가", "conf": 1.0}])
+    f = tmp_path / "a.wav"
+    f.write_bytes(b"x")
+    assert NV.heard_words(f)[0]["w"] == "가"
