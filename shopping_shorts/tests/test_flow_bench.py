@@ -95,11 +95,45 @@ def test_panbokki_picks_by_jev_and_remeasures(monkeypatch):
     assert st["pan_n"] == 1 and st["bm"]["side"] == "side/a.mp4" and len(seen["fixes"]) == 2
 
 
-def test_panbokki_low_confidence_remeasures_deeper(monkeypatch):
+def test_panbokki_low_confidence_stops_no_deeper(monkeypatch):
     monkeypatch.setattr(jev_gate, "decide", lambda *a, **k: {"pick": 0, "conf": 0.5, "fixroot": [0.5, 0.5], "ok": False})
     st = _st("bm_panbokki", trial="t.mp4", videos=[_vid("a")])
     r = _go(st, {"pan": {"match_ok": False, "fails": ["x"], "cands": [{"path": "p1"}, {"path": "p2"}]}})
-    assert r["do"][1]["cmd"] == "bm_match" and r["do"][1]["deeper"] is True and st["pan_n"] == 1
+    assert r["status"] == "stop" and "여기까지 맞췄어요" in r["why"] and "x" in r["fix"] and not r.get("retry_ok")
+
+
+def test_no_candidates_stops_at_first_pan_without_side_rerender():
+    st = _st("bm_panbokki", trial="t.mp4", videos=[_vid("a")])
+    r = _go(st, {"pan": {"match_ok": False, "fails": ["chunk.sec"], "cands": []}, "side": {"side": "side/a.mp4"}})
+    assert r["status"] == "stop" and "여기까지 맞췄어요" in r["why"] and "chunk.sec" in r["fix"]
+    assert "do" not in r and st.get("pan_n", 0) == 0
+    assert "deeper" not in json.dumps(r, ensure_ascii=False)
+
+
+def test_alarm_shape_is_fixed(monkeypatch):
+    def boom(*a, **k):
+        raise jev_gate.JevDown("no_key")
+    monkeypatch.setattr(jev_gate, "decide", boom)
+    st = _st("bm_panbokki")
+    _go(st, {"pan": {"match_ok": False, "fails": ["x"], "cands": [{"path": "a"}, {"path": "b"}]}})
+    assert set(st["alarm"]) == set(FB.ALARM_KEYS) and st["alarm"] == {"kind": "jev_down", "why": "no_key", "at": "bm_panbokki"}
+
+
+def test_fable_never_called_a_third_time():
+    # 확정(1) → 최종 불합격 → 되돌림 → 판볶이가 맞았다고 해도 세 번째 페이블 요청은 나가지 않는다
+    st = _st("bm_confirm", rules={"rules": {}}, side="side/a.mp4")
+    r = _go(st)
+    assert r["status"] == "review" and r["review"][0]["id"] == "bm_confirm" and st["bm"]["fable_n"] == 1
+    r = _go(st, rp={"bm_confirm": {"ok": True, "wrong": []}})
+    assert r["review"][0]["id"] == "bm_verdict" and st["bm"]["fable_n"] == 2
+    r = _go(st, rp={"bm_verdict": {"ok": False, "wrong": ["caption.y"]}})
+    assert r["status"] == "stop" and "caption.y" in r["fix"]       # 후보가 없어 판볶이에서 멈춤
+    st["phase"] = "bm_panbokki"                                      # 후보가 있어 맞췄다고 나와도
+    r = _go(st, {"pan": {"match_ok": True}})
+    assert r["status"] == "stop" and "여기까지 맞췄어요" in r["why"] and "caption.y" in r["fix"] and "review" not in r
+    assert st["bm"]["fable_n"] == 2
+    st["phase"] = "bm_verdict"
+    assert _go(st)["status"] == "stop" and st["bm"]["fable_n"] == 2
 
 
 def test_match_ok_goes_to_confirm_review():
@@ -110,8 +144,8 @@ def test_match_ok_goes_to_confirm_review():
 
 def test_confirm_fail_goes_back_then_stops():
     st = _st("bm_confirm_got", trial="t.mp4", videos=[_vid("a")])
-    r = _go(st, rp={"bm_confirm": {"ok": False, "wrong": ["caption.y"]}})
-    assert r["status"] == "execute" and r["do"][1]["deeper"] is True and st["pan_n"] == 1
+    r = _go(st, rp={"bm_confirm": {"ok": False, "wrong": ["caption.y"]}})      # 되돌림 → 고칠 후보 없음 → 바로 멈춤(재기 되풀이 없음)
+    assert r["status"] == "stop" and "caption.y" in r["fix"] and st["bm"]["confirm_n"] == 1
     st["bm"]["confirm_n"] = FB.CONFIRM_MAX
     st["phase"] = "bm_verdict_got"
     r = _go(st, rp={"bm_verdict": {"ok": False, "wrong": ["caption.y"]}})

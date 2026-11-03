@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """채널 벤치마킹 2판 단계(관제 319) — 우리 프리셋 7단계를 회원 PC에서. 판단 주인 = 이 파일.
 재기 = 실행기 명령(runner_ops bm_*·agy_read), 결정 = jev_gate(서버), 판독 = 회원 Claude(모델은 ASKS 한 곳).
-flow.py 는 FORMAT_PHASES·FORMAT_STAGES·PHASE_STAGE 에 등록만 한다(flow.start_bench)."""
+flow.py 는 FORMAT_PHASES·FORMAT_STAGES·PHASE_STAGE 에 등록만 한다(flow.start_bench).
+경보: Jev(판단 서버)가 꺼지면 st["alarm"] = {"kind": "jev_down", "why": <글>, "at": <phase>} 한 꼴로만 남긴다(ALARM_KEYS).
+  flow 는 순수 함수라 여기까지가 이 파일 몫 — 관리자 경보로 올리는 일은 받는 곳 = claude_flow.step(과제 7, shopping_shorts/claude_flow.py)."""
 from __future__ import annotations
 
 import json
 
 PAN_MAX = 3          # 판볶이 최대 횟수 — 넘으면 「여기까지 맞췄어요」로 멈춘다
 CONFIRM_MAX = 2      # 확정 검사·최종 판정이 틀렸다고 되돌릴 수 있는 횟수
+FABLE_MAX = 2        # 한 채널에서 페이블(bm_confirm·bm_verdict)을 부르는 횟수 — 설계서 §7 「채널당 2번만」. st["bm"]["fable_n"] 이 센다
+ALARM_KEYS = ("kind", "why", "at")
 ASKS = {   # 질문별 모델 — 페이블은 두 곳만(D6), 소넷·하이쿠 0곳(D5)
     "bm_read": {"id": "bm_read", "model": "opus"},
     "bm_trial": {"id": "bm_trial", "model": "opus"},      # 시험 편 = 회원 과제(Ruling 10) — 회원 Claude 가 shortem_make 로 1편 만들고 작업 폴더를 올린다
@@ -244,35 +248,44 @@ def bm_panbokki(st, m, rp, u):
             d = J.decide(f"판볶이 {n}회차 — 벤치와 다른 칸 {fails[:5]}", [json.dumps(p, ensure_ascii=False)[:3000]],
                          [json.dumps(c, ensure_ascii=False) for c in cands])
         except J.JevDown as e:       # 서버 쪽 문제 — 회원 과제로 넘기지 않고(ask_member) 경보를 남기고 멈춘다
-            st["alarm"] = {"kind": "jev_down", "where": "bm_panbokki", "why": str(e)}
+            st["alarm"] = {"kind": "jev_down", "why": str(e), "at": "bm_panbokki"}
             st["log"].append(f"경보: 벤치마킹 판단 서버(Jev) 실패 — {e}")
             raise F._Stop("잠시 판단 서버가 쉬고 있어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=str(e))
-        if not d["ok"]:
-            st["pan_n"] = n
-            st["log"].append(f"판볶이 {n}: 고를 칸 확신 부족(Jev {d['conf']}) → 더 깊이 다시 재기")
-            return {"do": [{**x, "deeper": True} if x["id"] == "pan" else x for x in _compare_do(st)], "then": "bm_panbokki"}
+        if not d["ok"]:      # 확신 없이 고르지 않는다 — 같은 표를 되풀이해 재지 않고 남은 칸과 함께 멈춘다
+            st["log"].append(f"판볶이 {n}: 고를 칸 확신 부족(Jev {d['conf']}) → 멈춤")
+            raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails)) + " — 이 부분은 직접 고쳐 주세요", final=True, detail=f"Jev 확신 부족 {d['conf']}")
         fix, why = cands[d["pick"]], f"Jev {d['conf']}"
     elif len(cands) == 1:
         fix, why = cands[0], "후보 하나"         # 고를 것이 없다 — 판단 없이 그대로
-    else:
-        st["pan_n"] = n
-        return {"do": [{**x, "deeper": True, "hint": fails} if x["id"] == "pan" else x for x in _compare_do(st)], "then": "bm_panbokki"}
+    else:       # 고칠 후보가 0개 — 같은 표를 다시 재도 같다(bm_match 는 덧붙임을 읽지 않는다). 첫 판볶이에서 바로 멈춘다
+        raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails or ["눈 판정에서 어긋남"])) + " — 이 부분은 직접 고쳐 주세요", final=True, detail="고칠 후보 없음")
     st["pan_n"] = n
     st["log"].append(f"판볶이 {n}: {fix} ({why})")
     b["fixed_last"] = fix.get("path") if isinstance(fix, dict) else fix
     return {"do": [{"id": "fix", "cmd": "bm_fix", "slug": b["slug"], "style": b["style"], "fix": fix}], "then": "bm_trial"}     # 한 칸만 고치고 시험 편부터 다시
 
 
+def _fable_call(st):
+    """페이블 요청이 나가기 직전에 부른다 — 이미 FABLE_MAX 번 불렀으면 부르지 않고 「여기까지 맞췄어요」 멈춤(조용한 초과 금지). 센 값은 st["bm"]["fable_n"]."""
+    F = _F()
+    b = st["bm"]
+    if int(b.get("fable_n") or 0) >= FABLE_MAX:
+        raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, b.get("fails") or ["눈 판정에서 어긋남"])) + " — 이 부분은 직접 고쳐 주세요",
+                      final=True, detail=f"페이블 {FABLE_MAX}번을 다 썼어요")
+    b["fable_n"] = int(b.get("fable_n") or 0) + 1
+
+
 def bm_confirm(st, m, rp, u):
     F = _F()
     b = st["bm"]
+    _fable_call(st)
     ask = "판 확정 검사: 아래 고정 칸·편마다 칸 가르기가 벤치 편 전부와 맞는지 본다. 틀린 칸만 적는다.\n" + json.dumps(b.get("rules"), ensure_ascii=False)[:8000]
     return {"review": [F._rv("bm_confirm", ask, [F._img(b["side"])] if b.get("side") else [], model=ASKS["bm_confirm"]["model"], need=("ok", "wrong"))],
             "then": "bm_confirm_got"}
 
 
 def _back_to_pan(st, wrong, why):
-    """확정 검사·최종 판정이 틀렸다고 하면 판볶이로 되돌린다(후보 없이 깊이 다시 재기). 되돌림은 CONFIRM_MAX 번까지."""
+    """확정 검사·최종 판정이 틀렸다고 하면 판볶이로 되돌린다(고칠 후보가 없으면 판볶이가 바로 멈춘다). 되돌림은 CONFIRM_MAX 번까지."""
     F = _F()
     b = st["bm"]
     b["confirm_n"] = int(b.get("confirm_n") or 0) + 1
@@ -294,6 +307,7 @@ def bm_confirm_got(st, m, rp, u):
 def bm_verdict(st, m, rp, u):
     F = _F()
     b = st["bm"]
+    _fable_call(st)
     ask = "최종 눈 판정: 왼쪽 벤치·오른쪽 우리 시험 영상을 나란히 본다. 같은 채널 영상으로 보이나? 어긋난 곳만 적는다."
     return {"review": [F._rv("bm_verdict", ask, [F._img(b["side"])] if b.get("side") else [], model=ASKS["bm_verdict"]["model"], need=("ok", "wrong"))],
             "then": "bm_verdict_got"}
