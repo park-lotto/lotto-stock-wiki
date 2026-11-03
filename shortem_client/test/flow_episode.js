@@ -20,6 +20,8 @@ const INST = arg('--install') ? path.resolve(arg('--install')) : '';
 if (!INST) fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'MEMBER_GUIDE.md'), path.join(CWD, 'CLAUDE.md'));
 // --keys <폴더>: 회원이 설정 화면 '내 키'에 넣어 둔 것처럼 <HOME>/keys/ 에 복사(쿠팡 파트너스 등 — 값은 출력하지 않는다)
 if (arg('--keys')) fs.cpSync(path.resolve(arg('--keys')), path.join(HOME, 'keys'), { recursive: true });
+// --sessions <폴더>: 앞 시험 홈의 로그인(sessions/·browser/)을 그대로 — 회원이 이미 로그인해 둔 PC 처럼(새 시험 홈엔 인스타 쿠키가 없어 준비 확인에서 멈춘다)
+if (arg('--sessions')) for (const d of ['sessions', 'browser']) { const s = path.join(path.resolve(arg('--sessions')), d); if (fs.existsSync(s)) fs.cpSync(s, path.join(HOME, d), { recursive: true }); }
 const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code', SHORTEM_NO_BROWSER: '1', SHORTEM_DEV_TOOLS: '1', SHORTEM_DEV: '1',
   SHORTEM_ENGINE: path.resolve(arg('--engine')), SHORTEM_BASE: arg('--base'), SHORTEM_LICENSE: fs.readFileSync(arg('--key-file'), 'utf8').trim(),
   CALCOPY_DEV_MINA_SERVER: '1', CALCOPY_DEV_COUPANG_SERVER: '1', SHORTEM_WAIT_SEC: '50', SHORTEM_YT_PROFILES: process.env.SHORTEM_YT_PROFILES || 'mcp' };   // 이 시험은 전용 파이어폭스 프로필 mcp* 로그인만(원본찾기 세션 yt* 와 계정 한도 나눔)
