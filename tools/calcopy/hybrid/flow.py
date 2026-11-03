@@ -3708,6 +3708,22 @@ def f_of_fetch(st, m, rp, u):
                    for k, o in enumerate(st["origins"])], "then": "of_fetched"}
 
 
+ORIGIN_MIN_H_FOREIGN = 720      # 해외원본형 원본 높이 하한(판 source.min_h 가 없을 때) — 회원 지침 05_material·briefs/screen_pick '720 은 마지막 수단'
+
+
+def _origin_min_h(st) -> int:
+    """(판단 주인 — 원본 화질 하한) 판 source.min_h, 없으면 해외원본형 ORIGIN_MIN_H_FOREIGN. 0 = 보지 않는다.
+    관제 318(11-04 #3360 김효준): 하한이 자막노래형 길(j_origin_ready)에만 있어 해외원본형 '소재 2편 함께 찾기'가 480x360 옛 리뷰를 원본으로 정했다."""
+    v = ((_style(st["version"]) if st.get("version") else {}).get("source") or {}).get("min_h")
+    if v:
+        return int(v)
+    return ORIGIN_MIN_H_FOREIGN if _fmt(st) == "해외원본형" else 0
+
+
+def _origin_h(o: dict) -> int:
+    return max((int(x.get("h") or 0) for x in o.get("files") or []), default=0)
+
+
 def f_of_fetched(st, m, rp, u):
     files, keep = [], []
     for k, o in enumerate(st["origins"]):
@@ -3720,6 +3736,24 @@ def f_of_fetched(st, m, rp, u):
         files += g["files"]
     if not keep:
         raise _Stop("해외 원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", retry="of_fetch", auto=True)
+    lo = _origin_min_h(st) if any(_origin_h(o) for o in keep) else 0
+    low = [o for o in keep if lo and 0 < _origin_h(o) < lo]      # 높이를 모르면(0) 거르지 않는다
+    if low:
+        st["log"].append(f"원본 화질 낮음 뺌(판 최소 {lo}px): " + ", ".join(f"{o['id']} {_origin_h(o)}px" for o in low))
+        keep = [o for o in keep if o not in low]
+        files = [f for o in keep for f in o.get("files") or []]
+        if not keep:
+            ids = [o["id"] for o in low]
+            tries = st.setdefault("tries", {})
+            if not tries.get("of_lowres_refind"):      # 원본 확인 탈락(f_of_verify_got)과 같은 길 — 이유를 들고 직접 찾기 한 바퀴 더
+                tries["of_lowres_refind"] = 1
+                st["origins"] = []
+                st.setdefault("skip_ids", []).extend(ids)
+                st["of_find_why"] = (f"앞에서 고른 원본의 화질이 {max(_origin_h(o) for o in low)}px 로 판 최소 {lo}px 보다 낮았다 — "
+                                     f"같은 촬영분의 {lo}p 이상 판(공식 채널·원 업로더)을 찾아라: {ids}")
+                return {"goto": "of_find"}
+            raise _Stop("받은 원본의 화질이 낮아서 이 스타일로 만들 수 없어요", "다시 시도해 주시면 더 선명한 원본을 한 번 더 찾아볼게요", retry="of_find",
+                        ask_member=True, origin_missing=True, detail=f"원본 화질 낮음: {ids} < {lo}px")
     st["origins"] = keep
     if len(files) > 1:                  # 재업로드(같은 영상 두 파일)는 빼고 간다 — 다음 장면 재사용을 B13 이 못 잡는다(10-27 run4 a·b편)
         return {"do": [{"id": "dups", "cmd": "origin_dups", "files": [f["name"] for f in files]}], "then": "of_dedup"}
@@ -4951,7 +4985,7 @@ def j_origin_ready(st, m, rp, u):
     if _subsong_too_short(st, dur):
         st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
         raise _Stop(*SHORT_SRC, final=True)
-    lo_h = int(((_style(st["version"]).get("source") or {}).get("min_h")) or 0)
+    lo_h = _origin_min_h(st)                     # 하한 주인 한 곳(해외원본형 받기 f_of_fetched 와 같은 판단)
     hi = max((int(x.get("h") or 0) for x in st["origin"]["files"]), default=0)
     if lo_h and hi < lo_h:                       # 판 source.min_h — 낮은 화질 원본은 창에 4배 늘려져 흐리다(10-27 flow04 360p)
         st["log"].append(f"원본 높이 {hi}px < 판 최소 {lo_h}px — 마침")
