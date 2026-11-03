@@ -84,3 +84,25 @@ def test_tiktok_skips_server_browser_when_relay_missing(monkeypatch):
     monkeypatch.setattr(kw_backends.config, "TIKTOK_SESSION_PATH", __file__, raising=False)
     assert kw_backends.pw_tiktok("dog carrier", 8) == []
     assert launched == []          # 늘 0건인 서버 브라우저(60초+9초)를 띄우지 않는다
+
+
+def test_relay_gives_waited_search_before_background_detail():
+    from shopping_shorts.coupang_relay import RelayQueue
+    q = RelayQueue()
+    for n in range(19):
+        q.submit_async("detail", {"product": "p%d" % n})
+    import threading
+    got = {}
+    t = threading.Thread(target=lambda: got.setdefault("r", q.submit("dog carrier", 8, 3, kind="tiktok",
+                                                                    payload={"keyword": "dog carrier"})))
+    t.start()
+    import time as _t
+    for _ in range(40):
+        if q.status()["waiting"] == 20:
+            break
+        _t.sleep(0.05)
+    job = q.take(1)
+    assert job.kind == "tiktok"                     # 상품재료 19건을 건너뛰고 먼저
+    q.complete(job.id, {"items": [{"url": "u"}]})
+    t.join(5)
+    assert got["r"]["items"][0]["url"] == "u"
