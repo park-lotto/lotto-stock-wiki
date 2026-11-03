@@ -863,6 +863,105 @@ def match_from_render(style, doc, work, media: bool | dict = True, frame0_kind_m
     return Tm
 
 
+# ---------------------------------------------------------------- 벤치마킹 시험 편(remake.py 결과) ↔ 벤치 줄판독 (관제 319 Ruling 10)
+# 줄판독 등장 어휘(ENTER_VOCAB) ↔ 프리셋 frame.json 자막 enter.kind(schema: pop|fade|rise|typewriter|none, 없으면 null) — 양쪽에 다 있는 것만.
+ENTER_FRAME = {"instant": None, "typing": "typewriter", "pop": "pop", "fade": "fade"}
+ENTER_MS = 300          # frame 자막 enter 가 비어 있을 때 새로 넣는 등장 시간(ms) — calcopy_frame/schema.py 예시값(28줄). 이미 있으면 그 ms 그대로
+# (판단 주인) 어긋난 대조 칸 → 프리셋 frame.json 의 고칠 자리. 여기 없는 칸은 frame 자리가 아니다(대본·재료·목소리 몫) — 판볶이 후보를 안 낸다.
+MATCH_FIX = {"enter.mode.나레": "layers[text:caption].enter", "enter.mode.원음": "layers[text:caption].enter"}
+
+
+def _caption_layer(frame: dict | None) -> dict | None:
+    return next((l for l in (frame or {}).get("layers") or [] if l.get("kind") == "text" and l.get("role") == "caption"), None)
+
+
+def _frame_enter(v) -> str:
+    k = v.get("kind") if isinstance(v, dict) else v
+    if k in (None, "none"):
+        return "instant"
+    inv = {f: m for m, f in ENTER_FRAME.items() if f}
+    return inv.get(str(k), enter_key(k))
+
+
+def _sfx_times(audio: dict) -> list[float]:
+    out = []
+    for s in audio.get("sfx") or []:      # remake_video: [{file,t,db}] · narr_video: [[file,t,db]]
+        t = s.get("t") if isinstance(s, dict) else (s[1] if isinstance(s, (list, tuple)) and len(s) > 1 else None)
+        if isinstance(t, (int, float)):
+            out.append(float(t))
+    return out
+
+
+def ours_from_remake(out_dir, frame: dict | None = None) -> dict:
+    """(어댑터) remake.py 결과 폴더 → _ours_lines 의 lines 꼴. 판정은 match_table 한 곳(여기서 판정하지 않는다).
+    시각 = timeline.json — narr_video steps[{text,t0,t1}](누적형 둘째 단계는 새로 붙은 마지막 줄만) · remake_video beats[{t0,dur,caption_lines}](빈 줄 뺌).
+    화자 = remake_log.kind(tts·human → 나레, none → 모름 None — 원음만 꼴은 줄마다 화자를 기록하지 않는다).
+    등장 = 프리셋 frame 자막 enter(렌더가 그 값으로 그린다 · frame 을 안 주면 None). 효과음 = audio.json sfx 시각. 줄 꾸밈(강조·스티커)·전환·0초 화면은 기록이 없어 비운다(→ 미측정)."""
+    out = Path(out_dir)
+    T = json.loads((out / "timeline.json").read_text(encoding="utf-8"))
+    lp, ap = out / "remake_log.json", out / "audio.json"
+    kind = json.loads(lp.read_text(encoding="utf-8")).get("kind") if lp.is_file() else None
+    sp = "나레" if kind in ("tts", "human") else None
+    cap = _caption_layer(frame)
+    enter = _frame_enter(cap.get("enter")) if cap else None
+    if isinstance(T.get("steps"), list) and T["steps"]:
+        rows = [(float(s["t0"]), float(s["t1"]), str(s.get("text") or "").split("\n")[-1]) for s in T["steps"] if "t0" in s and "t1" in s]
+        dur = float(T.get("dur") or max((r[1] for r in rows), default=0))
+    elif isinstance(T.get("beats"), list) and T["beats"]:
+        rows = [(float(b["t0"]), round(float(b["t0"]) + float(b["dur"]), 3), " ".join(b.get("caption_lines") or [])) for b in T["beats"]]
+        dur = max((r[1] for r in rows), default=0.0)
+        rows = [r for r in rows if r[2].strip()]
+    else:
+        raise ValueError("timeline.json 에 줄 시각(steps·beats)이 없다")
+    sfx = _sfx_times(json.loads(ap.read_text(encoding="utf-8"))) if ap.is_file() else None
+    lines = [{"t0": a, "t1": b, "text": t, "speaker": sp, "enter": enter, "layer": "채널",
+              "sfx": next((f"{x}" for x in sfx or [] if a <= x < b), None)} for a, b, t in rows]
+    return {"lines": lines, "dur": dur, "sfx_rate": round(len(sfx) / dur, 3) if sfx is not None and dur else None, "kind": kind}
+
+
+def fix_cands(T: dict, frame: dict) -> list[dict]:
+    """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 판볶이 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
+    from tools.calcopy.engine import preset_save as P
+    F = P.flat(frame)
+    cap = _caption_layer(frame) or {}
+    out, seen = [], set()
+    for r in T.get("rows") or []:
+        path = MATCH_FIX.get(r["key"])
+        if r.get("judge") != "out" or not path or path not in F or r.get("bench") not in ENTER_FRAME:
+            continue
+        k = ENTER_FRAME[r["bench"]]
+        old = cap.get("enter")
+        value = None if k is None else {"kind": k, "ms": old["ms"] if isinstance(old, dict) and old.get("ms") else ENTER_MS}
+        key = json.dumps([path, value], ensure_ascii=False, sort_keys=True)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"path": path, "value": value, "why": f"{r['key']} 벤치 {r['bench']} · 우리 {r['ours']} ({r['why'][:60]})"})
+    return out
+
+
+def bench_match(line_reads: list[str], work, preset_dir, bench_src=None) -> dict:
+    """(판단 주인) 벤치마킹 시험 편 대조 — 줄 자 = match_table(벤치 줄판독 ↔ ours_from_remake), 관문 = remake.gate_of(픽셀·이음매 기록).
+    픽셀 대조는 remake 가 이미 돌린 compare 기록을 읽는다(with_pixel 로 다시 돌리지 않는다 — 같은 compare 두 번, Jev 0.92).
+    match_ok = 줄 판정 통과 + 관문 통과. fails = 기준 칸 중 통과 아닌 것(미측정 포함) + '관문:<칸>'. cands = fix_cands."""
+    from tools.calcopy.engine import remake as RM
+    work, preset_dir = Path(work), Path(preset_dir)
+    docs = _load_docs(line_reads)
+    if not docs:
+        raise ValueError("벤치 줄판독이 없다")
+    frame = json.loads((preset_dir / "frame.json").read_text(encoding="utf-8"))
+    ours = ours_from_remake(work, frame)
+    win = _win_arg(None, docs)
+    fin = work / "final.mp4"
+    om = media_of(str(fin), win) if fin.is_file() else None          # 완성본이 없으면 컷·LUFS 는 못 잰다(match_table 이 미측정으로)
+    bm = bench_media_cached(str(bench_src), [d.get("id") for d in docs], win) if bench_src and Path(bench_src).is_dir() else None
+    T = match_table(docs, ours, om, bm)
+    g = RM.gate_of(work)
+    fails = [r["key"] for r in T["rows"] if r["core"] and r["judge"] != "in"] + [f"관문:{x}" for x in g["fails"]]
+    return {"match_ok": T["verdict"] == "통과" and g["ok"], "fails": fails, "cands": fix_cands(T, frame), "gate_ok": g["ok"], "gate": g,
+            "table": {"verdict": T["verdict"], "rows": T["rows"], "n_bench": T["n_bench"]}, "made_by": "kal_analyze.bench_match"}
+
+
 # ---------------------------------------------------------------- frames (견본 sheets.py 를 그대로 부른다)
 def _sheets_mod():
     p = ROOT / "channel/starpickroom/_tools/sheets.py"

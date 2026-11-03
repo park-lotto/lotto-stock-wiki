@@ -91,7 +91,7 @@ def test_panbokki_picks_by_jev_and_remeasures(monkeypatch):
     monkeypatch.setattr(jev_gate, "decide", dec)
     st = _st("bm_panbokki", trial="t.mp4", videos=[_vid("a")])
     r = _go(st, {"pan": {"match_ok": False, "fails": ["x"], "cands": [{"path": "p1", "value": 1}, {"path": "p2", "value": 2}]}, "side": {"side": "side/a.mp4"}})
-    assert [d["cmd"] for d in r["do"]] == ["bm_fix", "render_trial"] and r["do"][0]["fix"]["path"] == "p1"
+    assert [d["cmd"] for d in r["do"]] == ["bm_fix"] and r["do"][0]["fix"]["path"] == "p1" and st["phase"] == "bm_trial"   # 한 칸 고친 뒤 시험 편 다시(Ruling 10)
     assert st["pan_n"] == 1 and st["bm"]["side"] == "side/a.mp4" and len(seen["fixes"]) == 2
 
 
@@ -191,7 +191,7 @@ def test_partial_pass_keeps_only_passed_docs():
     st = _st("bm_measure_got", videos=[_vid("a"), _vid("b")], keep=["a", "b"], skel={"a": 2, "b": 2}, reread=1)
     r = _go(st, {"fill": {"ok": ["a"], "bad": {"b": ["줄1 enter 미기입"]}, "dir": "channel/s/줄판독"}})
     assert st["bm"]["line_reads"] == ["channel/s/줄판독/a.json"] and any("b" in x for x in st["log"])
-    assert r["do"][0]["cmd"] == "render_trial" and r["do"][0]["line_reads"] == ["channel/s/줄판독/a.json"]
+    assert r["status"] == "review" and r["review"][0]["id"] == "bm_trial" and st["bm"]["line_reads"] == ["channel/s/줄판독/a.json"]
 
 
 def test_flow_read_measure_trial_order():
@@ -205,7 +205,7 @@ def test_flow_read_measure_trial_order():
     _go(st, rp={"bm_read": {"rules": {}, "per_video": {}, "lines": {"a": _eye()}}})
     assert st["phase"] == "bm_measure_got"
     r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
-    assert st["phase"] == "bm_trial_got" and r["do"][0]["cmd"] == "render_trial"
+    assert st["phase"] == "bm_trial_got" and r["status"] == "review" and r["review"][0]["id"] == "bm_trial"
 
 
 # ── 실행기: 뼈대·채우기(판단 없음 — 뼈대 = kal_analyze.skeleton, 검사 = kal_analyze.check_doc) ──
@@ -232,3 +232,165 @@ def test_skel_and_fill_commands(tmp_path):
     assert res["ok"] == ["a"] and p.is_file() and not K.check_doc(json.loads(p.read_text(encoding="utf-8")))["errors"]
     res = R.run_do(tmp_path, [{"id": "fill", "cmd": "bm_fill", "slug": "s", "fills": {"a": bad}}])["fill"]
     assert res["ok"] == [] and res["bad"]["a"] and not p.exists()           # 못 넘은 판독은 남기지 않는다(대조에 안 쓰임)
+
+
+# ── 시험 편 = 회원 과제(관리자 Ruling 10) · 대조 = bm_match(kal_analyze.bench_match) ──
+def _trial_st(**kw):
+    return _st("bm_measure_got", url="https://www.youtube.com/@abc", videos=[_vid("a")], keep=["a"], skel={"a": 2}, reread=1, **kw)
+
+
+def test_trial_is_member_task_not_stop():
+    st = _trial_st()
+    r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
+    q = r["review"][0]
+    assert r["status"] == "review" and q["id"] == "bm_trial" and q["model"] == "opus" and "work_dir" in q["need"]
+    assert q["meta"]["kind"] == "member_task" and q["meta"]["tool"] == "shortem_make"
+    assert q["meta"]["preset"] == {"slug": "s", "style": "틀", "dir": "channel/s/preset/틀"} and q["meta"]["source"] == {"channel": "https://www.youtube.com/@abc"}
+    assert "_task" not in st and r["stage"]["text"] == "시험 영상 만들기" and r["message"].endswith("시험 영상 만들기 중")
+    assert "칼카피" not in r["message"] and "칼카피" not in q["ask"]
+
+
+def test_trial_task_has_no_bench_mp4():
+    st = _trial_st()
+    r = _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
+    blob = json.dumps(r["review"], ensure_ascii=False)
+    assert "src/a.mp4" not in blob and "src/a_360.mp4" not in blob and ".mp4" not in json.dumps(r["review"][0]["meta"], ensure_ascii=False)
+
+
+def test_trial_videos_only_source_has_no_channel():
+    st = _st("bm_trial", videos_in=["https://youtube.com/shorts/aaa"], videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"])
+    q = _go(st)["review"][0]
+    assert q["meta"]["source"] == {"channel": None} and "youtube.com/shorts/aaa" not in q["ask"]
+
+
+def test_trial_got_missing_or_failed_stops_two_lines():
+    for rp in ({}, {"bm_trial": {"work_dir": "", "ok": False, "why": "렌더 실패"}}, {"bm_trial": {"ok": True}}):
+        st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"])
+        r = _go(st, rp=rp)
+        assert r["status"] == "stop" and r["why"] == "시험 영상을 만들지 못했어요" and r["fix"] and r["retry_ok"] is True
+        assert "_task" not in r["state"]
+
+
+def test_trial_got_runs_side_and_match():
+    st = _st("bm_trial_got", videos=[_vid("a")], keep=["a"], line_reads=["channel/s/줄판독/a.json"])
+    r = _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"] and st["phase"] == "bm_panbokki"
+    side, pan = r["do"]
+    assert side["ours"] == "make/t1/final.mp4" and pan["work"] == "make/t1" and pan["line_reads"] == ["channel/s/줄판독/a.json"]
+
+
+def test_flow_trial_to_match_to_fix_and_back(monkeypatch):
+    monkeypatch.setattr(jev_gate, "decide", lambda *a, **k: {"pick": 1, "conf": 0.9, "fixroot": [0.2, 0.8], "ok": True})
+    st = _trial_st()
+    _go(st, {"fill": {"ok": ["a"], "bad": {}, "dir": "channel/s/줄판독"}})
+    assert st["phase"] == "bm_trial_got"
+    _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
+    assert st["phase"] == "bm_panbokki"
+    cands = [{"path": "p1", "value": 1, "why": "a"}, {"path": "p2", "value": 2, "why": "b"}]
+    r = _go(st, {"pan": {"match_ok": False, "fails": ["enter.mode.나레", "chunk.sec"], "cands": cands, "gate_ok": True}, "side": {"side": "side/x.mp4"}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_fix"] and r["do"][0]["fix"] == cands[1] and st["phase"] == "bm_trial"
+    r = _go(st, {"fix": {"fixed": "p2"}})
+    assert r["status"] == "review" and r["review"][0]["id"] == "bm_trial" and st["pan_n"] == 1
+
+
+def test_fix_error_stops():
+    st = _st("bm_trial", videos=[_vid("a")], line_reads=["x"])
+    r = _go(st, {"fix": {"error": "ValueError: 자리 없음"}})
+    assert r["status"] == "stop" and r["why"] and r["fix"]
+
+
+def test_match_error_stops():
+    st = _st("bm_panbokki", trial="make/t1/final.mp4", videos=[_vid("a")])
+    r = _go(st, {"pan": {"error": "ValueError: timeline.json 에 줄 시각이 없다"}})
+    assert r["status"] == "stop" and r["why"] and r["fix"]
+
+
+# ── bm_match 실행기 + 진짜 match_table(가짜 함수 아님) ──
+def _bench_doc(vid):
+    return {"id": vid, "dur": 4.0, "lines": [{"t0": 0.0, "t1": 1.0, "text": "첫째 줄이다", "speaker": "나레", "layer": "채널", "enter": "pop"},
+                                           {"t0": 1.0, "t1": 2.0, "text": "둘째 줄이다", "speaker": "나레", "layer": "채널", "enter": "pop"},
+                                           {"t0": 2.0, "t1": 4.0, "text": "셋째 줄", "speaker": "나레", "layer": "채널", "enter": "pop"}]}
+
+
+def _remake_out(W, verdict="통과", seams=True, kind="tts"):
+    out = W / "make" / "t1"
+    (out / "대조").mkdir(parents=True)
+    steps = [{"text": "첫째 줄이다", "t0": 0.0, "t1": 1.0, "new_cut": True, "sent": 0, "line": 0},
+             {"text": "첫째 줄이다\n둘째 줄이다", "t0": 1.0, "t1": 2.0, "new_cut": False, "sent": 0, "line": 0},
+             {"text": "셋째 줄", "t0": 2.0, "t1": 4.0, "new_cut": True, "sent": 1, "line": 1}]
+    (out / "timeline.json").write_text(json.dumps({"steps": steps, "dur": 4.0}, ensure_ascii=False), encoding="utf-8")
+    bad = [] if verdict == "통과" else ["자막 y"]
+    (out / "remake_log.json").write_text(json.dumps({"kind": kind, "steps": {"compare": {"verdict": verdict, "out": bad, "failed": []},
+                                                                            "seams": {"ok": seams, "rewinds": [] if seams else [3.2]}}}, ensure_ascii=False), encoding="utf-8")
+    (out / "대조" / "verdict.json").write_text(json.dumps({"verdict": verdict, "n_in": 3, "n_criteria": 3, "out": bad, "failed": []}, ensure_ascii=False), encoding="utf-8")
+    (out / "audio.json").write_text(json.dumps({"sfx": []}), encoding="utf-8")
+    return out
+
+
+def _preset(W, enter=None):
+    p = W / "channel" / "s" / "preset" / "틀"
+    p.mkdir(parents=True)
+    frame = {"canvas": [1080, 1920], "layers": [{"kind": "video", "x": 0, "y": 0, "w": 1080, "h": 1920},
+                                                {"kind": "text", "role": "caption", "x": 540, "y": 1300, "w": 980, "align": "center", "lines": 2,
+                                                 "font": "CcPretendard-Bold", "size": 60, "line_h": 70, "rgb": [255, 255, 255], "enter": enter}]}
+    (p / "frame.json").write_text(json.dumps(frame, ensure_ascii=False), encoding="utf-8")
+    (p / "manifest.json").write_text("{}", encoding="utf-8")
+    lr = W / "channel" / "s" / "줄판독"
+    lr.mkdir(parents=True)
+    for v in ("a", "b"):
+        (lr / f"{v}.json").write_text(json.dumps(_bench_doc(v), ensure_ascii=False), encoding="utf-8")
+
+
+def test_bm_match_real_table_on_remake_folder(tmp_path):
+    from tools.calcopy.engine import kal_analyze as K
+    assert "bm_match" in R.CMDS and "bm_match" in R.CMD_LABEL
+    _remake_out(tmp_path)
+    _preset(tmp_path)
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1",
+                               "line_reads": ["channel/s/줄판독/a.json", "channel/s/줄판독/b.json"]}])["pan"]
+    assert "error" not in out, out
+    assert set(out) >= {"match_ok", "fails", "cands", "gate_ok"} and out["gate_ok"] is True and out["match_ok"] is False
+    rows = {r["key"]: r for r in out["table"]["rows"]}
+    assert rows["enter.mode.나레"]["judge"] == "out" and rows["enter.mode.나레"]["ours"] == "instant"     # 프리셋 자막 enter 없음 = instant
+    assert rows["cut.median"]["judge"] == "failed" and "cut.median" in out["fails"]                     # 완성본 mp4 없음 = 못 잼(통과 아님)
+    solo = {r["key"]: r for r in K.match_table([_bench_doc("a")], K.ours_from_remake(tmp_path / "make" / "t1"), None, None)["rows"]}
+    assert rows["chunk.chars"]["ours"] == solo["chunk.chars"]["ours"]
+    assert len(out["cands"]) == 1 and out["cands"][0]["path"] == "layers[text:caption].enter"
+    assert out["cands"][0]["value"] == {"kind": "pop", "ms": K.ENTER_MS} and "enter.mode.나레" in out["cands"][0]["why"]
+
+
+def test_bm_match_gate_fail_blocks_match_ok(tmp_path):
+    _remake_out(tmp_path, verdict="미달", seams=True)
+    _preset(tmp_path, enter={"kind": "pop", "ms": 170})
+    out = R.run_do(tmp_path, [{"id": "pan", "cmd": "bm_match", "slug": "s", "style": "틀", "work": "make/t1",
+                               "line_reads": ["channel/s/줄판독/a.json"]}])["pan"]
+    assert out["gate_ok"] is False and out["match_ok"] is False and any(x.startswith("관문:") for x in out["fails"])
+    assert {r["key"]: r for r in out["table"]["rows"]}["enter.mode.나레"]["judge"] == "in" and out["cands"] == []
+
+
+def test_ours_from_remake_reads_new_chunk_only_and_narr_speaker(tmp_path):
+    from tools.calcopy.engine import kal_analyze as K
+    o = K.ours_from_remake(_remake_out(tmp_path))
+    assert [l["text"] for l in o["lines"]] == ["첫째 줄이다", "둘째 줄이다", "셋째 줄"] and o["dur"] == 4.0
+    assert all(l["speaker"] == "나레" for l in o["lines"])
+
+
+def test_ours_from_remake_beats_shape_and_missing(tmp_path):
+    import pytest
+    from tools.calcopy.engine import kal_analyze as K
+    out = tmp_path / "w"
+    out.mkdir()
+    (out / "timeline.json").write_text(json.dumps({"beats": [{"t0": 0.0, "dur": 1.5, "caption_lines": ["가나다"]}, {"t0": 1.5, "dur": 0.5, "caption_lines": []}]}, ensure_ascii=False), encoding="utf-8")
+    (out / "remake_log.json").write_text(json.dumps({"kind": "none"}), encoding="utf-8")
+    o = K.ours_from_remake(out)
+    assert o["lines"] == [{"t0": 0.0, "t1": 1.5, "text": "가나다", "speaker": None, "enter": None, "layer": "채널", "sfx": None}] and o["dur"] == 2.0
+    (out / "timeline.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError):
+        K.ours_from_remake(out)
+
+
+def test_gate_from_remake_folder(tmp_path):
+    from tools.calcopy.engine import remake
+    g = remake.gate_of(_remake_out(tmp_path, verdict="미달", seams=False))
+    assert g["ok"] is False and "자막 y" in g["fails"] and any("이음매" in x for x in g["fails"])
+    assert remake.passed("원본 없음 — 대조 생략", True) is True and remake.passed("미달", True) is False

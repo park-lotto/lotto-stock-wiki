@@ -10,6 +10,7 @@ PAN_MAX = 3          # 판볶이 최대 횟수 — 넘으면 「여기까지 맞
 CONFIRM_MAX = 2      # 확정 검사·최종 판정이 틀렸다고 되돌릴 수 있는 횟수
 ASKS = {   # 질문별 모델 — 페이블은 두 곳만(D6), 소넷·하이쿠 0곳(D5)
     "bm_read": {"id": "bm_read", "model": "opus"},
+    "bm_trial": {"id": "bm_trial", "model": "opus"},      # 시험 편 = 회원 과제(Ruling 10) — 회원 Claude 가 shortem_make 로 1편 만들고 작업 폴더를 올린다
     "bm_confirm": {"id": "bm_confirm", "model": "fable"},
     "bm_verdict": {"id": "bm_verdict", "model": "fable"},
 }
@@ -164,26 +165,57 @@ def bm_measure_got(st, m, rp, u):
     return {"goto": "bm_trial"}
 
 
+TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 판볶이용)
+지금 만든 임시 내 프리셋으로 기존 shortem_make 도구(1판 길 그대로 — AI 답 고리·소재 고르기 그대로)를 써서 영상 1편을 만든다.
+- 쓸 프리셋: 작업 폴더 {dir} (slug {slug} · 틀 {style}). 임시 내 프리셋으로 올려서 쓴다.
+- 소재: 1판 규칙 그대로 — {source}
+- 벤치 영상 파일은 재료로 쓰지 않는다(벤치를 베끼는 게 아니라 같은 꼴로 새 편을 만든다).
+- 끝나면 그 편의 작업 폴더(final.mp4·timeline.json·remake_log.json·대조/verdict.json 이 있는 곳)를 이 작업 폴더 기준 상대 경로로 올린다.
+{again}
+답: {{"work_dir": "<작업 폴더 상대 경로>", "ok": true|false, "why": "<못 만들었으면 이유>"}}"""
+
+
+def _trial_source(b: dict) -> dict:
+    """시험 편 소재 = 1판 규칙(shortem_client make_flow.js 211~213: 준 영상 또는 그 프리셋의 벤치 채널). 벤치 영상 파일·주소는 넣지 않는다."""
+    return {"channel": b.get("url") or None}
+
+
 def bm_trial(st, m, rp, u):
-    # ★render_trial 실행기 명령은 아직 없다 — 새 프리셋(channel/<slug>/preset/<틀>)을 회원 제작 흐름의 판(styles)·장부(flow_format)로
-    #   잇는 다리 결정 대기(관제 319 과제 6 NEEDS_CONTEXT, task-6-report '시험 편·대조 메우기'). 지금은 실행기가 '허용되지 않은 명령' 오류를 낸다.
+    """시험 편 — 회원 과제(의도한 일, 멈춤 아님). 회원 Claude 가 shortem_make 로 1편을 만들고 작업 폴더를 올린다(관리자 Ruling 10).
+    판볶이가 칸을 고친 뒤(do bm_fix → 여기)에도 같은 과제로 다시 만든다."""
+    F = _F()
     b = st["bm"]
-    return {"do": [{"id": "trial", "cmd": "render_trial", "slug": b["slug"], "style": b["style"], "line_reads": b.get("line_reads") or []}], "then": "bm_trial_got"}
+    fx = m.get("fix") or {}
+    if fx.get("error"):
+        raise F._Stop("프리셋 칸을 고치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=str(fx["error"])[:300])
+    src = _trial_source(b)
+    pdir = f"channel/{b['slug']}/preset/{b['style']}"
+    n = int(st.get("pan_n") or 0)
+    ask = TRIAL_ASK.format(dir=pdir, slug=b["slug"], style=b["style"],
+                           source=(f"벤치 채널 {src['channel']} 에서 고른다(영상 주소 없이 만들기)" if src["channel"] else "회원이 준 영상이 있으면 그 영상, 없으면 shortem_make 가 내는 안내 그대로"),
+                           again=(f"- 판볶이 {n}번째 고침 뒤 다시 만드는 편이다(고친 칸: {b.get('fixed_last')})." if n else ""))
+    meta = {"kind": "member_task", "tool": "shortem_make", "preset": {"slug": b["slug"], "style": b["style"], "dir": pdir}, "source": src, "try": n}
+    return {"review": [F._rv("bm_trial", ask, model=ASKS["bm_trial"]["model"], need=("work_dir", "ok"), meta=meta)], "then": "bm_trial_got"}
 
 
 def _compare_do(st):
     b = st["bm"]
     n = int(st.get("pan_n") or 0)       # 시도 번호를 넣어 같은 입력 반복으로 오해받지 않게(flow._watch)
     return [{"id": "side", "cmd": "bm_side", "bench": b["videos"][0]["v360"], "ours": b["trial"], "try": n},
-            {"id": "pan", "cmd": "bm_match", "slug": b["slug"], "style": b["style"], "ours": b["trial"], "try": n}]
+            {"id": "pan", "cmd": "bm_match", "slug": b["slug"], "style": b["style"], "work": b.get("trial_dir"), "line_reads": b.get("line_reads") or [], "try": n}]
 
 
 def bm_trial_got(st, m, rp, u):
+    """회원 과제 답 — 작업 폴더가 없거나 못 만들었으면 멈춤 두 줄(조용히 넘어가지 않음). 회원 Claude 가 이미 한 일이라 제작자 과제로 또 돌리지 않는다(ask_member)."""
     F = _F()
-    t = m.get("trial") or {}
-    if not t.get("mp4"):
-        raise F._Stop("시험 영상을 만들지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", auto=True, detail=json.dumps(t, ensure_ascii=False, default=str)[:300])
-    st["bm"]["trial"] = t["mp4"]
+    a = rp.get("bm_trial") if isinstance(rp.get("bm_trial"), dict) else {}
+    wd = str(a.get("work_dir") or "").strip().strip("/")
+    if not a.get("ok") or not wd:
+        raise F._Stop("시험 영상을 만들지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", ask_member=True,
+                      detail="회원 과제 답: " + json.dumps(a or "없음", ensure_ascii=False, default=str)[:300])
+    b = st["bm"]
+    b["trial_dir"], b["trial"] = wd, f"{wd}/final.mp4"
+    st["log"].append(f"시험 편 받음: {wd}")
     return {"do": _compare_do(st), "then": "bm_panbokki"}
 
 
@@ -194,6 +226,8 @@ def bm_panbokki(st, m, rp, u):
     b = st["bm"]
     if (m.get("side") or {}).get("side"):
         b["side"] = m["side"]["side"]       # 확정 검사·최종 판정이 좌우 영상을 본다
+    if (m.get("pan") or {}).get("error"):      # 대조를 못 했다 — 빈 대조표로 '맞춤'·'다시 재기'로 새지 않게 멈춘다
+        raise F._Stop("벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_trial", ask_member=True, detail=str(m["pan"]["error"])[:300])
     if m.get("pan"):
         b["pan_last"] = m["pan"]
     p = b.get("pan_last") or {}             # Jev 가 쉬어서 멈춘 뒤 다시 시도하면 직전 대조표로 이어 간다
@@ -225,8 +259,8 @@ def bm_panbokki(st, m, rp, u):
         return {"do": [{**x, "deeper": True, "hint": fails} if x["id"] == "pan" else x for x in _compare_do(st)], "then": "bm_panbokki"}
     st["pan_n"] = n
     st["log"].append(f"판볶이 {n}: {fix} ({why})")
-    return {"do": [{"id": "fix", "cmd": "bm_fix", "slug": b["slug"], "style": b["style"], "fix": fix},
-                   {"id": "trial", "cmd": "render_trial", "slug": b["slug"], "style": b["style"], "try": n}], "then": "bm_trial_got"}
+    b["fixed_last"] = fix.get("path") if isinstance(fix, dict) else fix
+    return {"do": [{"id": "fix", "cmd": "bm_fix", "slug": b["slug"], "style": b["style"], "fix": fix}], "then": "bm_trial"}     # 한 칸만 고치고 시험 편부터 다시
 
 
 def bm_confirm(st, m, rp, u):
