@@ -2429,7 +2429,7 @@ def c_bm_fetch(W, d):
 
 def c_bm_tear(W, d):
     from tools.calcopy.engine import bench_member as BM, preset_save as P
-    ch = W / "channel" / d["slug"]
+    ch = _inside(W, f"channel/{d['slug']}")
     groups, failed = {}, []
     llm = BM.member_llm()
     for v in d["videos"]:
@@ -2465,7 +2465,7 @@ def c_bm_side(W, d):
 def c_bm_brief(W, d):
     import zipfile
     from tools.calcopy.engine import preset_brief as B
-    p = W / "channel" / d["slug"] / "preset" / d["style"]
+    p = _inside(W, f"channel/{d['slug']}/preset/{d['style']}")
     r = B.render(p, p, str(d.get("name") or d["slug"]))
     z = W / "out" / f"{d['slug']}_{d['style']}.zip"
     z.parent.mkdir(parents=True, exist_ok=True)

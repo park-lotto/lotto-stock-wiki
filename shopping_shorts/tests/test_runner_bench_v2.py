@@ -28,3 +28,22 @@ def test_bm_brief_writes_zip(monkeypatch, tmp_path):
     monkeypatch.setattr(preset_brief, "render", lambda pd, od, name: {"md": "프리셋.md", "claude_md": "CLAUDE.md", "sha": "x"})
     out = R.run_do(tmp_path, [{"id": "b", "cmd": "bm_brief", "slug": "s", "style": "틀", "name": "n"}])
     assert (tmp_path / out["b"]["zip"]).exists()
+
+
+def test_bm_env_shape(monkeypatch, tmp_path):
+    from tools.calcopy.engine import agy
+    monkeypatch.setattr(agy, "find", lambda: "agy.exe")
+    monkeypatch.setattr(agy, "logged_in", lambda run=None: True)
+    out = R.run_do(tmp_path, [{"id": "e", "cmd": "bm_env"}])["e"]
+    assert out["agy"] is True and out["agy_login"] is True and out["disk_gb"] > 0
+
+
+def test_slug_cannot_escape_work_folder(tmp_path):
+    out = R.run_do(tmp_path, [{"id": "t", "cmd": "bm_tear", "slug": "../../x", "videos": []},
+                              {"id": "b", "cmd": "bm_brief", "slug": "../../x", "style": "틀", "name": "n"}])
+    assert "error" in out["t"] and "error" in out["b"]
+
+
+def test_bm_side_refuses_outside_path(tmp_path):
+    out = R.run_do(tmp_path, [{"id": "s", "cmd": "bm_side", "bench": "../a.mp4", "ours": "b.mp4"}])
+    assert "error" in out["s"]
