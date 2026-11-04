@@ -3377,8 +3377,8 @@ def ph_check_fix(st, m, rp, u):
 
 # ── 12·13 납품·정리 ───────────────────────────────────────────────────────
 def ph_deliver(st, m, rp, u):
-    if (st.get("text_fix") or {}).get("bg"):      # 마지막으로 잠깐만 기다린다 — 그래도 안 오면 흐림 판으로 완성(f_bg_got)
-        return _bg_take(st, BG_GRACE, "deliver")
+    if (st.get("text_fix") or {}).get("bg"):      # 이미 돈 낸 지우기 — 실행기 예산 안(BG_WAIT)까지 기다린다. 그래도 안 오면 흐림 판으로 완성(f_bg_got)
+        return _bg_take(st, BG_WAIT, "deliver")   # 11-04 강병주 #5656: 120초만 기다려 지운 15조각을 버렸다(조각당 수 분)
     return {"do": [{"id": "final", "cmd": "finish", "version": st["version"], "title": script_view(st)["title"]}], "then": "finished"}
 
 
@@ -4649,12 +4649,11 @@ def f_render(st, m, rp, u):
                     "replan": st.get("_plan_key") != _cuts_key(st), "spots": tf.get("spots") or {}, "bg": True}], "then": "f_render_clean_got"}
 
 
-BG_GRACE = 120      # 완성 직전 뒤 결과를 기다리는 초 — 넘으면 흐림 판으로 완성
 BG_WAIT = 1500      # 뒤 결과 없이는 못 가는 곳에서 기다리는 초(앞에서 기다리던 옛 길과 같은 쪽 — 실행기 예산 1800 안)
 
 
 def _bg_take(st, wait: int, then: str) -> dict:
-    """(판단 주인 — 뒤에서 지운 결과를 언제 받나) 렌더 직후(wait 0) · 완성 직전(BG_GRACE) · 못 가는 곳(BG_WAIT). then = 받은 뒤 갈 곳."""
+    """(판단 주인 — 뒤에서 지운 결과를 언제 받나) 렌더 직후(wait 0) · 완성 직전·못 가는 곳(BG_WAIT). then = 받은 뒤 갈 곳."""
     st["_bg_then"] = then
     return {"do": [{"id": "bg", "cmd": "clean_take", "version": st["version"], "wait": wait}], "then": "f_bg_got"}
 

@@ -242,10 +242,12 @@ def test_arrived_goes_to_render_with_blur_removed():
     assert not st["text_fix"].get("bg") and st["script"]["M"]["blur"]["a.mp4"] == [] and st["text_fix"]["calls"] == 1 and st["text_fix"]["done"] == {"a.mp4": [[0.0, 9.0]]}
 
 
-def test_before_delivery_waits_a_little_then_finishes_with_blur():
+def test_before_delivery_waits_for_paid_job_then_finishes_with_blur():
+    # 11-04 강병주 #5656: 완성 직전 120초만 기다려 이미 과금된 VMake 15조각(조각당 수 분)을 버리고 흐림 판으로 완성했다
+    #   → 완성 직전에도 BG_WAIT(실행기 예산 안)까지 기다린다. 그래도 안 오면 흐림 판(아래 단언 그대로)
     st = _st(bg=True)
     r = F.ph_deliver(st, {}, {}, {})
-    assert r["do"][0]["cmd"] == "clean_take" and r["do"][0]["wait"] == F.BG_GRACE
+    assert r["do"][0]["cmd"] == "clean_take" and r["do"][0]["wait"] == F.BG_WAIT >= 1200
     r = F.f_bg_got(st, {"bg": {"state": "running"}}, {}, {})
     assert r == {"goto": "deliver"} and not st["text_fix"].get("bg") and "흐림" in st["notice"]
     assert st["script"]["M"]["blur"]["a.mp4"]    # 흐림 칸 그대로
