@@ -28,7 +28,7 @@ DRAWN = ["캐릭터", "만화", "일러스트", "애니", "그림", "이모티�
 
 
 # 설명에 '캐릭터·만화' 낱말이 없어 DRAWN 으로 못 거르는 그림 짤(11-04 락스 편: fm_thisisfine = 불타는 방 만화 강아지)
-EXCLUDE_KEYS = {"fm_thisisfine"}
+EXCLUDE_KEYS = {"fm_thisisfine", "gdb_1aubp94slkac2s27"}   # + 영어 자막 박힌 영상(11-04 의대 편 «You stared me!»)
 
 
 def candidates(pack_dir=None):
