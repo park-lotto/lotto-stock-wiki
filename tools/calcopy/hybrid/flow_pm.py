@@ -210,6 +210,15 @@ def script_problems(st, S: dict) -> list[str]:
     e = r.get("engine")
     if e and not e.get("ok"):
         bad.append(f"대본 엔진: {(e.get('points') or {}).get('why')}")
+    # A9 화면 줄 자수 = 계획 관문(preset_make.plan_rules)과 같은 함수·같은 조각으로 대본 때 미리 잰다.
+    # (11-04 썰템쇼 리허설: script_audit cap_chars 는 caps 칸을 재는데 PC제작형 대본엔 caps 가 없어 늘 통과 →
+    #  계획 관문 A9 에서 걸려도 재료만 다시 물어 대본을 못 고치고 5번 돌다 멈췄다)
+    from tools.calcopy.engine import preset_make as PM
+    cfg = PM.load_preset(preset_dir(st))[1]
+    _, lim, over = PM.caption_over(PM.accumulate_pieces(S["lines"], cfg), cfg)
+    if over:
+        bad.append(f"A9 자막 화면 한 줄 {lim}자 이하: " + " · ".join(f"'{x}'({n}자)" for x, n in over[:6]) +
+                   " — 그 줄을 줄이거나 '/' 자리를 옮겨 화면 한 줄이 넘지 않게")
     return bad + scene_problems(st, S)
 
 

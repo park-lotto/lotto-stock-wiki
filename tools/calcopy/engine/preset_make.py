@@ -975,6 +975,15 @@ def reuse_rows(w, cfg) -> list[str]:
     return reuse_violations_bench(cuts, lens, bool((cfg.get("reuse") or {}).get("adjacent_run")))
 
 
+def caption_over(pieces: list, cfg: dict) -> tuple[int, int, list]:
+    """A9 자막 화면 줄 자수 — 판단 주인(계획 관문 plan_rules · 대본 단계 flow_pm.script_problems 가 같이 부른다).
+    화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌) 잰다. 반환 = (최대 자수, 상한, 넘은 줄 [(글, 자수)])."""
+    lim = int(cfg["checks"]["caption_max_chars"])
+    rows = [re.sub(r"^[^:\n]{1,10} : ", "", x) for p in pieces for x in p["text"].split("\n")]
+    over = list(dict.fromkeys((x, len(x)) for x in rows if len(x) > lim))
+    return max((len(x) for x in rows), default=0), lim, over
+
+
 def plan_rules(w, cfg, plan) -> list:
     """TTS·렌더 전에 잴 수 있는 것 — 계획 단계(--plan)와 완성 검사에 같은 표로 나온다(판단 한 곳)."""
     C, rows = cfg["checks"], []
@@ -985,8 +994,8 @@ def plan_rules(w, cfg, plan) -> list:
     aba = aba_list(cs, near)
     rows.append({"B": "A12", "항목": f"A-B-A 끼움(같은 소스 ±{near:g}초 사이 다른 컷 하나)", "값": aba or 0, "ok": not aba,
                  "기준": "0 — 같은 인물은 이어 붙이고 끼운 컷은 묶음 앞·뒤로(표시만, 자동 재배치 안 함)"})
-    mc = max(len(re.sub(r"^[^:\n]{1,10} : ", "", x)) for p in w["pieces"] for x in p["text"].split("\n"))   # 화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌)
-    rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {C['caption_max_chars']}", "ok": mc <= C["caption_max_chars"]})
+    mc, lim, _ = caption_over(w["pieces"], cfg)   # 판단 주인 caption_over — 대본 단계(flow_pm)도 같은 함수
+    rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {lim}", "ok": mc <= lim})
     if C.get("tts_no_jamo"):   # A11: 읽는 글에 ㅋㅋ·ㄷㄷ 같은 낱자 금지(자막엔 둔다)
         jamo = [l["tts"] for l in w["lines"] if re.search(r"[ㄱ-ㅎㅏ-ㅣ]", l["tts"])]
         rows.append({"B": "A11", "항목": "TTS 글 낱자(ㅋㅋ·ㄷㄷ) 없음", "값": jamo or 0, "ok": not jamo, "기준": "0 — 대본 줄 tts 칸에서 뺄 것"})

@@ -11,6 +11,7 @@ import { toolsDir, devMode } from './tools_paths.js';
 import { readZip, renting, holdPending } from './preset_rent.js';
 import { audit } from './audit.js';
 import { activeRuns, resetEngineWorker } from './engine_bridge.js';
+import { syncPlugin } from './plugin_sync.js';
 
 const OK_PATH = /^(server|engine)\/[^\0]+$|^app_version\.json$/;
 export const installDir = () => path.resolve(toolsDir(), '..');
@@ -116,6 +117,9 @@ export async function checkUpdate({ force = false } = {}) {
   writePending(pend, r.version);
   audit('update_ready', { result: r.version });
   applyDownloaded(dir, home, activeRuns().length || renting());     // 다른 창 프로그램이 빌려 만드는 중이어도(rent.lock) 엔진을 바꾸지 않는다(11-03 김효준: 제작 중 교체로 빌린 styles 가 사라짐)
+  // 플러그인(훅·스킬)도 받자마자(관제 325). 켤 때 syncPlugin 은 '돌고 있는 server 판'으로 돌아 새 판 플러그인은 한 번 더 켜야 왔다
+  //   (11-04 헬로2 PC: 1.0.103 을 받고도 wake.js 는 1.0.72 그대로). 훅 스크립트는 뜰 때마다 파일을 읽어 다음 훅부터 새 판이다.
+  syncPlugin({ version: r.version, installRoot: home, src: path.join(dir, 'server', 'plugin_update'), report: t => audit('plugin_sync', { result: t.slice(0, 70) }) });
   return { update: true, ready: true, version: r.version };
 }
 
