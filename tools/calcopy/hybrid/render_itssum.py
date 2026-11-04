@@ -567,7 +567,7 @@ def render_a(S, M, T, fr, R: Path):
 def render_b(S, M, T, R: Path):
     from shopping_shorts import scene_style
     from shopping_shorts.calcopy_frame import to_snapshot
-    from tools.calcopy.engine import preset_save as P
+    from shopping_shorts.calcopy_frame import preset_apply as P   # 적용만(만들기 preset_save 는 고객 묶음 밖)
     src = Path(M["cand_dir"])
     parts = R / "b_parts"
     shutil.rmtree(parts, ignore_errors=True); parts.mkdir(parents=True)

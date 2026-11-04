@@ -29,13 +29,14 @@ if str(ROOT) not in sys.path:
 from shopping_shorts.calcopy_frame import schema  # noqa: E402
 from shopping_shorts.calcopy_frame.per_video import (  # noqa: E402,F401 — 자리 이름·채우기 주인(고객 묶음 쪽)
     VAR, NO_DEFAULT, _FR, _key, _layer_of, _names, fill_defaults, flat, layer_order, unflat)
+from shopping_shorts.calcopy_frame.preset_apply import (  # noqa: E402,F401 — 적용(읽기·채우기·종속값 규칙)의 주인(고객 묶음 쪽)
+    REQUIRED_MANIFEST, _line_w, _scales, apply, apply_rules, load, title_ink_bottom)
 
 MADE_BY = "preset_save v1"
 RULE = ("같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, "
         "제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함")
 ALWAYS_PER_VIDEO = ("layers[text:title].text",)
 NOT_COMPARED = ("source", "made_by")   # 출처 표식 — 틀 값이 아니다(프리셋엔 첫 편 값이 남고 출처 목록은 manifest.sources)
-REQUIRED_MANIFEST = ("slug", "style", "made_by", "rule", "created_at", "updated_at", "variables", "sources")
 
 
 def always_per_video(path: str) -> bool:
@@ -226,33 +227,6 @@ RULE_FORMULA = ("title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄�
 EDGE_MARGIN = 48   # 제목 폭 상한의 바닥 = 화면 폭 − 48(양쪽 24px) — 두 편으로 만든 프리셋이 '긴 제목' 예를 못 봤을 때(LOO 1_V 실측: 930 상한 → 84pt)
 
 
-def _line_w(fam: str, size: float, ls: float, line: str) -> float:
-    from tools.calcopy.engine.to_frame import _pil_font
-    b = _pil_font(fam, size).getbbox(line, anchor="ls")
-    return (b[2] - b[0]) + ls * max(0, len(line) - 1)
-
-
-def _scales(t: dict) -> list:
-    n = int(t.get("lines") or 1)
-    sc = t.get("line_scale") or []
-    return [sc[i] if i < len(sc) else 1 for i in range(n)]
-
-
-def title_ink_bottom(t: dict) -> float | None:
-    """제목 마지막 줄 잉크 아래 끝(y) — 렌더러 규칙(줄 칸 line_h 안에 글꼴 ascent+descent 상자를 세로 가운데, to_frame.size_and_top 과
-    같은 모형)으로 그 글꼴·줄 크기·글을 놓아 잰다. 글이 없으면 None."""
-    if not t.get("text"):
-        return None
-    from tools.calcopy.engine.to_frame import _pil_font
-    lines = t["text"].split(chr(10))
-    i = len(lines) - 1
-    size = t["size"] * _scales({**t, "lines": len(lines)})[i]
-    f = _pil_font(t["font"], size)
-    asc, desc = f.getmetrics()
-    base = t["y"] + i * t["line_h"] + (t["line_h"] - (asc + desc)) / 2 + asc
-    return base + f.getbbox(lines[i], anchor="ls")[3]
-
-
 def derived(frame: dict, caption_ok: bool = True) -> dict:
     """편 설명서 한 장에서 규칙의 독립 값(측정값)을 뽑는다."""
     L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in frame.get("layers") or []}   # 틀 여러 장은 관계 규칙 없음(아직)
@@ -303,46 +277,6 @@ def rule_stats(preset_dir: Path, M: dict) -> dict:
         keys["video_anchor"] = {"values": None, "default": anchor, "range": None,
                                 "how": f"창 y 폭 {sp('video_top')} vs gap 폭 {sp('gap')} → {anchor}"}
     return {"formula": RULE_FORMULA, "keys": keys}
-
-
-def apply_rules(F: dict, rules: dict) -> dict:
-    """규칙으로 종속값(제목 크기·줄높이·위치, 창 y·h, 자막 y)을 계산해 넣는다. 제목 글자가 있어야 한다."""
-    K = {k: v["default"] for k, v in (rules or {}).get("keys", {}).items()}
-    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in F.get("layers") or []}
-    t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
-    if t and t.get("text") and "fill_w" in K:
-        lines = t["text"].split(chr(10))
-        # 크기는 잰 크기(중앙값) 그대로 — 글자 키(띠 높이)가 틀의 모양이다. 폭이 상한(fill_w)을 넘으면 먼저 자간을 줄이고
-        #   (크기의 −15% 까지, to_frame.spacing_for 와 같은 바닥), 그래도 넘을 때만 크기를 줄인다.
-        #   (2026-10-16 LOO: 폭 맞춤으로 크기부터 줄이니 제목 띠 높이가 원본 91~110 → 75~87 로 작아졌다)
-        size = K.get("size_cap") or t["size"]
-        sc = _scales({**t, "lines": len(lines)})               # 줄 배율(line_scale) — 줄마다 크기가 다른 제목
-        k = max(range(len(lines)), key=lambda i: _line_w(t["font"], size * sc[i], 0, lines[i]))
-        n = lines[k]
-        nat = _line_w(t["font"], size * sc[k], 0, n)
-        gaps = max(1, len(n) - 1)
-        ls = t["letter_spacing"]
-        if nat + ls * gaps > K["fill_w"]:
-            ls = max(-0.15 * size, (K["fill_w"] - nat) / gaps)
-            if nat + ls * gaps > K["fill_w"]:
-                size = size * (K["fill_w"] - ls * gaps) / max(1, nat)
-        t["letter_spacing"] = round(ls, 1)
-        t["size"] = round(size, 1)
-        t["line_h"] = round(t["size"] * K.get("lh_ratio", 1.15))
-        t["lines"] = len(lines)
-    if t and "title_top" in K:
-        t["y"] = K["title_top"]
-    if t and v and K.get("video_anchor") == "gap_ink" and "gap_ink" in K and title_ink_bottom(t) is not None:
-        v["y"] = round(title_ink_bottom(t) + K["gap_ink"])
-    elif v and K.get("video_anchor") == "constant" and "video_top" in K:
-        v["y"] = K["video_top"]
-    elif t and v and "gap" in K:
-        v["y"] = round(t["y"] + t["lines"] * t["line_h"] + K["gap"])
-    if v and "video_bottom" in K:
-        v["h"] = K["video_bottom"] - v["y"]
-    if c and v and "cap_dy" in K:
-        c["y"] = v["y"] + v["h"] + K["cap_dy"]
-    return F
 
 
 def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: str, exclude: tuple = (),
@@ -449,49 +383,6 @@ def unfix_value(preset_dir: Path, path: str, why: str) -> dict:
                                          "at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")}
     (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
-
-
-def load(preset_dir: Path) -> tuple[dict, dict]:
-    frame = json.loads((preset_dir / "frame.json").read_text(encoding="utf-8"))
-    M = json.loads((preset_dir / "manifest.json").read_text(encoding="utf-8"))
-    missing = [k for k in REQUIRED_MANIFEST if k not in M]
-    if missing:
-        raise ValueError(f"manifest 필수 항목 없음: {missing}")
-    return frame, M
-
-
-def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = None,
-          defaults: dict | None = None, caption_style: dict | None = None, rules: dict | None = None) -> dict:
-    """프리셋의 변수 자리를 채운 설명서. 순서: overrides({자리: 값}) → per_video(그 편 설명서, to_frame 결과)
-    → defaults(manifest variable_stats — 새 소재로 만들 때). 못 채운 변수가 하나라도 남으면 ValueError(목록).
-    caption_style = manifest caption_styles 의 한 항목 — 자막 층을 그 하위 스타일의 잰 층으로 바꾼다(미측정이면 ValueError)."""
-    P = flat(preset)
-    V = flat(per_video) if per_video else {}
-    left = []
-    for path, v in P.items():
-        if v != VAR:
-            continue
-        if overrides and path in overrides:
-            P[path] = overrides[path]
-        elif path in V and V[path] != VAR:
-            P[path] = V[path]
-        elif defaults and path in defaults and defaults[path].get("how") != NO_DEFAULT:
-            P[path] = defaults[path]["default"]          # None(최빈이 '없음')도 값이다 — 예: template_off
-        else:
-            left.append(path)
-    if caption_style is not None:
-        if not caption_style.get("layer"):
-            raise ValueError(f"자막 스타일 {caption_style.get('name')} 은 미측정 — 잰 층이 없다")
-        for f, v in caption_style["layer"].items():
-            if f != "kind":
-                P[f"layers[text:caption].{f}"] = v
-    if left:
-        raise ValueError(f"채우지 못한 변수: {left}")
-    out = unflat(P, layer_order(preset))
-    if rules:
-        out = apply_rules(out, rules)       # 종속값은 규칙이 정한다(독립 기본값을 채운 뒤)
-    schema.validate(out)
-    return out
 
 
 # ── 프리셋 고정값 == 자동본 (10-16: 원천 설명서가 옛 to_frame 판이라 고정값이 지금 자동본과 어긋났다 — 창아래_검정 낱말 간격 0·
