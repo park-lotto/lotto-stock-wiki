@@ -2336,23 +2336,31 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 #   예전엔 이 숫자를 반려 글로 Claude 에게 넘겨 재료를 고치게 했다(같은 칸을 손으로 옮겨 적는 왕복). 넣은 뒤에도 글자가 남으면 그때 반려.
                 boxes = [f["box"] for x in r["text"] for f in x]
                 ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
-                _auto_blur(M, c["src"], ent)
-                found.setdefault(c["src"], []).append(ent[:4])
-                fixed_k.add(k)
-                for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
-                    m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), M["blur"][c["src"]], anchors, ocr=ocr)
-                    rest = [f["box"] for fr in m2["text"] for f in fr if foreign_text(f)]
-                    left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
-                    if not rest or _ == AUTOBLUR_MORE:
-                        break
-                    e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
-                    _auto_blur(M, c["src"], e2)
-                    log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
-                log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
-                if len(ocr) != len(ocr0):      # 다시 잰 글자 검출도 컷마다 저장 — 끊겨도 재시도가 이 컷을 다시 재지 않는다(11-03 N95 회원: 같은 컷 14분 두 번)
-                    _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
-                if left >= TEXT_MIN_HITS:
-                    bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
+                a0c = float(c["ss"])
+                if not blur_fits(M, c["src"], ent, crop, a0c, a0c + n / FPS):
+                    sh = blur_share(list((M.get("blur") or {}).get(c["src"]) or []) + [ent], crop, a0c, a0c + n / FPS)
+                    log(f"[흐림 넣기] 컷 {k} {where} 글자 칸이 화면의 {sh:.0%} — 흐림으로 가릴 크기가 아니라 넣지 않음")
+                    bad.append(f"컷 {k} {where}: 남의 글자로 보이는 칸이 화면의 {sh:.0%}(흐림 상한 {BLUR_AREA_MAX:.0%}) — 장면 속 글자(포장·간판)일 수 있다. 흐림 대신 글자가 적은 다른 구간·재료로 바꾼다")
+                else:                                             # 면적 안 — 넣고 다시 잰다(위 반려여도 아래 얼굴 검사는 그대로 돈다)
+                    _auto_blur(M, c["src"], ent)
+                    found.setdefault(c["src"], []).append(ent[:4])
+                    fixed_k.add(k)
+                    for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
+                        m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), M["blur"][c["src"]], anchors, ocr=ocr)
+                        rest = [f["box"] for fr in m2["text"] for f in fr if foreign_text(f)]
+                        left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                        if not rest or _ == AUTOBLUR_MORE:
+                            break
+                        e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
+                        if not blur_fits(M, c["src"], e2, crop, a0c, a0c + n / FPS):
+                            break                                     # 더 넣으면 화면을 덮는다 — 남은 글자는 아래 '흐림을 넣어도 남음' 반려로
+                        _auto_blur(M, c["src"], e2)
+                        log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
+                    log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
+                    if len(ocr) != len(ocr0):      # 다시 잰 글자 검출도 컷마다 저장 — 끊겨도 재시도가 이 컷을 다시 재지 않는다(11-03 N95 회원: 같은 컷 14분 두 번)
+                        _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
+                    if left >= TEXT_MIN_HITS:
+                        bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
                 boxes = [f["box"] for x in r["text"] for f in x]          # 모든 장·모든 글줄(예전 [:3] 은 두 줄 자막의 한 줄만 담았다)
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
@@ -2377,8 +2385,9 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                         hit.append(f["box"])
             if hit:
                 ent = blur_entry(hit, crop, (ww, wh), float(c["ss"]), n / FPS)
-                _auto_blur(M, c["src"], ent)
-                log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
+                if blur_fits(M, c["src"], ent, crop, float(c["ss"]), float(c["ss"]) + n / FPS):      # 같은 면적 상한(blur_fits) — 화면을 덮는 칸은 퍼뜨리지 않는다
+                    _auto_blur(M, c["src"], ent)
+                    log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
     finally:
         if todo:
             ex.shutdown(wait=True, cancel_futures=True)
@@ -4038,6 +4047,20 @@ def _union_area(rects: list, clip: tuple) -> float:
     return area
 
 
+def blur_share(regs: list, crop, a0: float, a1: float) -> float:
+    """(판단 주인 — 흐림 칸이 컷 화면을 얼마나 덮나) 원본 구간 [a0,a1] 에 걸린 칸만, 겹친 칸은 한 번만(예전 합계는 같은 자리 두 칸을 두 배로 셌다).
+    면적 관문(blur_cut_gate)과 자동 흐림(blur_fits)이 같이 부른다."""
+    x, y, w, h = crop
+    live = [r for r in regs or [] if not (len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1))]
+    return _union_area(live, (x, y, w, h)) / max(1, w * h)
+
+
+def blur_fits(M: dict, src: str, ent: list, crop, a0: float, a1: float, area_max: float = BLUR_AREA_MAX) -> bool:
+    """자동 흐림 칸 ent 를 넣어도 면적 상한 안인가 — 넘으면 넣지 않는다(장면 속 큰 글자 = 흐림으로 가릴 것이 아니라 장면을 바꿀 것).
+    #4835 이정민: 포장 글자에 48~65% 칸을 넣고, 면적 반려를 넘기자 완성본 15초가 회색 블록이었다."""
+    return blur_share(list((M.get("blur") or {}).get(src) or []) + [ent], crop, a0, a1) <= area_max
+
+
 def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -> list[str]:
     """(판단 주인 — 흐림으로 때워도 되는 컷인가) 컷이 보여 주는 원본 구간에 걸린 흐림 칸이 창을 얼마나 덮나. 넘으면 다른 구간·재료로 바꾼다.
     관문 ④ 는 흐림 안 글자를 통과로 치므로 면적은 여기서 재야 한다. 계획·렌더가 timeline_gates 로 같이 부른다."""
@@ -4052,9 +4075,7 @@ def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -
         if not regs or c.get("ss") is None or not src.exists() or src.suffix.lower() in IMG_EXT:
             continue
         a0 = float(c["ss"]); a1 = a0 + src_frames(c) / FPS
-        x, y, w, h = cut_crop(c, src, (ww, wh))
-        live = [r for r in regs if not (len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1))]
-        share = _union_area(live, (x, y, w, h)) / max(1, w * h)      # 겹친 칸은 한 번만(예전 합계는 같은 자리 두 칸을 두 배로 셌다)
+        share = blur_share(regs, cut_crop(c, src, (ww, wh)), a0, a1)
         if share > area_max:
             out.append(f"{c['line']} {c['src']}@{a0:.2f} 흐림이 화면의 {share:.0%}(상한 {area_max:.0%}) — 이 컷은 남의 글자가 적은 다른 구간이나 다른 재료로 바꾼다")
     return out
