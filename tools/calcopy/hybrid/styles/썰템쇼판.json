@@ -80,12 +80,12 @@
      1080,
      239
     ],
-    "color": "#E2EED2",
+    "color": "#FFE8D6",
     "icons": [
      {
       "font": "BMJUA.ttf",
       "px": 92.7,
-      "color": "#AFDA81",
+      "color": "#FF8A3D",
       "cx": 460,
       "cy": 189.5,
       "max_w": 120,
@@ -96,7 +96,7 @@
      {
       "font": "BMJUA.ttf",
       "px": 92.7,
-      "color": "#FFFFFF",
+      "color": "#5A4A42",
       "cx": 541,
       "cy": 189.5,
       "max_w": 120,
@@ -107,7 +107,7 @@
      {
       "font": "BMJUA.ttf",
       "px": 92.7,
-      "color": "#AFDA81",
+      "color": "#FF8A3D",
       "cx": 622,
       "cy": 189.5,
       "max_w": 120,
@@ -187,7 +187,7 @@
        "font": "GmarketSansBold.otf",
        "px": 113.6,
        "center": 324,
-       "color": "#84FD46",
+       "color": "#FFB238",
        "max_w": 1060,
        "stroke": {
         "px": 3,
@@ -208,7 +208,7 @@
         1080,
         239
        ],
-       "color": "#565D50",
+       "color": "#5A4A42",
        "icons": []
       },
       "rules": [
@@ -306,7 +306,8 @@
      "why": "첫 줄이 칸을 넘을 때만 자막형 — frame_segments/hook_text_fits"
     }
    }
-  ]
+  ],
+  "_recolor_1104": "11-04 사장님 '썰템쇼는 너무 따라한 것 같다 — 색 바꾸고 상단 오른쪽 지워' → 벤치 연두 계열을 주황 계열로(머리띠 #FFE8D6·로고 썰/쇼 #FF8A3D·훅 머리띠 #5A4A42·훅 2줄 #FFB238), 오른쪽 위 책갈피 아이콘 없앰"
  },
  "caption": {
   "pack": "humorshowshow",
