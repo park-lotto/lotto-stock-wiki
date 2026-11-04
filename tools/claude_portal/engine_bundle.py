@@ -206,6 +206,9 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
     # 10-30 지시서(노하우) = 서버 한 곳 — vmake_clean 이 형식 판단(flow.erases_text)을 함수 안에서 부르지만 회원 PC 는 지시서가 명령에 실은 erase(CALCOPY_ERASE)를 쓴다
     "tools/calcopy/hybrid/flow.py",
+    # 11-04 엔진 topic_find 가 community_mine(커뮤니티 소재 캐기)·_server_access(우리 서버 SSH 정보)를, runner_ops 가 preset_gates 를 부른다 —
+    #   셋 다 묶음 금지 꼴이라 회원 PC 로 안 보낸다(보낼지는 관제 265 발행 판단). 이 PC 병합 관문이 test_hand_deps_all_resolved 로 막혀 적어 둔다
+    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py", "tools/calcopy/engine/preset_gates.py",
 }
 
 
