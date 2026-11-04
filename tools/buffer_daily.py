@@ -107,8 +107,12 @@ def _run_claude(cmd, out_path, attempt):
     with open(out_path, "a", encoding="utf-8") as out:
         out.write(f"\n===== {dt.datetime.now(bp.KST):%H:%M:%S} 시도 {attempt}\n")
         out.flush()
+        # ★11-03·04 멈춤의 뿌리(실측): ~/.claude 에 켜진 숏템 회원 플러그인의 SessionStart 훅 wake.js 가
+        #   팀 메시지를 6시간 기다리는데(asyncRewake), 헤드리스 -p 는 그 훅이 끝나길 기다려 아무것도 안 한다.
+        #   이 실행에서만 대기 시간을 0 으로 — wake.js 가 첫 확인에서 바로 끝난다(회원 플러그인 자체는 그대로).
+        env = dict(os.environ, SHORTEM_WAKE_LIFE_MS="0")
         p = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                             text=True, encoding="utf-8", errors="replace")
+                             text=True, encoding="utf-8", errors="replace", env=env)
 
         def pump():
             for line in p.stdout:
