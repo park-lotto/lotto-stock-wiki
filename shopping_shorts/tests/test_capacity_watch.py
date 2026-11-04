@@ -219,3 +219,14 @@ def test_waiting_survives_a_slim_job_queue(db):
     w = cw.waiting(db)
     assert len(w["rows"]) == 2
     assert w["by_customer"][0]["queued"] == 1
+
+
+def test_workers_count_system_jobs_and_multi_job_owners(db):
+    """관제 321: 주인 없는 시스템 작업·한 고객의 여러 작업도 워커를 하나씩 쓴다('워커 0개 가동' 오표시)."""
+    conn = sqlite3.connect(db)
+    conn.execute("INSERT INTO job_queue (state, owner) VALUES ('running', NULL)")
+    conn.execute("INSERT INTO job_queue (state, owner) VALUES ('running','70')")
+    conn.execute("INSERT INTO job_queue (state, owner) VALUES ('running','70')")
+    conn.commit()
+    conn.close()
+    assert cw.sample(db)["workers"] == 3

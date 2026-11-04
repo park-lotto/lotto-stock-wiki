@@ -21,4 +21,9 @@ Case '이상한 글 → 다시 묻고 엔터' @('abc', '') $false $false ''
 Case '1 로그인됨 → 시작' @('1') $true $true 'START'
 Case '이미 로그인 + 코드 → 다시 묻고 엔터' @($code, '') $true $true ''
 Case '엔터 → 끝' @('') $false $false ''
+# -LoginOnly(설치가 부르는 길) — 로그인만 하고 메뉴·시작은 안 한다(관제 310)
+$global:calls = @(); $global:isIn = $false; $global:afterLogin = $true
+$null = & $menu -LoginOnly *>&1
+$got = ($global:calls | Where-Object { $_ -ne 'auth status' }) -join ','
+if ($got -ne 'auth login') { $global:fail++; Write-Output "실패 -LoginOnly : [$got]" } else { Write-Output "통과 -LoginOnly : [$got]" }
 exit $global:fail

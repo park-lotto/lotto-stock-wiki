@@ -214,6 +214,43 @@ def _task_failed_payload(task_id, task_result_dict, reason="task_failed"):
     }
 
 
+def _poll_stall_limit_s(predict_ms):
+    """진행 정체로 끊을 시각(초) — 업체 예상시간의 2배, 최소 10분(2026-11-03 관제 315).
+    실측: 99%에서 50분 멈춘 작업이 1시간 폴링을 다 채운 뒤에야 실패했다(예상 787초).
+    MT_AI_POLL_STALL_MIN_S / MT_AI_POLL_STALL_FACTOR 로 조정, MT_AI_POLL_STALL_MIN_S=0 이면 끈다."""
+    try:
+        floor = int(os.environ.get("MT_AI_POLL_STALL_MIN_S", "600").strip() or "600")
+        factor = float(os.environ.get("MT_AI_POLL_STALL_FACTOR", "2").strip() or "2")
+    except ValueError:
+        floor, factor = 600, 2.0
+    if floor <= 0:
+        return None
+    try:
+        pred = max(0.0, float(predict_ms or 0) / 1000.0)
+    except (TypeError, ValueError):
+        pred = 0.0
+    return max(float(floor), factor * pred)
+
+
+# 진행률이 이 시간(초) 동안 그대로여야 정체로 본다 — 느리게라도 오르고 있으면 기다린다.
+_POLL_STALL_FLAT_S = 300
+
+
+def _poll_stalled_payload(task_id, n_polls, elapsed_s, progress, predict_ms, last_api_status):
+    return {
+        "error": "poll_stalled",
+        "skill_status": "failed",
+        "task_id": task_id,
+        "polls": n_polls,
+        "elapsed_seconds": round(elapsed_s, 1),
+        "progress": progress,
+        "predict_elapsed_ms": predict_ms,
+        "last_api_status": last_api_status,
+        "detail": "진행률 %s 에서 멈춤 — %.0f초 경과(업체 예상 %.0f초)" % (
+            progress, elapsed_s, float(predict_ms or 0) / 1000.0),
+    }
+
+
 def _poll_aborted_payload(task_id, n_polls, message, last_api_status):
     return {
         "error": "poll_aborted",
@@ -656,6 +693,7 @@ class AiApi:
         last_nonjson_detail = None
         err_streak = 0
         max_err = _max_consecutive_poll_errors()
+        progress, progress_at, predict_ms = None, start, None   # 정체 판정(관제 315)
 
         for idx, d in enumerate(durations, start=1):
             result = self.queryStatus(uri, policy)
@@ -688,10 +726,24 @@ class AiApi:
             if isinstance(raw, dict):
                 try:
                     last_api_status = raw.get("data", {}).get("status")
+                    data = raw.get("data") or {}
+                    if data.get("predict_elapsed") is not None:
+                        predict_ms = data.get("predict_elapsed")
+                    pg = data.get("progress")
+                    if pg is not None and pg != progress:
+                        progress, progress_at = pg, time.monotonic()
                 except (AttributeError, TypeError):
                     pass
 
             elapsed = time.monotonic() - start
+            limit = _poll_stall_limit_s(predict_ms)
+            if (limit is not None and elapsed > limit
+                    and time.monotonic() - progress_at >= _POLL_STALL_FLAT_S):
+                _progress_log(
+                    f"poll stalled task_id={taskId} progress={progress!r} "
+                    f"elapsed={elapsed:.0f}s limit={limit:.0f}s predict_ms={predict_ms!r}"
+                )
+                return _poll_stalled_payload(taskId, idx, elapsed, progress, predict_ms, last_api_status)
             if idx == 1 or idx % 3 == 0 or idx == n:
                 parts = [
                     f"poll {idx}/{n}",

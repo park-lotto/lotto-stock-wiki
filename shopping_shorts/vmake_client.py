@@ -283,7 +283,8 @@ def key_supports_new_api(api_key):
     return ok
 
 
-def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER_BASIC, resume_key=None):
+def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER_BASIC, resume_key=None,
+                     _stall_retry=True):
     """video_path의 하드섭/화면텍스트를 VMake로 제거 → out_path에 저장하고 경로 반환.
 
     흐름(SDK 내부): 로컬영상 OSS 업로드 → /skill/consume.json(크레딧) →
@@ -368,6 +369,13 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
             raise RuntimeError("AI 자막 제거 진행 조회가 중단되었습니다 — 다시 누르면 추가 비용 없이 "
                                "이어받습니다 (task_id=%s): %s" % (result.get("task_id"), detail))
         _pending_drop(out_path, key)              # 업체가 실패로 끝냈다 — 이어받을 결과가 없다
+        if result.get("error") == "poll_stalled" and _stall_retry:
+            # ★업체 쪽에서 진행률이 멈췄다(2026-11-03 실측: 99%에서 50분, 예상 787초 — 관제 315).
+            #   그 번호로 이어받아도 같은 자리에 멈춰 있으니 장부를 비우고 **딱 한 번** 새로 맡긴다(재과금 1회).
+            #   두 번째도 멈추면 그대로 실패로 올린다 — 무한 재과금 금지.
+            print("[vmake] 업체 진행 정체 → 1회 새로 맡긴다: %s" % detail, flush=True)
+            return remove_subtitles(video_path, api_key, out_path, poll_timeout=poll_timeout, tier=tier,
+                                    resume_key=resume_key, _stall_retry=False)
         raise RuntimeError(f"AI 자막 제거 실패: {detail}")
     urls = (result or {}).get("output_urls") or []
     if not urls:

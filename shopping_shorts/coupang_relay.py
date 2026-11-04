@@ -38,9 +38,10 @@ class _Job:
     #   kind="search"  기존 그대로(웹 요청이 결과를 기다린다)
     #   kind="detail"  상품 상세·리뷰 수집 — **아무도 안 기다린다**(1단계에서 미리 걸어둔다).
     #                  결과가 오면 on_done(payload)로 서버가 job에 저장한다.
-    __slots__ = ("id", "kind", "q", "limit", "payload", "done", "result", "taken_at", "on_done")
+    __slots__ = ("id", "kind", "q", "limit", "payload", "done", "result", "taken_at", "on_done", "background")
 
     def __init__(self, q, limit, kind="search", payload=None, on_done=None):
+        self.background = False      # submit_async = 아무도 안 기다린다 → take 가 뒤로 미룬다(관제 315)
         self.id = uuid.uuid4().hex[:12]
         self.kind = kind
         self.q = q
@@ -90,7 +91,11 @@ class RelayQueue:
         while True:
             with self._lock:
                 if self._waiting:
-                    job = self._waiting.pop(0)
+                    # ★기다리는 사람이 있는 일감(검색·틱톡)을 먼저 준다(2026-11-03 관제 315).
+                    #   들어온 순서대로만 주면, 아무도 안 기다리는 상품재료 수집(건당 30~60초) 19건 뒤에
+                    #   렌즈 틱톡 검색이 서서 75초 제한을 넘겨 버려졌다(실측: 릴레이 붙었는데 틱톡 0건·136초).
+                    idx = next((n for n, w in enumerate(self._waiting) if not w.background), 0)
+                    job = self._waiting.pop(idx)
                     job.taken_at = time.time()
                     self._inflight[job.id] = job
                     return job
@@ -123,6 +128,7 @@ class RelayQueue:
         기존 submit은 웹 요청이 그 자리에서 결과를 기다리는 구조라, 2~3분 걸리는
         상세·리뷰 수집에는 못 쓴다(사장님을 그만큼 세워둔다). 그래서 넣고 잊는다."""
         job = _Job(q, None, kind=kind, payload=payload, on_done=on_done)
+        job.background = True
         with self._lock:
             self._waiting.append(job)
         return job.id
