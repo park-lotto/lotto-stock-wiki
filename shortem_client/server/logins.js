@@ -130,24 +130,38 @@ export async function openLogin(platform) {
   open = { proc, platform, done: false, result: null };
   const me = open;
   const kill = setTimeout(() => { try { proc.kill(); } catch { /* 이미 닫힘 */ } }, 20 * 60 * 1000);
-  let seen = false;
-  const watch = setInterval(async () => {                    // 회원이 창을 닫았는데 크롬이 남은 경우 — 치워야 exit 이 와서 쿠키를 읽는다
-    const ps = await profileProcs();
-    if (!ps || !ps.length) return;
-    if (ps.some(p => p.win)) { seen = true; return; }
-    if (seen) await killProcs(ps);
-  }, 5000);
-  watch.unref();
-  proc.on('exit', async () => {
+  let exited = false;
+  const exitP = new Promise(res => proc.on('exit', () => { exited = true; res(); }));
+  waitLoginClosed({ exited: exitP, isExited: () => exited }).then(async how => {
     clearTimeout(kill);
-    clearInterval(watch);
     me.done = true;
     if (me.replaced) return;
     const st = await refreshCookies();
     me.result = st.connected;
-    audit('login', { platform, result: st.connected[platform] ? 'ok' : 'not_logged_in' });
-  });
+    audit('login', { platform, result: st.connected[platform] ? 'ok' : 'not_logged_in', how });
+  }).catch(() => { me.done = true; });
   return { ok: true, platform, opened: true };
+}
+
+// (판단 주인 — 로그인 창이 닫혔나) 전용 프로필에 창 있는 크롬이 한 번 보인 뒤 없어지면 닫힌 것. 띄운 프로세스의 종료는 믿지 않는다 —
+//   같은 프로필 크롬이 떠 있으면 넘기고 0.2초 만에 끝나고(실측 code 21), 관리자 권한이면 권한을 낮춰 다시 떠서 바로 끝난다(#4511·#4591 김효준).
+//   창 없이 남은 크롬은 치운다(쿠키 읽기가 프로필을 열어야 한다). 창을 잴 수 없는 PC(procs null)는 옛 방식 = 프로세스 종료.
+export async function waitLoginClosed({ exited, isExited = () => false, procs = profileProcs, kill = killProcs, sleep = ms => new Promise(r => setTimeout(r, ms)),
+  every = 5000, limitMs = 20 * 60 * 1000, goneMs = 30000, clock = Date.now } = {}) {
+  const t0 = clock();
+  let seen = false, goneSince = null;
+  while (clock() - t0 < limitMs) {
+    const ps = await procs();
+    if (ps === null) { await exited; return 'exit'; }
+    if (ps.some(p => p.win)) { seen = true; goneSince = null; }
+    else if (seen) { if (ps.length) await kill(ps); return 'closed'; }
+    else if (!ps.length && isExited()) {                       // 창이 한 번도 안 떴고 크롬도 없다 — 잠깐 기다려 보고 포기
+      goneSince = goneSince ?? clock();
+      if (clock() - goneSince >= goneMs) return 'gone';
+    }
+    await sleep(every);
+  }
+  return 'timeout';
 }
 
 // 만들기 전마다 최신 쿠키로(유튜브는 1시간 안에도 세션이 돈다 — 우리 PC 08-31 실측). 로그인 창이 열려 있으면 건너뛴다(프로필 잠김).
