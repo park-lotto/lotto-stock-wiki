@@ -1280,7 +1280,7 @@ def section_fallback_warn(vid: str, spans: list, f: Path) -> str:
 
 def c_download(W, d):
     src = W / "src"; src.mkdir(exist_ok=True)
-    files, warns = [], []
+    files, warns, fail = [], [], {}
     for it in d.get("items") or []:
         vid = it["id"]
         if CACHE:
@@ -1292,11 +1292,16 @@ def c_download(W, d):
         from tools.calcopy.engine import yt_fetch as YF
         from tools.calcopy.hybrid import screen
         secs = [tuple(x) for x in it.get("sections") or []] or None
-        for f in screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD):
+        try:      # 영상마다 따로 — 하나 실패(403 등)가 이미 받은 다른 영상까지 날리지 않게(#4732 강태경). 실패는 fail 로 지시서에(조용히 넘기지 않는다)
+            got = screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD)
+        except StageError as e:
+            fail[vid] = str(e)[:300]
+            continue
+        for f in got:
             files.append(dims(Path(f)))
             if secs and not YF.sections_meta(Path(f)) and dims(Path(f))["dur"] > sum(b - a for a, b in secs) + 2 * SECTION_PAD * len(secs) + 120:
                 warns.append(section_fallback_warn(vid, secs, Path(f)))
-    return {"files": files, **({"warn": warns} if warns else {})}
+    return {"files": files, **({"warn": warns} if warns else {}), **({"fail": fail} if fail else {})}
 
 
 def c_product_stills(W, d):

@@ -1990,7 +1990,22 @@ def ph_material_pick(st, m, rp, u):
 
 def ph_material_dl(st, m, rp, u):
     # 쿠팡 상품 사진도 재료 — 제작순서 05 '리뷰 영상이 없으면 쿠팡 상품 사진을 움직이는 컷으로'(10-21 선우용여 제품 컷 0개, 98 #22)
-    st["material"] = {"files": ((m.get("dl") or {}).get("files") or []) + ((m.get("stills") or {}).get("files") or [])}
+    dl = m.get("dl") or {}
+    got = (st.pop("_mat_keep", None) or []) + (dl.get("files") or []) + ((m.get("stills") or {}).get("files") or [])
+    fail = dict(dl.get("fail") or {})
+    if dl.get("error"):           # 옛 실행기(영상 하나 실패 = 통째 실패) — 고른 영상 전부를 실패로 본다
+        fail.update({c["id"]: str(dl["error"])[:200] for c in (st.get("screen_pick") or {}).get("chosen") or [] if c["id"] + ".mp4" not in {f.get("name") for f in got}})
+    if fail and not st["tries"].get("material_redl"):      # 받기 실패(#4732 강태경 403) — 그 영상만 한 번 다시. 조용히 사진만으로 가지 않는다
+        st["tries"]["material_redl"] = 1
+        st["_mat_keep"] = got
+        st["log"].append("재료 받기 실패 → 그 영상만 다시: " + ", ".join(f"{k}({v[:60]})" for k, v in fail.items()))
+        items = [{"id": c["id"], "sections": c.get("sections") or []} for c in (st.get("screen_pick") or {}).get("chosen") or [] if c["id"] in fail]
+        if items:
+            return {"do": [{"id": "dl", "cmd": "download", "items": items}], "then": "material_dl"}
+    if fail:
+        st.setdefault("warn", []).append({"stage": "material", "causes": ["재료 받기 실패"], "why": "; ".join(f"{k}: {v[:80]}" for k, v in fail.items())[:300]})
+        st["log"].append("경보: 재료 받기 다시 해도 실패 — 받은 것으로 진행: " + ", ".join(fail))
+    st["material"] = {"files": got}
     return {"goto": "asr"}
 
 
