@@ -288,6 +288,7 @@ export async function settled(sid) { const f = flows.get(sid); if (f && f.runnin
 export function recleanFlow(sid) {
   const f = loadFlow(sid); if (!f || f.busy) return f;
   f.fail = null; f.cancelled = false; f.status = 'reclean';
+  save(f);       // pump 가 디스크 상태로 시작한다(1c7e4f4e0) — 저장 안 하면 바꾼 상태가 되돌아가 아무 일도 안 한다(#4162)
   f.running = pump(f);
   return f;
 }
@@ -370,6 +371,7 @@ export function retryFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
   if (f.status === 'error') { f.fail = null; f.status = f.do ? 'execute' : (f.asks ? 'review' : f.status); }
   else if (f.fail && f.fail.server_stop && f.fail.retry_ok) { f.fail = null; f.status = 'retry'; }   // 서버가 '다시 시도하면 이어 간다'고 한 멈춤(받기 실패 등)
+  save(f);       // pump 가 디스크 상태로 시작한다(1c7e4f4e0) — 저장 안 하면 retry 가 error 로 되돌아가 매번 같은 오류(#4162 이성택)
   f.running = pump(f);
   return f;
 }
