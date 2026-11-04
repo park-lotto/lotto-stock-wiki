@@ -579,8 +579,13 @@ def _guard_account(store, ctx, cid):
     raise PortalError("account_mismatch", "이 라이선스는 다른 Claude 계정에 연결돼 있습니다 — 계정 변경을 요청했습니다. 승인되면 바로 쓸 수 있습니다")
 
 
-def _guard_session(store, cid, fh):
-    """판정 주인(관제 296): 한 회원은 한 번에 PC 1대만 접속한다. 자리는 session() 이 잡고 여기서 막는다."""
+def _guard_session(store, cid, fh, route="", name=None):
+    """판정 주인(관제 296·324): 한 회원은 한 번에 PC 1대만 접속한다. 자리는 session() 이 잡고 여기서 막거나 넘긴다.
+
+    켜져만 있는 PC 의 저절로 나가는 신호(_A4_BACKGROUND)는 남의 자리를 못 뺏는다.
+    사람이 실제로 쓰는 요청은 다른 PC 가 영상을 만드는 중(작업 권한 살아 있음)이 아니면 자리를 가져온다.
+    (11-04 회원 572: 데스크탑 창 하나가 닫히며 자리가 비자 켜만 둔 노트북 신호가 가져가 데스크탑 제작이 3시간 막힘)
+    """
     if _is_staff(cid):
         return
     with _tx(store) as c:
@@ -590,8 +595,18 @@ def _guard_session(store, cid, fh):
     now = _now()
     if s["kicked_fp"] == fh and s["kicked_until"] > now:
         raise PortalError("busy_session", "이 PC 접속은 숏클 페이지에서 끊었습니다 — 5분 뒤 다시 시도하세요", s["kicked_until"] - now)
-    if s["fp_hash"] and s["fp_hash"] != fh and s["expires"] > now:
-        raise PortalError("busy_session", f"다른 PC({s['device_name'] or '다른 PC'})에서 숏템을 쓰는 중입니다 — 동시에 1대만 쓸 수 있습니다", s["expires"] - now)
+    if not (s["fp_hash"] and s["fp_hash"] != fh and s["expires"] > now):
+        return
+    other = s["device_name"] or "다른 PC"
+    if route in _A4_BACKGROUND:
+        raise PortalError("busy_session", f"다른 PC({other})에서 숏템을 쓰는 중입니다 — 동시에 1대만 쓸 수 있습니다", s["expires"] - now)
+    with _tx(store, write=True) as c:
+        work = _row(c, "SELECT expires FROM claude_leases WHERE cid=? AND fp_hash<>? AND expires>?", (cid, fh, now))
+        if work:
+            raise PortalError("busy_session", f"다른 PC({other})에서 영상을 만드는 중입니다 — 끝나면 이 PC 에서 이어 쓸 수 있습니다",
+                              work["expires"] - now)
+        c.execute("UPDATE claude_sessions SET fp_hash=?, device_name=?, expires=? WHERE cid=?",
+                  (fh, name, now + SESSION_TTL, cid))
 
 
 def _semver(v):
@@ -643,7 +658,7 @@ def _front(store, ctx, route, need_device=True):
             raise PortalError("device_unknown", "이 기기는 등록되지 않았습니다 — 먼저 '숏템 준비 점검'으로 기기를 등록하세요")
         if route != "update":                    # 막힌 PC 도 새 판은 받는다
             _guard_account(store, ctx, cid)
-            _guard_session(store, cid, dev["fp_hash"])
+            _guard_session(store, cid, dev["fp_hash"], route, dev.get("name"))
     return cid, info, dev
 
 
@@ -947,7 +962,7 @@ def license(ctx: dict, store=None) -> dict:
             _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
         raise PortalError("device_limit", "기기 교체 승인을 기다리는 중입니다 — 승인되면 바로 쓸 수 있습니다" if asked else
                           f"PC {limit}대가 이미 등록돼 있습니다 — 숏클 페이지 '등록 기기'에서 뺄 PC 를 고르고 교체를 요청해 주세요")
-    _guard_session(store, cid, fh)
+    _guard_session(store, cid, fh, "license", dev.get("name"))
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
     return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "tier": member_tier(store, cid), "expires": info["exp"],
