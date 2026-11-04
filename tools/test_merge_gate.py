@@ -220,7 +220,7 @@ def test_gate_run_times_out_and_kills_tree(monkeypatch, tmp_path):
     assert any(x.startswith("GATE_TIMEOUT::") for x in MG.parse_failed(out))
     gpid = int(mark.read_text())
     if MG.os.name == "nt":
-        alive = str(gpid) in sp.run(["tasklist", "/FI", f"PID eq {gpid}"], capture_output=True, text=True).stdout
+        alive = str(gpid) in sp.run(["tasklist", "/FI", f"PID eq {gpid}"], capture_output=True, text=True, errors="replace").stdout
     else:
         try:
             MG.os.kill(gpid, 0)
