@@ -166,7 +166,7 @@ def vmake_round(W: Path, style: str, cut: int, fail: bool) -> dict:
     waited = round(time.time() - t0, 3)
     r = VC.bg_take(W / "src", 60)
     if r.get("done"):
-        RU.blur_minus_spans(M, r["done"])
+        RU.accept_erased(M, None, r)     # 지시서·회원 PC 와 같은 함수
         p.write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
     return {"start_sec": waited, "state": r["state"], "done": r["done"], "calls": len(calls), "error": r.get("error")}
 

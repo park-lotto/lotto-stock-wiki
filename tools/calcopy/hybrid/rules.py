@@ -490,6 +490,26 @@ def blur_minus_spans(M: dict, done: dict) -> int:
     return n
 
 
+def accept_erased(M: dict, tf: dict | None, res: dict) -> int:
+    """(판단 주인 — 지우기 결과를 받은 뒤 할 일, 11-05 사장님 '두더지잡기 그만') 모든 길이 이 함수만 부른다:
+    서버 지시서(flow.f_bg_got·f_render_clean_got) · 회원 PC 다시 만들기(runner_ops._c_render RESTYLE) · 점검 도구(patch_render_check).
+    ① 호출 수는 성공·실패 상관없이 센다(돈은 이미 나갔다) ② 지운 구간(res.done)을 tf.done·cleaned 에 더하고 보낸 초를 센다
+    ③ 지금까지 지운 구간 전부(tf.done)의 흐림을 재료.blur 에서 뺀다. 돌려줌 = 뺀 흐림 칸 수.
+    tf=None 이면(회원 PC — 편 상태를 모른다) 이번에 받은 구간만으로 ③.
+    11-04 사고: 같은 순서가 네 곳에 따로 적혀 restyle 길만 흐림 빼기가 없었고(#5864), 보낸 초를 한 곳은 sec·한 곳은 send_sec 로 셌다."""
+    tf = tf if tf is not None else {}
+    tf["calls"] = int(tf.get("calls") or 0) + int(res.get("calls") or 0)
+    done = res.get("done") or {}
+    if res.get("error") or not done:
+        return 0
+    for n, iv in done.items():
+        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        if n not in tf.setdefault("cleaned", []):
+            tf["cleaned"].append(n)
+    tf["sec"] = round(float(tf.get("sec") or 0) + float(res.get("send_sec") if res.get("send_sec") is not None else res.get("sec") or 0), 3)
+    return blur_minus_spans(M, tf["done"])
+
+
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
     """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
     ① max(샷 한도)는 쓰지 않는다 — 주인 = 회원 PC render_bench.shot_cap(관문·완성본 검사와 같은 경계 shot_starts). 관제 318(11-04 대기실 전수조사):

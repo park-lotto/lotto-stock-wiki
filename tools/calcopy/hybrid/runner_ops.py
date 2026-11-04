@@ -1791,10 +1791,10 @@ def _c_render(W, d):
         tk = c_clean_take(W, {"version": v, "wait": 0})
         sys.stderr.write(f"[다시 만들기] 뒤 지우기 결과 {tk.get('state')}\n")
         if tk.get("state") == "done" and not tk.get("error") and tk.get("done"):
-            # 지운 구간의 흐림도 뺀다 — 안 빼면 지운 원본 위에 흐림 띠를 다시 덮는다(11-04 강병주 #5656·#5864). 판단 주인 = rules.blur_minus_spans(flow.f_bg_got 과 같은 함수)
+            # 지운 구간의 흐림도 뺀다 — 안 빼면 지운 원본 위에 흐림 띠를 다시 덮는다(11-04 강병주 #5656·#5864). 판단 주인 = rules.accept_erased(지시서와 같은 함수)
             mp = W / "doc" / v / "재료.json"
             M = jload(mp)
-            nb = RU.blur_minus_spans(M, tk["done"])
+            nb = RU.accept_erased(M, None, tk)
             if nb:
                 jsave(mp, M)
                 sys.stderr.write(f"[다시 만들기] 지운 구간의 흐림 {nb}칸 뺌\n")

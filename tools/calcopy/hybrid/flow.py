@@ -4694,21 +4694,16 @@ def f_bg_got(st, m, rp, u):
     if c.get("state") == "running" and then == "check":
         return {"goto": "check"}
     tf.pop("bg", None)
-    tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
+    M = st["script"]["M"]
     if c.get("state") != "done" or c.get("error") or not c.get("done"):
+        RU.accept_erased(M, tf, {"calls": c.get("calls"), "error": "not done"})     # 호출 수만(돈은 나갔다)
         st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
         st["log"].append(f"뒤에서 지우기 안 씀({c.get('state')}): {str(c.get('why') or c.get('error') or '')[:200]} — 흐림 판으로")
         return {"goto": then}
-    for n, iv in (c.get("done") or {}).items():
-        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
-        if n not in tf.setdefault("cleaned", []):
-            tf["cleaned"].append(n)
-    tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("sec") or 0), 3)
+    nb = RU.accept_erased(M, tf, c)      # 판단 주인 — 구간 더하기·보낸 초·흐림 빼기(모든 길 같은 함수)
     st["log"].append(f"뒤에서 지운 자막 받음: {c.get('sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}" + (f" · 못 지운 곳은 흐림: {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):
         raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "이 편은 여기서 마칠게요", final=True)
-    M = st["script"]["M"]
-    nb = RU.blur_minus_spans(M, tf.get("done") or {})
     if nb:
         st["log"].append(f"지운 구간의 흐림 {nb}칸 뺌(재료.blur)")
     v = st["version"]
@@ -4795,19 +4790,13 @@ def f_render_clean_got(st, m, rp, u):
             return {"goto": "render"}
         raise _Stop("원본 자막 지우기가 끝나지 않았어요", "다시 시도해 주시면 못 지운 구간부터 이어서 지울게요", retry="render",
                     detail=str(c.get("why") or c.get("error"))[:300])
-    for n, iv in (c.get("done") or {}).items():
-        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
-        if n not in tf.setdefault("cleaned", []):
-            tf["cleaned"].append(n)
-    tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
-    tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("send_sec") or 0), 3)
+    M = st["script"]["M"]
+    nb = RU.accept_erased(M, tf, {**c, "send_sec": c.get("send_sec") or 0})      # 판단 주인 — f_bg_got·회원 PC 다시 만들기와 같은 함수
     tf["key"] = _cuts_key(st) if not (c.get("mode") == "vmake" and c.get("why")) else None     # 'why' 는 '지울 글자 없음'(mode none)에도 붙는다 — 그때 열쇠를 비우면 clean_text↔write_doc 끝없는 되풀이(10-27 립글로스 회원편 20바퀴) · 실패한 구간(크레딧·시간 초과)이 있으면 다음 렌더 때 다시 보낸다 — 컷이 같다고 건너뛰면 안 지운 채 렌더(10-26 까르보: 크레딧 부족 뒤 새 키에도 80초대 자막 남음)
     st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
                      + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):
         raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "이 편은 여기서 마칠게요", final=True)
-    M = st["script"]["M"]
-    nb = RU.blur_minus_spans(M, tf.get("done") or {})
     if nb:
         st["log"].append(f"지운 구간의 흐림 {nb}칸 뺌(재료.blur)")
     v = st["version"]
