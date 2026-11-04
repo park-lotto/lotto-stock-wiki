@@ -205,7 +205,7 @@ def test_v2_runner_ops_bench_deps_not_unresolved():
 
 def test_v2_guide_uses_flow_sid_and_member_words():
     t = (ROOT / "channel/production_guide/15_benchmark.md").read_text(encoding="utf-8")
-    for w in ("칼카피", "잡도리", "run_id"):
+    for w in ("칼카피", "run_id"):
         assert w not in t, w
-    for w in ("준비 확인", "벤치 받기", "뜯기", "영상 보기", "시험 편", "판볶이", "확정", "프리셋 묶음", "sid", "agy"):
+    for w in ("준비 확인", "벤치 받기", "뜯기", "영상 보기", "시험 편", "잡도리", "확정", "프리셋 묶음", "sid", "agy"):
         assert w in t, w

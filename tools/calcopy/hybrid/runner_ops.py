@@ -2480,10 +2480,10 @@ def c_bm_brief(W, d):
 
 
 def c_bm_fix(W, d):
-    """판볶이가 고른 칸 하나를 프리셋 고정값으로 못 박는다(판단 주인 = preset_save.fix_value). fix = {path, value, why}."""
+    """잡도리가 고른 칸 하나를 프리셋 고정값으로 못 박는다(판단 주인 = preset_save.fix_value). fix = {path, value, why}."""
     from tools.calcopy.engine import preset_save as P
     fx = d["fix"]
-    P.fix_value(_inside(W, f"channel/{d['slug']}/preset/{d['style']}"), fx["path"], fx["value"], str(fx.get("why") or "판볶이"))
+    P.fix_value(_inside(W, f"channel/{d['slug']}/preset/{d['style']}"), fx["path"], fx["value"], str(fx.get("why") or "잡도리"))
     return {"fixed": fx["path"]}
 
 

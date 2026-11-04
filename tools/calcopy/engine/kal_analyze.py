@@ -972,7 +972,7 @@ def match_from_render(style, doc, work, media: bool | dict = True, frame0_kind_m
 # 줄판독 등장 어휘(ENTER_VOCAB) ↔ 프리셋 frame.json 자막 enter.kind(schema: pop|fade|rise|typewriter|none, 없으면 null) — 양쪽에 다 있는 것만.
 ENTER_FRAME = {"instant": None, "typing": "typewriter", "pop": "pop", "fade": "fade"}
 ENTER_MS = 300          # frame 자막 enter 가 비어 있을 때 새로 넣는 등장 시간(ms) — calcopy_frame/schema.py 예시값(28줄). 이미 있으면 그 ms 그대로
-# (판단 주인) 어긋난 대조 칸 → 프리셋 frame.json 의 고칠 자리. 여기 없는 칸은 frame 자리가 아니다(대본·재료·목소리 몫) — 판볶이 후보를 안 낸다.
+# (판단 주인) 어긋난 대조 칸 → 프리셋 frame.json 의 고칠 자리. 여기 없는 칸은 frame 자리가 아니다(대본·재료·목소리 몫) — 잡도리 후보를 안 낸다.
 MATCH_FIX = {"enter.mode.나레": "layers[text:caption].enter", "enter.mode.원음": "layers[text:caption].enter"}
 
 
@@ -983,7 +983,7 @@ def _cap_of(layers) -> dict | None:
 def _caption_at(frame: dict | None) -> tuple[dict | None, str]:
     """(판단 주인) 자막 줄을 그리는 층과 그 층의 flat 자리 머리(preset_save.flat 꼴). 한 틀이면 머리 ''.
     틀 여러 장(to_frame_multi 꼴 — 훅 카드·본편)이면 자막 층이 있는 본편 틀(id 'body' 먼저, 없으면 자막 있는 마지막 틀) → 'frames[<id>].'.
-    실측(최종 검토, 방구 게시글형): 최상위 layers 만 보면 자막을 못 찾아 우리 등장이 instant 로 잡히고 판볶이 후보가 0개였다."""
+    실측(최종 검토, 방구 게시글형): 최상위 layers 만 보면 자막을 못 찾아 우리 등장이 instant 로 잡히고 잡도리 후보가 0개였다."""
     f = frame or {}
     cap = _cap_of(f.get("layers"))
     if cap is not None:
@@ -1047,7 +1047,7 @@ def ours_from_remake(out_dir, frame: dict | None = None, eye: dict | None = None
 
 
 def fix_cands(T: dict, frame: dict) -> list[dict]:
-    """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 판볶이 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
+    """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 잡도리 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
     from tools.calcopy.engine import preset_save as P
     F = P.flat(frame)
     cap, head = _caption_at(frame)

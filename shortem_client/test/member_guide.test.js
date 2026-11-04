@@ -131,7 +131,7 @@ test('/벤치마킹 명령 = 벤치마킹 스킬이 shortem_benchmark 고리를 
   assert.doesNotMatch(s, /^(allowed|disallowed)-tools:/m);
   assert.ok(!fs.existsSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', '벤치마킹')), '한글 스킬 폴더는 깨진 이름으로 잡힌다');
   for (const k of ['shortem_benchmark(step="start"', 'shortem_benchmark(step="wait"', 'shortem_ai(action="list")', 'shortem_ai(action="answer"', 'shortem_make(step="start", preset=']) assert.ok(s.includes(k), k);
-  assert.doesNotMatch(s, /칼카피|잡도리/, '회원 화면에 칼카피·잡도리 금지');
+  assert.doesNotMatch(s, /칼카피/, '회원 화면에 칼카피 금지(잡도리는 사장님 11-04 원래 이름으로 씀)');
   const { BENCH_TEXT } = { BENCH_TEXT: fs.readFileSync(path.join(REPO, 'shortem_client', 'server', 'benchmark.js'), 'utf8') };
   assert.match(BENCH_TEXT, /\/벤치마킹/);
 });

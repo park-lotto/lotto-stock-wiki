@@ -60,7 +60,7 @@ test('답한 편 sid 의 결과 폴더(W 밖)가 W 안으로 들어오고, 서�
   for (const n of ['final.mp4', 'timeline.json', 'remake_log.json']) fs.writeFileSync(path.join(out, n), n);
   fs.writeFileSync(path.join(out, '대조', 'verdict.json'), '{}');
   fs.writeFileSync(path.join(mk, `${ESID}.json`), JSON.stringify({ sid: ESID, topic_id: 7 }));
-  fs.mkdirSync(path.join(W(), 'trial', 't9_aaaaaaaaaaaa'), { recursive: true });   // 지난 시도(판볶이 전) — 새 시도가 들어오면 지운다
+  fs.mkdirSync(path.join(W(), 'trial', 't9_aaaaaaaaaaaa'), { recursive: true });   // 지난 시도(잡도리 전) — 새 시도가 들어오면 지운다
   const p = pending().find(x => x.req.tag === 'bm_trial');
   assert.equal(answer(p.id, { work_dir: ESID, ok: true }).ok, true);
   await waitFlow(SID, 3000);

@@ -133,14 +133,14 @@ def test_alarm_shape_is_fixed(monkeypatch):
 
 
 def test_fable_never_called_a_third_time():
-    # 확정(1) → 최종 불합격 → 되돌림 → 판볶이가 맞았다고 해도 세 번째 페이블 요청은 나가지 않는다
+    # 확정(1) → 최종 불합격 → 되돌림 → 잡도리가 맞았다고 해도 세 번째 페이블 요청은 나가지 않는다
     st = _st("bm_confirm", rules={"rules": {}}, side="side/a.mp4")
     r = _go(st)
     assert r["status"] == "review" and r["review"][0]["id"] == "bm_confirm" and st["bm"]["fable_n"] == 1
     r = _go(st, rp={"bm_confirm": {"ok": True, "wrong": []}})
     assert r["review"][0]["id"] == "bm_verdict" and st["bm"]["fable_n"] == 2
     r = _go(st, rp={"bm_verdict": {"ok": False, "wrong": ["caption.y"]}})
-    assert r["status"] == "stop" and "caption.y" in r["fix"]       # 후보가 없어 판볶이에서 멈춤
+    assert r["status"] == "stop" and "caption.y" in r["fix"]       # 후보가 없어 잡도리에서 멈춤
     st["phase"] = "bm_panbokki"                                      # 후보가 있어 맞췄다고 나와도
     r = _go(st, {"pan": {"match_ok": True}})
     assert r["status"] == "stop" and "여기까지 맞췄어요" in r["why"] and "caption.y" in r["fix"] and "review" not in r

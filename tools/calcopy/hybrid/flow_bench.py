@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-PAN_MAX = 3          # 판볶이 최대 횟수 — 넘으면 「여기까지 맞췄어요」로 멈춘다
+PAN_MAX = 3          # 잡도리 최대 횟수 — 넘으면 「여기까지 맞췄어요」로 멈춘다
 CONFIRM_MAX = 2      # 확정 검사·최종 판정이 틀렸다고 되돌릴 수 있는 횟수
 FABLE_MAX = 2        # 한 채널에서 페이블(bm_confirm·bm_verdict)을 부르는 횟수 — 설계서 §7 「채널당 2번만」. st["bm"]["fable_n"] 이 센다
 ALARM_KEYS = ("kind", "why", "at")
@@ -44,7 +44,7 @@ EYE_ASK = """## 화면 전환·첫 화면 판정(프레임 그림)
 REREAD_MAX = 1       # check_doc 를 못 넘은 줄판독을 다시 읽는 횟수 — 넘으면 통과한 편만 쓰고, 0편이면 멈춘다
 
 STAGES = [("setup", "준비 확인"), ("bm_fetch", "벤치 영상 받기"), ("bm_tear", "영상 뜯기"), ("bm_read", "영상 보기"), ("bm_trial", "시험 영상 만들기"),
-          ("bm_pan", "판볶이"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
+          ("bm_pan", "잡도리"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
 PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_reread": "bm_read", "bm_trial": "bm_read",
                "bm_eye_ask": "bm_read", "bm_trial_frames": "bm_pan", "bm_trial_eye": "bm_pan", "bm_trial_eye_got": "bm_pan",
                "bm_trial_got": "bm_trial", "bm_compare": "bm_pan", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
@@ -272,7 +272,7 @@ def bm_reread(st, m, rp, u):
     return {"do": _read_do(b, ids) + _eye_do(b, ids), "then": "bm_read_got"}
 
 
-TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 판볶이용)
+TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 잡도리용)
 지금 만든 임시 내 프리셋으로 기존 shortem_make 도구(1판 길 그대로 — AI 답 고리·소재 고르기 그대로)를 써서 영상 1편을 만든다.
 - 쓸 프리셋: 작업 폴더 {dir} (slug {slug} · 틀 {style}). 회원 PC 가 임시 내 프리셋으로 올려 두었다 — 프리셋 id {{preset_id}}
 - 만들기: shortem_make(step="start", preset="{{preset_id}}") 로 시작해 그 응답의 next 대로 완성(need="done")까지 간다.
@@ -290,7 +290,7 @@ def _trial_source(b: dict) -> dict:
 
 def bm_trial(st, m, rp, u):
     """시험 편 — 회원 과제(의도한 일, 멈춤 아님). 회원 Claude 가 shortem_make 로 1편을 만들고 작업 폴더를 올린다(관리자 Ruling 10).
-    판볶이가 칸을 고친 뒤(do bm_fix → 여기)에도 같은 과제로 다시 만든다."""
+    잡도리가 칸을 고친 뒤(do bm_fix → 여기)에도 같은 과제로 다시 만든다."""
     F = _F()
     b = st["bm"]
     fx = m.get("fix") or {}
@@ -301,7 +301,7 @@ def bm_trial(st, m, rp, u):
     n = int(st.get("pan_n") or 0)
     ask = TRIAL_ASK.format(dir=pdir, slug=b["slug"], style=b["style"],
                            source=(f"벤치 채널 {src['channel']} 에서 고른다(영상 주소 없이 만들기)" if src["channel"] else "회원이 준 영상이 있으면 그 영상, 없으면 shortem_make 가 내는 안내 그대로"),
-                           again=(f"- 판볶이 {n}번째 고침 뒤 다시 만드는 편이다(고친 칸: {b.get('fixed_last')})." if n else ""))
+                           again=(f"- 잡도리 {n}번째 고침 뒤 다시 만드는 편이다(고친 칸: {b.get('fixed_last')})." if n else ""))
     meta = {"kind": "member_task", "tool": "shortem_make", "preset": {"slug": b["slug"], "style": b["style"], "dir": pdir}, "source": src, "try": n}
     return {"review": [F._rv("bm_trial", ask, model=ASKS["bm_trial"]["model"], need=("work_dir", "ok"), meta=meta)], "then": "bm_trial_got"}
 
@@ -370,7 +370,7 @@ def bm_compare(st, m, rp, u):
 
 
 def bm_panbokki(st, m, rp, u):
-    """판볶이 — 어긋난 칸을 한 번에 한 칸씩. 고칠 값 고르기는 Jev(서버). PAN_MAX 넘으면 남은 칸과 함께 멈춘다."""
+    """잡도리 — 어긋난 칸을 한 번에 한 칸씩. 고칠 값 고르기는 Jev(서버). PAN_MAX 넘으면 남은 칸과 함께 멈춘다."""
     F = _F()
     from tools.calcopy.hybrid import jev_gate as J
     b = st["bm"]
@@ -391,22 +391,22 @@ def bm_panbokki(st, m, rp, u):
     n = int(st.get("pan_n") or 0) + 1
     if len(cands) >= 2:
         try:
-            d = J.decide(f"판볶이 {n}회차 — 벤치와 다른 칸 {fails[:5]}", [json.dumps(p, ensure_ascii=False)[:3000]],
+            d = J.decide(f"잡도리 {n}회차 — 벤치와 다른 칸 {fails[:5]}", [json.dumps(p, ensure_ascii=False)[:3000]],
                          [json.dumps(c, ensure_ascii=False) for c in cands])
         except J.JevDown as e:       # 서버 쪽 문제 — 회원 과제로 넘기지 않고(ask_member) 경보를 남기고 멈춘다
             st["alarm"] = {"kind": "jev_down", "why": str(e), "at": "bm_panbokki"}
             st["log"].append(f"경보: 벤치마킹 판단 서버(Jev) 실패 — {e}")
             raise F._Stop("잠시 판단 서버가 쉬고 있어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=str(e))
         if not d["ok"]:      # 확신 없이 고르지 않는다 — 같은 표를 되풀이해 재지 않고 남은 칸과 함께 멈춘다
-            st["log"].append(f"판볶이 {n}: 고를 칸 확신 부족(Jev {d['conf']}) → 멈춤")
+            st["log"].append(f"잡도리 {n}: 고를 칸 확신 부족(Jev {d['conf']}) → 멈춤")
             raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails)) + " — 이 부분은 직접 고쳐 주세요", final=True, detail=f"Jev 확신 부족 {d['conf']}")
         fix, why = cands[d["pick"]], f"Jev {d['conf']}"
     elif len(cands) == 1:
         fix, why = cands[0], "후보 하나"         # 고를 것이 없다 — 판단 없이 그대로
-    else:       # 고칠 후보가 0개 — 같은 표를 다시 재도 같다(bm_match 는 덧붙임을 읽지 않는다). 첫 판볶이에서 바로 멈춘다
+    else:       # 고칠 후보가 0개 — 같은 표를 다시 재도 같다(bm_match 는 덧붙임을 읽지 않는다). 첫 잡도리에서 바로 멈춘다
         raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails or ["눈 판정에서 어긋남"])) + " — 이 부분은 직접 고쳐 주세요", final=True, detail="고칠 후보 없음")
     st["pan_n"] = n
-    st["log"].append(f"판볶이 {n}: {fix} ({why})")
+    st["log"].append(f"잡도리 {n}: {fix} ({why})")
     b["fixed_last"] = fix.get("path") if isinstance(fix, dict) else fix
     return {"do": [{"id": "fix", "cmd": "bm_fix", "slug": b["slug"], "style": b["style"], "fix": fix}], "then": "bm_trial"}     # 한 칸만 고치고 시험 편부터 다시
 
@@ -431,7 +431,7 @@ def bm_confirm(st, m, rp, u):
 
 
 def _back_to_pan(st, wrong, why):
-    """확정 검사·최종 판정이 틀렸다고 하면 판볶이로 되돌린다(고칠 후보가 없으면 판볶이가 바로 멈춘다). 되돌림은 CONFIRM_MAX 번까지."""
+    """확정 검사·최종 판정이 틀렸다고 하면 잡도리로 되돌린다(고칠 후보가 없으면 잡도리가 바로 멈춘다). 되돌림은 CONFIRM_MAX 번까지."""
     F = _F()
     b = st["bm"]
     b["confirm_n"] = int(b.get("confirm_n") or 0) + 1
