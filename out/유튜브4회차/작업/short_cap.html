@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<!-- 4회차 세로 쇼츠 — 앞 두 구간(클로드 창·완성 쇼츠) 위에 얹는 글 판(투명 PNG). make_short.py 가 ?k= 로 하나씩 찍는다 -->
+<style>
+@font-face{font-family:Pre;src:url("fonts/Pretendard-Black.otf");font-weight:900}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;background:transparent;font-family:Pre,"Malgun Gothic",sans-serif;color:#1f1e1d}
+.big{position:absolute;left:0;right:0;text-align:center;font-weight:900;letter-spacing:-2px;line-height:1.15}
+.org{color:#d97757}
+.chip{position:absolute;left:50%;transform:translateX(-50%);background:#1f1e1d;color:#fff;font-weight:900;border-radius:22px;padding:20px 38px;font-size:60px;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.chip b{color:#f0a37f}
+.ff{position:absolute;right:50px;top:330px;background:#1f1e1d;color:#fff;border-radius:18px;padding:12px 26px;font-size:54px;font-weight:900}
+.ff b{color:#f0a37f}
+.k{display:none}
+</style></head>
+<body>
+<div class="k" id="k1"><div class="big" style="top:120px;font-size:104px">키보드로 <span class="org">딱 한 줄</span><br>쳤더니…</div>
+  <div class="chip" style="top:1560px">사람이 한 건 <b>이게 전부</b></div></div>
+<div class="k" id="k2"><div class="big" style="top:120px;font-size:96px">클로드가 <span class="org">혼자</span><br>만드는 중</div>
+  <div class="ff"><b>▶▶</b> 20배속</div>
+  <div class="big" style="top:1540px;font-size:66px;color:#5e5a4e">원본 찾기 → 대본 → 장면 → 자막</div></div>
+<div class="k" id="k3"><div class="big" style="top:150px;font-size:120px"><span class="org">완성!</span></div>
+  <div class="chip" style="top:1560px">▶ 눌러 보면</div></div>
+<div class="k" id="k4"><div class="chip" style="top:1700px;font-size:50px;padding:16px 32px;background:rgba(31,30,29,.88)">↑ 클로드가 만든 <b>완성본</b></div></div>
+<script>var k = new URLSearchParams(location.search).get('k'); if (k) document.getElementById(k).style.display = 'block';</script>
+</body></html>
