@@ -25,7 +25,8 @@ export const isMaskedKey = v => /[*•●·×✕✱∗]/.test(String(v || ''));
 export function readKey(service = 'typecast') {
   let k = '';
   try { k = fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
-  if (KEY_SERVICES[service]?.prefix && k && !k.startsWith(KEY_SERVICES[service].prefix)) return '';   // 꼴이 틀린 키(키 ID 등) = 없는 키로 — 점검이 다시 넣으라고 한다(파일은 지우지 않는다)
+  if (KEY_SERVICES[service]?.prefix && k && !k.startsWith(KEY_SERVICES[service].prefix)) return '';
+  if (KEY_SERVICES[service]?.shape && k && !KEY_SERVICES[service].shape.test(k)) return '';      // 꼴이 틀린 키(VMake 콜론 없음 등) = 없는 키로 — 같은 판단 = saveKey 의 shape   // 꼴이 틀린 키(키 ID 등) = 없는 키로 — 점검이 다시 넣으라고 한다(파일은 지우지 않는다)
   if (service !== 'vertex_sa' && isMaskedKey(k)) {           // 이미 저장된 가린 값 — 없는 키로 보고 치운다. 점검이 다시 넣으라고 안내한다
     try { fs.unlinkSync(keyFile(service)); } catch { /* 다음에 다시 */ }
     return '';
@@ -41,7 +42,8 @@ export const KEY_SERVICES = Object.freeze({
   coupang_access: { label: '쿠팡 파트너스 Access Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_ACCESS_KEY', need: '없으면 이 PC 크롬 창으로 쿠팡을 찾습니다' },
   coupang_secret: { label: '쿠팡 파트너스 Secret Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_SECRET_KEY', need: 'Access Key 와 짝으로 넣습니다' },
   buffer: { label: 'SNS 예약발행 키(Buffer)', where: 'buffer.com ▸ Settings ▸ API ▸ 새 키', env: 'BUFFER_API_KEY', need: '완성본을 SNS 에 예약발행할 때 씁니다(숏템메이커 예약발행과 같은 키)' },
-  vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY', need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
+  vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY',
+    shape: /^[^:\s]+:[^:\s]+$/, shapeWhy: 'VMake 키는 App Key 와 Secret 을 콜론(:)으로 이은 한 줄이어야 합니다(app_key:secret)',   /* #4356 김만기: 콜론 없는 키로 지우기 전부 서명 오류 */ need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
   vertex_sa: { label: '버텍스 AI 서비스 계정(JSON)', where: '구글 클라우드 ▸ IAM ▸ 서비스 계정 ▸ 키 ▸ JSON 내려받기(역할 Vertex AI User)', env: 'GOOGLE_APPLICATION_CREDENTIALS', file: true, json: true, need: 'AI 영상(Veo)·사진(Imagen)을 만들 때 씁니다 — 숏템메이커에 등록한 것을 그대로 가져올 수 있습니다' },
   gemini: { label: '제미나이 키(선택)', where: 'aistudio.google.com ▸ Get API key', env: 'SHORTEM_MEMBER_GEMINI_KEY', need: '있으면 고급반 벤치마킹 판독을 이 키로 먼저 합니다(없으면 Claude 가 읽습니다)' },
   speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
@@ -64,6 +66,7 @@ export function saveKey(service, value) {
   if (isMaskedKey(k)) return { ok: false, why: `가려진 키입니다 — 점이나 별표가 섞인 값은 쓸 수 없어요. ${svc.where} 에서 전체 키를 복사해 주세요` };
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
   if (svc.prefix && !k.startsWith(svc.prefix)) return { ok: false, why: `API 키는 ${svc.prefix} 로 시작합니다 — 키 ID 가 아니라 ${svc.where} 에서 만든 키 값 전체를 붙여 넣으세요` };   // 11-03 회원: 키 ID 를 넣어 제작 중 400
+  if (svc.shape && !svc.shape.test(k)) return { ok: false, why: svc.shapeWhy || `키 모양이 아닙니다 — ${svc.where}` };
   writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
   return { ok: true, ...keyStatus(service) };
 }
