@@ -131,6 +131,12 @@ _cache_lock = threading.Lock()
 # 크롤 사이 최소 간격(초). 사람이 상품 고르는 속도엔 걸리지 않는다.
 _MIN_INTERVAL_SEC = 3.0
 _last_call = [0.0]
+# ★Akamai 차단(관제 315, 2026-11-03 실측): 쿠팡은 **200** 을 주면서 화면에 "Access Denied" 를 띄운다.
+#   403 만 차단으로 봐서 "검색 결과 없음"으로 오판했고, 막힌 채로 상품재료 30여 건을 계속 두드렸다.
+#   한 번 걸리면 이 시간 동안 브라우저를 띄우지 않고 바로 접는다(더 두드리면 차단이 길어진다).
+_AKAMAI_DENY = "Access Denied"
+_BLOCK_COOLDOWN_SEC = 1800
+_blocked_until = [0.0]
 
 
 def _cached(key):
@@ -165,6 +171,10 @@ def search(keyword, limit=None, timeout_ms=None):
     hit = _cached(cache_key)
     if hit is not None:
         return dict(hit, cached=True)
+    if time.monotonic() < _blocked_until[0]:
+        left = int((_blocked_until[0] - time.monotonic()) / 60) + 1
+        return {"ok": False, "items": [], "search_url": search_link, "source": "crawl", "blocked": True,
+                "notice": f"쿠팡이 이 PC를 잠시 막았습니다(Access Denied) — 약 {left}분 쉬었다가 다시 시도합니다"}
 
     try:
         from playwright.sync_api import sync_playwright
@@ -227,6 +237,11 @@ def search(keyword, limit=None, timeout_ms=None):
         if status == 403:
             # IP 자체가 막힌 것 — 해외 IP(데이터센터든 주거용이든)면 여기로 온다.
             notice = "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+        elif _AKAMAI_DENY in body_text:
+            _blocked_until[0] = time.monotonic() + _BLOCK_COOLDOWN_SEC
+            print("[coupang] Access Denied(200) — %d분 쉼" % (_BLOCK_COOLDOWN_SEC // 60), flush=True)
+            return {"ok": False, "items": [], "search_url": search_link, "source": "crawl", "blocked": True,
+                    "notice": "쿠팡이 이 PC를 잠시 막았습니다(Access Denied) — 30분 쉬었다가 다시 시도합니다"}
         elif _SOFT_BLOCK in body_text:
             notice = "쿠팡이 잠시 요청을 제한했습니다 — 몇 분 뒤 다시 시도하세요"
         else:
