@@ -74,9 +74,11 @@ def build(title, card_text, timing, *, hl_fs=None, card_fs=None, fonts_dir=None)
         t0 = g["t"]
         t1 = total if k == len(groups) - 1 else round(g["t"] + g["d"], 3)
         y0 = spec.BODY_Y[g["color"]]
+        # 이 컷만 글자 축소(layout.fit_scale 이 정한 값, 관제 322) — 없으면 스타일 크기 그대로(원본 뇌전구 출력 불변)
+        fs = f"\\fs{round(spec.STYLE_FONT[g['color']][2] * g['fs_scale'])}" if g.get("fs_scale") else ""
         for j, ln in enumerate(g["lines"]):
             ev.append(_dlg(spec.BODY_LAYER, t0, t1, g["color"],
-                           f"{{\\an8\\pos({spec.BODY_X},{y0 + spec.LINE_GAP * j}){spec.ENTRANCE}}}{ln}"))
+                           f"{{\\an8\\pos({spec.BODY_X},{y0 + spec.LINE_GAP * j}){fs}{spec.ENTRANCE}}}{ln}"))
     return "\n".join(lines) + "\n" + "\n".join(ev) + "\n"
 
 

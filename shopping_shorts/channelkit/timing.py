@@ -22,6 +22,8 @@ def build(card_sec, cut_secs, groups, *, card_img=None, region=None, slug=None):
             row["img"] = g["img"]
         if g.get("meme") is not None:
             row["meme"] = g["meme"]
+        if g.get("fs_scale"):
+            row["fs_scale"] = g["fs_scale"]      # 이 컷만 글자 축소(layout 이 정한 값 — 관제 322)
         out.append(row)
         t = round(t + d, 3)
     total = round(t + spec.TAIL_SEC, 3)

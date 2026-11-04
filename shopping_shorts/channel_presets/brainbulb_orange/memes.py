@@ -27,6 +27,10 @@ PEOPLE = ["사람", "남자", "여자", "아이", "아기", "소녀", "소년", 
 DRAWN = ["캐릭터", "만화", "일러스트", "애니", "그림", "이모티콘", "인형"]   # 진짜 동물만(11-04 시험판: «분홍색 토끼 캐릭터» 그림 짤이 뽑혔다)      # 실존 인물 짤 막기(10-28 '토끼' 낱말로 아이돌 영상이 뽑혔다)
 
 
+# 설명에 '캐릭터·만화' 낱말이 없어 DRAWN 으로 못 거르는 그림 짤(11-04 락스 편: fm_thisisfine = 불타는 방 만화 강아지)
+EXCLUDE_KEYS = {"fm_thisisfine"}
+
+
 def candidates(pack_dir=None):
     """→ [(키, 메타, 표정점수)] 동물 영상 밈만, 표정 분명한 것 먼저."""
     pack_dir = pack_dir or PACK_DIR
@@ -36,7 +40,7 @@ def candidates(pack_dir=None):
     out = []
     for k, v in json.load(open(meta, encoding="utf-8")).items():
         w = v.get("what", "")
-        if k.startswith("pp_") or not v.get("usable") or not os.path.exists(os.path.join(pack_dir, k + ".mp4")):
+        if k.startswith("pp_") or k in EXCLUDE_KEYS or not v.get("usable") or not os.path.exists(os.path.join(pack_dir, k + ".mp4")):
             continue
         if any(a in w for a in ANIMALS) and not any(p in w for p in PEOPLE) and not any(x in w for x in DRAWN):
             out.append((k, v, sum(m in w for m in MOODS)))

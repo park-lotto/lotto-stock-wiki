@@ -52,6 +52,12 @@ def _subtitle_bounds(ass, fonts_dir):
             continue
         if sty in spec.BODY_Y:
             ok, info = layout.fits(sty, txt, fonts_dir)
+            m = re.search(r"\\fs(\d+)", p[9])
+            if m and not ok:                       # 이 컷만 글자 축소(layout.fit_scale, 관제 322) — 줄인 크기로 다시 판정
+                s = int(m.group(1)) / spec.STYLE_FONT[sty][2]
+                x = spec.BODY_X
+                ok = all(x + (info[k] - x) * s >= 0 for k in ("left100", "left108")) and \
+                    all(x + (info[k] - x) * s <= spec.CANVAS_W for k in ("right100", "right108"))
             if not ok:
                 bad.append({"style": sty, "text": txt, **info})
         elif sty in ("HL1", "HL2"):
