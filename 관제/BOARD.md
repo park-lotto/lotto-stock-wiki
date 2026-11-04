@@ -134,7 +134,7 @@
 | [323](cards/323-숏클_기본반_강의_준비(11-04_오늘_강의.md) | 숏클 기본반 강의 준비(11-04 오늘 강의) | 기본반강의 | - | out/기본반강의/ | 오늘 기본반 강의 자료가 완성돼 사장님이 확인함 | 2026-11-04 15:32 등록 · 분배 → 기본반강의 |
 | [324](cards/324-숏클_동시접속_켜져만_있는_PC가_쓰는_PC.md) | 숏클 동시접속: 켜져만 있는 PC가 쓰는 PC를 막음 | 숏클동시접속 | - | shopping_shorts/claude_portal.py:_guard_session | 가만히 켜진 PC는 자리를 못 뺏고, 실제로 쓰는 PC는 상대가 제작 중이 아니면 바로 자리를 가져간다 — 라이브에서 PC 2대(지문 2개)로 실측 | 2026-11-04 17:41 분배 → 숏클동시접속 |
 | [325](cards/325-숏클_판올림이_플러그인(훅)엔_켤_때_한_번.md) | 숏클 판올림이 플러그인(훅)엔 켤 때 한 번 늦게 반영 — 받는 즉시 플러그인도 갱신 | 숏클깨우기 | - | shortem_client/server/plugin_sync.js:syncPlugin | 새 판을 받은 그 실행 안에서 claude-plugin/shortem 의 wake.js·plugin.json 이 새 판으로 바뀌고 plugin_version.txt = 새 판(시험 + 이 PC 실측) | 2026-11-04 18:02 등록 · 분배 → 숏클깨우기 |
-| [326](cards/326-숏클_맥_한_줄_설치(curl_bash)_—.md) | 숏클 맥 한 줄 설치(curl|bash) — 맥 설치 묶음 빌더 통합·깃허브 맥 서버 빌드·인코더 VideoToolbox | 칼카피숏템엔진 | **필요** | installer/win/build_win.py:main(빌더 하나·--plat) / shopping_shorts/claude_portal.py:start_line(운영체제별 한 줄) / tools/calcopy/engine/encoder.py:venc | 깃허브 맥 서버(arm64·x64)에서 한 줄 설치→도구 sha 일치→MCP setup ok→시험 렌더 잉크>0 + 사장님 인텔 맥에서 한 줄 붙여넣기→Claude 로그인→'숏클 점검' 완료 | 2026-11-04 22:01 등록 · 분배 → 칼카피숏템엔진 |
+| [326](cards/326-숏클_맥_한_줄_설치(curl_bash)_—.md) | 숏클 맥 한 줄 설치(curl|bash) — 맥 설치 묶음 빌더 통합·깃허브 맥 서버 빌드·인코더 VideoToolbox | 칼카피숏템엔진 | 2026-11-04 22:01 · 사장님 | installer/win/build_win.py:main(빌더 하나·--plat) / shopping_shorts/claude_portal.py:start_line(운영체제별 한 줄) / tools/calcopy/engine/encoder.py:venc | 깃허브 맥 서버(arm64·x64)에서 한 줄 설치→도구 sha 일치→MCP setup ok→시험 렌더 잉크>0 + 사장님 인텔 맥에서 한 줄 붙여넣기→Claude 로그인→'숏클 점검' 완료 | 2026-11-04 22:01 승인: 사장님 |
 
 ## 병합 (116)
 
