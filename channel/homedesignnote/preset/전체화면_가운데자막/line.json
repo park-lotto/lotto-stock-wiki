@@ -1,0 +1,6 @@
+{
+ "_rule": "이 회원 프리셋이 쓰는 제작 라인 — 주인 한 곳. 기술 꾸러미 = tools/claude_portal/preset_pack.tech_files",
+ "line": "hybrid",
+ "version": "두유노판",
+ "_from": "11-03 사장님 '두유노판으로 line.json 붙여' — 회원 '인스타스토리형'이 옛 길(preset_make·worker_steps: 원본 1개·대본/재료 손 작성·음량 -9 LUFS)로 돌던 것을 단계 진행으로. flow_format_of('두유노판') = channel/프리셋.json homedesignnote member.flow_format(쇼핑형) · 판 렌더러 bench(10-26 두유노판). 옛 frame.json·manifest 는 지우지 않는다"
+}

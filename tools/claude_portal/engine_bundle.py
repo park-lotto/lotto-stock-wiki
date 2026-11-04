@@ -41,7 +41,7 @@ FORBIDDEN = (
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
 #   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
 SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
-           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=",
+           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=", r"TYPESAFE_API_KEY",   # Jev(서버 판단) 열쇠 이름 — 관제 319, 회원 묶음 어디에도 없어야 한다
            r"(?m)^\s*[A-Z][A-Z0-9_]*(?:API_KEY|_KEY|SECRET|TOKEN)\s*=\s*['\"]?[A-Za-z0-9_\-]{20,}['\"]?\s*$")   # .env 꼴 키 줄(일레븐랩스·타입캐스트·쿠팡 등) — 10-26
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
@@ -197,6 +197,8 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+    # 관제 319 과제 9: 실행기 벤치마킹 2판 명령(bm_*)이 함수 안에서 부른다 — 기본 묶음엔 안 넣고 고급반 묶음(benchmark_pack.RELEASED)으로만 빌려준다
+    "tools/calcopy/engine/bench_member.py", "tools/calcopy/engine/preset_brief.py",
     # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
     #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
     "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
