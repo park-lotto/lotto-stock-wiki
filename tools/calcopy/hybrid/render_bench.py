@@ -63,17 +63,28 @@ def _font(name, px):
     return ImageFont.truetype(str(FONTS / name), int(px))
 
 
+def _key_form(d: dict) -> dict:
+    """(판단 주인 — 덩어리 key 꼴) key = 그 덩어리 핵심 낱말(글자, briefs/script.md). True = 덩어리 글 전체, 그 밖의 글자 아닌 값은 뺀다.
+    #4234 박영상: key:true 가 배치 emph.word=True 로 넘어가 강조가 한 번도 칠해지지 않았다(조용히)."""
+    k = d.get("key")
+    if k is True:
+        return {**d, "key": str(d.get("text") or "")}
+    if "key" in d and not isinstance(k, str):
+        return {x: v for x, v in d.items() if x != "key"}
+    return d
+
+
 def caps_of(L: dict) -> list[dict]:
-    """줄 자막 덩어리 → [{text, key?, …}] (글만 적은 꼴도 받는다)."""
+    """줄 자막 덩어리 → [{text, key?, …}] (글만 적은 꼴도 받는다). key 꼴은 _key_form 한 곳."""
     if L["kind"] == "orig":
         out = []
         for c in L.get("caps_rel") or []:
             d = {"text": c[0], "s0": float(c[1]), "s1": float(c[2])}
             if len(c) > 3 and c[3]:
                 d["key"] = c[3]
-            out.append(d)
+            out.append(_key_form(d))
         return out
-    return [c if isinstance(c, dict) else {"text": c} for c in L.get("caps") or []]
+    return [_key_form(c) if isinstance(c, dict) else {"text": c} for c in L.get("caps") or []]
 
 
 def spans_of(L: dict) -> list[list[float]]:
