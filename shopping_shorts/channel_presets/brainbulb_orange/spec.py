@@ -72,9 +72,15 @@ def pick_meme_videos(emotions, seed):
 #   ID 는 타입캐스트 /v2/voices 목록(631개)에서 voice_name 'Jerome' 으로 찾음. ssfm-v30 감정 지원(angry·happy·normal·sad·tonedown·toneup·whisper)
 #   감정표(POLICY_EMOTION — 전부 화남, 펀치 강하게)는 원본 그대로 물려받는다.
 VOICE_JEROME = "tc_65a0e1d1d7012c484fe4bfc7"
-POLICY_VOICES = {"NARR": VOICE_JEROME, "CHAR": VOICE_JEROME, "PUNCH": VOICE_JEROME}
+# → 사장님 11-04 성권으로 들어 보고 "이걸로 확정"(빠르기 1.1·나레 보통·펀치 톤업). 제롬은 비교용으로 남긴다
+VOICE_SUNGKWON = "tc_6412c4222ff44c376498b271"   # 타입캐스트 'Sungkwon'(성권, 젊은 남성) — /v2/voices 목록에서 찾음
+POLICY_VOICES = {"NARR": VOICE_SUNGKWON, "CHAR": VOICE_SUNGKWON, "PUNCH": VOICE_SUNGKWON}
 
 # ── 줄나눔 = 확정 대본의 줄을 그대로(사장님이 컨펌한 줄나눔) — 화면 폭 안일 때만. 없으면 엔진이 나눈다 ─────
 #   11-04 시험판: 엔진이 줄 수를 줄이려 «미국 의회도서관도 일반 / 테이프는…» 처럼 낱말을 어색하게 끊었다.
 POLICY_KEEP_SCRIPT_LINES = True
-POLICY_TEMPO = 1.2                 # 말 빠르기(사장님 11-04 "속도는 1.2"). 원본 뇌전구 엔진 기본은 1.3
+POLICY_TEMPO = 1.1                 # 말 빠르기(사장님 11-04 "속도는 1.2" → 성권으로 들어 보고 "빠르네 1.1로"). 원본 뇌전구 엔진 기본은 1.3
+
+# ── 감정 = 나레 '보통 1.2', 펀치 컷 '톤업 1.2' — 사장님 11-04 "모든 나래에 보통을 기본값으로 1.2로 하고 7 14 15는 톤업"
+#   (도서관 편 7·14·15 = 대본 역할 PUNCH). 원본 뇌전구는 전부 화남(펀치 2.0) 그대로.
+POLICY_EMOTION = {"HOOK": None, "NARR": ("normal", 1.2), "CHAR": None, "PUNCH": ("toneup", 1.2)}
