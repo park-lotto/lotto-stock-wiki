@@ -1790,6 +1790,14 @@ def _c_render(W, d):
         #   다시 만들기도 받지 않아 박힌 글자가 그대로 남았다(11-03 강병주: bg_take 를 손으로 불러야 지워짐). 판단 주인 = vmake_clean.bg_take
         tk = c_clean_take(W, {"version": v, "wait": 0})
         sys.stderr.write(f"[다시 만들기] 뒤 지우기 결과 {tk.get('state')}\n")
+        if tk.get("state") == "done" and not tk.get("error") and tk.get("done"):
+            # 지운 구간의 흐림도 뺀다 — 안 빼면 지운 원본 위에 흐림 띠를 다시 덮는다(11-04 강병주 #5656·#5864). 판단 주인 = rules.blur_minus_spans(flow.f_bg_got 과 같은 함수)
+            mp = W / "doc" / v / "재료.json"
+            M = jload(mp)
+            nb = RU.blur_minus_spans(M, tk["done"])
+            if nb:
+                jsave(mp, M)
+                sys.stderr.write(f"[다시 만들기] 지운 구간의 흐림 {nb}칸 뺌\n")
     try:
         with _Alive(W, "영상 만들기"):
             info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
