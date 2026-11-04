@@ -32,6 +32,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--url"); ap.add_argument("--text-file")
     ap.add_argument("--workdir", required=True)
+    ap.add_argument("--preset", default=None, help="채널 규격 폴더(channel_presets/<이름>). 기본 brainbulb, 우리 겉모습 = brainbulb_orange(관제 322)")
     ap.add_argument("--voice", default=None, help="전 역할 같은 목소리(tc_…). 기본은 역할별 3명(spec.POLICY_VOICES)")
     ap.add_argument("--voice-narr", default=None); ap.add_argument("--voice-char", default=None); ap.add_argument("--voice-punch", default=None)
     ap.add_argument("--tempo", type=float, default=1.3)    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 외부 사례 7.4는 여성 목소리라 더 빨리 들린다
@@ -68,7 +69,8 @@ def main(argv=None):
                          llm=providers.script_llm(a.model, which=a.script_llm),
                          tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
                          sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg,
-                         reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer())
+                         reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer(),
+                         channel=a.preset)
     if r["status"] != "ok":
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:1500])
         return 1
