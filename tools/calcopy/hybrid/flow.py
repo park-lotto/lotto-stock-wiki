@@ -1436,7 +1436,18 @@ def ph_task_got(st, m, rp, u):
             st["log"].append(f"제작자가 앞 단계로: {to}")
             st["tries"].pop(to, None)
             st.get("redo_hist", {}).pop(to, None)
-            return {"goto": to}
+            if _fmt(st) == "PC제작형":      # 형식이 처리기를 따로 쓴다 — 단계 → 그 형식 처리기(flow_pm.task_goto, 11-04 KeyError 'script')
+                got = _PM.task_goto(st, "back", to)
+                if got:
+                    return got
+            else:
+                return {"goto": to}
+    if act in ("waive", "submit") and _fmt(st) == "PC제작형":       # PC 처리기로(보통 라인 render·check 처리기는 st['script'] 전제)
+        got = _PM.task_goto(st, act, t.get("stage") or "")
+        if got:
+            st["log"].append(f"제작자 과제 답 {act} → PC 처리기 {got.get('goto') or 'done'}")
+            return got
+        act = "end"
     if act == "submit":          # 직접 만든 결과 — 서버는 결과만 판정한다(11-02 C안)
         st["log"].append("제작자가 직접 만든 결과 제출: " + str(a.get("note") or "")[:200])
         st["auto"] = None

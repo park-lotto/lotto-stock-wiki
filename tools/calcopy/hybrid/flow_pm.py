@@ -366,7 +366,7 @@ def p_plan_eye_got(st, m, rp, u):
     probs = [str(x) for x in a.get("problems") or []]
     if a.get("ok") is True and not probs and len(a.get("cuts") or []) >= 3:
         st["log"].append("계획 통과 + 렌더 전 눈 확인 통과 → 완성(렌더 한 번)")
-        return {"do": [{"id": "pm", "cmd": "pm", "mode": "make", "preset": _rel_preset(st)}], "then": "p_make_got"}
+        return p_make(st, m, rp, u)
     if len(a.get("cuts") or []) < 3 and not probs:
         probs = ["렌더 전 눈 확인 증거 부족(컷마다 본 것을 적는다)"]
     return _plan_fix(st, ["렌더 전 눈 확인: " + x for x in probs], (st.get("pm_crop_sheets") or []) + (st.get("pm_plan_sheets") or [])[:1])
@@ -377,6 +377,30 @@ EYE = """너는 PC 제작 담당처럼 완성본 1초 시트를 눈으로 확인
 본다: 남의 박힌 글자·로고가 화면에 남았나 · 제품이 칸 가장자리로 밀렸나 · 대사 줄(화자) 장면이 말과 맞나 · 같은 장면 반복 · 끝 멈춤.
 대본: {lines}
 답: {{"ok": true/false, "title_seen": "화면 제목 글", "scenes": [{{"t": 초, "seen": "보인 것"}}], "problems": ["행 번호·무엇"]}}"""
+
+
+def p_make(st, m, rp, u):
+    """만들기(굽기·검사 = 회원 PC c_pm → preset_make) 한 번 — 눈 확인 통과 뒤, 제작자 과제 답(back·waive) 뒤."""
+    return {"do": [{"id": "pm", "cmd": "pm", "mode": "make", "preset": _rel_preset(st)}], "then": "p_make_got"}
+
+
+TASK_BACK = {"script": "p_script", "plan": "p_rows", "render": "p_make", "check": "p_make"}
+
+
+def task_goto(st, act: str, stage: str) -> dict | None:
+    """(판단 주인 — PC제작형 제작자 과제 답 back·waive·submit → PC 처리기) 단계 이름은 STAGES 의 key.
+    보통 라인 처리기(f_render·_fix_review — st['script'] 전제)로 보내지 않는다(11-04 회원 시험: waive → goto 'render' → KeyError 'script' → http_500 영영).
+    PC 관문은 넘기기로 건너지 않는다(preset_gates '우회 없음') — waive 는 남은 것을 경고로 적고 만들기를 한 번 더. None = 이 답으로는 못 이어 감(멈춤 안내)."""
+    if act == "back":
+        return {"goto": TASK_BACK[stage]} if stage in TASK_BACK else None
+    if act == "waive" and stage in ("plan", "render", "check"):
+        st.setdefault("warn", []).append({"stage": stage, "causes": ["제작자 권고 넘기기"], "why": str((st.get("_task") or {}).get("detail") or "")[:300]})
+        r = st.get("pm_final") or {}
+        if stage == "check" and r.get("final"):
+            return {"done": {"video": r["final"], "title": st["pm_script"].get("desktop_title") or "", "auto_ok": not st.get("pm_b_fails"), "look_ok": False,
+                             "look_left": list(st.get("pm_b_fails") or [])[:6] or ["마지막 확인을 끝까지 못 했어요"], "note": "확인에서 남은 것 있음"}}
+        return {"goto": "p_make"}
+    return None          # submit(직접 만든 결과)·대본 넘기기 — PC 라인은 판정할 길이 없다
 
 
 def p_make_got(st, m, rp, u):
@@ -411,6 +435,6 @@ def p_eye_got(st, m, rp, u):
 
 PHASES = {"bench": p_bench, "bench_got": p_bench_got, "p_topic_got": p_topic_got, "p_research_got": p_research_got, "material_dl": p_material_dl,
           "p_script": p_script, "p_script_got": p_script_got, "p_memes_got": p_memes_got, "p_rows": p_rows, "p_rows_got": p_rows_got,
-          "p_plan_got": p_plan_got, "p_plan_eye_got": p_plan_eye_got, "p_make_got": p_make_got, "p_eye_got": p_eye_got}
+          "p_plan_got": p_plan_got, "p_plan_eye_got": p_plan_eye_got, "p_make": p_make, "p_make_got": p_make_got, "p_eye_got": p_eye_got}
 PHASE_STAGE = {"p_topic_got": "bench", "p_research_got": "research", "material_dl": "material", "p_script": "script", "p_script_got": "script",
-               "p_memes_got": "sign", "p_rows": "plan", "p_rows_got": "plan", "p_plan_got": "plan", "p_plan_eye_got": "plan", "p_make_got": "render", "p_eye_got": "check"}
+               "p_memes_got": "sign", "p_rows": "plan", "p_rows_got": "plan", "p_plan_got": "plan", "p_plan_eye_got": "plan", "p_make": "render", "p_make_got": "render", "p_eye_got": "check"}
