@@ -145,12 +145,22 @@ def claude_llm(model=None, *, bin_path="claude", timeout=300, log=print):
 
     model = model or spec.SCRIPT_CLAUDE_MODEL
 
+    import tempfile
+
+    # ★프로젝트 폴더 밖 빈 폴더에서 띄운다(관제 322, 11-04 실측): 프로젝트 안에서 띄우면 그 폴더의 훅
+    #   (대시보드 '종료 전 기록하라' Stop 훅 등)까지 돌아 답 앞에 «대시보드 기록 명령을 실행했고…» 같은 말이 붙고,
+    #   그림 프롬프트 단계가 'JSON 객체가 없다'로 멈췄다. 숏템 회원 플러그인 깨우기(wake.js)도 -p 를 붙잡으니 끈다
+    #   (11-03 버퍼 매일예약 0건과 같은 원인, SHORTEM_WAKE_LIFE_MS=0).
+    run_dir = os.path.join(tempfile.gettempdir(), "channelkit_claude")
+    os.makedirs(run_dir, exist_ok=True)
+    env = dict(os.environ, SHORTEM_WAKE_LIFE_MS="0")
+
     def call(prompt):
         argv = [bin_path, "--print", "--permission-mode", "bypassPermissions"]
         if model:
             argv += ["--model", model]
         r = subprocess.run(argv, input=prompt, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=timeout)
+                           encoding="utf-8", errors="replace", timeout=timeout, cwd=run_dir, env=env)
         if r.returncode != 0:
             raise RuntimeError(f"claude {r.returncode}: {(r.stderr or '')[:300]}")
         out = (r.stdout or "").strip()
