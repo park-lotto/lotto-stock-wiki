@@ -52,7 +52,10 @@ def plan(now=None):
         raw = [v for v in vs if v not in ready]
         need = max(0, len(today) - len(ready))
         out.append({"folder": f, "inpock": bp._inpock_acct(f), "free_slots_today": [_kst(u) for u in today], "ready": ready,
-                    "prepare": random.sample(raw, min(need, len(raw))), "left_after": len(raw) - min(need, len(raw))})
+                    "prepare": random.sample(raw, min(need, len(raw))), "left_after": len(raw) - min(need, len(raw)),
+                    # 한글 이름 영상 — post 가 안 올린다. 준비할 때 먼저 rename 한다(사장님 11-04)
+                    "rename_first": [v for v in vs if bp._korean_name(v)],
+                    "next_no": bp._next_no(d)})
     return out
 
 

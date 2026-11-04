@@ -97,6 +97,47 @@ def _videos(d):
     return sorted(f for f in os.listdir(d) if f.lower().endswith(".mp4") and os.path.isfile(os.path.join(d, f)))
 
 
+NAME_RE = re.compile(r"^\d{2}_[a-z0-9]+(?:_[a-z0-9]+)*\.mp4$")   # production_start §0-2: NN_쉬운영어_소문자(_MMDD_HHMM·_confirm)
+
+
+def _korean_name(v):
+    """한글(ASCII 밖 글자)이 든 파일 이름인가 — 올리기 전에 영어 규칙 이름으로 바꿔야 한다(사장님 11-04).
+    ASCII 만 있으면 규칙 꼴이 아니어도 막지 않는다(볼케이노 moacco_… 등은 예외, 사장님 11-04)."""
+    return any(ord(c) > 127 for c in v)
+
+
+def _next_no(d):
+    """그 계정 폴더(꼭대기·예약·완료)에 쓰인 NN_ 번호의 다음 — 같은 번호 두 번 금지."""
+    nums = []
+    for sub in ("", RESERVED, DONE):
+        p = os.path.join(d, sub)
+        if os.path.isdir(p):
+            nums += [int(m.group(1)) for f in os.listdir(p) for m in [re.match(r"^(\d{2})_", f)] if m]
+    return max(nums, default=0) + 1
+
+
+def cmd_rename(a):
+    """한글 이름 영상을 영어 규칙 이름으로 바꾼다(같은 이름 .txt 도 같이). 번호는 그 폴더 다음 번호를 자동으로 붙인다.
+    py tools/buffer_post.py rename --folder "<계정폴더>" "<지금 이름.mp4>" <english_words>   예) shrimp_crackers → 08_shrimp_crackers.mp4"""
+    (n, d, _key), = list(_folders(a.folder))
+    src = os.path.join(d, a.old)
+    if not os.path.isfile(src):
+        raise SystemExit(f"[{n}] 파일 없음: {a.old}")
+    words = re.sub(r"\.mp4$", "", a.words.strip().lower())
+    new = f"{_next_no(d):02d}_{words}.mp4"
+    if not NAME_RE.match(new):
+        raise SystemExit(f"[{n}] 규칙 밖 이름: {new} — 쉬운 영어 소문자·숫자·밑줄만(예 shrimp_crackers, 얜샷템은 연예인 로마자 먼저)")
+    dst = os.path.join(d, new)
+    old_txt, new_txt = os.path.splitext(src)[0] + ".txt", os.path.splitext(dst)[0] + ".txt"
+    for p in (dst, new_txt):
+        if os.path.exists(p):
+            raise SystemExit(f"[{n}] 이미 있음: {os.path.basename(p)}")
+    os.rename(src, dst)
+    if os.path.isfile(old_txt):
+        os.rename(old_txt, new_txt)
+    print(f"[{n}] {a.old} → {new}" + (" (+ .txt)" if os.path.isfile(new_txt) else ""))
+
+
 def _caption(d, mp4):
     p = os.path.join(d, os.path.splitext(mp4)[0] + ".txt")
     if not os.path.isfile(p):
@@ -471,6 +512,9 @@ def cmd_post(a):
         # ① 올릴 수 있는 영상만 먼저 고른다 — 준비 안 된 영상이 칸을 차지하면 준비된 영상이 다음 날로 밀린다(10-29)
         ready = []
         for v in vs:
+            if _korean_name(v):
+                print(f"[{n}] {v}: 한글 파일 이름 — 건너뜀(먼저 rename 으로 영어 규칙 이름 NN_영어_소문자.mp4 로 바꾼다, 사장님 11-04)")
+                continue
             cap, cap_path = _caption(d, v)
             if not cap:
                 print(f"[{n}] {v}: .txt 없음 — 건너뜀(첫 줄 제목, 나머지 설명으로 같은 이름 .txt 를 써 두라)")
@@ -585,8 +629,13 @@ def main(argv=None):
             s.add_argument("--privacy", default="public", choices=["public", "unlisted", "private"])
         if name == "test":
             s.add_argument("--file", help="시험용 mp4(없으면 폴더 첫 영상)")
+    r = sub.add_parser("rename", help="한글 이름 영상 → NN_영어 규칙 이름(.txt 같이)")
+    r.add_argument("--folder", required=True)
+    r.add_argument("old")
+    r.add_argument("words", help="번호 뺀 영어 부분, 예 shrimp_crackers")
     a = p.parse_args(argv)
-    return {"scan": cmd_scan, "post": cmd_post, "test": cmd_test, "cleanup": cmd_cleanup}[a.cmd](a)
+    return {"scan": cmd_scan, "post": cmd_post, "test": cmd_test, "cleanup": cmd_cleanup,
+            "rename": cmd_rename}[a.cmd](a)
 
 
 if __name__ == "__main__":

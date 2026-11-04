@@ -5,6 +5,13 @@
 {plan}
 - `prepare` 에 있는 영상만 준비한다. `ready` 는 이미 준비됨. 칸 시각·무작위 선택은 buffer_post 가 다시 정한다.
 
+## 0. 한글 파일 이름부터 영어로 (사장님 11-04 — 버퍼에 올리기 전 필수)
+- 계획의 `rename_first` 에 있는 영상(ready·prepare 에 든 것 포함)은 1번 장면 모음으로 내용을 본 뒤 이름부터 바꾼다:
+  `py tools/buffer_post.py rename --folder "<folder>" "<지금 이름.mp4>" <english_words>`
+  - english_words = 쉬운 영어 소문자, 단어 사이 밑줄(예 shrimp_crackers). 얜샷템은 연예인 이름 로마자를 앞에(예 choihwajung_grandpa_seaweed).
+  - 번호 NN_ 은 도구가 그 폴더 다음 번호로 붙인다. 같은 이름 .txt 도 같이 바뀐다. `칼카피_`·채널명·`1차/v2` 는 넣지 않는다.
+- 바꾼 뒤에는 새 이름으로 아래 준비·예약을 한다. 한글 이름 그대로면 post 가 건너뛴다.
+
 ## 영상 하나 준비 (prepare 의 각 영상)
 드라이브 폴더 = {drive}\<folder>\<영상>
 1. 장면 모음: 파이썬 subprocess 로 ffmpeg — 길이/12 간격 12장, 가로 200, 6x2 타일 한 장(jpg)을 {report}.d\ 에 만들고 Read 로 본다.
