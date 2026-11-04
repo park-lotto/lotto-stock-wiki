@@ -29,6 +29,7 @@ import tempfile
 from pathlib import Path
 
 from tools.calcopy.hybrid import rules as RU
+from tools.calcopy.hybrid.common import orig_span_over
 
 # ── 단계(회원에게 보이는 한 줄) — 제작순서 00~13 ──────────────────────────────
 STAGES = [("setup", "준비 확인"), ("bench", "영상 확인"), ("origin", "원본 영상 찾기"), ("product", "제품 확인"), ("research", "자료 조사"),
@@ -1898,8 +1899,8 @@ def ph_research_check(st, m, rp, u):
         bad.append("원음 구간(spans)이 없다")
     for s in spans:
         try:
-            if not (0 <= float(s["a"]) < float(s["b"]) <= dur + 0.5):
-                bad.append(f"원음 구간 {s.get('tag')} {s.get('a')}~{s.get('b')} 가 받은 파일 길이({dur:.1f}초) 밖")
+            if not (0 <= float(s["a"]) < float(s["b"])) or orig_span_over(float(s["b"]), _origin_file(st)):
+                bad.append(f"원음 구간 {s.get('tag')} {s.get('a')}~{s.get('b')} 가 받은 파일 화면 끝({dur:.1f}초 파일) 밖")
         except (KeyError, TypeError, ValueError):
             bad.append(f"원음 구간 꼴이 틀렸다: {s}")
     for f in r.get("facts") or []:
@@ -2252,6 +2253,27 @@ def _channel_copy(v: str, S: dict, M: dict) -> list:
     return bench_distance.check_obj(slug, S, M)["fails"]
 
 
+def orig_end_problems(st: dict, S: dict) -> list:
+    """대본 원음 줄 끝이 원본 화면 끝을 넘으면 대본 단계에서 반려(#4089 박영상 — 계획까지 가서 cut_len 3번 연속 멈춤).
+    판단 = common.orig_span_over(계획 render_bench.src_left 와 같은 화면 끝). 원음 컷은 입 맞춤이라 엔진이 옮기거나 늘리지 못한다 — 대본에서 줄여야 한다."""
+    files = {f.get("name"): f for f in (st.get("origin") or {}).get("files") or []}
+    out = []
+    for L in S.get("lines") or []:
+        if L.get("kind") != "orig" or str(L.get("src") or "") not in files:
+            continue
+        try:
+            sp = [list(x) for x in (L.get("spans") or [L["span"]])]
+            b = max(float(x[1]) for x in sp)
+        except (KeyError, TypeError, ValueError, IndexError):
+            continue
+        f = files[str(L["src"])]
+        over = orig_span_over(b, f)
+        if over:
+            end = round(b - over, 2)
+            out.append(f"원음 줄 {L.get('id')} 끝 {b}초가 원본 {L['src']} 화면 끝({end}초)을 {over}초 넘는다 — 그 줄 spans 끝을 {end}초 이하로 줄이고 caps_rel 도 맞춰라(원음 컷은 엔진이 늘리지 못한다)")
+    return out
+
+
 def audit_script(st: dict, S: dict, M: dict) -> dict:
     """서버 판정 — 대본 검사(script_audit — 자막↔목소리·줄 끝 부호·영문 포함) + 제목 색 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
     from tools.calcopy.hybrid import script_audit
@@ -2284,7 +2306,8 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "subject_scene": subject_scene_problems(st, S, M),
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {}),
              "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []) + _channel_copy(v, S, M),
-             "alt_tail": RU.alt_tail_problems(S, _style(v).get("cps_target") or 7.0) if _alt_photo_fallback(st) else []}
+             "alt_tail": RU.alt_tail_problems(S, _style(v).get("cps_target") or 7.0) if _alt_photo_fallback(st) else [],
+             "orig_end": orig_end_problems(st, S)}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
         extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(" +
@@ -4394,6 +4417,7 @@ def f_research_check(st, m, rp, u):
         if h not in md:
             bad.append(f"조사.md 에 '{h}' 절이 없다")
     durs = {f["name"]: float(f.get("dur") or 1e9) for f in st["origin"]["files"]}
+    files_by = {f["name"]: f for f in st["origin"]["files"]}
     spans = [s for s in r.get("spans") or [] if isinstance(s, dict)]
     if not spans and not _no_speech(st):
         bad.append("원음 구간(spans)이 없다")
@@ -4403,7 +4427,7 @@ def f_research_check(st, m, rp, u):
             bad.append(f"원음 구간 {s.get('tag')} 의 src '{src}' 가 받은 원본 파일이 아니다({list(durs)})")
             continue
         try:
-            if not (0 <= float(s["a"]) < float(s["b"]) <= durs[src] + 0.5):
+            if not (0 <= float(s["a"]) < float(s["b"])) or orig_span_over(float(s["b"]), files_by[src]):
                 bad.append(f"원음 구간 {s.get('tag')} {s.get('a')}~{s.get('b')} 가 {src} 길이({durs[src]:.1f}초) 밖")
         except (KeyError, TypeError, ValueError):
             bad.append(f"원음 구간 꼴이 틀렸다: {s}")

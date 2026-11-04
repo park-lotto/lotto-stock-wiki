@@ -285,8 +285,10 @@ def asr_cross(path: Path) -> dict:
 
 def dims(p: Path) -> dict:
     from tools.calcopy.hybrid.common import probe
+    from tools.calcopy.hybrid.common import video_dur
     w, h, d = probe(p)
-    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2)}
+    vd = video_dur(p) if p.suffix.lower() in (".mp4", ".mkv", ".webm", ".mov") else 0.0
+    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2), **({"vdur": round(vd, 3)} if vd else {})}   # vdur = 화면 끝(원음 구간 검사 common.orig_span_over)
 
 
 def vtt_words(p: Path) -> list:

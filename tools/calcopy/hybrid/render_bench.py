@@ -1256,10 +1256,8 @@ def src_left(src: Path, ss: float) -> float | None:
         return None
     k = str(src)
     if k not in _src_len:
-        out = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration:format=duration", "-of", "json", src]).stdout
-        j = json.loads(out)
-        d = (j.get("streams") or [{}])[0].get("duration") or (j.get("format") or {}).get("duration")
-        _src_len[k] = float(d)
+        from tools.calcopy.hybrid.common import video_dur
+        _src_len[k] = video_dur(src)      # 화면 끝 자 = common.video_dur 한 곳(조사·대본 검사 common.orig_span_over 와 같은 끝)
     return round(_src_len[k] - ss - 1 / FPS, 3)
 
 
