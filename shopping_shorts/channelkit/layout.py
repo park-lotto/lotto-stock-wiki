@@ -104,6 +104,10 @@ def layout_groups(groups, fonts_dir=None):
     """groups[{text,color,...}] → 같은 리스트에 lines를 채운 새 리스트 + 실패 목록. 원본은 손대지 않는다."""
     out, fails = [], []
     for i, g in enumerate(groups):
+        given = g.get("lines") if getattr(spec, "POLICY_KEEP_SCRIPT_LINES", False) else None
+        if given and _given_ok(g["color"], g["text"], given, fonts_dir):
+            out.append(dict(g, lines=list(given)))      # 사장님이 컨펌한 줄나눔 그대로(관제 322)
+            continue
         lines, info = break_lines(g["color"], g["text"], fonts_dir)
         ng = dict(g)
         if lines is None:
@@ -113,3 +117,11 @@ def layout_groups(groups, fonts_dir=None):
             ng["lines"] = lines
         out.append(ng)
     return out, fails
+
+
+def _given_ok(style, text, lines, fonts_dir=None):
+    """확정 대본의 줄: 글자는 그대로(띄어쓰기만 다름 허용)·줄 수 한도 안·줄마다 108% 등장 순간까지 화면 안."""
+    if "".join(lines).replace(" ", "") != text.replace(" ", "") or not (1 <= len(lines) <= max_lines()):
+        return False
+    eg = measure.edges([(style, ln, 108) for ln in lines], fonts_dir)
+    return all(spec.BODY_X + l >= 0 and spec.BODY_X + r <= spec.CANVAS_W for l, r in eg)

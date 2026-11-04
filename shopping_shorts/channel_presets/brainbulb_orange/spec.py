@@ -67,3 +67,14 @@ def pick_meme_videos(emotions, seed):
     """밈 칸 감정들 → [{src, start, key, what}] (memes.pick). 주인 = brainbulb_orange/memes.py"""
     from . import memes
     return memes.pick(emotions, seed)
+
+# ── 목소리 = 타입캐스트 '제롬'(Jerome, 젊은 남성) 한 명 — 사장님 11-04 "기본값을 바꿀건데 … 타입캐스트 제롬" ─────
+#   ID 는 타입캐스트 /v2/voices 목록(631개)에서 voice_name 'Jerome' 으로 찾음. ssfm-v30 감정 지원(angry·happy·normal·sad·tonedown·toneup·whisper)
+#   감정표(POLICY_EMOTION — 전부 화남, 펀치 강하게)는 원본 그대로 물려받는다.
+VOICE_JEROME = "tc_65a0e1d1d7012c484fe4bfc7"
+POLICY_VOICES = {"NARR": VOICE_JEROME, "CHAR": VOICE_JEROME, "PUNCH": VOICE_JEROME}
+
+# ── 줄나눔 = 확정 대본의 줄을 그대로(사장님이 컨펌한 줄나눔) — 화면 폭 안일 때만. 없으면 엔진이 나눈다 ─────
+#   11-04 시험판: 엔진이 줄 수를 줄이려 «미국 의회도서관도 일반 / 테이프는…» 처럼 낱말을 어색하게 끊었다.
+POLICY_KEEP_SCRIPT_LINES = True
+POLICY_TEMPO = 1.2                 # 말 빠르기(사장님 11-04 "속도는 1.2"). 원본 뇌전구 엔진 기본은 1.3

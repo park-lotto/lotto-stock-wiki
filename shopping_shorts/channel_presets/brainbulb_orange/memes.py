@@ -11,6 +11,7 @@
 import hashlib
 import json
 import os
+import subprocess
 
 PACK_DIR = os.environ.get("BRAINBULB_MEME_PACK") or os.path.join(os.path.expanduser("~"), "Desktop", "볼케이노", "밈팩")
 
@@ -22,7 +23,8 @@ EMOTION_WORDS = {"경악/충격": ["놀란", "놀라", "충격", "경악", "눈�
 ANIMALS = ["고양이", "강아지", "개가", "개 ", "원숭이", "침팬지", "고릴라", "햄스터", "앵무", "오리", "물개", "너구리",
            "수달", "펭귄", "곰", "라쿤", "염소", "토끼", "다람쥐", "여우", "판다", "라마", "알파카", "부엉", "올빼미"]
 MOODS = ["놀", "웃", "장난", "메롱", "능글", "의기양양", "씩", "곁눈", "한심", "황당", "멍하", "째려", "노려", "당황", "충격"]
-PEOPLE = ["사람", "남자", "여자", "아이", "아기", "소녀", "소년", "배우", "가수"]      # 실존 인물 짤 막기(10-28 '토끼' 낱말로 아이돌 영상이 뽑혔다)
+PEOPLE = ["사람", "남자", "여자", "아이", "아기", "소녀", "소년", "배우", "가수"]
+DRAWN = ["캐릭터", "만화", "일러스트", "애니", "그림", "이모티콘", "인형"]   # 진짜 동물만(11-04 시험판: «분홍색 토끼 캐릭터» 그림 짤이 뽑혔다)      # 실존 인물 짤 막기(10-28 '토끼' 낱말로 아이돌 영상이 뽑혔다)
 
 
 def candidates(pack_dir=None):
@@ -36,10 +38,29 @@ def candidates(pack_dir=None):
         w = v.get("what", "")
         if k.startswith("pp_") or not v.get("usable") or not os.path.exists(os.path.join(pack_dir, k + ".mp4")):
             continue
-        if any(a in w for a in ANIMALS) and not any(p in w for p in PEOPLE):
+        if any(a in w for a in ANIMALS) and not any(p in w for p in PEOPLE) and not any(x in w for x in DRAWN):
             out.append((k, v, sum(m in w for m in MOODS)))
     out.sort(key=lambda x: (-x[2], x[0]))
     return out
+
+
+GREEN_MAX = 0.20     # 화면의 20% 넘게 크로마키 초록이면 빼다(11-04 시험판: 우는 고양이 fm_crycat 이 초록 배경째 나옴)
+
+
+def green_ratio(mp4, at=0.5):
+    """영상 한 장면(at 초)의 크로마키 초록 비율 0~1 — 32×32로 줄여 G가 R·B보다 60 넘게 밝은 화소를 센다. 못 재면 0."""
+    try:
+        r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{at:.2f}", "-i", mp4, "-frames:v", "1", "-vf", "scale=32:32",
+                            "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, timeout=30, stdin=subprocess.DEVNULL)
+        px = r.stdout
+    except Exception:  # noqa: BLE001 — 재기 실패는 '초록 아님'으로(밈 칸이 비는 쪽이 더 나쁘다) — 대신 로그
+        print(f"[memes] 초록 검사 실패(통과 처리): {mp4}")
+        return 0.0
+    n = len(px) // 3
+    if not n:
+        return 0.0
+    g = sum(1 for i in range(n) if px[3 * i + 1] > 120 and px[3 * i + 1] > px[3 * i] + 60 and px[3 * i + 1] > px[3 * i + 2] + 60)
+    return g / n
 
 
 def pick(emotions, seed, pack_dir=None):
@@ -56,8 +77,14 @@ def pick(emotions, seed, pack_dir=None):
         pool = [c for c in cands if c[0] not in used and any(w in c[1].get("what", "") for w in words)]
         if not pool:
             pool = [c for c in cands if c[0] not in used and c[2] > 0] or [c for c in cands if c[0] not in used] or cands
-        c = sorted(pool, key=key)[0]
-        used.add(c[0])
+        c = None
+        for cand in sorted(pool, key=key):            # 초록 배경(크로마키) 영상은 건너뛴다
+            used.add(cand[0])
+            if green_ratio(os.path.join(pack_dir, cand[0] + ".mp4"), float(cand[1].get("start") or 0) + 0.5) <= GREEN_MAX:
+                c = cand
+                break
+        if c is None:
+            continue
         out.append({"src": os.path.join(pack_dir, c[0] + ".mp4"), "start": float(c[1].get("start") or 0.0),
                     "key": c[0], "what": c[1].get("what", "")})
     return out

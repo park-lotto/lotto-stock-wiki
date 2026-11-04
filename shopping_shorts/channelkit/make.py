@@ -17,6 +17,14 @@ from . import pipeline, providers
 DEFAULT_VOICE = "tc_6059dad0b83880769a50502f"      # Typecast 'Changsu' = 박창수 (사장님 지정 2026-09-12). 외부 사례는 여성 나레(228Hz)+남성 PUNCH(104Hz) 2인 구성(실측)
 
 
+def _tempo(a):
+    """말 빠르기 — 명령줄 > 채널 spec.POLICY_TEMPO > 1.3(원본 뇌전구: 사장님 \"템포 더 빠르게\")."""
+    if a.tempo:
+        return a.tempo
+    from . import spec
+    return float(getattr(spec, "POLICY_TEMPO", 1.3) or 1.3)
+
+
 def _voices(a):
     if a.voice:
         return a.voice
@@ -35,7 +43,7 @@ def main(argv=None):
     ap.add_argument("--preset", default=None, help="채널 규격 폴더(channel_presets/<이름>). 기본 brainbulb, 우리 겉모습 = brainbulb_orange(관제 322)")
     ap.add_argument("--voice", default=None, help="전 역할 같은 목소리(tc_…). 기본은 역할별 3명(spec.POLICY_VOICES)")
     ap.add_argument("--voice-narr", default=None); ap.add_argument("--voice-char", default=None); ap.add_argument("--voice-punch", default=None)
-    ap.add_argument("--tempo", type=float, default=1.3)    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 외부 사례 7.4는 여성 목소리라 더 빨리 들린다
+    ap.add_argument("--tempo", type=float, default=None, help="말 빠르기. 기본 = 채널 spec.POLICY_TEMPO(없으면 1.3)")    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 외부 사례 7.4는 여성 목소리라 더 빨리 들린다
     _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 외부 사례 팩(저작권 미확인 — 커밋 안 함)
     ap.add_argument("--sfx-dir", default=os.path.join(_vol, "sfx_norm") if os.path.isdir(os.path.join(_vol, "sfx_norm")) else None)
     ap.add_argument("--meme-dir", default=os.path.join(_vol, "pepe", "fm") if os.path.isdir(os.path.join(_vol, "pepe", "fm")) else None)
@@ -50,6 +58,9 @@ def main(argv=None):
     ap.add_argument("--from", dest="from_step", default=None, help="이 단계부터 다시 (예: voice, subtitle)")
     ap.add_argument("--no-review", action="store_true", help="사진 검수 생략(모델 호출을 아낀다)")
     a = ap.parse_args(argv)
+    if a.preset:
+        from . import registry
+        registry.use(a.preset)      # ★목소리 기본값(_voices → spec.POLICY_VOICES)을 읽기 전에 채널부터 정한다
     if a.from_step:
         pipeline.reset_to(a.workdir, a.from_step)
         print(f"[make] {a.from_step} 단계부터 다시")
@@ -76,7 +87,7 @@ def main(argv=None):
             return _fixed if "숏폼 대본 작가" in prompt_text[:200] else _base(prompt_text)   # prompt.build 첫 줄
     r = pipeline.run_all(a.workdir, source_text=text,
                          llm=llm,
-                         tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
+                         tts=providers.typecast_synth(_voices(a), tempo=_tempo(a)), imagegen=imagegen,
                          sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg,
                          reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer(),
                          channel=a.preset)

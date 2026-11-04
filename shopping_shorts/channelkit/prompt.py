@@ -207,7 +207,8 @@ def parse(raw):
         if k not in d:
             raise ValueError(f"대본에 '{k}'가 없습니다")
     for g in d["groups"]:
-        g.pop("lines", None)          # 줄나눔은 우리가 한다 — LLM lines는 버린다(외부 사례와 같다)
+        if not getattr(spec, "POLICY_KEEP_SCRIPT_LINES", False):
+            g.pop("lines", None)      # 줄나눔은 우리가 한다 — LLM lines는 버린다(외부 사례와 같다). 확정 대본 채널은 layout 이 검사 후 그대로 쓴다
     return d
 
 
