@@ -56,7 +56,9 @@ check("③ 바꾼 뒤엔 올라감", "08_shrimp_crackers.mp4" in [r["file"] for 
 
 # ── 날짜·시간은 빼고(사장님 11-04 "예약 올릴 때 고치는 거면 마지막에 날짜와 시간은 빼고") ──
 check("⑥ _drop_stamp: 끝 날짜·시간 뗌", bp._drop_stamp("06_pepero_1027_1508.mp4"), "06_pepero.mp4")
-check("⑥ _drop_stamp: _confirm 은 남김", bp._drop_stamp("02_cushion_1024_0014_confirm.mp4"), "02_cushion_confirm.mp4")
+check("⑥ _drop_stamp: _confirm 도 뗌(사장님 11-04)", bp._drop_stamp("02_cushion_1024_0014_confirm.mp4"), "02_cushion.mp4")
+check("⑥ _drop_stamp: confirm 만 붙어도 뗌", bp._drop_stamp("11_cvs_4dollar_confirm.mp4"), "11_cvs_4dollar.mp4")
+check("⑥ _drop_stamp: 떼면 이름이 없어지면 그대로", bp._drop_stamp("06_confirm.mp4"), "06_confirm.mp4")
 check("⑥ _drop_stamp: 제품 숫자는 그대로", bp._drop_stamp("11_cvs_4dollar.mp4"), "11_cvs_4dollar.mp4")
 open(os.path.join(d, "어묵 꼬치.mp4"), "wb").write(b"E" * 1000)
 bp.main(["rename", "--folder", F, "어묵 꼬치.mp4", "fish_cake_skewer_1104_1530"])

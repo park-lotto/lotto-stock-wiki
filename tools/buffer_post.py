@@ -109,13 +109,15 @@ def _needs_rename(v):
     return not (NAME_RE.match(v) or v.startswith(NAME_EXEMPT))
 
 
-_STAMP = re.compile(r"(?:_\d{4}_\d{4})+(?=(?:_confirm)?\.mp4$|(?:_confirm)?$)")   # 끝의 _MMDD_HHMM(만든 시각)
+_STAMP = re.compile(r"(?:_\d{4}_\d{4}|_confirm)+(?=(?:\.mp4)?$)")   # 끝의 _MMDD_HHMM(만든 시각)·_confirm(확정 표시)
 
 
 def _drop_stamp(name):
-    """끝의 날짜·시간(_MMDD_HHMM)을 뗀다 — 버퍼에 올리는 이름엔 넣지 않는다(사장님 11-04).
-    '06_pepero_1027_1508.mp4' → '06_pepero.mp4' · '02_cushion_1024_0014_confirm.mp4' → '02_cushion_confirm.mp4'."""
-    return _STAMP.sub("", name)
+    """끝의 날짜·시간(_MMDD_HHMM)과 _confirm 을 뗀다 — 버퍼에 올리는 이름엔 넣지 않는다(사장님 11-04 "날짜와 시간은 빼고" · "confirm도 빼줘").
+    '06_pepero_1027_1508.mp4' → '06_pepero.mp4' · '02_cushion_1024_0014_confirm.mp4' → '02_cushion.mp4'.
+    떼고 나서 규칙 이름이 안 되면(예 '06_confirm.mp4' → '06.mp4') 그대로 둔다 — 그건 rename 으로 새로 짓는다."""
+    out = _STAMP.sub("", name)
+    return out if NAME_RE.match(out) or not name.endswith(".mp4") else name
 
 
 def _rename_pair(d, old, new):
@@ -534,10 +536,10 @@ def cmd_post(a):
         ready = []
         for v in vs:
             if not _needs_rename(v) and _drop_stamp(v) != v and not v.startswith(NAME_EXEMPT):
-                # 규칙엔 맞는데 끝에 날짜·시간이 붙은 이름 — 떼고 올린다(사장님 11-04). 번호·영어는 그대로라 판단이 필요 없다
+                # 규칙엔 맞는데 끝에 날짜·시간·_confirm 이 붙은 이름 — 떼고 올린다(사장님 11-04). 번호·영어는 그대로라 판단이 필요 없다
                 try:
                     _rename_pair(d, v, _drop_stamp(v))
-                    print(f"[{n}] {v} → {_drop_stamp(v)} (날짜·시간 뗌)")
+                    print(f"[{n}] {v} → {_drop_stamp(v)} (날짜·시간·confirm 뗌)")
                     v = _drop_stamp(v)
                 except RuntimeError as e:
                     print(f"[{n}] {v}: 날짜·시간 떼기 실패({e}) — 건너뜀")
