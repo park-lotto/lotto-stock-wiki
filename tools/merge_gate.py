@@ -86,16 +86,58 @@ def _run(cmd, cwd):
     _priv.mkdir(parents=True, exist_ok=True)
     for _k in ("TMP", "TEMP", "TMPDIR"):
         env[_k] = str(_priv)
+    limit = gate_timeout()
     try:
-        p = subprocess.run(
-            cmd, cwd=str(cwd), capture_output=True, text=True,
-            encoding="utf-8", errors="replace", env=env,
-        )
+        p = subprocess.Popen(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             encoding="utf-8", errors="replace", env=env)
+        try:
+            out, err = p.communicate(timeout=limit)
+            rc = p.returncode
+        except subprocess.TimeoutExpired:
+            # ★관문 시간 한도(관제 318, 11-04): 한도가 없어 시험 하나가 멈추면 병합 줄 전체가 끝없이 멈췄다
+            #   (10-26 1시간 반 · 11-02 1시간 40분 · 11-02 16:36~ 34시간 — 실제 영상 ffmpeg 파이프 교착, 작업자 2개 CPU 0).
+            #   넘으면 그 프로세스 트리(xdist 작업자·ffmpeg 까지)를 끝내고 '관문 시간 초과' 실패 한 줄을 넣는다 → 병합은 거절·라이브 무사·줄은 다음으로.
+            kill_tree(p.pid)
+            try:
+                out, err = p.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                out, err = "", ""
+            rc = 124
+            err = (err or "") + f"\nFAILED GATE_TIMEOUT::merge_gate_{limit}s - 관문 시간 초과: 멈춘 시험이 있어 시험 프로세스를 끝냄(merge_gate.gate_timeout)\n"
     finally:
         # ★만든 곳이 치운다(관제 107): pytest 임시 파일이 이 폴더에 쌓여 한 번에 1.4~2.4GB — 안 지워서 하루 7개(11GB)가
         #   C 를 채워 finish 가 「No space left」로 죽었다(2026-10-03). 락·번호표 형제 폴더(gate_child_<pid>_*)도 함께.
         clean_gate_temp(_os.getpid())
-    return p.returncode, (p.stdout or "") + (p.stderr or "")
+    return rc, (out or "") + (err or "")
+
+
+GATE_TIMEOUT_SEC = 2400      # 관문 한 번(전체 pytest 보통 7~10분)의 한도 — 넘으면 멈춘 것으로 본다. 환경변수 GATE_TIMEOUT_SEC 로 바꾼다
+
+
+def gate_timeout() -> int:
+    """(판단 주인 — 관문 실행 시간 한도) 초."""
+    try:
+        v = int(os.environ.get("GATE_TIMEOUT_SEC") or GATE_TIMEOUT_SEC)
+    except ValueError:
+        v = GATE_TIMEOUT_SEC
+    return max(1, v)
+
+
+def kill_tree(pid: int) -> None:
+    """프로세스와 그 자식 전부(xdist 작업자·ffmpeg) — 윈도는 taskkill /T, 그 밖은 자식부터."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, stdin=subprocess.DEVNULL)
+        return
+    try:
+        out = subprocess.run(["pgrep", "-P", str(pid)], capture_output=True, text=True).stdout.split()
+    except OSError:
+        out = []
+    for c in out:
+        kill_tree(int(c))
+    try:
+        os.kill(pid, 9)
+    except OSError:
+        pass
 
 
 GATE_TEMP_PREFIX = "gate_child_"

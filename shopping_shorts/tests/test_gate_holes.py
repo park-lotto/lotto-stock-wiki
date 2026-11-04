@@ -44,17 +44,19 @@ def test_시험_중에는_전역_락이_아니라_개별_락():
 def test_게이트_자식_pytest는_개별_락_환경을_받는다(tmp_path):
     seen = {}
 
-    def fake_sub_run(cmd, cwd=None, capture_output=None, text=None, encoding=None, errors=None, env=None):
-        seen.update(env or {})
-        class R:
-            returncode, stdout, stderr = 0, "", ""
-        return R()
-    orig = merge_gate.subprocess.run
-    merge_gate.subprocess.run = fake_sub_run
+    class FakePopen:      # 관제 318(11-04): _run 이 시간 한도 때문에 subprocess.run → Popen+communicate 로 바뀌었다
+        def __init__(self, cmd, cwd=None, env=None, **k):
+            seen.update(env or {})
+            self.returncode = 0
+
+        def communicate(self, timeout=None):
+            return "", ""
+    orig = merge_gate.subprocess.Popen
+    merge_gate.subprocess.Popen = FakePopen
     try:
         merge_gate._run(["x"], tmp_path)
     finally:
-        merge_gate.subprocess.run = orig
+        merge_gate.subprocess.Popen = orig
     assert seen.get("TRACK_FINISH_LOCK") and seen.get("TRACK_VIDEO_LOCK"), "게이트가 띄운 pytest 는 개별 락 경로를 받아야 한다"
 
 
