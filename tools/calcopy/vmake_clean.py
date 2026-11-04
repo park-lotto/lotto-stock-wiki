@@ -391,8 +391,11 @@ def cut_piece(f: Path, a: float, b: float, where: Path | None = None) -> Path:
     out = _piece_name(f, a, b)
     if where:
         out = Path(where) / out.name
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
-                    "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], check=True, stdin=subprocess.DEVNULL)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
+                        "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], stdin=subprocess.DEVNULL, capture_output=True)
+    if r.returncode != 0:      # 원문을 남긴다 — 뒤 프로세스(bg_run)는 출력이 버려져 'CalledProcessError' 만 남아 원인을 못 갈랐다(#5298 김유선, 손으로는 재현 안 됨)
+        err = (r.stderr or b"").decode("utf-8", "replace").strip()[-600:]
+        raise RuntimeError(f"조각 자르기 ffmpeg 실패 rc={r.returncode} ffmpeg={shutil.which('ffmpeg')} {f.name}@{a:.2f}-{b:.2f}: {err}")
     return out
 
 
