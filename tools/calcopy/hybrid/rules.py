@@ -467,6 +467,9 @@ def merge_blur(M: dict, blur: dict) -> int:
     return n
 
 
+WHOLE_END = 99999.0     # 통째 흐림의 끝(초) — 렌더 between(t,a,b) 에 그대로 들어간다
+
+
 def blur_minus_spans(M: dict, done: dict) -> int:
     """VMake 로 지운 구간(done = {파일 이름: [[a,b]…]} 원본 초 — vmake_clean.clean_used)의 흐림을 뺀다. 흐림 칸 [x,y,w,h,a,b] 를 지운 구간 밖 조각만 남긴다.
     지우기 전·실패 구간은 그대로 흐림(대체 길 유지). 바뀐 칸 수."""
@@ -477,8 +480,10 @@ def blur_minus_spans(M: dict, done: dict) -> int:
             continue
         out = []
         for r in rows:
-            if len(r) < 6:
+            if len(r) < 4:
                 out.append(r); continue
+            if len(r) < 6:          # 통째 흐림 [x,y,w,h] = 파일 처음~끝(11-05 김효준 #6290: 지운 파일에도 그대로 남았다) — 같은 빼기, 남은 조각은 6칸
+                r = list(r[:4]) + [0.0, WHOLE_END]
             parts = [[float(r[4]), float(r[5])]]
             for a, b in iv:
                 parts = [q for s0, s1 in parts for q in (([[s0, s1]] if b <= s0 or a >= s1 else []) + ([[s0, a]] if s0 < a < s1 else []) + ([[b, s1]] if s0 < b < s1 else []))

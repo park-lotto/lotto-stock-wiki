@@ -37,3 +37,17 @@ def test_send_sec_preferred_over_sec():
     tf = {}
     RU.accept_erased({"blur": {}}, tf, {"done": {"a.mp4": [[0, 1]]}, "sec": 9.0, "send_sec": 1.5})
     assert tf["sec"] == 1.5
+
+
+def test_whole_file_blur_is_minus_erased_span():
+    # 11-05 김효준 #6290: 통째 흐림 [x,y,w,h] 가 VMake 로 지운 파일에도 그대로 남았다
+    M = {"blur": {"a.mp4": [[10, 20, 30, 40]]}}
+    n = RU.accept_erased(M, {}, {"done": {"a.mp4": [[2.0, 6.0]]}, "calls": 1})
+    assert n == 1
+    assert [tuple(r) for r in M["blur"]["a.mp4"]] == [(10, 20, 30, 40, 0.0, 2.0), (10, 20, 30, 40, 6.0, RU.WHOLE_END)]
+
+
+def test_whole_file_blur_untouched_when_file_not_erased():
+    M = {"blur": {"a.mp4": [[10, 20, 30, 40]], "b.mp4": [[1, 2, 3, 4]]}}
+    RU.accept_erased(M, {}, {"done": {"a.mp4": [[0.0, 1.0]]}})
+    assert M["blur"]["b.mp4"] == [[1, 2, 3, 4]]
