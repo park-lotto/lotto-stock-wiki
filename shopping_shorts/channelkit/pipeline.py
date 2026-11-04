@@ -194,7 +194,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
         elif step == "render":
             r = render.build(wd, d["timing"], d["subtitle"]["path"], d["voice"]["files"], d["sfx"]["plan"],
                              sfx_dir=sfx_dir, bg_image=bg_image, frames_list=d.get("frames", {}).get("list"),
-                             fonts_dir=fonts_dir, log=log)
+                             fonts_dir=fonts_dir, log=log,
+                             overlays=[t for t in d.get("frames", {}).get("timeline", []) if t.get("kind") == "meme_video"])
             d["render"] = r
             _invalidate_after(job, "render")
 

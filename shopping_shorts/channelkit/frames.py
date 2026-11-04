@@ -127,7 +127,21 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
     memes = 0
     last_img = card_src            # ★직전 컷의 사진 — 빈 컷을 검게 두지 않으려고 들고 간다
     blanks = 0
+    # 영상 밈 채널(spec.MEME_KIND == "video", 예 brainbulb_orange): 밈 칸 프레임은 검은 슬롯만 두고
+    # 영상은 render 가 그 시각에 얹는다(timeline kind "meme_video"). 원본 뇌전구는 그림 밈 그대로.
+    vids = []
+    if getattr(spec, "MEME_KIND", "image") == "video":
+        vids = spec.pick_meme_videos([g["meme"] for g in groups if g.get("meme")], os.path.basename(os.path.abspath(workdir)))
     for g, tg in zip(groups, timing["groups"]):
+        if g.get("meme") and vids:
+            v = vids.pop(0)
+            p = compose(None, os.path.join(d, f"g{tg['i']:02d}.jpg"))          # 검은 캔버스(슬롯도 검정)
+            entries.append((p, tg["d"]))
+            timeline.append({"i": tg["i"], "t": tg["t"], "d": tg["d"], "kind": "meme_video", "src": v["src"],
+                             "start": v["start"], "key": v["key"], "emotion": g["meme"]})
+            memes += 1
+            log(f"[frames] 밈 {tg['t']:.2f}s~{tg['t'] + tg['d']:.2f}s [{g['meme']}] ← {v['key']} | {v['what'][:50]}")
+            continue
         if g.get("meme"):
             src = meme_path(g["meme"], meme_dir); kind = "meme"; memes += bool(src)
         else:

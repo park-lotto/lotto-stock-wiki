@@ -62,8 +62,42 @@ def break_lines(style, text, fonts_dir=None):
         if best is None or key < best[0]:
             best = (key, [a, b])
     if best is None:
-        return None, {"mode": "fail", "why": "두 줄로도 화면에 안 들어간다", **info}
+        more = _break_more(style, text, fonts_dir)
+        if more:
+            return more, {"mode": f"{len(more)}lines"}
+        return None, {"mode": "fail", "why": f"{max_lines()}줄로도 화면에 안 들어간다", **info}
     return best[1], {"mode": "2lines"}
+
+
+def max_lines():
+    """한 컷 최대 줄 수 — 채널 규격(spec.POLICY_MAX_LINES). 원본 뇌전구(9월 실측)는 2줄,
+    지금 볼케이노 형식(15컷·긴 문장)은 3~4줄(11-04 천원중국빵 편 sub.ass: y 1271·1358·1445 = 87 간격 3줄)."""
+    return int(getattr(spec, "POLICY_MAX_LINES", 2) or 2)
+
+
+def _break_more(style, text, fonts_dir=None):
+    """2줄로 안 들어갈 때 3줄 이상(최대 max_lines()) — 어절 경계, 줄마다 108% 등장 순간까지 화면 안,
+    가장 넓은 줄이 가장 좁은 분할. 줄 수는 적을수록 먼저. → lines 또는 None"""
+    import itertools
+    words = text.split()
+    for k in range(3, max_lines() + 1):
+        if len(words) < k:
+            return None
+        splits = [[" ".join(words[a:b]) for a, b in zip((0,) + cut, cut + (len(words),))]
+                  for cut in itertools.combinations(range(1, len(words)), k - 1)]
+        items = [(style, ln, 108) for s in splits for ln in s]
+        eg = measure.edges(items, fonts_dir)
+        best, pos = None, 0
+        for s in splits:
+            es = eg[pos:pos + k]; pos += k
+            if not all(spec.BODY_X + l >= 0 and spec.BODY_X + r <= spec.CANVAS_W for l, r in es):
+                continue
+            key = (max(r - l for l, r in es), [-(r - l) for l, r in es])   # 최대폭 최소, 동률이면 윗줄이 긴 쪽
+            if best is None or key < best[0]:
+                best = (key, s)
+        if best:
+            return best[1]
+    return None
 
 
 def layout_groups(groups, fonts_dir=None):

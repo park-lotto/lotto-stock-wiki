@@ -46,6 +46,7 @@ def main(argv=None):
     ap.add_argument("--script-llm", default=None, choices=["claude", "gemini"],
                     help="대본을 누가 쓸지. 기본 claude(골든 5편에서 실물에 더 가깝다). "
                          "대량·무인이면 gemini. 환경변수 BRAINBULB_SCRIPT_LLM 로도 된다")
+    ap.add_argument("--script-file", default=None, help="사장님이 확정한 대본 JSON(title·region·card_img·groups). 주면 대본을 새로 쓰지 않고 이것을 검사만 한다(관제 322)")
     ap.add_argument("--from", dest="from_step", default=None, help="이 단계부터 다시 (예: voice, subtitle)")
     ap.add_argument("--no-review", action="store_true", help="사진 검수 생략(모델 호출을 아낀다)")
     a = ap.parse_args(argv)
@@ -65,8 +66,16 @@ def main(argv=None):
         fh.write(text)
     from shopping_shorts.channel_presets.brainbulb import images as _images
     imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
+    llm = providers.script_llm(a.model, which=a.script_llm)
+    if a.script_file:
+        fixed = open(a.script_file, encoding="utf-8").read()
+        base_llm = llm
+
+        def llm(prompt_text, _fixed=fixed, _base=base_llm):
+            # 대본 단계 프롬프트에만 확정 대본을 돌려준다(다른 단계 — 그림 프롬프트 등 — 는 원래 모델)
+            return _fixed if "숏폼 대본 작가" in prompt_text[:200] else _base(prompt_text)   # prompt.build 첫 줄
     r = pipeline.run_all(a.workdir, source_text=text,
-                         llm=providers.script_llm(a.model, which=a.script_llm),
+                         llm=llm,
                          tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
                          sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg,
                          reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer(),

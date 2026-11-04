@@ -43,3 +43,27 @@ STYLE_FONT = {
     "RED": ("Paperlogy 9 Black", "Paperlogy-9Black.ttf", 98),
     "ORANGE": ("Paperlogy 7 Bold", "Paperlogy-7Bold.ttf", 94),
 }
+
+# ── 지금 볼케이노 형식(15컷·긴 문장·여러 줄)으로 — 사장님 11-04 "지금처럼 하는걸로" ─────────────
+# 원본 brainbulb 는 9월 형식(22~32컷·한 컷 2줄)이다. 우리가 확정하는 대본은 14~15컷에 컷당 2~4줄이라
+# 원본 규칙으로 돌리면 컷 수에서 반려된다. 값의 근거는 11-03~04 볼케이노 실물 6편(주식다음날입금·부모차보험·
+# 천원중국빵·AI대화매각·도서관책테이프·서울마라톤)의 timing.json·sub.ass.
+POLICY_MAX_LINES = 4               # 실물 최대 3줄(볼케이노) + 다듬기 줄나눔고침에서 4줄까지 씀(부모차보험 8컷·도서관 없음)
+POLICY_MIN_CUTS, POLICY_MAX_CUTS = 12, 18      # 실물 14~15컷
+POLICY_CARD_LONG_WARN = 44         # 실물 카드 32~39자(도서관 39자). 44 는 원본의 물리 한도 값 그대로
+# 켜는 검사 — 원본 24개 중 지금 형식과 맞는 것만. 빠진 것과 이유:
+#   cut_count 범위만 바꿔 유지 · slot_count(9~11, 실물 13~14) · punch(PUNCH 1개, 실물은 밈 컷도 PUNCH) ·
+#   nonwhite_run(실물 13노랑·14오렌지·15빨강 연속) · h2_abstract(실물 h2 '테이프 붙이면 안 됨' 숫자 없음) ·
+#   ending_declared/ending_mix(대본에 ending_style 칸 없음 — 사장님이 대본을 직접 확정) · copy(기사 사실을 그대로 옮기는 형식) ·
+#   words(한 줄 어절 수 — 줄나눔이 화면 폭으로 잰다) · meme_ratio·speaker_voice·line1_end·example_copy(9월 형식 관행)
+LINT_RULES = ["title_punct", "comma", "enum", "formal", "card", "layout", "cut_count", "slot_seq", "card_img",
+              "first_open", "last_closed"]
+
+# ── 밈 = 동물 영상(사장님 다듬기 방식) — frames 가 밈 칸을 검은 슬롯으로 두고 render 가 영상을 얹는다 ─────
+MEME_KIND = "video"
+
+
+def pick_meme_videos(emotions, seed):
+    """밈 칸 감정들 → [{src, start, key, what}] (memes.pick). 주인 = brainbulb_orange/memes.py"""
+    from . import memes
+    return memes.pick(emotions, seed)
