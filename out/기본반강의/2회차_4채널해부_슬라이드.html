@@ -69,6 +69,11 @@ svg.wires .arr{fill:var(--teal);stroke:none}
 .cmp-lab{position:absolute;top:196px;width:250px;text-align:center;font:800 20px Pretendard;color:#fff;background:var(--ink);border:3px solid var(--line);border-radius:999px;padding:5px 0}
 .cmp-lab.ours{background:var(--orange)}
 .vs{position:absolute;left:782px;top:470px;width:46px;height:46px;border-radius:50%;background:var(--teal);color:#fff;font:900 17px Pretendard;display:flex;align-items:center;justify-content:center;border:3px solid var(--line);z-index:2}
+.phone video{width:100%;height:100%;object-fit:contain;border:2px solid var(--line);display:block;background:#000;cursor:pointer}
+.phone .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:rgba(242,107,29,.92);color:#fff;font:900 30px Pretendard;display:flex;align-items:center;justify-content:center;padding-left:6px;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;transition:opacity .2s ease-out}
+.phone.playing .play{opacity:0}
+.hint{position:absolute;left:530px;width:550px;top:772px;text-align:center;font:700 17px Pretendard;color:var(--muted)}
+body.export .play,body.export .hint{display:none}
 /* flow */
 .flow{display:flex;align-items:stretch;gap:0}
 .step{flex:1;text-align:center;padding:18px 10px}
@@ -169,7 +174,7 @@ table.cmp td:first-child{background:var(--teal-l);font-weight:800;color:var(--in
 <div class="wrap"><div class="scaler"><section class="slide">
   <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
   <h1 class="t">① 썰템쇼 해부도 <span class="c">(벤치: 재밌쇼)</span></h1>
-  <div class="cmp-lab" style="left:530px">벤치 원본 · 재밌쇼</div><div class="cmp-lab ours" style="left:830px">우리 · 썰템쇼</div><div class="phone sm" style="left:530px;top:240px"><img src="img4/b_sseol.jpg" alt="재밌쇼 원본 화면"></div><div class="vs">VS</div><div class="phone sm" style="left:830px;top:240px"><img src="img4/sseol_new.jpg" alt="썰템쇼 화면"></div>
+  <div class="cmp-lab" style="left:530px">벤치 원본 · 재밌쇼</div><div class="cmp-lab ours" style="left:830px">우리 · 썰템쇼</div><div class="phone sm" style="left:530px;top:240px"><video class="pv" src="vid/b_sseol.mp4" poster="img4/b_sseol.jpg" playsinline preload="metadata" aria-label="재밌쇼 원본 화면"></video><span class="play">▶</span></div><div class="vs">VS</div><div class="hint">화면을 누르면 소리와 함께 재생 · 다시 누르면 멈춤</div><div class="phone sm" style="left:830px;top:240px"><video class="pv" src="vid/o_sseol.mp4" poster="img4/sseol_new.jpg" playsinline preload="metadata" aria-label="썰템쇼 화면"></video><span class="play">▶</span></div>
   <div class="box call" style="left:70px;top:200px"><h3>0~2초 훅 카드</h3><p>짙은 바탕에 큰 제목 2줄(흰+연두)<br>"[주체] + [센 동사] + [정체 숨긴 대상]"</p></div>
   <div class="box call" style="left:70px;top:520px"><h3>게시글 틀 (색은 우리 것)</h3><p>머리띠 + 로고, 제목 1줄, '익명' 줄<br>벤치 연두 → 우리 <b style="color:#E0651F">주황</b> · 오른쪽 위 아이콘 없앰</p></div>
   <div class="box call" style="left:1110px;top:200px"><h3>2줄 쌓이는 자막</h3><p>검정 글씨, 1줄 뜨고 2줄째 덧붙음<br>한 덩어리 최대 16자</p></div>
@@ -207,7 +212,7 @@ table.cmp td:first-child{background:var(--teal-l);font-weight:800;color:var(--in
 <div class="wrap"><div class="scaler"><section class="slide">
   <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
   <h1 class="t">② 숏템리폿 해부도 <span class="c">(벤치: 핫템리포트)</span></h1>
-  <div class="cmp-lab" style="left:530px">벤치 원본 · 핫템리포트</div><div class="cmp-lab ours" style="left:830px">우리 · 숏템리폿</div><div class="phone sm" style="left:530px;top:240px"><img src="img4/b_report.jpg" alt="핫템리포트 원본 화면"></div><div class="vs">VS</div><div class="phone sm" style="left:830px;top:240px"><img src="img4/report_iron.jpg" alt="숏템리폿 화면"></div>
+  <div class="cmp-lab" style="left:530px">벤치 원본 · 핫템리포트</div><div class="cmp-lab ours" style="left:830px">우리 · 숏템리폿</div><div class="phone sm" style="left:530px;top:240px"><video class="pv" src="vid/b_report.mp4" poster="img4/b_report.jpg" playsinline preload="metadata" aria-label="핫템리포트 원본 화면"></video><span class="play">▶</span></div><div class="vs">VS</div><div class="hint">화면을 누르면 소리와 함께 재생 · 다시 누르면 멈춤</div><div class="phone sm" style="left:830px;top:240px"><video class="pv" src="vid/o_report.mp4" poster="img4/report_iron.jpg" playsinline preload="metadata" aria-label="숏템리폿 화면"></video><span class="play">▶</span></div>
   <div class="box call" style="left:70px;top:200px"><h3>위 검정 띠 + 2색 제목</h3><p>1줄 상황 / 2줄 제품(크게)<br>벤치 노랑·빨강 → 우리 흰·분홍</p></div>
   <div class="box call" style="left:70px;top:520px"><h3>제목 글귀는 우리 말로</h3><p>벤치 "AI 주작 논란 터진…" →<br>우리 "말 한마디에 열리는 실물 아이언맨 헬멧"</p></div>
   <div class="box call" style="left:1110px;top:200px"><h3>자막 색 = 누가 말하나</h3><p>나레 = 흰 글씨+검정 테두리<br>원본 사람 말 = <span style="background:#32FFEF;padding:0 6px">하늘색</span> · 최대 8자</p></div>
@@ -240,7 +245,7 @@ table.cmp td:first-child{background:var(--teal-l);font-weight:800;color:var(--in
 <div class="wrap"><div class="scaler"><section class="slide">
   <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
   <h1 class="t">③ 꿀템샷 해부도 <span class="c">(벤치: 잇템로그)</span></h1>
-  <div class="cmp-lab" style="left:530px">벤치 원본 · 잇템로그</div><div class="cmp-lab ours" style="left:830px">우리 · 꿀템샷</div><div class="phone sm" style="left:530px;top:240px"><img src="img4/b_kkul.jpg" alt="잇템로그 원본 화면"></div><div class="vs">VS</div><div class="phone sm" style="left:830px;top:240px"><img src="img4/kkul.jpg" alt="꿀템샷 화면"></div>
+  <div class="cmp-lab" style="left:530px">벤치 원본 · 잇템로그</div><div class="cmp-lab ours" style="left:830px">우리 · 꿀템샷</div><div class="phone sm" style="left:530px;top:240px"><video class="pv" src="vid/b_kkul.mp4" poster="img4/b_kkul.jpg" playsinline preload="metadata" aria-label="잇템로그 원본 화면"></video><span class="play">▶</span></div><div class="vs">VS</div><div class="hint">화면을 누르면 소리와 함께 재생 · 다시 누르면 멈춤</div><div class="phone sm" style="left:830px;top:240px"><video class="pv" src="vid/o_kkul.mp4" poster="img4/kkul.jpg" playsinline preload="metadata" aria-label="꿀템샷 화면"></video><span class="play">▶</span></div>
   <div class="box call" style="left:70px;top:200px"><h3>제목 2줄 = 제품 + 반응</h3><p>1줄 흰색 = 제품·상황<br>2줄 <span style="background:#FDDE01;padding:0 6px">노랑</span> = "멘붕 온 외국인" 같은 반응</p></div>
   <div class="box call" style="left:70px;top:520px"><h3>원본은 가운데 창</h3><p>검정 바탕 가운데에 해외 원본<br>원본 글자는 흐림이 아니라 <b>지운다</b></p></div>
   <div class="box call" style="left:1110px;top:200px"><h3>자막 색 규칙</h3><p>나레 = 노랑 · 원본 사람 말 = 흰색<br>첫 나레 줄만 빨강 + 팝 · 최대 9자</p></div>
@@ -277,7 +282,7 @@ table.cmp td:first-child{background:var(--teal-l);font-weight:800;color:var(--in
 <div class="wrap"><div class="scaler"><section class="slide">
   <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
   <h1 class="t">④ 잇썸홈 해부도 <span class="c">(벤치: 두유노홈디노)</span></h1>
-  <div class="cmp-lab" style="left:530px">벤치 원본 · 두유노홈디노</div><div class="cmp-lab ours" style="left:830px">우리 · 잇썸홈</div><div class="phone sm" style="left:530px;top:240px"><img src="img4/b_home.jpg" alt="두유노홈디노 원본 화면"></div><div class="vs">VS</div><div class="phone sm" style="left:830px;top:240px"><img src="img4/home.jpg" alt="잇썸홈 화면"></div>
+  <div class="cmp-lab" style="left:530px">벤치 원본 · 두유노홈디노</div><div class="cmp-lab ours" style="left:830px">우리 · 잇썸홈</div><div class="phone sm" style="left:530px;top:240px"><video class="pv" src="vid/b_home.mp4" poster="img4/b_home.jpg" playsinline preload="metadata" aria-label="두유노홈디노 원본 화면"></video><span class="play">▶</span></div><div class="vs">VS</div><div class="hint">화면을 누르면 소리와 함께 재생 · 다시 누르면 멈춤</div><div class="phone sm" style="left:830px;top:240px"><video class="pv" src="vid/o_home.mp4" poster="img4/home.jpg" playsinline preload="metadata" aria-label="잇썸홈 화면"></video><span class="play">▶</span></div>
   <div class="box call" style="left:70px;top:200px"><h3>전체화면, 제목 없음</h3><p>0초 표지 카드만 2~3줄<br>그다음은 영상이 화면을 다 쓴다</p></div>
   <div class="box call" style="left:70px;top:520px"><h3>컷이 빠르다</h3><p>컷 길이 중앙 1.07초 · 전환 효과 없이 컷만<br>같은 동작을 이어 반복하는 컷 허용</p></div>
   <div class="box call" style="left:1110px;top:200px"><h3>가운데 흰 손글씨 한 줄</h3><p>문장부호 없이 · 최대 13자<br>워터마크 '잇썸홈' 반투명</p></div>
@@ -403,6 +408,15 @@ table.cmp td:first-child{background:var(--teal-l);font-weight:800;color:var(--in
 </div>
 <script>
 function fit(){document.querySelectorAll('.wrap').forEach(w=>{const s=Math.min(1,w.clientWidth/1600);const c=w.firstElementChild;c.style.transform='scale('+s+')';w.style.height=(900*s)+'px'});}
+
+document.querySelectorAll('video.pv').forEach(v=>{
+  v.addEventListener('click',()=>{
+    if(v.paused){document.querySelectorAll('video.pv').forEach(o=>{if(o!==v&&!o.paused)o.pause()});v.play()}else v.pause();
+  });
+  v.addEventListener('play',()=>v.parentElement.classList.add('playing'));
+  v.addEventListener('pause',()=>v.parentElement.classList.remove('playing'));
+  v.addEventListener('ended',()=>v.parentElement.classList.remove('playing'));
+});
 addEventListener('resize',fit);addEventListener('load',fit);fit();
 </script>
 </body>
