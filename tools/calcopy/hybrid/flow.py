@@ -1969,7 +1969,7 @@ def ph_material_got(st, m, rp, u):
     rows = s.get("rows") or []
     st["screen_rows"] = rows
     if not rows:
-        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "material_dl"}
+        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}] + _bench_mat_do(st), "then": "material_dl"}
     st["_screen_sheets"] = s.get("sheets") or []
     return {"review": [_rv("screen_pick", _screen_pick_ask(st, rows), [_img(x) for x in st["_screen_sheets"]][:_material_top(st)],
                            need=("chosen",))], "then": "material_pick"}
@@ -1995,14 +1995,41 @@ def ph_material_pick(st, m, rp, u):
         return {"review": [_rv("screen_pick", _screen_pick_ask(st, st.get("screen_rows") or [], f"\n★지난 답은 {len(chosen)}개뿐이었다 — 쓸 수 있는 것을 더 골라라."),
                                [_img(x) for x in st.get("_screen_sheets") or []][:_material_top(st)], need=("chosen",))], "then": "material_pick"}
     stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}
-    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills],
+    return {"do": ([{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills]) + _bench_mat_do(st),
             "then": "material_dl"}
+
+
+BENCH_NOTICE = "회원님이 넣은 소재 영상을 그대로 사용했어요 — 이 영상을 그대로 사용해도 저작권 문제가 없는지에 대한 책임은 회원님 본인에게 있습니다"
+
+
+def _bench_mat_do(st) -> list:
+    """(판단 주인 — 소재 영상을 재료로 받아 두나) 11-05 사장님 '그런 걸 그대로 쓰려고 일부러 찾은 사람이 많다, 그건 본인 몫' → 늘 받는다.
+    회원 PC 에 이미 있는 origin_get(full) — 유튜브는 받아 둔 벤치를 다시 안 받고, 틱톡·인스타는 통째로. 이미 원본이면 안 받는다."""
+    bid = str((st.get("bench") or {}).get("id") or "")
+    if not bid or bid in {str(o.get("id")) for o in st.get("origins") or []} or bid == str((st.get("origin") or {}).get("id") or ""):
+        return []
+    return [{"id": "bench_mat", "cmd": "origin_get", "vid": bid, "url": str(st.get("ref") or ""), "a": 0.0,
+             "b": float((st.get("bench") or {}).get("dur") or 0) or 600.0, "ts": [], "full": True}]
+
+
+def _bench_notice(st, M) -> None:
+    """재료가 소재 영상 파일을 처음 쓰면 회원에게 저작권 책임 문구를 한 번 보인다(st.notice — 진행 한 줄 뒤에 붙는다)."""
+    bid = str((st.get("bench") or {}).get("id") or "")
+    if not bid or st.get("_bench_noticed"):
+        return
+    if any(isinstance(c, dict) and str(c.get("src") or "").startswith(bid) for cuts in (M.get("cuts") or {}).values() for c in (cuts if isinstance(cuts, list) else [cuts])):
+        st["_bench_noticed"] = True
+        st["notice"] = (st["notice"] + " · " if st.get("notice") else "") + BENCH_NOTICE
+        st.pop("_notice_shown", None)
+        st["log"].append("소재 영상을 재료로 씀 — 저작권 책임 안내")
 
 
 def ph_material_dl(st, m, rp, u):
     # 쿠팡 상품 사진도 재료 — 제작순서 05 '리뷰 영상이 없으면 쿠팡 상품 사진을 움직이는 컷으로'(10-21 선우용여 제품 컷 0개, 98 #22)
     dl = m.get("dl") or {}
-    got = (st.pop("_mat_keep", None) or []) + (dl.get("files") or []) + ((m.get("stills") or {}).get("files") or [])
+    got = (st.pop("_mat_keep", None) or []) + (dl.get("files") or []) + ((m.get("stills") or {}).get("files") or []) + ((m.get("bench_mat") or {}).get("files") or [])
+    if (m.get("bench_mat") or {}).get("error"):
+        st["log"].append("소재 영상 재료 받기 실패(다른 재료로 진행): " + str(m["bench_mat"]["error"])[:200])
     fail = dict(dl.get("fail") or {})
     if dl.get("error"):           # 옛 실행기(영상 하나 실패 = 통째 실패) — 고른 영상 전부를 실패로 본다
         fail.update({c["id"]: str(dl["error"])[:200] for c in (st.get("screen_pick") or {}).get("chosen") or [] if c["id"] + ".mp4" not in {f.get("name") for f in got}})
@@ -2085,8 +2112,8 @@ def _apply_shot_reads(st, rp) -> None:
 # ── 7 대본·재료·근거 ──────────────────────────────────────────────────────
 def _rule_bench_id(st) -> str:
     """출처 규칙 ①(벤치는 재료가 아니다)에 넘길 벤치 id — 해외원본형에서 회원이 해외 원본 주소를 바로 줬으면 벤치 = 첫 원본이라 재료다(빈 값)."""
-    b = str((st.get("bench") or {}).get("id") or "")
-    return "" if b and b in {str(o.get("id")) for o in st.get("origins") or []} else b
+    # 11-05 사장님: 회원이 넣은 소재 영상은 재료로 써도 된다(저작권 책임은 회원 본인 — _bench_notice) → 이 규칙으로 반려하지 않는다
+    return ""
 
 
 def _origin_names(st) -> set:
@@ -2179,7 +2206,7 @@ CUT_RULES = [
     "같은 장면 재사용 금지 — 같은 원본에서 컷끼리 겹치지 않고 거리 3초 이상(quality_gate B13)",
     "원본 순서 X→Y→X 금지(A-B-A 끼움 — 같은 원본 사이에 다른 컷 하나만 끼우지 않는다, B16)",
     "대사와 장면이 맞게(컷 see = 그 줄 대사의 동작·상태)",
-    "벤치(소재 쇼츠 bench.mp4)는 재료가 아니다 — 원본·제품 영상·사진만",
+    "회원이 넣은 소재 영상(재료 목록의 소재 영상 파일)도 재료로 쓸 수 있다 — 쓰면 '저작권 책임은 회원 본인' 안내가 회원에게 간다(11-05 사장님)",
     "멈춘 그림 금지 — 원본이 멈춘 구간은 피하고, 사진 컷은 move(in·out·left·right)",
 ]
 
@@ -2539,6 +2566,7 @@ def ph_plan_got(st, m, rp, u):
     over = [p["over"]] if p.get("over") else []
     known = _origin_names(st) | {x.get("name") for x in (st.get("material") or {}).get("files") or [] if x.get("name")}
     orig_lines = {l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") == "orig"}
+    _bench_notice(st, st["script"]["M"])
     over += RU.material_problems(st["script"]["M"], known, orig_lines, _all_dims(st), _ar(st["version"]))        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     over += p.get("jumps") or []
@@ -4524,11 +4552,11 @@ def f_material(st, m, rp, u):
         do.append({"id": "screen", "cmd": "screen", "queries": _alt_queries(st), "exclude": R.get("exclude") or [],
                    "keywords": [k for k in R.get("keywords") or [] if k][:3] or [str((st.get("product") or {}).get("name") or "")[:20]], "top": _material_top(st),
                    "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")})
-    return {"do": do, "then": "f_material_got"}
+    return {"do": do + _bench_mat_do(st), "then": "f_material_got"}
 
 
 def f_material_got(st, m, rp, u):
-    st["material"] = {"files": (m.get("stills") or {}).get("files") or []}
+    st["material"] = {"files": ((m.get("stills") or {}).get("files") or []) + ((m.get("bench_mat") or {}).get("files") or [])}   # 소재 영상도 재료(11-05)
     if "screen" in m:
         st["_alt_screen"] = m.get("screen") or {}
     sh = m.get("shots") or {}
