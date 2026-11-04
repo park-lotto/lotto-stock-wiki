@@ -36,9 +36,9 @@
      "w": 1080,
      "h": 239,
      "rgb": [
-      90,
-      74,
-      66
+      86,
+      93,
+      80
      ],
      "radius": 0
     },
@@ -164,9 +164,9 @@
        255
       ],
       [
-       255,
-       178,
-       56
+       132,
+       253,
+       70
       ]
      ],
      "line_scale": null,
@@ -261,19 +261,27 @@
      "w": 1080,
      "h": 239,
      "rgb": [
-      255,
-      232,
-      214
+      226,
+      238,
+      210
      ],
      "radius": 0
     },
     {
      "kind": "image",
-     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2058%2077%27%3E%3Cpath%20d=%27M54%204L4%2038L54%2073%27%20fill=%27none%27%20stroke=%27%23D2601A%27%20stroke-width=%277%27%20stroke-linecap=%27round%27/%3E%3C/svg%3E",
+     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2058%2077%27%3E%3Cpath%20d=%27M54%204L4%2038L54%2073%27%20fill=%27none%27%20stroke=%27%2350822e%27%20stroke-width=%277%27%20stroke-linecap=%27round%27/%3E%3C/svg%3E",
      "x": 172,
      "y": 152,
      "w": 58,
      "h": 77
+    },
+    {
+     "kind": "image",
+     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2065%2085%27%3E%3Cpath%20d=%27M0%205Q0%200%205%200H60Q65%200%2065%205V83L32%2065L0%2083Z%27%20fill=%27%23538831%27/%3E%3C/svg%3E",
+     "x": 834,
+     "y": 144,
+     "w": 65,
+     "h": 85
     },
     {
      "kind": "image",
@@ -295,9 +303,9 @@
      "size": 92.7,
      "line_h": 107,
      "rgb": [
-      255,
-      138,
-      61
+      175,
+      218,
+      129
      ],
      "line_rgb": null,
      "line_scale": null,
@@ -389,9 +397,9 @@
      "size": 92.7,
      "line_h": 107,
      "rgb": [
-      255,
-      138,
-      61
+      175,
+      218,
+      129
      ],
      "line_rgb": null,
      "line_scale": null,
@@ -594,6 +602,5 @@
     }
    ]
   }
- ],
- "_recolor_1104": "11-04 사장님 '썰템쇼는 너무 따라한 것 같다 — 색 바꾸고 상단 오른쪽 지워' → 벤치 연두 계열을 주황 계열로(머리띠 #FFE8D6·로고 썰/쇼 #FF8A3D·훅 머리띠 #5A4A42·훅 2줄 #FFB238), 오른쪽 위 책갈피 아이콘 없앰"
+ ]
 }
