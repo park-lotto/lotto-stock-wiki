@@ -2848,7 +2848,40 @@ def cut_crop(c: dict, src: Path, win: tuple[int, int]) -> list[int]:
     elif crop == "face":
         crop = c.get("crop_used") or face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), aw / ah)
         c["crop_used"] = crop
+    elif isinstance(crop, list) and len(crop) == 4:
+        fixed = fit_crop_ar(crop, aw / ah, *_src_wh(src))
+        if fixed != list(crop):        # 숫자로 적은 칸의 비율이 창과 다르면 렌더(clip_cmd scale)가 그림을 늘린다(#5442 서지환: 608x1080 → 1080x870 창, 가로 2.2배)
+            c["crop_used"] = fixed
+            crop = fixed
     return crop
+
+
+CROP_AR_TOL = 0.02     # 자를 칸 비율이 창 비율과 이만큼 넘게 다르면 바로잡는다(눈에 띄는 찌그러짐 하한)
+_WH: dict = {}
+
+
+def _src_wh(src: Path) -> tuple[int, int]:
+    k = (str(src), src.stat().st_mtime if src.exists() else 0)
+    if k not in _WH:
+        _WH[k] = tuple(probe(src)[:2])
+    return _WH[k]
+
+
+def fit_crop_ar(crop, ar: float, iw: int, ih: int, tol: float = CROP_AR_TOL) -> list:
+    """(판단 주인 — 자를 칸 비율 = 창 비율) 높이·가운데는 두고 폭을 창 비율로. 원본보다 넓어지면 폭 = 원본 폭, 높이를 비율에 맞춘다(짝수)."""
+    x, y, w, h = (int(v) for v in crop)
+    if w <= 0 or h <= 0 or not iw or not ih or abs(w / h - ar) / ar <= tol:
+        return [x, y, w, h]
+    cx, cy = x + w / 2, y + h / 2
+    nh = min(h, ih)
+    nw = round(nh * ar)
+    if nw > iw:
+        nw = iw
+        nh = round(nw / ar)
+    nw, nh = nw // 2 * 2, nh // 2 * 2
+    nx = int(round(min(max(0, cx - nw / 2), iw - nw)))
+    ny = int(round(min(max(0, cy - nh / 2), ih - nh)))
+    return [nx, ny, nw, nh]
 
 
 def real_crop(M: dict, st: dict):
