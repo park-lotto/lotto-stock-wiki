@@ -37,7 +37,7 @@ check("지운 예약(deleted) 칸은 빈 칸", bp._slot_dues([dict(taken[0], fin
 
 # ── 끝까지: 가짜 Buffer 로 post 두 번 ──
 tmp = tempfile.mkdtemp(); d = os.path.join(tmp, F); os.makedirs(d)
-for nm, body in (("a.mp4", b"A" * 1000), ("b.mp4", b"B" * 1000), ("a_renamed.mp4", b"A" * 1000)):
+for nm, body in (("01_a.mp4", b"A" * 1000), ("02_b.mp4", b"B" * 1000), ("03_a_renamed.mp4", b"A" * 1000)):
     open(os.path.join(d, nm), "wb").write(body)
     open(os.path.join(d, nm[:-4] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
 rows, calls = [], []
@@ -60,7 +60,7 @@ for r in rows:
     by_file.setdefault(r["file"], set()).add((r["service"], r["due"]))
 posted = sorted(by_file)     # 순서가 무작위(10-29)라 같은 영상 a·a_renamed 중 먼저 온 쪽이 올라간다 — 둘 중 하나만
 check("올라간 영상 = b + (a 또는 a_renamed) 2개(이름만 바꾼 같은 영상은 막힘)",
-      len(posted) == 2 and "b.mp4" in posted and len({"a.mp4", "a_renamed.mp4"} & set(posted)) == 1, True)
+      len(posted) == 2 and "02_b.mp4" in posted and len({"01_a.mp4", "03_a_renamed.mp4"} & set(posted)) == 1, True)
 check("한 영상당 유튜브·틱톡 1번씩, 인스타 없음", sorted(len(v) for v in by_file.values()), [2, 2])
 check("한 영상의 두 서비스는 같은 칸", [len({due for _s, due in v}) for v in by_file.values()], [1, 1])
 dues = [next(iter(v))[1] for v in by_file.values()]
@@ -71,7 +71,7 @@ check("칸은 15:30·19:30 KST 뿐",
 import random as _r
 seen = set()
 for i in range(30):
-    _r.seed(i); seen.add(tuple(bp._order(["a.mp4", "b.mp4", "c.mp4"])))
+    _r.seed(i); seen.add(tuple(bp._order(["01_a.mp4", "02_b.mp4", "04_c.mp4"])))
 check("폴더에 여럿이면 무작위 순서(사장님 10-29)", len(seen) > 1, True)
 n1 = len(calls)
 for nm in posted:                                   # 예약 폴더로 간 것을 사장님이 실수로 다시 넣었다
@@ -86,9 +86,9 @@ firsts = set()
 for i in range(30):
     for nm in os.listdir(d2):
         os.remove(os.path.join(d2, nm)) if os.path.isfile(os.path.join(d2, nm)) else None
-    for nm, body in (("x1.mp4", b"X" * 999), ("x2.mp4", b"Y" * 999), ("ok.mp4", bytes([i]) * 1000)):
+    for nm, body in (("05_x1.mp4", b"X" * 999), ("06_x2.mp4", b"Y" * 999), ("07_ok.mp4", bytes([i]) * 1000)):
         open(os.path.join(d2, nm), "wb").write(body)
-    open(os.path.join(d2, "ok.txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
+    open(os.path.join(d2, "07_ok.txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
     rows.clear(); calls.clear(); _r.seed(i)
     bp._load = lambda p, default: rows if p == bp.LEDGER else {F2: "k"}
     bp.main(["post", "--folder", F2])

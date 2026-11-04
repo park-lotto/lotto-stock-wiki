@@ -100,10 +100,35 @@ def _videos(d):
 NAME_RE = re.compile(r"^\d{2}_[a-z0-9]+(?:_[a-z0-9]+)*\.mp4$")   # production_start §0-2: NN_쉬운영어_소문자(_MMDD_HHMM·_confirm)
 
 
-def _korean_name(v):
-    """한글(ASCII 밖 글자)이 든 파일 이름인가 — 올리기 전에 영어 규칙 이름으로 바꿔야 한다(사장님 11-04).
-    ASCII 만 있으면 규칙 꼴이 아니어도 막지 않는다(볼케이노 moacco_… 등은 예외, 사장님 11-04)."""
-    return any(ord(c) > 127 for c in v)
+NAME_EXEMPT = ("moacco_",)   # 볼케이노 완성본(out/moacco_<영어 요약>.mp4) — 이름 규칙 예외(사장님 11-04)
+
+
+def _needs_rename(v):
+    """올리기 전에 이름을 영어 규칙(NN_쉬운영어_소문자.mp4)으로 바꿔야 하나(사장님 11-04).
+    한글 이름·번호 없음·대문자·띄어쓰기 전부 해당. 이미 예약·완료된 영상은 건드리지 않는다(post 는 꼭대기만 본다)."""
+    return not (NAME_RE.match(v) or v.startswith(NAME_EXEMPT))
+
+
+_STAMP = re.compile(r"(?:_\d{4}_\d{4})+(?=(?:_confirm)?\.mp4$|(?:_confirm)?$)")   # 끝의 _MMDD_HHMM(만든 시각)
+
+
+def _drop_stamp(name):
+    """끝의 날짜·시간(_MMDD_HHMM)을 뗀다 — 버퍼에 올리는 이름엔 넣지 않는다(사장님 11-04).
+    '06_pepero_1027_1508.mp4' → '06_pepero.mp4' · '02_cushion_1024_0014_confirm.mp4' → '02_cushion_confirm.mp4'."""
+    return _STAMP.sub("", name)
+
+
+def _rename_pair(d, old, new):
+    """영상과 같은 이름 .txt 를 같이 바꾼다. 새 이름이 이미 있으면 RuntimeError(덮어쓰기 금지)."""
+    src, dst = os.path.join(d, old), os.path.join(d, new)
+    old_txt, new_txt = os.path.splitext(src)[0] + ".txt", os.path.splitext(dst)[0] + ".txt"
+    for p in (dst, new_txt):
+        if os.path.exists(p):
+            raise RuntimeError(f"이미 있음: {os.path.basename(p)}")
+    os.rename(src, dst)
+    if os.path.isfile(old_txt):
+        os.rename(old_txt, new_txt)
+    return os.path.isfile(new_txt)
 
 
 def _next_no(d):
@@ -124,18 +149,14 @@ def cmd_rename(a):
     if not os.path.isfile(src):
         raise SystemExit(f"[{n}] 파일 없음: {a.old}")
     words = re.sub(r"\.mp4$", "", a.words.strip().lower())
-    new = f"{_next_no(d):02d}_{words}.mp4"
+    new = _drop_stamp(f"{_next_no(d):02d}_{words}.mp4")          # 날짜·시간은 넣지 않는다(사장님 11-04)
     if not NAME_RE.match(new):
         raise SystemExit(f"[{n}] 규칙 밖 이름: {new} — 쉬운 영어 소문자·숫자·밑줄만(예 shrimp_crackers, 얜샷템은 연예인 로마자 먼저)")
-    dst = os.path.join(d, new)
-    old_txt, new_txt = os.path.splitext(src)[0] + ".txt", os.path.splitext(dst)[0] + ".txt"
-    for p in (dst, new_txt):
-        if os.path.exists(p):
-            raise SystemExit(f"[{n}] 이미 있음: {os.path.basename(p)}")
-    os.rename(src, dst)
-    if os.path.isfile(old_txt):
-        os.rename(old_txt, new_txt)
-    print(f"[{n}] {a.old} → {new}" + (" (+ .txt)" if os.path.isfile(new_txt) else ""))
+    try:
+        txt = _rename_pair(d, a.old, new)
+    except RuntimeError as e:
+        raise SystemExit(f"[{n}] {e}")
+    print(f"[{n}] {a.old} → {new}" + (" (+ .txt)" if txt else ""))
 
 
 def _caption(d, mp4):
@@ -512,8 +533,17 @@ def cmd_post(a):
         # ① 올릴 수 있는 영상만 먼저 고른다 — 준비 안 된 영상이 칸을 차지하면 준비된 영상이 다음 날로 밀린다(10-29)
         ready = []
         for v in vs:
-            if _korean_name(v):
-                print(f"[{n}] {v}: 한글 파일 이름 — 건너뜀(먼저 rename 으로 영어 규칙 이름 NN_영어_소문자.mp4 로 바꾼다, 사장님 11-04)")
+            if not _needs_rename(v) and _drop_stamp(v) != v and not v.startswith(NAME_EXEMPT):
+                # 규칙엔 맞는데 끝에 날짜·시간이 붙은 이름 — 떼고 올린다(사장님 11-04). 번호·영어는 그대로라 판단이 필요 없다
+                try:
+                    _rename_pair(d, v, _drop_stamp(v))
+                    print(f"[{n}] {v} → {_drop_stamp(v)} (날짜·시간 뗌)")
+                    v = _drop_stamp(v)
+                except RuntimeError as e:
+                    print(f"[{n}] {v}: 날짜·시간 떼기 실패({e}) — 건너뜀")
+                    continue
+            if _needs_rename(v):
+                print(f"[{n}] {v}: 이름 규칙 밖 — 건너뜀(먼저 rename 으로 NN_영어_소문자.mp4 로 바꾼다, 사장님 11-04)")
                 continue
             cap, cap_path = _caption(d, v)
             if not cap:

@@ -36,8 +36,8 @@ cases = {
     "good": "좋은 제목\n\n설명 #쇼츠\n인포크: [10] 조선미녀 맑은쌀 선크림",
 }
 for i, (nm, txt) in enumerate(cases.items()):
-    open(os.path.join(d, nm + ".mp4"), "wb").write(bytes([i]) * 100)
-    open(os.path.join(d, nm + ".txt"), "w", encoding="utf-8").write(txt)
+    open(os.path.join(d, f"{i+1:02d}_{nm}.mp4"), "wb").write(bytes([i]) * 100)
+    open(os.path.join(d, f"{i+1:02d}_{nm}.txt"), "w", encoding="utf-8").write(txt)
 rows, sent = [], []
 bp.DRIVE = tmp
 bp._load = lambda p, default: rows if p == bp.LEDGER else {F: "k"}
@@ -52,7 +52,7 @@ bp.buffer_api.schedule_video = lambda key, cid, cap, url, due_at=None, **k: (
     sent.append(cap) or {"id": f"p{len(sent)}", "dueAt": due_at})
 bp.main(["post", "--folder", F, "--at", "2099-01-01 10:00", "--gap", "24"])
 posted = sorted(r["file"] for r in rows)
-check("① 줄 없음 안 올림 / ② 없는 블록 안 올림 / ③ 비공개 안 올림 / ④ 있는 블록만 올림", posted, ["good.mp4"])
+check("① 줄 없음 안 올림 / ② 없는 블록 안 올림 / ③ 비공개 안 올림 / ④ 있는 블록만 올림", posted, ["04_good.mp4"])
 check("④ 장부에 인포크 제목", [r.get("inpock") for r in rows], ["[10] 조선미녀 맑은쌀 선크림"])
 check("⑤ Buffer 글에 '인포크:' 줄 없음", any("인포크:" in c for c in sent), False)
 check("⑥ 제목 아래 채널 말투 '프로필 링크 10번' 한 줄(사장님 10-29)", sent[0] if sent else None,

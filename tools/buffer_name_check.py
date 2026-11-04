@@ -54,5 +54,25 @@ check("② .txt 도 같이 바뀜", os.path.isfile(os.path.join(d, "08_shrimp_cr
 bp.main(["post", "--folder", F])
 check("③ 바꾼 뒤엔 올라감", "08_shrimp_crackers.mp4" in [r["file"] for r in rows], True)
 
+# ── 날짜·시간은 빼고(사장님 11-04 "예약 올릴 때 고치는 거면 마지막에 날짜와 시간은 빼고") ──
+check("⑥ _drop_stamp: 끝 날짜·시간 뗌", bp._drop_stamp("06_pepero_1027_1508.mp4"), "06_pepero.mp4")
+check("⑥ _drop_stamp: _confirm 은 남김", bp._drop_stamp("02_cushion_1024_0014_confirm.mp4"), "02_cushion_confirm.mp4")
+check("⑥ _drop_stamp: 제품 숫자는 그대로", bp._drop_stamp("11_cvs_4dollar.mp4"), "11_cvs_4dollar.mp4")
+open(os.path.join(d, "어묵 꼬치.mp4"), "wb").write(b"E" * 1000)
+bp.main(["rename", "--folder", F, "어묵 꼬치.mp4", "fish_cake_skewer_1104_1530"])
+check("⑦ rename 에 날짜·시간을 줘도 뗌", os.path.isfile(os.path.join(d, "09_fish_cake_skewer.mp4")), True)
+open(os.path.join(d, "10_pepero_1027_1508.mp4"), "wb").write(b"P" * 1000)
+open(os.path.join(d, "10_pepero_1027_1508.txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
+bp.main(["post", "--folder", F])
+check("⑧ 규칙 이름 + 날짜·시간 → post 가 떼고 올림", "10_pepero.mp4" in [r["file"] for r in rows], True)
+check("⑧ .txt 도 같이 떼고 예약 폴더로", os.path.isfile(os.path.join(d, bp.RESERVED, "10_pepero.txt")), True)
+check("⑨ 예약 폴더에 날짜 붙은 옛 이름은 없음", os.path.exists(os.path.join(d, bp.RESERVED, "10_pepero_1027_1508.mp4")), False)
+for nm in ("tissue.mp4", "tea infuser.mp4", "11_Big_Mug.mp4"):          # 번호 없음·띄어쓰기·대문자 = 규칙 밖 영어
+    open(os.path.join(d, nm), "wb").write(nm.encode() * 50)
+    open(os.path.join(d, nm[:-4] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
+bp.main(["post", "--folder", F])
+check("⑩ 규칙 밖 영어 이름(번호 없음·띄어쓰기·대문자)도 안 올림",
+      [f for f in ("tissue.mp4", "tea infuser.mp4", "11_Big_Mug.mp4") if f in [r["file"] for r in rows]], [])
+
 print("\n결과:", "전부 통과" if not fails else f"실패 {len(fails)}: {fails}")
 sys.exit(1 if fails else 0)
