@@ -2413,6 +2413,9 @@ def ph_script_heard(st, m, rp, u):
     bad = (m.get("heard") or {}).get("bad") or []
     if not bad:
         return {"goto": "customize"}
+    # 넘기기(_waive 'script')가 넘길 대본 = 지금 원음 대조에 걸린 이 대본(#4150 박준영: 대본 검사 합격본은 _script_try 에 없어
+    #   waive 가 None → 다시 멈춤, 예전 불합격 대본이 남아 있으면 그 옛 대본을 저장했다)
+    st["_script_try"] = {**(st.get("script") or {}), "causes": ["orig_heard"]}
     _tries(st, "script", LIMITS["script"], ["orig_heard"])
     why = json.dumps({"orig_heard": bad}, ensure_ascii=False)[:4000]
     st["log"].append("원음 대조 반려: " + why[:400])
