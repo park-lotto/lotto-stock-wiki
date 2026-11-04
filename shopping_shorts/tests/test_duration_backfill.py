@@ -135,3 +135,56 @@ def test_archive_slice_is_bounded(tmp_path):
     codes = [sc for _, sc in duration_backfill._targets(s)]
     assert len(codes) <= duration_backfill.ARCHIVE_SCAN_LIMIT, \
         f"아카이브를 통째로 담았다({len(codes)}건) — 상한이 없다"
+
+
+# ── 관제 321(2026-11-04): 길이보정이 고객 인스타 담기분석에 칸을 비켜 준다 ──────────
+
+def _queued(s, task):
+    with s._conn() as c:
+        return [json.loads(a) for (a,) in c.execute(
+            "SELECT args_json FROM job_queue WHERE task=? AND state='queued' ORDER BY id", (task,))]
+
+
+def test_exclusive_waiting_counts_only_instagram_customer_jobs(tmp_path):
+    s = _mkstore(tmp_path)
+    assert s.exclusive_waiting() == 0
+    s.enqueue("prewarm", {"shortcode": "a", "url": "https://www.youtube.com/shorts/x", "customer_id": "1"})
+    assert s.exclusive_waiting() == 0                # 유튜브 담기분석은 배타 칸을 안 기다린다
+    s.enqueue("prewarm", {"shortcode": "b", "url": "https://www.instagram.com/p/X/", "customer_id": "2"})
+    assert s.exclusive_waiting() == 1
+    s.enqueue("durfill", {"k": "1"})
+    assert s.exclusive_waiting() == 1                # 길이보정 자신은 안 센다
+
+
+def test_run_backfill_yields_mid_batch_and_requeues_the_rest(tmp_path, monkeypatch):
+    dbp = tmp_path / "t.db"
+    s = Store(dbp)
+    from shopping_shorts import instagram_playwright as ipw
+    monkeypatch.setattr(ipw, "_detail_context", _FakeCtx)
+    calls = []
+
+    def fake_detail(ctx, pk, code=""):
+        calls.append(code)
+        if len(calls) == 1:                          # 첫 건을 도는 사이 고객 인스타 담기분석이 들어온다
+            s.enqueue("prewarm", {"shortcode": "g", "url": "https://www.instagram.com/p/Y/", "customer_id": "70"})
+        return {"video_dash_manifest": 'mediaPresentationDuration="PT0H0M15S"'}
+
+    monkeypatch.setattr(ipw, "_fetch_reel_detail", fake_detail)
+    codes = ["DbkpMkcRfkJ", "Dbi9c1YNsSc", "DbmA3aZzieb"]
+    out = duration_backfill.run_backfill(db_path=dbp, sleep_s=0, codes=codes)
+    assert calls == ["DbkpMkcRfkJ"]                  # 1건만 하고 비켰다
+    assert "양보" in out
+    assert _queued(s, "durfill") == [{"codes": codes[1:]}]   # 남은 2건은 다시 줄에
+
+
+def test_run_backfill_runs_whole_batch_when_nobody_waits(tmp_path, monkeypatch):
+    dbp = tmp_path / "t.db"
+    s = Store(dbp)
+    from shopping_shorts import instagram_playwright as ipw
+    monkeypatch.setattr(ipw, "_detail_context", _FakeCtx)
+    calls = []
+    monkeypatch.setattr(ipw, "_fetch_reel_detail",
+                        lambda ctx, pk, code="": calls.append(code) or None)
+    duration_backfill.run_backfill(db_path=dbp, sleep_s=0, codes=["DbkpMkcRfkJ", "Dbi9c1YNsSc"])
+    assert calls == ["DbkpMkcRfkJ", "Dbi9c1YNsSc"]
+    assert _queued(s, "durfill") == []

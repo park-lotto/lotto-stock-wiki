@@ -1283,7 +1283,8 @@ function wlAgo(sec){
 function wlWho(r){
   // ★모르면 지어내지 않는다 — 이름이 없으면 id를 그대로 보여준다(0순위: 추측 금지).
   const nm=(r.owner_name||'').trim();
-  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '–');
+  // 주인이 없는 줄 = 서버가 스스로 건 뒷정리(길이보정 등) — 고객 작업이 아니다(관제 321).
+  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '<span class=mini>시스템(자동)</span>');
 }
 async function loadWorkLines(){
   try{
