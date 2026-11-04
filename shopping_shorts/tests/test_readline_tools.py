@@ -316,7 +316,7 @@ def test_capseg_odd_band_not_garbage():
 _HS = Path("C:/숏템_칼카피/humorshowshow")
 
 
-@pytest.mark.skipif(not (_HS / "work/lr6/mo_bfKkNmVTGPs.json").exists(), reason="유머쇼쇼 원본·옛 산출물 없음(집 PC 전용)")
+@pytest.mark.skipif(not ((_HS / "work/lr6/mo_bfKkNmVTGPs.json").exists() and (_HS / "mp4/bfKkNmVTGPs.mp4").exists()), reason="유머쇼쇼 원본·옛 산출물 없음(집 PC 전용)")
 def test_reproduce_humorshowshow_motion():
     from tools.calcopy.engine.readline_tools import shotmotion
     C = json.loads((_HS / "work/lr6/cut_bfKkNmVTGPs.json").read_text(encoding="utf-8"))
@@ -365,7 +365,7 @@ def test_itemhome_softfocus_not_zoomblur():
 _FS = Path("C:/숏템_칼카피/foreignshowshow")
 
 
-@pytest.mark.skipif(not (_FS / "work/lr6/fs_QMJtjJz4M6w_seg.json").exists(), reason="샤크탱크 원본·옛 산출물 없음(집 PC 전용)")
+@pytest.mark.skipif(not ((_FS / "work/lr6/fs_QMJtjJz4M6w_seg.json").exists() and (_FS / "src/QMJtjJz4M6w.mp4").exists()), reason="샤크탱크 원본·옛 산출물 없음(집 PC 전용)")
 def test_reproduce_foreignshowshow_shadow_flash_marks():
     from tools.calcopy.engine.readline_tools import marktrack
     mp4 = str(_FS / "src/QMJtjJz4M6w.mp4")
@@ -377,7 +377,7 @@ def test_reproduce_foreignshowshow_shadow_flash_marks():
 _HT = Path("C:/숏템_칼카피/hottemreport")
 
 
-@pytest.mark.skipif(not (_HT / "work/lr6/th6/OE-11wb7vdY.jpg").exists(), reason="핫템리포트 썸네일 없음(집 PC 전용)")
+@pytest.mark.skipif(not ((_HT / "work/lr6/th6/OE-11wb7vdY.jpg").exists() and (_HT / "mp4/OE-11wb7vdY.mp4").exists() and (_HT / "mp4/ZqVgAg99gRI.mp4").exists()), reason="핫템리포트 썸네일 없음(집 PC 전용)")
 def test_thumbmatch_hottemreport():
     """06 핫템리포트 손 측정: 썸네일 = OE 12.0초·Zq 18.83초 프레임."""
     from tools.calcopy.engine.readline_tools import thumbmatch
