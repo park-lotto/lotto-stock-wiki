@@ -56,6 +56,16 @@ def main():
     seg = W / "seg"; seg.mkdir(exist_ok=True)
     # 1) 클로드 창 + 8배속
     ui = seg / "o2_ui.mp4"
+    only_hook = "hook" in sys.argv[1:]  # 나레이션 화면만 다시 — 앞 두 구간은 저장본 그대로
+    ua = seg / "o2_ui.wav"; sh = seg / "o2_short.mp4"
+    if only_hook:
+        L, sl = dur(ui), dur(sh.with_suffix(".mkv"))
+    else:
+        L, sl = build_front(seg, ui, ua, sh)
+    _hook_and_join(seg, ui, ua, sh, L, sl)
+
+
+def build_front(seg, ui, ua, sh):
     TL = frames("claude_ui2.html", None, "TL", ui)
     R = random.Random(3)
     keys = []
@@ -80,13 +90,16 @@ def main():
     ev += [(TL["DONE"], A / "팩01" / "ding.wav", 0.7), (TL["PLAY"], A / "팩01" / "click2.wav", 1.0)]
     L = TL["END"]
     vol = f"if(lt(t,{TL['FF']:.2f}),0.12,if(lt(t,{TL['DONE']:.2f}),0.2,0.12))"
-    ua = seg / "o2_ui.wav"; mix(ev, L, ua, [(BGM, 0, L, vol, 0.5, 0.45)])
+    mix(ev, L, ua, [(BGM, 0, L, vol, 0.5, 0.45)])
     # 2) 쇼츠 원음 그대로 끝까지
     sl = dur(SHORT)
-    sh = seg / "o2_short.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-t", f"{sl:.3f}", "-i", str(W / "paper.png"), "-i", str(SHORT),
          "-filter_complex", "[1:v]scale=-2:1000,setsar=1[s];[0:v]scale=1920:1080,setsar=1[bg];[bg][s]overlay=(W-w)/2:40,fps=30,format=yuv420p[v];[1:a]aresample=48000,aformat=channel_layouts=stereo[a]",
          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-threads", "4", "-crf", "18", "-preset", "veryfast", "-c:a", "pcm_s16le", "-t", f"{sl:.3f}", str(sh.with_suffix(".mkv"))])
+    return L, sl
+
+
+def _hook_and_join(seg, ui, ua, sh, L, sl):
     # 3) 나레이션 훅
     hk = seg / "o2_hook.mp4"
     HT = frames("hook.html", None, "HT", hk)
