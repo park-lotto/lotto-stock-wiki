@@ -254,6 +254,7 @@ def member_frame(st: dict) -> dict:
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st
     name = brand.get("channel_name")
+    wm = brand.get("watermark") if isinstance(brand.get("watermark"), dict) else {}     # 회원 워터마크 자리(없으면 {}) — 본 틀·구간 틀이 같이 쓴다
     bar = (F.get("post") or {}).get("head_bar") or {}
     bar_text = [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"]
     if bar_text:       # 머리띠 글자 = 회원 채널명 한 칸(고정 글자 포함), 안 넣었으면 비운다 — 프리셋 원래 채널 글자를 내보내지 않는다(사장님 11-02)
@@ -292,20 +293,52 @@ def member_frame(st: dict) -> dict:
             F["post"]["author_line"] = {**PA, "text": text["post_author"].strip(), "member": True}
         else:
             del F["post"]["author_line"]
+    _member_titles(F.get("title") or [], text)
+    L = brand.get("logo")
+    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
+        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
+    for sg in F.get("segments") or []:         # 구간 틀(훅 카드 등)이 덮는 칸에도 회원이 바꾼 칸만 — 안 바꾼 칸은 구간 판 값(#4901 김효준: 첫 장면만 회원 색·채널명 빠짐)
+        _member_segment(sg.get("frame") or {}, F, brand, text, name, wm)
+    return st
+
+
+def _member_titles(titles: list, text: dict) -> None:
+    """회원 제목 꾸미기(글꼴·줄 색·크기·세로 위치) — 본 틀과 구간 틀이 같은 규칙. 안 고른 줄·칸은 그대로."""
     colors = text.get("title_colors") or []
-    for i, T in enumerate(F.get("title") or []):
+    for i, T in enumerate(titles):
         if text.get("title_font"):
             T["font"] = member_font_file(text["title_font"])
         if i < len(colors) and colors[i]:      # 안 고른 줄은 프리셋 색
             T["color"] = colors[i]
-        if text.get("title_scale"):
+        if text.get("title_scale") and T.get("px"):
             T["px"] = round(T["px"] * float(text["title_scale"]))
         if text.get("title_dy") and "center" in T:   # 미리보기에서 끌어 옮긴 세로 거리(px, 1080×1920 기준)
             T["center"] += int(text["title_dy"])
-    L = brand.get("logo")
-    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
-        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
-    return st
+
+
+def _member_segment(Fs: dict, F: dict, brand: dict, text: dict, name, wm: dict) -> None:
+    """구간 틀 Fs 가 덮는 칸 중 회원이 바꾼 것만 본 틀과 같은 값으로. 구간 틀이 안 덮는 칸은 합칠 때 본 틀(회원 값)이 그대로 쓰인다."""
+    bg = (brand.get("colors") or {}).get("bg")
+    if bg and "bg" in Fs:
+        Fs["bg"] = list(bg)
+    if "title" in Fs:
+        _member_titles(Fs.get("title") or [], text)
+    if "watermark" in Fs:
+        if wm and F.get("watermark"):              # 회원이 워터마크 자리를 정했다 = 구간에서도 같은 자리
+            Fs["watermark"] = dict(F["watermark"])
+        elif Fs.get("watermark"):
+            if name:
+                head = str(Fs["watermark"].get("text") or "").split(" ", 1)
+                Fs["watermark"] = {**Fs["watermark"], "text": f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name}
+                name_look([Fs["watermark"]], brand.get("name_scale"), brand.get("name_color"))
+            else:
+                Fs["watermark"] = None
+    if "logo" in Fs and Fs.get("logo"):
+        if name:
+            Fs["logo"] = {**Fs["logo"], "text": name}
+            name_look([Fs["logo"]], brand.get("name_scale"), brand.get("name_color"))
+        else:
+            Fs["logo"] = None
 
 
 def save_counted(name: str, counted: dict):
