@@ -287,7 +287,7 @@ def test_frame_segments_resolve():
     assert [(x["t0"], x["t1"], x["kind"]) for x in g] == [(0.0, round(round(1.62 * FPS) / FPS, 4), "post"), (2.8333, 4.3333, "full")]
     assert g[0]["frame"]["title"] == [{"px": 50}] and "segments" not in g[0]["frame"]        # 판 틀 위에 깊게 덮음(목록은 대신)
     assert g[0]["window"] == [0, 760, 1080, 1056] and g[1]["window"] == [0, 0, 1080, 1920]
-    assert g[0]["body_text"] == "첫 줄 글." and g[0]["captions"] == "hide" and g[1]["body_text"] is None
+    assert g[0]["body_text"] == "첫 줄 글" and g[0]["captions"] == "hide" and g[1]["body_text"] is None
     assert RB.frame_segments(_S2(), _T2(), {"frame": {"window": [0, 0, 1, 1]}}) == []
     for bad in ([{"t0": 0, "t1": 2}, {"t0": 1, "t1": 3}], [{"t0": 0, "t1": "N9.end"}], [{"t0": 0, "t1": 1, "captions": "x"}], [{"t0": 2, "t1": 1}]):
         with pytest.raises(RB.StageError):

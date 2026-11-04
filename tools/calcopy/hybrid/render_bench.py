@@ -947,7 +947,8 @@ def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
         bt = sg.get("body_text")
         text = None
         if bt == "lines":
-            text = " ".join((L.get("tts") or " ".join(c["text"] for c in caps_of(L))).strip() for L in S["lines"]
+            # 화면 글 = 자막(caps) — 목소리 글(tts)은 끝 마침표·읽기 표기(QR→큐알)가 있어 띠에 그대로 보였다(#4253 윤상길). 자막이 없는 줄만 tts(끝 '.' 뗌)
+            text = " ".join((" ".join(c["text"] for c in caps_of(L)) or str(L.get("tts") or "").rstrip(".")).strip() for L in S["lines"]
                             if L["kind"] != "orig" and t0 - 1e-3 <= T["lines"][L["id"]][0] < t1 - 1e-3)
         elif bt is not None:
             raise StageError(f"frame.segments[{i}].body_text '{bt}' 모름 — lines 또는 비움")
