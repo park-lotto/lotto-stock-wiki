@@ -162,14 +162,12 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
       </ol>
       <div class="qmsg" id="startMsg">내 회원 인증이 들어 있습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div>
     </div>
-    <details class="more"><summary>PC 관리 · 다른 설치 방법</summary>
+    <details class="more"><summary>PC 관리</summary>
       <div class="grid">
         <div class="card"><div class="nm">등록 PC <small id="devCount"></small></div><div class="list" id="devList"></div><div class="sub" id="swapNote" style="margin-top:8px"></div></div>
         <div class="card"><div class="nm">지금 접속</div><div id="leaseState" class="sub"></div>
           <div class="row" style="margin-top:10px"><button class="btn sm warn" id="leaseFree">강제 해제</button><span class="msg" id="leaseMsg"></span></div></div>
       </div>
-      <div class="grid" id="instCards"></div>
-      <div class="row" style="margin-top:10px"><a class="btn sm" href="/api/claude/me/start.cmd" style="text-decoration:none">설치 파일로 받기</a><a class="btn sm" href="/api/claude/me/start.md" style="text-decoration:none">START.md 받기</a></div>
     </details>
   </section>
 
@@ -375,19 +373,6 @@ function renderLicense(){
   $('leaseFree').disabled=!H.lease&&!H.session;
 }
 
-function renderInstall(){
-  const ua=navigator.userAgent||''; const isMac=/Mac/i.test(ua);
-  const names={'desktop':'Claude 데스크탑용 (윈도·맥)','code-win-x64':'Claude Code용 (윈도)'};
-  const want=['desktop','code-win-x64'];
-  const by={}; (H.installers||[]).forEach(i=>by[i.os]=i);
-  $('instCards').innerHTML=want.map(os=>{ const i=by[os]; const mine=os==='desktop'||(!isMac&&os==='code-win-x64');
-    return '<div class="card'+(mine?' sel':'')+'"><div class="nm">'+names[os]+(mine?'<br><small>이 PC 에 맞는 것</small>':'')+'</div>'
-      +(i&&i.ready?('<div class="sub">버전 '+esc(i.version||'')+(i.size?' · '+(i.size<1048576?Math.max(1,Math.round(i.size/1024))+'KB':Math.round(i.size/1048576)+'MB'):'')+'</div>'
-        +'<div class="mono" style="margin-top:6px">sha256 '+esc(i.sha256||'')+'</div>'
-        +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
-       :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
-}
-
 $('startCopy').onclick=async()=>{
   try{ const r=await api('/api/claude/me/start_line'); await navigator.clipboard.writeText(r.line); $('startMsg').textContent='복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
   catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
@@ -410,7 +395,7 @@ async function load(selId){
   catch(e){ showErr(e.message||'불러오지 못했습니다'); $('presetCards').innerHTML='<div class="empty">'+esc(e.message||'')+'</div>'; return; }
   $('err').classList.remove('on');
   $('notices').innerHTML=(H.notices||[]).map(n=>'<div class="notice">⚠️ '+esc(n.title)+(n.level==='suspend'?' — 사용이 잠시 멈췄습니다. 관리자 확인 뒤 풀립니다':' — 평소와 다른 사용이 보였습니다')+'</div>').join('');
-  renderProfiles(selId||(CUR&&CUR.profile_id)); renderPacks(); renderLicense(); renderInstall();
+  renderProfiles(selId||(CUR&&CUR.profile_id)); renderPacks(); renderLicense();
   $('steps').innerHTML=H.steps.map(s=>'<li>'+esc(s)+'</li>').join('');
   $('guideLink').innerHTML=H.guide?'<a href="'+esc(H.guide)+'" target="_blank" rel="noopener" style="color:var(--accent)">그림 안내 보기</a>':'그림 안내는 준비 중입니다.';
 }
