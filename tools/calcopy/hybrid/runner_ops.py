@@ -2680,6 +2680,90 @@ def c_bm_eye_frames(W, d):
     return {"frames": out, "failed": failed}
 
 
+def c_bm_rules(W, d):
+    """통과한 줄판독 → 규칙빈도·대본언어·팔레트(지침서 §2-2 ⑤). 판단 없음 — 쓰기 주인 = kal_analyze.write_rules(집 PC kal.py 와 같은 함수)."""
+    from tools.calcopy.engine import kal_analyze as K
+    ch = _inside(W, f"channel/{d['slug']}")
+    docs = []
+    for vid in d.get("ids") or []:
+        p = ch / "줄판독" / f"{vid}.json"
+        if p.is_file():
+            docs.append(jload(p))
+    if not docs:
+        return {"docs": 0, "error": "통과한 줄판독 없음 — 규칙을 셀 편이 없다"}
+    K.write_rules(ch, docs, d["slug"])
+    return {"docs": len(docs)}
+
+
+def _gate_get(doc, key: str):
+    cur = doc
+    for k in key.split("."):
+        if not isinstance(cur, dict) or k not in cur:
+            return None
+        cur = cur[k]
+    return cur
+
+
+def _gate_one(v) -> dict:
+    if v is None:
+        return {"v": None}
+    if isinstance(v, dict) and "failed" in v:
+        return {"failed": str(v["failed"])[:80]}
+    if isinstance(v, bool):
+        return {"num": int(v)}
+    if isinstance(v, (int, float)):
+        return {"num": v}
+    return {"len": len(v) if hasattr(v, "__len__") else 1}
+
+
+def _gate_path(path: Path, key: str | None) -> dict:
+    if not path.is_file():
+        return {"file": False}
+    if not key:
+        return {"file": True}
+    try:
+        doc = jload(path)
+    except (OSError, ValueError) as e:
+        return {"file": True, "error": f"{type(e).__name__}"}
+    if key.startswith("lines[]."):
+        k = key[len("lines[]."):]
+        ls = [l for l in (doc.get("lines") if isinstance(doc, dict) else None) or [] if isinstance(l, dict)]
+        return {"file": True, "n": len(ls), "has": sum(k in l for l in ls), "set": sum(l.get(k) not in (None, "", []) for l in ls)}
+    return {"file": True, **_gate_one(_gate_get(doc, key))}
+
+
+def gate_measure(W: Path, rows: list[dict], slug: str, ids: list[str] | None = None, work: str | None = None) -> dict:
+    """(재기 주인 · 판단 없음 · 읽기만) rows = [{id, out:'경로#키'}](서버 bench_steps.gate_rows 가 보냄) — {ch}=channel/<slug>·{id}=편·{work}=시험 편·'*' 글롭.
+    파일을 만들거나 고치지 않는다. 판정은 서버(bench_steps.evaluate)."""
+    import glob as _glob
+    W = Path(W)
+    ch = f"channel/{slug}"
+    if ids is None:
+        ids = sorted(p.stem for p in (W / "src").glob("*.mp4") if not p.stem.endswith("_360")) if (W / "src").is_dir() else []
+    out = {}
+    for r in rows:
+        tpl, _, key = str(r["out"]).partition("#")
+        tpl = tpl.replace("{ch}", ch).replace("{work}", str(work or "_없음_"))
+        if "{id}" in tpl:
+            per = {vid: _gate_path(W / tpl.replace("{id}", vid), key or None) for vid in ids}
+        elif "*" in tpl:
+            hits = sorted(_glob.glob(str(W / tpl)))
+            per = {"*": {"file": bool(hits), "count": len(hits), **(_gate_path(Path(hits[0]), key or None) if hits and key else {})}}
+        else:
+            per = {"-": _gate_path(W / tpl, key or None)}
+        out[str(r["id"])] = {"per": per}
+    return {"ids": ids, "rows": out}
+
+
+def c_bm_gate(W, d):
+    """단계 칸 재기(판단 없음 — 읽기만). 행 목록은 서버가 보낸다(표 = 서버 bench_steps). 판정은 서버 flow_bench._step_gate."""
+    work = d.get("work")
+    if work:
+        _inside(W, work)
+    return {"phase": d.get("phase"), **gate_measure(W, d.get("rows") or [], str(d["slug"]), d.get("ids"), work)}
+
+
+CMDS.update({"bm_gate": c_bm_gate, "bm_rules": c_bm_rules})
 CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames, "bm_clean": c_bm_clean, "bm_wait": c_bm_wait})
 CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
 
@@ -2722,7 +2806,8 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
              "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
-             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인", "bm_clean": "PC 정리하고 기다리기", "bm_wait": "잠시 기다리기"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인", "bm_clean": "PC 정리하고 기다리기", "bm_wait": "잠시 기다리기",
+             "bm_gate": "단계 검사", "bm_rules": "규칙 세기"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}

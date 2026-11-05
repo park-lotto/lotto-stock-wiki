@@ -442,14 +442,8 @@ def step_rules(S: State):
     kd = S.dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)      # --from rules(이미 분석한 채널)에서도 돈다
     docs = K._load_docs([str(S.dir / "줄판독")])
-    R = K.rules_of(docs)
-    (kd / "규칙빈도_초안.md").write_text(K.rules_md(R, S.d["slug"]), encoding="utf-8")
-    (kd / "규칙빈도.json").write_text(json.dumps(R, ensure_ascii=False, indent=1), encoding="utf-8")
-    Sc = K.script_of(docs)
-    (kd / "대본언어.md").write_text(K.script_md(Sc), encoding="utf-8")
-    (kd / "대본언어.json").write_text(json.dumps(Sc, ensure_ascii=False, indent=1), encoding="utf-8")
-    P = K.palette_of(docs)
-    (S.dir / "팔레트.json").write_text(json.dumps(P, ensure_ascii=False, indent=1), encoding="utf-8")
+    out = K.write_rules(S.dir, docs, S.d["slug"])        # 쓰는 자리 한 곳(회원 흐름 bm_rules 와 같은 함수)
+    R, Sc, P = out["rules"], out["script"], out["palette"]
     draft = S.dir / "_kal" / "스타일분석_초안.md"
     draft.write_text("# 스타일분석 초안(kal.py rules — 규칙빈도·대본언어·팔레트 자동 집계. 사람이 §3 꼴로 옮겨 적고 규칙을 채택한다)\n\n"
                      + K.rules_md(R, S.d["slug"]) + "\n" + K.script_md(Sc) + "\n## 팔레트(channel/<slug>/팔레트.json)\n"

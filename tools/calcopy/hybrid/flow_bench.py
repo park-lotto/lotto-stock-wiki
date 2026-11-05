@@ -101,6 +101,49 @@ def _fail_stop(st, errs, why: str, fix: str, retry: str | None, retry_content: b
     raise F._Stop(why, fix, retry=retry if retry_content else None, detail=detail, **kw)
 
 
+# 단계 관문(사장님 11-06 "단계를 정해서 지침서에 나온 걸 하나씩 다 봐야" · Jev 해결 1.00·뿌리 0.86 / 구조 A 해결 0.76·위험 0.26):
+#   칸 표 = hybrid/bench_steps.STEPS 한 곳(지침서 줄마다). 단계 끝마다 실행기 bm_gate 가 그 단계 칸을 읽기만 하고(재기), 여기 _step_gate 가 bench_steps.evaluate 로 판정한다.
+#   막는 칸 미달 → 그 단계 다시 재기 · 같은 칸 묶음 flow.REDO_STUCK 번 연속 → 멈춤 · 검사 결과가 없으면 멈춤(조용한 통과 금지) · 아직 안 이은 칸(wait)은 st 와 log 에만.
+def _gtry(b: dict, phase: str) -> dict:
+    """다시 재기 번호 — 같은 do 를 그대로 다시 내면 flow._watch 가 '같은 입력 반복'으로 감독을 부른다."""
+    n = len((b.get("gate_hist") or {}).get(phase) or [])
+    return {"try": n} if n else {}
+
+
+def _gate_do(st, phase: str, ids: list | None = None, work: str | None = None) -> dict:
+    from tools.calcopy.hybrid import bench_steps as BS
+    b = st["bm"]
+    return {"id": "gate", "cmd": "bm_gate", "phase": phase, "slug": b["slug"], "rows": BS.gate_rows(phase), **({"ids": list(ids)} if ids is not None else {}),
+            **({"work": work} if work else {}), **_gtry(b, phase)}
+
+
+def _step_gate(st, phase: str, m: dict, retry: str, ids: list | None = None):
+    """(판단 주인 · 단계 통과) None = 통과, dict = 다시 재기(goto) 또는 환경 되살리기. 같은 칸 묶음 REDO_STUCK 번 연속이면 멈춤(raise)."""
+    from tools.calcopy.hybrid import bench_steps as BS
+    F = _F()
+    b = st["bm"]
+    g = m.get("gate")
+    if not isinstance(g, dict) or g.get("error") or g.get("phase") != phase:
+        errs = [g["error"]] if isinstance(g, dict) and g.get("error") else [f"단계 칸 검사 결과 없음({phase})"]
+        return _fail_stop(st, errs, "단계 검사를 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry, ask_member=True)
+    e = BS.evaluate(phase, g.get("rows") or {}, ids)
+    b.setdefault("gate", {})[phase] = {"miss": e["miss"], "wait": e["wait"], "ok": len(e["ok"]), "why": {k: e["why"][k] for k in e["miss"] + e["wait"]}}
+    if e["wait"]:
+        st["log"].append(f"단계 검사({phase}): 아직 안 이은 칸 {len(e['wait'])}개(막지 않음) {e['wait']}")
+    hist = b.setdefault("gate_hist", {}).setdefault(phase, [])
+    if not e["miss"]:
+        hist.clear()
+        return None
+    hist.append(sorted(e["miss"]))
+    del hist[:-F.REDO_STUCK]
+    why = json.dumps({k: e["why"][k] for k in e["miss"]}, ensure_ascii=False)[:400]
+    st["log"].append(f"단계 검사({phase}) 미달 {e['miss']} → 다시 재기({retry}) {len(hist)}번째: {why[:200]}")
+    if len(hist) >= F.REDO_STUCK and all(h == hist[-1] for h in hist):
+        raise F._Stop("같은 칸이 계속 비어 다음 단계로 못 가요", "잠시 뒤 다시 해 주세요", retry=retry, ask_member=True,
+                      detail=f"{phase} 미달 칸 {F.REDO_STUCK}번 연속: " + why)
+    return {"goto": retry}
+
+
 def bm_setup(st, m, rp, u):
     return {"do": [{"id": "bm_env", "cmd": "bm_env"}], "then": "bm_env_got"}
 
@@ -122,7 +165,8 @@ def bm_env_got(st, m, rp, u):
 def bm_fetch(st, m, rp, u):
     """벤치 영상 받기 — 준비 확인 뒤, 또는 받기 실패 뒤 다시 시도(옛 retry=bm_env_got 은 빈 준비 결과로 'agy 없음' 오판)."""
     b = st["bm"]
-    return {"do": [{"id": "bm_fetch", "cmd": "bm_fetch", **({"videos": b["videos_in"]} if b.get("videos_in") else {"url": b["url"]}), "n": b["n"]}], "then": "bm_fetch_got"}
+    return {"do": [{"id": "bm_fetch", "cmd": "bm_fetch", **({"videos": b["videos_in"]} if b.get("videos_in") else {"url": b["url"]}), "n": b["n"], **_gtry(b, "bm_fetch")},
+                   _gate_do(st, "bm_fetch")], "then": "bm_fetch_got"}
 
 
 def bm_fetch_got(st, m, rp, u):
@@ -131,12 +175,17 @@ def bm_fetch_got(st, m, rp, u):
     if not vs:
         return _fail_stop(st, [r["error"]] if r.get("error") else [], "벤치 영상을 받지 못했어요", "채널 주소를 확인하거나 영상 주소 3개를 주세요", "bm_fetch", auto=True)
     st["bm"]["videos"] = vs
+    g = _step_gate(st, "bm_fetch", m, "bm_fetch", ids=[v["id"] for v in vs])
+    if g:
+        return g
     return bm_tear(st, m, rp, u)
 
 
 def bm_tear(st, m, rp, u):
     """뜯기 — 받은 영상 그대로(다시 시도도 받기부터가 아니라 뜯기만)."""
-    return {"do": [{"id": "bm_tear", "cmd": "bm_tear", "slug": st["bm"]["slug"], "videos": st["bm"]["videos"]}], "then": "bm_tear_got"}
+    b = st["bm"]
+    return {"do": [{"id": "bm_tear", "cmd": "bm_tear", "slug": b["slug"], "videos": b["videos"], **_gtry(b, "bm_tear")},
+                   _gate_do(st, "bm_tear", [v["id"] for v in b["videos"]])], "then": "bm_tear_got"}
 
 
 def bm_tear_got(st, m, rp, u):
@@ -148,6 +197,9 @@ def bm_tear_got(st, m, rp, u):
     b = st["bm"]
     b["style"], b["other_styles"] = ps[0]["style"], [p["style"] for p in ps[1:]]      # 편 수가 많은 틀 하나로 간다 — 나머지는 결과에 적는다
     b["keep"] = [v["id"] for v in b["videos"] if v["id"] in set(ps[0]["sources"])]
+    g = _step_gate(st, "bm_tear", m, "bm_tear", ids=b["keep"])
+    if g:
+        return g
     _branch(st, t)
     return {"do": [{"id": "skel", "cmd": "bm_skel", "slug": b["slug"], "ids": b["keep"]}], "then": "bm_skel_got"}
 
@@ -303,7 +355,9 @@ def bm_measure(st, m, rp, u):
     fills = {vid: {**_fill_of(vid, rows.get(vid) or [], per), "eye": b["eye"].get(vid)} for vid in b.get("skel") or {} if vid in rows}
     if not fills:
         raise F._Stop("벤치 영상 판독이 비었어요", "잠시 뒤 다시 해 주세요", retry="bm_read_got", auto=True, detail="오푸스 답 lines 에 편이 없음")
-    return {"do": [{"id": "fill", "cmd": "bm_fill", "slug": b["slug"], "fills": fills}], "then": "bm_measure_got"}
+    return {"do": [{"id": "fill", "cmd": "bm_fill", "slug": b["slug"], "fills": fills},
+                   {"id": "rules", "cmd": "bm_rules", "slug": b["slug"], "ids": list(fills)},      # 지침서 §2-2 ⑤ 규칙빈도·대본언어·팔레트(주인 kal_analyze.write_rules)
+                   _gate_do(st, "bm_read", list(fills))], "then": "bm_measure_got"}
 
 
 def bm_eye_ask(st, m, rp, u):
@@ -333,6 +387,9 @@ def bm_measure_got(st, m, rp, u):
                       detail="줄판독 check_doc 불합격: " + json.dumps(bad, ensure_ascii=False)[:400])
     if bad:
         st["log"].append(f"줄판독 검사 못 넘은 편은 대조에서 뺌: {sorted(bad)}")
+    g = _step_gate(st, "bm_read", m, "bm_reread", ids=ok)
+    if g:
+        return g
     b["line_reads"] = [f"{d}/{x}.json" for x in ok]
     return {"goto": "bm_trial"}
 
@@ -416,12 +473,16 @@ def bm_trial_frames(st, m, rp, u):
     b = st["bm"]
     lr = b.get("line_reads") or []
     v = {"id": "trial", "mp4": b["trial"], **({"win_doc": lr[0]} if lr else {})}
-    return {"do": [{"id": "eye_t", "cmd": "bm_eye_frames", "videos": [v], "try": int(st.get("pan_n") or 0)}], "then": "bm_trial_eye"}
+    return {"do": [{"id": "eye_t", "cmd": "bm_eye_frames", "videos": [v], "try": int(st.get("pan_n") or 0)},
+                   {**_gate_do(st, "bm_trial", work=b["trial_dir"]), "pan": int(st.get("pan_n") or 0)}], "then": "bm_trial_eye"}
 
 
 def bm_trial_eye(st, m, rp, u):
     b = st["bm"]
     if "eye_t" in m:
+        g = _step_gate(st, "bm_trial", m, "bm_trial")      # 시험 편 완성본·시각 기록이 있어야 대조로 간다(그림과 같은 묶음에서 잼)
+        if g:
+            return g
         got = _eye_frames_got(m["eye_t"], ["trial"])
         if got is None:
             return _eye_stop(st, "bm_eye_frames(시험 편): " + json.dumps(m["eye_t"], ensure_ascii=False, default=str)[:300], "bm_trial_frames")

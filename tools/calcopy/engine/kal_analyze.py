@@ -1315,6 +1315,21 @@ def script_of(docs: list[dict]) -> dict:
     return out
 
 
+def write_rules(ch_dir, docs: list[dict], title: str = "") -> dict:
+    """(주인 · 지침서 §2-2 ⑤ 산출물 쓰기 한 곳) 줄판독 모음 → _kal/규칙빈도_초안.md·규칙빈도.json·대본언어.md·대본언어.json + 팔레트.json.
+    집 PC kal.py step_rules 와 회원 흐름 실행기 bm_rules 가 둘 다 이것을 부른다(쓰는 자리 두 벌 금지). 판단은 rules_of·script_of·palette_of."""
+    ch = Path(ch_dir)
+    kd = ch / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)
+    R, Sc, P = rules_of(docs), script_of(docs), palette_of(docs)
+    (kd / "규칙빈도_초안.md").write_text(rules_md(R, title), encoding="utf-8")
+    (kd / "규칙빈도.json").write_text(json.dumps(R, ensure_ascii=False, indent=1), encoding="utf-8")
+    (kd / "대본언어.md").write_text(script_md(Sc), encoding="utf-8")
+    (kd / "대본언어.json").write_text(json.dumps(Sc, ensure_ascii=False, indent=1), encoding="utf-8")
+    (ch / "팔레트.json").write_text(json.dumps(P, ensure_ascii=False, indent=1), encoding="utf-8")
+    return {"rules": R, "script": Sc, "palette": P}
+
+
 def script_md(S: dict) -> str:
     L = ["# 대본 언어(kal_analyze script)", ""]
     for sp, r in S.items():

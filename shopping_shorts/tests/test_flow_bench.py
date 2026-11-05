@@ -5,8 +5,23 @@ from tools.calcopy.hybrid import flow, flow_bench as FB, jev_gate
 from tools.calcopy.hybrid import runner_ops as R
 
 
+_GATE_AT = {"bm_fetch_got": ("bm_fetch", "bm_fetch"), "bm_tear_got": ("bm_tear", "bm_tear"), "bm_measure_got": ("bm_read", "fill"),
+            "bm_trial_eye": ("bm_trial", "eye_t")}
+
+
+def _pass_gate(phase):
+    """단계 관문(bench_steps) 칸이 전부 통과하는 실행기 bm_gate 결과 — 이 파일 시험은 관문 뒤 흐름을 본다(관문 자체는 test_bench_steps)."""
+    from tools.calcopy.hybrid import bench_steps as BS
+    full = {"file": True, "count": 9, "n": 1, "has": 1, "set": 1, "len": 1, "num": 9999}
+    return {"phase": phase, "rows": {r["id"]: {"per": {"*": full}} for r in BS.gate_rows(phase)}}
+
+
 def _go(st, m=None, rp=None):
-    return flow.step(st, m or {}, rp or {}, {})
+    m = dict(m or {})
+    at = _GATE_AT.get(st.get("phase"))
+    if at and at[1] in m and "gate" not in m:
+        m["gate"] = _pass_gate(at[0])
+    return flow.step(st, m, rp or {}, {})
 
 
 def _vid(i):
@@ -348,7 +363,7 @@ def _trial_eye(st, n=1):
 def test_trial_got_runs_side_and_match():
     st = _st("bm_trial_got", videos=[_vid("a")], keep=["a"], line_reads=["channel/s/줄판독/a.json"])
     r = _go(st, rp={"bm_trial": {"work_dir": "make/t1", "ok": True}})
-    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames"] and st["phase"] == "bm_trial_eye"
+    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames", "bm_gate"] and st["phase"] == "bm_trial_eye"
     assert r["do"][0]["videos"] == [{"id": "trial", "mp4": "make/t1/final.mp4", "win_doc": "channel/s/줄판독/a.json"}]
     assert "화면 전환 확인" in R.CMD_LABEL["bm_eye_frames"] and "칼카피" not in R.CMD_LABEL["bm_eye_frames"]
     r = _trial_eye(st)
@@ -710,7 +725,7 @@ def test_trial_frames_error_stops():
 def test_new_trial_rejudges_trial_eye_only():
     st = _st("bm_trial_got", videos=[_vid("a")], line_reads=["channel/s/줄판독/a.json"], eye={"a": _done_eye()}, trial_eye=_done_eye(), trial_frames=_fr(1, "trial"))
     r = _go(st, rp={"bm_trial": {"work_dir": "make/t2", "ok": True}})
-    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames"] and "trial_eye" not in st["bm"] and st["bm"]["eye"] == {"a": _done_eye()}
+    assert [d["cmd"] for d in r["do"]] == ["bm_eye_frames", "bm_gate"] and "trial_eye" not in st["bm"] and st["bm"]["eye"] == {"a": _done_eye()}
 
 
 def test_compare_retry_reuses_trial_eye():
@@ -718,7 +733,7 @@ def test_compare_retry_reuses_trial_eye():
     r = _go(st)
     assert [d["cmd"] for d in r["do"]] == ["bm_side", "bm_match"] and r["do"][1]["eye"] == _done_eye()
     st = _st("bm_compare", trial_dir="make/t1", trial="make/t1/final.mp4", videos=[_vid("a")])
-    assert [d["cmd"] for d in _go(st)["do"]] == ["bm_eye_frames"]
+    assert [d["cmd"] for d in _go(st)["do"]] == ["bm_eye_frames", "bm_gate"]
 
 
 def test_bm_fill_bad_eye_is_bad_not_written(tmp_path):
