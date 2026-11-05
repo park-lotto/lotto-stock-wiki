@@ -3508,7 +3508,7 @@ def snapshot(st: dict) -> dict:
     return scene_style.validate_snapshot({"version": 1, "mode": "story", "plainCaption": 2, "presetId": "plain", "sceneIndex": 0, "frameKind": "body",
                                           "frameRule": "body_all", "text": {"channel": "", "hook1": "", "hook2": "", "bodyTitle": ""},
                                           "captionPack": fields["captionPack"], "motionPack": fields["motionPack"],
-                                          "wordFx": {"style": "mark", "color": "", "grow": ""},
+                                          "wordFx": st.get("member_wordfx") or {"style": "mark", "color": "", "grow": ""},   # 회원 강조(styles._member_caption_fx)
                                           **({"captionOverride": st["member_caption"]} if st.get("member_caption") else {})})
 
 
@@ -4393,6 +4393,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     else:
         __import__("os").environ.pop("SHORTEM_SCRIPT_LANG", None)
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
+    for m in st.get("member_unused") or []:      # 회원이 정했지만 이 프리셋에서 영상에 안 닿는 칸(styles._member_caption_fx) — 조용히 받지 않는다
+        log(f"[회원 칸 안 닿음] {m}")
     RI.member_voice(S, st)                # 회원 목소리 칸 + 회원이 정한 말 빠르기(#1893 — 판 cps_target 맞춤을 건너뛴다)
     RI.voice_args(S, check=True)         # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
     RI.read_names(S, log)                 # 이름 발음 사전(engine/name_dict — preset_make.tts 와 같은 주인 apply_all, 그 목소리로 확인한 표기만)
@@ -4568,7 +4570,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
            "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)
     jsave(doc / "자막표.json", tab)
-    info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, **({"member_look": look.get("presetId")} if look else {}), "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
+    info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, **({"member_unused": st["member_unused"]} if st.get("member_unused") else {}), **({"member_look": look.get("presetId")} if look else {}), "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
             "devices": {**devices(st, trans, A, segs, T, len(sent)),
                         **({"motion_graphics": {"id": MG["id"], "layers": len(MG["layers"]), "color": MG["color_filter"], "not_drawn": MG["not_drawn"]}} if MG else {})},

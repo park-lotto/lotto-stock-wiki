@@ -143,7 +143,9 @@ def catalog() -> dict:
         p = next((v for v in presets if v.get("base_voice_id") == k["voice_id"] or v.get("preset_id") == k["voice_id"]), {})
         voices.append({"voice_id": k["voice_id"], "name": k["name"], "preset_id": p.get("preset_id") or k["voice_id"],
                        "engine": "elevenlabs" if k["engine"] == "일레븐랩스" else "typecast", "about": p.get("one_liner") or k.get("note") or ""})
-    return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
+    from shopping_shorts import scene_style
+    return {"fonts": fonts, "caption_packs": list(scene_style.caption_pack_keys()),   # 자막팩 이름(caption-motions.js PACKS — 주인 scene_style.caption_pack_keys)
+            "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
             "caption_mode": ["accumulate", "replace"], "voices": voices, "tts_emotions": list(TC_EMOTIONS), "tts_providers": list(PROVIDERS), "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
             "preset_defaults": preset_defaults_table(),   # 프리셋마다 기본값(원본 영상 기준) — packFor 가 엔진 기본 팩 위에 얹는다
             # 숏템메이커 템플릿(썰20·고정20) — 이름만(견본 그림은 벤치 화면이라 고객에게 안 보낸다). 고르면 렌더러가 그 자리에서 그린다
@@ -222,7 +224,7 @@ def preset_defaults_table() -> dict:
 
 
 EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color", "watermark"),
-            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "orig_text", "post_author"),
+            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "caption_pack", "orig_text", "post_author"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -266,6 +268,8 @@ def check(pack: dict, cat: dict | None = None) -> list:
     for key in ("title_font", "caption_font"):
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
+    if tx.get("caption_pack") is not None and tx["caption_pack"] not in (cat.get("caption_packs") or ()):
+        err.append(f"모르는 자막팩: {tx['caption_pack']}")
     pa = tx.get("post_author")
     if pa is not None and (not isinstance(pa, str) or len(pa) > 20 or re.search(r"[<>{}$\\]", pa)):
         err.append("게시글 작성자 줄은 20자 이하 글자여야 합니다('' = 안 그림)")

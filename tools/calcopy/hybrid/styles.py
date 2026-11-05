@@ -231,6 +231,65 @@ def name_look(items: list, scale, color) -> None:
                 it["color"] = color
 
 
+MEMBER_EMPH_BENCH = {"color": ("mark", ""), "grow": ("mark", "pop"), "underline": ("underline", "")}   # 회원 강조 → bench 스냅샷 wordFx(style, grow)
+
+
+def _member_caption_fx(st: dict, text: dict, cap: dict) -> None:
+    """(판단 주인 — 회원 자막 등장·강조·외곽선·자막팩 → bench 렌더 칸, 11-05 문인석·박은숙) member_frame 이 부른다.
+    등장·외곽선 = cap(→ render_bench.snapshot captionOverride → precision20-ui.js 가 팩 base·variants·speakers 에 입힘).
+    강조 = st['member_wordfx'](스냅샷 wordFx — bench 는 핵심 단어 고정 색칠 mark 를 그대로 두고 색·키우기만, 밑줄은 underline).
+    자막팩 = st.packs.caption.pack·옛 칸 caption.pack(새 팩에 없는 변형은 뺀다). 이 판에서 영상에 안 닿는 회원 칸은 st['member_unused'] 로 알린다."""
+    from shopping_shorts import scene_style
+    c = text.get("caption") or {}
+    unused = []
+    bench = st.get("renderer") == "bench"
+    if "enter" in c and c["enter"] is not None:
+        spec = scene_style.clean_caption_enter({"kind": "none"} if c["enter"] == "none" else c["enter"])
+        if spec:
+            cap["enter"] = spec
+    if "outline_px" in c or "outline_rgb" in c:
+        o = {}
+        if isinstance(c.get("outline_px"), (int, float)):
+            o["px"] = c["outline_px"]
+        if isinstance(c.get("outline_rgb"), list):
+            o["rgb"] = "#%02X%02X%02X" % tuple(c["outline_rgb"])
+        if o:
+            cap["outline"] = o
+    m = c.get("emphasis")
+    if m == "none":
+        st["member_wordfx"] = {"style": "", "color": "", "grow": ""}
+    elif isinstance(m, dict) and m.get("style") in MEMBER_EMPH_BENCH:
+        style, grow = MEMBER_EMPH_BENCH[m["style"]]
+        st["member_wordfx"] = {"style": style, "color": "#%02X%02X%02X" % tuple(m["rgb"]), "grow": grow}
+    if c.get("mode") and bench:
+        unused.append(f"text.caption.mode(자막 쌓기 {c['mode']}) — 이 프리셋은 판 caption.stack 으로 쌓아 영상에 안 닿는 칸")
+    name = text.get("caption_pack")
+    if name:
+        from tools.calcopy.hybrid import pack_map
+        packs = pack_map.caption_packs()
+        if name not in packs:
+            raise StyleError(f"회원 자막팩 '{name}' 이 자막팩 목록에 없다")
+        if not bench:
+            unused.append(f"text.caption_pack({name}) — 이 프리셋은 전용 렌더러라 자막팩을 쓰지 않는다")
+        else:
+            P = st.get("packs") or {}
+            if P.get("caption") is not None:
+                PC = P["caption"]
+                PC["pack"] = name
+                have = set((packs[name].get("variants") or {}))
+                if PC.get("variants"):
+                    PC["variants"] = {a: v for a, v in PC["variants"].items() if v in have}
+                errs = pack_map.check(P)
+                if errs:
+                    raise StyleError("회원 자막팩 반영 뒤 팩 검사 실패: " + " / ".join(errs))
+            if isinstance(st.get("caption"), dict):
+                st["caption"]["pack"] = name
+    if (cap.get("enter") or cap.get("outline") or st.get("member_wordfx")) and not bench:
+        unused.append("text.caption 등장·강조·외곽선 — 이 프리셋은 전용 렌더러라 자막팩 스냅샷을 쓰지 않는다")
+    if unused:
+        st["member_unused"] = unused
+
+
 def member_frame(st: dict) -> dict:
     """회원 '꾸미기' 값 → 판 틀(주인 한 곳 — 렌더·썸네일·캡컷·관문이 모두 load 로 받는다). SHORTEM_MEMBER_PACK = local_settings.packFile. 없으면 그대로."""
     f = os.environ.get("SHORTEM_MEMBER_PACK")
@@ -248,6 +307,7 @@ def member_frame(st: dict) -> dict:
     elif (bgm.get("candidates") or [None])[0]:      # 소리 단계에서 고른 곡(11-03: 회원 팩 bgm 이 판에 안 들어가 프리셋 곡만 나왔다)
         st["member_bgm"] = {"id": bgm["candidates"][0]}
     cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy", "scale") if text.get(f"caption_{k}")}
+    _member_caption_fx(st, text, cap)
     if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기)·크기(#1949 이성택 — 팩 size·강조 size 배율) — 자막팩 위에 덮는다(render_bench.snapshot)
         st["member_caption"] = cap
     F = st.get("frame")

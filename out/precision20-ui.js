@@ -1481,7 +1481,8 @@
     el.classList.add('wfx-on');Object.keys(WORD_FX_STYLES).forEach(k=>el.classList.toggle('wfx-'+k,wordFx.style===k));
     marks.forEach((m,k)=>{let s=spans[m.w];if(!s)return;s.classList.add('wfx-mk');if(Number.isInteger(m.n)&&m.n>0&&m.n<s.textContent.length&&!s.querySelector('.wfx-part')){const t=s.textContent,p=document.createElement('span');p.className='wfx-part';p.textContent=t.slice(0,m.n);s.textContent='';s.append(p,t.slice(m.n));}   // 어절 앞부분만 칠하기(m.n, 주인 scene_style.scene_marks) — 나머지 글자는 본래 색
       s=s.querySelector('.wfx-part')||s;s.style.color=colors[k];
-      const g=WORD_FX_GROWS[m.grow];if(!g)return;
+      const g=WORD_FX_GROWS[m.grow||wordFx.grow];if(!g)return;   // 회원 강조 키우기(wordFx.grow) — 장면 표식 grow 가 먼저
+      
       const at=Array.isArray(sc.words)&&Number.isFinite(sc.words[m.w])?Math.max(0,sc.words[m.w]-sc.start):0,scale=Math.round(growScale(g,wordFxClock+WORD_FX_LEAD-at)*1000)/1000;
       s.style.transformOrigin='50% 60%';s.style.transform=scale!==1?`scale(${scale})`:'';scales.push(scale);});
     return '0:'+(scales.join('|')||'1');
@@ -2757,7 +2758,9 @@
         if(ov.color&&pk.text)pk.text.color=ov.color;
         if(ov.dy){const mv=o=>{if(o&&o.place&&typeof o.place.y==='number')o.place.y+=o.place.y<=100?ov.dy/19.2:ov.dy};mv(pk);[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(mv)}
         if(ov.color)[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(o=>{if(o.text&&o.text.color)o.text.color=ov.color})   // 11-05 김효준 #6290: 화자 층(speakers) 색이 회원색을 덮어 narr 줄이 팩 노란색으로 나왔다
-        if(ov.scale>0){const sc=o=>{if(!o)return;if(typeof o.size==='number')o.size*=ov.scale;if(o.emph&&typeof o.emph.size==='number')o.emph.size*=ov.scale};sc(pk);[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(sc)}}}   // 자막 크기(회원 text.caption_scale → styles.member_frame) = 팩 글자·강조 크기 배율
+        if(ov.scale>0){const sc=o=>{if(!o)return;if(typeof o.size==='number')o.size*=ov.scale;if(o.emph&&typeof o.emph.size==='number')o.emph.size*=ov.scale};sc(pk);[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(sc)}
+        if(ov.outline){const o=ov.outline,base=+pk.size||100,re=/^\s*([\d.]+)em\s+(#[0-9a-f]{3,8})/i,put=(s,force)=>{if(!s)return;const cur=re.exec(String(s.WebkitTextStroke||''));if(!force&&!cur)return;const w=typeof o.px==='number'?2*o.px/base:(cur?+cur[1]:0),c=o.rgb||(cur?cur[2]:'#000000');if(w>0){s.WebkitTextStroke=`${+w.toFixed(4)}em ${c}`;s.paintOrder='stroke fill';s.strokeLinejoin='round'}else delete s.WebkitTextStroke};pk.text=pk.text||{};pk.text.style=pk.text.style||{};put(pk.text.style,typeof o.px==='number');if(pk.emph){pk.emph.style=pk.emph.style||{};put(pk.emph.style,typeof o.px==='number')}[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(L=>{put(L.text&&L.text.style,false);put(L.emph&&L.emph.style,false)})}   // 회원 외곽선(text.caption.outline_px·rgb → styles._member_caption_fx) = 팩 테 굵기(em=2·px/팩 글자 크기)·색. 변형·화자 층은 자기 테가 있을 때만
+        if(ov.enter&&typeof ov.enter==='object')[pk,...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(L=>{L.enter=ov.enter})}}   // 회원 등장(clean_caption_enter 스펙) = captionEnterSpec 이 읽는 팩·변형·화자 enter 칸 모두에(팩 motion 보다 이긴다) · 자막 크기(회원 text.caption_scale → styles.member_frame) = 팩 글자·강조 크기 배율
       sceneContext=context;adminView=context?.adminView===true;if(!saved)renderGrid();   // 관리자 전용 틀 노출은 context 를 받아야 정해진다(rowVisible)
       sceneTexts.clear();for(const k of Object.keys(shownBase))delete shownBase[k];shownAt=-1;   // 관제 219: 장면별 글은 이 작업 저장본 것만
       for(const [key,value] of Object.entries(saved?.sceneTexts||{}))if(typeof value==='string')sceneTexts.set(key,value);
