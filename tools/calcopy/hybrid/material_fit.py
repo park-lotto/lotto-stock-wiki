@@ -568,6 +568,23 @@ def fix_aba(cuts: list[dict], log=print) -> list[str]:
     return out
 
 
+def same_frames(c: dict, cuts: list[dict]) -> bool:
+    """(판단 주인 — 재사용 중 '같은 화면 두 번'인가) 같은 원본에서 쓰는 초 구간 [ss, ss+원본초)가 다른 영상 컷과 실제로 겹치면 참.
+    가까운 재사용(B13 거리 미만·겹침 없음)은 경고, 겹침은 진짜 결함 — 11-05: 03c84aaba(#3590 경고 컷 안 지움)가 둘을 묶어 겹침 컷도 안 빼
+    10-27 펜티 E2 규칙(겹침 + 빈자리 없음 + 같은 줄 다른 컷 → 빼기)이 깨졌다(서버 반영 관문 실패)."""
+    from tools.calcopy.hybrid.render_bench import FPS, src_frames
+    if c.get("ss") is None:
+        return False
+    a0 = float(c["ss"]); a1 = a0 + src_frames(c) / FPS
+    for x in cuts:
+        if x is c or x.get("src") != c.get("src") or x.get("ss") is None:
+            continue
+        b0 = float(x["ss"]); b1 = b0 + src_frames(x) / FPS
+        if min(a1, b1) - max(a0, b0) > 1e-3:
+            return True
+    return False
+
+
 def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=print, adjacent_run: bool = False, end: float | None = None,
                   still=None) -> list[str]:
     """(판단 주인 — 계획이 숫자 반려를 스스로 푼다, 사장님 10-27 '뿌리 수정': Claude 는 장면을 고르고 정확한 초는 코드가 맞춘다)
@@ -637,7 +654,7 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             mates = [x for x in cuts if x is not c and x.get("line") == c.get("line") and x.get("kind") == "tts"]
             if sp:
                 out.append(sp + " ← 샷 넘침")
-            elif not c.get("over") and mates and not (c.get("reuse_unfixed") and not (c.get("jumpy") or c.get("frozen"))):
+            elif not c.get("over") and mates and not (c.get("reuse_unfixed") and not (c.get("jumpy") or c.get("frozen")) and not same_frames(c, cuts)):
                 # ↑ 재사용(B13 경고)만 걸린 컷은 빼지 않는다 — 경고가 고른 컷(제품 컷)을 지웠다(#3590 김효준: 원본 20초라 거리 3초를 못 지킴, Jev 뿌리 0.91·해결 0.86).
                 #   그 자리에 두고 아래 '[옮기기] … 관문 몫' 경고로만 남긴다. 장면 전환·멈춘 그림(진짜 결함)은 그대로 빼기
                 # 재사용·전환인데 같은 원본에 빈자리가 없다 — 같은 줄에 Claude 가 고른 다른 컷이 있으면 이 컷을 빼고 그 컷이 시간을 이어받는다
