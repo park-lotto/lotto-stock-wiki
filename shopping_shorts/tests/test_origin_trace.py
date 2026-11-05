@@ -68,3 +68,74 @@ def test_list_and_desc_survive_ytdlp_null(monkeypatch):
     monkeypatch.setattr(SP, "run", lambda *a, **k: R())
     assert OT._list("https://www.tiktok.com/@x") == []
     assert "secondary user ID" in OT._desc("https://www.youtube.com/shorts/aaaaaaaaaaa")["error"]
+
+
+# ── 같은 영상 판정 = 프레임 대조(관제 319 11-06 감시 적발) ──────────────────────────
+# 실사고: judge_same 눈(썸네일 한 장)이 벤치 h3RPb5yZ9Ew 의 원본을 같은 가게 다른 편(@glitter_esther DeaeUEbzy6E '2탄')으로 골랐다.
+#   실측: 벤치→그 릴스 0.8 넘는 프레임 0/28 · 우리 1차(그 릴스 재편집)→릴스 0.52 · 같은 가게 다른 편 CZdHXV0nfGw→릴스 0.00
+import io
+from pathlib import Path
+
+import pytest
+
+from tools.calcopy import origin_find as OF
+
+SNAP = Path("C:/t/kal_snap")
+_B = SNAP / "origin/work_ig/h3RPb5yZ9Ew/seed/v.mp4"
+_O = SNAP / "material/origin_DeaeUEbzy6E.mp4"
+_U = SNAP / "out/숏템스냅_남대문스카프_1차.mp4"
+_C = SNAP / "data/snapbwatni/src/CZdHXV0nfGw.mp4"
+
+
+@pytest.mark.skipif(not (_B.exists() and _O.exists() and _U.exists() and _C.exists()), reason="스냅봤니 실측 영상 없음(CH PC 전용)")
+def test_frame_match_separates_same_shop_other_episode():
+    assert OF.frame_match(_B, _O)["same"] is False          # 같은 가게 다른 편(오판 사례)
+    assert OF.frame_match(_C, _O)["same"] is False          # 같은 가게 또 다른 편
+    r = OF.frame_match(_U, _O)                              # 같은 촬영분 재편집(자막·머리띠·자르기 다름)
+    assert r["same"] is True and r["share"] >= OF.FRAME_SHARE
+
+
+def _jpeg():
+    from PIL import Image
+    b = io.BytesIO(); Image.new("RGB", (40, 70), "gray").save(b, "JPEG"); return b.getvalue()
+
+
+def test_judge_same_eye_yes_but_frames_no_is_not_same(tmp_path, monkeypatch):
+    """눈이 '같다'고 해도 프레임 대조가 못 받치면 같은 영상이 아니다 — 눈은 후보 줄이기만."""
+    import urllib.request
+    from PIL import Image
+    from tools.calcopy.engine import claude_cli as CC
+    s = tmp_path / "seed"; s.mkdir()
+    Image.new("RGB", (40, 70), "white").save(s / "f15.jpg")
+
+    class Resp:
+        def read(self):
+            return _jpeg()
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: Resp())
+    monkeypatch.setattr(CC, "ask", lambda parts, prompt, tag="", model=None: ({"same": [1, 2], "why": "같은 가게"}, None))
+    cands = [{"key": "a", "url": "u/a", "thumb": "http://t/a"}, {"key": "b", "url": "u/b", "thumb": "http://t/b"}, {"key": "c", "url": "u/c", "thumb": "http://t/c"}]
+    seen = []
+
+    def confirm(seed, v, d):
+        seen.append(v["key"])
+        return {"same": v["key"] == "b", "share": 0.5 if v["key"] == "b" else 0.0}
+    out = OF.judge_same([s / "f15.jpg"], cands, tmp_path, log=print, confirm=confirm)
+    assert out == {"a": False, "b": True, "c": False}
+    assert seen == ["a", "b"]                                # 눈이 '다름'이라 한 c 는 받지 않는다(비용)
+    assert cands[0]["frame_match"]["share"] == 0.0           # 근거 수치를 후보에 남긴다
+
+
+def test_judge_same_frames_unavailable_is_undetermined(tmp_path, monkeypatch):
+    """후보를 못 받으면(confirm None) '같음'으로 두지 않고 미판정으로 뺀다(조용한 통과 금지)."""
+    import urllib.request
+    from PIL import Image
+    from tools.calcopy.engine import claude_cli as CC
+    s = tmp_path / "seed"; s.mkdir(); Image.new("RGB", (40, 70), "white").save(s / "f15.jpg")
+
+    class Resp:
+        def read(self):
+            return _jpeg()
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: Resp())
+    monkeypatch.setattr(CC, "ask", lambda parts, prompt, tag="", model=None: ({"same": [1]}, None))
+    out = OF.judge_same([s / "f15.jpg"], [{"key": "a", "url": "u/a", "thumb": "http://t/a"}], tmp_path, log=lambda m: None, confirm=lambda *a: None)
+    assert out == {}
