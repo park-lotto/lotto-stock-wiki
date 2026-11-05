@@ -1,0 +1,95 @@
+<!doctype html>
+<!-- 디자인 기준: awesome-design-md / notion — 문서형 안내 페이지라 노션의 차분한 본문·카드 틴트 색을 씀 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>볼케이노 카드뉴스 만드는 법</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--ink:#1f1f1f;--sub:#6b6b6b;--line:#e9e9e7;--primary:#5645d4;--navy:#0a1530;
+--peach:#ffe8d4;--rose:#fde0ec;--mint:#d9f3e1;--lav:#e6e0f5;--sky:#dcecfa;--warn:#dd5b00;--card:#f7f7f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#191919;--ink:#ececec;--sub:#9b9b9b;--line:#2f2f2f;--primary:#9d90ff;--navy:#ececec;
+--peach:#3a2a1c;--rose:#3a2230;--mint:#1d3325;--lav:#2b2640;--sky:#1d2d3d;--warn:#ff9a4a;--card:#222}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.65;font-size:16px}
+.wrap{max-width:860px;margin:0 auto;padding:48px 16px 80px}
+.tag{display:inline-block;font-size:13px;font-weight:600;color:var(--primary);background:var(--lav);padding:4px 10px;border-radius:6px}
+h1{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:14px 0 8px;color:var(--navy)}
+.lead{color:var(--sub);margin:0 0 28px}
+.notice{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--card);padding:14px 16px;border-radius:8px;font-size:15px}
+h2{font-size:22px;margin:44px 0 14px;letter-spacing:-.01em}
+.flow{display:grid;gap:12px}
+.step{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:18px;border-radius:12px;border:1px solid var(--line)}
+.step:nth-child(1){background:var(--lav)}.step:nth-child(2){background:var(--sky)}.step:nth-child(3){background:var(--mint)}
+.step:nth-child(4){background:var(--peach)}.step:nth-child(5){background:var(--rose)}.step:nth-child(6){background:var(--card)}
+.num{width:44px;height:44px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:800;color:var(--primary);border:1px solid var(--line)}
+.step h3{margin:0 0 4px;font-size:17px}
+.step p{margin:0;font-size:15px}
+.step ul{margin:6px 0 0;padding-left:18px;font-size:15px}
+code{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--card);border:1px solid var(--line);padding:1px 6px;border-radius:5px;word-break:break-all}
+.file{display:block;margin-top:8px;color:var(--sub);font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}h1{font-size:27px}}
+.box{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--card)}
+.box h3{margin:0 0 6px;font-size:16px}.box p{margin:0;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:13px}
+.foot{margin-top:40px;color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="tag">볼케이노 MCP · volcano_cardnews</span>
+  <h1>볼케이노에서 카드뉴스 만드는 법</h1>
+  <p class="lead">도구 <code>volcano_cardnews</code>를 부르면 서버가 <code>next_step</code>으로 다음 할 일을 알려 주고, 그대로 따라간다. 숏폼 영상(<code>volcano_video</code>)과 같은 방식.</p>
+
+  <div class="notice"><b>확인 범위</b> — 이 PC에서 볼케이노로 카드뉴스를 끝까지 만들어 본 적은 아직 없다. 아래 순서는 실행기 파일 머리말(<code>~/.volcano/runner/cardnews_*.py</code> 8개)과 <code>handoff/볼케이노MCP.md</code>를 읽고 정리한 것이다. 실제 규격은 서버를 한 번 불러 봐야 확정된다.</div>
+
+  <h2>만드는 순서</h2>
+  <div class="flow">
+    <div class="step"><div class="num">1</div><div><h3>디자인 고르기 — 브라우저 미리보기</h3>
+      <p>눈으로 보고 <b>디자인만</b> 정한 뒤 [적용]을 누른다. 소재는 아직 정하지 않는다.</p>
+      <span class="file">cardnews_design.py — 골라 둔 디자인을 읽기만 함</span></div></div>
+    <div class="step"><div class="num">2</div><div><h3>소재 주기 — Claude Code에서 MCP 호출</h3>
+      <ul><li><b>주제</b>: agy가 웹에서 찾아 사실 자료와 출처를 가져온다</li>
+      <li><b>뉴스·인스타 링크</b>: agy가 본문을 읽는다</li>
+      <li><b>유튜브</b>: yt-dlp로 자막을 받고, 자막이 없으면 360p로 내려받아 agy가 직접 본다</li>
+      <li><b>로컬 영상·PDF·문서</b>: agy가 직접 본다</li></ul>
+      <p style="margin-top:6px">카드 문구도 agy가 쓴다. 무엇을 어떻게 물을지는 서버가 정한다.</p>
+      <span class="file">cardnews_source.py</span></div></div>
+    <div class="step"><div class="num">3</div><div><h3>레퍼런스 재기</h3>
+      <p>agy가 레퍼런스 카드에서 글자와 대략의 위치를 읽고, 프로그램이 픽셀을 재서 정확한 자리·색·외곽선을 낸다.</p>
+      <span class="file">cardnews_refspec.py</span></div></div>
+    <div class="step"><div class="num">4</div><div><h3>그림 만들기</h3>
+      <p>agy 그림 도구(Nano Banana 2)에 레퍼런스를 함께 넘겨 같은 디자인으로 그린다. 그다음 그림 속 글자를 받아 적어 원래 문구와 대조한다. 오탈자가 있으면 <b>글자 없는 바탕</b>을 다시 그리고, 글자는 코드가 올린다.</p>
+      <span class="file">cardnews_agyimage.py · 그림 검색으로 가져오는 길은 cardnews_images.py(전용 크롬)</span></div></div>
+    <div class="step"><div class="num">5</div><div><h3>렌더</h3>
+      <p>볼케이노 앱의 원래 그리기 코드(<code>renderer.ts</code>)를 PIL로 옮긴 렌더러가 카드를 그린다.</p>
+      <span class="file">cardnews_render.py · 자리 계산은 cardnews_layout.py</span></div></div>
+    <div class="step"><div class="num">6</div><div><h3>(선택) 인스타 캐러셀 게시</h3>
+      <p>메타 OAuth가 필요하다. 메타는 파일을 직접 받지 않으므로 이미지를 공개 주소에 먼저 올려야 한다.</p>
+      <span class="file">cardnews_publish.py</span></div></div>
+  </div>
+
+  <h2>시작 전 주의</h2>
+  <div class="grid2">
+    <div class="box"><h3>어느 창에서</h3><p>볼케이노 서버 호출은 <code>Desktop/볼케이노작업</code>을 <b>일반 창</b>으로 열어서 한다. 그 폴더의 <code>.vscode/tasks.json</code>은 폴더를 열면 <code>claude --dangerously-skip-permissions</code>를 자동으로 실행한다.</p></div>
+    <div class="box"><h3>agy 로그인</h3><p>소재 찾기·글 쓰기·그림 판독을 전부 agy(구독)가 한다. 로그인은 사장님 터미널에서만 된다.</p></div>
+    <div class="box"><h3>실행기 첫 실행</h3><p>auto 모드 분류기가 막았던 전례가 있다. 그때는 사장님이 <code>!</code>로 한 번 돌려 주면 그 뒤로는 Claude가 이어서 돌릴 수 있었다.</p></div>
+    <div class="box"><h3>출입증</h3><p>작업 폴더의 <code>.volcano_runner_key.json</code>은 이틀 뒤 만료된다. 없으면 실행기가 돌지 않는다.</p></div>
+  </div>
+
+  <h2>숏템 카드뉴스와 헷갈리지 않게</h2>
+  <table>
+    <tr><th></th><th>볼케이노 카드뉴스</th><th>숏템 카드뉴스 제작소 (관제 223)</th></tr>
+    <tr><td>어디서</td><td>Claude Code + MCP</td><td>숏템 <code>/cardnews</code> (10-17 관리자 전용 라이브)</td></tr>
+    <tr><td>글·그림</td><td>agy(구독) · Nano Banana 2</td><td>버텍스 제미니 · 제미니 그림 모델</td></tr>
+    <tr><td>결과물</td><td>PIL 렌더 카드</td><td>브라우저에서 만든 1080×1350 JPEG ZIP</td></tr>
+  </table>
+
+  <p class="foot">근거: ~/.volcano/runner/cardnews_*.py 머리말 · handoff/볼케이노MCP.md · handoff/카드뉴스.md (2026-11-05 확인)</p>
+</div>
+</body>
+</html>
