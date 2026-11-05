@@ -172,6 +172,27 @@ def _queue_answerer(q: Path, stop: threading.Event, log, workers: int = 2, ask=N
             stop.wait(1.0)
 
 
+def _bench_ids(job: Path) -> list:
+    """시험기 상태(W/flow_state.json bm.videos)의 벤치 편 id — 소재·재료에서 뺄 것(G10)."""
+    try:
+        st = json.loads((job.parent / "flow_state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [str(v["id"]) for v in ((st.get("bm") or {}).get("videos") or []) if v.get("id")]
+
+
+def _bench_in_materials(work: Path, bench_ids: list) -> list:
+    """재료.json 컷·샷의 src 중 벤치 편(G10 · rules._bench_src 한 곳)."""
+    from tools.calcopy.hybrid import rules as RU
+    try:
+        M = json.loads((work / "재료.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    srcs = {str(x.get("src") or "") for x in (M.get("shots") or []) if isinstance(x, dict)}
+    srcs |= {str(c.get("src") or "") for v in (M.get("cuts") or {}).values() for c in (v if isinstance(v, list) else [v]) if isinstance(c, dict)}
+    return sorted(x for x in srcs if x and RU._bench_src(x, bench_ids))
+
+
 def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None, eng_root: Path | None = None) -> dict:
     """회원 과제 한 건 → 엔진 길로 1편 → {work_dir: 'trial/t<try>_<sid>', ok: True} / {work_dir: '', ok: False, why}."""
     run = run or _run_make
@@ -195,7 +216,10 @@ def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None, en
     ch = str((m.get("source") or {}).get("channel") or "")
     if ch:          # 회원 PC make_flow.originalsFile 과 같은 꼴 — 벤치 채널이 소재 채널(영상 파일은 안 넣는다)
         of = data / "originals.json"
-        of.write_text(json.dumps({"note": "시험 편 소재 채널(flow_dev 회원 과제)", "channels": [{"platform": "youtube", "url": ch}]}, ensure_ascii=False), encoding="utf-8")
+        # 벤치 채널 = 클립 채널(role bench) — G10 원본 추적을 통과한 편만 후보, 벤치 편 id 는 소재·재료에서 뺀다(관제 319, topic_find.channel_candidates)
+        bench_ids = _bench_ids(job)
+        of.write_text(json.dumps({"note": "시험 편 소재 채널(flow_dev 회원 과제) — 벤치 클립 채널", "bench_ids": bench_ids,
+                                  "channels": [{"platform": "youtube", "url": ch, "role": "bench"}]}, ensure_ascii=False), encoding="utf-8")
         env2["CALCOPY_ORIGINALS_FILE"] = str(of)
     # 회원 PC 프리셋 빌리기(preset_rent.js)와 같은 꼴 — 내 프리셋 폴더 channel/<slug> 통째를 엔진 루트 channel/<slug> 로 복사하고 상대 경로로 돌린 뒤 지운다.
     #   manifest 의 뜯기 경로가 엔진 루트 기준 상대 경로라 W/job 절대 경로로 주면 load_preset 이 뜯기를 못 찾는다(11-06 실측 '프리셋에 뜯기/틀 없음', Jev 0.96·해결 0.51)
@@ -228,6 +252,9 @@ def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None, en
         sj = json.loads(sp.read_text(encoding="utf-8"))
         sj["purpose"] = m.get("purpose") or "calcopy"      # 과제 지시 '대본 purpose=calcopy' — 목소리는 voices.tts_for 한 곳이 정한다
         sp.write_text(json.dumps(sj, ensure_ascii=False, indent=1), encoding="utf-8")
+        bad_src = _bench_in_materials(work, _bench_ids(job))
+        if bad_src:
+            return bad(f"벤치 편이 재료에 들어 있다(원본에서만 규칙): {bad_src}")
         sid = S["sid"]
         S = run(["approve", sid, "--by", "고객"], env2)
         log({"member_task": "approve", "state": S.get("state"), "error": S.get("error"), "min": round((time.time() - t0) / 60, 1)})

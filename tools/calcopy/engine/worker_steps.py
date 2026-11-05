@@ -278,6 +278,8 @@ def step_source(topic, ctx: Ctx) -> dict:
         q = f"id:{src['id']}"
     elif src.get("kind") == "참고영상" and src.get("url"):  # 고객이 준 인스타·틱톡 등 영상 = 그 영상이 재료(받기는 media_download, 관제 234)
         q = f"url:{src['url']}"
+    elif src.get("kind") == "원본추적" and src.get("origin_url"):   # 클립 채널 편 → G10 이 찾은 원 출처 영상만 재료(hybrid/origin_trace, 관제 319)
+        q = f"url:{src['origin_url']}"
     if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
         from tools.calcopy.engine import worker_ledger as L
         L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")

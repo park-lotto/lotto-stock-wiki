@@ -664,7 +664,7 @@ CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 �
 
 
 def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=print, per_channel: int = 30,
-                       stats=None) -> tuple[list[dict], list[dict]]:
+                       stats=None, trace=None) -> tuple[list[dict], list[dict]]:
     """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 프리셋한 채널 목록을 넘기고 어떻게 찾아나가는지").
     같은 결 채널(channel_find 가 판정한 목록 — 확정만)의 최근 쇼츠에서 **그 채널 조회 중앙값의 1.5배 이상** 터진 편을
     조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
@@ -674,6 +674,11 @@ def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=pri
     d = json.loads(Path(channels_file).read_text(encoding="utf-8"))
     rows = (d.get("channels") if isinstance(d, dict) else d) or []
     originals = any("verdict" not in c for c in rows)      # 해외원본_채널.json(판정 칸 없음) = 소재+재료 채널
+    # 벤치 클립 채널(role='bench' — 남의 영상을 재편집하는 채널, 관제 319 G10): 그 편은 재료가 아니다 → 원 출처를 찾은 편만 후보(받은 원본만 재료)
+    bench_ids = set(d.get("bench_ids") or []) if isinstance(d, dict) else set()
+    clip_ch = set()
+    if trace is None:
+        from tools.calcopy.hybrid.origin_trace import trace
     chans = [c for c in rows if (c.get("platform", "youtube") == "youtube") and
              (originals or str(c.get("verdict") or "").startswith(CHANNEL_VERDICTS))]
     pool, failed = [], []
@@ -690,15 +695,25 @@ def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=pri
             r = v["views"] / med if med else 0
             if r >= CHANNEL_MIN_RATIO:
                 pool.append({"id": v["id"], "title": v.get("title") or "", "views": v["views"], "ratio": round(r, 2),
-                             "channel": st.get("name") or c.get("name"), "url": f"https://www.youtube.com/shorts/{v['id']}"})
+                             "channel": st.get("name") or c.get("name"), "url": f"https://www.youtube.com/shorts/{v['id']}",
+                             **({"clip": True} if c.get("role") == "bench" else {})})
     pool.sort(key=lambda v: (-v["ratio"], -v["views"]))
     cands: list[dict] = []
     for v in pool:
         t = _clean_title(v["title"])
         if not t or any(overlap(t, [{"what": "", "text": c["topic"]}])["score"] >= 0.6 for c in cands):
             continue
-        cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
-                      "source": {"kind": "해외원본" if originals else "채널", **v}})
+        if v.pop("clip", False):
+            tr = trace(v, bench_ids, log=log)
+            log(f"[원본 추적] {v['id']} → {'찾음 ' + str(tr.get('origin_url')) if tr.get('ok') else '못 찾음: ' + str(tr.get('why'))}")
+            if not tr.get("ok"):
+                failed.append({"where": f"원본 추적 {v['id']}", "why": tr.get("why"), "refs": tr.get("refs"), "tried": tr.get("tried")})
+                continue
+            cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
+                          "source": {"kind": "원본추적", **v, "origin_url": tr["origin_url"], "trace": {k: tr.get(k) for k in ("how", "refs", "made_by")}}})
+        else:
+            cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
+                          "source": {"kind": "해외원본" if originals else "채널", **v}})
         if len(cands) >= n:
             break
     log(f"[채널 찾기] 채널 {len(chans)}개 → 터진 편 {len(pool)}개 → 후보 {len(cands)}개 · 실패 {len(failed)}")
@@ -822,7 +837,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         failed.append(f"검색: {fb}")
     lst = [v for v in lst if v.get("id")]   # 폴백 실패 표식({id: None})은 상세 조회하지 않는다(10-16 실측: yt_detail(None) 150초 대기)
     src = c.get("source") or {}
-    seed = src.get("id") if src.get("kind") in ("채널", "해외원본") else None
+    seed = src.get("id") if src.get("kind") in ("채널", "해외원본", "원본추적") else None   # 원본추적 = 클립 편은 벤치(읽기)만, 재료는 원본
     if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
         lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
     elif src.get("kind") == "참고영상" and src.get("url"):

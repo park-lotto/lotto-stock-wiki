@@ -219,7 +219,13 @@ def shot_text(shots: list[dict]) -> str:
     return "\n".join(one(s) for s in shots or [])
 
 
-def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: dict) -> list[str]:
+def _bench_src(src: str, bench_ids) -> bool:
+    """재료 파일 이름에 벤치 편 id(벤치 편 + 벤치 클립 채널의 편, G10 관제 319)가 들어 있으면 벤치 — 'src_<id>.mp4'·'v_<id>.mp4'·'<id>.mp4' 꼴 모두."""
+    stem = src.rsplit(".", 1)[0]
+    return any(i and (stem == i or stem.endswith("_" + i) or stem.startswith(i + "_") or stem.startswith(i)) for i in (bench_ids or ()))
+
+
+def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: dict, bench_ids=()) -> list[str]:
     """재료 출처 규칙 ①② + 다른 출연자 샷(사장님 10-21 "반드시 원본을 찾아서 / 다른 채널의 연예인 영상을 그대로 가져다 쓰면 절대 안 된다").
     ① 벤치(남의 쇼츠)는 재료가 아니다 ② 사람 얼굴 컷은 원본 파일만 ③' 원본 컷 ss 가 주인공 없는 다른 출연자 샷이면 안 된다.
     ③ 장면 전환(프레임 차)은 영상이 있어야 재므로 PC(runner_ops.source_rule_scan)가 재고 서버가 합친다."""
@@ -229,7 +235,7 @@ def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: 
             src = str(c.get("src") or "")
             face = str(c.get("face") or "").strip()
             stem = src.rsplit(".", 1)[0]
-            if src.startswith("bench") or (bench_id and src.startswith(bench_id)):
+            if src.startswith("bench") or (bench_id and src.startswith(bench_id)) or _bench_src(src, bench_ids):
                 out.append(f"{line}: 벤치(남의 쇼츠) {src} 를 재료로 썼다 — 원본·제품 영상만 쓴다")
             elif face not in NO_FACE and src not in origin_names:
                 out.append(f"{line}: 사람 얼굴 컷({c.get('face')})이 원본이 아닌 {src} 에서 왔다 — 연예인 장면은 원본 파일({', '.join(sorted(origin_names))})에서만")
