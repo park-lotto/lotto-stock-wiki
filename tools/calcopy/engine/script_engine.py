@@ -247,8 +247,9 @@ def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
     """프리셋 → 칸 목록과 길이 규칙. 판단 주인: 줄 길이 범위는 style_writer.line_ranges/_cap_range, 나레 전체는 원본 받아쓰기 합 ±15%."""
     J = json.loads(Path(P["tteutgi"]).read_text(encoding="utf-8")) if P.get("tteutgi") else {}
     R = json.loads(Path(P["rules"]).read_text(encoding="utf-8")) if P.get("rules") else {}
+    from tools.calcopy.engine.remake import narration_kind     # 나레 꼴 판단 한 곳(remake 렌더 분기와 같은 함수 — 11-06 두 곳이 반대 기본값이었다)
+    mode = mode or ("captions" if narration_kind(J) == "none" else "narration")
     vr = J.get("voice_rules") or {}
-    mode = mode or ("captions" if vr.get("narration") == "none" else "narration")
     roles, roles_basis = pick_roles(P, roles)
     n = len(roles)
     polite_ratio = (J.get("script_tone") or {}).get("polite_ratio")

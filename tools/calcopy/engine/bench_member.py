@@ -128,6 +128,46 @@ def tear(mp4: Path, d: Path, llm) -> tuple[dict, dict, Path]:
     return J, json.loads(fp.read_text(encoding="utf-8")), jp
 
 
+EAR_ASK = ("소리만 판정하라. ① 사람 말소리가 있나 — 있으면 영상 속 인물의 현장 말소리인지, 화면 밖 나레이터가 대본을 읽는 나레이션인지, 합성 TTS 인지 "
+           "② 화면 자막 글을 누가 소리 내 읽나 ③ 배경음악이 있나·분위기 ④ 원래 현장 소리(웃음·박수·말)가 들리나 ⑤ 효과음")
+EAR_SCHEMA = {"type": "object", "properties": {
+    "speech": {"type": "boolean"}, "narration": {"type": "string", "enum": ["없음", "사람 나레이션", "합성 TTS 나레이션"]},
+    "captions_read_aloud": {"type": "boolean"}, "bgm": {"type": "boolean"}, "bgm_mood": {"type": "string"},
+    "source_audio": {"type": "boolean"}, "sfx": {"type": "array", "items": {"type": "string"}}, "why": {"type": "string"}},
+    "required": ["speech", "narration", "captions_read_aloud", "bgm", "source_audio", "why"]}
+EAR_KIND = {"없음": "none", "사람 나레이션": "human", "합성 TTS 나레이션": "tts"}
+
+
+def ear_fill(J: dict, mp4, jp=None, ask=None) -> dict:
+    """(판단 주인 · 받아쓰기 빈 답 확인, 관제 319 11-06) 뜯기 audio.composition 이 '받아쓰기 빈 답'으로 실패했으면 agy 로 직접 들어
+    나레이션 유무(composition.narration = none|human|tts)·배경음악·현장음을 채운다. 나레 꼴을 읽는 곳은 remake.narration_kind 한 곳.
+    실측 근거: 스냅봤니 3편 제미나이 받아쓰기 빈 답 — agy 3/3 '나레이션 없음·자막 안 읽음·배경음악+현장음'. agy 도 못 들으면 그대로 두고 이유만 남긴다(짐작 금지).
+    jp 가 있으면 뜯기.json 을 다시 쓴다. 반환 = {filled, narration?, why}."""
+    A = J.setdefault("audio", {})
+    comp = A.get("composition") or {}
+    if not (isinstance(comp, dict) and comp.get("failed") and "빈" in str(comp.get("failed"))):
+        return {"filled": False, "why": "받아쓰기 빈 답 아님 — 그대로"}
+    if ask is None:
+        from tools.calcopy.engine import agy
+        ask = agy.ask_video
+    r = ask(Path(mp4), EAR_ASK, EAR_SCHEMA)
+    a = (r or {}).get("answer") if isinstance(r, dict) else None
+    kind = EAR_KIND.get(str((a or {}).get("narration")))
+    if not kind:
+        comp["ear_failed"] = str((r or {}).get("error") or "agy 답 꼴 틀림")[:200]
+        A["composition"] = comp
+        out = {"filled": False, "why": comp["ear_failed"]}
+    else:
+        A["composition"] = {"narration": kind, "source_audio_kept": bool(a.get("source_audio")),
+                            "bgm": {"present": bool(a.get("bgm")), "mood": a.get("bgm_mood")}, "sfx": a.get("sfx") or [],
+                            "captions_read_aloud": bool(a.get("captions_read_aloud")), "why": str(a.get("why") or "")[:400],
+                            "method": "agy 직접 듣기(제미나이 받아쓰기 빈 답 확인 — bench_member.ear_fill)", "was": comp.get("failed")}
+        out = {"filled": True, "narration": kind, "why": str(a.get("why") or "")[:200]}
+    if jp:
+        Path(jp).write_text(json.dumps(J, ensure_ascii=False, indent=1), encoding="utf-8")
+    return out
+
+
 def shape_key(frame: dict) -> tuple:
     """(판단 주인) 같은 틀인가 — 층의 종류·역할이 같아야 한 프리셋으로 합친다."""
     frames = frame.get("frames") if isinstance(frame.get("frames"), list) else [frame]

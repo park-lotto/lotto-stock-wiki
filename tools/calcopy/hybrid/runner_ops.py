@@ -2455,7 +2455,8 @@ def c_bm_tear(W, d):
     llm = BM.member_llm()
     for v in d["videos"]:
         try:
-            J, frame, _ = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
+            J, frame, jp = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
+            BM.ear_fill(J, _inside(W, v["mp4"]), jp)       # 받아쓰기 빈 답이면 agy 로 직접 들어 나레 유무를 채운다(판단 주인 bench_member.ear_fill)
             key = BM.shape_key(frame)
             style = groups[key]["style"] if key in groups else ("틀" if not groups else f"틀{len(groups) + 1}")   # 이름만 미리 계산 — 저장이 성공한 뒤에만 틀을 확정(유령 틀·번호 소비 방지)
             P.save(J, frame, ch / "preset" / style, v["id"], f"channel/{d['slug']}/뜯기/{v['id']}/뜯기.json")
