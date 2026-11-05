@@ -456,7 +456,9 @@ def text_defects(d: dict, joined: bool = True) -> list[dict]:
     return out
 
 
-LATIN_READ = {"TV": "티비", "AI": "에이아이", "LED": "엘이디", "USB": "유에스비", "PC": "피씨", "OK": "오케이"}
+LATIN_READ = {"TV": "티비", "AI": "에이아이", "LED": "엘이디", "USB": "유에스비", "PC": "피씨", "OK": "오케이",
+              # 흔한 단위 — 읽기가 하나뿐이라 코드가 고친다(11-05 박은숙 #7759 'kg' 이 관문에 걸려 제작자 과제). g·l 한 글자는 낱말과 헷갈려 뺀다
+              "KG": "킬로그램", "MG": "밀리그램", "ML": "밀리리터", "CM": "센티미터", "MM": "밀리미터", "KM": "킬로미터", "KCAL": "킬로칼로리", "MAH": "밀리암페어"}
 _LETTER = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "에이 비 씨 디 이 에프 지 에이치 아이 제이 케이 엘 엠 엔 오 피 큐 알 에스 티 유 브이 더블유 엑스 와이 지".split()))
 
 
