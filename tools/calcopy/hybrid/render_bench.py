@@ -452,6 +452,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 break
             fit_all()                 # 옮긴 자리(ss_planned·max)에서 다시 맞추기·늦추기
             measure_over()
+        if pull_to_end(cuts, src_dir, log=_lg):        # 그래도 원본 파일 끝을 넘는 컷 = 렌더가 '프레임 모자람'으로 깨진다 — 끝에 맞춰 앞당긴다(11-05 이준연 #7539)
+            measure_over()
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     gap = [(c["line"], c["t1"], cuts[i + 1]["t0"]) for i, c in enumerate(cuts[:-1]) if abs(float(c["t1"]) - float(cuts[i + 1]["t0"])) > 1e-6]
@@ -1258,6 +1260,28 @@ def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
 
 
 _src_len: dict[str, float] = {}
+
+
+def pull_to_end(cuts: list[dict], src_dir: Path, log=print) -> int:
+    """(판단 주인 — 원본 파일 끝을 넘는 영상 컷) 계획 measure_over 가 src_left 를 단 컷(원본에서 쓸 길이 > ss 뒤 남은 화면)을
+    같은 원본 '끝 − 쓸 길이' 로 앞당긴다. 넘기기(SHORTEM_WAIVE_GATE)로 그대로 렌더하면 컷 조각 프레임이 모자라 렌더가 깨졌다
+    (11-05 이준연 f754262669e5: 10.07초 파일 ss 8.65 → '계획 68 · 실제 42' 2번). 원본이 쓸 길이보다 짧으면 그대로 둔다(관문이 알린다). 옮긴 컷 수."""
+    n = 0
+    for c in cuts:
+        if "src_left" not in c or c.get("kind") == "orig" or c.get("ss") is None:
+            continue
+        src = src_dir / c["src"]
+        total = src_left(src, 0.0)
+        need = round(src_frames(c) / FPS, 3)
+        if total is None or total < need:
+            continue
+        new = round(max(0.0, total - need), 3)
+        log(f"[원본 끝] {c.get('line')} {c['src']} ss {c['ss']} → {new}(원본 {round(total, 2)}초에 {need}초가 들어가게)")
+        c["ss"] = c["ss_planned"] = new
+        c["no_snap"] = True
+        c.pop("src_left", None)
+        n += 1
+    return n
 
 
 def src_left(src: Path, ss: float) -> float | None:
