@@ -3000,7 +3000,9 @@ def _dir_sig(W: Path, cap: int = 4000) -> tuple:
                             stack.append(e.path)
                     else:
                         try:
-                            tot += e.stat().st_size; cnt += 1
+                            # os.stat(경로) — 윈도 scandir 항목 크기는 쓰는 중인 파일이 닫힐 때까지 0 에 멈춘다(11-05 실측 1·2·3MB 써도 0).
+                            #   그래서 구간 받기(yt-dlp→ffmpeg 손자)가 파일을 키워도 '진행 신호 180초 없음'으로 끊었다(김미향 #7614 2번)
+                            tot += os.stat(e.path).st_size; cnt += 1
                         except OSError:
                             pass
         except OSError:
