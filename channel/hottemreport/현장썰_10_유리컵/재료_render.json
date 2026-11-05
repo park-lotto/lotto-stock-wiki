@@ -1,0 +1,87 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰_10_유리컵/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "tt_7593975023707213087.mp4",
+   "ss": 5.75,
+   "cuts": [
+    {
+     "src": "tt_7593975023707213087.mp4",
+     "ss": 5.75,
+     "dur": 8.05,
+     "block": "O1"
+    },
+    {
+     "src": "tt_7565119818383346962.mp4",
+     "ss": 3.0,
+     "dur": 2.45,
+     "block": "N2",
+     "src_crop": [
+      0,
+      600,
+      1080,
+      1320
+     ]
+    },
+    {
+     "src": "tt_7593975023707213087.mp4",
+     "ss": 17.328,
+     "dur": 4.172,
+     "block": "O2"
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "O1",
+   "covers": [
+    "N1",
+    "O1"
+   ],
+   "src": "jd",
+   "ss": 5.75,
+   "vs": 0.0,
+   "src_crop": null,
+   "why": "'They're silicone, right? So they look like real glasses' — 두 잔을 카메라 앞에 들어 보임",
+   "ve": 8.05,
+   "src_end": 13.8
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "ad",
+   "ss": 3.0,
+   "vs": 8.05,
+   "src_crop": [
+    0,
+    600,
+    1080,
+    1320
+   ],
+   "why": "다른 사람(@adrianwidjy 친구)이 나무 바닥에 떨어뜨림(3.5~5.5) — 멀쩡히 굴러감",
+   "ve": 10.5,
+   "src_end": 5.45,
+   "guard": "원본 컷 5.483 앞에서 끊음(−0.422초)"
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "jd",
+   "ss": 17.328,
+   "vs": 10.5,
+   "src_crop": null,
+   "why": "잔을 어깨 뒤로 던짐(17.75~18.0) + 'throw them, they're not gonna break' — B13: O1 끝 13.55 와 4초 이상",
+   "ve": 14.672,
+   "src_end": 21.5
+  }
+ ]
+}

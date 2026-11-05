@@ -1,0 +1,1355 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.558
+   ],
+   "O1": [
+    2.638,
+    5.108
+   ],
+   "N2": [
+    5.188,
+    7.63
+   ],
+   "N3": [
+    7.71,
+    10.501
+   ],
+   "N4": [
+    10.581,
+    13.023
+   ],
+   "O2": [
+    13.103,
+    19.303
+   ],
+   "N5": [
+    19.383,
+    21.36
+   ],
+   "N6": [
+    21.44,
+    23.882
+   ],
+   "O3": [
+    23.962,
+    27.162
+   ],
+   "N7": [
+    27.242,
+    29.219
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 쿠션 파데를 바르고",
+    "t0": 0.0,
+    "t1": 1.429,
+    "show": [
+     0.0,
+     1.429
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "충격 받은 외국인이 있는데요",
+    "t0": 1.429,
+    "t1": 2.558,
+    "show": [
+     1.429,
+     2.638
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 한국 파데",
+    "t0": 2.638,
+    "t1": 3.838,
+    "show": [
+     2.638,
+     3.838
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "제일 어두운 호수야",
+    "t0": 3.838,
+    "t1": 5.108,
+    "key": "어두운",
+    "show": [
+     3.838,
+     5.188
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가장 어두운 색인데도",
+    "t0": 5.188,
+    "t1": 6.474,
+    "show": [
+     5.188,
+     6.474
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴이 하얗게",
+    "t0": 6.474,
+    "t1": 7.331,
+    "show": [
+     6.474,
+     7.331
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "떠 버렸는데요",
+    "t0": 7.331,
+    "t1": 7.63,
+    "show": [
+     7.331,
+     7.71
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그런데 한 달 뒤",
+    "t0": 7.71,
+    "t1": 8.567,
+    "show": [
+     7.71,
+     8.567
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "티르티르에서",
+    "t0": 8.567,
+    "t1": 9.424,
+    "key": "티르티르",
+    "show": [
+     8.567,
+     9.424
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "새 호수 11개를",
+    "t0": 9.424,
+    "t1": 10.424,
+    "show": [
+     9.424,
+     10.424
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "내놨는데요",
+    "t0": 10.424,
+    "t1": 10.501,
+    "show": [
+     10.424,
+     10.581
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그중 제일 어두운",
+    "t0": 10.581,
+    "t1": 11.581,
+    "show": [
+     10.581,
+     11.581
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "43N 딥 코코아를",
+    "t0": 11.581,
+    "t1": 12.724,
+    "show": [
+     11.581,
+     12.724
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봤더니",
+    "t0": 12.724,
+    "t1": 13.023,
+    "show": [
+     12.724,
+     13.103
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "세상에 말도 안 돼",
+    "t0": 13.103,
+    "t1": 15.653,
+    "show": [
+     13.103,
+     15.653
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 내 피부색이잖아",
+    "t0": 15.653,
+    "t1": 17.753,
+    "key": "피부색",
+    "show": [
+     15.653,
+     17.753
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "자는 동안 내 피부 재 갔나?",
+    "t0": 17.753,
+    "t1": 19.303,
+    "show": [
+     17.753,
+     19.383
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "컨실러도",
+    "t0": 19.383,
+    "t1": 19.954,
+    "show": [
+     19.383,
+     19.954
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "필요 없겠다고",
+    "t0": 19.954,
+    "t1": 20.812,
+    "show": [
+     19.954,
+     20.812
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "할 정도였는데요",
+    "t0": 20.812,
+    "t1": 21.36,
+    "show": [
+     20.812,
+     21.44
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "드디어 쿠션 파데를",
+    "t0": 21.44,
+    "t1": 22.583,
+    "show": [
+     21.44,
+     22.583
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓸 수 있게 됐다며",
+    "t0": 22.583,
+    "t1": 23.583,
+    "show": [
+     22.583,
+     23.583
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "기뻐했는데요",
+    "t0": 23.583,
+    "t1": 23.882,
+    "show": [
+     23.583,
+     23.962
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "세상에 내 얼굴 좀 봐",
+    "t0": 23.962,
+    "t1": 25.412,
+    "show": [
+     23.962,
+     25.412
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "필터 씌운 것 같아",
+    "t0": 25.412,
+    "t1": 27.162,
+    "key": "필터",
+    "show": [
+     25.412,
+     27.242
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다음 달엔",
+    "t0": 27.242,
+    "t1": 27.813,
+    "show": [
+     27.242,
+     27.813
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "호수 10개가",
+    "t0": 27.813,
+    "t1": 28.671,
+    "show": [
+     27.813,
+     28.671
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "더 나온다고 하네요",
+    "t0": 28.671,
+    "t1": 29.219,
+    "show": [
+     28.671,
+     29.533
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 3.5,
+    "w": 1,
+    "crop": [
+     54,
+     0,
+     972,
+     1290
+    ],
+    "see": "얼굴 반이 밝게 뜬 채 빨간 쿠션을 듦 — 0초 첫 프레임 얼굴",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.319,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 5.5,
+    "w": 1,
+    "crop": [
+     54,
+     0,
+     972,
+     1290
+    ],
+    "see": "뜬 얼굴로 말하는 근접",
+    "line": "N1",
+    "t0": 1.319,
+    "kind": "tts",
+    "t1": 2.638,
+    "dur": 1.319,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     54,
+     0,
+     972,
+     1290
+    ],
+    "see": "원음 구간 그대로(뺨 밝은 동그라미)",
+    "line": "O1",
+    "ss": 0.25,
+    "src": "YOLbmBYU-3E.mp4",
+    "t0": 2.638,
+    "kind": "orig",
+    "t1": 5.188,
+    "dur": 2.55,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 4.2,
+    "w": 1,
+    "crop": [
+     54,
+     0,
+     972,
+     1290
+    ],
+    "see": "하얗게 뜬 얼굴 정면",
+    "line": "N2",
+    "t0": 5.188,
+    "kind": "tts",
+    "t1": 6.449,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 6.3,
+    "w": 1,
+    "crop": [
+     54,
+     0,
+     972,
+     1290
+    ],
+    "see": "입 벌린 놀람 + 쿠션",
+    "line": "N2",
+    "t0": 6.449,
+    "kind": "tts",
+    "t1": 7.71,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 7.6,
+    "w": 1,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "빨간 쿠션 상자 탑 등장",
+    "line": "N3",
+    "t0": 7.71,
+    "kind": "tts",
+    "t1": 8.667,
+    "dur": 0.957,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 10.5,
+    "w": 1,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "쿠션 상자 들고 있는 모습",
+    "line": "N3",
+    "t0": 8.667,
+    "kind": "tts",
+    "t1": 9.624,
+    "dur": 0.957,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 14.5,
+    "w": 1,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "상자 옆 반응",
+    "line": "N3",
+    "t0": 9.624,
+    "kind": "tts",
+    "t1": 10.581,
+    "dur": 0.957,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 18.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "제일 어두운 쿠션 열어 보여 줌",
+    "line": "N4",
+    "t0": 10.581,
+    "kind": "tts",
+    "t1": 11.842,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 23.5,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "퍼프로 얼굴에 두드림",
+    "line": "N4",
+    "t0": 11.842,
+    "kind": "tts",
+    "t1": 13.103,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 26.4,
+    "crop": "face",
+    "see": "원음 구간(자동 얼굴 크롭)",
+    "line": "O2",
+    "t0": 13.103,
+    "kind": "orig",
+    "t1": 15.653,
+    "dur": 2.55,
+    "over": 0.0
+   },
+   {
+    "at": 2.55,
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 29.45,
+    "crop": "face",
+    "see": "원음 구간(자동 얼굴 크롭)",
+    "line": "O2",
+    "t0": 15.653,
+    "kind": "orig",
+    "t1": 17.753,
+    "dur": 2.1,
+    "over": 0.0
+   },
+   {
+    "at": 4.65,
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 32.3,
+    "crop": "face",
+    "see": "원음 구간(자동 얼굴 크롭)",
+    "line": "O2",
+    "t0": 17.753,
+    "kind": "orig",
+    "t1": 19.383,
+    "dur": 1.63,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 34.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "눈 밑에 퍼프",
+    "line": "N5",
+    "t0": 19.383,
+    "kind": "tts",
+    "t1": 20.412,
+    "dur": 1.029,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 38.0,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "눈 밑 두드림 근접",
+    "line": "N5",
+    "t0": 20.412,
+    "kind": "tts",
+    "t1": 21.44,
+    "dur": 1.028,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 41.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "바른 얼굴 정면",
+    "line": "N6",
+    "t0": 21.44,
+    "kind": "tts",
+    "t1": 22.281,
+    "dur": 0.841,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 45.5,
+    "w": 1,
+    "crop": [
+     0,
+     486,
+     1080,
+     1434
+    ],
+    "see": "쿠션 두 개 들고 기뻐함",
+    "line": "N6",
+    "t0": 22.281,
+    "kind": "tts",
+    "t1": 23.121,
+    "dur": 0.84,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 49.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "활짝 웃음",
+    "line": "N6",
+    "t0": 23.121,
+    "kind": "tts",
+    "t1": 23.962,
+    "dur": 0.841,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 50.5,
+    "crop": "face",
+    "see": "원음 구간(자동 얼굴 크롭)",
+    "line": "O3",
+    "t0": 23.962,
+    "kind": "orig",
+    "t1": 25.412,
+    "dur": 1.45,
+    "over": 0.0
+   },
+   {
+    "at": 1.45,
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 52.5,
+    "crop": "face",
+    "see": "원음 구간(자동 얼굴 크롭)",
+    "line": "O3",
+    "t0": 25.412,
+    "kind": "orig",
+    "t1": 27.242,
+    "dur": 1.83,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 54.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "완성 얼굴 + 쿠션 들어 보임",
+    "line": "N7",
+    "t0": 27.242,
+    "kind": "tts",
+    "t1": 28.388,
+    "dur": 1.146,
+    "over": 0.0
+   },
+   {
+    "src": "YOLbmBYU-3E.mp4",
+    "ss": 56.6,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "쿠션 들고 말함(끝 컷)",
+    "line": "N7",
+    "t0": 28.388,
+    "kind": "tts",
+    "t1": 29.5333,
+    "dur": 1.145,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     0.25,
+     2.72
+    ],
+    "t0": 2.638,
+    "t1": 5.108
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     26.4,
+     28.95
+    ],
+    "t0": 13.103,
+    "t1": 15.653
+   },
+   {
+    "line": "O2",
+    "k": 1,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     29.45,
+     31.55
+    ],
+    "t0": 15.653,
+    "t1": 17.753
+   },
+   {
+    "line": "O2",
+    "k": 2,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     32.3,
+     33.85
+    ],
+    "t0": 17.753,
+    "t1": 19.303
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     50.5,
+     51.95
+    ],
+    "t0": 23.962,
+    "t1": 25.412
+   },
+   {
+    "line": "O3",
+    "k": 1,
+    "src": "YOLbmBYU-3E.mp4",
+    "span": [
+     52.5,
+     54.25
+    ],
+    "t0": 25.412,
+    "t1": 27.162
+   }
+  ],
+  "end": 29.5333
+ },
+ "placement": {
+  "reference": null,
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 쿠션 파데를 바르고",
+    "t0": 0.0,
+    "t1": 1.429,
+    "show": [
+     0.0,
+     1.429
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "충격 받은 외국인이 있는데요",
+    "t0": 1.429,
+    "t1": 2.558,
+    "show": [
+     1.429,
+     2.638
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 한국 파데",
+    "t0": 2.638,
+    "t1": 3.838,
+    "show": [
+     2.638,
+     3.838
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "제일 어두운 호수야",
+    "t0": 3.838,
+    "t1": 5.108,
+    "key": "어두운",
+    "show": [
+     3.838,
+     5.188
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "가장 어두운 색인데도",
+    "t0": 5.188,
+    "t1": 6.474,
+    "show": [
+     5.188,
+     6.474
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴이 하얗게",
+    "t0": 6.474,
+    "t1": 7.331,
+    "show": [
+     6.474,
+     7.331
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "떠 버렸는데요",
+    "t0": 7.331,
+    "t1": 7.63,
+    "show": [
+     7.331,
+     7.71
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그런데 한 달 뒤",
+    "t0": 7.71,
+    "t1": 8.567,
+    "show": [
+     7.71,
+     8.567
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "티르티르에서",
+    "t0": 8.567,
+    "t1": 9.424,
+    "key": "티르티르",
+    "show": [
+     8.567,
+     9.424
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "새 호수 11개를",
+    "t0": 9.424,
+    "t1": 10.424,
+    "show": [
+     9.424,
+     10.424
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "내놨는데요",
+    "t0": 10.424,
+    "t1": 10.501,
+    "show": [
+     10.424,
+     10.581
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그중 제일 어두운",
+    "t0": 10.581,
+    "t1": 11.581,
+    "show": [
+     10.581,
+     11.581
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "43N 딥 코코아를",
+    "t0": 11.581,
+    "t1": 12.724,
+    "show": [
+     11.581,
+     12.724
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봤더니",
+    "t0": 12.724,
+    "t1": 13.023,
+    "show": [
+     12.724,
+     13.103
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "세상에 말도 안 돼",
+    "t0": 13.103,
+    "t1": 15.653,
+    "show": [
+     13.103,
+     15.653
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "완전 내 피부색이잖아",
+    "t0": 15.653,
+    "t1": 17.753,
+    "key": "피부색",
+    "show": [
+     15.653,
+     17.753
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "자는 동안 내 피부 재 갔나?",
+    "t0": 17.753,
+    "t1": 19.303,
+    "show": [
+     17.753,
+     19.383
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "컨실러도",
+    "t0": 19.383,
+    "t1": 19.954,
+    "show": [
+     19.383,
+     19.954
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "필요 없겠다고",
+    "t0": 19.954,
+    "t1": 20.812,
+    "show": [
+     19.954,
+     20.812
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "할 정도였는데요",
+    "t0": 20.812,
+    "t1": 21.36,
+    "show": [
+     20.812,
+     21.44
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "드디어 쿠션 파데를",
+    "t0": 21.44,
+    "t1": 22.583,
+    "show": [
+     21.44,
+     22.583
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓸 수 있게 됐다며",
+    "t0": 22.583,
+    "t1": 23.583,
+    "show": [
+     22.583,
+     23.583
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "기뻐했는데요",
+    "t0": 23.583,
+    "t1": 23.882,
+    "show": [
+     23.583,
+     23.962
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "세상에 내 얼굴 좀 봐",
+    "t0": 23.962,
+    "t1": 25.412,
+    "show": [
+     23.962,
+     25.412
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "필터 씌운 것 같아",
+    "t0": 25.412,
+    "t1": 27.162,
+    "key": "필터",
+    "show": [
+     25.412,
+     27.242
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다음 달엔",
+    "t0": 27.242,
+    "t1": 27.813,
+    "show": [
+     27.242,
+     27.813
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "호수 10개가",
+    "t0": 27.813,
+    "t1": 28.671,
+    "show": [
+     27.813,
+     28.671
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "더 나온다고 하네요",
+    "t0": 28.671,
+    "t1": 29.219,
+    "show": [
+     28.671,
+     29.533
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = 없음(합계 비율)",
+   "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+   "효과음 0발(본보기 0) []",
+   "등장 {'cut': 28} · 강조 0/28"
+  ]
+ }
+}

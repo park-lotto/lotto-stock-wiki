@@ -1,0 +1,1085 @@
+{
+ "id": "hNRxwfSjXxY",
+ "dur": 24.4,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정 친아빠가 팔순",
+   "colors": [
+    {
+     "word": "장윤정",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "친아빠가",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "팔순",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "bg": "빨강 띠 #FF1700(y152~327)"
+  },
+  {
+   "text": "잔치 대신 원하는 소원",
+   "colors": [
+    {
+     "word": "잔치",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "대신",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "원하는",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "소원",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "bg": "검정 바탕"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   [
+    187,
+    283
+   ],
+   [
+    336,
+    428
+   ]
+  ],
+  "window": [
+   0,
+   461,
+   1080,
+   1376
+  ],
+  "caption_band": [
+   1153,
+   1263
+  ],
+  "caption_band_raised": [
+   950,
+   1147
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": {
+   "what": null,
+   "alpha": null
+  },
+  "bg_hex": "#000000",
+  "hook": {
+   "t0": 0,
+   "t1": 3.77,
+   "what": "누끼 2명 상반신·검정 바탕(창 없음), 연속 확대 약 ×1.15",
+   "arrow": null,
+   "exit": "고리 회전 전환 3.77~4.17초"
+  },
+  "fixed_icon": null
+ },
+ "lines": [
+  {
+   "t0": 4.0,
+   "t1": 4.87,
+   "text": "장윤정은 최근",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1166,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 503,
+   "align": "center",
+   "max_w": 514,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 차 안 셀카(모자·마스크 턱에) — 고리 회전 전환 직후",
+   "motion": "cam",
+   "transition": "zoomblur",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 4.87,
+   "t1": 6.57,
+   "text": "시아버지가 팔순잔치해서",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1165,
+    1254
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 536,
+   "align": "center",
+   "max_w": 823,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 차 안 말함",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 6.57,
+   "t1": 7.7,
+   "text": "멋있게 옷 입고",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "y": [
+    1164,
+    1249
+   ],
+   "fill_hex": "#FDFDFE",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 537,
+   "align": "center",
+   "max_w": 468,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 7.7,
+   "t1": 8.77,
+   "text": "염색도 하시고",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "y": [
+    1165,
+    1249
+   ],
+   "fill_hex": "#FEFDFE",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 536,
+   "align": "center",
+   "max_w": 455,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 8.77,
+   "t1": 9.63,
+   "text": "잔치해서",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [
+    8.77
+   ],
+   "y": [
+    1165,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 547,
+   "align": "center",
+   "max_w": 314,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 모자·줄무늬 상의, 나무 벽 앞 손짓",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 9.63,
+   "t1": 11.13,
+   "text": "즐거운 시간을 보냈다며",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1159,
+    1263
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 542,
+   "align": "center",
+   "max_w": 755,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 11.13,
+   "t1": 11.87,
+   "text": "친아버지와",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1155,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 576,
+   "align": "center",
+   "max_w": 548,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 11.87,
+   "t1": 13.1,
+   "text": "얘기를 나눴는데요",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1155,
+    1259
+   ],
+   "fill_hex": "#FDFCFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 552,
+   "align": "center",
+   "max_w": 633,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.17,
+   "text": "장윤정의 아버지는",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 10,
+   "cut_at": [
+    13.1
+   ],
+   "y": [
+    1158,
+    1243
+   ],
+   "fill_hex": "#FFFDFF",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 506,
+   "align": "center",
+   "max_w": 583,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "아버지(안경·남색 재킷) 차 안에서 손 흔듦",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 14.17,
+   "t1": 15.23,
+   "text": "이를 의식한 듯",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1158,
+    1249
+   ],
+   "fill_hex": "#FDFDFE",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 536,
+   "align": "center",
+   "max_w": 475,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 15.23,
+   "t1": 17.07,
+   "text": "나는 팔순잔치 하지 마라며",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1155,
+    1258
+   ],
+   "fill_hex": "#FEFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 540,
+   "align": "center",
+   "max_w": 879,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 17.07,
+   "t1": 18.13,
+   "text": "대신 소원 하나만",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [
+    17.07
+   ],
+   "y": [
+    1165,
+    1243
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 495,
+   "align": "center",
+   "max_w": 644,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 줄무늬 상의, 나무 벽 앞",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 18.13,
+   "t1": 19.5,
+   "text": "들어 달라고 했습니다",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1164,
+    1250
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 512,
+   "align": "center",
+   "max_w": 741,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 19.5,
+   "t1": 20.73,
+   "text": "이 소원의 정체는",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "y": [
+    1153,
+    1251
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 424,
+   "align": "center",
+   "max_w": 697,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 20.73,
+   "t1": 22.07,
+   "text": "화면을 빠르게 톡톡",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "위로 올린 자리(y≈980~1096)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [
+    20.73
+   ],
+   "y": [
+    982,
+    1067
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 594,
+   "align": "center",
+   "max_w": 736,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "장윤정 주먹 쥔 손짓 — 행동 유도 문구",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 22.07,
+   "t1": 23.5,
+   "text": "두 번 눌러주시면\n감사합니다",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "2줄·위로 올린 자리(y≈950~1147)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [],
+   "y": [
+    950,
+    1114
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 542,
+   "align": "center",
+   "max_w": 533,
+   "letter_gap_px": 0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "같은 컷 — 2줄 '두 번 눌러주시면/감사합니다'",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  },
+  {
+   "t0": 23.5,
+   "t1": 24.4,
+   "text": "장윤정과 3박 4일\n국내여행 가기",
+   "speaker": "나레",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "2줄·위로 올린 자리(y≈950~1147)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [
+    23.5
+   ],
+   "y": [
+    950,
+    1122
+   ],
+   "fill_hex": "#FDFDFD",
+   "font": {
+    "name": "굵은 고딕 Black 계열(Noto Sans KR Black/Pretendard Black 근사, 등록 글꼴 대조 미실시)",
+    "basis": "눈 — 1080 원본 확대 크롭, 획 굵기 13~14px/잉크 높이 79px"
+   },
+   "size_px": 90,
+   "x": 562,
+   "align": "center",
+   "max_w": 636,
+   "letter_gap_px": 0,
+   "line_gap_px": 20,
+   "outline": {
+    "px": 10,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 덩어리로 같은 프레임 교체)",
+   "scene_desc": "방송 스튜디오 여성(꽃무늬 옷, 얼굴 위쪽 잘림) — 소원 정체 2줄 공개",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(시각·y·채움·외곽) / 눈(글꼴·크기)",
+   "notes": "0.033초 단위 잉크 수: 첫 프레임부터 완성(타이핑·팝 없음)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   4.0
+  ]
+ ],
+ "beats": "훅(0~3.77 누끼 두 사람(아버지+여성) 프로필·검정 바탕·천천히 확대 ×1.15, 화살표 없음, 자막 없이 나레가 제목 읽음) → 고리 회전 전환(3.77~4.17) → 나레 본문(4.0~20.7 사연, 컷 4개) → 궁금증 '이 소원의 정체는' → 행동 유도(20.7~23.5) → 끝 공개(23.5~24.4 방송 화면 위 '장윤정과 3박 4일/국내여행 가기')",
+ "narr_share": "나레 17/17 덩어리, 나레 소리 0.08~24.4초 ≈ 24.3/24.4초(훅 0~4.0 은 자막 없이 제목 낭독, vtt 마지막 '공개됩니다' 가 끝까지)",
+ "notes": [
+  "자막 '두 번 눌러주시면 감사합니다' vs 나레 '두 번 누르면 공개됩니다' — 화면 글과 말이 다르다",
+  "가격이 아니라 '소원'을 공개(장윤정과 3박 4일 국내여행 가기), 본문 자막과 같은 모양 2줄을 위(y950~1122)로 올림",
+  "브리프의 '창 오른쪽 아래 빨강·흰 화살표 아이콘' 이 편엔 없음(빨강 픽셀 0, 전 프레임)",
+  "훅 빨간 곡선 화살표 없음(두 사람 누끼만)",
+  "훅 오른쪽 여성 사진·마지막 컷 방송 여성 이름은 화면 글자로 확인 안 됨",
+  "목소리 성별·TTS 여부 미확인, 효과음 후보 없음",
+  "글꼴 이름 등록 글꼴 대조 안 함(눈 추정), size_px 90 눈 역산",
+  "x·max_w 는 흰+검정 이웃 마스크 자동값 — 밝은 배경 흰 부분이 섞여 ±40px 오차 가능(가운데 정렬은 눈 확인)"
+ ],
+ "name_evidence": [
+  "장윤정 — 제목·자막 화면 글자(이름이 speaker 에는 안 쓰임, 전 줄 나레)"
+ ],
+ "frame0": {
+  "what": "누끼 두 사람(왼쪽 안경 쓴 노인 남성, 오른쪽 검정 재킷 여성) 상반신 검정 바탕, 위 제목 2줄",
+  "face_frac": 0.13,
+  "text": "장윤정 친아빠가 팔순 / 잔치 대신 원하는 소원"
+ },
+ "_made_by": "kal_analyze.skeleton → 워커 줄판독(1080 원본 프레임·0.033초 잉크 수·픽셀 중앙값)"
+}

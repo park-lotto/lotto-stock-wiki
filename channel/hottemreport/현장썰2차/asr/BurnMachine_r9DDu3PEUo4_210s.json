@@ -1,0 +1,57 @@
+{
+ "music_bed": false,
+ "segments": [
+  {
+   "start": 210.0,
+   "end": 211.88,
+   "label": "S1",
+   "text": "But this is really a tool that I think",
+   "kind": "speech"
+  },
+  {
+   "start": 212.16,
+   "end": 220.96,
+   "label": "S1",
+   "text": "like, you know, when I first saw it, I was like, \"Eh, it's really gimmicky\" until Mat Fraser said it, and I was like \"Anything Mat Fraser says I guess I'll just try it.\"",
+   "kind": "speech"
+  },
+  {
+   "start": 221.42,
+   "end": 229.46,
+   "label": "S1",
+   "text": "I've been surprised by this. Now, this isn't my favorite form of conditioning. I don't love just sitting around doing this, but I can see this for a few populations.",
+   "kind": "speech"
+  },
+  {
+   "start": 229.78,
+   "end": 246.62,
+   "label": "S1",
+   "text": "Number one, if you have lower body issues that prevent you from being able to train your lower body or to like condition with different tools, so whether you're like an adaptive athlete, say in a wheelchair, or you're somebody who has an injury that you're rehabbing, still want conditioning,",
+   "kind": "speech"
+  },
+  {
+   "start": 246.62,
+   "end": 252.34,
+   "label": "S1",
+   "text": "amazing for that. And this can't, like there's not really much else you can use that can simulate this. Amazing for that.",
+   "kind": "speech"
+  },
+  {
+   "start": 253.08,
+   "end": 265.76,
+   "label": "S1",
+   "text": "Also, if you're somebody that just wants to change up your conditioning, great for that. If you're somebody that wants upper body conditioning, I know there's probably quite a few MMA athletes, boxers, those types that could really benefit from this, this can work. And it's a very simple device, so I'll just show you. It's basically two bearings.",
+   "kind": "speech"
+  },
+  {
+   "start": 267.62,
+   "end": 312.2,
+   "label": "S1",
+   "text": "So, there's basically a rotating",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "_src": "C:/Users/CH/AppData/Local/Temp/c60.m4a",
+ "_offset": 210.0
+}

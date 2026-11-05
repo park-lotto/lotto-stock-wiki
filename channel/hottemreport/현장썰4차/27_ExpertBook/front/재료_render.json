@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/27_ExpertBook/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "jt.mp4",
+   "ss": 25.0,
+   "cuts": [
+    {
+     "src": "jt.mp4",
+     "ss": 25.0,
+     "dur": 3.801,
+     "block": "N1",
+     "src_crop": [
+      531,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "jtz1.mp4",
+     "ss": 0.33,
+     "dur": 4.02,
+     "block": "O1",
+     "src_crop": [
+      531,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "jt.mp4",
+     "ss": 91.2,
+     "dur": 3.449,
+     "block": "N2",
+     "src_crop": [
+      620,
+      80,
+      690,
+      869
+     ]
+    },
+    {
+     "src": "jtz2.mp4",
+     "ss": 0.35,
+     "dur": 4.1,
+     "block": "O2",
+     "src_crop": [
+      531,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "jt",
+   "ss": 25.0,
+   "vs": 0.0,
+   "src_crop": [
+    531,
+    0,
+    857,
+    1080
+   ],
+   "why": "jt 23.26~29.33 한 샷 — 검정 덮개(제품) 위 낙서·마커 든 손(얼굴 없음), 첫 화면부터 노트북",
+   "ve": 3.801,
+   "src_end": 28.801
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "jtz1",
+   "ss": 0.33,
+   "vs": 3.801,
+   "src_crop": [
+    531,
+    0,
+    857,
+    1080
+   ],
+   "why": "Julian 이 리무버로 닦은 덮개를 보며 'wow … as good as new'(원본 편집 47.18~50.88·50.88~54.55) — 덮개만 보이는 정지 구간(완성본 freezedetect 4.57·5.47·5.97초)이라 jt 48.9~53.6 을 1.22배 천천히 다가가는 사본 jtz1(zoomclip_av.py, 원음 그대로)",
+   "ve": 7.821,
+   "src_end": 4.35
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "jt",
+   "ss": 91.2,
+   "vs": 7.821,
+   "src_crop": [
+    620,
+    80,
+    690,
+    869
+   ],
+   "why": "jt 78.75~96.43 한 샷 — 바닥에 놓은 노트북 위에 올라섬(사람 작아 확대, Cif 상자·주전자 상표는 crop 밖)",
+   "ve": 11.27,
+   "src_end": 94.649
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "jtz2",
+   "ss": 0.35,
+   "vs": 11.27,
+   "src_crop": [
+    531,
+    0,
+    857,
+    1080
+   ],
+   "why": "Julian 'really impressed … withstand the weight'(96.43~115.22 한 샷) — 정지에 가까운 서 있는 장면(freezedetect 13.2·14.13초)이라 jt 96.5~101.2 를 1.22배 다가가는 사본 jtz2",
+   "ve": 15.37,
+   "src_end": 4.45
+  }
+ ]
+}

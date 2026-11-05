@@ -1,0 +1,14 @@
+{
+ "_note": "숏템리폿 4차 30 다이슨 허쉬젯 앞 화면 소스 — pd = Phones And Drones hbgYfTVYU_U 전체(1920x1080 → 857x1080, 위에서 찍은 손만) · me = MrExitStrategy VP94GltYb8U 190~420초 사본(0~211.27 손만) · 창 1080x1360. pd 는 186.0 → 200.5 → 234.95 차례(되감기 없음).",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/30_HushJet/front/src",
+ "files": {"pd": "pd.mp4", "me": "me.mp4", "pp": "pd.mp4"},
+ "voice_src": {"pd": "pd_voice.wav", "me": "me_voice.wav"},
+ "scene_cuts": {"pd": [86.65, 98.26, 103.67, 113.28, 140.64, 142.18], "me": [211.27], "how": "ffmpeg 320px select scene>0.12 (위에서 찍은 고정 카메라)"},
+ "blocks": {
+  "N1": {"src": "pd", "ss": 186.0, "src_crop": [470, 0, 857, 1080], "why": "pd 142.18~ 한 샷 — 손에 든 허쉬젯(스톤), 얼굴 없음"},
+  "O1": {"src": "me", "src_crop": [530, 0, 857, 1080], "why": "켠 남색 허쉬젯 앞에 손을 대 보며 'Very powerful … that's impressive'(0~211.27 한 샷, 얼굴 없음)"},
+  "N2": {"src": "pd", "ss": 200.5, "src_crop": [470, 0, 857, 1080], "why": "pd 단추를 누르는 손(한 샷 안)"},
+  "O2": {"src": "pd", "src_crop": [470, 0, 857, 1080], "why": "손에 든 허쉬젯 + 'but wow. That power is actually amazing on something this tiny'(한 샷 안)"}
+ },
+ "consts": {"LUFS_FINAL": -14.0, "LUFS_NARR": -13.8, "LIMIT": 0.8, "GAINS": [7.1, 9.9], "GAP_NN": 0.25, "LEAD": 0.03, "_why": "−14 LUFS · GAINS = −16 − 원음 창 LUFS(ebur128, VOICE_AF 뒤: O1 −23.1 · O2 −25.9) · LEAD 0.03"}
+}

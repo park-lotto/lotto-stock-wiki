@@ -1,0 +1,435 @@
+{
+ "topic": "SIAX 폴드 버즈(접이식 초박형 무선 이어폰) — Mrwhosetheboss 가 처음 꺼내 보고 'Oh my goodness … didn't expect them to be this tiny'·뚜껑을 열자 'Wow … transforming buds' + DemiGlaceTomato 손 개봉 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "LDR6_hdpza8",
+ "bench_note": "벤치 '에어팟 유저가 뒷목 잡는 발명품'(31.4만, 핫템리포트 22위, 2026-08-21, 설명란 '#SIAX') — 일본/틱톡 컷 모음이라 단일 원본 없음(3차 소재표). 같은 제품을 처음 만져 보는 유튜브 Mrwhosetheboss 'I spent $12,000 on the THINNEST Tech' VTLnDqjfRZQ(2,072만, 2026-09-08) 868~1022초 'Transforming thin earbuds' 장 원음형. 벤치 '빡친 디자이너가 만든'(근거 없음)·'13mm 드라이버·블루투스 5.4·듀얼 마이크'(1차 출처 못 찾음 — siax.com 은 도메인 판매 페이지)·'애플 너네도 일 좀 하자'(남의 상표 도발)는 안 씀",
+ "sources": {
+  "mw": {
+   "file": "mw.mp4",
+   "who": "유튜브 Mrwhosetheboss VTLnDqjfRZQ 855~1030초 구간 사본(1920x960 30fps, 영어 원음 140-3 'English (GB) original' — 스페인·프랑스·포르투갈 더빙 트랙 있음, 원음 골라 받음)",
+   "views": 20722688,
+   "dur": 175.0,
+   "res": "1920x960"
+  },
+  "dg": {
+   "file": "dg.mp4",
+   "who": "유튜브 DemiGlaceTomato 'The slimmest, smallest true wireless earbuds, probably ever!' 69dxZMXwUPM 전체(1080x1920 세로, 손만 — 설명란 'The brand is Siax')",
+   "views": 11121,
+   "dur": 196.15,
+   "res": "1080x1920"
+  }
+ },
+ "titles": {
+  "hook": "종이처럼 얇은\n접이식 이어폰"
+ },
+ "facts": {
+  "f1": {
+   "text": "Mrwhosetheboss 원본(스피치매틱스, 사본 초 = 원본 − 약 853) 35.16~40.28 'Earbuds that even with their charging case are just 6.4mm thick' · 41~46 'I never really thought of AirPods as a thick product, but next to these they look like they're made for giants' · 쿠팡 상품명 'SIAX FOLD BUDS 클립형 얇은 케이스 접이식 … 종이처럼'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "같은 원본 91.70~98.58 'when you want to listen to them, pull your finger around, lift the lid up. Wow. So they're not just thin buds, they're actually transforming buds' · 102.34~109.30 'they've got a tiny little spring inside them … stay as thin as that when they're not in use, but then jump out'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "같은 원본 22.90~28.75 'Oh my goodness. I was ready for them to be thin, but I didn't expect them to be this tiny.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "같은 원본 95.17~98.95 'Wow. So, they're not just thin buds, they're actually transforming buds.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "케이스까지 합쳐도 두께가 육 점 사 밀리 종이처럼 얇은 무선 이어폰이 있는데요 근데 뚜껑을 열면 납작하던 이어폰이 툭 튀어나온다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "mw",
+    "span": [
+     22.85,
+     28.75
+    ],
+    "en": "Oh my goodness. I was ready for them to be thin, but I didn't expect them to be this tiny.",
+    "caps": [
+     "오 마이 갓…",
+     "얇을 줄은 알았는데",
+     "이렇게 작을 줄은 몰랐어요!"
+    ],
+    "check": "Oh 23.00 · tiny 28.40 · 다음 I've 29.64 · 화면 한 샷 13.2~31.4(손·케이스, 아래 '$45 SIAX FOLD BUDS' 가격 띠는 crop 밖)"
+   },
+   {
+    "id": "O2",
+    "src": "mw",
+    "span": [
+     95.17,
+     99.0
+    ],
+    "en": "Wow. So, they're not just thin buds, they're actually transforming buds.",
+    "caps": [
+     "와! 그냥 얇은 게 아니라",
+     "변신하는 이어폰이네요!"
+    ],
+    "check": "앞 up 94.90 · Wow 95.22 · buds 98.58 · 다음 Oh 100.54 · 화면 93.1~97.13(뚜껑 열림)·97.13~101.63(이어폰 꺼냄) 손만"
+   }
+  ],
+  "dropped": {
+   "벤치 '빡친 디자이너가 만든'": "근거 없음 — 안 씀",
+   "벤치 '13mm 드라이버·블루투스 5.4·듀얼 마이크'": "1차 출처 못 찾음 — 안 씀",
+   "벤치 '애플 너네도 일 좀 하자'·리뷰어 'AirPods … giants'": "남의 상표 — 대사·제목 모두 안 씀",
+   "리뷰어 화면 가격 띠 '$45'": "금액 — crop 밖",
+   "가격": "금액 금지"
+  },
+  "tts_fix": "10-28 1차 N2 '튀어나온대요'를 스피치매틱스·위스퍼 둘 다 '튀어나오는데요'로 받아씀(98 #173 꼴) → '튀어나온다는데요'"
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "케이스까지 합쳐도 두께가 6.4mm",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.966,
+   "text": "종이처럼 얇은",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.859,
+   "text": "무선 이어폰이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 4.337,
+   "text": "오 마이 갓…",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.77,
+   "text": "얇을 줄은 알았는데",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.727,
+   "text": "이렇게 작을 줄은 몰랐어요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.487,
+   "text": "근데 뚜껑을 열면",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.68,
+   "text": "납작하던 이어폰이 툭 튀어나온다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.836,
+   "text": "와! 그냥 얇은 게 아니라",
+   "kind": "원음"
+  },
+  {
+   "t0": 15.65,
+   "text": "변신하는 이어폰이네요!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "케이스까지 합쳐도 두께가 6.4mm",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.966,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "종이처럼 얇은",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.966,
+   "dur": 0.893,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "무선 이어폰이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.859,
+   "dur": 1.478,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "오 마이 갓…",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.337,
+   "dur": 1.433,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "얇을 줄은 알았는데",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.77,
+   "dur": 1.957,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이렇게 작을 줄은 몰랐어요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 7.727,
+   "dur": 2.76,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 뚜껑을 열면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.487,
+   "dur": 1.193,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "납작하던 이어폰이 툭 튀어나온다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.68,
+   "dur": 2.156,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와! 그냥 얇은 게 아니라",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.836,
+   "dur": 1.814,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "변신하는 이어폰이네요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 15.65,
+   "dur": 2.616,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    4.337,
+    10.237
+   ],
+   [
+    13.836,
+    17.666
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 4.087
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 4.337,
+    "a1": 10.237,
+    "audio_ss": 22.85,
+    "src": "mw"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 10.487,
+    "n1": 13.586
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 13.836,
+    "a1": 17.666,
+    "audio_ss": 95.17,
+    "src": "mw"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "dg",
+    "ss": 33.0,
+    "vs": 0.0,
+    "src_crop": [
+     0,
+     0,
+     1080,
+     1360
+    ],
+    "why": "손으로 은색 케이스를 옆으로 돌려 얇은 옆면을 보여 줌(36~40초)",
+    "ve": 4.237,
+    "src_end": 37.237
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "mw",
+    "ss": 22.75,
+    "vs": 4.237,
+    "src_crop": [
+     640,
+     0,
+     627,
+     790
+    ],
+    "why": "손으로 보라 케이스를 꺼내 열어 봄 + 'Oh my goodness … this tiny'(13.2~31.4 한 샷, 얼굴 없음, 가격 띠 crop 밖)",
+    "ve": 10.487,
+    "src_end": 29.0
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "dg",
+    "ss": 44.0,
+    "vs": 10.487,
+    "src_crop": [
+     0,
+     0,
+     1080,
+     1360
+    ],
+    "why": "케이스를 열자 납작한 이어폰이 보임(44~56초)",
+    "ve": 13.736,
+    "src_end": 47.249
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "mw",
+    "ss": 95.07,
+    "vs": 13.736,
+    "src_crop": [
+     330,
+     0,
+     762,
+     960
+    ],
+    "why": "폰 뒤 케이스 뚜껑을 손가락으로 열고 이어폰을 꺼냄 + 'Wow … transforming buds'(93.1~97.13·97.13~101.63 손만)",
+    "ve": 18.266,
+    "src_end": 99.6
+   }
+  ],
+  "dur": 18.266,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\22_FoldBuds\\front\\render\\narr_N1.wav",
+    "dur": 4.087,
+    "tempo": 0.897,
+    "chars": 32,
+    "speech": 3.962,
+    "cps": 8.08,
+    "segs": [
+     [
+      0.124,
+      2.062
+     ],
+     [
+      2.218,
+      4.087
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\22_FoldBuds\\front\\render\\narr_N2.wav",
+    "dur": 3.099,
+    "tempo": 1.017,
+    "chars": 24,
+    "speech": 3.099,
+    "cps": 7.75,
+    "segs": [
+     [
+      0.0,
+      0.371
+     ],
+     [
+      0.779,
+      3.099
+     ]
+    ]
+   }
+  ]
+ }
+}

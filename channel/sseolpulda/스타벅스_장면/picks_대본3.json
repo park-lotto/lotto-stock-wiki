@@ -1,0 +1,10 @@
+{"lines":[
+ {"i":0,"kind":"photo","src":"c/p_cups.jpg","zoom":true,"meme":"놀람"},
+ {"i":1,"kind":"photo","src":"c/p_cups2.jpg","zoom":true},
+ {"i":2,"kind":"photo","src":"art/dong2015.jpg","zoom":true},
+ {"i":3,"kind":"photo","src":"ai/03.png","zoom":true},
+ {"i":4,"kind":"photo","src":"art/mtn2015.jpg","zoom":true},
+ {"i":5,"kind":"video","src":"c/v_6jjcT73ZCxc.mp4","start":30.0},
+ {"i":6,"kind":"photo","src":"c/p_app.jpg","zoom":true},
+ {"i":7,"kind":"video","src":"c/v_DD0NQBw--Qs.mp4","start":25.0,"meme":"웃음"}
+]}

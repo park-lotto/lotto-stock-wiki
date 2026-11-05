@@ -1,0 +1,50 @@
+{
+ "music_bed": true,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 3.79,
+   "speaker": "S1",
+   "text": "Check out this two-in-one folding treadmill from Home Fitness Code.",
+   "kind": "speech"
+  },
+  {
+   "start": 3.79,
+   "end": 8.79,
+   "speaker": "S1",
+   "text": "It's easy to assemble, you just need to screw two knobs to fix the handrail and you can use the treadmill.",
+   "kind": "speech"
+  },
+  {
+   "start": 8.79,
+   "end": 12.35,
+   "speaker": "S1",
+   "text": "It has multi-speed and an LCD screen.",
+   "kind": "speech"
+  },
+  {
+   "start": 12.35,
+   "end": 16.3,
+   "speaker": "S1",
+   "text": "You can speed up to 10 km an hour under running mode.",
+   "kind": "speech"
+  },
+  {
+   "start": 16.3,
+   "end": 18.61,
+   "speaker": "S1",
+   "text": "It's portable and compact.",
+   "kind": "speech"
+  },
+  {
+   "start": 18.61,
+   "end": 22.02,
+   "speaker": "S1",
+   "text": "Shop now on homefitnesscode.com.",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-flash-lite-latest",
+ "_src": "Uuw-7RAk-EE.m4a",
+ "_offset": 0.0
+}

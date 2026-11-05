@@ -1,0 +1,183 @@
+{
+ "_note": "잇템로그판 해외반응 시리즈 — 라네즈 버블티 립(2026-10-22). 원본 = Aylen Park 'jkHyncpQRdc'(2,987만, 채널 중앙 72만의 41배). 한국 검증 = 아이템홈 '한국 화장품을 쓰고 울어버린 외국인 #립 #플럼퍼' 868만 등 한국 화장품 해외반응. 사실 근거 = Speechmatics 영어 낱말 시각(asr_words.json) + 1초 시트.",
+ "slug": "ititemlog_ep04_lip",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "라네즈 립 슬리핑 마스크·립밤(쿠팡: 라네즈 립 슬리핑 마스크 류)",
+ "title_lines": [
+  [
+   [
+    "한국 립밤 맛보고"
+   ]
+  ],
+  [
+   [
+    "버블티라 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "2.92~6.36 'Laneige just dropped their new bubble tea collection' · 6.36 'two flavors Taro and Matcha'",
+  "f2": "17.00~20.80 'Wait. Oh wow. So cute' · 21.76 'There's a lip sleeping mask and a lip balm in here'",
+  "f3": "45.84 'It tastes so good' · 46.64 'Should we try it and compare it to the real drink now'",
+  "f4": "53.32~60.20 'It's the same flavor ... It's so similar. How did they make this so that it tastes so similar to the actual drink? That's crazy'",
+  "f5": "84~93초 하트 모양 케이블 홀더로 립 주걱 꽂기 · 92.48 'Here's the final result'"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 립밤을 맛보고 깜짝 놀란 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 립밤을 맛보고"
+    },
+    {
+     "text": "깜짝 놀란 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(소개)",
+   "src": "jkHyncpQRdc.mp4",
+   "spans": [
+    [
+     2.92,
+     6.36
+    ]
+   ],
+   "said": "You guys Laneige just dropped their new bubble tea collection",
+   "caps_rel": [
+    [
+     "라네즈에서 버블티 컬렉션이 나왔어",
+     0.0,
+     3.44,
+     "버블티"
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 설명",
+   "tts": "타로랑 말차, 두 가지 버블티 맛 립 제품인데요.",
+   "caps": [
+    {
+     "text": "타로랑 말차"
+    },
+    {
+     "text": "두 가지 버블티 맛 립 제품인데요",
+     "key": "버블티 맛"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "jkHyncpQRdc.mp4",
+   "spans": [
+    [
+     17.0,
+     20.8
+    ]
+   ],
+   "said": "Wait. Oh wow. So cute",
+   "caps_rel": [
+    [
+     "잠깐, 우와",
+     0.0,
+     2.7
+    ],
+    [
+     "너무 귀여워",
+     2.7,
+     3.8
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 설명",
+   "tts": "안에는 립 슬리핑 마스크와 립밤이 들어 있었는데요.",
+   "caps": [
+    {
+     "text": "안에는 립 슬리핑 마스크와"
+    },
+    {
+     "text": "립밤이 들어 있었는데요"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 시도",
+   "tts": "입술에 바르고 맛을 보더니 진짜 버블티랑 비교해 보기로 했는데요.",
+   "caps": [
+    {
+     "text": "입술에 바르고 맛을 보더니"
+    },
+    {
+     "text": "진짜 버블티랑 비교해 보기로 했는데요",
+     "key": "진짜 버블티"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응(정점)",
+   "src": "jkHyncpQRdc.mp4",
+   "spans": [
+    [
+     53.32,
+     60.2
+    ]
+   ],
+   "said": "It's the same flavor. Yeah. It's so similar. How did they make this so that it tastes so similar to the actual drink? That's crazy",
+   "caps_rel": [
+    [
+     "맛이 똑같아",
+     0.0,
+     1.0,
+     "똑같아"
+    ],
+    [
+     "진짜 비슷해",
+     1.0,
+     2.84
+    ],
+    [
+     "어떻게 실제 음료랑",
+     2.88,
+     4.9
+    ],
+    [
+     "이렇게 같은 맛을 냈지? 미쳤다",
+     4.9,
+     6.88
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "마지막엔 립 주걱까지 하트 모양으로 꽂아서 꾸며 놨다고 하네요.",
+   "caps": [
+    {
+     "text": "마지막엔 립 주걱까지"
+    },
+    {
+     "text": "하트 모양으로 꽂아서 꾸며 놨다고 하네요"
+    }
+   ]
+  }
+ ]
+}

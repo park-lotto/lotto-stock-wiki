@@ -1,0 +1,335 @@
+{
+ "topic": "Pan's Mushroom Jerky(판스 버섯 육포) — 표고버섯으로 만든 육포. 샤크들이 '진짜 맛있다'며 씹은 쫄깃한 육포의 정체가 버섯 → '어쩐지 더 맛있더라' → 말레이시아 사촌의 간식에서 시작 → 투자 경쟁 끝에 마크와 성사",
+ "product": "Pan's Mushroom Jerky(표고버섯 육포)",
+ "bench": {
+  "id": "Qu3S7KKz4JM",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "이게 육포가 아니라고?! (화면 제목: 이게 육포가 / 진짜 아니라고?!)",
+  "dur": 47.9,
+  "views": 576000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "1초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '원가 2,300원·판매가 11,000~13,000원'·'4억에 지분 20%'(금액·지분) → 쓰지 않음",
+  "벤치 '채식주의자에게 어필이 되며'·원본 'high in fiber and vitamin D'·'so healthy'(건강·영양 주장) → 쓰지 않음",
+  "벤치 끝 '방송 나간 뒤 이틀 만에 투자액을 거둬들였고 지금은 몇십억 매출'(1차 출처 못 찾음) → 쓰지 않음",
+  "벤치 남의 틱톡·리뷰 영상(남의 얼굴) — 이 원본 밖 → 원본 무대·제품 컷으로"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "진짜 맛있다!",
+     "완전 좋은데?"
+    ],
+    "cap_at": [
+     89.38,
+     91.14
+    ],
+    "span": [
+     89.38,
+     91.7
+    ],
+    "orig_en": "Really good. I love it.",
+    "text": "진짜 맛있다! 완전 좋은데?",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 도마 위 버섯 육포 덩어리) — 벤치 0~1.0 투자자 육포 씹기(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "진짜 맛있다!",
+      "span": "진짜 맛있다!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "완전 좋은데?",
+      "span": "완전 좋은데?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "샤크들이 쫄깃한 육포를",
+     "한 입씩 씹어 보는데",
+     "다들 맛있다고 난리인데"
+    ],
+    "text": "샤크들이 쫄깃한 육포를 한 입씩 씹어 보는데 다들 맛있다고 난리인데",
+    "tts": "샤크들이 쫄깃한 육포를, 한 입씩 씹어 보는데, 다들 맛있다고 난리인데",
+    "fx": "빨강 번쩍 — 벤치 0.5('육포를 씹는 투자자들')",
+    "emph": [
+     {
+      "cap": "샤크들이 쫄깃한 육포를",
+      "span": "쫄깃한 육포를",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 입씩 씹어 보는데",
+      "span": "한 입씩",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 맛있다고 난리인데",
+      "span": "맛있다고 난리인데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(반전 예고)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "그때 창업자가",
+     "이 고기 같은 식감에 대해",
+     "고백할 게 있다는데"
+    ],
+    "text": "그때 창업자가 이 고기 같은 식감에 대해 고백할 게 있다는데",
+    "tts": "그때 창업자가, 이 고기 같은 식감에 대해, 고백할 게 있다는데",
+    "fx": "초록 번쩍 — 벤치 6.4('그런데 사실은')",
+    "emph": [
+     {
+      "cap": "그때 창업자가",
+      "span": "그때 창업자가",
+      "color": "초록",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 고기 같은 식감에 대해",
+      "span": "식감에 대해",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고백할 게 있다는데",
+      "span": "있다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(정체)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "사실은…",
+     "버섯이에요!"
+    ],
+    "cap_at": [
+     91.8,
+     95.2
+    ],
+    "span": [
+     91.8,
+     95.84
+    ],
+    "orig_en": "Is actually... mushrooms.",
+    "text": "사실은… 버섯이에요!",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "사실은…",
+      "span": "사실은…",
+      "color": "파랑",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "버섯이에요!",
+      "span": "버섯이에요!",
+      "color": "민트",
+      "whole": true,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(반응)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "어쩐지!",
+     "더 맛있더라"
+    ],
+    "cap_at": [
+     99.66,
+     100.6
+    ],
+    "span": [
+     99.66,
+     102.15
+    ],
+    "orig_en": "I was wondering why I love it even more.",
+    "text": "어쩐지! 더 맛있더라",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "어쩐지!",
+      "span": "어쩐지!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "더 맛있더라",
+      "span": "더 맛있더라",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "계기",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "알고 보니",
+     "말레이시아 사촌이 만든 간식을",
+     "고기인 줄 알았다는데"
+    ],
+    "text": "알고 보니 말레이시아 사촌이 만든 간식을 고기인 줄 알았다는데",
+    "tts": "알고 보니, 말레이시아 사촌이 만든 간식을, 고기인 줄 알았다는데",
+    "emph": [
+     {
+      "cap": "알고 보니",
+      "span": "알고 보니",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "말레이시아 사촌이 만든 간식을",
+      "span": "사촌이 만든 간식을",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고기인 줄 알았다는데",
+      "span": "알았다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "샤크들이 씹은 육포",
+  "line2": "정체가 버섯이라고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '이게 육포가 / 진짜 아니라고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 89.38~91.70 'Really good.' 'I love it.'(스피치매틱스 enhanced 영어 — 투자자 원음, 이름은 자막에 안 씀) · 화면 78~85 투자자들이 육포를 씹음 · 0초 화면은 같은 원본 180.8초 도마 위 버섯 육포(cover)",
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14&t=78s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 80.70~99.62 'But before you share them, I have to admit something. That marvelously meaty texture that you're experiencing … is actually … mushrooms. That's right. Pan's mushroom jerky.'",
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14&t=80s",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 99.66~102.02 'I was wondering why I love it even more.'(투자자 원음) · 128.49~129.89 'These are all shiitakes, by the way.'",
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14&t=99s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 134.05~161.01 'So my father was born and raised in a small fishing village in Malaysia. … I reach in and try it … It must be pork. … The person who served it was my cousin and he was vegetarian…'",
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14&t=134s",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "원본 556.30~564.06 '18. You got a deal?' 'I'll do it for 15.' 'Mark, you got a deal?' — 금액·지분은 대본에 안 씀(앞 칼카피는 O3 뒤에서 잘려 하이브리드에 안 들어감)",
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14&t=556s",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

@@ -1,0 +1,165 @@
+{
+ "topic": "로투스 비스코프 × 이름 = biscuit + coffee(공식) · 로투스 = 깨끗함을 뜻하는 연꽃(공식) — 1932 벨기에 제빵사 Jan Boone Sr. · 1950년대 낱개 포장 → 카페가 커피에 곁들여 냄 · 1990년대 미국엔 항공사를 통해 처음 들어감(전부 Lotus Bakeries 공식) · 뒤 체험: 쿠팡 로투스 비스코프 37.5g×12(8285435999, 같은 제품)",
+ "brand": "Lotus Biscoff",
+ "scene_query": "Lotus Biscoff coffee commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "nm",
+  "why": "카페 커피 옆에 늘 따라 나오던 그 과자 — 이름 '비스코프'가 비스킷+커피를 합친 말(공식). 훅 = 커피잔 옆 로투스 → 깨닫는 짤"
+ },
+ "hook": [
+  "카페 커피 옆 그 과자,",
+  "이름에 뭐가 숨었게?"
+ ],
+ "post": "로투스 비스코프는 비스킷과 커피를 합친 이름",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "nm": {
+   "text": "Lotus Biscoff 공식 'About us'(2026-10-28 확인): 'Unsurprisingly, the name Biscoff itself is a combination of ‘biscuit’ and ‘coffee’.'",
+   "url": "https://lotusbiscoff.com/en-ca/about-us"
+  },
+  "lt": {
+   "text": "Lotus Biscoff 공식 'About us'·Lotus Bakeries 공식 'History': 'In 1932, a Belgian baker named Jan Boone Sr., creates a caramelised biscuit with nothing but natural ingredients. He names it Lotus, after the flower that symbolises purity.'",
+   "url": "https://lotusbiscoff.com/en-ca/about-us"
+  },
+  "cf": {
+   "text": "Lotus Biscoff 공식 'About us': 'In the 1950’s, baker Boone starts wrapping the biscuits individually. It’s eagerly snapped up by cafés and restaurants as the biscuit to be served with a coffee. It’s an instant hit because taste wise, coffee and the caramelised biscuit have complementary profiles. They boost each other’s flavour.'",
+   "url": "https://lotusbiscoff.com/en-ca/about-us"
+  },
+  "ar": {
+   "text": "Lotus Bakeries 공식 'History': '1990's Lotus® Biscoff® takes flight — In the 1990's, Lotus® Biscoff® is first exported to the US via Airlines, slowly winning the hearts of American consumers in the process.'",
+   "url": "https://www.lotusbakeries.com/history"
+  },
+  "p1": {
+   "text": "쿠팡 8285435999 '로투스 비스코프, 37.5g, 48개'(파트너스 API 2026-10-28 — 상품 사진을 열어 Biscoff 37.5g×12 상자·낱개 봉지 확인)",
+   "url": "https://www.coupang.com/vp/products/8285435999"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(이름에 커피)",
+    "seg": "A",
+    "text": "카페 커피 옆에 늘 따라 나오던 그 과자, 근데 이름에 커피가 숨어 있다는데",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "비스코프라는 이름이, 비스킷이랑 커피를 합쳐서 만든 말이래요",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "처음 만든 사람은, 벨기에의 한 제빵사였는데",
+    "facts": [
+     "lt"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "덤(연꽃)",
+    "seg": "A",
+    "text": "앞에 붙은 로투스는, 깨끗함을 뜻하는 연꽃에서 따온 이름이고",
+    "facts": [
+     "lt"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "전환",
+    "seg": "A",
+    "text": "과자를 하나씩 따로 싸서 팔자, 카페들이 커피랑 같이 내주기 시작했대요",
+    "facts": [
+     "cf"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "쌉쌀한 커피랑 캐러멜 맛이 서로를 살려 줘서, 바로 대박이 났다는데",
+    "facts": [
+     "cf"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "심지어 미국에는, 비행기에서 나눠 주던 과자로 처음 퍼졌대요",
+    "facts": [
+     "ar"
+    ],
+    "sources": [
+     "https://www.lotusbakeries.com/history"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그래서 지금도 비행기 과자로 기억하는 사람이 많대요",
+    "facts": [
+     "ar"
+    ],
+    "sources": [
+     "https://www.lotusbakeries.com/history"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 이야기 듣고 저도, 쿠팡에서 로투스 한 상자를 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/8285435999"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "하나씩 포장돼 있어서, 커피 마실 때 꺼내 먹기 딱 좋고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/8285435999"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "커피에 살짝 찍어 먹을 때마다, 이름이 왜 비스코프인지 알겠더라고요",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://lotusbiscoff.com/en-ca/about-us"
+    ]
+   }
+  ]
+ }
+}

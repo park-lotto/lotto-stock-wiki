@@ -1,0 +1,152 @@
+{
+ "topic": "크리넥스 × 원래 코 풀라고 만든 휴지가 아니었다 — 1차 대전 때 방독면 필터로 쓰려던 얇은 셀룰로스 솜(Cellucotton) → 전쟁이 끝나 재료가 남음 → 다리듯 펴서 1924 크리넥스 → 처음엔 화장 지우는 콜드크림 닦개로 팔림 → 1930 '코 푸는 데 쓴다'는 편지가 쏟아짐 → '버리는 손수건' 광고로 바꾸자 첫해 판매 두 배(전부 Kimberly-Clark 공식 자료 'Disposable facial tissues story') · 뒤 체험: 쿠팡 크리넥스 클래식 소프트 미용티슈(8200388334, 같은 제품)",
+ "brand": "Kleenex",
+ "scene_query": "Kleenex history gas mask cold cream",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "kc",
+  "why": "코 풀 때 쓰는 휴지의 대명사 크리넥스 — 처음엔 화장 지우는 용도로 팔았고, 사람들이 코를 풀자 광고를 바꿨다(Kimberly-Clark 공식). 훅 장면 = 상자에서 휴지를 뽑는 손 → 어리둥절 트래볼타 짤 — '코 푸는 휴지가 아니었다고?'"
+ },
+ "hook": [
+  "크리넥스가 원래,",
+  "코 푸는 휴지가 아니다?"
+ ],
+ "post": "크리넥스는 원래 화장 지우는 휴지였다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "kc": {
+   "text": "Kimberly-Clark 공식 자료 'Disposable facial tissues story'(Source: Shared Values: A History of Kimberly-Clark, 2026-10-28 확인): Mahler 'suggested that this product could be used as a filter in gas masks' · 'The end of the war in 1918 brought about an end to the gas mask project. With a surplus of Cellucotton, K-C needed to find another commercial application' · Fourness 'conceived the idea of ironing cellulose material to make a smooth and soft tissue' · 'facial tissue was born in 1924 with the name Kleenex' · 'Cold Cream Remover for the Stars' — positioned as replacement for the 'cold cream towel' · 1929 Pop-Up box · 1930 'letters from consumers supporting the product's use as a handkerchief swamped K-C' → 'the handkerchief you can throw away' · 'Sales of Kleenex doubled the first year of this new campaign'",
+   "url": "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+  },
+  "bp": {
+   "text": "British Pathé 공식 유튜브 'Latest Gas Masks For Troops (1914-1918)'(nkbXE0qala0) — 1차 대전 방독면 쓰는 병사(기록 영상)",
+   "url": "https://www.youtube.com/watch?v=nkbXE0qala0"
+  },
+  "kv": {
+   "text": "Kimberly-Clark 공식 유튜브 'Kimberly-Clark's U.S. Employees Celebrate 150 Years'(XcgloPGVt6I) — 공장 큰 종이 두루마리·휴지 상자",
+   "url": "https://www.youtube.com/watch?v=XcgloPGVt6I"
+  },
+  "p1": {
+   "text": "쿠팡 8200388334 '크리넥스 클래식 소프트 천연펄프 미용티슈 2겹' — 파트너스 API 2026-10-28, 상품 사진을 열어 크리넥스(Kleenex) 상자 확인",
+   "url": "https://www.coupang.com/vp/products/8200388334"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(코 푸는 휴지가 아니었다 = 질문)",
+    "seg": "A",
+    "text": "휴지 하면 떠오르는 크리넥스, 원래는 코 풀라고 만든 게 아니었다는데",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "시작은 전쟁 때, 방독면 필터로 쓰려고 만들던 얇은 솜 종이였는데",
+    "facts": [
+     "kc",
+     "bp"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "계기",
+    "seg": "A",
+    "text": "전쟁이 끝나 버리자, 그 재료가 잔뜩 남아 버렸대요",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "그래서 다림질하듯 부드럽게 눌러 펴서, 얼굴용 휴지로 만든 게 크리넥스",
+    "facts": [
+     "kc",
+     "kv"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "근데 처음엔 콜드크림, 그러니까 화장 지우는 용도로 팔았는데",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "회사로 편지가 쏟아졌는데, 다들 이걸로 코를 풀고 있다는 거죠",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그래서 광고를, 버리는 손수건으로 바꿨더니, 판매가 두 배가 됐대요",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도, 쿠팡에서 크리넥스를 한 묶음 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/8200388334"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "한 장 뽑으면 다음 장이 쏙 올라와서, 한 손으로도 뽑기 편하고",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "코 풀 때마다, 원래는 화장 지우던 휴지라는 게 자꾸 생각나더라고요",
+    "facts": [
+     "kc"
+    ],
+    "sources": [
+     "https://www.kimberly-clark.com/-/media/kimberly/pdf/innovation/ProductEvol_FacialTissue_umbracoFile.pdf"
+    ]
+   }
+  ]
+ }
+}

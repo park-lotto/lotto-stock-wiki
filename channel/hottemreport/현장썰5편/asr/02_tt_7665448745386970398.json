@@ -1,0 +1,97 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 0.18,
+   "speaker": "S1",
+   "text": "[sfx]",
+   "kind": "sfx"
+  },
+  {
+   "start": 0.18,
+   "end": 5.0,
+   "speaker": "S1",
+   "text": "There's supposed to be a water bottle in that box. That box is massive.",
+   "kind": "speech"
+  },
+  {
+   "start": 5.0,
+   "end": 8.0,
+   "speaker": "S1",
+   "text": "[laughter]",
+   "kind": "reaction"
+  },
+  {
+   "start": 8.0,
+   "end": 11.6,
+   "speaker": "S1",
+   "text": "If you fill this up once a day, you save 2900 water bottles.",
+   "kind": "speech"
+  },
+  {
+   "start": 11.6,
+   "end": 14.5,
+   "speaker": "S1",
+   "text": "We're going to see how much this actually holds.",
+   "kind": "speech"
+  },
+  {
+   "start": 14.5,
+   "end": 16.5,
+   "speaker": "S1",
+   "text": "Owala.",
+   "kind": "speech"
+  },
+  {
+   "start": 18.2,
+   "end": 20.2,
+   "speaker": "S1",
+   "text": "Stanley.",
+   "kind": "speech"
+  },
+  {
+   "start": 20.2,
+   "end": 22.8,
+   "speaker": "S2",
+   "text": "[laughter]",
+   "kind": "reaction"
+  },
+  {
+   "start": 23.9,
+   "end": 26.6,
+   "speaker": "S1",
+   "text": "Hydro Jug.",
+   "kind": "speech"
+  },
+  {
+   "start": 28.1,
+   "end": 31.0,
+   "speaker": "S1",
+   "text": "I still got room for another one.",
+   "kind": "speech"
+  },
+  {
+   "start": 40.8,
+   "end": 42.6,
+   "speaker": "S1",
+   "text": "Fit in.",
+   "kind": "speech"
+  },
+  {
+   "start": 43.6,
+   "end": 47.1,
+   "speaker": "S2",
+   "text": "That's my water bottle!",
+   "kind": "speech"
+  },
+  {
+   "start": 47.1,
+   "end": 49.3,
+   "speaker": "S1",
+   "text": "Not anymore.",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}

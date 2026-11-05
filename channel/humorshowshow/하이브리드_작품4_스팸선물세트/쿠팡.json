@@ -1,0 +1,238 @@
+{
+ "스팸 선물세트": {
+  "search_url": "https://www.coupang.com/np/search?q=%EC%8A%A4%ED%8C%B8%20%EC%84%A0%EB%AC%BC%EC%84%B8%ED%8A%B8",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8891851387",
+    "name": "스팸 선물세트 8호 + 쇼핑백, 4세트",
+    "url": "https://www.coupang.com/vp/products/8891851387",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8891851387&itemId=29074731717&vendorItemId=95946033816&traceid=V0-153-5f3189f7ea7a53d0&clickBeacon=35329770-cc3f-11f1-8528-1f795ae9cf23%7E3&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=1&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/VI5FzxKfAvXqByvvVLQ2Pl_NKDAkluAh4MtLpkP7FaSmg_VbWBQHW5WJ63zjUpUNHgqUR0l4y94aVWjb-S690uDyunF7Vg3W9fgcRESvAOQkpwwb7NM30bnF1Up2JEOy-cgnbgKjI64A527BybLu-RsX2k-DeclOFSEFGr-AbxBLrZL4MjiRsHwPAzsFE42ugh2YUrnbaPq5IjNrcX9hWpTKPhobNGoZbQURkpe_3yY-rZNbmfeNMy7f1zXAMTtSczpe6bBUcZOenU9MNSntRvdtiYxvjleciTduDcaVZoPUrWTJWjrevsr6nHhLUD0H9pKng9pBI3Ks67FUX-78z_EpJVdrj5EyoUaP8NSzufyrjb0x1DfJb6oGiqxvmK-hHkw0iXoqoMQ7pkOc2yYr7h2ve1AcTV-0mk4mnBD5hbNqjKU7L6fZ3HgFRlF_OuEkUMRs4_0TpP4tAbORXhp7iv1tA70SZsmfcEciATz0RR6j-ef14jKkm4xmDQjo-LBtc4wC2CU0BE4uPWG-nZVQJXX-XewgU6WlOQ==",
+    "price": "109,250원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "6745862652",
+    "name": "스팸 고급유 7호 선물세트, 5세트",
+    "url": "https://www.coupang.com/vp/products/6745862652",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=6745862652&itemId=26647202555&vendorItemId=95945761552&traceid=V0-153-5cbd70eb0c7dc246&clickBeacon=35329770-cc3f-11f1-857e-bb112d014193%7E3&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=1&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/sKsbfZ98ewdwBXWOsInYrH2KHqQlkoIJfhGSuYvtAHGrhZuZdpeO1vpn6E-3FrF5cFTg4UNTp6FLVUMES9QOOdlvDxOM5wSgmyaCgCUGRh5cl6MV086ifYAlToAwxezoTL3i5-xCX505N_sa5JKhb-X0eaFtlJxWYkMFu8eyQ1--W4goP4dSg7BioaE6x4EseJIkXvyCp4-d75rI4Q3BuqQJej0KdqLeLokoe4TtRZlBfOoK_xYBSqCAt751zimDzglVJYMnrRTCYpMnuUZ_omHqUvQjs-Wm7xJjgpcnTZsQIVuj5iCZ3NEPhXpVrOO3awsfXll7hYg10CLu1xFLrZ_uCwkWXcovC0aDsiGB-_xucUpmo7X7Q48ZDyBOG1Y3nJfqoMWKZ5XeQfx_lB0oYor_yOPeYm_s5_xuxaxVTMQyjnMC6lIr-duhGdTVyjX5syzJ97abeV1iuZejs3c5vuvJRjjIbfescWkijEL66hPrG52QtMDpzmq_I_PIOCBv-5kFos-7Hw==",
+    "price": "95,110원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9140894476",
+    "name": "CJ 스팸복합 MC-B호 선물가방포함 선물세트, 5세트",
+    "url": "https://www.coupang.com/vp/products/9140894476",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9140894476&itemId=27509393669&vendorItemId=94474342987&traceid=V0-153-fb8aa211ebdfe889&clickBeacon=35329770-cc3f-11f1-a14c-72c469e5e89c%7E3&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=1&slot=3",
+    "image": "https://ads-partners.coupang.com/image1/enwOtQv_bZE9hkDFehaz1ZYdKR7UTOmD0m8yH6Fz9zPyhpJrVenQVudynvGVsXP1b0w5LpmFAsVgSsdRbGJH73XQE6SRWmqNBAKEXXbsG5tcKw6Z4ben_9iZjOjWUbA6j0pUY4v7rdbn21h7O0tFk8aJX5Scb8q3M5m947nuVQH_islqXDKnO3NggzfhlR6eqf91mP2xHSGuqE2cwf111cRViE-a-haksUalkozp-Fav_wMPaGepValf06nlKAJA3weNYvwwY1P34e9yhG1gR7UAK6XPLG2qvgIoMPiT2FLeh3gM9-H4lZewVpiq9VLJaj9jqgpJtKVHHGpZQMh5_qD07x5OFxXmwyLTgjqYbvtZ811japp8z_zy8YyJJ22TKIPi-MFCAbuDsuor7xqTBzc1JU42dcXzGzpMSnk8Vk1GtedoAM8YYfSM31xKbzsMWnCY1ePB4DKK3LWjxwZpQmKCGZusaHVXn_TA-FezFbBL2bEP_avVyDqYJ9km3OKIz9i_2RpWBjJ5RguDzS-3Ikv0Lw3p4wI=",
+    "price": "76,110원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9063325932",
+    "name": "CJ 스마트초이스 T호*5개, 5세트",
+    "url": "https://www.coupang.com/vp/products/9063325932",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9063325932&itemId=26611502425&vendorItemId=95969841086&traceid=V0-153-eefa75e941ece016&clickBeacon=3532be80-cc3f-11f1-8892-771054fb2e6b%7E3&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=1&slot=4",
+    "image": "https://ads-partners.coupang.com/image1/Ak0WyOZ4sbyyVM93ApNw9QiP9I9TTrQQiNUexMPvrPAXdIOAFe0oiG_uDJLMwmZHHhbDsHEdqhknDIF0oxhTxaepo0JAvYBVGaRBvw_nWTDvxY-LCddHXotPIDBlxBlSFqxqkHalX51eJ_JXBpzjoSU_0pfJn-0zS1QK6FEjk1m8onO0rysPmvMGBVXgakCwpKl_hwpADPRgeiKeZ7b4tOYFL-oXODWfIn1HHxELp4XAPsDdfm1ceMOuIuIVI6oRS3c6Inw7X211I_NI-a06P2xVglIXoKqcbJ_-oQz_p4L2rHW240Cw_enerSI_D9QhbjspLEWS0kP29tI0Y2hQLaGNJlV8m_BfnHEw-vWuZqBDRT0A0Z27xfOrKBsZaMdOMk0rSVjReDXVinlNbS-zOk5ZWX5IMzLhtEQe7Dmdt8SKUlrqLw7g1dc9_AwqQY0fSM2-okuHHMlmvhqZ4y_aRTZXE7GVLvkKSRX_EpVUS4ccqdqQMmqJEgHLPLgJHcCQFCPW42lmWwjutSJSxzDA9QlHdw4mqLgZFA==",
+    "price": "94,500원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "8755248251",
+    "name": "CJ 스팸 12호 추석 선물세트+쇼핑백 1600g, 1세트",
+    "url": "https://www.coupang.com/vp/products/8755248251",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8755248251&itemId=26573669067&vendorItemId=96043201267&traceid=V0-153-48fbff004e3ff706&clickBeacon=3532be80-cc3f-11f1-9962-4387ae760d86%7E3&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=1&slot=5",
+    "image": "https://ads-partners.coupang.com/image1/Y-Zv4YMeSju-oHeUYwMdtli0-wopkEfL3k7duLfL3i6_C-DQmDH0O5YIWEJtlc1kBJDhEasRyF1ln60dFPNK6QDitKgv2S2NQ5FZVHW183isu5U3eU_Z3KU38Mi-TCQPkJk9PIq6X3PNSoLXAe95ENmC18Z6jU_mc1cBVL6yHzf_qofIqt_oVhrO4imQk44ArB4C_vLha-27aD_af40g5kIm9NEJ_zSYdjs4EHUJ7bi044AhWlgZtn8jIc5y6B6OqFWCfzk8vtBHHZsxqoSgND3MTDKXlywM68LgOa9gyTELwdTxJH5MxwMf9rH4-9sb029copebnpoxVZs54-eQ7ioZ6uwu7CXCFRU0R9FEqWzCnjYqi0mnXlopZM_vPwMSTxOt8lo2OP6-Iw8BXM21CFkLBNavJxPPl5PlNF0sLt-HPqHaMrT0nAoInJMsLHl_aAzwrinxuMzX84S0DVXZWBCi4zhVk9SCQhS_vVFSNVf6HNJVywg5tCaX6mNCV5mj2xj5TOBmcXUzSvma8lDsLA4wUwc8x5fnaA==",
+    "price": "39,880원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9718167065",
+    "name": "스팸 3호 선물세트",
+    "url": "https://www.coupang.com/vp/products/9718167065",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9718167065&itemId=29042277114&vendorItemId=3001085211&traceid=V0-153-6d760771286d0e25&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=0&slot=6",
+    "image": "https://ads-partners.coupang.com/image1/onRbyVTjSxcybMCfotC2h0sZmQ2iG2qWJ3LQus_uc2VHWUampKjcvZLBA89Y3k2qBmFuOC_mcZA_d-pe8kZUgpTGqV4echGBuAt4mt_LMzSXH3UWVJnBoAmf0EzpuwexzKNQAMM0JNgx0XuQj3GcyeSB4d9pO1j2uCP5cTHmNL3YpYVDfChp5qOXTrnjmGriFNKmbG6jx0Mh5Z7jyEL4lrTO0dNenDTQQDdGSyhJ47mXXKvRp66V6SLkVYE_vrnq4Lm6dM19m7k4oUsPnJips24OhEs326DQjqZS-ugqEjEusq5tUJMjCP0Peb0ClIBw7TQtM-6Ptp-SIUX8QySulmEnEyVnDOgFt_YonZ2poPpnnIskR1HYaJhyb0fOw6Ckk8QN-2Sf9xM_418XfNrsc0U-pnr4sJyj0eDwb_Q2OEEwdFK7Pab-To05jK49QXBGemdrsB5QdNamh6ZcQAl02z6fznnrKhEjI6jP87A9x3Slr3Y1PoP_TSqeHz6iphUJ-dMJf4PQqbSw1H_7u1uUff4_HIHlw04PPoZIYQzNZBAJ",
+    "price": "42,240원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "2171131275",
+    "name": "스팸 선물세트 8호 + 쇼핑백",
+    "url": "https://www.coupang.com/vp/products/2171131275",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=2171131275&itemId=55652366&vendorItemId=96172605825&traceid=V0-153-ceea590e51f1f22b&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=0&slot=7",
+    "image": "https://ads-partners.coupang.com/image1/003LlhfO_gpfB7mA022DCT8xU7VjCYLIP42ZUAKRwEbHMU43QwfXGguQIm8oasCcoaeaz95mAKnjzoZ0BdBJ7kqbVnqssLC3nJd8paFJgwuk0jX69BZj0fmuidtdb4s5Rskv8vwcJ3l0NE1mp7sV5tI4SrlnLGdCYjj6Oxu_HBPx1j8o8nqscCGJrJ7oJVaF45JFZfrrRcQjyDjuEIh62XeJMD4hNCtrGHQR3FcgD9H4NPQOnyj2df2UcKJeHjpQ3R-GIwkRT1GrvE7xrRwHmncYM17RWzYqe6UbCZRHf9vHQ4cT_jjFQ9FuhjIAkjnR3wr67AGJeci0nwPqgVAzIq6g70bfC9GSydotXJEHVRWpkodQUaByfAFuCY7cFAL8DK4SMfOHt2Ac9fKFWPx2EOWGLOyUO3bh7umdAprLvDRlQWnq0iqvc2cx6c6Tj_RXt4GD5_aFzkjTVkyZy-GonkuHGFpeK2HRUKl9LDqjCVi3c2Y2FXo8KL2Xitbe8D1AAlJp1_23wrvdG652cVC6oCZaJ5dUa83jviuPydPi5Z_5Ow==",
+    "price": "29,330원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "8289256478",
+    "name": "스팸 12호 선물세트",
+    "url": "https://www.coupang.com/vp/products/8289256478",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8289256478&itemId=21421691268&vendorItemId=94651232912&traceid=V0-153-fecf419878b73acd&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=0&slot=8",
+    "image": "https://ads-partners.coupang.com/image1/VmiwcomOmjEFSApnVn3mM1bzOQJNnUxQoWegTTYfKvQK3MzrbCwUvdcsDK9HQTeMyix_ye2Sxyv45YJLzribCskacp2qsRrmOZR_HOae9UjkCi1W12xviyTl_xGvRmlQzxzNxLlu-rH4270Z6N_rrnyv7rh3r2PXTfcJZGoi8EsoBZMy6Jwey5yI2aPyF5JQuAhZt2NSBOja7sRMsCRxoUcL5-iWcwmtSdDX6WpUD7cDfhoxjYxvSMDvikWChIlOA3bOWX8K4ijzXrNJXdSZGeJwUkgNSyf9dZC47kq5usTaHHZ87DETwvD22WhQa4_SgPeM6bdan-_XS_v7RMQe9YQnjvvRFQOHzcgvarLJ-YlmyCt8tldwr5vRA9IKIz5Q-5EOlysVPr2N20i_uGoNcGprZOr7CGrTrywb8ESe_iDMnKhsGizebSQnvWnlav4RSHbzI0JWFDTgLTeFByEdUQSR8lbWFYorUq3BxBrhAhYQnlrRdGx1j2ImMEf5XnW55OdF5b5X7ZTZpxvuX6tpt5viHIfasCiPyvvAxCv0oI_mlgc=",
+    "price": "23,710원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "6734845934",
+    "name": "스팸 1호 선물세트",
+    "url": "https://www.coupang.com/vp/products/6734845934",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=6734845934&itemId=15702725217&vendorItemId=82917150198&traceid=V0-153-ee343c51b0552180&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=0&slot=9",
+    "image": "https://ads-partners.coupang.com/image1/8bwnl3LaGYmm2mid8bWyHBSSpotNPiptvTY-C-TnI8y4imNKtKiLioaSxoi2AUZ4NipTKQFMyUvdGKcsjbK0Mwlo0Wpt7rduEtx3w5XqZP3u7peHPC1tLOuuZb7spuyn4Z47eWpw-GBFTvIGVrqyogDZYwPvCBWThSpVzJtDKZ8gz5ZqEyn7zoS9R7EiUfOqfplAf1KJo-uHbMsOoqivCcNb_7arEe9NjLAXwAF8kuikUXqBjwf3kCqhpCdS_EYJcWc6_EFy7kHqZ0JV64KYu2J3TZLyhP1FT6nBXLMgcKBPH2NHlvA_AJ9DV_F15euNbHlx7BD8g0R-vtBKLaglZ_XYDvIgj3VHX5QATEpryTPyvA4qXUUL0Y7S1E5P16vs4FzjZGCw7a5eGqBhc9ralfccec4uLuv__RBwDe0qZsLPKgVXcMGVuY5e_RSFTYLv-JWqbrDEMnyEkU7MNLqDoga80zOJAbquxyIOSczlmGd8ZTF7U8RfWJipSUU895Mnq684MyWyV23gpNzGcKcWSYHer9cssYsjQmxwt8DLqkn7sFMK",
+    "price": "58,180원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9723792530",
+    "name": "스팸 1호 선물세트",
+    "url": "https://www.coupang.com/vp/products/9723792530",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9723792530&itemId=29042247553&vendorItemId=96034557319&traceid=V0-153-f859702540f41e5a&requestid=20261020133207248286053105&token=31850C%7CMIXED&pt=0&slot=10",
+    "image": "https://ads-partners.coupang.com/image1/3Ct418KFe15oiAxE3KQvmUDEDS3bKCGq1_3mH4kGYH42FP7q_YNpC-U482lF4UbP91evdqXEl4zgml9xmJcefbVRxX5xdIxai289ZzNysNNhlKLFGoLrmMgop_0dFFfLQG1o4nSSPfT-2dbx7W-KPaf1_EcuNTbqaxYDAwH3MMAlCRX7fAinHz_zNFvmRUkFmDOcLxQtKLJGcaFoq6JbgIE3M0k1GfuwUKTSMTDGxLDedymTIHgfB4pq7icZMaafRl16wznDbUKKKiNxhrALcOvwNn4lmh-6TIH-Jpc1ZIu7SpFu7uER_YW3EcPfPVoNGNK1SBTVFWFXMMcMJKwdPaRek4nB7S694SaXesNDaRr8EXshqwC4-8Xf06UVbp9aRJl8BKLK0Zjejiknc_nQ-GPDvvdO2fDC2p3IWcBvdNaAmIzMUi-pcqXeieoWhSDumIO4doDynGsjr_hiqUAEML9CNAYhLFjcin7wKIqmdCjBPkyOonh0mYUFkaD0lABdiPgChd1WeEn3d8ok7I5L4b29ml6M5LlHdGPFLBXsaakPqoU=",
+    "price": "55,900원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   }
+  ]
+ },
+ "스팸 클래식": {
+  "search_url": "https://www.coupang.com/np/search?q=%EC%8A%A4%ED%8C%B8%20%ED%81%B4%EB%9E%98%EC%8B%9D",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9737072606",
+    "name": "부침 볶음 찌개 다양하게 사용 씨제이 스팸 클래식 대용량 1.81kg, 1개, 1.81kg",
+    "url": "https://www.coupang.com/vp/products/9737072606",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9737072606&itemId=29140984395&vendorItemId=96066690965&traceid=V0-153-ec94beb08406ca50&clickBeacon=3542eb20-cc3f-11f1-b11c-4ab552a5e034%7E3&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=1&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/vYdVAxDHmm0EYmgrvdh5asmu_8fdAn4_nvoOAag7unlUlf1Z0d-BHQNxRpO-MeqMlfmOnfvJpRV7nEhgC4KLBJiAfI2IaTfUe4krvAGP5BO49VdjJ5aX4wfvOxXg1wtMHUw2e8jp_qrHt2ulkCSWSHcwjIXaDTnFIO18ipHDANtEzInrifgAQ4qc1K03gQywlYmkInm05UzL9HFhoCi4hjumgF5kNodCMVr1-HdHYacWsEWbOBwGGtUFJEd4JU2qInVXfCqoXsdKuZFOpY_4hkaDeLle6D-rrqZ0Nwe1g7cJhpoSIPjcxJZNK1uWMt3DNNFe9Hy9e4TvGDyciaQfjvBtBcpW4yerQPkSvJkiEzT_OC3P-SptrAg-tONQL0d-HItU58ClVOs7bm5RJZamGD9VY1-BbRPgXCDDaoUaoWzcC-xBzXWAcLPQklUL6nAFaDT4f_L8QTEFLsSXE5TGxDfouP0KCcXOigLRsllCV6RQFlAwMZpC8iuS3vA4tOe-mTJIz-e6B-LK9ToAmQTBsrHg1fF0wAy3qg==",
+    "price": "35,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "8728575109",
+    "name": "쟌슨빌 클래식 햄통조림, 200g, 12개",
+    "url": "https://www.coupang.com/vp/products/8728575109",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8728575109&itemId=25314272641&vendorItemId=92195949911&traceid=V0-153-82e940f32e32ff74&clickBeacon=3542eb20-cc3f-11f1-9c84-0eb671fa097e%7E3&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=1&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/M6Wby-Vl_7dMjuXgM2QCwS8WqpoNaycilMkYn_3XG1DlbVAXZIfRIpnKgEkljpsav8qx9CawNXTBXJdkaMKEE8pAdAJnyEemuerOiiKxz3hHe97EYYuHjj9o_gABZ4qCewZTfFuY6Clts28JABtSp2RJ2a2u29Z0Fr2sp17tdH6jHr8ebYlEeNIeOJpaHWal3oBRgCykr0OJWIyZCr35JN5w1cZbDZ7cnrlcL5YLLFOEn37tltAYikvvcMBX_883E139sWzHsus-i0S70dImbskwW0vau5Q8KmBTV-fi3RONGV2Zh4saD9EPj4lMuf90t3kmDKXPYwVg62UkYsTh1LsLy7EYY-BzTbTQ66ZwVUdVyeNLVbNuKBbjhRc7Z1024IE4VDNszHGTyLZJvhd8RVQVvA0YxvEW-wfBHTC8Vk3LaQK0EmCDSE0S26D4tZujvy-KsOTtt3R5iHjBOCk4UXvd20DgJ_28xGA_cx9_7D1jTe0jMXiC9vPWM4OiFhY3wgMS3rNB",
+    "price": "26,510원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "1017437",
+    "name": "동원 리챔 오리지널, 300g, 8개",
+    "url": "https://www.coupang.com/vp/products/1017437",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=1017437&itemId=23774491468&vendorItemId=94873072691&traceid=V0-153-fbb877fa74efe166&clickBeacon=3542eb20-cc3f-11f1-813b-43b777e49bac%7E3&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=1&slot=3",
+    "image": "https://ads-partners.coupang.com/image1/9QdHN-guRe82II_O9TO-mwuP-JVa0cJA6KQ-JUG0q5Tq_khitrdMSdW9THBwHM2Ee0EELYziQUBUi5alOn1MVhrp92pW8YCvFFfZuZSR766Tyjsdh53H92dP8AHPZEGg0KrwHvUBN6HSYhKAWxEyBMAyS-RhZtdJ4BntnkNtbtoTxf9amXWRysQ3lITZQH4gGd7eXmU6lhFzlrVtAxyMOoGn4mIGY3Gd9a7lXiguJcVucdo8fRhVfiS0iB-PR4ME1K1FM3Pbw4gtzHL5BM0j8EJaRneapOCnJsR7JxYbCij3grf7up0_E60UwgQsxiudGAEOyJeJQJId1duucjaWGZ1xBgdVMODLHpBeGlgn40tiJLkaYfayX7D1f9_IR0WkjosUpwrX8p6G3x37Lz80XM7H7quXBwoL3OBbt74BVrBnyWRXG5CaO7k1Ngp7eHTOKJFw1kRF6DlEMgJ3-1Zm3EFd5VXSA-ghnCDf48wF7n_dIW1p_U7QlINTPx2uJrCXF9cthsLB7tYDwSZMrIxcaJSXh-U=",
+    "price": "29,430원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9368771675",
+    "name": "스팸 마일드 햄통조림, 340g, 10개",
+    "url": "https://www.coupang.com/vp/products/9368771675",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9368771675&itemId=14651694684&vendorItemId=94531850315&traceid=V0-153-3d197312ac2c3cf6&clickBeacon=3542eb20-cc3f-11f1-91ee-349d1be349f9%7E3&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=1&slot=4",
+    "image": "https://ads-partners.coupang.com/image1/Fg0w1K3CWpsRFQCtFvrVn9bUXh0yKAZnyahjFASzBGt9rKsmr0y-ifd9H2HCF3nUSLZGVcoOGMjRDISt9QsLe09lFzxeSHHBm6EWM6gWk5nSXftWFrFyKTE1F8_r4Idi-rsMz9YttRZEiv7VBQIvtkwwpTvbtLgSi0Qr1xu_kQRFrvbXIBNxZNbrVTDDfJsjL-rIor4Q58C2a72cyO3N5ZabFGX98W3HLS9YkxeCWQRT071_egKYYOC2MZD1Nsz8KaohsHgv53c3Tnw8GEdlxTj0FGxV_jdrcjgBlM-q1tMpfa7Nj-sNEGW3qyt6szxD6irsLkK2JGVebjFkvNcgS84eNVyFBVv1_1TWDjtI7kSprROm3xfmjndTwWqlDPFmmKrLKQ0btYFe3gork0YBsjjmwRd5L1LwhHJxAN2bJeJL1g1hK_yYdLVH6vOG2N-drvNGiEsC2IOMHSpMO42yDVagr_OCcGrEcZCSOYr8E2y6wPiqfjeX_upcKo3BMECU2FYRdUAkMEIF2zhY_YsMPH4r",
+    "price": "55,340원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "8728575109",
+    "name": "쟌슨빌 사조 클래식, 120g, 8개",
+    "url": "https://www.coupang.com/vp/products/8728575109",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8728575109&itemId=25199115873&vendorItemId=92195734360&traceid=V0-153-82e940f32e32ff74&clickBeacon=3542eb20-cc3f-11f1-ac02-5e4cac80fc28%7E3&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=1&slot=5",
+    "image": "https://ads-partners.coupang.com/image1/01Ap7C6Oh5lfPmmT04Q2-IhEVB45Kzkh-Opvi4RmOl2p782KjQ_uWdFKR7VzZaTaB5C4lLI8BNmR4eYqqw_yxdOGtl_7pM9R848TQiNTpLvJPUGFDG4Uj_l_O1cPcz6ctBbot9Is4vmdQe3WVtqWWfBs9gxMdDt8WugqSjJ5Cdjozvsvwe5VfQyaLmG9jkBHm88TFMBy787j32wymejxTRs7YeHkmj9elf3OrOyu_aAobhmSKqVyNsYD-vbF9aeKAdiOGs_Mvj895X3sEanvCADDEMIjBk4KQeFkPSsovUIQ0izNyHUlHBHzgrQ8OtZ2aA6V6sGclNAU30AF5jyMn6RrGx5_BUYGK2TlQTZFWVgMdKF1C_Za7A9cMCcjXPfxgPUH_hDRuY__IUh0p9XipHB6fBdhILwSgIGsf4n9q_WtZX8gVulrjLQtJ93IsAUWk7trQ4IG5XjDU0BtXrUKAK6HXfnOHMhnrDkZRtfY5seTwg6d-SLI-R6CPSVx1-VkXbPvNWwXzpDVmQ==",
+    "price": "13,100원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "8244032757",
+    "name": "스팸 클래식",
+    "url": "https://www.coupang.com/vp/products/8244032757",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8244032757&itemId=15395230860&vendorItemId=85762458930&traceid=V0-153-2d099a7de67865c6&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=0&slot=6",
+    "image": "https://ads-partners.coupang.com/image1/O3LgwdVoWoIyuJcyO_JRo_8Pn4Xi78mxlqzkq_T7H4y0JMit3bo2l91cKgncfPvR8C_Qtx4u2x8jBRqlyI5F6AQZZ9-LPnyeS_73a7Fj0BuPZq4VhHEXoMOt8g6eJcE2qzKrz0l-ulpx_u1si_aldVzLH0PgQDSJ46XkbGQbvWjII_r8bQH0nqU2kqMohZPOSv59ndcHu5yl1CTvQX34tD9VKqx_uHZR0VPc6lYbE-wBWArj3CQ2N-kZH_DQ4tR6ol4JGrPjfw1wie6_yPzK_8yvREd88uDPB8O-qoxY3BPlDZqhm-JnMyv7wh0q-Gyiw2paPb6_AncRCG_uuTBf3K4xZZSNGgb8H5u8Ql2WCJll35SY77LJ6zxMabkPeXpIuFT0SiD61fA_KqzwjjjSpljl0FFzSWf5Srnqm2_PVQFC7PsAtUilr3hRuj0iXGxM5DYXSob-ro_H95daekJGnLkPilgvbifKaXqIzKiKoBsv_-Zi4e5E2gXFpM-CR3Pd-OAgCDvnKlg_fcTLph4xIww9",
+    "price": "24,720원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "8244032757",
+    "name": "스팸 클래식",
+    "url": "https://www.coupang.com/vp/products/8244032757",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8244032757&itemId=8921491362&vendorItemId=91255258320&traceid=V0-153-2d099a7de67865c6&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=0&slot=7",
+    "image": "https://ads-partners.coupang.com/image1/wsLRv69JDOonOqbjwmpgVUhT0hTxve2eAZ8Wz_26RuJjWYuvUtEUwimm3UAEpuI6CPx85B7S2P1DS2bN8dYe4TDwK4B0zQ--NH77RWGzxom9KCh9ExpEh864iNd57z8XrFHeKoPb1TrnRm40ida4exu3nbsH0jXQsW0x1AuoPmiVNqiawO80vnuJrNjCtwsMO5X0eUXYeGBXXKpwwsNeQKDJaS11KBWHQboqW34kEFeuKsJntyE9n7T_FKhaKc9FL77Eh3g2tJRusey0Sqk6Vc6zOUFZlB7NzneKQjsiG1ZneLDs4e7hY0UR7r6N9zKLA1tGrkxf-mOjNHGZvcXsejKbi6RiIV4N3ZodTal55Hxo_vYtb34phwbPhKqaUbZ8_GHlzLDEd0gowCxAxV62vp3iEIzFWD_Op8thoy-bh4Rl3FFjJ_ggcKwduQeOy2bRagRLAcR2tSyiLma6nFN0RP_OaDBrzCf_yYw9u-rU3AJIJIuGl9dAovzrYvIhzr7rxZ2LFJcWdbqmfJjajW_Ib4za",
+    "price": "23,390원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "8244032757",
+    "name": "스팸 클래식",
+    "url": "https://www.coupang.com/vp/products/8244032757",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8244032757&itemId=24238174274&vendorItemId=91255258455&traceid=V0-153-2d099a7de67865c6&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=0&slot=8",
+    "image": "https://ads-partners.coupang.com/image1/lsKZl6DRsWczELTSluS2tgRBUnp6iorRYV-mEdvS9jZXmu3fkDir_E-Mea-i97p5OkbMk6_iSpvmVcLfyMDVN8u9DJ-HDWlwNzkyffzOf62Y4Vt8Dn0qkDUFw51JWHZswOki3eksGTZ9Pk29iNudeG248JTnFIOf1KdMF_4sS1fvBzcP8mbrXAoHi9Ft0HGioSA99qmUTbyxVHIgtnRgj3lOoeGh-LcTgYBc_TgwtCeoEIeLgfmDfETNDxt7IxDAdgBOyAzbTianlvaOo8y23qT6U5VcMzb8Zh3JytChGuvzhmEqobPv28jDtP1oHEfbZygw8bK29QPOgiCMmwmkNAnh9T-MUKQSAE2VtIQyzi28tq-cOQGAFf7CYrozfKCOi67btU6l1o4tk9FzF_Cjjr0SYx-o4DfZfv1YEu3_H9Md1Yz-zXanNK7zOp4QX5dFTW8Q6TD673BLmP_OHgq6pM6xWoGDLjoLidvfPDYWlw-qplL1qxHO9ttQijKnp_O040VBWBhM9T3noFY72P82miPh8Q==",
+    "price": "42,330원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "8244032757",
+    "name": "스팸 클래식",
+    "url": "https://www.coupang.com/vp/products/8244032757",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8244032757&itemId=319063598&vendorItemId=85762458348&traceid=V0-153-2d099a7de67865c6&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=0&slot=9",
+    "image": "https://ads-partners.coupang.com/image1/TEJqOBeaI87e9ChrTK6zXfBbL6KFSA1OmF-g_bOmIUd4DTzZQz2ZUu1IrlYYxYGTCptqb7U8J0QOEycM988_Wao2z4ZewG7cm495Rgj66bl54x5DqwKrzVsZnxcL8g7XI2Gl1WijU3yNpb-OFa1Zn_Ixj-rxE2XYUx51Wf41gIl9raKsi110PLSrpVsimb1o_Sy-ru-NcqgKApaOsWUsVc2wxeJeey2I0Ey22p0vCuyVnJ-m9keuolkBkATSQDZAl1YBaxNZJrOCNPGjXFV1-PWAlCosEEXFsKQbNIC-T-n3bQH80wPqaCh4xlHrtqEMfNqH9IITQdjP5C8P7JUrdUEDg1eoAKMl3pXeYg1HYeAAhVAzbma2WvQ1mKq-kbLjk9_Blw_7tHN33XS4z-ErQXTJWyAyr3kpOkh6hWiP4Co_LagH2q3AEQgxN67jkLWWULGibT81bkbsM1C1i4OlatvbzQvjxN6O764y64dCmJ9obgifEJZyCqWwWHGNvvPNvTlu9nTLqGmVPJkL0JtMLw==",
+    "price": "30,370원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "8244032757",
+    "name": "스팸 클래식",
+    "url": "https://www.coupang.com/vp/products/8244032757",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=8244032757&itemId=19965781319&vendorItemId=95877932101&traceid=V0-153-2d099a7de67865c6&requestid=20261020133207353126489905&token=31850C%7CMIXED&pt=0&slot=10",
+    "image": "https://ads-partners.coupang.com/image1/KeX3oTV7YFJoi_dQKWnOHFJZpQUq7OIJatBkJWsMDzom-QeG817jF-MuNDaJ4IgE12BwglapPbb09v0lgpEFbOmT1xhGDkJyBpL_QWvHlF6vdgPk7ZtYFROls5oKTdkUnO_tHxKdte1fvz7Caj0cjhi0rmICiZYD7A-H91df31h5_seAF3Qf5xGM2DkVAEp7wUiyRmj-RErCH1iw1wDUet16xU58HTrr_KzLax8oKXWwQYRI6ptHKY5GNxcyNbwKmAO-rKAEAOHEE74Dy8CgdwJi7RFvN8mICpr9OzspK2YGYG0879v3_a5SjdY3kYSa8Fj5y0-m0v6Zp4pJBY9oS6YL6VgB2ZegJgXtcaCWnDyuIGnj9iy8VNf48Sy6BP1OtLeg41cp2hP-2zhFnyd_1V6FHcDivmrwtA_ga0ZaBsDPYCegN_CtW3Xp9fYEa8Wymxk_8DShBkYQPoLWdenZkMikJmeXeOLaxowIvwOL_VC6cd-vG49dVQUGA4rNIEP7FdWWa9hAy8dinDeYuHr0HFykVg==",
+    "price": "70,550원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   }
+  ]
+ }
+}

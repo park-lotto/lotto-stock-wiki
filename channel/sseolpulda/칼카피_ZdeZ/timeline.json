@@ -1,0 +1,145 @@
+{
+ "beats": [
+  {
+   "beat_idx": 0,
+   "t0": 0.0,
+   "dur": 5.2,
+   "narration": "해외 영상에서 하도 신기하다고 하길래",
+   "caption_lines": [
+    "해외 영상에서 하도 신기하다고 하길래"
+   ],
+   "role": "hook",
+   "primary": {
+    "video_id": "s0",
+    "start": 0.0,
+    "end": 5.2
+   }
+  },
+  {
+   "beat_idx": 1,
+   "t0": 5.2,
+   "dur": 2.1,
+   "narration": "솔직히 주작 의심했는데",
+   "caption_lines": [
+    "솔직히 주작 의심했는데"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 5.2,
+    "end": 7.3
+   }
+  },
+  {
+   "beat_idx": 2,
+   "t0": 7.3,
+   "dur": 3.6,
+   "narration": "어디든 툭 갖다 대면",
+   "caption_lines": [
+    "어디든 툭 갖다 대면"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 7.3,
+    "end": 10.9
+   }
+  },
+  {
+   "beat_idx": 3,
+   "t0": 10.9,
+   "dur": 3.9,
+   "narration": "온 집안이 초대형 우퍼로 둔갑함;;",
+   "caption_lines": [
+    "온 집안이 초대형 우퍼로 둔갑함;;"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 10.9,
+    "end": 14.8
+   }
+  },
+  {
+   "beat_idx": 4,
+   "t0": 14.8,
+   "dur": 3.4,
+   "narration": "소리 퍼지는 게 예술이네",
+   "caption_lines": [
+    "소리 퍼지는 게 예술이네"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 14.8,
+    "end": 18.2
+   }
+  },
+  {
+   "beat_idx": 5,
+   "t0": 18.2,
+   "dur": 3.5,
+   "narration": "이거 은근 탐나는 거 인정?",
+   "caption_lines": [
+    "이거 은근 탐나는 거 인정?"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 18.2,
+    "end": 21.7
+   }
+  },
+  {
+   "beat_idx": 6,
+   "t0": 21.72,
+   "dur": 2.18,
+   "narration": "",
+   "caption_lines": [],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 21.72,
+    "end": 23.9
+   }
+  }
+ ],
+ "scenes": [
+  [
+   0.0,
+   5.2,
+   "해외 영상에서 하도 신기하다고 하길래"
+  ],
+  [
+   5.2,
+   7.300000000000001,
+   "솔직히 주작 의심했는데"
+  ],
+  [
+   7.3,
+   10.9,
+   "어디든 툭 갖다 대면"
+  ],
+  [
+   10.9,
+   14.8,
+   "온 집안이 초대형 우퍼로 둔갑함;;"
+  ],
+  [
+   14.8,
+   18.2,
+   "소리 퍼지는 게 예술이네"
+  ],
+  [
+   18.2,
+   21.7,
+   "이거 은근 탐나는 거 인정?"
+  ],
+  [
+   21.72,
+   23.9,
+   ""
+  ]
+ ],
+ "tail_start": 21.72
+}

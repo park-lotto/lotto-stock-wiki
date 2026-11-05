@@ -1,0 +1,128 @@
+{
+ "bench": [
+  {
+   "id": "QMJtjJz4M6w",
+   "segs": 9,
+   "narr_sec": 22.3,
+   "chars": 172,
+   "cps": 7.71,
+   "voiced_frames": 499,
+   "f0_median_hz": 117.6,
+   "semitone_std": 8.73
+  },
+  {
+   "id": "vbxJ_v132ao",
+   "segs": 6,
+   "narr_sec": 15.5,
+   "chars": 122,
+   "cps": 7.87,
+   "voiced_frames": 354,
+   "f0_median_hz": 110.3,
+   "semitone_std": 4.81
+  },
+  {
+   "id": "kmQGQNJgSVo",
+   "segs": 6,
+   "narr_sec": 13.9,
+   "chars": 122,
+   "cps": 8.78,
+   "voiced_frames": 297,
+   "f0_median_hz": 115.1,
+   "semitone_std": 4.74
+  },
+  {
+   "id": "mVzrvBpMu3E",
+   "segs": 10,
+   "narr_sec": 25.0,
+   "chars": 197,
+   "cps": 7.88,
+   "voiced_frames": 541,
+   "f0_median_hz": 124.0,
+   "semitone_std": 9.73
+  }
+ ],
+ "bench_f0_median_hz": 116.3,
+ "voices": [
+  {
+   "name": "지훈",
+   "voice_id": "tc_61f0859907085fc68561c9a1",
+   "sample": "tc-jihoon-stable",
+   "voiced_frames": 174,
+   "f0_median_hz": 129.0,
+   "semitone_std": 4.61,
+   "semitone_gap": 1.79
+  },
+  {
+   "name": "김건",
+   "voice_id": "tc_61c2f7741330d213c238cba6",
+   "sample": "tc-gunn-stable",
+   "voiced_frames": 122,
+   "f0_median_hz": 129.6,
+   "semitone_std": 4.62,
+   "semitone_gap": 1.87
+  },
+  {
+   "name": "박창수",
+   "voice_id": "tc_6059dad0b83880769a50502f",
+   "sample": "tc-changsu-stable",
+   "voiced_frames": 157,
+   "f0_median_hz": 133.3,
+   "semitone_std": 7.75,
+   "semitone_gap": 2.35
+  },
+  {
+   "name": "필재",
+   "voice_id": "tc_68257f68bc6e3c161ab5078d",
+   "sample": "tc-piljae-stable",
+   "voiced_frames": 120,
+   "f0_median_hz": 141.6,
+   "semitone_std": 4.13,
+   "semitone_gap": 3.4
+  },
+  {
+   "name": "용식이",
+   "voice_id": "tc_5feb2085cca1a479e73bac37",
+   "sample": "tc-yongsik-stable",
+   "voiced_frames": 186,
+   "f0_median_hz": 187.1,
+   "semitone_std": 6.6,
+   "semitone_gap": 8.22
+  },
+  {
+   "name": "발키리",
+   "voice_id": "tc_60478557f12456064b353409",
+   "sample": "tc-valkyrie-stable",
+   "voiced_frames": 225,
+   "f0_median_hz": 222.2,
+   "semitone_std": 4.83,
+   "semitone_gap": 11.2
+  },
+  {
+   "name": "미나(일레븐·참고)",
+   "voice_id": "aiUUgjHa4mpHf6UenZuf",
+   "sample": "kr-mina-stable",
+   "voiced_frames": 214,
+   "f0_median_hz": 233.6,
+   "semitone_std": 3.63,
+   "semitone_gap": 12.07
+  },
+  {
+   "name": "유라(TC)",
+   "voice_id": "tc_61130d6cf89dd58a4c13295d",
+   "sample": "tc-yura-stable",
+   "voiced_frames": 167,
+   "f0_median_hz": 235.3,
+   "semitone_std": 5.21,
+   "semitone_gap": 12.19
+  },
+  {
+   "name": "문정",
+   "voice_id": "tc_68f9c6a72f0f04a417bb136f",
+   "sample": "tc-moonjung-stable",
+   "voiced_frames": 262,
+   "f0_median_hz": 271.2,
+   "semitone_std": 4.57,
+   "semitone_gap": 14.65
+  }
+ ]
+}

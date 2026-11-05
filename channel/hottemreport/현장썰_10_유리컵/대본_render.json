@@ -1,0 +1,394 @@
+{
+ "topic": "유리잔처럼 생긴 투명 실리콘 파인트잔 — 떨어뜨려도 통 튀고, 던져도 안 깨짐(틱톡 @jordan_the_stallion8 830만 + @adrianwidjy 바닥 떨어뜨리기)",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "01ilCC0jZHk",
+ "bench_note": "벤치 핫템리포트 '일본 장인이 만든 안 깨지는 유리컵'(KINJO JAPAN, 150만). 벤치 던지기 장면 = KINJO 공식 인스타 DLAJIVnTjJk(2025-06-17, 4.7초, 음악뿐) — 원음 있는 원본이 아니라서, 같은 신기한 점(유리처럼 생겼는데 안 깨지는 실리콘 잔)을 사람 원음으로 보여 주는 틱톡 원본으로 간다(10-21 렌즈·구글 검색 실측, 원본찾기 근거 = 원본찾기.md)",
+ "sources": {
+  "main": {
+   "file": "tt_7593975023707213087.mp4",
+   "who": "틱톡 @jordan_the_stallion8",
+   "url": "https://www.tiktok.com/@jordan_the_stallion8/video/7593975023707213087",
+   "upload": "2026-01-11",
+   "views": 8300000,
+   "dur": 25.5,
+   "res": "720x1280"
+  },
+  "sub": {
+   "file": "tt_7565119818383346962.mp4",
+   "who": "틱톡 @adrianwidjy",
+   "url": "https://www.tiktok.com/@adrianwidjy/video/7565119818383346962",
+   "upload": "2025-10-25",
+   "views": 238000,
+   "dur": 11.0,
+   "res": "1080x1920",
+   "use": "화면만(친구가 나무 바닥에 떨어뜨림) — 원음 안 씀"
+  }
+ },
+ "titles": {
+  "hook": "유리잔인 줄 알았는데\n던져도 안 깨지는 컵"
+ },
+ "facts": {
+  "f1": {
+   "text": "jd 5.5~6.5 투명 파인트잔을 탁자에 떨어뜨림 → 잔이 통 튀어 굴러감 · 7.5~9.5 두 손으로 잔을 꾹 눌러 찌그러뜨리며 웃음(6.70~9.32 웃음소리)",
+   "kind": "화면(0.25초 시트)"
+  },
+  "f2": {
+   "text": "jd 9.56~13.50 'They're silicone, right? So they look like real glasses,' (faster-whisper medium·small 두 모델 일치)",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "jd 17.75~18.0 잔을 어깨 뒤로 던짐 · 18.16~21.02 'oh, and throw them, they're not gonna break'(두 모델 일치)",
+   "kind": "화면+본인 말"
+  },
+  "f4": {
+   "text": "ad 3.3~5.5 친구가 투명 실리콘 잔을 나무 바닥에 떨어뜨림 → 멀쩡히 굴러감(화면 위 'Found this amazing glass looking silicone cups!' 글)",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "유리잔처럼 생겼는데 떨어뜨려도 통 튀고 꾹 눌리는 컵이 있는데요 바닥에 떨어뜨려도 멀쩡하니까 아예 던져 버린대요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jd",
+    "span": [
+     9.45,
+     13.55
+    ],
+    "en": "They're silicone, right? So they look like real glasses,",
+    "caps": [
+     "이거 실리콘이지?",
+     "진짜 유리잔 같은데!"
+    ],
+    "check": "두 모델 일치 · 13.50 'glasses' 끝, 'but' 14.00 전에서 끊음"
+   },
+   {
+    "id": "O2",
+    "src": "jd",
+    "span": [
+     17.85,
+     21.1
+    ],
+    "en": "oh, and throw them, they're not gonna break,",
+    "caps": [
+     "그냥 던져 버려!",
+     "안 깨지거든!"
+    ],
+    "check": "던지는 손 17.75~18.0 이 화면 첫머리(LEAD 0.1) · 'break' 21.02 끝"
+   }
+  ],
+  "dropped": {
+   "23.68~25.54 'The glasses are real though, they will break.'": "옆의 진짜 유리잔 얘기 — 하이브리드 앞(이음 전)에 안 들어가 뺌",
+   "14.98~17.34 'if you taste something that's so delicious'": "길이(앞 12~16초) 때문에 뺌",
+   "ad 원음": "말이 거의 없음('Oh!' 정도, 받아쓰기 두 모델 엇갈림)",
+   "가격·브랜드": "원본에 없음 · 브랜드 표기 판독 안 됨(잔 아래 양각 글자 720p 로 안 읽힘)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "유리잔처럼 생겼는데",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.184,
+   "text": "떨어뜨려도 통 튀고",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.118,
+   "text": "꾹 눌리는 컵이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.7,
+   "text": "이거 실리콘이지?",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.613,
+   "text": "진짜 유리잔 같은데!",
+   "kind": "원음"
+  },
+  {
+   "t0": 8.05,
+   "text": "바닥에 떨어뜨려도 멀쩡하니까",
+   "kind": "나레"
+  },
+  {
+   "t0": 9.735,
+   "text": "아예 던져 버린대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.022,
+   "text": "그냥 던져 버려!",
+   "kind": "원음"
+  },
+  {
+   "t0": 12.795,
+   "text": "안 깨지거든!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "유리잔처럼 생겼는데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.184,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "떨어뜨려도 통 튀고",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.184,
+   "dur": 0.934,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "꾹 눌리는 컵이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.118,
+   "dur": 1.582,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이거 실리콘이지?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.7,
+   "dur": 1.913,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 유리잔 같은데!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.613,
+   "dur": 2.437,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "바닥에 떨어뜨려도 멀쩡하니까",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 8.05,
+   "dur": 1.685,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아예 던져 버린대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.735,
+   "dur": 1.287,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "그냥 던져 버려!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 11.022,
+   "dur": 1.773,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "안 깨지거든!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 12.795,
+   "dur": 1.877,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.7,
+    7.8
+   ],
+   [
+    11.022,
+    14.272
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.45
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.7,
+    "a1": 7.8,
+    "audio_ss": 9.45,
+    "src": "jd"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 8.05,
+    "n1": 10.772
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 11.022,
+    "a1": 14.272,
+    "audio_ss": 17.85,
+    "src": "jd"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "O1",
+    "covers": [
+     "N1",
+     "O1"
+    ],
+    "src": "jd",
+    "ss": 5.75,
+    "vs": 0.0,
+    "src_crop": null,
+    "why": "'They're silicone, right? So they look like real glasses' — 두 잔을 카메라 앞에 들어 보임",
+    "ve": 8.05,
+    "src_end": 13.8
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "ad",
+    "ss": 3.0,
+    "vs": 8.05,
+    "src_crop": [
+     0,
+     600,
+     1080,
+     1320
+    ],
+    "why": "다른 사람(@adrianwidjy 친구)이 나무 바닥에 떨어뜨림(3.5~5.5) — 멀쩡히 굴러감",
+    "ve": 10.5,
+    "src_end": 5.45,
+    "guard": "원본 컷 5.483 앞에서 끊음(−0.422초)"
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "jd",
+    "ss": 17.328,
+    "vs": 10.5,
+    "src_crop": null,
+    "why": "잔을 어깨 뒤로 던짐(17.75~18.0) + 'throw them, they're not gonna break' — B13: O1 끝 13.55 와 4초 이상",
+    "ve": 14.672,
+    "src_end": 21.5
+   }
+  ],
+  "dur": 14.672,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_10_유리컵\\render\\narr_N1.wav",
+    "dur": 3.45,
+    "tempo": 0.906,
+    "chars": 27,
+    "speech": 3.45,
+    "cps": 7.83,
+    "segs": [
+     [
+      0.0,
+      1.05
+     ],
+     [
+      1.184,
+      2.146
+     ],
+     [
+      2.311,
+      3.45
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_10_유리컵\\render\\narr_N2.wav",
+    "dur": 2.722,
+    "tempo": 0.797,
+    "chars": 21,
+    "speech": 2.722,
+    "cps": 7.71,
+    "segs": [
+     [
+      0.0,
+      2.722
+     ]
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 29 인스타360 루나 울트라 하이브리드 — 앞 = 숏템리폿 현장썰 James Afante 원음형 박창수판(29_LunaUltra/front), 뒤 = 쿠팡 9521280320 '인스타360 루나 울트라 표준 액션캠'(같은 제품 — 대표 사진 = 검정 루나 울트라 본체·LEICA 두 렌즈, James 것과 같은 꼴). 뒤 화면 = 손·제품 컷만(James 손 근접, Insta360 공식 영상의 제품만 나온 컷, 쿠팡 사진 — 원음 인물 얼굴·광고 모델 얼굴 0, 공식 영상 아래 작은 설명 글 crop 밖). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "인스타360 루나 울트라(쿠팡 9521280320, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/29_LunaUltra/front/render/final.mp4",
+  "cut": 12.47,
+  "why": "원음 O2 'detachable' 끝(앞 12.407) 뒤 — 원본 컷 335.30(앞 12.49) 전에 끊어 다음 와이드 샷이 안 보이게",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 14:27, '인스타360 루나' 1회, 29_cand/coupang_a.json): 9521280320 '인스타360 루나 울트라 표준 액션캠' — 같은 이름 크리에이터 묶음 9521280324 · 대표 사진(front/src/cp_9521280320.jpg) = 검정 루나 울트라 본체·LEICA 두 렌즈·떼는 화면",
+  "o_tele": "Insta360 공식 온라인 설명서 사양(onlinemanual.insta360.com/lunaultra/en-us/specs/specs) 'dual-lens' · 망원 렌즈 1/1.3인치·F2.0·60mm 환산 · James 원본 0:30 'a dedicated telephoto lens system'",
+  "o_tripod": "James 원본 사본 60.52~70.94 'bottom part … which actually also act as a tripod … first time ever … tripod. Look at that' · 화면 사본 67.2~68.9·91.1~92.7 받침 끼운 카메라",
+  "o_gimbal": "Insta360 공식 온라인 설명서 사양 '1-inch Leica Vlog gimbal camera'·짐벌 회전 범위·떨림 억제(jitter suppression) 항목 · 공식 영상 201.7~203.4 손에 든 카메라가 달리는 말을 따라 찍음"
+ },
+ "흥미이음": {
+  "원본흥미": "펼치자마자 'There we go. Wow.' · 화면을 떼면서 'look at this. It's detachable.'",
+  "뒤흥미": "쿠팡의 바로 그 루나 울트라 — 두 렌즈·받침이 삼각대·손이 흔들려도 잡아 주는 짐벌",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 '인스타360 루나 울트라' + 대표 사진(검정 본체·LEICA 두 렌즈·떼는 화면) = James 의 루나 울트라"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/29_LunaUltra/front/frame_render.json",
+  "title": "화면이 떨어지는\n카메라"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·검정 카메라·흰 티셔츠 위 — 노랑 금지(흰), 하늘",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "두 개라"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "검정 렌즈·파란 하늘 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "삼각대가"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 티셔츠·나무 책상(살색 가까움) 위 — 빨강·분홍·주황·노랑 금지, 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "꽉"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "초록 풀밭·흐린 건물 위 — 하늘"
+  },
+  "B5": {
+   "emphasis": {
+    "words": [
+     "계속"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 티셔츠·흰 사진 위 — 하늘",
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 카메라가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 카메라가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "렌즈가 두 개라, 멀리 있는 것도 코앞처럼 당겨 찍을 수 있다네요.",
+   "caps": [
+    "렌즈가 두 개라",
+    "멀리 있는 것도",
+    "코앞처럼 당겨",
+    "찍을 수 있다네요"
+   ],
+   "emph": [
+    "두 개라"
+   ],
+   "facts": [
+    "o_tele"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "밑에 끼우는 받침이, 그대로 삼각대가 된대요.",
+   "caps": [
+    "밑에 끼우는 받침이",
+    "그대로",
+    "삼각대가",
+    "된대요"
+   ],
+   "emph": [
+    "삼각대가"
+   ],
+   "facts": [
+    "o_tripod"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "손이 흔들려도, 화면은 꽉 잡아 준다고 해요.",
+   "caps": [
+    "손이 흔들려도",
+    "화면은",
+    "꽉 잡아",
+    "준다고 해요"
+   ],
+   "emph": [
+    "꽉"
+   ],
+   "facts": [
+    "o_gimbal"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "카페에서 꺼냈더니, 옆 사람들이 그거 뭐냐고 계속 물어봤어요.",
+   "caps": [
+    "카페에서 꺼냈더니",
+    "옆 사람들이",
+    "그거 뭐냐고",
+    "계속 물어봤어요"
+   ],
+   "emph": [
+    "계속"
+   ],
+   "facts": []
+  }
+ ]
+}

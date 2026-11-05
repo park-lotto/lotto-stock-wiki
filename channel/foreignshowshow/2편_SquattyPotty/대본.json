@@ -1,0 +1,996 @@
+{
+ "channel": "foreignshowshow(샥탬스토리 벤치)",
+ "ep": "2편_SquattyPotty",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "dur": 50.467,
+  "cut_median": 1.27,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "title_bands": [
+   [
+    211,
+    304
+   ],
+   [
+    318,
+    407
+   ]
+  ]
+ },
+ "frame": "벤치 그대로(1080x1920, 위 검정 띠 2줄 제목 1줄 노랑·2줄 흰, 창 [0,434,1080,1052], 아래 검정, 로고 자리 '샥탬스토리')",
+ "title": {
+  "line1_yellow": "볼일이 술술 나온다는",
+  "line2_white": "변기 발판?!"
+ },
+ "length_sec": 44.45,
+ "narr_chars": 164,
+ "orig_sec": 20.63,
+ "tone": "나레 = 한국어 반말 전언체(~는데/~다고/~고/~자), 원음 = 영어 방송 원음 + 한국어 번역 자막",
+ "fx_bench_same": [
+  "0초 빨간 원(투자자 얼굴)",
+  "빨간 점선 원(발판)",
+  "분홍 화살표(장 꺾인 곳)",
+  "날개 돈다발 이모지(지분 경쟁)",
+  "자막 흰+형광 핵심어 강조, 검정 테두리"
+ ],
+ "lines": [
+  {
+   "n": 1,
+   "beat": "1 결말 반응",
+   "kind": "원음",
+   "t0": 0.0,
+   "t1": 1.08,
+   "dur": 1.08,
+   "orig": [
+    "Holy crap!"
+   ],
+   "sub_ko": [
+    "헐 대박!"
+   ],
+   "asr": "155.96~157.12 'Holy crap!' 2모델 일치(asr_clips.json, 말 끝 157.06)"
+  },
+  {
+   "n": 2,
+   "beat": "1 결말 반응",
+   "kind": "원음",
+   "t0": 1.08,
+   "t1": 4.26,
+   "dur": 3.18,
+   "orig": [
+    "You're selling—",
+    "Holy crap, right? There's a crapload of money in Squatty Potty."
+   ],
+   "sub_ko": [
+    "그걸 판다고?",
+    "대박이죠? 이 발판에 돈이 똥더미로 쌓여요"
+   ],
+   "asr": "157.12~157.9 'You're selling' 2모델(asr_clips2.json, 겹친 말) · 157.9~160.3 'Holy crap, right? There's a crap load of money in squa…' 2모델(끝 단어 갈림 — 60초 묶음 3-flash 'Squatty Potty')"
+  },
+  {
+   "n": 3,
+   "beat": "2 시연",
+   "kind": "나레",
+   "t0": 4.26,
+   "t1": 8.75,
+   "dur": 4.49,
+   "text": "변기 앞에 이 발판 하나만 놓고 두 발을 올리면 쪼그려 앉은 자세가 된다는데",
+   "tts_text": "변기 앞에 이 발판 하나만 놓고, 두 발을 올리면 쪼그려 앉은 자세가 된다는데",
+   "chunks": [
+    "변기 앞에",
+    "이 발판 하나만 놓고",
+    "두 발을 올리면",
+    "쪼그려 앉은 자세가",
+    "된다는데"
+   ],
+   "est_tts_sec": 4.1,
+   "src": "창업자 피치 89~100초 'A simple stool… allows the user to squat in a healthy position while still enjoying… their Western toilet'(asr_2atj_b 2모델)"
+  },
+  {
+   "n": 4,
+   "beat": "3 기존 불편",
+   "kind": "나레",
+   "t0": 8.75,
+   "t1": 13.06,
+   "dur": 4.31,
+   "text": "그냥 앉으면 장 끝 근육이 꺾여서 잘 안 나오는데 쪼그려 앉으면 쭉 펴진다고",
+   "tts_text": "그냥 앉으면 장 끝 근육이 꺾여서 잘 안 나오는데, 쪼그려 앉으면 쭉 펴진다고",
+   "chunks": [
+    "그냥 앉으면",
+    "장 끝 근육이 꺾여서",
+    "잘 안 나오는데",
+    "쪼그려 앉으면",
+    "쭉 펴진다고"
+   ],
+   "est_tts_sec": 4.1,
+   "src": "창업자 61.5~84.5초 'puborectalis muscle… forming a kink… sitting… only partially relaxes… only in a squat position… completely relax'(asr_2atj_b 2모델) — 출연자 주장이라 전언체"
+  },
+  {
+   "n": 5,
+   "beat": "4 숫자",
+   "kind": "나레",
+   "t0": 13.06,
+   "t1": 15.8,
+   "dur": 2.74,
+   "text": "엄마랑 아들이 35만 달러에 지분 5%를 걸었는데",
+   "tts_text": "엄마랑 아들이 삼십오만 달러에 지분 오 퍼센트를 걸었는데",
+   "chunks": [
+    "엄마랑 아들이",
+    "35만 달러에",
+    "지분 5%를 걸었는데"
+   ],
+   "est_tts_sec": 3.33,
+   "src": "21~25.5초 'This is my mother Judy… seeking $350,000 for a 5% share'(2모델) · 화면 이름표 38~39초 'BOBBY & JUDY EDWARDS'·40~42초 'Seeking $350k for a 5% stake'"
+  },
+  {
+   "n": 6,
+   "beat": "4 숫자",
+   "kind": "원음",
+   "t0": 15.8,
+   "t1": 18.32,
+   "dur": 2.52,
+   "orig": [
+    "The first year in business, we sold a million dollars in Squatty Potty."
+   ],
+   "sub_ko": [
+    "첫해에만 100만 달러어치 팔았어요"
+   ],
+   "asr": "136.74~139.34 2모델 'First year in business, we sold $1 million in Squa-'(장면 경계에서 단어 끝 잘림)"
+  },
+  {
+   "n": 7,
+   "beat": "4 숫자",
+   "kind": "원음",
+   "t0": 18.32,
+   "t1": 19.81,
+   "dur": 1.49,
+   "orig": [
+    "Come on!"
+   ],
+   "sub_ko": [
+    "말도 안 돼!"
+   ],
+   "asr": "139.34~140.0 웅얼거림(모델마다 'Hey everybody'/'party party' — 번역 안 함) · 140.0~140.7 'Come on' 4회 중 3회(클립 3-flash 1회 'Mama, I'm on TV!')"
+  },
+  {
+   "n": 8,
+   "beat": "4 숫자",
+   "kind": "원음",
+   "t0": 19.81,
+   "t1": 22.43,
+   "dur": 2.62,
+   "orig": [
+    "The year after that?",
+    "The year after, we did 2.7 million."
+   ],
+   "sub_ko": [
+    "그다음 해는요?",
+    "다음 해엔 270만 달러요"
+   ],
+   "asr": "140.91~143.61 2모델 'The year after that / (The year after) we did 2.7 million'(말 끝 143.41~143.63)"
+  },
+  {
+   "n": 9,
+   "beat": "4 숫자",
+   "kind": "원음",
+   "t0": 22.43,
+   "t1": 23.16,
+   "dur": 0.73,
+   "orig": [
+    "Yes, I like it."
+   ],
+   "sub_ko": [
+    "좋아, 맘에 드네"
+   ],
+   "asr": "143.61~144.44 2모델 'Yes, I like it.'"
+  },
+  {
+   "n": 10,
+   "beat": "5 지분 경쟁",
+   "kind": "나레",
+   "t0": 23.16,
+   "t1": 25.06,
+   "dur": 1.9,
+   "text": "케빈이 같은 돈에 10%를 달라는데",
+   "tts_text": "케빈이 같은 돈에 십 퍼센트를 달라는데",
+   "chunks": [
+    "케빈이 같은 돈에",
+    "10%를 달라는데"
+   ],
+   "est_tts_sec": 2.3,
+   "src": "334~337초 'I'd give you the $350,000 for 10%'(2모델) · 화면 이름표 337~340초 'Kevin's offer: $350k for a 10% stake'(얼굴↔이름 연결은 안 함)"
+  },
+  {
+   "n": 11,
+   "beat": "5 지분 경쟁",
+   "kind": "원음",
+   "t0": 25.06,
+   "t1": 26.93,
+   "dur": 1.87,
+   "orig": [
+    "Yeah, 700,000 for 10%."
+   ],
+   "sub_ko": [
+    "그럼 70만 달러에 10%로 하죠"
+   ],
+   "asr": "381.75~384.0 2모델 'Yeah, 700,000 for 10%.'(끝 383.55~384.05 → 컷 끝 383.72 = 장면 바뀜)"
+  },
+  {
+   "n": 12,
+   "beat": "5 지분 경쟁",
+   "kind": "나레",
+   "t0": 26.93,
+   "t1": 29.26,
+   "dur": 2.33,
+   "text": "로리도 35만 달러에 10%를 고집하자",
+   "tts_text": "로리도 삼십오만 달러에 십 퍼센트를 고집하자",
+   "chunks": [
+    "로리도 35만 달러에",
+    "10%를 고집하자"
+   ],
+   "est_tts_sec": 2.69,
+   "src": "412.3~416.5초 'I feel that the 350,000 for 10% is right'(2모델) · 화면 이름표 416~418초 \"Lori's offer: $350k for a 10% stake\""
+  },
+  {
+   "n": 13,
+   "beat": "5 지분 경쟁",
+   "kind": "원음",
+   "t0": 29.26,
+   "t1": 31.63,
+   "dur": 2.37,
+   "orig": [
+    "How about 10% for 500,000?"
+   ],
+   "sub_ko": [
+    "50만 달러에 10%는 어때요?"
+   ],
+   "asr": "416.45~418.92 2모델 'How about 10% for 500,000?'"
+  },
+  {
+   "n": 14,
+   "beat": "5 지분 경쟁",
+   "kind": "원음",
+   "t0": 31.63,
+   "t1": 32.75,
+   "dur": 1.12,
+   "orig": [
+    "I don't accept that."
+   ],
+   "sub_ko": [
+    "그건 안 받아요"
+   ],
+   "asr": "425.75~427.4 2모델 'I don't accept that.'(끝 426.95~427.19 → 컷 끝 427.0 = 장면 바뀜)"
+  },
+  {
+   "n": 15,
+   "beat": "5 지분 경쟁",
+   "kind": "원음",
+   "t0": 32.75,
+   "t1": 36.4,
+   "dur": 3.65,
+   "orig": [
+    "Actually, we're going to take Lori's offer.",
+    "There you go. Great."
+   ],
+   "sub_ko": [
+    "로리 제안 받을게요",
+    "좋았어!"
+   ],
+   "asr": "513.45~515.25 2모델 'Actually, we're going to take Lori's offer.' · 515.25~517.0 3-flash 'There you go. / Great.'(60초 묶음 2모델도 516.2 'There you go' 517.1 'Great')"
+  },
+  {
+   "n": 16,
+   "beat": "6 방송 후 결과",
+   "kind": "나레",
+   "t0": 36.4,
+   "t1": 40.95,
+   "dur": 4.55,
+   "text": "그렇게 손을 잡고 방송 뒤 20개 나라에 진출해서 450만 개 넘게 팔렸고",
+   "tts_text": "그렇게 손을 잡고, 방송 뒤 스무 개 나라에 진출해서 사백오십만 개 넘게 팔렸고",
+   "chunks": [
+    "그렇게 손을 잡고",
+    "방송 뒤 20개 나라에",
+    "진출해서",
+    "450만 개 넘게 팔렸고"
+   ],
+   "est_tts_sec": 4.22,
+   "src": "CNBC eW9uh884ll8 256~265초 'We've now sold over 4.5 million… partnered with over 20 major retailers… in 20 countries'(유튜브 자막 + asr_eW9.json 2모델 일치) — 출처 1곳"
+  },
+  {
+   "n": 17,
+   "beat": "6 방송 후 결과",
+   "kind": "나레",
+   "t0": 40.95,
+   "t1": 44.45,
+   "dur": 3.5,
+   "text": "방송 이후 매출만 1억 7,500만 달러를 찍었다고",
+   "tts_text": "방송 이후 매출만 일억 칠천오백만 달러를 찍었다고",
+   "chunks": [
+    "방송 이후 매출만",
+    "1억 7,500만 달러를",
+    "찍었다고"
+   ],
+   "est_tts_sec": 2.94,
+   "src": "CNBC eW9uh884ll8 265~271초 'We've now done 175 million dollars in sales since Shark Tank'(유튜브 자막 + asr_eW9.json 2모델 일치) — 출처 1곳(전언체)"
+  }
+ ],
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "why": "채널 공통 목소리(샥탬스토리_시작.md §1, 페이블 10-18)"
+ },
+ "brand": "샥탬스토리",
+ "titles": {
+  "line1": "볼일이 술술 나온다는",
+  "line2": "변기 발판?!"
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "L1",
+    "kind": "원음",
+    "fn": "1 결말 반응(금액 반응)",
+    "text": "우와!",
+    "caps": [
+     "우와!"
+    ],
+    "orig_en": "Woo-ha!",
+    "orig_span": [
+     25.42,
+     26.0
+    ],
+    "asr": "S1 25.42~26.0 'Woo-ha!' 2모델 일치(asr_2atj_b.txt gemini-3-flash 25.50~26.50 · gemini-flash-latest 25.13~26.24), 20ms 크기: 창업자 말 끝 25.35·말 시작 25.43·끝 25.95, 입 모양 25.4~25.9(컷 25.33~26.06 같은 사람)",
+    "emph": [
+     {
+      "cap": "우와!",
+      "span": "우와!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ],
+    "why_change": "효과 정밀(10-18, 페이블 B): 옛 0초 줄 'Holy crap!'(155.96) 컷은 얼굴 높이 429~438px 초근접 — 크롭을 넓혀도 얼굴/창 0.39(벤치 0.29~0.36)라 벤치 크기 원(r209)이 얼굴을 못 감쌈 → 같은 원본 중간 샷(얼굴 371~382px) 투자자 금액 반응 원음으로"
+   },
+   {
+    "id": "L2",
+    "kind": "원음",
+    "fn": "1 결말 반응",
+    "text": "그걸 판다고? 대박이죠? 이 발판에 돈이 똥더미로 쌓여요",
+    "caps": [
+     "그걸 판다고?",
+     "대박이죠? 이 발판에",
+     "돈이 똥더미로 쌓여요"
+    ],
+    "orig_en": "You're selling— Holy crap, right? There's a crapload of money in Squatty Potty.",
+    "orig_span": [
+     157.12,
+     160.3
+    ],
+    "asr": "157.12~157.9 'You're selling' 2모델(asr_clips2.json, 겹친 말) · 157.9~160.3 'Holy crap, right? There's a crap load of money in squa…' 2모델(끝 단어 갈림 — 60초 묶음 3-flash 'Squatty Potty')",
+    "emph": [
+     {
+      "cap": "그걸 판다고?",
+      "span": "그걸 판다고?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "대박이죠? 이 발판에",
+      "span": "대박이죠? 이 발판에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "돈이 똥더미로 쌓여요",
+      "span": "똥더미로 쌓여요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L3",
+    "kind": "나레",
+    "fn": "2 시연",
+    "text": "변기 앞에 이 발판 하나만 놓고 두 발을 올리면 쪼그려 앉은 자세가 된다는데",
+    "tts": "변기 앞에 이 발판 하나만 놓고, 두 발을 올리면 쪼그려 앉은 자세가 된다는데",
+    "caps": [
+     "변기 앞에",
+     "이 발판 하나만 놓고",
+     "두 발을 올리면",
+     "쪼그려 앉은 자세가",
+     "된다는데"
+    ],
+    "emph": [
+     {
+      "cap": "변기 앞에",
+      "span": "변기 앞에",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이 발판 하나만 놓고",
+      "span": "하나만 놓고",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 발을 올리면",
+      "span": "두 발을",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쪼그려 앉은 자세가",
+      "span": "앉은 자세가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "된다는데",
+      "span": "된다는데",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L4",
+    "kind": "나레",
+    "fn": "3 기존 불편",
+    "text": "그냥 앉으면 장 끝 근육이 꺾여서 잘 안 나오는데 쪼그려 앉으면 쭉 펴진다고",
+    "tts": "그냥 앉으면 장 끝 근육이 꺾여서 잘 안 나오는데, 쪼그려 앉으면 쭉 펴진다고",
+    "caps": [
+     "그냥 앉으면",
+     "장 끝 근육이 꺾여서",
+     "잘 안 나오는데",
+     "쪼그려 앉으면",
+     "쭉 펴진다고"
+    ],
+    "emph": [
+     {
+      "cap": "그냥 앉으면",
+      "span": "그냥 앉으면",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "장 끝 근육이 꺾여서",
+      "span": "근육이 꺾여서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "잘 안 나오는데",
+      "span": "나오는데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쪼그려 앉으면",
+      "span": "쪼그려 앉으면",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쭉 펴진다고",
+      "span": "쭉 펴진다고",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L5",
+    "kind": "나레",
+    "fn": "4 숫자",
+    "text": "엄마랑 아들이 35만 달러에 지분 5%를 걸었는데",
+    "tts": "엄마랑 아들이 삼십오만 달러에 지분 오 퍼센트를 걸었는데",
+    "caps": [
+     "엄마랑 아들이",
+     "35만 달러에",
+     "지분 5%를 걸었는데"
+    ],
+    "emph": [
+     {
+      "cap": "엄마랑 아들이",
+      "span": "엄마랑 아들이",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "35만 달러에",
+      "span": "35만 달러에",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "지분 5%를 걸었는데",
+      "span": "5%를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L6",
+    "kind": "원음",
+    "fn": "4 숫자",
+    "text": "첫해에만 100만 달러어치 팔았어요",
+    "caps": [
+     "첫해에만 100만",
+     "달러어치 팔았어요"
+    ],
+    "orig_en": "The first year in business, we sold a million dollars in Squatty Potty.",
+    "orig_span": [
+     136.74,
+     139.26
+    ],
+    "asr": "136.74~139.34 2모델 'First year in business, we sold $1 million in Squa-'(장면 경계에서 단어 끝 잘림)",
+    "emph": [
+     {
+      "cap": "첫해에만 100만",
+      "span": "100만",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "달러어치 팔았어요",
+      "span": "팔았어요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L7",
+    "kind": "원음",
+    "fn": "4 숫자",
+    "text": "말도 안 돼!",
+    "caps": [
+     "말도 안 돼!"
+    ],
+    "orig_en": "Come on!",
+    "orig_span": [
+     139.34,
+     140.83
+    ],
+    "asr": "139.34~140.0 웅얼거림(모델마다 'Hey everybody'/'party party' — 번역 안 함) · 140.0~140.7 'Come on' 4회 중 3회(클립 3-flash 1회 'Mama, I'm on TV!')",
+    "emph": [
+     {
+      "cap": "말도 안 돼!",
+      "span": "말도 안 돼!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L8",
+    "kind": "원음",
+    "fn": "4 숫자",
+    "text": "그다음 해는요? 다음 해엔 270만 달러요",
+    "caps": [
+     "그다음 해는요?",
+     "다음 해엔",
+     "270만 달러요"
+    ],
+    "orig_en": "The year after that? The year after, we did 2.7 million.",
+    "orig_span": [
+     140.91,
+     143.53
+    ],
+    "asr": "140.91~143.61 2모델 'The year after that / (The year after) we did 2.7 million'(말 끝 143.41~143.63)",
+    "emph": [
+     {
+      "cap": "그다음 해는요?",
+      "span": "그다음 해는요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다음 해엔",
+      "span": "다음 해엔",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "270만 달러요",
+      "span": "270만 달러요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L9",
+    "kind": "원음",
+    "fn": "4 숫자",
+    "text": "좋아, 맘에 드네",
+    "caps": [
+     "좋아, 맘에 드네"
+    ],
+    "orig_en": "Yes, I like it.",
+    "orig_span": [
+     143.61,
+     144.34
+    ],
+    "asr": "143.61~144.44 2모델 'Yes, I like it.'",
+    "emph": [
+     {
+      "cap": "좋아, 맘에 드네",
+      "span": "맘에 드네",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L10",
+    "kind": "나레",
+    "fn": "5 지분 경쟁",
+    "text": "케빈이 같은 돈에 10%를 달라는데",
+    "tts": "케빈이 같은 돈에 십 퍼센트를 달라는데",
+    "caps": [
+     "케빈이 같은 돈에",
+     "10%를 달라는데"
+    ],
+    "emph": [
+     {
+      "cap": "케빈이 같은 돈에",
+      "span": "같은 돈에",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%를 달라는데",
+      "span": "10%를",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L11",
+    "kind": "원음",
+    "fn": "5 지분 경쟁",
+    "text": "그럼 70만 달러에 10%로 하죠",
+    "caps": [
+     "그럼 70만 달러에",
+     "10%로 하죠"
+    ],
+    "orig_en": "Yeah, 700,000 for 10%.",
+    "orig_span": [
+     381.75,
+     383.62
+    ],
+    "asr": "381.75~384.0 2모델 'Yeah, 700,000 for 10%.'(끝 383.55~384.05 → 컷 끝 383.72 = 장면 바뀜)",
+    "emph": [
+     {
+      "cap": "그럼 70만 달러에",
+      "span": "70만 달러에",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%로 하죠",
+      "span": "10%로 하죠",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L12",
+    "kind": "나레",
+    "fn": "5 지분 경쟁",
+    "text": "로리도 35만 달러에 10%를 고집하자",
+    "tts": "로리도 삼십오만 달러에 십 퍼센트를 고집하자",
+    "caps": [
+     "로리도 35만 달러에",
+     "10%를 고집하자"
+    ],
+    "emph": [
+     {
+      "cap": "로리도 35만 달러에",
+      "span": "35만 달러에",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%를 고집하자",
+      "span": "10%를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L13",
+    "kind": "원음",
+    "fn": "5 지분 경쟁",
+    "text": "50만 달러에 10%는 어때요?",
+    "caps": [
+     "50만 달러에",
+     "10%는 어때요?"
+    ],
+    "orig_en": "How about 10% for 500,000?",
+    "orig_span": [
+     416.45,
+     418.82
+    ],
+    "asr": "416.45~418.92 2모델 'How about 10% for 500,000?'",
+    "emph": [
+     {
+      "cap": "50만 달러에",
+      "span": "50만 달러에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%는 어때요?",
+      "span": "10%는 어때요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L14",
+    "kind": "원음",
+    "fn": "5 지분 경쟁",
+    "text": "그건 안 받아요",
+    "caps": [
+     "그건 안 받아요"
+    ],
+    "orig_en": "I don't accept that.",
+    "orig_span": [
+     425.81,
+     426.93
+    ],
+    "asr": "425.75~427.4 2모델 'I don't accept that.'(끝 426.95~427.19 → 컷 끝 427.0 = 장면 바뀜)",
+    "emph": [
+     {
+      "cap": "그건 안 받아요",
+      "span": "받아요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L15",
+    "kind": "원음",
+    "fn": "5 지분 경쟁",
+    "text": "로리 제안 받을게요 좋았어!",
+    "caps": [
+     "로리 제안 받을게요",
+     "좋았어!"
+    ],
+    "orig_en": "Actually, we're going to take Lori's offer. There you go. Great.",
+    "orig_span": [
+     513.45,
+     517.1
+    ],
+    "asr": "513.45~515.25 2모델 'Actually, we're going to take Lori's offer.' · 515.25~517.0 3-flash 'There you go. / Great.'(60초 묶음 2모델도 516.2 'There you go' 517.1 'Great')",
+    "emph": [
+     {
+      "cap": "로리 제안 받을게요",
+      "span": "받을게요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "좋았어!",
+      "span": "좋았어!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L16",
+    "kind": "나레",
+    "fn": "6 방송 후 결과",
+    "text": "그렇게 손을 잡고 방송 뒤 20개 나라에 진출해서 450만 개 넘게 팔렸고",
+    "tts": "그렇게 손을 잡고, 방송 뒤 스무 개 나라에 진출해서 사백오십만 개 넘게 팔렸고",
+    "caps": [
+     "그렇게 손을 잡고",
+     "방송 뒤 20개 나라에",
+     "진출해서",
+     "450만 개 넘게 팔렸고"
+    ],
+    "emph": [
+     {
+      "cap": "그렇게 손을 잡고",
+      "span": "손을 잡고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "방송 뒤 20개 나라에",
+      "span": "20개",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "진출해서",
+      "span": "진출해서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "450만 개 넘게 팔렸고",
+      "span": "450만 개",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "L17",
+    "kind": "나레",
+    "fn": "6 방송 후 결과",
+    "text": "방송 이후 매출만 1억 7,500만 달러를 찍었다고",
+    "tts": "방송 이후 매출만 일억 칠천오백만 달러를 찍었다고",
+    "caps": [
+     "방송 이후 매출만",
+     "1억 7,500만 달러를",
+     "찍었다고"
+    ],
+    "emph": [
+     {
+      "cap": "방송 이후 매출만",
+      "span": "이후 매출만",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "1억 7,500만 달러를",
+      "span": "1억 7,500만 달러를",
+      "color": "노랑",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "찍었다고",
+      "span": "찍었다고",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8,
+  "cps_note": "벤치 기준 편 나레 실측 181자/23.2초"
+ }
+}

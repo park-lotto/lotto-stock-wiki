@@ -1,0 +1,1172 @@
+{
+ "id": "a06yYTgpa_c",
+ "dur": 29.28,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "월 천 찍은 유튜버들이",
+   "colors": [
+    {
+     "word": "월 천 찍은 유튜버들이",
+     "hex": "#F7F111"
+    }
+   ],
+   "outline": "검정(띠와 같은 색 — 띠 위라 외곽 구분 불가)"
+  },
+  {
+   "text": "산다는 모니터",
+   "colors": [
+    {
+     "word": "산다는 모니터",
+     "hex": "#E90C2A"
+    }
+   ],
+   "outline": "짙은 외곽(눈)",
+   "note": "1줄보다 큼"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   559,
+   1080,
+   1361
+  ],
+  "caption_band": [
+   1390,
+   1480
+  ],
+  "title_y": [
+   [
+    291,
+    384
+   ],
+   [
+    412,
+    547
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": null,
+  "logo_y": [
+   170,
+   224
+  ],
+  "watermark": null,
+  "source_hex": null,
+  "channel_name": {
+   "text": "핫템리포트",
+   "y": [
+    170,
+    224
+   ],
+   "x": [
+    410,
+    669
+   ],
+   "fill_hex": "#F7FFF5",
+   "glow": {
+    "hex": "#011F00~초록 번짐(띠 위 y60~140 평균)",
+    "sec": null
+   }
+  },
+  "note": "검정 띠(y0~559) + 초록 번짐 채널명 + 노랑/빨강 2줄 제목 + 창 y559~1920 꽉 채움(크롭, 레터박스 없음) · 4.6~7.0초 원본은 창 아래 검정(원본 비율)"
+ },
+ "lines": [
+  {
+   "t0": 0.033,
+   "t1": 0.967,
+   "speaker": "나레",
+   "text": "여기 월 천 찍은",
+   "layer": "핫템리포트",
+   "role": "훅",
+   "enter": "fade(반투명→흰 — 0.03~0.27)",
+   "enter_ms": 230,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1392,
+    1467
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "상자에서 모니터를 꺼내는 남자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.967,
+   "t1": 1.8,
+   "speaker": "나레",
+   "text": "유튜버가",
+   "layer": "핫템리포트",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1467
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터를 들어 올리는 남자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.1,
+   "t1": 2.467,
+   "speaker": "원음",
+   "text": "어~ 잠깐~!!",
+   "layer": "핫템리포트",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1392,
+    1481
+   ],
+   "fill_hex": "#B1FFF3",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(노랑 물음표 + 동심원 그림 애니 — 모니터 화면 위)",
+     "x": 580,
+     "y": 950,
+     "w": 250,
+     "t_in": 2.233,
+     "t_out": 3.433,
+     "anim": "물음표 그려짐·원이 퍼짐 → 3.3~3.43 선으로 흩어지며 사라짐(노랑 픽셀 수 프레임별 실측)"
+    }
+   ],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터를 세워 든 남자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.467,
+   "t1": 3.633,
+   "speaker": "나레",
+   "text": "드디어 이걸 샀는데요",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터 뒤에서 웃는 남자",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.733,
+   "t1": 4.633,
+   "speaker": "원음",
+   "text": "이거 미쳤는데!!",
+   "layer": "핫템리포트",
+   "role": "고조",
+   "enter": "pop(주황 불꽃 글로우로 크게 등장 3.73 → 3.80~4.03 불씨 흩어지며 청록 글자로)",
+   "enter_ms": 300,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1392,
+    1481
+   ],
+   "fill_hex": "#87FFEC",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": {
+    "hex": "주황 #FF5A1E 계열(눈)",
+    "sec": 0.3
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터를 든 남자(원본 글자 흐림 상자)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.833,
+   "t1": 5.7,
+   "speaker": "나레",
+   "text": "유튜버들이 환장하는",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "typing(끝 글자 흐림→선명 — 4.83~4.90)",
+   "enter_ms": 70,
+   "variant": "기본(흰)",
+   "type_cps": 128.6,
+   "cursor": false,
+   "y": [
+    1394,
+    1469
+   ],
+   "fill_hex": "#FFFDFC",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터 앞 빨간 옷 남자",
+   "fit": 6,
+   "cut_at": [
+    5.633
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.7,
+   "t1": 6.667,
+   "speaker": "나레",
+   "text": "이유가 있는데",
+   "layer": "핫템리포트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1467
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "2단 모니터에서 그림 작업",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.033,
+   "t1": 7.667,
+   "speaker": "원음",
+   "text": "완전 신세계네~",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1330,
+    1412
+   ],
+   "fill_hex": "#B5FFF7",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "책상에 놓인 2단 모니터",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.667,
+   "t1": 9.4,
+   "speaker": "원음",
+   "text": "위에는 프리뷰 화면",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1330,
+    1412
+   ],
+   "fill_hex": "#81FFF1",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "모니터 윗단 영상 미리보기",
+   "fit": 9,
+   "cut_at": [
+    8.567
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.4,
+   "t1": 11.133,
+   "speaker": "원음",
+   "text": "타임라인 아래 두고",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1331,
+    1413
+   ],
+   "fill_hex": "#80FFF1",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 근접",
+   "scene_desc": "모니터 아랫단 편집 타임라인",
+   "fit": 9,
+   "cut_at": [
+    11.033
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.133,
+   "t1": 13.433,
+   "speaker": "원음",
+   "text": "심지어 터치도 돼서",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1330,
+    1414
+   ],
+   "fill_hex": "#7EFFF2",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "타임라인을 손으로 터치",
+   "fit": 9,
+   "cut_at": [
+    11.867
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.433,
+   "t1": 14.633,
+   "speaker": "원음",
+   "text": "소스 드래그해서",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1331,
+    1398
+   ],
+   "fill_hex": "#81FFF2",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "손가락으로 소스를 끌어옴",
+   "fit": 9,
+   "cut_at": [
+    13.8
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.633,
+   "t1": 15.867,
+   "speaker": "원음",
+   "text": "타임라인에 넣고",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1330,
+    1414
+   ],
+   "fill_hex": "#80FFF2",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "타임라인에 소스 넣기",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.867,
+   "t1": 17.133,
+   "speaker": "원음",
+   "text": "손으로 넘기면서",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1330,
+    1412
+   ],
+   "fill_hex": "#81FFF1",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "타임라인을 손으로 넘김",
+   "fit": 9,
+   "cut_at": [
+    16.6
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.133,
+   "t1": 17.833,
+   "speaker": "원음",
+   "text": "트리밍까지",
+   "layer": "핫템리포트",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1331,
+    1414
+   ],
+   "fill_hex": "#85FFF1",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "클립 길이 자르기",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.9,
+   "t1": 19.333,
+   "speaker": "원음",
+   "text": "와 진짜 미쳤다!",
+   "layer": "핫템리포트",
+   "role": "고조",
+   "enter": "fade(반투명→선명 — 17.90~18.27)",
+   "enter_ms": 370,
+   "variant": "원음(청록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1331,
+    1421
+   ],
+   "fill_hex": "#87FFEC",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터 앞 손짓(원본 글자 흐림 상자 17.83~18.27)",
+   "fit": 6,
+   "cut_at": [
+    18.5
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 19.333,
+   "t1": 20.267,
+   "speaker": "나레",
+   "text": "이건 각도 조절이",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "세로로 세운 모니터 책상",
+   "fit": 8,
+   "cut_at": [
+    20.0
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.267,
+   "t1": 21.3,
+   "speaker": "나레",
+   "text": "되는 버티컬 모니터로",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "기울인 아랫단에서 사진 작업",
+   "fit": 9,
+   "cut_at": [
+    20.533
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.3,
+   "t1": 22.233,
+   "speaker": "나레",
+   "text": "게임 유튜버 라방도",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1467
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "모니터 앞 게임 방송하는 남자",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.233,
+   "t1": 23.1,
+   "speaker": "나레",
+   "text": "뮤지션 트랙 작업도",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "건반과 음악 작업 화면",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.1,
+   "t1": 24.367,
+   "speaker": "나레",
+   "text": "다 씹어먹는다고",
+   "layer": "핫템리포트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "건반 치는 손",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.367,
+   "t1": 25.6,
+   "speaker": "나레",
+   "text": "사실 스마트폰 스크롤에",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "세로 화면 문서를 보는 남자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 25.6,
+   "t1": 26.6,
+   "speaker": "나레",
+   "text": "길들여져서",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "세로 모니터 책상",
+   "fit": 6,
+   "cut_at": [
+    26.333
+   ],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 26.6,
+   "t1": 27.633,
+   "speaker": "나레",
+   "text": "크리에이터뿐만 아니라",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "세로 모니터 앞 남자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 27.633,
+   "t1": 28.5,
+   "speaker": "나레",
+   "text": "모두에게 세로형이",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1394,
+    1467
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "세로 모니터 앞 남자",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 28.5,
+   "t1": 29.233,
+   "speaker": "나레",
+   "text": "더 편하다고 하네요",
+   "layer": "핫템리포트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1393,
+    1466
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 8~13px(행 스캔 OE 0.9초 중앙 13px·p25 10px / 11.5초 중앙 8px)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 29.12,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +19.0dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "제품 사용",
+   "scene_desc": "세로 모니터 앞 남자",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 fontmatch 1위 Pretendard-ExtraBold 0.67·2위 KCCGanpan — 반듯한 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조는 모양만"
+   },
+   "letter_gap_px": "좁음(눈 — 낱자 사이 빈 열 거의 없음, 외곽선끼리 붙음)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.033
+  ],
+  [
+   1.8,
+   2.1
+  ],
+  [
+   3.633,
+   3.733
+  ],
+  [
+   4.633,
+   4.833
+  ],
+  [
+   6.667,
+   7.033
+  ]
+ ],
+ "beats": "훅 나레(0.03~1.8 '여기 월 천 찍은 유튜버가', 첫 줄 페이드) → 원음 '어~ 잠깐~!!'+노랑 물음표 그림(2.1~2.47) → 다리 '드디어 이걸 샀는데요' → 원음 고조 '이거 미쳤는데!!'(3.73 주황 불꽃 pop) → 다리 나레(4.83~6.67) → 원음 시연 9줄(7.03~19.33 프리뷰·타임라인·터치·트리밍·'와 진짜 미쳤다!') → 공개 나레(19.33~24.37 각도 조절·라방·트랙 작업) → 끝(24.37~29.23 '스마트폰 스크롤에 길들여져서 … 세로형이 더 편하다고 하네요', CTA 없음)",
+ "narr_share": "나레 줄 15/26, 나레 14.7초/29.28초",
+ "notes": [
+  "주황 불꽃 pop 효과가 원음 줄('이거 미쳤는데!!')에도 쓰인다 — Zq·RWS 는 나레 줄. 불꽃 pop = 강한 감탄/훅 자리.",
+  "노랑 물음표+동심원 그림 스티커 1개(2.23~3.43) — '어~ 잠깐~!!' 질문 줄과 같은 때.",
+  "원음 시연 구간 9줄은 꾸밈 없음(청록 평자막).",
+  "효과음: 채널 신호표 후보 29.12초(마지막 줄 끝) — 귀 확인 못 함."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "상자에서 큰 검정 모니터를 꺼내는 곱슬머리 남자(첫 프레임 원본 글자 흐림 상자, 자막은 0.03초부터 페이드)",
+  "face_frac": "약 0.05(얼굴/창 면적, 눈)",
+  "text": "월천찍은 유튜버들이 / 산다는 모니터(고정 제목만)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·sfx_events 신호) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "scratchpad capseg.py/cutdet.py/px.py/segsheet.py — 결과 C:/숏템_칼카피/hottemreport/work/lr6/"
+}

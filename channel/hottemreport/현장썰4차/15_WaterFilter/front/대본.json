@@ -1,0 +1,42 @@
+{
+ "topic": "Ninja HydraSense(닌자 하이드라센스) 카운터탑 정수기 — 콜라·피클 국물을 물통에 부어도 꼭지에서 맑은 물이 나온다며 미국 크리에이터들이 별걸 다 부어 보는 영상. 원음 = @sharpafedc 틱톡(140만) 피클 국물 편",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "31CIMtXmCao",
+ "bench_note": "벤치 '요즘 미국 유튜버들이 난리 난 챌린지'(78.2만, 핫템리포트 18위, 2026-10-10) — 여러 크리에이터 몽타주(우유·와인·오렌지 주스·피클 국물·소다). 20~25초 수염·모자 남자 = @sharpafedc 7674009554937597215(피클 국물, 같은 부엌·같은 모자·같은 하얀 기계). 벤치 끝 '오줌이었다고'는 근거 없음·수위라 안 씀",
+ "sources": {
+  "sh": {"file": "sh.mp4", "who": "틱톡 @sharpafedc 7674009554937597215 'Why are you still drinking nasty tap water?!'(2026-08-14)", "views": 1400000, "dur": 46.0, "res": "1080x1920"},
+  "ca": {"file": "ca.mp4", "who": "틱톡 @carliejimenez2 7673587625407614238 'Ninja continues to shock me'(2026-08-13, 분홍 기계·콜라)", "views": 9016, "dur": 28.0, "res": "1080x1920"}
+ },
+ "titles": {"hook": "피클 국물 부어도\n생수 나오는 정수기"},
+ "facts": {
+  "f1": {"text": "sh 0.08~4.12 'So supposedly Ninja's new water filter can turn pickle juice clear' (스피치매틱스 낱말 시각)", "kind": "본인 말"},
+  "f2": {"text": "sh 5.57~8.73 화면: 피클 든 물통에 얼음을 붓고 'You can even add ice to the tank' · 8.73~10.63 화면: 버튼 → 꼭지에서 맑은 물이 컵에", "kind": "화면+본인 말"},
+  "f3": {"text": "sh 11.36~13.60 'Oh. That's some high quality H2O.' (마신 뒤)", "kind": "본인 말"},
+  "f4": {"text": "ca 0.04~ 'A water filter so good it turned my soda into water' · 5.35~8.68 화면: 콜라 든 물통 옆 꼭지에서 맑은 물", "kind": "본인 말+화면"},
+  "f5": {"text": "벤치 31CIMtXmCao 설명란 '요즘 미국 유튜버들 사이에서 난리 난 신기한 정수기 … 우유부터 다양한 음료까지 넣어보는' · 렌즈 7장 틱톡 9계정 HydraSense 영상(콜라·피클·주스)", "kind": "벤치·렌즈"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(제품+~있는데요)", "text": "콜라를 부어도 맑은 물이 나오는 정수기가 있는데요.",
+    "caps": ["콜라를 부어도", "맑은 물이 나오는", "정수기가 있는데요"], "facts": ["f4", "f5"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "피클 국물에 얼음까지 넣고 버튼을 눌렀더니, 진짜 투명한 물이 나와요.",
+    "caps": ["피클 국물에 얼음까지 넣고", "버튼을 눌렀더니", "진짜 투명한 물이 나와요"], "facts": ["f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "sh", "span": [0.05, 4.22], "en": "So supposedly Ninja's new water filter can turn pickle juice clear.",
+    "caps": ["새 정수기가 피클 국물까지", "맑게 바꿔 준다던데?"],
+    "check": "스피치매틱스 낱말 So 0.08 · clear 3.52~4.12 · 다음 Okay 4.32 · 화면 컷 3.93(같은 사람 가까운 샷)"},
+   {"id": "O2", "src": "sh", "span": [11.30, 13.60], "en": "Oh. That's some high quality H2O.",
+    "caps": ["오…", "이거 완전 고급 생수인데?"],
+    "check": "Oh 11.36 · H2O 12.80~13.60 · 다음 This 13.64 · 화면 한 샷 10.63~13.60(마시고 감탄)"}
+  ],
+  "dropped": {
+   "벤치 끝 '다름 아닌 오줌이었다고'": "근거 없음·수위 — 안 씀",
+   "'99% 80가지 오염물질·미세플라스틱' 원음": "효능·과학 근거 — 안 씀",
+   "가격·재고": "금액 금지"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

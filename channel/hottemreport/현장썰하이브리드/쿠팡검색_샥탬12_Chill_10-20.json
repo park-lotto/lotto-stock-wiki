@@ -1,0 +1,18 @@
+{
+ "칠필 음료 냉각 쿨러": {
+  "ep": "샥탬12_Chill_10-20",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%B9%A0%ED%95%84%20%EC%9D%8C%EB%A3%8C%20%EB%83%89%EA%B0%81%20%EC%BF%A8%EB%9F%AC",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ },
+ "CHILLPILL": {
+  "ep": "샥탬12_Chill_10-20",
+  "ok": false,
+  "items": [],
+  "search_url": "https://www.coupang.com/np/search?q=CHILLPILL",
+  "source": "crawl",
+  "notice": "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+ }
+}

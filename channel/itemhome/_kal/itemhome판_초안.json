@@ -1,0 +1,116 @@
+{
+ "name": "itemhome판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": null,
+  "channel": "https://www.youtube.com/@아이템홈itemhome",
+  "analysis": "channel/itemhome/스타일분석.md",
+  "line_reads": "channel/itemhome/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\itemhome\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/itemhome/팔레트.json",
+  "rules_counted": "channel/itemhome/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미나 / 문정 / 유라 중에서 (벤치 화자 여 10/14))"
+ },
+ "cps_target": 8.59,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 15.3,
+  "max": 39.6
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 지, 다 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 7.0",
+   "원음: 어미 입니다, 다, 어요, 에요 · 존댓말 0.69 · 전언 0.0 · 자수 중앙 6.0"
+  ],
+  "example": [
+   "드라마에서 10년 차",
+   "녹차밭에 선 박진영이",
+   "이탈리아 패션쇼까지"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 8.63
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": "instant",
+   "fx_rate": {
+    "나레": 0.65,
+    "원음": 0.56
+   },
+   "plain_rate": 0.41,
+   "by_pos": {
+    "훅": 0.85,
+    "본문": 0.59,
+    "끝": 0.44
+   },
+   "strong": [
+    "자리=본문 → enter=instant 142/162",
+    "화자=원음 → enter=instant 119/132",
+    "화자=나레 → enter=instant 67/82",
+    "역할=증거 → enter=instant 52/57",
+    "역할=다리 → enter=instant 26/33",
+    "자리=끝 → enter=instant 29/32",
+    "역할=본문 → enter=instant 24/27",
+    "화자전환 첫 덩어리=원음 → enter=instant 24/27",
+    "역할=훅 → enter=instant 19/24",
+    "역할=훅 → emph 16/24",
+    "역할=끝 → enter=instant 20/21",
+    "자리=훅 → enter=instant 15/20",
+    "자리=훅 → emph 14/20",
+    "역할=공개 → enter=instant 13/14",
+    "역할=공개 → emph 12/14",
+    "역할=이음 → enter=instant 11/14",
+    "역할=고조 → enter=instant 11/12",
+    "역할=고조 → emph 8/12",
+    "역할=답 → enter=instant 3/5"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

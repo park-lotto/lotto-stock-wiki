@@ -1,0 +1,429 @@
+{
+ "topic": "인스타360 루나 울트라(Insta360 Luna Ultra) — 처음 꺼내 펼쳐 보는 James Afante 'There we go. Wow.'·'Look at this. It's detachable.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "cIuRFzUnqq0",
+ "bench_note": "벤치 'DJI가 막으려한 액션캠의 정체'(3.8만, 핫템리포트 10-27 목록 50위, 설명란 '인스타360 루나 울트라(Insta360 Luna Ultra) … DSLR급 줌') — 화면 속 제품 = 인스타360 루나 울트라 짐벌 카메라. 원음형 = 유튜브 James Afante 'Insta360 Luna Ultra First Impressions & Unboxing' FSUQkyyMp08(8.8천, 2560x1280, 자동 더빙 20개 — 원어 140-20 en-US original) 150~520초 사본 30fps(전체본 삭제, 사본 시각 = 원래 −150). 화면 보조 = Insta360 공식 'Meet Insta360 Luna Ultra' gWscweuterk(258만) 제품만 나온 컷. 벤치의 'DJI 소송'은 1차 출처로 확정 못 해 안 씀.",
+ "sources": {
+  "jm": {
+   "file": "jm.mp4",
+   "who": "유튜브 James Afante FSUQkyyMp08 150~520초 사본(원어 140-20, 30fps) — 손 근접 컷·책상 앞 본인(앞 원음형만), 뒤에는 손 컷만",
+   "views": 8806,
+   "dur": 370.0,
+   "res": "2560x1280"
+  },
+  "of": {
+   "file": "of.mp4",
+   "who": "유튜브 Insta360 공식 gWscweuterk(137, 1920x1080) — 렌즈 근접·산 배경 카메라·손에 든 카메라만(모델 얼굴 컷·아래 작은 설명 글 crop 밖)",
+   "views": 2579399,
+   "dur": 277.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "화면이 떨어지는\n카메라"
+ },
+ "facts": {
+  "f1": {
+   "text": "Insta360 공식 온라인 설명서 사양(onlinemanual.insta360.com/lunaultra/en-us/specs/specs) '8K Leica flagship dual-lens gimbal camera' · 주렌즈 1인치·망원 1/1.3인치 · James 원본 0:30 'dual Leica lens system'",
+   "kind": "제조사 사양"
+  },
+  "f2": {
+   "text": "Insta360 공식 온라인 설명서 사양 'Detachable Touchscreen Remote'(2.0인치 OLED) · James 원본 사본 332.40~335.20 'look at this. It's detachable.'",
+   "kind": "제조사 사양·리뷰"
+  },
+  "f3": {
+   "text": "James 원본 사본 44.00~45.92 'There we go. Wow.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "James 원본 사본 332.40~335.20 'look at this. It's detachable.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "손바닥만 한데 렌즈가 두 개나 달렸다는 카메라가 있는데요 근데 진짜 신기한 건 이 화면을 떼어 내서 따로 들고 볼 수 있다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jm",
+    "span": [
+     43.96,
+     46.2
+    ],
+    "en": "There we go. Wow.",
+    "caps": [
+     "됐다, 됐다",
+     "와!"
+    ],
+    "check": "앞 go 43.28~43.64 · There 44.00 · Wow 45.40~45.92 · 다음 Guys 47.48 · 원본 컷 43.83 뒤에서 시작(손 근접 펼침), 45.30 원본 안 컷(같은 손 근접)"
+   },
+   {
+    "id": "O2",
+    "src": "jm",
+    "span": [
+     332.35,
+     335.22
+    ],
+    "en": "look at this. It's detachable.",
+    "caps": [
+     "이것 좀 봐요",
+     "화면이 떨어져요!"
+    ],
+    "check": "앞 guys 332.12~332.40 · look 332.40 · detachable 334.28~335.20 · 다음 Meaning 335.24 · 원본 한 샷(330.83~335.30) 안 — 손으로 화면을 떼어 냄"
+   }
+  ],
+  "dropped": {
+   "벤치 'DJI가 막으려 한'(소송)": "1차 출처로 확정 못 함 — 안 씀",
+   "8K·Dolby Vision·줌 배수 숫자": "판·리뷰마다 표기가 달라 숫자는 안 씀",
+   "가격": "금액 금지",
+   "James 의 타갈로그 말": "원음 구간에 안 넣음(영어 구간만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "손바닥만 한데",
+   "kind": "나레"
+  },
+  {
+   "t0": 0.765,
+   "text": "렌즈가 두 개나 달렸다는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.04,
+   "text": "카메라가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.31,
+   "text": "됐다, 됐다",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.102,
+   "text": "와!",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.8,
+   "text": "근데 진짜 신기한 건",
+   "kind": "나레"
+  },
+  {
+   "t0": 6.764,
+   "text": "이 화면을 떼어 내서",
+   "kind": "나레"
+  },
+  {
+   "t0": 7.728,
+   "text": "따로 들고 볼 수 있다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 9.537,
+   "text": "이것 좀 봐요",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.733,
+   "text": "화면이 떨어져요!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "손바닥만 한데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 0.765,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "렌즈가 두 개나 달렸다는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.765,
+   "dur": 1.275,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "카메라가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.04,
+   "dur": 1.27,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "됐다, 됐다",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.31,
+   "dur": 1.792,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "와!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.102,
+   "dur": 0.698,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 진짜 신기한 건",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 5.8,
+   "dur": 0.964,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이 화면을 떼어 내서",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 6.764,
+   "dur": 0.964,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "따로 들고 볼 수 있다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 7.728,
+   "dur": 1.809,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이것 좀 봐요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 9.537,
+   "dur": 1.196,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "화면이 떨어져요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 10.733,
+   "dur": 2.274,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.31,
+    5.55
+   ],
+   [
+    9.537,
+    12.407
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.06
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.31,
+    "a1": 5.55,
+    "audio_ss": 43.96,
+    "src": "jm"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 5.8,
+    "n1": 9.287
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 9.537,
+    "a1": 12.407,
+    "audio_ss": 332.35,
+    "src": "jm"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "jm",
+    "ss": 29.3,
+    "vs": 0.0,
+    "src_crop": [
+     900,
+     0,
+     1016,
+     1280
+    ],
+    "why": "jm 29.17~31.43 손에 든 루나 울트라 몸통 → 31.43~34.37 손 근접(얼굴은 아래턱만)",
+    "ve": 3.28,
+    "src_end": 32.58
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "jm",
+    "ss": 43.93,
+    "vs": 3.28,
+    "src_crop": [
+     593,
+     0,
+     1016,
+     1280
+    ],
+    "why": "손으로 펼친 짐벌 + 'There we go. Wow.'(43.83~46.33 손 근접 두 컷)",
+    "ve": 5.647,
+    "src_end": 46.297,
+    "guard": "원본 컷 46.33 앞에서 끊음(−0.153초)"
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "jm",
+    "ss": 60.197,
+    "vs": 5.647,
+    "src_crop": [
+     1028,
+     0,
+     1016,
+     1280
+    ],
+    "why": "jm 60.1~63.0 가로로 든 카메라를 만지는 손 → 63.0~ 받침 끼우는 손",
+    "ve": 9.507,
+    "src_end": 64.057
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "jm",
+    "ss": 332.32,
+    "vs": 9.507,
+    "src_crop": [
+     900,
+     0,
+     1016,
+     1280
+    ],
+    "why": "손으로 화면을 떼어 냄 + 'look at this. It's detachable.'(330.83~335.30 한 샷)",
+    "ve": 13.007,
+    "src_end": 335.82
+   }
+  ],
+  "dur": 13.007,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\29_LunaUltra\\front\\render\\narr_N1.wav",
+    "dur": 3.06,
+    "tempo": 0.847,
+    "chars": 24,
+    "speech": 3.06,
+    "cps": 7.84,
+    "segs": [
+     [
+      0.0,
+      3.06
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\29_LunaUltra\\front\\render\\narr_N2.wav",
+    "dur": 3.487,
+    "tempo": 0.914,
+    "chars": 27,
+    "speech": 3.487,
+    "cps": 7.74,
+    "segs": [
+     [
+      0.0,
+      2.132
+     ],
+     [
+      2.366,
+      3.487
+     ]
+    ]
+   }
+  ]
+ }
+}

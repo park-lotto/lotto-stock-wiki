@@ -1,0 +1,150 @@
+{
+ "slug": "sinbak",
+ "ref": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g",
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 15.3,
+   "at": "2026-10-20 08:12",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\sinbak\\top.json"
+   },
+   "note": "신박발견 구독 53000 편 552 조회중앙 45,000 최대 28,000,000 (구독 대비 중앙 0.85)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:16",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\sinbak\\src",
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ]
+   },
+   "note": "받음 6/6(720p lite, C 여유 27.9GB)"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 0.2,
+   "at": "2026-10-20 08:22",
+   "outputs": {
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 118.8,
+   "at": "2026-10-20 08:24",
+   "outputs": {
+    "dirs": {
+     "rAt34vkQ0OY": "C:\\숏템_칼카피\\sinbak\\kal\\frames_rAt34vkQ0OY",
+     "oT-SxFJcQ-4": "C:\\숏템_칼카피\\sinbak\\kal\\frames_oT-SxFJcQ-4",
+     "fzoZc7V_hDM": "C:\\숏템_칼카피\\sinbak\\kal\\frames_fzoZc7V_hDM",
+     "CnRWZ3scVfk": "C:\\숏템_칼카피\\sinbak\\kal\\frames_CnRWZ3scVfk",
+     "bpjoacs2S6Q": "C:\\숏템_칼카피\\sinbak\\kal\\frames_bpjoacs2S6Q",
+     "edTkyQKrqMk": "C:\\숏템_칼카피\\sinbak\\kal\\frames_edTkyQKrqMk"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:24",
+   "outputs": {
+    "skeletons": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 6편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:46",
+   "outputs": {
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ]
+   },
+   "note": "줄판독 6편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-20 08:48",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\sinbak판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "waiting_human",
+   "sec": 28.8,
+   "at": "2026-10-20 08:48",
+   "outputs": {
+    "frames": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "errs": []
+   },
+   "note": "프리셋 손질 — frames/frame_<id>.json 을 _hand/ 로 손질(실측 근거 notes) → preset_save → 다시 실행 (견본 channel/starpickroom/preset/spr_preset.py · 자동본 C:\\숏템_칼카피\\sinbak\\frames)"
+  }
+ },
+ "asked": {},
+ "brand": "신박리포트",
+ "n": 6,
+ "hybrid": "예",
+ "voice": "tc_6059dad0b83880769a50502f",
+ "lite": true,
+ "channel": {
+  "name": "신박발견",
+  "url": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g/shorts",
+  "subs": 53000,
+  "total": 552,
+  "view_median": 45000,
+  "view_max": 28000000,
+  "top_ids": [
+   "rAt34vkQ0OY",
+   "oT-SxFJcQ-4",
+   "fzoZc7V_hDM",
+   "CnRWZ3scVfk",
+   "bpjoacs2S6Q",
+   "edTkyQKrqMk"
+  ],
+  "views_per_sub": 0.85
+ }
+}

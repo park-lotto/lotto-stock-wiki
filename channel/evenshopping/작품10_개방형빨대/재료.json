@@ -1,0 +1,450 @@
+{
+ "_note": "작품10 개방형빨대 — 원본은 yt2 계정으로 받은 해외 유튜브(src/*.info.json). 컷은 0.5~1초 시트·샷 경계(render_bench.shot_starts)·계획 접촉 시트를 보고 고름. src_crop = 남의 글자·로고·자막 띠 밖",
+ "cand_dir": "C:/숏템_칼카피/evenshopping/작품10_개방형빨대/src/",
+ "shots": [
+  {
+   "i": 0,
+   "caption": "빨대 솔질 지옥",
+   "kind": "product",
+   "cont": false,
+   "seen": "두 손으로 빨대를 천에 넣고 문지르는 근접",
+   "url": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 27.0,
+   "src_crop": [
+    700,
+    0,
+    829,
+    1080
+   ]
+  },
+  {
+   "i": 1,
+   "caption": "끝내버린 천재의 발명품?",
+   "kind": "product",
+   "cont": false,
+   "seen": "민트 빨대 옆 틈이 벌어진 근접",
+   "url": "https://www.youtube.com/watch?v=DQbJeNnu7MQ",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 16.0,
+   "src_crop": [
+    800,
+    150,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 2,
+   "caption": "요즘 텀블러 빨대",
+   "kind": "product",
+   "cont": false,
+   "seen": "빨대 꽂힌 테이크아웃 커피 컵",
+   "url": "https://www.youtube.com/watch?v=qVGVD9u0Fxc",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 298.6,
+   "src_crop": [
+    650,
+    0,
+    620,
+    808
+   ]
+  },
+  {
+   "i": 3,
+   "caption": "하나씩 다 들고",
+   "kind": "product",
+   "cont": false,
+   "seen": "남자가 빨대 하나를 들어 보임",
+   "url": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    500,
+    0,
+    829,
+    1080
+   ]
+  },
+  {
+   "i": 4,
+   "caption": "다니는데,",
+   "cont": true
+  },
+  {
+   "i": 5,
+   "caption": "안쪽 때는 솔로",
+   "kind": "product",
+   "cont": false,
+   "seen": "민트 빨대 안에 솔을 넣는 손",
+   "url": "https://www.youtube.com/watch?v=Hgx86Jz4B6U",
+   "src": "Hgx86Jz4B6U.mp4",
+   "ss": 45.0,
+   "src_crop": [
+    560,
+    380,
+    700,
+    912
+   ]
+  },
+  {
+   "i": 6,
+   "caption": "아무리 문질러도",
+   "cont": true
+  },
+  {
+   "i": 7,
+   "caption": "눈에 안 보인다는 거.",
+   "kind": "product",
+   "cont": false,
+   "seen": "남자가 빨대 구멍 안을 들여다봄",
+   "url": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 15.1,
+   "src_crop": [
+    1000,
+    0,
+    829,
+    1080
+   ]
+  },
+  {
+   "i": 8,
+   "caption": "바로 반으로 쫙 열리는",
+   "kind": "product",
+   "cont": false,
+   "seen": "초록 빨대를 두 손으로 벌려 엶",
+   "url": "https://www.youtube.com/watch?v=kkBUsht0dfI",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 0.1,
+   "src_crop": [
+    620,
+    0,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 9,
+   "caption": "개방형 실리콘 빨대.",
+   "kind": "product",
+   "cont": false,
+   "seen": "상자 속 빨대 단면(열리는 홈 모양)",
+   "url": "https://www.youtube.com/watch?v=Un8dhJ_rgGc",
+   "src": "Un8dhJ_rgGc.mp4",
+   "ss": 16.6,
+   "src_crop": [
+    360,
+    0,
+    553,
+    720
+   ]
+  },
+  {
+   "i": 10,
+   "caption": "여기다가",
+   "kind": "product",
+   "cont": false,
+   "seen": "민트 빨대 단면 — 맞물리는 홈 근접",
+   "url": "https://www.youtube.com/watch?v=kkBUsht0dfI",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 5.0,
+   "src_crop": [
+    700,
+    0,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 11,
+   "caption": "말도 안 되는 게,",
+   "cont": true
+  },
+  {
+   "i": 12,
+   "caption": "빨대 옆 틈을",
+   "kind": "product",
+   "cont": false,
+   "seen": "분홍 실리콘 빨대 틈을 손으로 벌림",
+   "url": "https://www.youtube.com/watch?v=qVGVD9u0Fxc",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 256.6,
+   "src_crop": [
+    650,
+    88,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 13,
+   "caption": "손으로 벌리면",
+   "cont": true
+  },
+  {
+   "i": 14,
+   "caption": "안쪽이 통째로 드러나서,",
+   "kind": "product",
+   "cont": false,
+   "seen": "활짝 펼친 분홍 빨대를 물에 씻음",
+   "url": "https://www.youtube.com/watch?v=qVGVD9u0Fxc",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 260.5,
+   "src_crop": [
+    300,
+    0,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 15,
+   "caption": "기존 빨대는",
+   "kind": "product",
+   "cont": false,
+   "seen": "테이블 위 일반 빨대들(금속·유리)",
+   "url": "https://www.youtube.com/watch?v=G5oZTlpfPCA",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    300,
+    0,
+    737,
+    960
+   ]
+  },
+  {
+   "i": 16,
+   "caption": "솔을 넣어도",
+   "kind": "product",
+   "cont": false,
+   "seen": "솔을 빨대 안에 밀어 넣음",
+   "url": "https://www.youtube.com/watch?v=Hgx86Jz4B6U",
+   "src": "Hgx86Jz4B6U.mp4",
+   "ss": 21.0,
+   "src_crop": [
+    560,
+    380,
+    700,
+    912
+   ]
+  },
+  {
+   "i": 17,
+   "caption": "속이 안 보였지만,",
+   "cont": true
+  },
+  {
+   "i": 18,
+   "caption": "이건 손가락으로",
+   "kind": "product",
+   "cont": false,
+   "seen": "싱크대에서 연 빨대를 손가락으로 닦음",
+   "url": "https://www.youtube.com/watch?v=G5oZTlpfPCA",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 38.6,
+   "src_crop": [
+    580,
+    40,
+    560,
+    730
+   ]
+  },
+  {
+   "i": 19,
+   "caption": "쓱 닦고",
+   "cont": true
+  },
+  {
+   "i": 20,
+   "caption": "헹구면 끝.",
+   "kind": "product",
+   "cont": false,
+   "seen": "수돗물에 빨대를 헹굼",
+   "url": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 7.0,
+   "src_crop": [
+    700,
+    0,
+    829,
+    1080
+   ]
+  },
+  {
+   "i": 21,
+   "caption": "심지어 다 씻은 뒤엔",
+   "kind": "product",
+   "cont": false,
+   "seen": "깨끗한 빨대들이 컵에 꽂혀 있음",
+   "url": "https://www.youtube.com/watch?v=DQbJeNnu7MQ",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 9.2,
+   "src_crop": [
+    900,
+    100,
+    700,
+    912
+   ]
+  },
+  {
+   "i": 22,
+   "caption": "틈을 꾹꾹 눌러",
+   "kind": "product",
+   "cont": false,
+   "seen": "빨대 틈을 손가락으로 따라 눌러 닫음",
+   "url": "https://www.youtube.com/watch?v=G5oZTlpfPCA",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 50.3,
+   "src_crop": [
+    580,
+    40,
+    560,
+    730
+   ]
+  },
+  {
+   "i": 23,
+   "caption": "닫기만 하면,",
+   "cont": true
+  },
+  {
+   "i": 24,
+   "caption": "다시 멀쩡한",
+   "kind": "product",
+   "cont": false,
+   "seen": "물컵에 꽂힌 닫힌 빨대",
+   "url": "https://www.youtube.com/watch?v=kkBUsht0dfI",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 19.6,
+   "src_crop": [
+    650,
+    0,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 25,
+   "caption": "빨대가 된다고.",
+   "cont": true
+  },
+  {
+   "i": 26,
+   "caption": "근데 진짜 반전은,",
+   "kind": "product",
+   "cont": false,
+   "seen": "손에 든 민트 빨대 끝 단면",
+   "url": "https://www.youtube.com/watch?v=kkBUsht0dfI",
+   "src": "kkBUsht0dfI.mp4",
+   "ss": 15.1,
+   "src_crop": [
+    650,
+    0,
+    600,
+    782
+   ]
+  },
+  {
+   "i": 27,
+   "caption": "이런 빨대가",
+   "kind": "product",
+   "cont": false,
+   "seen": "여러 색 실리콘 빨대 세트(해외 판매 영상)",
+   "url": "https://www.youtube.com/watch?v=7xzvgnv2WjI",
+   "src": "7xzvgnv2WjI.mp4",
+   "ss": 8.0,
+   "src_crop": [
+    360,
+    0,
+    553,
+    720
+   ]
+  },
+  {
+   "i": 28,
+   "caption": "해외 것만 있는 게",
+   "cont": true
+  },
+  {
+   "i": 29,
+   "caption": "아니라",
+   "cont": true
+  },
+  {
+   "i": 30,
+   "caption": "국내에서 만든",
+   "kind": "product",
+   "cont": false,
+   "seen": "분홍 빨대와 전용 케이스(국내 제품 홍보 영상)",
+   "url": "https://www.youtube.com/watch?v=qVGVD9u0Fxc",
+   "src": "qVGVD9u0Fxc.mp4",
+   "ss": 306.0,
+   "src_crop": [
+    700,
+    60,
+    620,
+    808
+   ]
+  },
+  {
+   "i": 31,
+   "caption": "제품까지 나왔다는 거.",
+   "cont": true
+  },
+  {
+   "i": 32,
+   "caption": "덕분에 텀블러",
+   "kind": "product",
+   "cont": false,
+   "seen": "여성이 빨대 꽂힌 물병으로 마심",
+   "url": "https://www.youtube.com/watch?v=G5oZTlpfPCA",
+   "src": "G5oZTlpfPCA.mp4",
+   "ss": 62.4,
+   "src_crop": [
+    900,
+    120,
+    640,
+    834
+   ]
+  },
+  {
+   "i": 33,
+   "caption": "쓰는 사람들 사이에서",
+   "cont": true
+  },
+  {
+   "i": 34,
+   "caption": "빨대 솔질은",
+   "kind": "product",
+   "cont": false,
+   "seen": "싱크대에서 빨대를 문지름",
+   "url": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+   "src": "Q5VrYhJVmo0.mp4",
+   "ss": 12.0,
+   "src_crop": [
+    700,
+    0,
+    829,
+    1080
+   ]
+  },
+  {
+   "i": 35,
+   "caption": "이제 옛말이라고.",
+   "kind": "product",
+   "cont": false,
+   "seen": "여러 색 실리콘 빨대들",
+   "url": "https://www.youtube.com/watch?v=DQbJeNnu7MQ",
+   "src": "DQbJeNnu7MQ.mp4",
+   "ss": 49.2,
+   "src_crop": [
+    300,
+    0,
+    600,
+    782
+   ]
+  }
+ ]
+}

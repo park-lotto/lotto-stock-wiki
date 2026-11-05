@@ -1,0 +1,350 @@
+{
+ "id": "MMp1PIFYPCs",
+ "dur": 28.0,
+ "title_card": "한국에 오자 3배가 된 / 디저트의 정체",
+ "post_title": "한국에 오자 3배가 된 디저트의 정체",
+ "frame": {
+  "header": "0~240px 노랑(#FABE17 근처) 띠 — 왼쪽 회색 ≡ 메뉴, 가운데 검은 굵은 '앞북이' 로고 + 북 치는 마스코트(전 구간 고정, 업스케일로 약간 흐림)",
+  "layout_y": "1080x1920 · 머리띠 0~240 / 제목 줄 약 300~380(검정 고딕 1줄, 전 구간 고정) / 메타 줄 약 420~445 'ㅅㄱ | 18:13'(회색, 5편 모두 같은 글자) + 455 가로선 / 자막 칸 약 490~640(검정 고딕 가운데 정렬, 1~2줄 누적) / 그림 칸 약 672~1668, x 45~1035(정사각 990) / 아래 1668~1920 흰 여백(oTY 2.6~4.9초만 출처 표기)",
+  "ai_notice": null,
+  "hook_card": "0~1.6초: 머리띠 어둡게 + 검정 반투명 띠(약 240~600px)에 큰 2줄 제목(1줄 흰색 / 2줄 하늘색(시안), 검은 외곽선) + 아래 흰 제목 줄 + 영상 전체폭(약 800px~) — 이후 정규 틀로 전환"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.6,
+   "caption": "한국에 오자 3배가 된 / 디저트의 정체",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "훅: 숟가락으로 초코 무스 크게 떠냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.8,
+   "caption": "전통 초코 무스로 유명한",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리잔에 초코 무스 부어 소용돌이",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.8,
+   "t1": 3.6,
+   "caption": "프랑스 디저트 회사가",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코코아 가루 뿌린 무스 유리잔",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.6,
+   "t1": 4.7,
+   "caption": "한국 코스트코에 들어오며",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "Marie Morin Mousse au chocolat 상자, 어둠에서 밝아짐",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "어둠→밝기 페이드"
+  },
+  {
+   "t0": 4.7,
+   "t1": 5.5,
+   "caption": "2개짜리 무스를",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "손이 상자 밀어 치움",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.5,
+   "t1": 6.7,
+   "caption": "무려 6개로 불렸다는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리병 무스 여러 개, 숟가락으로 뜸",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.7,
+   "t1": 7.7,
+   "caption": "이게 말도 안 되는 게",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 무스 떠냄 근접",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.7,
+   "t1": 8.4,
+   "caption": "다크 초콜릿을",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "볼에 다크 초콜릿 칩 쏟아짐",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.5,
+   "caption": "다크 초콜릿을 / 42%나 때려 넣어",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "주걱으로 칩 섞기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 9.5,
+   "t1": 10.3,
+   "caption": "첫 입부터 찐한",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "안경 여성이 무스 한 입",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.3,
+   "t1": 11.3,
+   "caption": "첫 입부터 찐한 / 카카오 풍미가 터지고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성, 초콜릿 묻은 이로 활짝 웃음",
+   "infographic": null,
+   "emotion": {
+    "who": "실사 인물(해외 먹방)",
+    "feeling": "기쁨·만족(초콜릿 이 웃음)",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 11.3,
+   "t1": 12.1,
+   "caption": "거품 낸 계란 흰자와",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "볼에서 머랭 섞기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.1,
+   "t1": 12.9,
+   "caption": "거품 낸 계란 흰자와 / 솔티드 버터를 넣어",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "무스 반죽 주걱",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.9,
+   "t1": 14.3,
+   "caption": "꾸덕하면서도 부드럽게 녹는",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 숟가락 무스 먹음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 14.3,
+   "t1": 15.3,
+   "caption": "꾸덕하면서도 부드럽게 녹는 / 식감까지 완성했다는 거",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "눈 감고 음미",
+   "infographic": null,
+   "emotion": {
+    "who": "실사 인물",
+    "feeling": "음미",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.3,
+   "caption": "팜유로 맛만 흉내 낸",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "판초콜릿이 한 장씩 떨어져 쌓임",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "판이 허공에서 생겨 쌓이고 층마다 모양이 똑같음(추정, 근거 약함)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 16.3,
+   "t1": 17.7,
+   "caption": "팜유로 맛만 흉내 낸 / 짭 초콜릿이 가득한 한국 시장에",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "더미가 높아짐",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "같은 클립"
+   },
+   "effect": null
+  },
+  {
+   "t0": 17.7,
+   "t1": 19.2,
+   "caption": "생태계 교란종처럼 등장한 건데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "여성이 무스 병 은박 뚜껑 벗김",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.2,
+   "t1": 20.1,
+   "caption": "진짜는 여기서부터",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 은박 벗김",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 20.1,
+   "t1": 21.3,
+   "caption": "진한맛에 놀랄줄 알았더니",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "곱슬머리 빨간 립 여성이 무스 병 보이고 먹음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.3,
+   "t1": 22.2,
+   "caption": "정작 한국인들은",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 눈 감고 숟가락",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.2,
+   "t1": 23.3,
+   "caption": "묵직한 유리용기에 꽂혀",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "남자가 빈 유리병 들여다봄(얕은 초점)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.5,
+   "caption": "묵직한 유리용기에 꽂혀 / 온갖 걸 담기 시작했다는 거",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "빈 병에 패션프루트 숟가락으로 담기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.5,
+   "t1": 25.6,
+   "caption": "찐 초콜릿 실컷 먹으라고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "패션프루트를 무스 위에 얹음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.6,
+   "t1": 26.3,
+   "caption": "찐 초콜릿 실컷 먹으라고 / 개수를 늘렸더니",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.3,
+   "t1": 27.9,
+   "caption": "살림살이까지 늘어난 거 아니냐고ㅋㅋ",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "나무 탁자 위 병들(크럼블·크림) 위에서 내려봄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드 → 출신(프랑스 전통 무스) → 한국 코스트코 입점·2→6개 → '이게 말도 안 되는 게' 재료(다크 42%·흰자·솔티드버터) + 먹방 반응 → 대비(팜유 짭 초콜릿 시장, 생태계 교란종) → '진짜는 여기서부터' 반전(한국인은 유리병에 꽂힘) → 재활용 → 농담 마무리 '~거 아니냐고ㅋㅋ'",
+ "ratios": {
+  "infographic_sec": 0.0,
+  "character_sec": 0.0,
+  "ai_image_sec": 2.4,
+  "real_video_sec": 25.5,
+  "meme_sec": 0.0
+ },
+ "measure": "10fps 자막칸(y≈472~660)·그림칸(y≈680~1660) 픽셀차로 변화 시각 0.1초 측정, 자막 상태마다 시작·중간·끝 3프레임 판독(Claude 눈). 소리(TTS·효과음)는 이번 판독 범위 밖",
+ "source": "C:/숏템_칼카피/apbuki/mp4/MMp1PIFYPCs.mp4"
+}

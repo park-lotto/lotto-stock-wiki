@@ -1,0 +1,144 @@
+{
+ "music_bed": false,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.5,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "This is the product that almost got me thrown in jail.",
+   "kind": "speech"
+  },
+  {
+   "start": 2.5,
+   "end": 4.7,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Oh, you think this is a regular bottle of water?",
+   "kind": "speech"
+  },
+  {
+   "start": 4.7,
+   "end": 9.1,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "What about this little sticker here that says, \"Peel Corner\"?",
+   "kind": "speech"
+  },
+  {
+   "start": 9.1,
+   "end": 10.5,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Peel corner. Whoa!",
+   "kind": "speech"
+  },
+  {
+   "start": 10.5,
+   "end": 11.4,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Whoa!",
+   "kind": "reaction"
+  },
+  {
+   "start": 11.4,
+   "end": 12.7,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Whoa!",
+   "kind": "reaction"
+  },
+  {
+   "start": 12.7,
+   "end": 14.6,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Whoa!",
+   "kind": "reaction"
+  },
+  {
+   "start": 14.6,
+   "end": 22.0,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "You are witnessing history because this is the world's first wearable water.",
+   "kind": "speech"
+  },
+  {
+   "start": 22.0,
+   "end": 23.2,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Let's go!",
+   "kind": "speech"
+  },
+  {
+   "start": 23.2,
+   "end": 30.8,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "It stretches to fit any sized human being ever made.",
+   "kind": "speech"
+  },
+  {
+   "start": 30.8,
+   "end": 33.9,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "No, seriously, any size.",
+   "kind": "speech"
+  },
+  {
+   "start": 33.9,
+   "end": 42.5,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "\"I love drinking water, but I hate carrying it\" is something you'll never say because I got two gallons on me, hands-free.",
+   "kind": "speech"
+  },
+  {
+   "start": 42.5,
+   "end": 44.8,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Imagine the future.",
+   "kind": "speech"
+  },
+  {
+   "start": 44.8,
+   "end": 46.8,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "Whether you're walking your dog,",
+   "kind": "speech"
+  },
+  {
+   "start": 46.8,
+   "end": 48.5,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "working,",
+   "kind": "speech"
+  },
+  {
+   "start": 48.5,
+   "end": 50.8,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "or at a concert,",
+   "kind": "speech"
+  },
+  {
+   "start": 50.8,
+   "end": 55.2,
+   "label": "S1",
+   "speaker": "S1",
+   "text": "you will be hydrated!",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "_src": "frankeinvents_7635303314745232670.mp4",
+ "_offset": 0.0
+}

@@ -1,0 +1,467 @@
+[
+ {
+  "product": "인스탁스 미니 에보",
+  "fit": true,
+  "feats": [
+   {
+    "id": "f1",
+    "text": "사진 속 QR코드로 15초 영상과 당시 소리까지 스마트폰에서 재생하는 기능",
+    "type": "과한 기능",
+    "power": 9,
+    "cuts": [
+     "kTf3rBERh30-8",
+     "kTf3rBERh30-9",
+     "kTf3rBERh30-10",
+     "kTf3rBERh30-11",
+     "kTf3rBERh30-12",
+     "grab_instagram_451c06e5f1d7-6",
+     "grab_instagram_451c06e5f1d7-7",
+     "grab_tiktok_1190d863de3b-11"
+    ]
+   },
+   {
+    "id": "f2",
+    "text": "1930년부터 2020년까지 다이얼 조작으로 시대별 특유의 노이즈와 소리 효과까지 구현하는 필터",
+    "type": "과한 기능",
+    "power": 8,
+    "cuts": [
+     "kTf3rBERh30-2",
+     "kTf3rBERh30-3",
+     "kTf3rBERh30-4",
+     "kTf3rBERh30-5",
+     "kTf3rBERh30-6",
+     "grab_instagram_451c06e5f1d7-13",
+     "grab_instagram_451c06e5f1d7-14",
+     "grab_instagram_451c06e5f1d7-15",
+     "lens_youtube_eyyd0g-3"
+    ]
+   },
+   {
+    "id": "f3",
+    "text": "후면 LCD 화면으로 인화 전에 구도와 결과물을 미리 확인하여 필터 및 컷 실패 방지",
+    "type": "불편 해결",
+    "power": 7,
+    "cuts": [
+     "grab_youtube_b4a089a104f7-2",
+     "grab_youtube_b4a089a104f7-8",
+     "grab_tiktok_1190d863de3b-7",
+     "grab_tiktok_1190d863de3b-25",
+     "lens_youtube_eyyd0g-8"
+    ]
+   },
+   {
+    "id": "f4",
+    "text": "1960년대 빈티지 시네마 카메라 느낌의 디자인으로 휴대용 패션 아이템 역할 수행",
+    "type": "뜻밖의 쓰임",
+    "power": 7,
+    "cuts": [
+     "kTf3rBERh30-1",
+     "grab_youtube_b4a089a104f7-7",
+     "lens_youtube_eyyd0g-0",
+     "lens_youtube_eyyd0g-5"
+    ]
+   },
+   {
+    "id": "f5",
+    "text": "촬영 사진을 카메라에서 즉시 필름으로 인화 출력",
+    "type": "기본",
+    "power": 6,
+    "cuts": [
+     "grab_instagram_451c06e5f1d7-4",
+     "grab_instagram_451c06e5f1d7-20",
+     "grab_tiktok_1190d863de3b-9",
+     "grab_tiktok_1190d863de3b-10",
+     "lens_youtube_eyyd0g-4"
+    ]
+   },
+   {
+    "id": "f6",
+    "text": "전용 스마트폰 앱과 연동하여 촬영한 인화 사진을 디지털 파일로 저장 및 공유",
+    "type": "기본",
+    "power": 6,
+    "cuts": [
+     "grab_youtube_b4a089a104f7-12",
+     "grab_tiktok_1190d863de3b-12",
+     "grab_tiktok_1190d863de3b-26",
+     "grab_tiktok_1190d863de3b-27"
+    ]
+   }
+  ],
+  "plan": [
+   [
+    "설정",
+    "",
+    "윗선이 정한 방향(원가 무시하고 최고로 / 원래는 평범하게 가려 했다 중 하나)"
+   ],
+   [
+    "폭주1",
+    "f1",
+    "실무자가 과하게 넣어버림"
+   ],
+   [
+    "폭주2",
+    "f2",
+    "하나 더 넣어버림"
+   ],
+   [
+    "대사",
+    "f4",
+    "윗선의 걱정 대사 → 실무자의 대답 대사(대답에 이 기능)"
+   ],
+   [
+    "반전",
+    "f3",
+    "근데 진짜 소름 돋는 건 — 가장 센 기능"
+   ]
+  ],
+  "script": {
+   "title": "어느 카메라 제조사 개발팀이 사장님 뒷목 잡게 만든 이유",
+   "lines": [
+    {
+     "beat": "설정",
+     "text": "한 카메라 제조사 사장님이 원가 무시하고 최고의 카메라를 만들어보라고 지시했는데",
+     "feat": ""
+    },
+    {
+     "beat": "폭주1",
+     "text": "개발팀이 미쳐서 사진 속 QR코드로 15초 영상과 당시 소리까지 스마트폰에서 재생하는 기능을 박아버림",
+     "feat": "f1"
+    },
+    {
+     "beat": "폭주2",
+     "text": "거기에 1930년부터 2020년까지 다이얼 조작으로",
+     "feat": ""
+    },
+    {
+     "beat": "폭주2",
+     "text": "시대별 특유의 노이즈와 소리 효과까지 구현하는 필터를 얹어버린 거임",
+     "feat": "f2"
+    },
+    {
+     "beat": "대사",
+     "text": "사장님이 \"아니 다 집어넣으면 가격은 어떡하냐!\" 라고 당황해하자",
+     "feat": ""
+    },
+    {
+     "beat": "대사",
+     "text": "\"1960년대 빈티지 시네마 카메라 느낌의 디자인으로 휴대용 패션 아이템 역할 수행을 하니까 괜찮습니다\" 라며 받아침",
+     "feat": "f4"
+    },
+    {
+     "beat": "반전",
+     "text": "근데 진짜 소름 돋는 건",
+     "feat": ""
+    },
+    {
+     "beat": "반전",
+     "text": "후면 LCD 화면으로 인화 전에 구도와 결과물을 미리 확인하여 필터 및 컷 실패 방지를 해버린다는 거",
+     "feat": "f3"
+    }
+   ]
+  },
+  "problems": [],
+  "attempts": 1,
+  "copy": 0.02
+ },
+ {
+  "product": "초음파 칼",
+  "fit": true,
+  "feats": [
+   {
+    "id": "f1",
+    "text": "초당 3만~5만 번 작동하는 고성능 초음파 진동 기능",
+    "type": "과한 기능",
+    "power": 9,
+    "cuts": [
+     "grab_youtube_a32bef21180a-1",
+     "grab_youtube_ba303dcb804e-6",
+     "grab_youtube_9251ad141110-9",
+     "grab_youtube_40666e45eb92-5"
+    ]
+   },
+   {
+    "id": "f2",
+    "text": "벽면 부착 및 자석 거치가 가능한 무선 충전 패드",
+    "type": "과한 기능",
+    "power": 7,
+    "cuts": [
+     "grab_youtube_a32bef21180a-12",
+     "grab_youtube_a32bef21180a-13",
+     "grab_youtube_a32bef21180a-14",
+     "grab_youtube_40666e45eb92-4"
+    ]
+   },
+   {
+    "id": "f3",
+    "text": "무른 토마토나 빵, 포도를 짓뭉개짐 없이 매끄럽게 절단",
+    "type": "불편 해결",
+    "power": 8,
+    "cuts": [
+     "grab_youtube_a32bef21180a-5",
+     "grab_youtube_ba303dcb804e-1",
+     "grab_youtube_40666e45eb92-15",
+     "grab_youtube_40666e45eb92-16",
+     "grab_youtube_3bbd1256b35c-1"
+    ]
+   },
+   {
+    "id": "f4",
+    "text": "당근, 수박 등 단단한 식재료를 적은 힘으로 손쉽게 절단",
+    "type": "불편 해결",
+    "power": 7,
+    "cuts": [
+     "grab_youtube_a32bef21180a-4",
+     "grab_youtube_a32bef21180a-6",
+     "grab_youtube_ba303dcb804e-3",
+     "grab_youtube_9251ad141110-10"
+    ]
+   },
+   {
+    "id": "f5",
+    "text": "종이나 두꺼운 플라스틱 판까지 매끄럽게 자르는 정밀 절삭",
+    "type": "뜻밖의 쓰임",
+    "power": 8,
+    "cuts": [
+     "grab_youtube_a32bef21180a-3",
+     "grab_youtube_ba303dcb804e-5",
+     "grab_youtube_ba303dcb804e-8",
+     "grab_youtube_ba303dcb804e-9"
+    ]
+   },
+   {
+    "id": "f6",
+    "text": "일반 칼처럼 숫돌 연마 및 흐르는 물 세척 가능",
+    "type": "기본",
+    "power": 5,
+    "cuts": [
+     "grab_youtube_a32bef21180a-9",
+     "grab_youtube_a32bef21180a-10",
+     "grab_youtube_a32bef21180a-11"
+    ]
+   }
+  ],
+  "plan": [
+   [
+    "설정",
+    "",
+    "윗선이 정한 방향(원가 무시하고 최고로 / 원래는 평범하게 가려 했다 중 하나)"
+   ],
+   [
+    "폭주1",
+    "f1",
+    "실무자가 과하게 넣어버림"
+   ],
+   [
+    "폭주2",
+    "f2",
+    "하나 더 넣어버림"
+   ],
+   [
+    "대사",
+    "f5",
+    "윗선의 걱정 대사 → 실무자의 대답 대사(대답에 이 기능)"
+   ],
+   [
+    "반전",
+    "f3",
+    "근데 진짜 소름 돋는 건 — 가장 센 기능"
+   ]
+  ],
+  "script": {
+   "title": "주방용품 제조사 사장님이 개발팀 보고 당황한 이유",
+   "lines": [
+    {
+     "beat": "설정",
+     "text": "최근 한 주방용품 제조사에서 평범한 칼이나 만들자고 했더니",
+     "feat": ""
+    },
+    {
+     "beat": "설정",
+     "text": "개발팀 엔지니어가 과하게 집착해버린 건데",
+     "feat": ""
+    },
+    {
+     "beat": "폭주1",
+     "text": "초당 3만~5만 번 작동하는 고성능 초음파 진동 기능을 박아버렸다는 거",
+     "feat": "f1"
+    },
+    {
+     "beat": "폭주2",
+     "text": "거기에 벽면 부착 및 자석 거치가 가능한 무선 충전 패드까지 붙여버림",
+     "feat": "f2"
+    },
+    {
+     "beat": "대사",
+     "text": "사장님이 \"아니 이런 기능까지 넣으면 단가는 어쩌려고?\" 라며 걱정하자",
+     "feat": ""
+    },
+    {
+     "beat": "대사",
+     "text": "\"종이나 두꺼운 플라스틱 판까지 매끄럽게 자르는 정밀 절삭도 됩니다\" 라며 괴물 칼을 만듦",
+     "feat": "f5"
+    },
+    {
+     "beat": "반전",
+     "text": "근데 진짜 소름 돋는 건",
+     "feat": ""
+    },
+    {
+     "beat": "반전",
+     "text": "무른 토마토나 빵, 포도를 짓뭉개짐 없이 매끄럽게 절단해 버린다고",
+     "feat": "f3"
+    }
+   ]
+  },
+  "problems": [],
+  "attempts": 1,
+  "copy": 0.02
+ },
+ {
+  "product": "휴대용 트리플 모니터",
+  "fit": true,
+  "feats": [
+   {
+    "id": "f1",
+    "text": "노트북 양옆으로 펼쳐지는 슬라이딩 방식의 트리플 모니터 확장 구조",
+    "type": "과한 기능",
+    "power": 9,
+    "cuts": [
+     "grab_tiktok_2b12bdf8725a-1",
+     "grab_instagram_ac5f8994e143-1",
+     "grab_instagram_b2a9ccf03028-1",
+     "grab_instagram_d81d6303f55e-1"
+    ]
+   },
+   {
+    "id": "f2",
+    "text": "자석 패드로 노트북 뒷면에 간편하고 튼튼하게 부착하는 고정 방식",
+    "type": "불편 해결",
+    "power": 7,
+    "cuts": [
+     "grab_tiktok_2b12bdf8725a-0",
+     "grab_tiktok_2b12bdf8725a-11",
+     "grab_youtube_3fcff98658bc-2"
+    ]
+   },
+   {
+    "id": "f3",
+    "text": "케이블 하나만 꽂으면 전원과 디스플레이 출력이 동시 해결되는 단일 연결",
+    "type": "불편 해결",
+    "power": 8,
+    "cuts": [
+     "grab_instagram_d5f8616f882f-4",
+     "grab_instagram_a72c35f1a2f8-8",
+     "grab_instagram_d81d6303f55e-3",
+     "grab_instagram_1827efd71968-0"
+    ]
+   },
+   {
+    "id": "f4",
+    "text": "360도 회전 지원으로 세로 모드(피벗) 전환을 통한 문서 작업 최적화",
+    "type": "과한 기능",
+    "power": 8,
+    "cuts": [
+     "grab_instagram_a72c35f1a2f8-10",
+     "grab_instagram_a72c35f1a2f8-16",
+     "grab_instagram_a72c35f1a2f8-17"
+    ]
+   },
+   {
+    "id": "f5",
+    "text": "노트북 뒤에서 화면 각도를 유지하며 지지해 주는 내장 킥스탠드",
+    "type": "기본",
+    "power": 6,
+    "cuts": [
+     "grab_tiktok_2b12bdf8725a-12",
+     "grab_instagram_a72c35f1a2f8-4"
+    ]
+   },
+   {
+    "id": "f6",
+    "text": "측면 버튼 및 하단 패널을 이용한 개별 화면 밝기 및 메뉴 조절",
+    "type": "기본",
+    "power": 5,
+    "cuts": [
+     "grab_tiktok_2b12bdf8725a-9",
+     "grab_tiktok_2b12bdf8725a-14",
+     "grab_instagram_a72c35f1a2f8-9"
+    ]
+   }
+  ],
+  "plan": [
+   [
+    "설정",
+    "",
+    "윗선이 정한 방향(원가 무시하고 최고로 / 원래는 평범하게 가려 했다 중 하나)"
+   ],
+   [
+    "폭주1",
+    "f1",
+    "실무자가 과하게 넣어버림"
+   ],
+   [
+    "폭주2",
+    "f4",
+    "하나 더 넣어버림"
+   ],
+   [
+    "대사",
+    "f2",
+    "윗선의 걱정 대사 → 실무자의 대답 대사(대답에 이 기능)"
+   ],
+   [
+    "반전",
+    "f3",
+    "근데 진짜 소름 돋는 건 — 가장 센 기능"
+   ]
+  ],
+  "script": {
+   "title": "노트북 모니터 만들라니까 괴물을 만든 개발팀",
+   "lines": [
+    {
+     "beat": "설정",
+     "text": "한 제조사 사장님이 이번엔 원래 평범하게 가려 했는데",
+     "feat": ""
+    },
+    {
+     "beat": "폭주1",
+     "text": "개발팀이 노트북 양옆으로 펼쳐지는 슬라이딩 방식의 트리플 모니터 확장 구조를 박아버린 거임",
+     "feat": "f1"
+    },
+    {
+     "beat": "폭주2",
+     "text": "거기에 360도 회전 지원으로 세로 모드 피벗 전환을 통한 문서 작업 최적화까지 넣어버림",
+     "feat": "f4"
+    },
+    {
+     "beat": "대사",
+     "text": "당황한 사장님이 \"아니 무게 때문에 화면 떨어지면 어떡하냐고!\" 라며 쏘아붙이자",
+     "feat": ""
+    },
+    {
+     "beat": "대사",
+     "text": "\"자석 패드로 노트북 뒷면에 간편하고 튼튼하게 부착하는 고정 방식인데요?\"",
+     "feat": "f2"
+    },
+    {
+     "beat": "대사",
+     "text": "라며 엔지니어가 미친 대답을 던져버렸다는 거",
+     "feat": ""
+    },
+    {
+     "beat": "반전",
+     "text": "근데 진짜 소름 돋는 반전은",
+     "feat": ""
+    },
+    {
+     "beat": "반전",
+     "text": "케이블 하나만 꽂으면 전원과 디스플레이 출력이 동시 해결되는 단일 연결이라 세팅이 끝난다고",
+     "feat": "f3"
+    }
+   ]
+  },
+  "problems": [],
+  "attempts": 1,
+  "copy": 0.03
+ }
+]

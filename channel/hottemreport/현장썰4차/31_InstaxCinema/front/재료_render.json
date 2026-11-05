@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/31_InstaxCinema/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "hc.mp4",
+   "ss": 102.85,
+   "cuts": [
+    {
+     "src": "hc.mp4",
+     "ss": 102.85,
+     "dur": 4.571,
+     "block": "N1",
+     "src_crop": [
+      520,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "hc.mp4",
+     "ss": 14.07,
+     "dur": 6.93,
+     "block": "O1",
+     "src_crop": [
+      560,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "sf.mp4",
+     "ss": 7.5,
+     "dur": 4.092,
+     "block": "N2",
+     "src_crop": [
+      530,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "hc.mp4",
+     "ss": 62.22,
+     "dur": 3.68,
+     "block": "O2",
+     "src_crop": [
+      480,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "hc",
+   "ss": 102.85,
+   "vs": 0.0,
+   "src_crop": [
+    520,
+    0,
+    857,
+    1080
+   ],
+   "why": "hc 102.78~111.29 한 샷 — 두 손으로 쥔 에보 시네마 앞면(다이얼·단추), 얼굴 없음",
+   "ve": 4.571,
+   "src_end": 107.421
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "hc",
+   "ss": 14.07,
+   "vs": 4.571,
+   "src_crop": [
+    560,
+    0,
+    857,
+    1080
+   ],
+   "why": "주머니에서 꺼내 쥐며 'wow, what a wild looking camera … can't believe this exists'(9.10~32.38 한 샷)",
+   "ve": 11.501,
+   "src_end": 21.0
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "sf",
+   "ss": 7.5,
+   "vs": 11.501,
+   "src_crop": [
+    530,
+    0,
+    857,
+    1080
+   ],
+   "why": "sf 카메라를 세로로 쥔 손(한 샷 안)",
+   "ve": 15.593,
+   "src_end": 11.592
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "hc",
+   "ss": 62.22,
+   "vs": 15.593,
+   "src_crop": [
+    480,
+    0,
+    857,
+    1080
+   ],
+   "why": "손잡이 낀 카메라를 쥐며 'Wow … feels really good in the hands'(35.38~92.73 한 샷)",
+   "ve": 19.273,
+   "src_end": 65.9
+  }
+ ]
+}

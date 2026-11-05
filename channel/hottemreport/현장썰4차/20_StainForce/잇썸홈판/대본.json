@@ -1,0 +1,206 @@
+{
+ "_note": "숏템리폿 4차 20 스테인포스 하이브리드 — 앞 = 숏템리폿 현장썰 Alder & Jade 원음형 박창수판(20_StainForce/front), 뒤 = 쿠팡 9357518116 '샤크 스테인포스 얼룩 제거 핸디 청소기 패브릭 클리너 HX100JNC'(같은 모델 9358856836 HX100J 도 있음)(같은 제품 — 벤치 14초 'Shark STAINFORCE'·흰/회색 본체·받침대). 뒤 화면 = 샤크 공식 사용법 영상 + 리뷰어 영상 다른 장면 + 쿠팡 대표 사진(move). 금액·효능은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "샤크 스테인포스 얼룩 제거 핸디 청소기 HX100JNC(쿠팡 9357518116) — 같은 모델 9358856836(HX100J)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/20_StainForce/front/render/final.mp4",
+  "cut": 12.85,
+  "why": "원음 O2 'No problem' 끝(앞 12.523) 뒤 0.33초 — 같은 한 샷(aj 125.52~128.55) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-27 20:5x, '샤크 스테인포스'·'샤크 얼룩 제거 청소기'): 9357518116 '샤크 스테인포스 얼룩 제거 핸디 청소기 패브릭 클리너 HX100JNC' · 9358856836 'SHARK 샤크 스테인포스 무선 얼룩제거 청소기 … HX100J' · 9337930342(HX100EUT) — 20_StainForce/coupang.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_9357518116.jpg): 흰·회색 손 청소기 + 받침대 + 'STAINFORCE' 세제 통 = 벤치 14·20~29초 기계·받침대와 같은 모양",
+  "o_spray": "샤크 공식 uecQ3ylcVos 27.36~37.04 'Spray the stain with Shark cleaning solution. Wait for 1 to 2 minutes then spray again … Scrub again to activate the solution'",
+  "o_pull": "같은 영상 41.52~52.04 'Tilt the unit upwards and pull back slowly to extract … until you no longer see the stain or liquid being sucked through the clear window'",
+  "o_crevice": "같은 영상 91.14~ 'For stains in tight or narrow areas use the crevice tool for precise cleaning … Perfect for edges seams and corners'"
+ },
+ "흥미이음": {
+  "원본흥미": "카펫에 묻은 얼룩을 문지르고 빨아들이니 'wow, it's almost already gone'·'fully removed'",
+  "뒤흥미": "쿠팡의 바로 그 샤크 스테인포스 — 같은 기계로 얼룩을 뿌리고 문지르고 빨아들이는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: 벤치 'Shark STAINFORCE' = 쿠팡 상품명 '샤크 스테인포스 HX100JNC' + 대표 사진 본체·받침대 대조. 앞 원음 리뷰어 기계도 StainForce(제목·화면 'STAINFORCE' 글자, 색만 청록)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/20_StainForce/front/frame_render.json",
+  "title": "강아지 실수 얼룩\n쓱 빨아먹는 청소기"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "칙"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "밝은 베이지 카펫 위 — 노랑 대신 하늘(흰 바탕 위 노란 글 금지)"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "틈새"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "밝은 소파 위 — 노랑 대신 하늘"
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리예요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 본체·밝은 배경 위 — 노랑 대신 하늘"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 샤크 스테인포스가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "그 샤크 스테인포스가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 전용 세제 칙 뿌리고 조금 기다렸다가 문지르면 된대요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "전용 세제 칙 뿌리고",
+    "조금 기다렸다가",
+    "문지르면 된대요"
+   ],
+   "emph": [
+    "칙"
+   ],
+   "facts": [
+    "o_spray"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 기계를 살짝 들고 천천히 당기면 얼룩물이 쭉 빨려 올라와요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "기계를 살짝 들고",
+    "천천히 당기면",
+    "얼룩물이 쭉 빨려 올라와요"
+   ],
+   "emph": [
+    "쭉"
+   ],
+   "facts": [
+    "o_pull"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 소파 틈 같은 좁은 곳은, 틈새 도구로 따로 닦을 수 있대요.",
+   "caps": [
+    "심지어 소파 틈 같은",
+    "좁은 곳은",
+    "틈새 도구로",
+    "따로 닦을 수 있대요"
+   ],
+   "emph": [
+    "틈새"
+   ],
+   "facts": [
+    "o_crevice"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "강아지 실수한 러그에 써 봤더니, 다들 그 청소기 뭐냐고 난리예요.",
+   "caps": [
+    "강아지 실수한 러그에",
+    "써 봤더니",
+    "다들 그 청소기 뭐냐고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}

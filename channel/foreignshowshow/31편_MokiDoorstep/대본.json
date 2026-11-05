@@ -1,0 +1,405 @@
+{
+ "topic": "Moki Doorstep(모키 도어스텝) — 차 문 고리(스트라이커)에 걸어 밟고 올라서는 지붕용 보조 발판. 키 작은 아내가 지붕에 카약을 못 올려서 → 문 고리에 1초 만에 거는 발판 → 소방관 남편이 구조 현장의 문 고리에서 떠올림 → 회사 통째 인수 제안",
+ "product": "Moki Doorstep(차량 문 고리 걸이 발판)",
+ "bench": {
+  "id": "JPsGZJ4nwz8",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "방송 나와서 바로 40억을?! (화면 제목 같음)",
+  "dur": 53.8,
+  "views": 303000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "1초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '순식간에 백만장자'·'40억'·'월 1억'(금액) → 쓰지 않음",
+  "벤치 끝 '방송 후 거래는 불발됐지만 대형 회사가 인수'(원본 결말과 다름 — 원본 424~445초 방송 중 회사 통째 인수 성사) → 쓰지 않음",
+  "원본 '2,200파운드를 버티는 걸쇠'(안전성 주장) → 쓰지 않음",
+  "벤치 '가격이 비싸고 짝퉁이 판칠 것'(가격 얘기) → 쓰지 않음"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이거…",
+     "진짜 기막힌 아이디어다!"
+    ],
+    "cap_at": [
+     126.17,
+     126.65
+    ],
+    "span": [
+     126.17,
+     127.93
+    ],
+    "orig_en": "This is... This is a great idea.",
+    "text": "이거… 진짜 기막힌 아이디어다!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 받침대 위 발판) — 벤치 0~1.0 감탄하는 투자자(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "이거…",
+      "span": "이거…",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 기막힌 아이디어다!",
+      "span": "진짜 기막힌 아이디어다!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "키 작은 아내가",
+     "차 지붕에 카약을",
+     "혼자 못 올려서",
+     "주말마다 애를 먹었다는데"
+    ],
+    "text": "키 작은 아내가 차 지붕에 카약을 혼자 못 올려서 주말마다 애를 먹었다는데",
+    "tts": "키 작은 아내가, 차 지붕에 카약을 혼자 못 올려서, 주말마다 애를 먹었다는데",
+    "fx": "빨강 번쩍 — 벤치 0.5",
+    "emph": [
+     {
+      "cap": "키 작은 아내가",
+      "span": "아내가",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차 지붕에 카약을",
+      "span": "지붕에 카약을",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "혼자 못 올려서",
+      "span": "올려서",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "주말마다 애를 먹었다는데",
+      "span": "애를 먹었다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "그래서 만든 게",
+     "차 문 고리에 거는 발판인데",
+     "거는 데 딱 1초면 된다는데"
+    ],
+    "text": "그래서 만든 게 차 문 고리에 거는 발판인데, 거는 데 딱 1초면 된다는데",
+    "tts": "그래서 만든 게, 차 문 고리에 거는 발판인데, 거는 데 딱 일 초면 된다는데",
+    "fx": "초록 번쩍 — 벤치 6.4",
+    "emph": [
+     {
+      "cap": "그래서 만든 게",
+      "span": "그래서",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "차 문 고리에 거는 발판인데",
+      "span": "거는 발판인데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "거는 데 딱 1초면 된다는데",
+      "span": "1초면",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(시연)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "올라가는 것도",
+     "이렇게 금방이에요!"
+    ],
+    "cap_at": [
+     85.81,
+     86.53
+    ],
+    "span": [
+     85.81,
+     87.29
+    ],
+    "orig_en": "And I'm up just as quick.",
+    "text": "올라가는 것도 이렇게 금방이에요!",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "올라가는 것도",
+      "span": "올라가는 것도",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이렇게 금방이에요!",
+      "span": "이렇게 금방이에요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "계기(잉?)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "알고 보니 남편이 소방관이라",
+     "사고 난 차 문을 뜯을 때마다",
+     "보던 그 고리에서 떠올렸다는데"
+    ],
+    "text": "알고 보니 남편이 소방관이라, 사고 난 차 문을 뜯을 때마다 보던 그 고리에서 떠올렸다는데",
+    "tts": "알고 보니 남편이 소방관이라, 사고 난 차 문을 뜯을 때마다, 보던 그 고리에서 떠올렸다는데",
+    "emph": [
+     {
+      "cap": "알고 보니 남편이 소방관이라",
+      "span": "남편이 소방관이라",
+      "color": "노랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "사고 난 차 문을 뜯을 때마다",
+      "span": "문을 뜯을 때마다",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보던 그 고리에서 떠올렸다는데",
+      "span": "고리에서 떠올렸다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "반응",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "와…",
+     "이런 걸 생각해 내다니",
+     "똑똑하네!"
+    ],
+    "cap_at": [
+     87.49,
+     88.01,
+     89.41
+    ],
+    "span": [
+     87.49,
+     90.05
+    ],
+    "orig_en": "Wow. Thinks of these things. That's smart.",
+    "text": "와… 이런 걸 생각해 내다니 똑똑하네!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "와…",
+      "span": "와…",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이런 걸 생각해 내다니",
+      "span": "생각해 내다니",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑똑하네!",
+      "span": "똑똑하네!",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "결과",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "결국",
+     "회사를 통째로 사겠다는",
+     "샤크까지 나왔다는데"
+    ],
+    "text": "결국 회사를 통째로 사겠다는 샤크까지 나왔다는데",
+    "tts": "결국, 회사를 통째로 사겠다는 샤크까지 나왔다는데",
+    "emph": [
+     {
+      "cap": "결국",
+      "span": "결국",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "회사를 통째로 사겠다는",
+      "span": "통째로 사겠다는",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크까지 나왔다는데",
+      "span": "나왔다는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "지붕이 안 닿는 아내",
+  "line2": "남편이 만든 발판?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '방송 나와서 / 바로 40억을?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 126.17~127.93 'This is. This is a great idea.'(투자자 원음 — 이름은 자막에 안 씀) · 화면 = 0~0.9초 받침대 위 발판(71.2초, cover) → 127.07~ 투자자 손에 든 발판 샘플(얼굴 없음)",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=126s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 26.44~58.60 'Sharks, at a mere five feet tall … We are an outdoor loving couple, and most weekends start off with us blowing up a kayak … Alyssa has never been able to easily secure the gear on the roof of a car.'",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=26s",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 65.36~87.29 'we've invented the Moki doorstep … This hooks on in one second to the striker of the vehicle, which is standard on most cars. And I'm up just as quick.'",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=79s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 148.47~170.07 'So I'm an emergency room nurse. Zach's a firefighter. … being a firefighter, we use the jaws of life. And we always try to open the door this way. And that bolt right there … So using that knowledge, I said, hey, we can create a device to step on it' — 강도(2,200파운드)는 안전성 주장이라 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=148s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 87.49~90.05 'Wow. Thinks of these things. That's smart.'(투자자 원음 — 화면은 사람 없는 손·발판 근접 cover)",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=87s",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 424.40~445.32 'I will offer you right now $3 million for the entire company.' … 'Let's do it.' — 금액은 대본에 안 씀(앞 칼카피 N4 는 하이브리드에서 잘림)",
+   "url": "https://www.youtube.com/watch?v=cMYX4FfMT1A&t=424s",
+   "kind": "방송 원음"
+  }
+ }
+}

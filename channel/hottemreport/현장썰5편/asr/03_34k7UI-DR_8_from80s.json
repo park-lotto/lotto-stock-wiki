@@ -1,0 +1,167 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.2,
+   "speaker": "S1",
+   "text": "Dorothy in The Wizard of Oz.",
+   "kind": "speech"
+  },
+  {
+   "start": 3.02,
+   "end": 5.25,
+   "speaker": "S1",
+   "text": "Okay, this is it. Ready?",
+   "kind": "speech"
+  },
+  {
+   "start": 8.0,
+   "end": 9.17,
+   "speaker": "S1",
+   "text": "Nothing.",
+   "kind": "speech"
+  },
+  {
+   "start": 9.17,
+   "end": 12.18,
+   "speaker": "S1",
+   "text": "Oh my god, they're moving.",
+   "kind": "speech"
+  },
+  {
+   "start": 12.18,
+   "end": 15.35,
+   "speaker": "S1",
+   "text": "It feels like awkward. It feels like you're walking on ice.",
+   "kind": "speech"
+  },
+  {
+   "start": 15.35,
+   "end": 18.25,
+   "speaker": "S1",
+   "text": "Like really slippery ice.",
+   "kind": "speech"
+  },
+  {
+   "start": 18.25,
+   "end": 22.0,
+   "speaker": "S1",
+   "text": "But I also do not think that this is the best road to try it on.",
+   "kind": "speech"
+  },
+  {
+   "start": 30.2,
+   "end": 35.84,
+   "speaker": "S1",
+   "text": "It feels like you're riding roller skates on ice, and like someone's pushing you.",
+   "kind": "speech"
+  },
+  {
+   "start": 35.84,
+   "end": 36.65,
+   "speaker": "S2",
+   "text": "Yeah.",
+   "kind": "speech"
+  },
+  {
+   "start": 46.85,
+   "end": 48.74,
+   "speaker": "S1",
+   "text": "The stopping's a little awkward. You want to try them?",
+   "kind": "speech"
+  },
+  {
+   "start": 48.74,
+   "end": 49.32,
+   "speaker": "S2",
+   "text": "Yeah.",
+   "kind": "speech"
+  },
+  {
+   "start": 49.32,
+   "end": 50.8,
+   "speaker": "S1",
+   "text": "All right, let's see it.",
+   "kind": "speech"
+  },
+  {
+   "start": 50.8,
+   "end": 52.3,
+   "speaker": "S1",
+   "text": "(giggle)",
+   "kind": "reaction"
+  },
+  {
+   "start": 52.3,
+   "end": 55.22,
+   "speaker": "S1",
+   "text": "Come on. Come to... Yeah, there you go.",
+   "kind": "speech"
+  },
+  {
+   "start": 55.85,
+   "end": 57.17,
+   "speaker": "S1",
+   "text": "All right, talk me through it.",
+   "kind": "speech"
+  },
+  {
+   "start": 57.17,
+   "end": 100.1,
+   "speaker": "S2",
+   "text": "All right, I'm wa- woah, wait.",
+   "kind": "speech"
+  },
+  {
+   "start": 100.1,
+   "end": 101.27,
+   "speaker": "S1",
+   "text": "Did it take off?",
+   "kind": "speech"
+  },
+  {
+   "start": 101.27,
+   "end": 102.6,
+   "speaker": "S2",
+   "text": "Yeah, now they're going.",
+   "kind": "speech"
+  },
+  {
+   "start": 102.6,
+   "end": 103.74,
+   "speaker": "S2",
+   "text": "Woah.",
+   "kind": "speech"
+  },
+  {
+   "start": 103.74,
+   "end": 106.32,
+   "speaker": "S1",
+   "text": "Just keep, like don't walk faster. Yeah, don't walk faster.",
+   "kind": "speech"
+  },
+  {
+   "start": 106.32,
+   "end": 108.57,
+   "speaker": "S2",
+   "text": "Yeah, it makes you want to go.",
+   "kind": "speech"
+  },
+  {
+   "start": 108.57,
+   "end": 112.55,
+   "speaker": "S2",
+   "text": "They're weird to get used to. Like it takes a second, but it's fun.",
+   "kind": "speech"
+  },
+  {
+   "start": 112.55,
+   "end": 121.0,
+   "speaker": "S1",
+   "text": "So, one of the claims, one of the claims made by these things is that when you walk, is that you walk 250% faster",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}

@@ -1,0 +1,159 @@
+{
+ "topic": "레고 × 이름 뜻 = 덴마크어 LEG GODT(잘 놀아라) — 1932년 불황에 목수 올레 키르크 크리스티안센이 사다리·다리미판·나무 장난감을 만들다 이름을 지음, 라틴어 '모은다'는 나중에 안 우연(레고 공식 연혁·90년 이름 기사) · 뒤 체험: 쿠팡 레고 클래식 라지 조립 박스 10698(7708749458, 같은 브랜드 제품)",
+ "brand": "LEGO",
+ "scene_query": "LEGO official commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "nm",
+  "why": "누구나 아는 블록 레고 — 이름이 덴마크 말 '잘 놀아라'의 줄임말이고, 처음엔 사다리·다리미판 만들던 목수 가게였다(회사 공식)"
+ },
+ "hook": [
+  "레고라는 이름,",
+  "무슨 뜻인지 알아?"
+ ],
+ "post": "레고라는 이름은 덴마크 말 '잘 놀아라'에서 왔다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "nm": {
+   "text": "레고 공식 90년 이름 기사: 'combining the two Danish words - \"LEG GODT\", meaning \"Play Well\"' · 레고 공식 연혁: 'The name LEGO is an abbreviation of the two Danish words leg godt, meaning play well'",
+   "url": "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+  },
+  "cp": {
+   "text": "레고 공식 연혁(The beginning): 'The global economic crisis forces carpenter Ole Kirk Kristiansen to produce new easy saleable products.' · 'The LEGO Group was founded in 1932 by Ole Kirk Kristiansen'",
+   "url": "https://www.lego.com/en-us/history/articles/b-the-beginning-of-the-lego-group"
+  },
+  "wd": {
+   "text": "레고 공식 연혁(The beginning): 'Ole Kirk Kristiansen also produces ladders, ironing boards, Christmas tree stands and other articles for everyday use.' · 'starts with wooden toys, such as cars, airplanes and yoyo's'",
+   "url": "https://www.lego.com/en-us/history/articles/b-the-beginning-of-the-lego-group"
+  },
+  "la": {
+   "text": "레고 공식 90년 이름 기사: 'Ole later discovered that \"LEGO\" in Latin can be translated to \"I gather\" or \"I collect\".' · 'when the name was created, LEGO toys weren't construction toys, making the Latin connection purely coincidental'",
+   "url": "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+  },
+  "rx": {
+   "text": "사회 반응(§0-1 14) · 같은 소재 영상 인기 댓글 '세계 최고의 지뢰'(103)·'발바닥 브레이커'(33)(포인트.md)",
+   "url": "포인트.md"
+  },
+  "p1": {
+   "text": "쿠팡 7708749458 '레고클래식 라지 조립 박스 10698'(파트너스 API 2026-10-29 — 대표 사진을 열어 LEGO CLASSIC 10698 노란 상자 확인)",
+   "url": "https://www.coupang.com/vp/products/7708749458"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(이름 뜻)",
+    "seg": "A",
+    "text": "블록 장난감 레고, 그 이름이 덴마크 말 잘 놀아라의 줄임말이래요",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name",
+     "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(목수)",
+    "seg": "A",
+    "text": "원래는 덴마크의 한 목수가, 불황에 일감이 끊기면서",
+    "facts": [
+     "cp"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/history/articles/b-the-beginning-of-the-lego-group"
+    ]
+   },
+   {
+    "fn": "공개(다리미판)",
+    "seg": "A",
+    "text": "사다리랑 다리미판에, 나무 장난감까지 만들어 팔았는데",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/history/articles/b-the-beginning-of-the-lego-group"
+    ]
+   },
+   {
+    "fn": "이름 짓기",
+    "seg": "A",
+    "text": "가게 이름을 지을 때, 그 두 낱말 앞 글자를 따서 붙인 거죠",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+    ]
+   },
+   {
+    "fn": "반전(라틴어)",
+    "seg": "A",
+    "text": "근데 나중에 알고 보니, 라틴어로는 모은다라는 뜻도 있었대요",
+    "facts": [
+     "la"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+    ]
+   },
+   {
+    "fn": "쐐기(우연)",
+    "seg": "A",
+    "text": "그땐 블록도 아니었는데, 우연히 딱 맞는 이름이 된 셈이죠",
+    "facts": [
+     "la"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+    ]
+   },
+   {
+    "fn": "사회 반응",
+    "seg": "A",
+    "text": "덕분에 지금은 전 세계 거실 바닥에서, 발바닥을 노리고 있죠",
+    "facts": [
+     "rx"
+    ],
+    "sources": [
+     "포인트.md"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "어릴 때 생각이 나서 저도 쿠팡에서, 레고 클래식 큰 상자를 하나 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7708749458"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "색색깔 블록이 가득 들어 있어서, 아무거나 막 만들어 보면 되고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7708749458"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "아이랑 바닥에 앉아 같이 조립하다 보니, 이름처럼 진짜 잘 놀게 되더라고요",
+    "facts": [
+     "nm"
+    ],
+    "sources": [
+     "https://www.lego.com/en-us/aboutus/news/2026/february/90-year-history-of-the-lego-name"
+    ]
+   }
+  ]
+ }
+}

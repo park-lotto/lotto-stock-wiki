@@ -1,0 +1,399 @@
+{
+ "id": "2iVxJaHNblg",
+ "dur": 41.81,
+ "title_card": "코스트코 털어버린 / 한국의 이것",
+ "post_title": "코스트코 털어버린 한국의 이것",
+ "frame": {
+  "header": "y0~180 연노랑(#FDE7A8) 머리띠: 왼쪽 선물상자 로고+빨간 '펀박스' 글자, 오른쪽 돋보기 아이콘(가짜 웹 기사 앱 틀) / y230~310 검정 제목 1줄(=영상 제목) / y345~380 오른쪽 회색 메타 '펀박스 | 18:00' / y~406 주홍(#CC4E37) 가로줄",
+  "layout_y": "(1080x1920 기준) 자막칸 y430~610(검정 굵은 고딕 가운데, 최대 2줄 누적) / 그림칸 y640~1780(흰 바탕, 가로형 그림·영상 중앙, 위아래 흰 여백) / 고지 y1830~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 하단 y≈1855 가운데, 회색(#888) 굵은 글씨, 훅 카드 구간 뒤 본편 전 구간 상시",
+  "caption_style": "둥근 굵은 고딕, 2줄 누적"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.5,
+   "caption": "(훅 카드) 코스트코 털어버린/한국의 이것",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "냉동김밥 트레이가 도는 원형 컨베이어 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "화면 어둡게+큰 제목"
+  },
+  {
+   "t0": 1.5,
+   "t1": 3.0,
+   "caption": "미국 수출 → /하나만 보고 만든",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "'야채 김밥' 냉동 포장 들고 김밥 보여주는 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.0,
+   "t1": 4.3,
+   "caption": "한국 냉동식품이 → /있었는데.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "포장 속 냉동김밥 손가락으로 누르는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.3,
+   "t1": 5.1,
+   "caption": "경북 구미의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "흰 가운 두 사람이 김밥 검수, 벽에 '구미 김밥 공장 / 품질 제일' 팻말",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "팻말 한글이 대본 단어('구미 김밥 공장') 그대로 — 프롬프트 글자가 그림에 박힌 꼴, 조명·피부가 매끈한 AI 사진 질감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 5.1,
+   "t1": 6.4,
+   "caption": "경북 구미의/설립 3년 차 회사가 → 만든 바바김밥.",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "주황 외벽 공장 건물 'ALLGOT' 간판",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "30.8s 실제 회사 사진(생산동·직원 단체)과 건물 모양이 다름, 간판 글씨체 뭉개짐 — 실물 대신 재연"
+   },
+   "effect": null
+  },
+  {
+   "t0": 6.4,
+   "t1": 7.1,
+   "caption": "만든 바바김밥.",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "바바김밥 5종 포장 실물 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.1,
+   "t1": 8.2,
+   "caption": "그때 미국에선 김밥이",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "회전 칼날이 김밥 써는 기계, 김 서림",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "김밥 단면 재료가 모두 같은 모양 반복, 칼날 금속 반사가 과장된 CG 질감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 8.2,
+   "t1": 10.1,
+   "caption": "그때 미국에선 김밥이/스시롤도 아닌 → 정체불명 음식이었는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "식당에서 젓가락으로 김밥 들고 갸웃하는 흑인 남자, 옆 여자가 손가락질 → 9.0s 얼굴 펀치인",
+   "infographic": null,
+   "emotion": {
+    "who": "미국인 손님",
+    "feeling": "의문·낯섦",
+    "prop": "손가락질"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "실존 장면이 아닌 설명용 재연, 손가락 모양·배경 인물 흐림이 AI 사진 특유, 김밥 단면 노른자색 균일"
+   },
+   "effect": null
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.1,
+   "caption": "정체불명 음식이었는데/2023년 8월",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "전자레인지 앞 교복 소녀가 김밥 접시 — 카메라가 위로 틸트하며 손 자세가 바뀜",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지 기반 움직임 추정)",
+    "evidence": "10.5s→10.8s 사이 손 위치·자세가 변함(정지 그림 확대로는 불가) → 이미지→영상 AI(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 11.1,
+   "t1": 12.8,
+   "caption": "트레이더조스 560개 → /매장에 250톤을",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "냉동창고에서 상자 정리하는 빨간 앞치마 직원, 팻말 'CA-AUG23-REF'",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "팻말 글자 'AUG23'가 대본 '2023년 8월'과 일치 — 프롬프트 단어가 그림 글자로 새어 나온 AI 흔적"
+   },
+   "effect": null
+  },
+  {
+   "t0": 12.8,
+   "t1": 13.8,
+   "caption": "매장에 250톤을 → 깔아버림.",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "마트 냉동 진열대에 김밥 채우는 직원과 손님",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "간판 'LOCAL PRODUCE' 일부 글자 잘림·흐림, 직원 동일 인물 반복"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.8,
+   "t1": 15.0,
+   "caption": "깔아버림./근데 이걸 뒤집은건",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "텃밭에서 일하는 할머니(틱톡) + 앞에 김밥 포장 든 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.0,
+   "t1": 16.2,
+   "caption": "마트도 회사도 → /아니었고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 틱톡 영상, 할머니가 카메라 보며 말함",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.2,
+   "t1": 17.8,
+   "caption": "한국계 크리에이터가 → /올린 틱톡 영상",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "트레이 위 김밥 영상(세로 영상 가운데 크롭)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.8,
+   "t1": 18.8,
+   "caption": "하나였는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "김밥 트레이에 손 뻗는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.8,
+   "t1": 21.5,
+   "caption": "하나였는데/레전든게 그 뒤로 → 2주 만에 250톤이 → /전량 털렸고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "김밥 먹는 모녀 틱톡 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.5,
+   "t1": 23.0,
+   "caption": "김밥으로 세면 → /100만 줄임.",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 모녀 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.0,
+   "t1": 24.2,
+   "caption": "결국 1인당 한두 개로",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "마트에서 입 벌린 금발 여자 → 오른쪽으로 패닝해 빈 냉동고 앞 얼굴 감싼 흑인 남자",
+   "infographic": null,
+   "emotion": {
+    "who": "미국 손님",
+    "feeling": "놀람→좌절",
+    "prop": "손으로 얼굴 감싸기"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "같은 그림 안 가로 패닝, 매장 배경 흐림 일정, 인물 피부·니트 질감이 AI 사진 특유"
+   },
+   "effect": null
+  },
+  {
+   "t0": 24.2,
+   "t1": 25.1,
+   "caption": "결국 1인당 한두 개로/구매 제한이 걸리고",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "두 손 든 금발 여자 vs 'SELF CHECKOUT' 앞 마스크 직원이 손가락질",
+   "infographic": null,
+   "emotion": {
+    "who": "손님",
+    "feeling": "놀람·황당",
+    "prop": "두 손 들기"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "같은 금발 여자가 앞 컷과 동일 인물로 재등장(일관 캐릭터 생성), 간판 글자 깔끔하나 배경 진열 반복"
+   },
+   "effect": null
+  },
+  {
+   "t0": 25.1,
+   "t1": 26.7,
+   "caption": "재입고는 한 달 반 뒤로 → /밀려버림.",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "전화기 두 대를 동시에 든 한국 남자 사장, 옆 직원이 서류 보며 다그침",
+   "infographic": null,
+   "emotion": {
+    "who": "회사 사장",
+    "feeling": "당황·쩔쩔맴",
+    "prop": "전화기 2대·서류 더미"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연 사진(정지+줌·패닝)",
+    "evidence": "벽 팻말 한글이 '고해미람·성공기원·전자' 등 뜻 없는 글자로 뭉개짐 — AI 한글 생성 결함"
+   },
+   "effect": null
+  },
+  {
+   "t0": 26.7,
+   "t1": 30.0,
+   "caption": "그럼 대박 터뜨린 올곧이 → /미국 시장을 → 다 먹었겠다 싶겠지만.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "흰 장갑으로 바바김밥 포장 뜯고 김밥 단면 보여주는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 30.0,
+   "t1": 32.2,
+   "caption": "다 먹었겠다 싶겠지만./중소기업 혼자선 → 감당 못 할 정도로 → 판이 커지자.",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "올곧 '생산동' 앞 직원 단체 사진('올곧은 식품! 올곧은 고집!' 현수막), 2단 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.2,
+   "t1": 33.4,
+   "caption": "판이 커지자./원조가 뚫어놓은 자리에",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "김밥 줄 클로즈업 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 33.4,
+   "t1": 35.6,
+   "caption": "사조대림, CJ. → /우양 같은 대기업들이",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "어두운 김밥 영상 위에 대기업 로고가 하나씩 날아와 쌓임",
+   "infographic": {
+    "type": "로고 쌓기",
+    "motion": "34.0 SAJO 왼쪽에서 등장 → 34.4 CJ 오른쪽 → 34.8 우양 아래에서 미끄러져 들어옴(각 약 0.3초)",
+    "value": "사조대림·CJ·우양"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.6,
+   "t1": 36.8,
+   "caption": "줄줄이 치고 들어왔고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "식품 박람회 'GLOBAL FOOD INNOVATIONS 2024 – KOREAN PAVILION' 부스에서 김밥 설명하는 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "보도사진 또는 AI 재연(미확정)",
+    "evidence": "간판 글자는 깔끔, 인물 손 정상 — 판단 근거 약함"
+   },
+   "effect": null
+  },
+  {
+   "t0": 36.8,
+   "t1": 39.5,
+   "caption": "줄줄이 치고 들어왔고/결국 코스트코까지 → 쫙 깔리면서 → /품절 대란이 끝나버림.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코스트코 진열대 깻잎참치마요김밥 봉지(17.99) 들고 → 카트에 담긴 봉지 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 39.5,
+   "t1": 41.81,
+   "caption": "이걸 이겨내고 → /성공한 올곧이 → 대단함ㅋㅋ",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "젓가락으로 김밥 집어 단면 보여주는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅카드(실사 공장) → 제품·회사 소개(실사+AI 재연) → 미국 반응 '정체불명'(AI 재연 인물) → 첫 입점 → 반전(틱톡 바이럴 실사) → 품절·구매제한(AI 재연 인물 감정) → 경쟁사 진입(로고 쌓기 그래픽) → 코스트코 입점 → 감탄 마무리",
+ "ratios": {
+  "infographic_sec": 2.2,
+  "character_sec": 0,
+  "ai_image_sec": 13.7,
+  "real_video_sec": 25.2,
+  "meme_sec": 0
+ }
+}

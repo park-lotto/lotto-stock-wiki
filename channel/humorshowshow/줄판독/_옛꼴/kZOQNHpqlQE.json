@@ -1,0 +1,183 @@
+{
+ "id": "kZOQNHpqlQE",
+ "title_card": "개발자의 의도가 / 완전히 빗나간 요거트",
+ "post_title": "개발자의 의도가 빗나간 요거트",
+ "dur": 32.95,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.0,
+   "caption": "개발자의 의도가 완전히 빗나간 요거트",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "빨간 입술로 요거트 숟가락 먹는 영상(광고풍) — 훅 카드 아래",
+   "effect": null,
+   "ending": "명사 끝(요거트)"
+  },
+  {
+   "t0": 2.0,
+   "t1": 4.6,
+   "caption": "최근 한국에 입성하며 / 사재기템으로 떠오르고 있다는 이것",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "기타",
+   "screen_desc": "코스트코 매장 외관 → 매장에서 사람들이 물건 쓸어담는 영화풍 장면(작품 불명)",
+   "effect": null,
+   "ending": "~이것"
+  },
+  {
+   "t0": 4.6,
+   "t1": 6.0,
+   "caption": "바로 라 페르미에 요거트",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "반짝 가루 전환 효과 → 라 페르미에르 파란 도자기 용기·꿀맛 패키지 제품사진",
+   "effect": "반짝이 전환",
+   "ending": "명사 끝(요거트)"
+  },
+  {
+   "t0": 6.0,
+   "t1": 8.0,
+   "caption": "프랑스 현지에서도 / 유명한 고오급 브랜드인데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "매장 냉장고에 라 페르미에르 진열, 손으로 꺼내는 영상",
+   "effect": null,
+   "ending": "~인데"
+  },
+  {
+   "t0": 8.0,
+   "t1": 11.6,
+   "caption": "그 이유는 최상의 맛 살리려고 / 용기째 발효시키는 개쩌는 공법 때문ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "도자기 용기에 우유 붓기 → 공장 생산라인(용기 이동·금박 뚜껑)",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 11.6,
+   "t1": 14.0,
+   "caption": "개발자 : 다들 이 꾸덕한 질감과 / 맛에 놀라겠지? 후훗~",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "개발자",
+   "screen": "밈짤",
+   "screen_desc": "빨간 스웨터 남자가 신나게 춤추는 시트콤 장면 + 집중선(인물 불명)",
+   "effect": "집중선",
+   "ending": "~"
+  },
+  {
+   "t0": 14.0,
+   "t1": 16.0,
+   "caption": "하지만 사람들의 반응은 / 예상과 달랐는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "금박 뚜껑 파란 용기 여러 개 클로즈업",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 16.0,
+   "t1": 18.4,
+   "caption": "사람들 : 이걸 어케 써야 / 지대로 썼다고 소문이 날까나~",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "사람들",
+   "screen": "제품영상",
+   "screen_desc": "빈 파란 용기들 돌려 보여주는 클로즈업",
+   "effect": null,
+   "ending": "~"
+  },
+  {
+   "t0": 18.4,
+   "t1": 20.4,
+   "caption": "고작 요거트 용기 주제에 / 개튼튼한 도자기라",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "금박 뚜껑 용기 2개 클로즈업(la fermière 각인)",
+   "effect": null,
+   "ending": "~라"
+  },
+  {
+   "t0": 20.4,
+   "t1": 23.6,
+   "caption": "전자렌지, 식세기 뿐만 아니라 / 250도 오븐까지 올라운더 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "용기 바닥 각인(freezer·oven·microwave SAFE) → 오븐 속 용기에 수플레 부풀음",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 23.6,
+   "t1": 27.0,
+   "caption": "이걸로 캔들, 커피잔은 기본이고 / 화분까지 만드는 사람들 속출",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "용기 캔들 → 에스프레소 내리는 커피잔 → 창가 화분 3개",
+   "effect": null,
+   "ending": "속출(명사 끝)"
+  },
+  {
+   "t0": 27.0,
+   "t1": 29.8,
+   "caption": "심지어 전용 뚜껑까지 사서 / 완전체로 승격시켜버림 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "주황·노랑 용기에 나무 뚜껑 덮는 손",
+   "effect": "빨간 화살표+반짝 표시",
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 29.8,
+   "t1": 33.0,
+   "caption": "이정도면 도자기 사고 / 요거트는 서비스로 받은격 아니냐고 ㅋㅋ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "파란 용기 속 요거트를 숟가락으로 뜨는 클로즈업",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅카드(제품 정체 숨김) → 한국 사재기 소개 → 제품명 공개 → 고급 브랜드·공법 → 개발자 기대(화자대사+밈) → 반전 예고 → 사람들 속마음(화자대사) → 용기 튼튼함 → 활용 확장(오븐·캔들·화분·뚜껑) → ㅋㅋ 마무리",
+ "celeb_scenes": [
+  {
+   "t0": 2.6,
+   "t1": 4.6,
+   "who": "불명",
+   "program": null,
+   "why_here": "‘사재기템’ 줄에 매장 물건 쓸어담는 군중 장면을 붙여 과장"
+  },
+  {
+   "t0": 11.6,
+   "t1": 14.0,
+   "who": "불명(미국 시트콤 춤 장면으로 보임, 이름 표기 없음)",
+   "program": null,
+   "why_here": "개발자의 ‘후훗~’ 자신만만한 대사에 신나는 춤 밈을 붙임"
+  }
+ ],
+ "kangjueun": "없음 — 전 구간 자막 변화 지점 40개 프레임 확인, 한국 연예인·방송 장면 자체가 없음",
+ "_note": "판독=Claude 눈(5fps 프레임 자막띠 변화 분할 + cap 시트 대조). asr 파일 없음→narration 전부 null. t0=첫 줄이 뜬 시각(두 줄 자막은 한 줄씩 차례로 뜸)"
+}

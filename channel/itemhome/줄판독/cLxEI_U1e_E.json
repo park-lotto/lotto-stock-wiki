@@ -1,0 +1,840 @@
+{
+ "id": "cLxEI_U1e_E",
+ "dur": 15.256,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "소녀시대 수영이가",
+   "colors": [
+    {
+     "word": "소녀시대 수영이가",
+     "hex": "#FCFAFB"
+    }
+   ]
+  },
+  {
+   "text": "15년째 쟁여둔 립밤",
+   "colors": [
+    {
+     "word": "15년째 쟁여둔 립밤",
+     "hex": "#FBED03"
+    }
+   ],
+   "note": "2줄 통째 노랑(1판 8/8)"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "caption_band": [
+   1209,
+   1325
+  ],
+  "title_y": [
+   [
+    222,
+    313
+   ],
+   [
+    337,
+    428
+   ]
+  ],
+  "bg_hex": "#090000",
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰·2줄 노랑, 굵은 고딕) + 영상 창 y480~1920(세로 1440) + 창 안 자막 1줄(나레 = 굵은 흰+강조 노랑/분홍, 원음 = “ ” 기울인 흰+강조 노랑/분홍) · 화면 출처 표기 없음(설명란 '출처:')"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.267,
+   "speaker": "원음:수영",
+   "text": "발에 채일만큼 있어야지",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "채일만큼",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수영 얼굴 근접(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "첫 프레임부터 원음 — 8편 중 원음으로 여는 편"
+  },
+  {
+   "t0": 1.267,
+   "t1": 2.167,
+   "speaker": "나레",
+   "text": "수영이가 15년째",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1304
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "15년째",
+     "hex": "#E74939",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "빨간 화살표(제품 가리킴, 손그림 꼴)",
+     "x": 790,
+     "y": 1000,
+     "w": 200,
+     "t_in": 1.333,
+     "t_out": 2.167,
+     "anim": "선이 그려지듯 나타나 머묾(1.33~1.43)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "분홍 립밤 튜브를 든 손 + 빨간 화살표",
+   "fit": 8,
+   "cut_at": [
+    1.4
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.167,
+   "t1": 3.333,
+   "speaker": "나레",
+   "text": "사서 쓴다는 이 립밤",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃으며 손짓하는 수영",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.333,
+   "t1": 4.267,
+   "speaker": "나레",
+   "text": "대체 정체가 뭘까",
+   "layer": "아이템홈",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "정체",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "턱에 손 댄 수영",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(3.333) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 4.267,
+   "t1": 5.433,
+   "speaker": "원음:수영",
+   "text": "약간의 컬러감이",
+   "layer": "아이템홈",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "컬러감",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 든 수영 → 재킷 깃의 립 브로치 근접",
+   "fit": 6,
+   "cut_at": [
+    5.1,
+    5.267
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.433,
+   "t1": 6.067,
+   "speaker": "원음:수영",
+   "text": "있고 싶을 때",
+   "layer": "아이템홈",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "재킷 깃 근접(빨간 립 브로치)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.067,
+   "t1": 7.367,
+   "speaker": "원음:수영",
+   "text": "제가 쓰는 립밤이에요",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "재킷 깃 앞에서 손이 립밤을 듦",
+   "fit": 7,
+   "cut_at": [
+    7.0
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.367,
+   "t1": 8.0,
+   "speaker": "나레",
+   "text": "블랙핑크 제니가",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1296
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "제니 흑백 화보 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.733,
+   "speaker": "나레",
+   "text": "광고한 바로 그",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "바닥에 앉은 제니 화보(흰 바탕)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.733,
+   "t1": 9.1,
+   "speaker": "나레",
+   "text": "립밤",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1296
+   ],
+   "fill_hex": "#F9B4C0",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤을 입에 대는 제니 흑백 광고",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(8.733) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 9.1,
+   "t1": 10.033,
+   "speaker": "원음:수영",
+   "text": "거짓말 안 하고",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "거짓말",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 바르는 수영(흰 옷)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.033,
+   "t1": 11.067,
+   "speaker": "원음:수영",
+   "text": "한 15년째",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1223,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "15년째",
+     "hex": "#E74939",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 바르는 수영 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.067,
+   "t1": 11.733,
+   "speaker": "원음:수영",
+   "text": "이렇게 생긴 거",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1306
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "검정 립밤 스틱을 든 손 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.733,
+   "t1": 12.733,
+   "speaker": "원음:수영",
+   "text": "계속 사고 있는 거 같아",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 스틱 든 손",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.733,
+   "t1": 13.467,
+   "speaker": "나레",
+   "text": "립밤이 필요할 땐",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수영 상반신(립밤 든 손)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(12.733) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 13.467,
+   "t1": 14.333,
+   "speaker": "나레",
+   "text": "자기한테 물어보라고",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수영 정면 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.333,
+   "t1": 15.167,
+   "speaker": "원음:수영",
+   "text": "안 써본 게 없습니다",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "안 써본 게 없습니다",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수영 정면 얼굴(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [],
+ "beats": "원음 훅(0~1.27 '발에 채일만큼 있어야지') → 나레 훅(1.27~4.27 수영이가 15년째 사서 쓴다는 이 립밤·대체 정체가 뭘까 + 빨간 화살표) → 원음 답·공개(4.27~7.37 약간의 컬러감이 있고 싶을 때 제가 쓰는 립밤) → 나레 다리(7.37~9.1 블랙핑크 제니가 광고한 바로 그 립밤) → 원음 증거(9.1~12.73 거짓말 안 하고 15년째 계속 사고 있는 거) → 나레 이음(12.73~14.33 립밤이 필요할 땐 자기한테 물어보라고) → 원음 끝('안 써본 게 없습니다')",
+ "narr_share": "나레 줄 8/17, 나레 6.3초/15.256초",
+ "notes": [
+  "자막 없는 틈이 한 번도 없다(0초부터 끝까지 이어짐) → pop 등장 0, 전부 cut.",
+  "질문 줄 '대체 정체가 뭘까' — 나레가 질문하고 원음이 답하는 꼴."
+ ],
+ "name_evidence": [
+  "제목 '소녀시대 수영이가'",
+  "나레 자막 '수영이가 15년째'"
+ ],
+ "frame0": {
+  "what": "수영 얼굴 근접(회색 재킷, 하늘색 세트) + 첫 프레임부터 원음 따옴표 자막",
+  "face_frac": "약 0.30(창 대비 얼굴, 눈)",
+  "text": "소녀시대 수영이가 / 15년째 쟁여둔 립밤(제목) + “발에 채일만큼 있어야지”"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet --v2 컷/전환/광류 motion·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

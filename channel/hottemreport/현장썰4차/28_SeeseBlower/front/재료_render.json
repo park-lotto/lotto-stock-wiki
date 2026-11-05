@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/28_SeeseBlower/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "dr.mp4",
+   "ss": 14.0,
+   "cuts": [
+    {
+     "src": "dr.mp4",
+     "ss": 14.0,
+     "dur": 3.541,
+     "block": "N1",
+     "src_crop": [
+      531,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "dr.mp4",
+     "ss": 42.05,
+     "dur": 6.25,
+     "block": "O1",
+     "src_crop": [
+      610,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "dr.mp4",
+     "ss": 163.4,
+     "dur": 3.444,
+     "block": "N2",
+     "src_crop": [
+      1063,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "dr.mp4",
+     "ss": 405.67,
+     "dur": 2.48,
+     "block": "O2",
+     "src_crop": [
+      180,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "dr",
+   "ss": 14.0,
+   "vs": 0.0,
+   "src_crop": [
+    531,
+    0,
+    857,
+    1080
+   ],
+   "why": "dr 0~37.03 한 샷 — 상자에서 송풍기를 꺼내는 손(얼굴 없음)",
+   "ve": 3.541,
+   "src_end": 17.541
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "dr",
+   "ss": 42.05,
+   "vs": 3.541,
+   "src_crop": [
+    610,
+    0,
+    857,
+    1080
+   ],
+   "why": "송풍기를 켠 손 + 'You hear that? It's actually moving my hand'(37.03~119.73 한 샷) — 보닛 BMW 원형 로고(소스 x≈537)는 crop 왼쪽 밖, 그릴 작은 M 표식은 첫 1초만 손 옆에 작게",
+   "ve": 9.791,
+   "src_end": 48.3
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "dr",
+   "ss": 163.4,
+   "vs": 9.791,
+   "src_crop": [
+    1063,
+    0,
+    857,
+    1080
+   ],
+   "why": "dr 119.73~201.33 한 샷 — 보닛 물기를 송풍기로 밀어냄, 그릴·로고는 crop 왼쪽 밖",
+   "ve": 13.235,
+   "src_end": 166.844
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "dr",
+   "ss": 405.67,
+   "vs": 13.235,
+   "src_crop": [
+    180,
+    0,
+    857,
+    1080
+   ],
+   "why": "손에 든 송풍기 근접 + 'This little thing is crazy'(346.73~ 한 샷) — 바퀴 가운데 BMW 로고(소스 x≈1106)는 crop 오른쪽 밖",
+   "ve": 15.715,
+   "src_end": 408.15
+  }
+ ]
+}

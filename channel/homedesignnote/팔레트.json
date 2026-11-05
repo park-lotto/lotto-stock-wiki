@@ -1,0 +1,333 @@
+{
+ "n_docs": 6,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 92,
+    "n_docs": 6,
+    "docs": [
+     "DCXQjaWcZ-g",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI",
+     "WTgQPFfdSOQ",
+     "_QqLEH4qlFQ",
+     "iiBUscncqIk"
+    ],
+    "members": [
+     "#FFFFFF",
+     "#FFFDFC",
+     "#FEFCFC",
+     "#FEFCFA",
+     "#FFFEFC",
+     "#FFFBF8",
+     "#FFFDFA",
+     "#FFFCFA",
+     "#F8F6F4",
+     "#FFFCFC",
+     "#FCFBFB",
+     "#FCFDFF",
+     "#FAFAFC",
+     "#FCFDFD",
+     "#FFFFFD",
+     "#FFFEFD",
+     "#FFFEFF",
+     "#FEFCFD",
+     "#FEFCFE",
+     "#FCFCFF",
+     "#FFF7F8",
+     "#FEFBFC",
+     "#FFFDF9",
+     "#FDFDFE",
+     "#FFFCFB"
+    ]
+   },
+   {
+    "hex": "#F7F4F2",
+    "n_lines": 17,
+    "n_docs": 1,
+    "docs": [
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#F7F4F2",
+     "#F6F4F2",
+     "#F7F3F0",
+     "#F9F4F2",
+     "#F8F4F0",
+     "#F5F0EE"
+    ]
+   },
+   {
+    "hex": "#000000",
+    "n_lines": 9,
+    "n_docs": 1,
+    "docs": [
+     "WTgQPFfdSOQ"
+    ],
+    "members": [
+     "#000000"
+    ]
+   },
+   {
+    "hex": "#EACE18",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "iiBUscncqIk"
+    ],
+    "members": [
+     "#EACE18"
+    ]
+   }
+  ],
+  "강조": [
+   {
+    "hex": "#7FD5E2",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "EINoAh8C9rQ",
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#7FD5E2",
+     "#7FD5E3"
+    ]
+   },
+   {
+    "hex": "#9DBDCD",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "DCXQjaWcZ-g"
+    ],
+    "members": [
+     "#9DBDCD"
+    ]
+   },
+   {
+    "hex": "#ECCE18",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "iiBUscncqIk"
+    ],
+    "members": [
+     "#ECCE18",
+     "#ECCF18"
+    ]
+   },
+   {
+    "hex": "#5E8CAC",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "WTgQPFfdSOQ"
+    ],
+    "members": [
+     "#5E8CAC"
+    ]
+   }
+  ],
+  "외곽선": [
+   {
+    "hex": "#000000",
+    "n_lines": 139,
+    "n_docs": 6,
+    "docs": [
+     "DCXQjaWcZ-g",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI",
+     "WTgQPFfdSOQ",
+     "_QqLEH4qlFQ",
+     "iiBUscncqIk"
+    ],
+    "members": [
+     "#000000",
+     "#060708",
+     "#060506",
+     "#0B0906",
+     "#08090B",
+     "#080809",
+     "#010202",
+     "#090A0C",
+     "#050502",
+     "#080504",
+     "#0A0607",
+     "#040002",
+     "#060202",
+     "#010000",
+     "#060606",
+     "#020100",
+     "#040302",
+     "#0A0302",
+     "#0C0A0A",
+     "#070506",
+     "#0C0907",
+     "#060709"
+    ]
+   },
+   {
+    "hex": "#13110F",
+    "n_lines": 59,
+    "n_docs": 4,
+    "docs": [
+     "DCXQjaWcZ-g",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI",
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#13110F",
+     "#110D0C",
+     "#171313",
+     "#110E0A",
+     "#1A1815",
+     "#14120F",
+     "#1A130E",
+     "#160F0D",
+     "#0D0A07",
+     "#12110F",
+     "#151213",
+     "#1A1611",
+     "#120F0C",
+     "#0E0D0A",
+     "#18110D",
+     "#0D0906",
+     "#130F0C",
+     "#0F0D0C",
+     "#110F0E",
+     "#151311",
+     "#0E0D0C",
+     "#1C1B1A",
+     "#1E1C1B",
+     "#191917",
+     "#100F0E",
+     "#151210",
+     "#1D1D1B",
+     "#0F100F",
+     "#1E1618",
+     "#12100F",
+     "#1B1616",
+     "#17110E",
+     "#100C0C",
+     "#0F0B0A",
+     "#0D0706",
+     "#100E0D",
+     "#110A08",
+     "#0E0907",
+     "#0D0B09",
+     "#110808",
+     "#0D0A09",
+     "#1A1712",
+     "#0C0C0D",
+     "#171613",
+     "#151110",
+     "#0F0C0B",
+     "#100907",
+     "#13100D",
+     "#1A1614",
+     "#191614",
+     "#1D1713",
+     "#14120D",
+     "#181511",
+     "#140F0F",
+     "#160D0F",
+     "#161212"
+    ]
+   },
+   {
+    "hex": "#211C18",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "SU9YofB1IoI",
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#211C18",
+     "#211D1A"
+    ]
+   },
+   {
+    "hex": "#565655",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "DCXQjaWcZ-g"
+    ],
+    "members": [
+     "#565655"
+    ]
+   }
+  ],
+  "글로우": [
+   {
+    "hex": "#000000",
+    "n_lines": 11,
+    "n_docs": 1,
+    "docs": [
+     "WTgQPFfdSOQ"
+    ],
+    "members": [
+     "#000000"
+    ]
+   }
+  ],
+  "제목": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 8,
+    "n_docs": 5,
+    "docs": [
+     "DCXQjaWcZ-g",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI",
+     "WTgQPFfdSOQ",
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#FFFFFF"
+    ]
+   },
+   {
+    "hex": "#7FD5E2",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "EINoAh8C9rQ",
+     "_QqLEH4qlFQ"
+    ],
+    "members": [
+     "#7FD5E2",
+     "#7FD5E3"
+    ]
+   },
+   {
+    "hex": "#EACE18",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "iiBUscncqIk"
+    ],
+    "members": [
+     "#EACE18"
+    ]
+   },
+   {
+    "hex": "#5E8CAC",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "WTgQPFfdSOQ"
+    ],
+    "members": [
+     "#5E8CAC"
+    ]
+   }
+  ],
+  "스티커": [],
+  "출처": []
+ }
+}

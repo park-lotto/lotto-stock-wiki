@@ -1,0 +1,2242 @@
+{
+ "id": "dNthcAKrj5U",
+ "dur": 38.545,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "에이티즈 산 가방 속",
+   "colors": [
+    {
+     "word": "에이티즈 산 가방 속",
+     "hex": "#FCFAFB"
+    }
+   ]
+  },
+  {
+   "text": "풀내음 나는 핸드크림",
+   "colors": [
+    {
+     "word": "풀내음 나는 핸드크림",
+     "hex": "#FBED03"
+    }
+   ],
+   "note": "2줄 통째 노랑(1판 8/8)"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "caption_band": [
+   1209,
+   1325
+  ],
+  "title_y": [
+   [
+    221,
+    313
+   ],
+   [
+    335,
+    427
+   ]
+  ],
+  "bg_hex": "#090000",
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰·2줄 노랑, 굵은 고딕) + 영상 창 y480~1920(세로 1440) + 창 안 자막 1줄(나레 = 굵은 흰+강조 노랑/분홍, 원음 = “ ” 기울인 흰+강조 노랑/분홍) · 화면 출처 표기 없음(설명란 '출처:')"
+ },
+ "lines": [
+  {
+   "t0": 0.1,
+   "t1": 0.867,
+   "speaker": "나레",
+   "text": "이탈리아 패션쇼까지",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산이 이탈리아 거리 차 옆에 선 모습",
+   "fit": 6,
+   "cut_at": [
+    0.8
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.867,
+   "t1": 1.9,
+   "speaker": "나레",
+   "text": "다녀온 에이티즈 산",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1296
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "에이티즈 산",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "안경 쓴 산 얼굴 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.9,
+   "t1": 2.8,
+   "speaker": "나레",
+   "text": "가방 맨 마지막에",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "가방",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "탁자 위 검정 가방 앞에 앉은 산(보그 촬영장)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.8,
+   "t1": 3.767,
+   "speaker": "나레",
+   "text": "핸드크림이 나왔다는데",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "핸드크림",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "가방에 손 넣는 산",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.767,
+   "t1": 4.8,
+   "speaker": "원음:산",
+   "text": "오늘 저랑 함께",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "줄무늬 셔츠 산 상반신(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.8,
+   "t1": 5.267,
+   "speaker": "원음:산",
+   "text": "제 가방 한 번",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1222,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "가방",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "가방 쪽으로 몸 돌린 산",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.3,
+   "t1": 5.7,
+   "speaker": "원음:산",
+   "text": "보시겠어요",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "가방 가리키는 산",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.7,
+   "t1": 6.267,
+   "speaker": "원음:산",
+   "text": "제 물건들을",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신",
+   "fit": 5,
+   "cut_at": [
+    6.033
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.267,
+   "t1": 7.0,
+   "speaker": "원음:산",
+   "text": "바리바리 싸들고",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "바리바리",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 감고 웃는 산",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.0,
+   "t1": 7.6,
+   "speaker": "원음:산",
+   "text": "다닌 편이 아닌데",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 감고 말하는 산",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.6,
+   "t1": 7.967,
+   "speaker": "나레",
+   "text": "그런 산이",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴 근접(모니터 앞)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.067,
+   "t1": 8.633,
+   "speaker": "나레",
+   "text": "보그 앞에서",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "보그",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "꽃을 입에 댄 산 화보(분홍 바탕)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "cutdet v2 7.967 zoomblur — 앞 컷 끝 흐림 몇 프레임, 눈으로는 하드컷(전환 효과 아님)"
+  },
+  {
+   "t0": 8.633,
+   "t1": 9.433,
+   "speaker": "나레",
+   "text": "통째로 연 가방",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "통째로",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "가방 앞에 앉은 산",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.433,
+   "t1": 10.267,
+   "speaker": "원음:산",
+   "text": "제가 원래 쓰는",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.267,
+   "t1": 11.667,
+   "speaker": "원음:산",
+   "text": "아이템들을 좀 많이",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "아이템",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.667,
+   "t1": 12.4,
+   "speaker": "원음:산",
+   "text": "담아 왔어요",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.4,
+   "t1": 13.167,
+   "speaker": "나레",
+   "text": "하나씩 다 꺼내고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "턱에 손 댄 산 흑백 화보",
+   "fit": 3,
+   "cut_at": [
+    13.067
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.267,
+   "t1": 13.867,
+   "speaker": "나레",
+   "text": "끝에 남은 하나를",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "하나",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "산 화보(검정 재킷·노란 조명)",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.867,
+   "t1": 14.333,
+   "speaker": "나레",
+   "text": "집었다고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "가방에서 물건 집는 산",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.333,
+   "t1": 14.933,
+   "speaker": "원음:산",
+   "text": "마지막은",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "가방 앞 산 상반신",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.933,
+   "t1": 15.667,
+   "speaker": "원음:산",
+   "text": "핸드크림입니다",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "핸드크림",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "조말론 핸드크림 튜브를 든 손",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.667,
+   "t1": 16.733,
+   "speaker": "나레",
+   "text": "손에 쏙 바르고 나서",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손등에 크림 짜는 손 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.733,
+   "t1": 17.4,
+   "speaker": "나레",
+   "text": "산이 말한 향",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "향",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.5,
+   "t1": 18.967,
+   "speaker": "원음:산",
+   "text": "상큼하고 약간",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1207,
+    1287
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "상큼하고",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "주황 과즙 튀는 그림(왼쪽 가장자리, 오렌지 조각)",
+     "x": 150,
+     "y": 850,
+     "w": 350,
+     "t_in": 17.4,
+     "t_out": 19.8,
+     "anim": "왼쪽에서 튀어나와 방울로 흩어짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴 + 왼쪽에 주황 과즙 튀는 그림",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.967,
+   "t1": 20.467,
+   "speaker": "원음:산",
+   "text": "풀내음이 느껴지는",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "풀내음",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "초록 잎 하나(왼쪽)",
+     "x": 90,
+     "y": 1150,
+     "w": 70,
+     "t_in": 19.8,
+     "t_out": 20.4,
+     "anim": "옆에서 날아 들어옴"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 감은 산 얼굴 + 노란 방울 그림",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.467,
+   "t1": 21.067,
+   "speaker": "원음:산",
+   "text": "그런 향이에요",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "두 손을 비비는 근접(크림 바르는 손)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.067,
+   "t1": 21.667,
+   "speaker": "원음:산",
+   "text": "저는 개인적으로",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 하트 여러 개(아래에서 떠오름, 큰 하트 왼쪽)",
+     "x": 200,
+     "y": 1000,
+     "w": 260,
+     "t_in": 21.15,
+     "t_out": 22.2,
+     "anim": "아래에서 떠올라 커짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴 + 아래에서 떠오르는 하트",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.667,
+   "t1": 22.2,
+   "speaker": "원음:산",
+   "text": "좋아합니다",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "좋아합니다",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 산 얼굴 + 하트",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.2,
+   "t1": 23.1,
+   "speaker": "나레",
+   "text": "피아니스트 김재환은",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "피아니스트",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "피아노 치는 김재환(안경)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.133,
+   "t1": 23.667,
+   "speaker": "나레",
+   "text": "선물로 받아",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "핸드크림 상자를 든 손(나무 벽)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.667,
+   "t1": 24.3,
+   "speaker": "나레",
+   "text": "처음 써 보더니",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1300
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "처음",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴(안경)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.3,
+   "t1": 24.7,
+   "speaker": "원음:김재환",
+   "text": "냄새 좋아",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "냄새 좋아",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 김재환 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.7,
+   "t1": 25.9,
+   "speaker": "원음:김재환",
+   "text": "굉장히 호감형인",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "호감형",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손바닥에 짠 크림 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 25.9,
+   "t1": 26.6,
+   "speaker": "원음:김재환",
+   "text": "에프 메이저",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴(말하는 중)",
+   "fit": 4,
+   "cut_at": [
+    26.0
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 26.6,
+   "t1": 27.167,
+   "speaker": "원음:김재환",
+   "text": "아무런 해가",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1339
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴(말하는 중)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 27.167,
+   "t1": 27.733,
+   "speaker": "원음:김재환",
+   "text": "안 느껴지는",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1213,
+    1300
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 27.733,
+   "t1": 29.167,
+   "speaker": "원음:김재환",
+   "text": "아주 이쁜 향이네요",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1308
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "이쁜 향",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴(웃는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 29.167,
+   "t1": 29.867,
+   "speaker": "원음:김재환",
+   "text": "제가 원래 엄청",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "카메라 앞 손바닥(크림 바른 손)",
+   "fit": 7,
+   "cut_at": [
+    29.433
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 29.867,
+   "t1": 30.7,
+   "speaker": "원음:김재환",
+   "text": "악건성인데",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손바닥 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 30.7,
+   "t1": 31.667,
+   "speaker": "원음:김재환",
+   "text": "근데 반들반들해",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1217,
+    1306
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "반들반들",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "김재환 얼굴(손 보이며)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 31.667,
+   "t1": 32.5,
+   "speaker": "원음:김재환",
+   "text": "근데 금방 스며들어",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1217,
+    1306
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "스며들어",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 김재환 얼굴 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 32.6,
+   "t1": 33.233,
+   "speaker": "나레",
+   "text": "산은 가방 다",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1299
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "가방",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 산 얼굴 근접(어두운 바탕)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 33.233,
+   "t1": 33.967,
+   "speaker": "나레",
+   "text": "보여 주고 나서",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "꽃 든 산 화보(분홍 바탕)",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 33.967,
+   "t1": 34.9,
+   "speaker": "나레",
+   "text": "웃으면서 이랬다고",
+   "layer": "아이템홈",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 산(하늘색 바탕 화보)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 34.9,
+   "t1": 35.933,
+   "speaker": "원음:산",
+   "text": "별거 없네요 그죠",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "별거 없네요 그죠",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 35.933,
+   "t1": 36.433,
+   "speaker": "원음:산",
+   "text": "더 보여주려고",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴(하늘색 바탕)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 36.433,
+   "t1": 37.033,
+   "speaker": "원음:산",
+   "text": "뭔가 하지도 않고",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 37.133,
+   "t1": 37.567,
+   "speaker": "원음:산",
+   "text": "솔직하게 제가",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "솔직하게 제가",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신(가방 앞)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 37.567,
+   "t1": 38.433,
+   "speaker": "원음:산",
+   "text": "들고 다니는",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "산 상반신(가방 앞)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.1,
+   "첫 3프레임"
+  ],
+  [
+   5.267,
+   5.3,
+   "덩어리 사이 1프레임"
+  ],
+  [
+   7.967,
+   8.067,
+   "컷 직후"
+  ],
+  [
+   13.167,
+   13.267,
+   "컷 직후"
+  ],
+  [
+   17.4,
+   17.5,
+   "컷 직후"
+  ],
+  [
+   23.1,
+   23.133,
+   "1프레임"
+  ],
+  [
+   32.5,
+   32.6,
+   "컷 직후"
+  ],
+  [
+   37.033,
+   37.133,
+   "컷 직후"
+  ]
+ ],
+ "beats": "나레 훅 4줄(0.1~3.77 이탈리아 패션쇼까지 다녀온 에이티즈 산·가방 맨 마지막에 핸드크림) → 원음 본문(3.77~7.6 가방 보여드림·바리바리 싸들고 다닌 편 아님) → 나레 다리(7.6~9.43 보그 앞에서 통째로 연 가방) → 원음(9.43~12.4 원래 쓰는 아이템 담아 옴) → 나레 다리(12.4~14.33 끝에 남은 하나를 집었다고) → 원음 공개(14.33~15.67 '마지막은 핸드크림입니다') → 나레 증거(15.67 손에 쏙 바르고) → 원음 향 묘사(17.5~22.2 상큼·풀내음, 과즙·잎·하트 그림) → 나레 다리(22.2~24.3 피아니스트 김재환이 선물로 받아) → 제3자 원음 증언(24.3~32.5 김재환: 호감형·악건성인데 반들반들) → 나레 이음(32.6~34.9 산은 가방 다 보여 주고 웃으며) → 원음 끝(34.9~38.43 '별거 없네요 그죠·솔직하게 제가 들고 다니는')",
+ "narr_share": "나레 줄 18/49, 나레 13.3초/38.545초",
+ "notes": [
+  "원음 화자 둘 — 산(본인)·김재환(같은 제품을 쓴 다른 연예인, 나레 '피아니스트 김재환은' 으로 소개) — 둘 다 같은 따옴표 기울임체.",
+  "그림 3종(과즙·잎·하트)은 향·좋아함 낱말 줄에만 — 8편 꾸밈 중 드문 편.",
+  "끝을 나레로 맺지 않고 원음 '들고 다니는' 에서 끊음."
+ ],
+ "name_evidence": [
+  "제목 '에이티즈 산 가방 속'",
+  "나레 자막 '다녀온 에이티즈 산'·'산이 말한 향'",
+  "나레 자막 '피아니스트 김재환은'"
+ ],
+ "frame0": {
+  "what": "에이티즈 산 상반신(안경·줄무늬 셔츠, 이탈리아 거리 차 옆) — 자막 0.1초부터",
+  "face_frac": "약 0.12(창 대비 얼굴, 눈)",
+  "text": "에이티즈 산 가방 속 / 풀내음 나는 핸드크림(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet --v2 컷/전환/광류 motion·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

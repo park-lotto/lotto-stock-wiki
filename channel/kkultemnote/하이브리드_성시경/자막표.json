@@ -1,0 +1,317 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 꿀템노트판) · 시각은 final.mp4 기준 초",
+ "pack": "kkultemnote",
+ "rows": [
+  {
+   "line": "HOOK",
+   "t0": 0.0,
+   "t1": 0.33,
+   "text": "그게 뭐가",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "HOOK",
+   "t0": 0.33,
+   "t1": 0.85,
+   "text": "그게 뭐가 맛있겠어?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 0.85,
+   "t1": 1.672,
+   "text": "성시경도 따라 한",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N1",
+   "t0": 1.672,
+   "t1": 2.574,
+   "text": "1등 레시피라는데요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "1등 레시피"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O1",
+   "t0": 2.574,
+   "t1": 3.324,
+   "text": "근데 1등했다는 거",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 3.324,
+   "t1": 4.084,
+   "text": "맛있을 거 아니에요",
+   "speaker": "orig",
+   "variant": "orig_red",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N2",
+   "t0": 4.084,
+   "t1": 5.181,
+   "text": "대체 어떻게 끓이나요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "어떻게"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O2",
+   "t0": 5.181,
+   "t1": 6.681,
+   "text": "면 빼서 면을 참기름",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O2",
+   "t0": 6.681,
+   "t1": 7.761,
+   "text": "다진마늘에다가",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 7.761,
+   "t1": 8.461,
+   "text": "비벼요",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 8.461,
+   "t1": 9.55,
+   "text": "계란은 국물에 푼다네요?",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "계란"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 9.55,
+   "t1": 10.64,
+   "text": "아이 맛있겠는데",
+   "speaker": "orig",
+   "variant": "orig_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N4",
+   "t0": 10.64,
+   "t1": 11.336,
+   "text": "근데 1등감은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "1등감"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N4",
+   "t0": 11.336,
+   "t1": 11.957,
+   "text": "아니라는데요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O4",
+   "t0": 11.957,
+   "t1": 12.707,
+   "text": "1등 레시피는",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O4",
+   "t0": 12.707,
+   "t1": 13.647,
+   "text": "저는 아닌 것 같아요",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O5",
+   "t0": 13.647,
+   "t1": 14.277,
+   "text": "한 번쯤 해보는 건",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O5",
+   "t0": 14.277,
+   "t1": 15.433,
+   "text": "해보는 건 괜찮다^^",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = BpUOIUwkoG4",
+  "변형 orig_red → O1「맛있을 거 아니에요」",
+  "효과음 0발(본보기 0) []",
+  "효과 append_text 0회(편당 0~2)",
+  "등장 {'fade': 10, 'cut': 7, 'pop': 1} · 강조 4/18"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "BpUOIUwkoG4",
+  "worst_slot_diff": 0.1,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "ours": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "bench_emph": 0.75,
+    "ours_emph": 0.75,
+    "n": 4
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 1.0
+    },
+    "ours": {
+     "fade": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.5,
+    "n": 2
+   },
+   "orig.first": {
+    "bench": {
+     "fade": 0.4,
+     "cut": 0.4,
+     "pop": 0.2
+    },
+    "ours": {
+     "fade": 0.5,
+     "cut": 0.33,
+     "pop": 0.17
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.67,
+     "fade": 0.33
+    },
+    "ours": {
+     "cut": 0.67,
+     "fade": 0.33
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

@@ -1,0 +1,15 @@
+{
+  "hidden": "EINoAh8C9rQ",
+  "product": {"name": "빨래 접는 기계(폴드메이트)", "kw": ["빨래 접는 기계", "빨래 개는 기계"], "category": "가전", "price_band": "고가", "install": "설치없음"},
+  "note": "LOO 2편(지인사건형 훅, 상위 5위 260만). 숨긴 원본의 제품 사실만(화자·지인 이야기 '결혼하는 친구가 사달라고'·'애기 있는 집' 은 뺐다). 제품명은 영상 제목(#Foldimate).",
+  "sources": {"EINoAh8C9rQ": "두유노홈디노 원본(숨김) C:/숏템_칼카피/homedesignnote/asr/EINoAh8C9rQ.json + top50.json 제목"},
+  "facts": [
+    {"id": "f1", "text": "미국 스타트업에서 개발한 빨래 접는 기계다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f2", "text": "출시되자마자 품절 대란이 났다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f3", "text": "빨래 25장을 5분 만에 접을 수 있다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f4", "text": "잘 펴서 넣어주기만 하면 알아서 접힌다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f5", "text": "SNS에서 화제가 됐다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f6", "text": "가격이 예상보다 저렴한 편이다", "src": ["EINoAh8C9rQ"]},
+    {"id": "f7", "text": "제품 이름은 폴드메이트(Foldimate)다", "src": ["EINoAh8C9rQ 제목"]}
+  ]
+}

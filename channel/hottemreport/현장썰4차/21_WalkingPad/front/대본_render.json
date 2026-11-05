@@ -1,0 +1,437 @@
+{
+ "topic": "킹스미스 워킹패드 C2(접이식 걷기 러닝머신) — 미국 Inside Ilona's World 가 처음 올라가 걸어 보고 'This is so nice'·멈추니 'oh, it just stops' + 킹스미스(WalkingPad BeNeLux) 공식 소개 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "Rpfk8Yn0Y-c",
+ "bench_note": "벤치 '요즘 미국에서 난리 난 운동'(33.2만, 핫템리포트 20위, 책상 아래 워킹패드 몽타주 나레만 — 단일 원본 없음, 2차 '원음 약함'). 같은 꼴 제품(킹스미스 워킹패드 C2)을 처음 걸어 보는 유튜브 Inside Ilona's World tl2UJa_MA9E(2024-12-17, 설명란 'KingSmith WalkingPad C2') 원음형. 벤치 '식후혈당관리에 좋다'(효능)·'실리콘밸리 개발자 유행'(근거 없음)·'잔고장 없이 오래'(근거 없음)는 안 씀",
+ "sources": {
+  "il": {
+   "file": "il.mp4",
+   "who": "유튜브 Inside Ilona's World 'Minimalist Fitness? WalkingPad C2 Unboxing & First Walk' tl2UJa_MA9E 전체(1080p30, 영어 원음 140 — 더빙 트랙 없음)",
+   "views": 1144,
+   "dur": 201.1,
+   "res": "1920x1080"
+  },
+  "ks2": {
+   "file": "ks2.mp4",
+   "who": "유튜브 WalkingPad BeNeLux 'WalkingPad C2 - Introduction Video' VDxQvA1su4g(공식 소개 영상, 음악만)",
+   "views": 8575,
+   "dur": 88.56,
+   "res": "1920x1012"
+  },
+  "iz": {
+   "file": "ilz.mp4",
+   "who": "il 90~110초 사본 — 101.5초부터 천천히 다가감(멈춤 방지, 소리 그대로)",
+   "dur": 20.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "걷다 멈추면\n알아서 서는 러닝머신"
+ },
+ "facts": {
+  "f1": {
+   "text": "Ilona 원본(스피치매틱스) 72.64~79.56 'I could see myself watching a movie or a TV show for an hour and a half to get my 10,000 steps every morning' · Garage Gym Reviews Everything NzZ_2qVYQlo 99~110 'this does actually fold in half … can easily be stored like under a bed in a closet' · 공식 소개 영상 12.6~14.0 화면 글 'Folding design 180°'",
+   "kind": "본인 말·리뷰·공식"
+  },
+  "f2": {
+   "text": "Ilona 원본 81.16~84.08 'And then if I stop walking it starts slowing down' · 98.44~103.32 'And if I just stop walking altogether oh oh it just stops'",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "Ilona 원본 49.04~53.28 'This is so nice. I like this.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Ilona 원본 98.44~103.32 'And if I just stop walking altogether, oh, oh, it just stops'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "집에서 드라마 틀어 놓고 걷는 반으로 접히는 러닝머신이 있는데요 근데 걷다가 멈추면 벨트도 알아서 멈춘다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "il",
+    "span": [
+     48.95,
+     53.4
+    ],
+    "en": "This is so nice. I like this.",
+    "caps": [
+     "이거 너무 좋다",
+     "완전 마음에 들어요"
+    ],
+    "check": "This 49.04 · this 52.60~53.28 · 다음 It's 54.60 · 화면 한 샷 41.51~132.70"
+   },
+   {
+    "id": "O2",
+    "src": "iz",
+    "span": [
+     8.38,
+     13.45
+    ],
+    "en": "And if I just stop walking altogether, oh, oh, it just stops.",
+    "caps": [
+     "아예 걸음을 멈추면…",
+     "어, 어!",
+     "그냥 멈춰 버리네!"
+    ],
+    "check": "원본 초 98.38~103.45(= iz +90) · And 98.44 · stops 102.80~103.32 · 앞 here 90.36 · 다음 I 113.56 · 화면 한 샷 41.51~132.70(100.3초 벨트 뒤로 내려섬)"
+   }
+  ],
+  "dropped": {
+   "벤치 '식후혈당관리에 좋다'": "효능 — 안 씀",
+   "벤치 '실리콘밸리 개발자들 사이에서 유행'": "근거 없음 — 안 씀",
+   "벤치 '잔고장 없이 오래 쓴다'": "근거 없음 — 안 씀",
+   "Ilona '만 보'·'cardio best'": "숫자·효능 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "집에서 드라마 틀어 놓고 걷는",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.535,
+   "text": "반으로 접히는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.303,
+   "text": "러닝머신이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.704,
+   "text": "이거 너무 좋다",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.4,
+   "text": "완전 마음에 들어요",
+   "kind": "원음"
+  },
+  {
+   "t0": 8.404,
+   "text": "근데 걷다가 멈추면",
+   "kind": "나레"
+  },
+  {
+   "t0": 9.382,
+   "text": "벨트도 알아서 멈춘다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.247,
+   "text": "아예 걸음을 멈추면…",
+   "kind": "원음"
+  },
+  {
+   "t0": 13.843,
+   "text": "어, 어!",
+   "kind": "원음"
+  },
+  {
+   "t0": 14.393,
+   "text": "그냥 멈춰 버리네!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "집에서 드라마 틀어 놓고 걷는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.535,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "반으로 접히는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.535,
+   "dur": 0.768,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "러닝머신이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.303,
+   "dur": 1.401,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이거 너무 좋다",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.704,
+   "dur": 1.696,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "완전 마음에 들어요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.4,
+   "dur": 3.004,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 걷다가 멈추면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 8.404,
+   "dur": 0.978,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "벨트도 알아서 멈춘다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.382,
+   "dur": 1.865,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아예 걸음을 멈추면…",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 11.247,
+   "dur": 2.596,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "어, 어!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.843,
+   "dur": 0.55,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "그냥 멈춰 버리네!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 14.393,
+   "dur": 2.524,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.704,
+    8.154
+   ],
+   [
+    11.247,
+    16.317
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.454
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.704,
+    "a1": 8.154,
+    "audio_ss": 48.95,
+    "src": "il"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 8.404,
+    "n1": 10.997
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 11.247,
+    "a1": 16.317,
+    "audio_ss": 8.38,
+    "src": "iz"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "ks2",
+    "ss": 3.35,
+    "vs": 0.0,
+    "src_crop": [
+     600,
+     0,
+     804,
+     1012
+    ],
+    "why": "공식(3.0 은 빈 거실이라 3.35부터): 거실을 걸어와 소파 밑에서 워킹패드를 꺼냄(2.96~6.68 한 샷, 글 없음)",
+    "ve": 3.297,
+    "src_end": 6.647,
+    "guard": "원본 컷 6.68 앞에서 끊음(−0.307초)"
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "il",
+    "ss": 48.543,
+    "vs": 3.297,
+    "src_crop": [
+     380,
+     0,
+     857,
+     1080
+    ],
+    "why": "Ilona 가 처음 올라가 걸으며 'This is so nice, I like this'(41.51~132.70 한 샷)",
+    "ve": 8.404,
+    "src_end": 53.65
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "ks2",
+    "ss": 20.35,
+    "vs": 8.404,
+    "src_crop": [
+     660,
+     0,
+     715,
+     900
+    ],
+    "why": "공식: 거실에서 워킹패드 위를 걸음(20.28~23.84, 왼아래 'Colorful appearance' 글은 crop 밖)",
+    "ve": 11.147,
+    "src_end": 23.093
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "iz",
+    "ss": 8.28,
+    "vs": 11.147,
+    "src_crop": [
+     380,
+     0,
+     857,
+     1080
+    ],
+    "why": "걸음을 멈추자 뒤로 내려섬 'oh, oh, it just stops'(같은 한 샷) — 멈춰 선 뒤 1.1초가 freezedetect 에 걸려(10-28 1차 15.5초) il 90~110초를 천천히 다가가는 사본 ilz.mp4(101.5초부터 2.8초 동안 1.30배, 소리 그대로)로",
+    "ve": 16.917,
+    "src_end": 14.05
+   }
+  ],
+  "dur": 16.917,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\21_WalkingPad\\front\\render\\narr_N1.wav",
+    "dur": 3.454,
+    "tempo": 0.873,
+    "chars": 27,
+    "speech": 3.454,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      3.454
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\21_WalkingPad\\front\\render\\narr_N2.wav",
+    "dur": 2.593,
+    "tempo": 0.895,
+    "chars": 20,
+    "speech": 2.593,
+    "cps": 7.71,
+    "segs": [
+     [
+      0.0,
+      1.146
+     ],
+     [
+      1.294,
+      2.593
+     ]
+    ]
+   }
+  ]
+ }
+}

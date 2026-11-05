@@ -1,0 +1,369 @@
+{
+ "_note": "샥탬스토리 하이브리드 12편 Chill Systems — 앞 0~O5 끝 = 칼카피(새 엔진 v2 재렌더, 0초 원 = 진열대 분홍 Chill 쿨러 전체), 뒤 = 같은 옷(지훈·샥탬 프리셋 제목·BGM 이어서) 1인칭 체험 나레, 잇썸홈판 존댓말. 쿠팡에 Chill Systems 같은 제품이 없어 비슷한 제품(HOST FREEZE 냉동 젤 맥주잔)을 씀 — B1 에서 숨기지 않고 말함. CTA 없음.",
+ "product": "HOST FREEZE 맥주잔(16oz, 이중벽 속 냉동 젤, 2개 세트) — 쿠팡 39518112(4.7·리뷰 26, 구글 색인) · 같은 줄 9747306626·9367335310·4791194390·36471264. 방송 제품(Chill Systems The Chiller)과 같은 원리(냉동 젤 내장 = 얼음 없이 음료를 차갑게)의 비슷한 제품",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "끝"
+ },
+ "흥미이음": {
+  "원본흥미": "가장 큰 경쟁자가 '얼음'이라는 쿨러 — 속에 든 냉동 젤을 통째로 얼려 두면 얼음 없이 캔·맥주를 차갑게 한다(앞 O1~O3 '경쟁자? 얼음이요' · N1 '얼음 없이 음료를 차갑게 해 준다는 쿨러')",
+  "뒤흥미": "HOST FREEZE 맥주잔도 잔 벽 속 냉동 젤을 냉동실에 얼려 두었다가 맥주를 따르면 얼음 없이 차가워진다 — 리뷰 영상에 냉동실에 넣는 장면·서리 낀 잔·얼린 잔에 맥주 따르는 장면이 그대로 보임(Revu2u inDmQ4pacGw, Dad's Honest Hauls -WH6BXN60Go, HOST 공식 92Fhu2_liQo)",
+  "판정": "같음",
+  "근거": "신기한 점(얼음 없이, 젤을 얼려 음료를 차갑게)이 같다 — 모양(3캔 원통 vs 맥주잔)만 다름. 같은 제품은 쿠팡에 없음: 렌즈 3장 쿠팡 결과에 Chill Systems 없음(유일한 음료 칠러 9303807430 '칠필' = 이베이 같은 이름 상품 사진에서 얼음을 채워 쓰는 캔 칠러 → 얼음 쓰는 물건이라 흥미 없음), 구글 'site:coupang.com Chill Systems 칠러' 0건. 그래서 B1 '똑같은 건 없어서 비슷한 걸'"
+ },
+ "hybrid": {
+  "front_doc": "../12편_ChillSystems",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/12편_ChillSystems/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/12편_ChillSystems/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/12편_ChillSystems/엔진v2",
+  "cut_after": "O5",
+  "cut_why": "O5 원음 '딱 세 캔밖에 안 들어가네요 / 솔직히 저는 45분이면 다 마셔요' — 투자자의 의문으로 끝나는 자리(다음 O6 은 창업자 반박). '근데 저 영상 보고 얼음 없이 될까 싶어'로 잇는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "하이브리드 3~11편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "경쟁자가 얼음이라는",
+  "line2": "3캔짜리 쿨러?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(사장님 10-19 지훈 확정)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 9.49,
+  "cps_note": "9~11편 하이브리드와 같은 목표(지훈 tempo 1.0 실측 cps_out 9.49)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "공개(이음+잉?)",
+    "text": "근데 저 영상 보고 얼음도 없이 될까 싶어서 쿠팡을 뒤졌는데 똑같은 건 없어서 비슷한 걸 샀거든요",
+    "tts": "근데 저 영상 보고 얼음도 없이 될까 싶어서 쿠팡을 뒤졌는데 똑같은 건 없어서 비슷한 걸 샀거든요",
+    "caps": [
+     "근데 저 영상 보고",
+     "얼음도 없이 될까 싶어서",
+     "쿠팡을 뒤졌는데",
+     "똑같은 건 없어서",
+     "비슷한 걸 샀거든요"
+    ],
+    "facts": [
+     "c1",
+     "c0"
+    ],
+    "emph_words": [
+     "얼음도 없이",
+     "비슷한 걸"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph": [
+     {
+      "cap": "근데 저 영상 보고",
+      "span": "영상 보고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "얼음도 없이 될까 싶어서",
+      "span": "될까 싶어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡을 뒤졌는데",
+      "span": "쿠팡을 뒤졌는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없어서",
+      "span": "건 없어서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 걸 샀거든요",
+      "span": "샀거든요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게 잔 벽 속에 젤이 들어 있어서 잔째로 얼리는 거더라고요",
+    "tts": "이게 말도 안 되는 게 잔 벽 속에 젤이 들어 있어서 잔째로 얼리는 거더라고요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "잔 벽 속에",
+     "젤이 들어 있어서",
+     "잔째로 얼리는 거더라고요"
+    ],
+    "facts": [
+     "f_gel"
+    ],
+    "emph_words": [
+     "젤",
+     "잔째로"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잔 벽 속에",
+      "span": "잔 벽 속에",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "젤이 들어 있어서",
+      "span": "들어 있어서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잔째로 얼리는 거더라고요",
+      "span": "얼리는 거더라고요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데 공식 설명대로 두 시간 얼린 잔에 따르니까 살얼음처럼 차갑더라고요",
+    "tts": "진짜 핵심은 이건데 공식 설명대로 두 시간 얼린 잔에 따르니까 살얼음처럼 차갑더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "공식 설명대로",
+     "두 시간 얼린 잔에",
+     "따르니까",
+     "살얼음처럼 차갑더라고요"
+    ],
+    "facts": [
+     "f_gel",
+     "v1"
+    ],
+    "emph_words": [
+     "두 시간",
+     "살얼음처럼"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "공식 설명대로",
+      "span": "공식 설명대로",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "두 시간 얼린 잔에",
+      "span": "두 시간",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "따르니까",
+      "span": "따르니까",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "살얼음처럼 차갑더라고요",
+      "span": "차갑더라고요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 녹을 얼음이 없으니까 끝까지 맥주가 안 싱거워지더라고요",
+    "tts": "심지어 이게 대박인 게 녹을 얼음이 없으니까 끝까지 맥주가 안 싱거워지더라고요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "녹을 얼음이 없으니까",
+     "끝까지 맥주가",
+     "안 싱거워지더라고요"
+    ],
+    "facts": [
+     "f_dil"
+    ],
+    "emph_words": [
+     "안 싱거워"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "빨강",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "녹을 얼음이 없으니까",
+      "span": "얼음이 없으니까",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "끝까지 맥주가",
+      "span": "끝까지 맥주가",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 싱거워지더라고요",
+      "span": "싱거워지더라고요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "집들이 때 꺼냈더니 보는 사람마다 잔이 왜 얼어 있냐고 난리였어요",
+    "tts": "집들이 때 꺼냈더니 보는 사람마다 잔이 왜 얼어 있냐고 난리였어요",
+    "caps": [
+     "집들이 때 꺼냈더니",
+     "보는 사람마다",
+     "잔이 왜 얼어 있냐고",
+     "난리였어요"
+    ],
+    "facts": [],
+    "emph_words": [
+     "난리"
+    ],
+    "emph": [
+     {
+      "cap": "집들이 때 꺼냈더니",
+      "span": "꺼냈더니",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보는 사람마다",
+      "span": "보는 사람마다",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잔이 왜 얼어 있냐고",
+      "span": "얼어 있냐고",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리였어요",
+      "span": "난리였어요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c0": "같은 제품 없음: 렌즈 3장(lens_src/12_a·b·c) = Chill Systems 'The Chiller'(walmart·amazon.ae·sharktankshopper), 쿠팡 결과에 Chill Systems 없음(channel/hottemreport/현장썰하이브리드/렌즈_샥탬12_Chill.json) · 렌즈 쿠팡 9303807430 '칠필 음료 냉각 쿨러 … 드링크 칠러 355ml'(1/3장) = 다나와 같은 이름 '[해외] 칠필 음료 냉각 쿨러'·이베이 'Instant Drink Chiller … Brand CHILLPILL' 상품 사진에서 원통 안에 얼음을 채워 캔을 식히는 물건(얼음 사용 → 흥미 없음, C:/숏템_칼카피/foreignshowshow/하이브리드/12편_ChillSystems/chillpill_ebay.png) · 구글 'site:coupang.com Chill Systems 칠러' 결과에 Chill Systems 없음(2026-10-20)",
+  "c1": "쿠팡(2026-10-20 구글 색인, 쿠팡 직접 접속은 이 PC IP 차단 'Access Denied'·검색 ok=False) 'site:coupang.com 호스트 프리즈 컵' → 39518112 '호스트 프리즈 맥주잔 남성용 프리즈블 맥주 선물 이중 벽 단열 파인트 세트 차가운 음료용 텀블러 16 2개 그레이' 4.7(26) · 9747306626 '호스트 프리즈 맥주잔 냉동 가능한 파인트 잔 세트 … 16온스 그레이' · 9367335310 · 4791194390 '호스트 쿨링 비어 글래스 프리즈 맥주잔' · 36471264 '호스트 프리즈 쿨링 핀트 클래스 맥주잔' (C:/숏템_칼카피/foreignshowshow/하이브리드/12편_ChillSystems/쿠팡_구글색인_2026-10-20.json)",
+  "f_gel": "HOST 공식 영상 92Fhu2_liQo 화면 글자 'CUP FREEZES IN 2 HOURS · CHILLS BEER IN 10 MINUTES · BUILT-IN ACTIVE COOLING GEL · INSULATED SILICONE BAND · HOLDS 16 OZ' + 판매처 설명 'place the Beer FREEZE upside down in the freezer for 2 hours to allow the gel to evenly spread and freeze'(sayweee·littleredhen) — 회사 주장",
+  "v1": "리뷰 영상에 같은 동작이 보임 — Revu2u inDmQ4pacGw(냉동실 선반에 잔을 넣고 서리 낀 잔에 맥주), Dad's Honest Hauls -WH6BXN60Go(얼린 잔 서리), HOST 92Fhu2_liQo(얼린 잔에 맥주 따름). '얼음 없이도 차갑다'는 체감 = 창작 감상",
+  "f_dil": "The Product Critiques QDZiXKY6sbs 화면 글 'a perfectly chilled beer without the hassle of watering it down with ice' · 'consistently cold beverage without dilution' — 얼음을 안 넣으니 묽어지지 않음(원리상 + 판매 설명). '끝까지'는 체감 = 창작",
+  "B5": "창작(사회 반응 — 집들이·주변 반응은 화자 설정)"
+ }
+}

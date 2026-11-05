@@ -1,0 +1,413 @@
+{
+ "_note": "17 크리넥스 — 앞 = Restored Century 「Inside an American WW1 Gas Mask Factory in 1918 — Restored Archival Film」 KMSApiLetTU(_b 308~332초·_c 595~627초, 미국 기록 영상 복원본) · 킴벌리클라크 공식 「Kimberly-Clark's U.S. Employees Celebrate 150 Years」 XcgloPGVt6I(_a 16~42초, 아래 박힌 자막·위아래 검은 띠는 자르기 밖) · 화장 지우기 = Jessica Vu 4YncgbGK9wg(_a 94~112초 — 1차로 쓴 스톡 um8Yx_RBvMk 는 'M' 워터마크·격자가 박혀 지움) · 크리넥스 상자 손 영상 WWEvuwen05Q(_a 82~100·_b 150~176·_c 205~250초, 720p) · 뒤 = 쿠팡 8200388334 상품 사진 + 같은 크리넥스 상자 손 영상. 720 미만(파테 1차 대전 방독면 480·1958 화장 480·1937 화장 480)은 받았다가 지움.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/17_크리넥스/src",
+ "shots": [
+  {
+   "src": "WWEvuwen05Q_c.mp4",
+   "ss": 23.4,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "WWEvuwen05Q_c.mp4",
+     "ss": 23.4,
+     "dur": 2.2,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      682,
+      720
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_travolta.mp4",
+     "ss": 0.2,
+     "dur": 1.35,
+     "fit": "cover",
+     "src_crop": [
+      380,
+      0,
+      520,
+      550
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "크리넥스 상자에서 휴지를 뽑는 손 → 두리번거리는 트래볼타 짤",
+   "why": "훅 = 코 푸는 휴지 크리넥스가 '원래 코 풀라고 만든 게 아니다?'"
+  },
+  {
+   "src": "KMSApiLetTU_c.mp4",
+   "ss": 26.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "KMSApiLetTU_c.mp4",
+     "ss": 26.0,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "KMSApiLetTU_b.mp4",
+     "ss": 8.0,
+     "dur": 2.05,
+     "fit": "cover",
+     "src_crop": [
+      480,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "1918 미국 방독면 기록 영상(복원본): 방독면을 쓰는 병사 → 공장에서 얇은 판을 재단기로 자르는 사람",
+   "why": "'전쟁 때, 방독면 필터로 쓰려고 만들던 얇은 솜 종이'"
+  },
+  {
+   "src": "XcgloPGVt6I_a.mp4",
+   "ss": 1.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 1.55,
+     "dur": 1.55,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      70,
+      628,
+      830
+     ]
+    },
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 21.3,
+     "dur": 1.4,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      70,
+      628,
+      830
+     ]
+    }
+   ],
+   "ours": "킴벌리클라크 공식: 지게차가 옮기는 큰 종이 두루마리 → 늘어선 두루마리",
+   "why": "'그 재료가 잔뜩 남아 버렸대요'"
+  },
+  {
+   "src": "XcgloPGVt6I_a.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 0.0,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      70,
+      628,
+      830
+     ]
+    },
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 9.2,
+     "dur": 1.15,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      70,
+      628,
+      830
+     ]
+    },
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 10.5,
+     "dur": 1.05,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      70,
+      628,
+      830
+     ]
+    }
+   ],
+   "ours": "킴벌리클라크 공식: 기계에 걸려 풀리는 두루마리 → 종이를 다루는 기계 → 기계 위를 지나는 종이 묶음",
+   "why": "'다림질하듯 부드럽게 눌러 펴서'"
+  },
+  {
+   "src": "XcgloPGVt6I_a.mp4",
+   "ss": 5.45,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "XcgloPGVt6I_a.mp4",
+     "ss": 5.45,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      70,
+      628,
+      830
+     ]
+    }
+   ],
+   "ours": "킴벌리클라크 공식: 줄지어 나오는 크리넥스 상자(아래 박힌 자막은 자르기 밖)",
+   "why": "'만든 게 크리넥스'"
+  },
+  {
+   "src": "4YncgbGK9wg_a.mp4",
+   "ss": 4.9,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "4YncgbGK9wg_a.mp4",
+     "ss": 4.9,
+     "dur": 2.5,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      110,
+      681,
+      900
+     ]
+    },
+    {
+     "src": "4YncgbGK9wg_a.mp4",
+     "ss": 8.8,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      110,
+      681,
+      900
+     ]
+    }
+   ],
+   "ours": "뷰티 유튜버 Jessica Vu 「How to CORRECTLY Remove Makeup」: 눈 화장을 하얀 시트로 닦아 내는 손(오른쪽 위 제품 이름표는 자르기 밖)",
+   "why": "'처음엔 콜드크림, 그러니까 화장 지우는 용도로'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cruiselaugh.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cruiselaugh.mp4",
+     "ss": 0.0,
+     "dur": 1.85,
+     "fit": "cover",
+     "src_crop": [
+      150,
+      0,
+      340,
+      400
+     ],
+     "kind": "짤"
+    },
+    {
+     "src": "WWEvuwen05Q_b.mp4",
+     "ss": 11.5,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      682,
+      720
+     ]
+    }
+   ],
+   "ours": "크게 웃는 톰 크루즈 짤 → 휴지를 집어 드는 손",
+   "why": "'다들 이걸로 코를 풀고 있다는 거죠'"
+  },
+  {
+   "src": "WWEvuwen05Q_c.mp4",
+   "ss": 2.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "WWEvuwen05Q_c.mp4",
+     "ss": 2.0,
+     "dur": 2.35,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      682,
+      720
+     ]
+    }
+   ],
+   "ours": "크리넥스 상자 위 휴지를 매만지는 두 손",
+   "why": "'광고를, 버리는 손수건으로 바꿨더니'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_sealclap.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_sealclap.mp4",
+     "ss": 0.1,
+     "dur": 1.7,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "박수 치는 물개 짤",
+   "why": "'판매가 두 배가 됐대요'"
+  },
+  {
+   "src": "coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "coupang.jpg",
+     "ss": 0,
+     "dur": 3.1,
+     "fit": "cover",
+     "src_crop": [
+      150,
+      40,
+      700,
+      925
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 8200388334 크리넥스 클래식 소프트 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 크리넥스를 한 묶음' — 같은 제품"
+  },
+  {
+   "src": "WWEvuwen05Q_a.mp4",
+   "ss": 5.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "WWEvuwen05Q_a.mp4",
+     "ss": 5.5,
+     "dur": 3.55,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      682,
+      720
+     ]
+    }
+   ],
+   "ours": "한 장 뽑자 다음 장이 쏙 올라오는 크리넥스 상자(손만)",
+   "why": "'한 장 뽑으면 다음 장이 쏙 올라와서'"
+  },
+  {
+   "src": "WWEvuwen05Q_c.mp4",
+   "ss": 27.4,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "WWEvuwen05Q_c.mp4",
+     "ss": 27.4,
+     "dur": 2.65,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      682,
+      720
+     ]
+    }
+   ],
+   "ours": "상자에서 휴지를 끌어 올리는 손(손만)",
+   "why": "'코 풀 때마다, 원래는 화장 지우던 휴지라는 게'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_muttley.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_muttley.mp4",
+     "ss": 0.1,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      60,
+      0,
+      182,
+      240
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "킥킥대는 머틀리 짤",
+   "why": "'자꾸 생각나더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.2,
+   "db": -3,
+   "why": "트래볼타 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 5,
+   "dt": 0.0,
+   "db": -3,
+   "why": "톰 크루즈 웃음 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 6,
+   "dt": 2.3,
+   "db": -3,
+   "why": "물개 박수 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 2.6,
+   "db": -3,
+   "why": "머틀리 짤 띵"
+  }
+ ]
+}

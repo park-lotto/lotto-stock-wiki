@@ -1,0 +1,109 @@
+{
+ "name": "evenshopping판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "이븐쇼핑",
+  "channel": "https://www.youtube.com/channel/UClecY6IhcjwmCBJHiZ2-cTg",
+  "analysis": "channel/evenshopping/스타일분석.md",
+  "line_reads": "channel/evenshopping/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\evenshopping\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/evenshopping/팔레트.json",
+  "rules_counted": "channel/evenshopping/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [],
+  "why": "사장님이 시작할 때 고름(kal.py --voice)"
+ },
+ "cps_target": 8.68,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 25.9,
+  "max": 36.7
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 지, 제품, 디어, 래 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 9"
+  ],
+  "example": [
+   "귀찮음에서 시작된 미국 천재의 제품?",
+   "천재가 왜 게으른지 알 수있는 제품?",
+   "다이소도 당황한 주부의 아이디어?"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   403,
+   1080,
+   1407
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 8.7
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": null,
+   "fx_rate": {
+    "나레": 0.11
+   },
+   "plain_rate": 0.89,
+   "by_pos": {
+    "훅": 0.07,
+    "본문": 0.1,
+    "끝": 0.2
+   },
+   "strong": [
+    "화자=나레 → enter=instant 185/185",
+    "자리=본문 → enter=instant 141/141",
+    "역할=본문 → enter=instant 56/56",
+    "역할=다리 → enter=instant 42/42",
+    "자리=끝 → enter=instant 30/30",
+    "역할=증거 → enter=instant 25/25",
+    "자리=훅 → enter=instant 14/14",
+    "역할=반전 → enter=instant 13/13",
+    "역할=끝 → enter=instant 13/13",
+    "역할=공개 → enter=instant 10/10",
+    "역할=고조 → enter=instant 10/10",
+    "역할=이음 → enter=instant 10/10",
+    "역할=훅 → enter=instant 6/6",
+    "화자전환 첫 덩어리=나레 → enter=instant 6/6"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

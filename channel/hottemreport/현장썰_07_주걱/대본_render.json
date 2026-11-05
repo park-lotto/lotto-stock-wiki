@@ -1,0 +1,625 @@
+{
+ "topic": "분리 헤드 각도 조절 주걱(Blue Bosti Adaptchula) — 싸구려 복제품 소리에 개발자가 직접 찍은 반박 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "핫템리포트 ZqVgAg99gRI(미국에서 2,600만 뷰 찍은 주걱 영상) — 프레임 대조: 벤치 0~4초·30~35초 = tt 7648753090601946398, 10~29초 = tt 7612825657571052831, 5~9초 = tt 7681429606934596894 셀러리 장면(look/bench_1s.jpg vs look/sheet_*.jpg)",
+ "bench_note": "벤치 제목·나레의 남 브랜드(테무) 이름은 쓰지 않는다 — '싸구려 복제품'으로만",
+ "sources": {
+  "main": {
+   "file": "tt_7648753090601946398.mp4",
+   "who": "틱톡 @bluebosti",
+   "views": 18700000,
+   "dur": 89.0,
+   "res": "1080x1920",
+   "desc": "No Temu does not have the same product!"
+  },
+  "sub": {
+   "file": "tt_7612825657571052831.mp4",
+   "who": "틱톡 @bluebosti",
+   "views": 2200000,
+   "dur": 114.0,
+   "res": "1080x1920",
+   "desc": "My family and I invented the one and only Adaptchula!"
+  }
+ },
+ "titles": {
+  "hook": "미국에서 1,870만 뷰\n찍은 주걱 영상"
+ },
+ "facts": {
+  "f1": {
+   "text": "a 0~5.28 'People try and say the spatula my family and I invented is a cheap … drop-shipped product'(위스퍼 small) · 조회수 1,870만(yt-dlp 10-21)",
+   "kind": "본인 말+메타"
+  },
+  "f2": {
+   "text": "a 13.08~15.70 'Nope, it came from two years of product development.'",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "a 38.54~43.92 'this is just one of seven different angles, including this 90 degree, gets down in there. No problem. No burnt fingers' · 화면 40~43초 에어프라이어 안쪽",
+   "kind": "화면+본인 말"
+  },
+  "f4": {
+   "text": "a 64.94~71.26 'reinforced rear edge … stubborn debris … This thing's gonna scrape it right off' · 화면 66~71초 팬 긁기",
+   "kind": "화면+본인 말"
+  },
+  "f5": {
+   "text": "b 87.72~93.08 'The reason we use PPSU, some of the safest baby bottles on the planet are made from this material' · 화면 b 89~93 젖병",
+   "kind": "화면+본인 말"
+  },
+  "f6": {
+   "text": "a 76.48~78.88 'everything can go directly in your dishwasher'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2",
+   "N3",
+   "O3",
+   "N4",
+   "O4"
+  ],
+  "lines": [
+   {
+    "text": "싸구려 복제품 소리를 들은 주걱 개발자가 화가 나서 찍은 영상이 1870만 뷰를 찍었는데요 헤드를 꽂는 각도가 일곱 가지라 깊은 에어프라이어도 문제없대요 뒤쪽 모서리는 단단하게 만들어서 팬에 눌어붙은 것도 긁어낸대요 날은 아기 젖병에도 쓰는 소재로 만들어서 설거지도 간단하대요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "a",
+    "span": [
+     13.08,
+     15.75
+    ],
+    "en": "Nope, it came from two years of product development.",
+    "caps": [
+     "아니, 2년 동안 개발한 거야!"
+    ],
+    "check": "위스퍼 small 낱말 13.08~15.70"
+   },
+   {
+    "id": "O2",
+    "src": "a",
+    "span": [
+     40.8,
+     43.95
+    ],
+    "en": "90 degree gets down in there. No problem. No burnt fingers.",
+    "caps": [
+     "90도로 꽂으면 쏙 들어가!",
+     "손 데일 일도 없어!"
+    ],
+    "check": "위스퍼 small 낱말 40.86~43.92"
+   },
+   {
+    "id": "O3",
+    "src": "a",
+    "span": [
+     69.55,
+     71.28
+    ],
+    "en": "This thing's gonna scrape it right off.",
+    "caps": [
+     "이걸로 싹 긁어내!"
+    ],
+    "check": "위스퍼 small 낱말 69.58~71.26"
+   },
+   {
+    "id": "O4",
+    "src": "a",
+    "span": [
+     76.45,
+     78.92
+    ],
+    "en": "Everything can go directly in your dishwasher.",
+    "caps": [
+     "전부 식기세척기에 넣으면 끝!"
+    ],
+    "check": "위스퍼 small 낱말 76.48~78.88"
+   }
+  ],
+  "dropped": {
+   "a 0~5.28·80~89 남 브랜드 이름(Timu)": "남 브랜드 이름 금지 — 원음·자막 둘 다 안 씀",
+   "가격": "원본 b 101~107 '$44' — 금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수",
+  "speed": 1.24,
+  "target_cps": 8.0
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "싸구려 복제품 소리를 들은",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.389,
+   "text": "주걱 개발자가 화가 나서 찍은 영상이",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.678,
+   "text": "1,870만 뷰를 찍었는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 5.443,
+   "text": "아니, 2년 동안 개발한 거야!",
+   "kind": "원음"
+  },
+  {
+   "t0": 8.363,
+   "text": "헤드를 꽂는 각도가 일곱 가지라",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.024,
+   "text": "깊은 에어프라이어도 문제없대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.062,
+   "text": "90도로 꽂으면 쏙 들어가!",
+   "kind": "원음"
+  },
+  {
+   "t0": 13.975,
+   "text": "손 데일 일도 없어!",
+   "kind": "원음"
+  },
+  {
+   "t0": 15.462,
+   "text": "뒤쪽 모서리는 단단하게 만들어서",
+   "kind": "나레"
+  },
+  {
+   "t0": 17.247,
+   "text": "팬에 눌어붙은 것도 긁어낸대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 19.154,
+   "text": "이걸로 싹 긁어내!",
+   "kind": "원음"
+  },
+  {
+   "t0": 21.134,
+   "text": "날은 아기 젖병에도 쓰는",
+   "kind": "나레"
+  },
+  {
+   "t0": 22.426,
+   "text": "소재로 만들어서",
+   "kind": "나레"
+  },
+  {
+   "t0": 23.33,
+   "text": "설거지도 간단하대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 24.743,
+   "text": "전부 식기세척기에 넣으면 끝!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "싸구려 복제품 소리를 들은",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.389,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "주걱 개발자가 화가 나서 찍은 영상이",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.389,
+   "dur": 2.289,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "1,870만 뷰를 찍었는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 3.678,
+   "dur": 1.765,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아니, 2년 동안 개발한 거야!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.443,
+   "dur": 2.92,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "헤드를 꽂는 각도가 일곱 가지라",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 8.363,
+   "dur": 1.661,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "깊은 에어프라이어도 문제없대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.024,
+   "dur": 2.038,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "90도로 꽂으면 쏙 들어가!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 12.062,
+   "dur": 1.913,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "손 데일 일도 없어!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.975,
+   "dur": 1.487,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "뒤쪽 모서리는 단단하게 만들어서",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 15.462,
+   "dur": 1.785,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "팬에 눌어붙은 것도 긁어낸대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 17.247,
+   "dur": 1.907,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "이걸로 싹 긁어내!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 19.154,
+   "dur": 1.98,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "날은 아기 젖병에도 쓰는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 21.134,
+   "dur": 1.292,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "소재로 만들어서",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 22.426,
+   "dur": 0.904,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "설거지도 간단하대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 23.33,
+   "dur": 1.413,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "전부 식기세척기에 넣으면 끝!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 24.743,
+   "dur": 3.07,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    5.443,
+    8.113
+   ],
+   [
+    12.062,
+    15.212
+   ],
+   [
+    19.154,
+    20.884
+   ],
+   [
+    24.743,
+    27.213
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 5.193
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 5.443,
+    "a1": 8.113,
+    "audio_ss": 13.08,
+    "src": "a"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 8.363,
+    "n1": 11.812
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 12.062,
+    "a1": 15.212,
+    "audio_ss": 40.8,
+    "src": "a"
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "n0": 15.462,
+    "n1": 18.904
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "a0": 19.154,
+    "a1": 20.884,
+    "audio_ss": 69.55,
+    "src": "a"
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "n0": 21.134,
+    "n1": 24.493
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "a0": 24.743,
+    "a1": 27.213,
+    "audio_ss": 76.45,
+    "src": "a"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "b",
+    "ss": 0.3,
+    "vs": 0.0,
+    "src_crop": null,
+    "why": "첫 프레임 = 제품: 각도 바꾼 파란 헤드를 들어 보임 → 라자냐·스테이크 시연",
+    "ve": 5.343,
+    "src_end": 5.643
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "a",
+    "ss": 12.98,
+    "vs": 5.343,
+    "src_crop": null,
+    "why": "개발자 본인이 카메라에 대고 '2년 개발' 반박",
+    "ve": 8.363,
+    "src_end": 16.0
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "N2",
+     "O2"
+    ],
+    "src": "a",
+    "ss": 37.101,
+    "vs": 8.363,
+    "src_crop": null,
+    "why": "90도로 꽂아 에어프라이어 안쪽 → 버거",
+    "ve": 15.462,
+    "src_end": 44.2
+   },
+   {
+    "block": "O3",
+    "covers": [
+     "N3",
+     "O3"
+    ],
+    "src": "a",
+    "ss": 65.858,
+    "vs": 15.462,
+    "src_crop": null,
+    "why": "긁어낸 팬",
+    "ve": 20.941,
+    "src_end": 71.337,
+    "guard": "원본 컷 71.37 앞에서 끊음(−0.193초)"
+   },
+   {
+    "block": "N4",
+    "covers": [
+     "N4"
+    ],
+    "src": "b",
+    "ss": 89.007,
+    "vs": 20.941,
+    "src_crop": null,
+    "why": "젖병 소재 설명 — 젖병 들어 보임(b 89~93)",
+    "ve": 24.643,
+    "src_end": 92.709
+   },
+   {
+    "block": "O4",
+    "covers": [
+     "O4"
+    ],
+    "src": "a",
+    "ss": 76.35,
+    "vs": 24.643,
+    "src_crop": null,
+    "why": "식기세척기 이야기 → 세척기 칸에 헤드",
+    "ve": 27.813,
+    "src_end": 79.52
+   }
+  ],
+  "dur": 27.813,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_07_주걱\\render\\narr_N1.wav",
+    "dur": 5.193,
+    "tempo": 0.954,
+    "chars": 38,
+    "speech": 5.193,
+    "cps": 7.32,
+    "segs": [
+     [
+      0.0,
+      3.245
+     ],
+     [
+      3.641,
+      5.193
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_07_주걱\\render\\narr_N2.wav",
+    "dur": 3.449,
+    "tempo": 0.824,
+    "chars": 27,
+    "speech": 3.449,
+    "cps": 7.83,
+    "segs": [
+     [
+      0.0,
+      3.449
+     ]
+    ]
+   },
+   {
+    "id": "N3",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_07_주걱\\render\\narr_N3.wav",
+    "dur": 3.442,
+    "tempo": 0.839,
+    "chars": 27,
+    "speech": 3.442,
+    "cps": 7.84,
+    "segs": [
+     [
+      0.0,
+      3.442
+     ]
+    ]
+   },
+   {
+    "id": "N4",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰_07_주걱\\render\\narr_N4.wav",
+    "dur": 3.359,
+    "tempo": 0.787,
+    "chars": 26,
+    "speech": 3.359,
+    "cps": 7.74,
+    "segs": [
+     [
+      0.0,
+      3.359
+     ]
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,138 @@
+{
+ "items": [
+  {
+   "start": 7.3,
+   "end": 13.1,
+   "speaker": "S1",
+   "text": "This is a $15,000, fully drivable mini Porsche.",
+   "kind": "speech"
+  },
+  {
+   "start": 13.1,
+   "end": 15.5,
+   "speaker": "S1",
+   "text": "Now, check this out. Come around here.",
+   "kind": "speech"
+  },
+  {
+   "start": 15.8,
+   "end": 18.1,
+   "speaker": "S1",
+   "text": "You press this button right here,",
+   "kind": "speech"
+  },
+  {
+   "start": 18.1,
+   "end": 19.4,
+   "speaker": "S1",
+   "text": "and",
+   "kind": "speech"
+  },
+  {
+   "start": 19.4,
+   "end": 23.7,
+   "speaker": "S1",
+   "text": "the engine goes on, all right?",
+   "kind": "speech"
+  },
+  {
+   "start": 23.7,
+   "end": 26.9,
+   "speaker": "S1",
+   "text": "Now, we've got hazard lights around the back,",
+   "kind": "speech"
+  },
+  {
+   "start": 26.9,
+   "end": 29.8,
+   "speaker": "S1",
+   "text": "and, guess what?",
+   "kind": "speech"
+  },
+  {
+   "start": 29.8,
+   "end": 37.0,
+   "speaker": "S1",
+   "text": "Look at this! It is made for drifting, so you've got your drift brake because this goes up to 80 km/h. Can you imagine?",
+   "kind": "speech"
+  },
+  {
+   "start": 37.0,
+   "end": 40.0,
+   "speaker": "S1",
+   "text": "All right.",
+   "kind": "speech"
+  },
+  {
+   "start": 40.0,
+   "end": 42.2,
+   "speaker": "S1",
+   "text": "We're going to take it out.",
+   "kind": "speech"
+  },
+  {
+   "start": 42.2,
+   "end": 45.3,
+   "speaker": "S1",
+   "text": "Got it in mode 3, the fastest mode.",
+   "kind": "speech"
+  },
+  {
+   "start": 45.3,
+   "end": 47.3,
+   "speaker": "S1",
+   "text": "Woo! Woo!",
+   "kind": "reaction"
+  },
+  {
+   "start": 48.8,
+   "end": 52.2,
+   "speaker": "S1",
+   "text": "[laughter]",
+   "kind": "reaction"
+  },
+  {
+   "start": 103.8,
+   "end": 105.5,
+   "speaker": "S1",
+   "text": "I love the sound.",
+   "kind": "speech"
+  },
+  {
+   "start": 105.5,
+   "end": 107.3,
+   "speaker": "S1",
+   "text": "It's awesome.",
+   "kind": "speech"
+  },
+  {
+   "start": 108.0,
+   "end": 109.5,
+   "speaker": "S1",
+   "text": "Sweet!",
+   "kind": "speech"
+  },
+  {
+   "start": 113.4,
+   "end": 116.2,
+   "speaker": "S1",
+   "text": "This is fun. I want one!",
+   "kind": "speech"
+  },
+  {
+   "start": 120.2,
+   "end": 121.8,
+   "speaker": "S1",
+   "text": "This is awesome.",
+   "kind": "speech"
+  },
+  {
+   "start": 121.8,
+   "end": 122.9,
+   "speaker": "S1",
+   "text": "What do you think?",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-3.5-flash"
+}

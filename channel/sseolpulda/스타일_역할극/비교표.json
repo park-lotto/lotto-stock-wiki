@@ -1,0 +1,92 @@
+{
+ "_설명": "썰풀다(도파민썰템) 역할극 3편 비교. 2026-10-17 실측. 출처: 재료/asr_화자분리_*.json(스피치매틱스 diarization=speaker, sensitivity 0.9) · 재료/role_lines.json(역할 구간=받아쓰기+자막 따옴표로 손으로 정함) · 재료/voice_cmp.json(librosa pyin·MFCC, 분리 없이 섞인 소리) · 뜯기(engine_뜯기3/oJZD·7DYb, 재료/6KlP1xkSKnE_뜯기.json) · 시트/*.jpg(눈으로 봄). '미확인'은 재지 못한 것.",
+ "videos": {
+  "oJZDImhYdXw": {
+   "views": 1600000,
+   "title_band": ["모든 걸 때려박은(검정)", "미친 의자 수준(파랑)"],
+   "length_sec": 27.5,
+   "voice": {
+    "roles": {"나레": {"chars": 203, "sec": 23.67, "cps": 8.58, "f0_hz": 151.1},
+              "사장": {"chars": 15, "sec": 1.71, "cps": 8.77, "f0_hz": null, "note": "음높이 검출 0프레임(pyin 50~600Hz). 1~4kHz 에너지 비중 -3.4dB(나레 -10.6dB), 300Hz 미만 -5.8dB(나레 -2.6dB) → 저음을 깎은 필터 목소리로 보임(귀 확인 안 함)"},
+              "개발팀": {"chars": 14, "sec": 1.77, "cps": 7.91, "f0_hz": 204.6, "semitone_vs_narr": 5.25}},
+    "speechmatics_speakers": 1,
+    "engine_speakers": 1,
+    "turns": 4,
+    "dialog_char_share": 0.125,
+    "dialog_line_sec": [1.71, 1.77],
+    "first_dialog_at": 14.96
+   },
+   "captions": {
+    "narration": "굵은 글씨 + 검정 외곽선, 흰색 또는 분홍(224,128,192) 강조 줄 번갈아",
+    "dialog": "반투명 회색 둥근 상자 + 어두운 글씨 2줄, 따옴표. 사장=손글씨체·곧은따옴표(\"), 개발팀=고딕체·둥근따옴표(“ ”) — 화자 구분은 글꼴",
+    "name_tag": false,
+    "count_engine": 23
+   },
+   "cuts": {"shots": 47, "median_sec": 0.5, "per_min": 100.4},
+   "sources": "같은 의자(Libernovo) 리뷰 영상들 — 원작 개수 미확인",
+   "audio": {"lufs": -7.0, "bgm": true, "source_audio": false, "sfx_engine_spikes": 0}
+  },
+  "7DYbxVNz5q8": {
+   "views": 2300000,
+   "title_band": ["삼성 엔지니어가(검정)", "저지른 미친 실수(자홍)"],
+   "length_sec": 29.267,
+   "voice": {
+    "roles": {"나레": {"chars": 143, "sec": 18.09, "cps": 7.9, "f0_hz": 144.2},
+              "엔지니어": {"chars": 70, "sec": 8.7, "cps": 8.05, "f0_hz": 255.5, "semitone_vs_narr": 9.9},
+              "경영진": {"chars": 13, "sec": 2.25, "cps": 5.78, "f0_hz": 197.0, "semitone_vs_narr": 5.4, "note": "스피치매틱스는 나레(S1)로 묶음"}},
+    "speechmatics_speakers": 2,
+    "engine_speakers": 1,
+    "turns": 6,
+    "dialog_char_share": 0.367,
+    "dialog_line_sec": [2.97, 2.25, 5.73],
+    "first_dialog_at": 6.26
+   },
+   "captions": {
+    "narration": "흰 글씨 + 검정 외곽선",
+    "dialog": "검정 둥근 상자 + 타자 효과(커서 |). 엔지니어=초록(0,240,0)·따옴표 “ ”, 경영진=분홍(240,112,192)·별표 * — 화자 구분은 글자색",
+    "name_tag": false,
+    "count_engine": "제목을 자막으로 잘못 잡음(점검.md D9) — 실제 약 28개"
+   },
+   "cuts": {"shots": 21, "median_sec": 1.17, "per_min": 41.0},
+   "sources": "폴드 리뷰 여러 편(물속·비행기 좌석·금발 여성 릴스·축구 화면 등) — 원작 개수 미확인",
+   "audio": {"lufs": -7.1, "bgm": true, "source_audio": false, "sfx_engine_spikes": 0}
+  },
+  "6KlP1xkSKnE": {
+   "views": 628000,
+   "title_band": ["삼성(파랑) 본사 멘붕 터진(검정)", "애플 7년 만의 미친 반격(빨강)"],
+   "length_sec": 29.767,
+   "voice": {
+    "roles": {"나레": {"chars": 164, "sec": 21.57, "cps": 7.6, "f0_hz": 160.0},
+              "삼성": {"chars": 32, "sec": 4.26, "cps": 7.51, "f0_hz": 264.5, "semitone_vs_narr": 8.7},
+              "애플": {"chars": 28, "sec": 3.42, "cps": 8.19, "f0_hz": 254.1, "semitone_vs_narr": 8.01}},
+    "speechmatics_speakers": 3,
+    "engine_speakers": 3,
+    "turns": 4,
+    "dialog_char_share": 0.268,
+    "dialog_line_sec": [2.4, 3.42, 1.86],
+    "first_dialog_at": 9.84
+   },
+   "captions": {
+    "narration": "흰 글씨 + 검정 외곽선 (일부 줄 노랑·분홍 강조)",
+    "dialog": "상자 없음. 이름표 줄 '(삼성)'/'(애플)' + 대사를 *별표*로 감쌈. 삼성=하늘색(80,176,240), 애플=분홍(224,128,192) — 화자 구분은 이름표+글자색(제목 띠 색과 같은 짝: 삼성 파랑·애플 빨강/분홍)",
+    "name_tag": true,
+    "count_engine": 25
+   },
+   "cuts": {"shots": 21, "median_sec": 1.53, "per_min": 40.3},
+   "sources": "만화 지면·폴더블 리뷰어(남성 얼굴 컷 4개, 대사 자리에 씀)·커팅매트 위 시연 등 — 원작 개수 미확인",
+   "audio": {"lufs": -8.9, "bgm": true, "source_audio": false, "sfx_engine_spikes": 0}
+  }
+ },
+ "common": {
+  "frame": "흰 바탕(252,249,253) · 위 제목 2줄 고정 · 오른쪽 위 [광고] · 영상 창 y≈336~1621 가로 꽉",
+  "roles": "나레 1 + 대사 역할 2(윗선·실무자 또는 경쟁 두 회사)",
+  "narration_pitch_hz": [144.2, 160.0],
+  "role_pitch_semitone_above_narr": [5.25, 9.9],
+  "dialog_char_share": [0.125, 0.367],
+  "first_dialog_sec": [6.26, 14.96],
+  "dialog_line_sec": [1.71, 5.73],
+  "cps_all_roles": [5.78, 8.77],
+  "bridge_narration": ["라고 하자", "라며", "고 쏘아붙이자", "이라는 미친 한 수를 던져버렸다는 거"],
+  "ending": ["근데 진짜 소름 끼치는 반전은 … 호강한다고", "진짜 소름 돋는 포인트는 … 미쳐버린다고", "… 통장 깨지는 소리가 들린다고"]
+ }
+}

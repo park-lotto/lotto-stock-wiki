@@ -1,0 +1,1221 @@
+{
+ "id": "BzMWncGDhnY",
+ "dur": 58.955,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "자전거는 장비빨?",
+   "colors": [
+    {
+     "word": "자전거는 장비빨?",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "풉 ㅋ",
+   "colors": [
+    {
+     "word": "풉 ㅋ",
+     "hex": "#E71D21"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   484,
+   1080,
+   788
+  ],
+  "caption_band": [
+   1278,
+   1478
+  ],
+  "title_y": [
+   [
+    205,
+    470
+   ]
+  ],
+  "bg_hex": "#FAFAFA",
+  "source_y": null,
+  "logo_y": [
+   91,
+   195
+  ],
+  "watermark": null,
+  "source_hex": null,
+  "headline": [
+   {
+    "text": "자전거는 장비빨?",
+    "colors": [
+     {
+      "word": "자전거는 장비빨?",
+      "hex": "#000000"
+     }
+    ]
+   },
+   {
+    "text": "풉 ㅋ",
+    "colors": [
+     {
+      "word": "풉 ㅋ",
+      "hex": "#E71D21"
+     }
+    ]
+   }
+  ],
+  "headline_hide_after": null,
+  "note": "흰 바탕 + 좌상단 원형 불꽃 로고 '뜨거운 사람들 @HotPeople'(y91~195) + 2줄 헤드라인(y≈205~470, 한 줄/낱말 빨강) + 가로 영상 창 y484~1272(1080×788) + 창 아래 흰 바탕 검정 자막 1~2줄(y≈1280~1440) — 로고·헤드라인 끝까지 유지(0·25·58.9초 프레임)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.7,
+   "speaker": "나레",
+   "text": "한국 자전거 대회 역사상\n가장 충격적인 사건이 터짐.",
+   "layer": "채널자막",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "대회 출발선 군중(컬러) → 흑백 옛 대회 행렬",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.7,
+   "t1": 4.533,
+   "speaker": "나레",
+   "text": "'자전거는 장비빨'\n이라는 말은",
+   "layer": "채널자막",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1284,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "낡은 짐자전거 바퀴·페달 근접(바구니)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "zoomblur",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "2.63~2.73 줌블러(앞 장면 흐려져 나가고 새 장면 흐림→선명) — 자막은 2.70 한 프레임에 교체(tr_BzMW_2.7.jpg)",
+   "transition_strength": {
+    "blur_frames": 4,
+    "pre": 4,
+    "post": 2,
+    "basis": "cutdet --v2 창 라플라시안(자막 띠 밖이라 마스크 불필요) · 눈 확인 tc_*.jpg"
+   }
+  },
+  {
+   "t0": 4.533,
+   "t1": 6.533,
+   "speaker": "나레",
+   "text": "항상 이 업계에서\n뜨거운 감자였음.",
+   "layer": "채널자막",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "뜨거운 감자",
+     "hex": "#E71D21",
+     "grow": null,
+     "outline": null
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 4.62,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +21.7dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "화려한 자전거를 든 선수 웃음",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.533,
+   "t1": 8.8,
+   "speaker": "나레",
+   "text": "그런데 수천만 원짜리 장비로\n풀세팅한 엘리트 선수들이",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "대회장 천막 앞 선수 무리·눕혀 둔 자전거",
+   "fit": 7,
+   "cut_at": [
+    8.167
+   ],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.8,
+   "t1": 10.833,
+   "speaker": "나레",
+   "text": "한 평범한 40대 아저씨 때문에",
+   "layer": "채널자막",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1328,
+    1384
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두건 쓴 요리복 아저씨 인터뷰 웃음",
+   "fit": 8,
+   "cut_at": [
+    10.767
+   ],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.833,
+   "t1": 13.0,
+   "speaker": "나레",
+   "text": "단체로 멘탈이 나가는\n사건이 발생 ㄷㄷ",
+   "layer": "채널자막",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "대회장 헬멧 쓴 선수들 무리",
+   "fit": 5,
+   "cut_at": [
+    12.9
+   ],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.0,
+   "t1": 15.4,
+   "speaker": "나레",
+   "text": "지옥의 오르막이라 불리는\n대관령 힐클라임 대회.",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "대관령 힐클라임",
+     "hex": "#E71D21",
+     "grow": null,
+     "outline": null
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "굽은 오르막 도로를 오르는 선수 행렬",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "zoomblur",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.4,
+   "t1": 17.8,
+   "speaker": "나레",
+   "text": "선수들은 기록을 단축하려고\n고가의 전용 신발에,",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1428
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "앞 선수 뒷모습(사이클복) 따라가며 라이딩",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.8,
+   "t1": 20.0,
+   "speaker": "나레",
+   "text": "수십만 원짜리\n기능성 복장으로 무장함.",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "대회장 사이클복 선수 무리 서 있음",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.0,
+   "t1": 22.4,
+   "speaker": "나레",
+   "text": "자전거 무게 100그램을 줄이려고\n수백만 원을 씀.",
+   "layer": "채널자막",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "람보르기니 자전거 앞 남성 인터뷰",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.4,
+   "t1": 24.8,
+   "speaker": "나레",
+   "text": "근데 웬 40대 아저씨가\n낡은 일반 운동화를 신고",
+   "layer": "채널자막",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "낡은 일반 운동화",
+     "hex": "#E71D21",
+     "grow": null,
+     "outline": null
+    }
+   ],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 22.73,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +27.0dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
+   "scene": "얼굴",
+   "scene_desc": "두건 아저씨 인터뷰 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.8,
+   "t1": 26.6,
+   "speaker": "나레",
+   "text": "맨손으로 출발선에 섰음.",
+   "layer": "채널자막",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1386
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "맨손",
+     "hex": "#E71D21",
+     "grow": null,
+     "outline": null
+    }
+   ],
+   "sticker": [
+    {
+     "what": "빨간원+화살표",
+     "x": 600,
+     "y": 1110,
+     "w": 380,
+     "t_in": 24.8,
+     "t_out": 26.6,
+     "anim": "없음(정지) — 손 둘레 빨간 원 + 흰 '맨손' 글(x≈150,y≈884)에서 빨간 곡선 화살표, 창 안"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 저지 선수가 장갑 없이 핸들 잡은 손 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 26.6,
+   "t1": 29.0,
+   "speaker": "나레",
+   "text": "거기다 무게만 10kg 가\n훌쩍 넘어가는 자전거.",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 재킷 남성 자전거 몸통 근접 라이딩",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 29.0,
+   "t1": 31.2,
+   "speaker": "나레",
+   "text": "다들 동네 마실 나왔냐며\n코웃음 쳤음.",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "선글라스 선수 웃으며 라이딩",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 31.2,
+   "t1": 33.6,
+   "speaker": "나레",
+   "text": "하지만 오르막이 시작되자\n미친 상황이 벌어짐.",
+   "layer": "채널자막",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 재킷 아저씨 헬멧 라이딩 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 33.6,
+   "t1": 35.533,
+   "speaker": "나레",
+   "text": "이 평범한 운동화가\n가파른 언덕을",
+   "layer": "채널자막",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "오르막 도로 빨간 옷 라이더 정면 원경",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 35.533,
+   "t1": 37.467,
+   "speaker": "나레",
+   "text": "미친 듯이 치고\n올라가기 시작한 거임.",
+   "layer": "채널자막",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 라이더 다가옴",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 37.467,
+   "t1": 39.3,
+   "speaker": "나레",
+   "text": "비결은 단순하고 무식했음.",
+   "layer": "채널자막",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1328,
+    1386
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "다른 선수 언덕 오르막 옆모습",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 39.3,
+   "t1": 41.7,
+   "speaker": "나레",
+   "text": "투자 실패로 파산 직전에,\n허리까지 다쳤던 그는,",
+   "layer": "채널자막",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "주방에서 웍 요리하는 빨간 팔 남성",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 41.7,
+   "t1": 43.9,
+   "speaker": "나레",
+   "text": "매일 악명 높은\n미시령 고개를 오르내리며",
+   "layer": "채널자막",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "오르막 라이더 정면",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 43.9,
+   "t1": 46.3,
+   "speaker": "나레",
+   "text": "자신의 심장과 허벅지를\n괴물로 개조해버린 거임.",
+   "layer": "채널자막",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 재킷 라이더 근접 페달링",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 46.3,
+   "t1": 48.7,
+   "speaker": "나레",
+   "text": "결국 수십만 원짜리\n전용 신발을 신은 선수들은,",
+   "layer": "채널자막",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "커브길 선수들이 지쳐 자전거 끌고 걸음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 48.7,
+   "t1": 51.0,
+   "speaker": "나레",
+   "text": "낡은 운동화에 추월당하며\n영혼까지 털려버림.",
+   "layer": "채널자막",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1286,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 재킷 남성이 다른 선수 옆을 지나침",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 51.0,
+   "t1": 53.0,
+   "speaker": "나레",
+   "text": "압도적인 격차로\n당당히 1위 우승.",
+   "layer": "채널자막",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 재킷 라이더 홀로 오르막",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "눈 정정(tc_ 1프레임 시트): cutdet v2 가 원본 움직임 흐림·밝기 튐을 전환으로 잡음 — 하드 컷"
+  },
+  {
+   "t0": 53.0,
+   "t1": 55.0,
+   "speaker": "나레",
+   "text": "'스포츠는 장비빨'이라며\n거들먹거리던",
+   "layer": "채널자막",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1284,
+    1424
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두건 아저씨 인터뷰 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 55.0,
+   "t1": 56.767,
+   "speaker": "나레",
+   "text": "사람들의 입을\n다물게 만든 전설.",
+   "layer": "채널자막",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(검정·흰 바탕)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1288,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두건 아저씨 얼굴 근접 웃음",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 56.767,
+   "t1": 58.9,
+   "speaker": "나레",
+   "text": "장비보다 위대한 '인간 엔진'\n\"김팔용\" 이야기임.",
+   "layer": "채널자막",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1284,
+    1426
+   ],
+   "fill_hex": "#000000",
+   "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "빨간 재킷 남성 벽화 앞에 서서 웃음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+    "basis": "1판 렌더 대조 IoU 0.638(09-25 역분석 §2) — 이번에 다시 안 잼"
+   },
+   "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "zoomblur",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_strength": {
+    "blur_frames": 5,
+    "pre": 4,
+    "post": 2,
+    "basis": "cutdet --v2 창 라플라시안(자막 띠 밖이라 마스크 불필요) · 눈 확인 tc_*.jpg"
+   }
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅 형광펜(0~2.7 '역사상 가장 충격적인 사건이 터짐.') → 통념 다리(2.7~6.5 '자전거는 장비빨…뜨거운 감자') → 대비 설정(6.5~13 엘리트 vs 40대 아저씨, 'ㄷㄷ') → 무대·상대 장비(13~22.4 숫자 100그램·수백만 원) → 반전 주인공 장비(22.4~31.2 낡은 운동화·맨손·10kg, 빨간원 그림) → 전환 '하지만'(31.2) → 상승(33.6~53 비결·추월·1위) → 끝 형광펜 이름 공개(56.8 '\"김팔용\" 이야기임.', CTA 없음)",
+ "narr_share": "나레 줄 27/27, 나레 58.9초/58.955초",
+ "notes": [
+  "자막 = 컷마다 1개(27덩어리·컷 27) — 자막 교체 시각과 컷 시각이 같은 프레임(capseg·cutdet).",
+  "문장부호 씀(마침표·쉼표·따옴표) · 어미 ~음/~함/~임/~됨(반말 명사형).",
+  "빨강 강조 낱말 4줄(뜨거운 감자·대관령 힐클라임·낡은 일반 운동화·맨손) — 빨강 hex 는 1판 값.",
+  "효과음·BGM: 귀로 못 들음 — sfx 칸은 sfx_events 신호만."
+ ],
+ "name_evidence": [
+  "끝 자막 '\"김팔용\" 이야기임.'(56.77~58.9) — 화면 글자"
+ ],
+ "frame0": {
+  "what": "자전거 대회 출발선 군중(컬러, 출발 아치) + 헤드라인 + 형광펜 첫 자막",
+  "face_frac": "약 0.01(창 대비, 원경 군중 — 눈)",
+  "text": "자전거는 장비빨? / 풉 ㅋ(헤드라인) · 한국 자전거 대회 역사상 가장 충격적인 사건이 터짐.(첫 자막)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: segsheet·1초 장면 시트·1프레임 rangesheet / 픽셀: capseg --mode dark·cutdet --v2·px box) 2026-10-25 (관제 263 지시서 06 · hotpeople)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막+배경음(나레 목소리 없음 — 유튜브 자동자막 ko 없음·1판 Whisper 2편 BGM 가사만)"
+}

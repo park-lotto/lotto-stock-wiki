@@ -1,0 +1,220 @@
+{
+ "_made_by": "humorshowshow 줄판독 2판 dialog 칸 집계(관제 263 지시서 06, 2026-10-25) — 대본 옵션 화자대사줄 근거",
+ "n_docs": 6,
+ "rows": {
+  "k": 33,
+  "n": 190
+ },
+ "docs_with": {
+  "k": 4,
+  "n": 6
+ },
+ "by_form": {
+  "이름 : 대사": {
+   "rows": 12,
+   "turns": 7,
+   "docs": [
+    "NBdmq90aJus",
+    "jECuoRljWj0"
+   ],
+   "meme_turns": {
+    "k": 3,
+    "n": 7
+   },
+   "meme_rows": {
+    "k": 4,
+    "n": 12
+   }
+  },
+  "따옴표": {
+   "rows": 21,
+   "turns": 10,
+   "docs": [
+    "bfKkNmVTGPs",
+    "pY2zNE5A1m4"
+   ],
+   "meme_turns": {
+    "k": 3,
+    "n": 10
+   },
+   "blank_turns": {
+    "k": 4,
+    "n": 10
+   }
+  }
+ },
+ "turn_pos_frac": [
+  0.2,
+  0.27,
+  0.29,
+  0.33,
+  0.38,
+  0.4,
+  0.4,
+  0.47,
+  0.49,
+  0.5,
+  0.51,
+  0.57,
+  0.57,
+  0.6,
+  0.63,
+  0.68,
+  0.84
+ ],
+ "turn_pos_bucket": {
+  "가운데 0.33~0.67": 11,
+  "앞 0~0.33": 4,
+  "뒤 0.67~1": 2
+ },
+ "turn_role": {
+  "본문": 6,
+  "반전": 5,
+  "답": 3,
+  "질문": 3
+ },
+ "turn_scene": {
+  "손·제품 근접": 4,
+  "짤": 6,
+  "매장·건물": 1,
+  "빈 칸": 4,
+  "기타": 2
+ },
+ "rows_per_turn": 1.94,
+ "per_doc": {
+  "BlA9f8rBPuc": {
+   "rows": 0,
+   "of": 22,
+   "turns": 0,
+   "who": [],
+   "forms": [],
+   "meme_rows": 0,
+   "f0_med_dialog": null,
+   "f0_med_other": 183.0
+  },
+  "Lr2Hwd0PeKM": {
+   "rows": 0,
+   "of": 35,
+   "turns": 0,
+   "who": [],
+   "forms": [],
+   "meme_rows": 0,
+   "f0_med_dialog": null,
+   "f0_med_other": 135.3
+  },
+  "NBdmq90aJus": {
+   "rows": 6,
+   "of": 25,
+   "turns": 3,
+   "who": [
+    "제조사",
+    "한국인들"
+   ],
+   "forms": [
+    "이름 : 대사"
+   ],
+   "meme_rows": 2,
+   "f0_med_dialog": 254.8,
+   "f0_med_other": 180.0
+  },
+  "bfKkNmVTGPs": {
+   "rows": 1,
+   "of": 20,
+   "turns": 1,
+   "who": [
+    "코스트코(의인화)"
+   ],
+   "forms": [
+    "따옴표"
+   ],
+   "meme_rows": 0,
+   "f0_med_dialog": 242.3,
+   "f0_med_other": 175.7
+  },
+  "jECuoRljWj0": {
+   "rows": 6,
+   "of": 23,
+   "turns": 4,
+   "who": [
+    "벨",
+    "한국업체"
+   ],
+   "forms": [
+    "이름 : 대사"
+   ],
+   "meme_rows": 2,
+   "f0_med_dialog": 240.2,
+   "f0_med_other": 182.2
+  },
+  "pY2zNE5A1m4": {
+   "rows": 20,
+   "of": 65,
+   "turns": 9,
+   "who": [
+    "나(글쓴이)",
+    "엄마",
+    "퀵 기사님"
+   ],
+   "forms": [
+    "따옴표"
+   ],
+   "meme_rows": 11,
+   "f0_med_dialog": 198.7,
+   "f0_med_other": 190.1
+  }
+ },
+ "f0_by_who": {
+  "나(글쓴이)": {
+   "rows": 8,
+   "f0_med": 163.0
+  },
+  "벨": {
+   "rows": 2,
+   "f0_med": 240.2
+  },
+  "엄마": {
+   "rows": 2,
+   "f0_med": 225.2
+  },
+  "제조사": {
+   "rows": 4,
+   "f0_med": 272.35
+  },
+  "코스트코(의인화)": {
+   "rows": 1,
+   "f0_med": 242.3
+  },
+  "퀵 기사님": {
+   "rows": 10,
+   "f0_med": 198.7
+  },
+  "한국업체": {
+   "rows": 4,
+   "f0_med": 240.25
+  },
+  "한국인들": {
+   "rows": 2,
+   "f0_med": 142.5
+  }
+ },
+ "old_1pan_21": {
+  "docs_with": {
+   "k": 14,
+   "n": 21
+  },
+  "rows": {
+   "k": 48,
+   "n": 356
+  },
+  "meme_rows": {
+   "k": 15,
+   "n": 48
+  },
+  "basis": "1판 줄판독(_옛꼴, kind=화자대사, 눈 1fps) — 2판 6편과 같은 자로 다시 재지 않음"
+ },
+ "end_line_selftalk": {
+  "k": 16,
+  "n": 21,
+  "basis": "1판 21편 마지막 줄에 ㅋㅋ 혼잣말(눈) · 2판 6편 중 4편(BlA9·NBdm·bfKk·jECu)"
+ }
+}

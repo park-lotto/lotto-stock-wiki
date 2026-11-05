@@ -1,0 +1,796 @@
+{
+ "_note": "샥탬스토리 22편 Plufl 재료 계획. 창 1080x1052(벤치 rlYYyUPjrug, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(TQw9ISabbhU_audio.m4a).",
+ "sources": {
+  "TQw9ISabbhU": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "Will The Sharks Sleep On Plufl? | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 511.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(147~153·314~317·410~414·429~431초) 안 씀 · 480초 뒤 끝 화면 안 씀 · 옷·간판 'Plufl' = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "사람이 들어가 자는",
+  "line2": "개 침대가 있다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 123.41,
+   "audio_dur": 1.4,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    388.0,
+    389.4
+   ],
+   "ss": 388.0,
+   "dur": 1.4,
+   "t_final_est": [
+    0.0,
+    1.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 위 회색 플러플 침대(원본 샷 387.85~390.19, 사람 없음 — 소리 = 침대에 누운 투자자 원음 'it's really comfortable.' cover, 말한 사람은 화면 밖 · 55초 공개 컷은 침대가 커서 원 856px 거절)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    44.2,
+    46.021
+   ],
+   "ss": 44.2,
+   "dur": 1.821,
+   "t_final_est": [
+    1.4,
+    3.22
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    45,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "강아지 방석에 엎드린 개 '키퍼'(원본 샷 44.11~47.61, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    181.05,
+    182.402
+   ],
+   "ss": 181.05,
+   "dur": 1.352,
+   "t_final_est": [
+    3.22,
+    4.57
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "개가 부러웠던 사연을 말하는 창업자(샷 180.98~183.58, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 64.73,
+   "audio_dur": 2.88,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    63.0,
+    65.88
+   ],
+   "ss": 63.0,
+   "dur": 2.88,
+   "t_final_est": [
+    4.57,
+    7.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "플러플 침대 테두리 근접(원본 샷 62.83~67.43 — 소리 = 창업자 원음 cover, 말하는 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    70.05,
+    71.91
+   ],
+   "ss": 70.05,
+   "dur": 1.86,
+   "t_final_est": [
+    7.45,
+    9.31
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 플러플 침대에 들어가 몸을 웅크림(원본 샷 69.97~73.21, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    76.45,
+    77.517
+   ],
+   "ss": 76.45,
+   "dur": 1.067,
+   "t_final_est": [
+    9.31,
+    10.38
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    418,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "침대에 앉은 창업자 옆으로 개가 다가옴(샷 76.38~78.28, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "O3",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 87.69,
+   "audio_dur": 1.85,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    86.25,
+    88.1
+   ],
+   "ss": 86.25,
+   "dur": 1.85,
+   "t_final_est": [
+    10.38,
+    12.23
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    12,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "담요를 덮고 침대에서 자는 창업자(원본 샷 86.19~88.89 — 소리 = 다른 창업자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 89.54,
+   "audio_dur": 0.91,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    88.95,
+    89.86
+   ],
+   "ss": 88.95,
+   "dur": 0.91,
+   "t_final_est": [
+    12.23,
+    13.14
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "잠든 창업자 곁의 개(샷 88.89~90.39, 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "N3",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    94.05,
+    95.869
+   ],
+   "ss": 94.05,
+   "dur": 1.819,
+   "t_final_est": [
+    13.14,
+    14.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "침대 옆을 지나가는 개(원본 샷 93.99~96.76, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    101.55,
+    103.369
+   ],
+   "ss": 101.55,
+   "dur": 1.819,
+   "t_final_est": [
+    14.96,
+    16.78
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    426,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "담요를 걷으며 일어나는 창업자(샷 101.50~104.27, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N4",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    115.4,
+    116.785
+   ],
+   "ss": 115.4,
+   "dur": 1.385,
+   "t_final_est": [
+    16.78,
+    18.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    213,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자가 침대에 드러누움(원본 샷 115.32~117.35, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N4",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    120.4,
+    121.857
+   ],
+   "ss": 120.4,
+   "dur": 1.457,
+   "t_final_est": [
+    18.16,
+    19.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "담요를 덮고 누운 투자자(샷 119.19~122.52, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "O4",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 133.46,
+   "audio_dur": 0.88,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    133.46,
+    134.34
+   ],
+   "ss": 133.46,
+   "dur": 0.88,
+   "t_final_est": [
+    19.62,
+    20.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    645,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "침대에 누운 다른 투자자(원본 샷 129.40~135.60, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    403.2,
+    404.789
+   ],
+   "ss": 403.2,
+   "dur": 1.589,
+   "t_final_est": [
+    20.5,
+    22.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    579,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "제안하는 투자자(원본 샷 403.17~404.77, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N5",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    404.8,
+    406.125
+   ],
+   "ss": 404.8,
+   "dur": 1.325,
+   "t_final_est": [
+    22.09,
+    23.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    384,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "함께 제안하는 로리(샷 404.77~406.11, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O6",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 446.03,
+   "audio_dur": 0.72,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    446.03,
+    446.75
+   ],
+   "ss": 446.03,
+   "dur": 0.72,
+   "t_final_est": [
+    23.41,
+    24.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    418,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자들과 투자자가 끌어안음(원본 샷 445.78~448.68)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O7",
+   "kind": "원음",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": false,
+   "audio_src": "TQw9ISabbhU_audio.m4a",
+   "audio_ss": 459.78,
+   "audio_dur": 1.21,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    459.78,
+    460.99
+   ],
+   "ss": 459.78,
+   "dur": 1.21,
+   "t_final_est": [
+    24.13,
+    25.34
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    462,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "웃으며 말하는 투자자(원본 샷 459.76~461.79, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "N6",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    465.0,
+    467.252
+   ],
+   "ss": 465.0,
+   "dur": 2.252,
+   "t_final_est": [
+    25.34,
+    27.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    763,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤로 걸어 나오는 두 창업자(원본 샷 463.63~468.90, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "N6",
+   "kind": "나레",
+   "src": "TQw9ISabbhU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=TQw9ISabbhU",
+   "src_orig_span": [
+    472.3,
+    473.781
+   ],
+   "ss": 472.3,
+   "dur": 1.481,
+   "t_final_est": [
+    27.6,
+    29.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    707,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 뒤 인터뷰하는 두 창업자(샷 469.14~480.15, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/22편_Plufl/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    432,
+    1060,
+    836,
+    1342
+   ],
+   "target_what": "무대 위 회색 플러플 침대 — 388.0초 원본 프레임 눈 측정(창 크롭 [0,0,1108,1080] 안 x 436~866·y 636~940, ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    634,
+    1201
+   ],
+   "size": 534,
+   "face_clear": true,
+   "target_box": [
+    432,
+    1060,
+    836,
+    1342
+   ],
+   "target_path": [
+    [
+     0.0,
+     432.0,
+     1060.0,
+     836.0,
+     1342.0
+    ],
+    [
+     0.067,
+     429.0,
+     1061.3,
+     833.0,
+     1343.3
+    ],
+    [
+     0.133,
+     429.3,
+     1064.0,
+     828.0,
+     1342.3
+    ],
+    [
+     0.2,
+     429.7,
+     1066.7,
+     823.0,
+     1341.3
+    ],
+    [
+     0.267,
+     430.0,
+     1069.0,
+     818.0,
+     1340.0
+    ],
+    [
+     0.333,
+     427.0,
+     1069.7,
+     815.0,
+     1340.7
+    ],
+    [
+     0.4,
+     424.0,
+     1070.0,
+     812.0,
+     1341.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     634,
+     1201
+    ],
+    [
+     0.067,
+     631,
+     1202
+    ],
+    [
+     0.133,
+     629,
+     1203
+    ],
+    [
+     0.2,
+     626,
+     1204
+    ],
+    [
+     0.267,
+     624,
+     1204
+    ],
+    [
+     0.333,
+     621,
+     1205
+    ],
+    [
+     0.4,
+     618,
+     1206
+    ]
+   ],
+   "track_conf": 0.906,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.906 · 원 534px = 물건 반대각선 246×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.0 '강아지를 질투해서'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 3.0 '사람을 위한 개 침대'"
+  },
+  {
+   "line": "O3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 15.5 '언제든 편하게'"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 21.0 '투자자들도 직접 체험'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "O6",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 39.5 '투자자 둘을 선택'"
+  }
+ ]
+}

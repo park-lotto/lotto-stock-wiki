@@ -1,0 +1,121 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "개방형 실리콘 빨대(틈을 벌려 안쪽을 씻고 다시 눌러 닫는 빨대) — 쿠팡 9558105024",
+ "product_mode": "named",
+ "product_why": "벤치 이븐쇼핑 Y2YXuAE4J00(310만) 과 같은 종류 '개방형 실리콘 빨대'(옆 틈을 벌려 씻고 다시 닫음). 해외 원본(유튜브) Lexngo·SiRo·siliconeuse 등 같은 구조. 쿠팡 9558105024 상품 사진 '오픈 전/오픈 후' 같은 구조 — 브랜드 이름은 대본에 쓰지 않는다",
+ "coupang": {
+  "product_id": "9558105024",
+  "url": "https://www.coupang.com/vp/products/9558105024",
+  "name": "국내제조 친환경 텀블러용 개방형 실리콘 빨대 3종 세트 22cm",
+  "checked": "channel/evenshopping/작품10_개방형빨대/쿠팡검색.json (파트너스 API 10-26)"
+ },
+ "voice": {
+  "name": "진우",
+  "voice_id": "tc_632293f759d649937b97f323",
+  "why": "판 기본(manifest make.voice_id, 사장님 10-26)"
+ },
+ "cps_target": 8.8,
+ "lines": [
+  {
+   "i": 0,
+   "text": "빨대 솔질 지옥 끝내버린 천재의 발명품?",
+   "role": "title",
+   "point": "잉",
+   "facts": [],
+   "tts": "빨대 솔질 지옥 끝내버린 천재의 발명품?",
+   "answer_at": 2
+  },
+  {
+   "i": 1,
+   "text": "요즘 텀블러 빨대 하나씩 다 들고 다니는데, 안쪽 때는 솔로 아무리 문질러도 눈에 안 보인다는 거.",
+   "role": "bait",
+   "point": "잉",
+   "facts": [
+    "f3"
+   ],
+   "tts": "요즘 텀블러 빨대 하나씩 다 들고 다니는데, 안쪽 때는 솔로 아무리 문질러도 눈에 안 보인다는 거.",
+   "answer_at": 2
+  },
+  {
+   "i": 2,
+   "text": "바로 반으로 쫙 열리는 개방형 실리콘 빨대.",
+   "role": "reveal",
+   "point": "",
+   "facts": [
+    "f1"
+   ],
+   "tts": "바로 반으로 쫙 열리는 개방형 실리콘 빨대."
+  },
+  {
+   "i": 3,
+   "text": "여기다가 말도 안 되는 게, 빨대 옆 틈을 손으로 벌리면 안쪽이 통째로 드러나서,",
+   "role": "solve",
+   "point": "와우",
+   "facts": [
+    "f2"
+   ],
+   "tts": "여기다가 말도 안 되는 게, 빨대 옆 틈을 손으로 벌리면 안쪽이 통째로 드러나서,"
+  },
+  {
+   "i": 4,
+   "text": "기존 빨대는 솔을 넣어도 속이 안 보였지만, 이건 손가락으로 쓱 닦고 헹구면 끝.",
+   "role": "more2",
+   "point": "",
+   "facts": [
+    "f2"
+   ],
+   "tts": "기존 빨대는 솔을 넣어도 속이 안 보였지만, 이건 손가락으로 쓱 닦고 헹구면 끝."
+  },
+  {
+   "i": 5,
+   "text": "심지어 다 씻은 뒤엔 틈을 꾹꾹 눌러 닫기만 하면, 다시 멀쩡한 빨대가 된다고.",
+   "role": "more",
+   "point": "와우",
+   "facts": [
+    "f2"
+   ],
+   "tts": "심지어 다 씻은 뒤엔 틈을 꾹꾹 눌러 닫기만 하면, 다시 멀쩡한 빨대가 된다고."
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 반전은, 이런 빨대가 해외 것만 있는 게 아니라 국내에서 만든 제품까지 나왔다는 거.",
+   "role": "twist",
+   "point": "와우",
+   "facts": [
+    "f1"
+   ],
+   "tts": "근데 진짜 반전은, 이런 빨대가 해외 것만 있는 게 아니라 국내에서 만든 제품까지 나왔다는 거."
+  },
+  {
+   "i": 7,
+   "text": "덕분에 텀블러 쓰는 사람들 사이에서 빨대 솔질은 이제 옛말이라고.",
+   "role": "land",
+   "point": "",
+   "facts": [],
+   "tts": "덕분에 텀블러 쓰는 사람들 사이에서 빨대 솔질은 이제 옛말이라고."
+  }
+ ],
+ "facts": {
+  "f1": "쿠팡 9558105024 상품명 '국내제조 친환경 텀블러용 개방형 실리콘 빨대 3종 세트 22cm'(파트너스 API 10-26) — '국내에서 만든'의 근거",
+  "f2": "해외 원본 유튜브 hG9C-4OyfXs 'Lexngo - Silicone Resealable Reusable Straw' · DQbJeNnu7MQ 'SiRo - BUDDY STRAW Resealable Silicone Straw' · RGJfBExlnsM 'Openable silicone straws easy to close' — 틈을 벌려 열고 눌러 닫는 장면 · 쿠팡 9558105024 대표 사진 '오픈 전/오픈 후'",
+  "f3": "유튜브 h9AxhaLlviU 'How to Clean NASTY Sippy cup Straws!' · CUeBc5J4QqI 'How to clean the middle of a straight reuseable drinking straw' — 솔 세척 장면(때)"
+ },
+ "title_lines": [
+  "빨대 솔질 지옥",
+  "끝내버린 천재템"
+ ],
+ "title_slots": {
+  "hook1": "빨대 솔질 지옥",
+  "hook2": "끝내버린 천재템",
+  "bodyTitle": "솔질 끝내버린 천재의 빨대?"
+ },
+ "script_note": "이븐쇼핑 4차 설명서(cards_v4/이븐쇼핑.md) H5 '{불편} 끝내버린 천재의 {제품군}' · 미끼 ③집단형 · 마무리 '덕분에 {집단}은 이제 {예전 불편}…'(불편 회수) · 고조 2(여기다가 말도 안 되는 게·심지어) · 반전 1(근데 진짜 반전은) · 나라 근거 없음 → '천재'만. 강조 낱말 색·스티커 없음(벤치 강조 0/185). 대본 쓴 이 = Claude(오푸스) 10-26",
+ "sfx": "manifest make.sfx",
+ "bgm": null,
+ "search_seed": [
+  "silicone straw that opens for cleaning",
+  "resealable silicone straw"
+ ]
+}

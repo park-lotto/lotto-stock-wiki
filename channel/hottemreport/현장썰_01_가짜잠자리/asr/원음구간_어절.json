@@ -1,0 +1,477 @@
+{
+ "pp_O1": [
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "I",
+     "start": 0.0,
+     "end": 0.38
+    },
+    {
+     "w": "know.",
+     "start": 0.38,
+     "end": 0.74
+    },
+    {
+     "w": "I",
+     "start": 1.02,
+     "end": 1.34
+    },
+    {
+     "w": "know.",
+     "start": 1.34,
+     "end": 1.74
+    },
+    {
+     "w": "What's",
+     "start": 2.28,
+     "end": 2.6
+    },
+    {
+     "w": "that",
+     "start": 2.6,
+     "end": 2.76
+    },
+    {
+     "w": "idiot",
+     "start": 2.76,
+     "end": 2.92
+    },
+    {
+     "w": "doing",
+     "start": 2.92,
+     "end": 3.08
+    },
+    {
+     "w": "still",
+     "start": 3.08,
+     "end": 3.32
+    },
+    {
+     "w": "wearing",
+     "start": 3.32,
+     "end": 3.52
+    },
+    {
+     "w": "a",
+     "start": 3.52,
+     "end": 3.6
+    },
+    {
+     "w": "dragonfly",
+     "start": 3.6,
+     "end": 4.0
+    },
+    {
+     "w": "on",
+     "start": 4.0,
+     "end": 4.1
+    },
+    {
+     "w": "his",
+     "start": 4.1,
+     "end": 4.22
+    },
+    {
+     "w": "hat?",
+     "start": 4.22,
+     "end": 4.54
+    },
+    {
+     "w": "Well,",
+     "start": 5.0,
+     "end": 5.18
+    },
+    {
+     "w": "every",
+     "start": 5.64,
+     "end": 5.86
+    }
+   ]
+  },
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "I",
+     "start": 0.0,
+     "end": 0.28
+    },
+    {
+     "w": "know,",
+     "start": 0.28,
+     "end": 0.6
+    },
+    {
+     "w": "I",
+     "start": 0.8,
+     "end": 1.0
+    },
+    {
+     "w": "know.",
+     "start": 1.0,
+     "end": 1.28
+    },
+    {
+     "w": "What's",
+     "start": 2.08,
+     "end": 2.28
+    },
+    {
+     "w": "that",
+     "start": 2.28,
+     "end": 2.38
+    },
+    {
+     "w": "idiot",
+     "start": 2.38,
+     "end": 2.76
+    },
+    {
+     "w": "doing",
+     "start": 2.76,
+     "end": 3.02
+    },
+    {
+     "w": "still",
+     "start": 3.02,
+     "end": 3.28
+    },
+    {
+     "w": "wearing",
+     "start": 3.28,
+     "end": 3.52
+    },
+    {
+     "w": "a",
+     "start": 3.52,
+     "end": 3.58
+    },
+    {
+     "w": "dragonfly",
+     "start": 3.58,
+     "end": 4.14
+    },
+    {
+     "w": "on",
+     "start": 4.14,
+     "end": 4.28
+    },
+    {
+     "w": "his",
+     "start": 4.28,
+     "end": 4.4
+    },
+    {
+     "w": "hat?",
+     "start": 4.4,
+     "end": 4.7
+    },
+    {
+     "w": "Well,",
+     "start": 5.08,
+     "end": 5.34
+    },
+    {
+     "w": "every",
+     "start": 5.6,
+     "end": 6.0
+    }
+   ]
+  }
+ ],
+ "pp_O2": [
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "Again,",
+     "start": 11.0,
+     "end": 11.38
+    },
+    {
+     "w": "bugs",
+     "start": 11.38,
+     "end": 11.66
+    },
+    {
+     "w": "were",
+     "start": 11.66,
+     "end": 11.78
+    },
+    {
+     "w": "out",
+     "start": 11.78,
+     "end": 11.94
+    },
+    {
+     "w": "earlier,",
+     "start": 11.94,
+     "end": 12.48
+    },
+    {
+     "w": "now",
+     "start": 12.88,
+     "end": 13.06
+    },
+    {
+     "w": "they're",
+     "start": 13.06,
+     "end": 13.22
+    },
+    {
+     "w": "gone.",
+     "start": 13.22,
+     "end": 13.58
+    },
+    {
+     "w": "So",
+     "start": 14.06,
+     "end": 14.22
+    },
+    {
+     "w": "does",
+     "start": 14.22,
+     "end": 14.38
+    },
+    {
+     "w": "it",
+     "start": 14.38,
+     "end": 14.48
+    },
+    {
+     "w": "work?",
+     "start": 14.48,
+     "end": 14.76
+    }
+   ]
+  },
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "Again,",
+     "start": 11.06,
+     "end": 11.52
+    },
+    {
+     "w": "bugs",
+     "start": 11.82,
+     "end": 12.1
+    },
+    {
+     "w": "were",
+     "start": 12.1,
+     "end": 12.26
+    },
+    {
+     "w": "earlier,",
+     "start": 12.26,
+     "end": 12.76
+    },
+    {
+     "w": "now",
+     "start": 13.1,
+     "end": 13.28
+    },
+    {
+     "w": "they're",
+     "start": 13.28,
+     "end": 13.44
+    },
+    {
+     "w": "gone.",
+     "start": 13.44,
+     "end": 13.84
+    },
+    {
+     "w": "So",
+     "start": 14.26,
+     "end": 14.5
+    },
+    {
+     "w": "does",
+     "start": 14.5,
+     "end": 14.68
+    },
+    {
+     "w": "it",
+     "start": 14.68,
+     "end": 14.82
+    },
+    {
+     "w": "work?",
+     "start": 14.82,
+     "end": 15.22
+    }
+   ]
+  }
+ ],
+ "mt_O3": [
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "I",
+     "start": 13.54,
+     "end": 13.7
+    },
+    {
+     "w": "see",
+     "start": 13.7,
+     "end": 13.8
+    },
+    {
+     "w": "a",
+     "start": 13.8,
+     "end": 13.88
+    },
+    {
+     "w": "bunch",
+     "start": 13.88,
+     "end": 14.1
+    },
+    {
+     "w": "of",
+     "start": 14.1,
+     "end": 14.22
+    },
+    {
+     "w": "mosquitoes,",
+     "start": 14.22,
+     "end": 14.78
+    },
+    {
+     "w": "but",
+     "start": 14.78,
+     "end": 15.08
+    },
+    {
+     "w": "they're",
+     "start": 15.08,
+     "end": 15.3
+    },
+    {
+     "w": "not",
+     "start": 15.3,
+     "end": 15.44
+    },
+    {
+     "w": "coming",
+     "start": 15.44,
+     "end": 15.72
+    },
+    {
+     "w": "near",
+     "start": 15.72,
+     "end": 15.92
+    },
+    {
+     "w": "me.",
+     "start": 15.92,
+     "end": 16.2
+    },
+    {
+     "w": "Oh,",
+     "start": 16.2,
+     "end": 16.42
+    },
+    {
+     "w": "there's",
+     "start": 16.42,
+     "end": 16.6
+    },
+    {
+     "w": "one.",
+     "start": 16.6,
+     "end": 16.82
+    },
+    {
+     "w": "Is",
+     "start": 17.12,
+     "end": 17.32
+    },
+    {
+     "w": "that",
+     "start": 17.32,
+     "end": 17.52
+    }
+   ]
+  },
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": []
+  }
+ ],
+ "mt_O4": [
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "Go",
+     "start": 32.8,
+     "end": 32.96
+    },
+    {
+     "w": "over",
+     "start": 32.96,
+     "end": 33.22
+    },
+    {
+     "w": "you.",
+     "start": 33.22,
+     "end": 33.52
+    },
+    {
+     "w": "It's",
+     "start": 34.66,
+     "end": 34.92
+    },
+    {
+     "w": "working.",
+     "start": 34.92,
+     "end": 35.3
+    }
+   ]
+  },
+  {
+   "model": "gemini-3.5-flash",
+   "err": null,
+   "words": [
+    {
+     "w": "Go",
+     "start": 32.8,
+     "end": 32.96
+    },
+    {
+     "w": "over",
+     "start": 32.96,
+     "end": 33.22
+    },
+    {
+     "w": "you.",
+     "start": 33.22,
+     "end": 33.52
+    },
+    {
+     "w": "It's",
+     "start": 34.66,
+     "end": 34.92
+    },
+    {
+     "w": "working.",
+     "start": 34.92,
+     "end": 35.3
+    }
+   ]
+  }
+ ]
+}

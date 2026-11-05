@@ -1,0 +1,182 @@
+{
+ "_note": "샥탬스토리 하이브리드 18편 LUCY 뒤 재료 — 같은 상표 공식 영상 2편(DrawLUCY) + B2 방송 케빈 시연. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/18편_LUCY/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "Gq_t8OV_T7s": {
+   "채널": "DrawLUCY(공식)",
+   "제목": "LUCY flex Instructional Video 1: Unboxing and Attaching Head and Clamp",
+   "해상도": "1920x1080 59.94fps",
+   "남의 글자": "0초 'LUCY UNIVERSITY' 로고·사람 얼굴 컷(3~165초) = 안 씀 · 쓰는 구간은 탁자 위 손만"
+  },
+  "NJPklYRULSI": {
+   "채널": "DrawLUCY(공식)",
+   "제목": "The LUCY Drawing Tool",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "110~115초 'DrawLUCY.com' 띠·사람 얼굴 컷 = 안 씀"
+  },
+  "49r_YvwH6lw": {
+   "채널": "Sony Pictures Television(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "149~161초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "Gq_t8OV_T7s.mp4",
+   "ss": 186.0,
+   "dur": 2.5,
+   "src_crop": [
+    525,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(DrawLUCY Gq_t8OV_T7s 'LUCY flex Instructional Video 1', 1080p): 손에 든 루시 본체(머리·거위목) — 탁자 위, 손만(한 샷 165~236)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "Gq_t8OV_T7s.mp4",
+   "ss": 232.0,
+   "dur": 3.0,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 루시 본체를 들어 거울 창을 보여 줌(같은 샷, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "49r_YvwH6lw.mp4",
+   "ss": 150.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(49r_YvwH6lw): 케빈이 루시 창을 들여다봄(원본 샷 149.72~152.79, 소리 끔)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "49r_YvwH6lw.mp4",
+   "ss": 158.0,
+   "dur": 2.7,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 케빈이 루시로 종이에 그림 — 위에서(샷 157.82~161.19, 소리 끔)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 60.0,
+   "dur": 2.6,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(DrawLUCY NJPklYRULSI 'The LUCY Drawing Tool', 1080p): 창 너머 비친 과일 그릇 위로 연필로 따라 그림(손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 71.2,
+   "dur": 2.6,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 종이 위 연필 과일 스케치(손만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 73.9,
+   "dur": 2.4,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 스케치가 채워짐(같은 장면 이어서, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 79.2,
+   "dur": 2.5,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 완성된 과일 그릇 그림",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 130.2,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 분홍 작약 그림",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "NJPklYRULSI.mp4",
+   "ss": 135.2,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 호랑이 그림",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

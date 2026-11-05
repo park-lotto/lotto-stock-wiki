@@ -1,0 +1,860 @@
+{
+ "version": "style_classify 2판 2026-10-17",
+ "made_at": "2026-10-17 22:55",
+ "n": 50,
+ "styles": [
+  {
+   "style": "나레만",
+   "n": 25,
+   "views_median": 372000,
+   "views_max": 3700000,
+   "ids": [
+    "D3Pc6HZ6t6c",
+    "mYxuF1A74j4",
+    "GqSkDhM_bV0",
+    "1_VtwOkbbVE",
+    "6iW_aMG_-L0",
+    "s9RVpN6MzX4",
+    "qcR1cpdR-eA",
+    "L1mZz4riyZE",
+    "Wu8vTQLkY_E",
+    "_zLL14jbrdc",
+    "RfbD3Yf9t3E",
+    "L4Y90sbL-3A",
+    "Mkf664rnZKA",
+    "w7-TjvF93yw",
+    "JM3MtB0CHS4",
+    "sZzoHbDirfA",
+    "GFpMl6gVMI0",
+    "2OTU-cK0M5Y",
+    "SSwmHxNgWtU",
+    "9XWX-ZMbxlo",
+    "4RKsl0caOFw",
+    "6t5rlyFU1iA",
+    "Q9w-kd3AIdE",
+    "5NzKJp0LbBc",
+    "H5ie-Ah1gGY"
+   ],
+   "top3": [
+    {
+     "id": "D3Pc6HZ6t6c",
+     "views": 3700000,
+     "title": "Double Your Living Room Space with This "
+    },
+    {
+     "id": "mYxuF1A74j4",
+     "views": 3300000,
+     "title": "하키 퍽 하나에 울었다 웃은 썰 (feat. 개감동)"
+    },
+    {
+     "id": "GqSkDhM_bV0",
+     "views": 2900000,
+     "title": "VR 혁신! 제자리에서 무한 걷기가 가능한 '워킹 플로어'의 원리"
+    }
+   ]
+  },
+  {
+   "style": "나레+원음",
+   "n": 5,
+   "views_median": 1300000,
+   "views_max": 2200000,
+   "ids": [
+    "w-Ygny1f8O8",
+    "t-xMApVctB0",
+    "m4nffB05HNU",
+    "LqPm7k1Aqek",
+    "rMXGuFJEWDE"
+   ],
+   "top3": [
+    {
+     "id": "w-Ygny1f8O8",
+     "views": 2200000,
+     "title": "How they recorded music before electrici"
+    },
+    {
+     "id": "t-xMApVctB0",
+     "views": 1500000,
+     "title": "I opened my grandmother's secret box tha"
+    },
+    {
+     "id": "m4nffB05HNU",
+     "views": 1300000,
+     "title": "프로 스포츠 경기장 속 숨겨진 직업의 비밀"
+    }
+   ]
+  },
+  {
+   "style": "자막만",
+   "n": 3,
+   "views_median": 205000,
+   "views_max": 8800000,
+   "ids": [
+    "ZdeZRtCeAC4",
+    "fnZNougO6NQ",
+    "iZ-TprLYezA"
+   ],
+   "top3": [
+    {
+     "id": "ZdeZRtCeAC4",
+     "views": 8800000,
+     "title": "Make sure to turn the sound on #BoneCond"
+    },
+    {
+     "id": "fnZNougO6NQ",
+     "views": 205000,
+     "title": "설거지 간단  미친 가성비 아침 샌드위치 메이커 ㄷㄷ​#샌드위치메이커 #"
+    },
+    {
+     "id": "iZ-TprLYezA",
+     "views": 188000,
+     "title": "따로 보면 두 개인데 하나가 되고… 1위는 빛을 비추면 고백까지 합니다#"
+    }
+   ]
+  },
+  {
+   "style": "역할극",
+   "n": 16,
+   "views_median": 846000,
+   "views_max": 3000000,
+   "ids": [
+    "ho5GSd-4To0",
+    "7DYbxVNz5q8",
+    "oJZDImhYdXw",
+    "v6Mrf2LDqS0",
+    "CRDgWgy4PA4",
+    "-cDiMofZWyo",
+    "sOGg5ySFBDo",
+    "eLYn_4Nckvw",
+    "WA5rBxExyP8",
+    "6KlP1xkSKnE",
+    "KWKNY4Vjguc",
+    "GnPAhXFxSV4",
+    "GqV__fVDMkk",
+    "mlaiX-U7Wgk",
+    "OksMoXVSN5M",
+    "tLuDcq_3zW4"
+   ],
+   "top3": [
+    {
+     "id": "ho5GSd-4To0",
+     "views": 3000000,
+     "title": "The Viral Pencil That Sold 50 Million Un"
+    },
+    {
+     "id": "7DYbxVNz5q8",
+     "views": 2300000,
+     "title": "The Reason Samsung Dropped a Preemptive "
+    },
+    {
+     "id": "oJZDImhYdXw",
+     "views": 1600000,
+     "title": "The insane chair that successful people "
+    }
+   ]
+  },
+  {
+   "style": "미분류",
+   "n": 1,
+   "views_median": 468000,
+   "views_max": 468000,
+   "ids": [
+    "C7jHq_emrXU"
+   ],
+   "top3": [
+    {
+     "id": "C7jHq_emrXU",
+     "views": 468000,
+     "title": "Why Sneakerheads Are Ditching Expensive "
+    }
+   ]
+  }
+ ],
+ "known_check": [
+  {
+   "id": "ZdeZRtCeAC4",
+   "want": "자막만",
+   "got": "자막만"
+  },
+  {
+   "id": "w-Ygny1f8O8",
+   "want": "나레+원음",
+   "got": "나레+원음"
+  },
+  {
+   "id": "7DYbxVNz5q8",
+   "want": "역할극",
+   "got": "역할극"
+  },
+  {
+   "id": "oJZDImhYdXw",
+   "want": "역할극",
+   "got": "역할극"
+  }
+ ],
+ "rules": {
+  "ROLE_PROMPT_EXTRA": "\n추가 규칙: 이야기 속 인물의 말(직접 인용·따옴표 대사)은 나레이터와 같은 목소리여도 반드시 별도 구절로 끊고 kind=dialog 로 적어라. 그 대사 목소리가 나레이터와 다른 사람·다른 합성 목소리면 다른 화자 라벨을 써라. 구절 하나는 8초를 넘기지 마라.",
+  "ROLE_PITCH_SEMI": 4.0,
+  "ALIGN_MIN": 0.6
+ },
+ "rows": [
+  {
+   "rank": 1,
+   "id": "ZdeZRtCeAC4",
+   "views": 8800000,
+   "style": "자막만",
+   "reason": "judge 나레 없음 + 뜯기3판 원음만+자막",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "Make sure to turn the sound on #BoneConductionSpeaker #WooferSpeaker #CampingMustHave #BudgetFrie..."
+  },
+  {
+   "rank": 2,
+   "id": "D3Pc6HZ6t6c",
+   "views": 3700000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "Double Your Living Room Space with This One Thing"
+  },
+  {
+   "rank": 3,
+   "id": "mYxuF1A74j4",
+   "views": 3300000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "하키 퍽 하나에 울었다 웃은 썰 (feat. 개감동)"
+  },
+  {
+   "rank": 4,
+   "id": "ho5GSd-4To0",
+   "views": 3000000,
+   "style": "역할극",
+   "reason": "R2: 역할 구간 3개 피치 +9.5반음(나레 156.9Hz→역할 271.2Hz)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "The Viral Pencil That Sold 50 Million Units After the Company Accidentally Went Over Budget #Seed..."
+  },
+  {
+   "rank": 5,
+   "id": "GqSkDhM_bV0",
+   "views": 2900000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "VR 혁신! 제자리에서 무한 걷기가 가능한 '워킹 플로어'의 원리"
+  },
+  {
+   "rank": 6,
+   "id": "7DYbxVNz5q8",
+   "views": 2300000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 3구절 + 한국어 화자 3명 / 피치 교차확인 +9.2반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "The Reason Samsung Dropped a Preemptive Tease Before the Foldable iPhone #GalaxyZFold8 #FoldableP..."
+  },
+  {
+   "rank": 7,
+   "id": "w-Ygny1f8O8",
+   "views": 2200000,
+   "style": "나레+원음",
+   "reason": "원음 구절 2개, 현장음 'LP판 지직거리는 잡음 소리'",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "How they recorded music before electricity ㄷㄷ#phonograph #cylinderphonograph #Edison #retroaesthe..."
+  },
+  {
+   "rank": 8,
+   "id": "1_VtwOkbbVE",
+   "views": 1900000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "The ultimate space-saving hack that even Daiso planners admire #eyeletpunch #homehacks #household..."
+  },
+  {
+   "rank": 9,
+   "id": "oJZDImhYdXw",
+   "views": 1600000,
+   "style": "역할극",
+   "reason": "R2: 역할 구간 1개 피치 +8.0반음(나레 155.3Hz→역할 246.2Hz)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "The insane chair that successful people are buying in secret #Libernovo #ErgonomicChair #OfficeCh..."
+  },
+  {
+   "rank": 10,
+   "id": "6iW_aMG_-L0",
+   "views": 1600000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "B:뜯기 3판(10-16)"
+   ],
+   "title": "카약 전복 시 생존법! 패들 놓쳐도 당황하지 마세요!"
+  },
+  {
+   "rank": 11,
+   "id": "t-xMApVctB0",
+   "views": 1500000,
+   "style": "나레+원음",
+   "reason": "원음 구절 5개",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:28, gemini-3.5-flash)"
+   ],
+   "title": "I opened my grandmother's secret box that no one could open for 100 years#vintagecosmetics#1930s#..."
+  },
+  {
+   "rank": 12,
+   "id": "s9RVpN6MzX4",
+   "views": 1500000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:28, gemini-3.5-flash)"
+   ],
+   "title": "They really weren't kidding when they said you can't trust anyone in life"
+  },
+  {
+   "rank": 13,
+   "id": "v6Mrf2LDqS0",
+   "views": 1400000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 2구절 + 한국어 화자 3명 / 피치 교차확인 +4.8반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:28, gemini-3.5-flash)"
+   ],
+   "title": "A must-have workshop gear even US developers didn't see coming #MicroClimateAir3 #DustMask #Works..."
+  },
+  {
+   "rank": 14,
+   "id": "m4nffB05HNU",
+   "views": 1300000,
+   "style": "나레+원음",
+   "reason": "원음 구절 0개, 현장음 '관중 함성 소리'",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:29, gemini-3.5-flash)"
+   ],
+   "title": "프로 스포츠 경기장 속 숨겨진 직업의 비밀"
+  },
+  {
+   "rank": 15,
+   "id": "CRDgWgy4PA4",
+   "views": 1200000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 2구절 + 한국어 화자 3명 / 피치 교차확인 +7.5반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:44, gemini-3.5-flash)"
+   ],
+   "title": "The insane kitchen gadget made by a bread lover fed up with slicing loaves by hand #BreadSlicer #..."
+  },
+  {
+   "rank": 16,
+   "id": "qcR1cpdR-eA",
+   "views": 1200000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:30, gemini-3.5-flash)"
+   ],
+   "title": "No Build, No Food? The Truth About the Only Crazy Restaurant in the World #LegoRestaurant #Unique..."
+  },
+  {
+   "rank": 17,
+   "id": "-cDiMofZWyo",
+   "views": 1000000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 1구절 + 한국어 화자 2명 / 피치 교차확인 +9.1반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:44, gemini-3.5-flash)"
+   ],
+   "title": "The life-changing pasta gadget for beginners who used to burn their noodles #pastacooker #easycoo..."
+  },
+  {
+   "rank": 18,
+   "id": "L1mZz4riyZE",
+   "views": 1000000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:31, gemini-3.5-flash)"
+   ],
+   "title": "The Shocker: Why Foreigners Can’t Stop Buying This Specific Beauty Product #PorePrimer #OliveYoun..."
+  },
+  {
+   "rank": 19,
+   "id": "Wu8vTQLkY_E",
+   "views": 973000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:32, gemini-3.5-flash)"
+   ],
+   "title": "The Toy That Went Viral Among Marvel Fans for Its Insane Quality #IronManGauntlet #KidultToy #Adu..."
+  },
+  {
+   "rank": 20,
+   "id": "LqPm7k1Aqek",
+   "views": 970000,
+   "style": "나레+원음",
+   "reason": "원음 구절 1개",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:32, gemini-3.5-flash)"
+   ],
+   "title": "When Family Love Meets Cutting-Edge LiDAR Tech! #AutonomousChair #RobotWheelchair #TechShorts #Sm..."
+  },
+  {
+   "rank": 21,
+   "id": "_zLL14jbrdc",
+   "views": 968000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:32, gemini-3.5-flash)"
+   ],
+   "title": "Thought it was a tumbler, but it’s an oxygen tank for 10 minutes of underwater breathing? #WaterA..."
+  },
+  {
+   "rank": 22,
+   "id": "sOGg5ySFBDo",
+   "views": 886000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 2구절 + 한국어 화자 2명 / 피치 교차확인 +6.0반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:33, gemini-3.5-flash)"
+   ],
+   "title": "The stick coffee made by the Vietnamese coffee queen after a multi-billion dollar divorce settlem..."
+  },
+  {
+   "rank": 23,
+   "id": "eLYn_4Nckvw",
+   "views": 867000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 3구절 + 한국어 화자 2명 / 피치 교차확인 -0.3반음 (문턱 미만 — 제미나이 화자 분리만 근거)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:33, gemini-3.5-flash)"
+   ],
+   "title": "The Insane Insulation Ice Tray Hack That Even Daiso Staff Were Stunned By ㄷㄷ#ClearIce #HomeCafeHa..."
+  },
+  {
+   "rank": 24,
+   "id": "WA5rBxExyP8",
+   "views": 825000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 4구절 + 한국어 화자 4명 / 피치 교차확인 +2.8반음 (문턱 미만 — 제미나이 화자 분리만 근거)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:33, gemini-3.5-flash)"
+   ],
+   "title": "Huawei totally embarrassed themselves after stealing and launching an unreleased iPhone Fold desi..."
+  },
+  {
+   "rank": 25,
+   "id": "6KlP1xkSKnE",
+   "views": 628000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 3구절 + 한국어 화자 4명 / 피치 교차확인 +8.3반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:45, gemini-3.5-flash)"
+   ],
+   "title": "Apple's Crazy Comeback After 7 Years That Left Samsung Headquarters in Shock#iPhoneFold #iPhoneUl..."
+  },
+  {
+   "rank": 26,
+   "id": "rMXGuFJEWDE",
+   "views": 623000,
+   "style": "나레+원음",
+   "reason": "원음 구절 4개",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:35, gemini-3.5-flash)"
+   ],
+   "title": "Spending my rent money on a full room-scale VR setup #VRgames #MetaQuest3 #GamingGear #TechGeek #..."
+  },
+  {
+   "rank": 27,
+   "id": "RfbD3Yf9t3E",
+   "views": 589000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 -0.8반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:35, gemini-3.5-flash)"
+   ],
+   "title": "술 좋아하는 친구 있으면 이거 보여줘요 (빈병 활용법)"
+  },
+  {
+   "rank": 28,
+   "id": "C7jHq_emrXU",
+   "views": 468000,
+   "style": "미분류",
+   "reason": "한국어 나레는 있음(스피치매틱스 58단어·judge 나레) — 그러나 제미나이 받아쓰기가 구절 0개라 원음 유무를 못 잼",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:51, gemini-3.5-flash)"
+   ],
+   "title": "Why Sneakerheads Are Ditching Expensive Gear for This Trick #HairdryerShrinkWrap #HeatShrinkWrap ..."
+  },
+  {
+   "rank": 29,
+   "id": "L4Y90sbL-3A",
+   "views": 382000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:36, gemini-3.5-flash)"
+   ],
+   "title": "Household items that make you wonder more about the creator's taste than their function #StrangeI..."
+  },
+  {
+   "rank": 30,
+   "id": "Mkf664rnZKA",
+   "views": 372000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:36, gemini-3.5-flash)"
+   ],
+   "title": "The Truth About the Black-and-White Tablet That Sold Out Worldwide #Remarkable2 #E-Paper #TabletR..."
+  },
+  {
+   "rank": 31,
+   "id": "w7-TjvF93yw",
+   "views": 371000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:37, gemini-3.5-flash)"
+   ],
+   "title": "For people who take cleanup more seriously than the painting itself #DIYpainting #painting #DIYin..."
+  },
+  {
+   "rank": 32,
+   "id": "KWKNY4Vjguc",
+   "views": 346000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 1구절 + 한국어 화자 2명 / 피치 교차확인 +9.2반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:37, gemini-3.5-flash)"
+   ],
+   "title": "Why Samsung engineers melted titanium #GalaxyZ8 #GalaxyZFold8 #SamsungElectronics"
+  },
+  {
+   "rank": 33,
+   "id": "JM3MtB0CHS4",
+   "views": 265000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:38, gemini-3.5-flash)"
+   ],
+   "title": "Genghis Khan Would Be Blown Away? Mongolian Horse Archery A to Z"
+  },
+  {
+   "rank": 34,
+   "id": "sZzoHbDirfA",
+   "views": 251000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:38, gemini-3.5-flash)"
+   ],
+   "title": "100억 원 챌린지인데 아무도 못 한다고? 진짜 이유 봤을 때 소름"
+  },
+  {
+   "rank": 35,
+   "id": "GnPAhXFxSV4",
+   "views": 234000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 3구절 + 한국어 화자 3명 / 피치 교차확인 -3.0반음 (문턱 미만 — 제미나이 화자 분리만 근거)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:38, gemini-3.5-flash)"
+   ],
+   "title": "The Viral Japanese 3-Second Ice Slime That’s Taking Over#CoolVabubabu #CoolingSpray #SummerEssent..."
+  },
+  {
+   "rank": 36,
+   "id": "GFpMl6gVMI0",
+   "views": 210000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:39, gemini-3.5-flash)"
+   ],
+   "title": "You’re Using Your Cup Noodle Lid Like That? Watch This Before You Toss It#CupNoodles #LifeHacks #..."
+  },
+  {
+   "rank": 37,
+   "id": "GqV__fVDMkk",
+   "views": 210000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 2구절 + 한국어 화자 3명 / 피치 교차확인 +8.8반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:39, gemini-3.5-flash)"
+   ],
+   "title": "This insane shampoo bottle melts away without a trace #SoftBottle #EcoFriendlyItem #ZeroWaste"
+  },
+  {
+   "rank": 38,
+   "id": "mlaiX-U7Wgk",
+   "views": 208000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 2구절 + 한국어 화자 2명 / 피치 교차확인 +7.6반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:39, gemini-3.5-flash)"
+   ],
+   "title": "The Crazy Ear Pick Made by an Angry Developer After an ENT Visit #SmartEarPick #CameraEarPick #Ea..."
+  },
+  {
+   "rank": 39,
+   "id": "fnZNougO6NQ",
+   "views": 205000,
+   "style": "자막만",
+   "reason": "judge 나레 없음 + 스피치매틱스 한국어 단어 0",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)"
+   ],
+   "title": "설거지 간단  미친 가성비 아침 샌드위치 메이커 ㄷㄷ​#샌드위치메이커 #자취생꿀템 #맥모닝만들기 #주방꿀템 #가성비아이템"
+  },
+  {
+   "rank": 40,
+   "id": "2OTU-cK0M5Y",
+   "views": 193000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 -1.1반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:39, gemini-3.5-flash)"
+   ],
+   "title": "Stop using that bulky laundry rack"
+  },
+  {
+   "rank": 41,
+   "id": "SSwmHxNgWtU",
+   "views": 191000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 +1.0반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:40, gemini-3.5-flash)"
+   ],
+   "title": "트럼프 임기 3분의 1을 골프장에서 보낸 이유 (feat. 손녀는 프로)"
+  },
+  {
+   "rank": 42,
+   "id": "iZ-TprLYezA",
+   "views": 188000,
+   "style": "자막만",
+   "reason": "R4: 제미나이 빈 답 + 스피치매틱스 한국어 단어 0 — judge 는 나레 있다고 함(충돌, 귀 확인 안 함)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:47, gemini-3.5-flash)"
+   ],
+   "title": "따로 보면 두 개인데 하나가 되고… 1위는 빛을 비추면 고백까지 합니다#반지추천 #커플링 #커플선물 #주얼리추천"
+  },
+  {
+   "rank": 43,
+   "id": "OksMoXVSN5M",
+   "views": 171000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 1구절 + 한국어 화자 2명 / 피치 교차확인 -0.6반음 (문턱 미만 — 제미나이 화자 분리만 근거)",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:47, gemini-3.5-flash)"
+   ],
+   "title": "The SME Ketchup That Made Big Brands Wave the White Flag After One Look at the Label #TomatoKetch..."
+  },
+  {
+   "rank": 44,
+   "id": "9XWX-ZMbxlo",
+   "views": 171000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 -0.2반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:41, gemini-3.5-flash)"
+   ],
+   "title": "The ultimate cheat code to hide yellow teeth #TeethWhitening #TeethPatch #DIYTeethWhitening #Dent..."
+  },
+  {
+   "rank": 45,
+   "id": "4RKsl0caOFw",
+   "views": 160000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:41, gemini-3.5-flash)"
+   ],
+   "title": "The Secret Behind This Wild New Hoodie Made for Chewing #FidgetHoodie #SquishyHoodie #ADHDMustHave"
+  },
+  {
+   "rank": 46,
+   "id": "6t5rlyFU1iA",
+   "views": 154000,
+   "style": "나레만",
+   "reason": "judge 역할 줄 6개가 말소리에 안 맞음(자막에만 있는 대사로 봄) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:41, gemini-3.5-flash)"
+   ],
+   "title": "An ad that briefly forgot the purpose of a screen protector lol #ScreenProtector #TemperedGlass #..."
+  },
+  {
+   "rank": 47,
+   "id": "Q9w-kd3AIdE",
+   "views": 130000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 +1.8반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:41, gemini-3.5-flash)"
+   ],
+   "title": "Cheongdam-dong Celebrity Protein Hair Mask Hack #HowToGetBetterHair #HairMaskRecommendation #AtHo..."
+  },
+  {
+   "rank": 48,
+   "id": "5NzKJp0LbBc",
+   "views": 125000,
+   "style": "나레만",
+   "reason": "역할 줄 1구간 있으나 나레와 같은 목소리(피치 +2.6반음) / 한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:48, gemini-3.5-flash)"
+   ],
+   "title": "먹물 바른 문어에 종이 꾹! 찍었더니 수백만원짜리 예술 작품이?!"
+  },
+  {
+   "rank": 49,
+   "id": "H5ie-Ah1gGY",
+   "views": 114000,
+   "style": "나레만",
+   "reason": "한국어 화자 1명, 원음 구절 0·현장음 없음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:42, gemini-3.5-flash)"
+   ],
+   "title": "베르나베우 스타디움 숨겨진 기술력 실화? (2조원의 비밀)"
+  },
+  {
+   "rank": 50,
+   "id": "tLuDcq_3zW4",
+   "views": 111000,
+   "style": "역할극",
+   "reason": "받아쓰기 한국어 대사 4구절 + 한국어 화자 3명 / 피치 교차확인 +8.7반음",
+   "sources": [
+    "A:judge(1차 10-15)",
+    "A:스피치매틱스 asr(1차 10-15)",
+    "C:새 받아쓰기(2026-10-17 22:43, gemini-3.5-flash)"
+   ],
+   "title": "The Mac lipstick that caused a photo-editing controversy, it turns out there was a major plot twi..."
+  }
+ ],
+ "weak": [
+  "- oJZDImhYdXw 역할극 — 받아쓰기가 대체 모델(gemini-flash-lite-latest) 결과",
+  "- m4nffB05HNU 나레+원음 — 원음 말소리 구절 0, 제미나이 현장음 설명('관중 함성 소리')만 근거",
+  "- eLYn_4Nckvw 역할극 — 제미나이 화자 분리만 근거(피치 차 -0.27반음 < 4.0; 비슷한 높이의 다른 목소리면 피치로 못 가름)",
+  "- WA5rBxExyP8 역할극 — 제미나이 화자 분리만 근거(피치 차 2.78반음 < 4.0; 비슷한 높이의 다른 목소리면 피치로 못 가름)",
+  "- C7jHq_emrXU 미분류 — 한국어 나레는 있음(스피치매틱스 58단어·judge 나레) — 그러나 제미나이 받아쓰기가 구절 0개라 원음 유무를 못 잼",
+  "- GnPAhXFxSV4 역할극 — 제미나이 화자 분리만 근거(피치 차 -3.02반음 < 4.0; 비슷한 높이의 다른 목소리면 피치로 못 가름)",
+  "- iZ-TprLYezA 자막만 — R4: 제미나이 빈 답 + 스피치매틱스 한국어 단어 0 — judge 는 나레 있다고 함(충돌, 귀 확인 안 함)",
+  "- OksMoXVSN5M 역할극 — 제미나이 화자 분리만 근거(피치 차 -0.56반음 < 4.0; 비슷한 높이의 다른 목소리면 피치로 못 가름)"
+ ]
+}

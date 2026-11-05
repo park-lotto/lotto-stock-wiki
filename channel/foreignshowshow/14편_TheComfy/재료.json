@@ -1,0 +1,1114 @@
+{
+ "_note": "샥탬스토리 14편 The Comfy 재료 계획. 창 1080x1052(벤치 D6H6sj3pap4, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(IK_JDKOLP8g_audio.m4a).",
+ "sources": {
+  "IK_JDKOLP8g": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "The Sharks Snuggle Down With Comfy! | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137) + 140 영어(소리 트랙 하나)",
+   "길이": 705.9,
+   "받은 구간": "전체",
+   "남의 글자": "아래 파란 이름·제안 띠(16~20·22~24·442~448·589·604~610·634초) 시각 안 씀 · 686초 뒤 SHARK TANK 끝 화면 안 씀 · 화면 속 TV 홍보 영상의 'Comfy' 글자 = 제품 브랜드"
+  },
+  "ISf6BtA7kXk": {
+   "채널": "In The Know(리뷰)",
+   "제목": "The Comfy from 'Shark Tank' is our new favorite wearable blanket",
+   "해상도": "1920x1080 23.976fps",
+   "길이": 95.5,
+   "남의 글자": "7.5~9.8 'IN THE KNOW' 글자·오른쪽 위 작은 채널 표식 — 쓴 58.3~58.9 로고 근접엔 없음(시트 눈 확인)"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "샤크들이 비웃은",
+  "line2": "입는 담요의 반전?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 93.27,
+   "audio_dur": 0.64,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    37.9,
+    38.54
+   ],
+   "ss": 37.9,
+   "dur": 0.64,
+   "t_final_est": [
+    0.0,
+    0.64
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    499,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대: 창업자 가슴의 'the original Comfy' 로고 티셔츠(원본 샷 33.37~42.78, 소리 = 다음 컷 투자자 'Oh my God' cover · R3 원 후보 바닷가 홍보 영상·검은 컴피 투자자·제품 근접 로고는 얼굴 겹침·추적 신뢰·크기로 거절)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 93.92,
+   "audio_dur": 0.37,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    93.92,
+    94.29
+   ],
+   "ss": 93.92,
+   "dur": 0.37,
+   "t_final_est": [
+    0.64,
+    1.01
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    374,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "정장 투자자가 크게 웃으며 'Oh my God'(말하는 본인, 샷 93.89~95.70) — 벤치 0초 같은 투자자",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    94.33,
+    95.281
+   ],
+   "ss": 94.33,
+   "dur": 0.951,
+   "t_final_est": [
+    1.01,
+    1.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    367,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 투자자가 계속 웃음(앞 컷 이어서, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    46.1,
+    47.387
+   ],
+   "ss": 46.1,
+   "dur": 1.287,
+   "t_final_est": [
+    1.96,
+    3.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    745,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대: 창업자가 회색 컴피를 머리부터 뒤집어씀(원본 샷 46.05~47.98)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 379.36,
+   "audio_dur": 3.04,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    379.36,
+    382.4
+   ],
+   "ss": 379.36,
+   "dur": 3.04,
+   "t_final_est": [
+    3.25,
+    6.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    389,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자가 '특별하지 않다, 빠지겠다'(말하는 본인, 샷 379.35~382.58)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    69.55,
+    71.065
+   ],
+   "ss": 69.55,
+   "dur": 1.515,
+   "t_final_est": [
+    6.29,
+    7.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    249,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "흰 옷 투자자(바바라 — 원음 '바바라' 호명·이름 띠로 확인)가 손뼉 치며 웃음(원본 샷 69.50~71.57, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    86.9,
+    88.066
+   ],
+   "ss": 86.9,
+   "dur": 1.166,
+   "t_final_est": [
+    7.8,
+    8.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 와이드(원본 샷 86.85~88.42, 바바라 포함 — 앞 판의 흰 로고 화면은 자막 '바바라의'가 흰 글자 위에 겹쳐 안 읽혀 바꿈)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 74.39,
+   "audio_dur": 4.6,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    74.39,
+    78.99
+   ],
+   "ss": 74.39,
+   "dur": 4.6,
+   "t_final_est": [
+    8.97,
+    13.57
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    745,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 셔츠 창업자가 손짓하며 설명(말하는 본인, 왼쪽 가장자리에 회색 컴피 모자를 쓴 형제 — 샷 71.57~79.38)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "N3",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    114.3,
+    116.147
+   ],
+   "ss": 114.3,
+   "dur": 1.847,
+   "t_final_est": [
+    13.57,
+    15.42
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "회색 컴피 겉감·안감 근접(원본 샷 114.25~116.42)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    118.75,
+    120.056
+   ],
+   "ss": 118.75,
+   "dur": 1.306,
+   "t_final_est": [
+    15.42,
+    16.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "큰 앞주머니에 손을 넣어 보임(근접, 샷 118.72~120.25)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "O4",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 147.34,
+   "audio_dur": 2.11,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    147.34,
+    149.45
+   ],
+   "ss": 147.34,
+   "dur": 2.11,
+   "t_final_est": [
+    16.72,
+    18.83
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    745,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대: 창업자가 컴피를 벗어 들고 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 149.52,
+   "audio_dur": 3.7,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    149.52,
+    153.22
+   ],
+   "ss": 149.52,
+   "dur": 3.7,
+   "t_final_est": [
+    18.83,
+    22.53
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 흰색 면이 나오게 뒤집어 입음(샷 149.48~153.29)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    211.8,
+    213.633
+   ],
+   "ss": 211.8,
+   "dur": 1.833,
+   "t_final_est": [
+    22.53,
+    24.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자들이 컴피를 입고 무대 소파에 앉음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N4",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    225.0,
+    226.58
+   ],
+   "ss": 225.0,
+   "dur": 1.58,
+   "t_final_est": [
+    24.36,
+    25.94
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "소파에 누운 투자자들(컴피 입음)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "O5",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 244.0,
+   "audio_dur": 1.45,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    244.0,
+    245.45
+   ],
+   "ss": 244.0,
+   "dur": 1.45,
+   "t_final_est": [
+    25.94,
+    27.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자가 묻는 중(원본 샷 241.17~245.48)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "O5",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 245.5,
+   "audio_dur": 1.9,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    245.5,
+    247.4
+   ],
+   "ss": 245.5,
+   "dur": 1.9,
+   "t_final_est": [
+    27.39,
+    29.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    443,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "원본 다음 샷(245.48~247.41)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O5",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 247.45,
+   "audio_dur": 0.87,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    247.45,
+    248.32
+   ],
+   "ss": 247.45,
+   "dur": 0.87,
+   "t_final_est": [
+    29.29,
+    30.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    746,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 형제 'Brand new'(말하는 본인, 샷 247.41~250.12)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "O6",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 252.48,
+   "audio_dur": 1.16,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    252.48,
+    253.64
+   ],
+   "ss": 252.48,
+   "dur": 1.16,
+   "t_final_est": [
+    30.16,
+    31.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    643,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 반문(원본 샷 251.85~253.65 — 'yet' 꼬리는 샷 경계에서 끊음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "N5",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    571.1,
+    573.19
+   ],
+   "ss": 571.1,
+   "dur": 2.09,
+   "t_final_est": [
+    31.32,
+    33.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    433,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "흰 옷 투자자(바바라)가 손짓하며 말함(원본 샷 570.94~574.67, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "N5",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    582.9,
+    583.754
+   ],
+   "ss": 582.9,
+   "dur": 0.854,
+   "t_final_est": [
+    33.41,
+    34.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    546,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 형제가 웃으며 듣는 모습(샷 582.85~584.38)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "O7",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 640.41,
+   "audio_dur": 0.34,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    640.41,
+    640.75
+   ],
+   "ss": 640.41,
+   "dur": 0.34,
+   "t_final_est": [
+    34.27,
+    34.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    683,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 형제 'Barbara,'(말하는 본인, 샷 638.71~640.77)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O7",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 640.8,
+   "audio_dur": 1.06,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    640.8,
+    641.86
+   ],
+   "ss": 640.8,
+   "dur": 1.06,
+   "t_final_est": [
+    34.61,
+    35.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    358,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "바바라(원본 반응 컷, 샷 640.77~641.88)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O7",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 641.9,
+   "audio_dur": 1.16,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    641.9,
+    643.06
+   ],
+   "ss": 641.9,
+   "dur": 1.16,
+   "t_final_est": [
+    35.67,
+    36.83
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    35,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 'you have a deal'(말하는 본인, 샷 641.88~643.08)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O7",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 643.1,
+   "audio_dur": 0.92,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    643.1,
+    644.02
+   ],
+   "ss": 643.1,
+   "dur": 0.92,
+   "t_final_est": [
+    36.83,
+    37.75
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    212,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "바바라 'Okie dokie'(말하는 본인, 샷 643.08~644.04)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "O7",
+   "kind": "원음",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": false,
+   "audio_src": "IK_JDKOLP8g_audio.m4a",
+   "audio_ss": 644.06,
+   "audio_dur": 1.1,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    644.06,
+    645.16
+   ],
+   "ss": 644.06,
+   "dur": 1.1,
+   "t_final_est": [
+    37.75,
+    38.85
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 와이드 — 창업자가 바바라에게 걸어감(샷 644.04~645.18)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "N6",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    645.2,
+    646.818
+   ],
+   "ss": 645.2,
+   "dur": 1.618,
+   "t_final_est": [
+    38.85,
+    40.47
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 형제가 서로 끌어안고 웃음(원본 샷 645.18~647.08, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 26,
+   "line": "N6",
+   "kind": "나레",
+   "src": "IK_JDKOLP8g.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "src_orig_span": [
+    649.1,
+    650.761
+   ],
+   "ss": 649.1,
+   "dur": 1.661,
+   "t_final_est": [
+    40.47,
+    42.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    800,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "바바라가 창업자와 포옹(원본 샷, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/14편_TheComfy/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.64
+   ],
+   "target": [
+    588,
+    984,
+    825,
+    1134
+   ],
+   "target_what": "창업자 티셔츠의 the original Comfy 로고(제품 상표) — 손 상자 = 37.9초 완성본 격자 sheet/sh.jpg 눈 측정",
+   "why": "R3 0초 원 = 물건(제품) — 벤치 0~1.4 원은 웃는 투자자 얼굴이지만 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    706,
+    1059
+   ],
+   "size": 314,
+   "face_clear": true,
+   "target_box": [
+    588,
+    984,
+    825,
+    1134
+   ],
+   "target_path": [
+    [
+     0.0,
+     588.0,
+     984.0,
+     825.0,
+     1134.0
+    ],
+    [
+     0.067,
+     587.3,
+     981.0,
+     824.3,
+     1131.0
+    ],
+    [
+     0.133,
+     587.3,
+     980.0,
+     824.3,
+     1130.0
+    ],
+    [
+     0.2,
+     587.7,
+     981.7,
+     824.7,
+     1131.7
+    ],
+    [
+     0.267,
+     588.7,
+     985.3,
+     825.7,
+     1135.3
+    ],
+    [
+     0.333,
+     590.0,
+     988.0,
+     827.0,
+     1138.0
+    ],
+    [
+     0.4,
+     590.3,
+     987.3,
+     827.3,
+     1137.3
+    ],
+    [
+     0.467,
+     588.7,
+     984.0,
+     825.7,
+     1134.0
+    ],
+    [
+     0.533,
+     587.7,
+     981.0,
+     821.7,
+     1129.0
+    ],
+    [
+     0.6,
+     589.0,
+     980.0,
+     817.0,
+     1124.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     706,
+     1059
+    ],
+    [
+     0.067,
+     706,
+     1056
+    ],
+    [
+     0.133,
+     706,
+     1055
+    ],
+    [
+     0.2,
+     706,
+     1057
+    ],
+    [
+     0.267,
+     707,
+     1060
+    ],
+    [
+     0.333,
+     708,
+     1063
+    ],
+    [
+     0.4,
+     709,
+     1062
+    ],
+    [
+     0.467,
+     707,
+     1059
+    ],
+    [
+     0.533,
+     705,
+     1055
+    ],
+    [
+     0.6,
+     703,
+     1052
+    ]
+   ],
+   "track_conf": 0.916,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.916 · 원 314px = 물건 반대각선 140×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "O1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.64,
+    1.02
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "원 다음 얼굴 컷 첫 프레임(13편과 같은 꼴)"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.5 담요 컷"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 6.0 반전 컷"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 18.0 소재 컷"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    2.18,
+    2.63
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 26.0 '뒤집어 입을 수도' — 원본 149.52 = 줄 안 2.18"
+  },
+  {
+   "line": "O6",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 30.5 '판매가 아예 없다고?'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 45.0 지분 컷"
+  },
+  {
+   "line": "O7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.49,
+    1.94
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "거래 성사 'you have a deal' — 원본 641.90 = 줄 안 1.49"
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+ "_note": "숏템리폿 4차 34 체스넛 무브 하이브리드 — 앞 = 숏템리폿 현장썰 The Curious Object 원음형 박창수판(34_ChessnutMove/front), 뒤 = 쿠팡 9771196745 'Chessnut Move 로봇 체스보드'(같은 제품, 로켓). 뒤 화면 = 손·제품 컷만(위에서 찍은 판·말을 드는 손·폰 든 손·쿠팡 사진 — 얼굴 0). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "체스넛 무브 로봇 체스판(쿠팡 9771196745, 같은 제품 — 같은 이름 9373434190·9723658288)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/34_ChessnutMove/front/render/final.mp4",
+  "cut": 19.0,
+  "why": "O2 'goodness' 끝(앞 18.79) 뒤 0.2초 — 원본 컷 170.42(앞 19.21) 앞",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 21:57, 'chessnut' 1회, 33_cand/coupang_f.json): 9771196745 'Chessnut Move 로봇 체스보드 자동 피스 이동 음성 제어 비디오 통합'(로켓) · 같은 이름 9373434190 'Chessnut 체스넛 무브 로봇 체스' · 9723658288 · 대표 사진(front/src/cp_9771196745.jpg) = 체스넛 무브 판(흰 바탕) · 끝 사진(cp_9373434190.jpg) = 어두운 바탕 판",
+  "o_reset": "The Curious Object 원본(스피치매틱스) 96.3~117.5 'Let's see when I hit reset board … They're just getting in line right now' · 356.0~360.3 'even if you don't have a phone, you can still reset the entire board with a press of a button' · 원본 119.87~130.46 화면(말들이 제자리로 감)",
+  "o_light": "The Curious Object 원본 221.8~230.1 'when you lift a piece, all the blue dots that light up indicate what move you can make' · 원본 225.06~226.98 화면(말을 드는 손·파란 점)",
+  "o_online": "The Curious Object 원본 145.2~149.0 'when you hit online, you can connect your chess.com account' · 332.5~334.2 'I'm playing against a real person online right now' · 263.7~265.1 'They'll know exactly where to go with their little wheels' · 원본 204.54~216.84 화면(폰 앱으로 두면 판의 말이 움직임)"
+ },
+ "흥미이음": {
+  "원본흥미": "보드 초기화를 누르자 말들이 혼자 줄을 서 — 'They're so cute … they're sentient'",
+  "뒤흥미": "쿠팡의 바로 그 체스넛 무브 — 버튼 한 번에 제자리·갈 칸에 불·온라인 상대 수를 말이 대신 움직임",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 'Chessnut Move 로봇 체스보드' + 사진(판 아래 CHESSNUT 글) = 원본 상자 'MOVE Experience Robotic Chess Like Never Before'(16~19초)"
+ },
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"},
+ "cps_target": 8.3,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4},
+ "front_style": {"frame": "channel/hottemreport/현장썰4차/34_ChessnutMove/front/frame_render.json", "title": "말이 혼자\n움직이는 체스판"},
+ "transition": {"kind": "slideleft", "dur": 0.25},
+ "back_style": "shortem",
+ "line_role": {"B1": "공개", "B2": "고조", "B3": "고조", "B4": "고조", "B5": "cta"},
+ "back_caption_lines": {
+  "B1": {"emphasis": {"words": ["진짜"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 쿠팡 사진 위 칸은 흰 글씨만 · '진짜'는 나무 탁자·판 위 — 하늘", "enter": {"kind": "pop", "ms": 300}},
+  "B2": {"emphasis": {"words": ["알아서"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "검정·흰 칸 판·나무 탁자 위 — 하늘"},
+  "B3": {"emphasis": {"words": ["불이"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "검정·흰 칸 판 위 — 하늘"},
+  "B4": {"emphasis": {"words": ["대신"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "판·폰 든 손 위 — 하늘"},
+  "B5": {"emphasis": {"words": ["자리를 못"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "어두운 바탕 쿠팡 사진 위 — 하늘", "enter": {"kind": "fade", "ms": 300}}
+ },
+ "sfx": {"pack_customer": 0},
+ "lines": [
+  {"id": "B1", "role": "공개", "point": "잉", "answer_at": 3, "kind": "tts", "seg": "B", "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 체스판이 진짜 있더라고요.", "caps": ["근데 저 영상 보고", "쿠팡에서 찾아봤더니", "그 체스판이", "진짜 있더라고요"], "emph": ["진짜"], "facts": ["c0"]},
+  {"id": "B2", "role": "고조", "point": "권위", "kind": "tts", "seg": "B", "tts": "버튼 한 번만 누르면, 흩어진 말들이 알아서 제자리로 간대요.", "caps": ["버튼 한 번만 누르면", "흩어진 말들이", "알아서", "제자리로 간대요"], "emph": ["알아서"], "facts": ["o_reset"]},
+  {"id": "B3", "role": "고조", "kind": "tts", "seg": "B", "tts": "말을 들어 올리면, 갈 수 있는 칸에 불이 들어온다고 하고요.", "caps": ["말을 들어 올리면", "갈 수 있는 칸에", "불이", "들어온다고 하고요"], "emph": ["불이"], "facts": ["o_light"]},
+  {"id": "B4", "role": "고조", "kind": "tts", "seg": "B", "tts": "폰 앱으로 온라인 상대랑 둬도, 상대 수를 말이 대신 움직여 준대요.", "caps": ["폰 앱으로", "온라인 상대랑 둬도", "상대 수를 말이", "대신 움직여 준대요"], "emph": ["대신"], "facts": ["o_online"]},
+  {"id": "B5", "role": "cta", "kind": "tts", "seg": "B", "tts": "친구들 놀러 왔을 때 켜 놨더니, 다들 판 앞에서 자리를 못 뜨더라고요.", "caps": ["친구들 놀러 왔을 때", "켜 놨더니", "다들 판 앞에서", "자리를 못 뜨더라고요"], "emph": ["자리를 못"], "facts": []}
+ ]
+}

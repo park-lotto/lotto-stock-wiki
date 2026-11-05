@@ -1,0 +1,741 @@
+{
+ "id": "qBPnRzR-VaQ",
+ "dur": 13.816,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "염색약 바꾸고",
+   "colors": [
+    {
+     "word": "염색약 바꾸고",
+     "hex": "#FDFDFD"
+    }
+   ]
+  },
+  {
+   "text": "머릿결 살아난 최은경",
+   "colors": [
+    {
+     "word": "머릿결 살아난",
+     "hex": "#A6FEF6"
+    },
+    {
+     "word": "최은경",
+     "hex": "#F9F59D"
+    }
+   ],
+   "note": "끝 낱말만 연노랑(1판 8/8)"
+  }
+ ],
+ "source_label": "출처 : 최은경의 관리사무소",
+ "layout": {
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "caption_band": [
+   1226,
+   1390
+  ],
+  "title_y": [
+   [
+    164,
+    266
+   ],
+   [
+    291,
+    394
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1557
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": "#FFFFFF",
+  "credit_text": "출처 : 최은경의 관리사무소",
+  "note": "검정 바탕 + 2줄 제목(1줄 흰·2줄 민트+끝 낱말 연노랑, 기울임) + 정사각 영상 창 y420~1500 + 창 안 자막(나레 노랑 위 y≈1226 · 원음 아래 y≈1322) + 창 아래 '출처 : <원본 채널>' 흰 32px"
+ },
+ "lines": [
+  {
+   "t0": 0.2,
+   "t1": 0.8,
+   "speaker": "원음:최은경",
+   "text": "완전 부드러워",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "typing(0.2 '완전' + 노랑 반짝이 지팡이 → 0.4 전체)",
+   "enter_ms": 200,
+   "variant": "원음(연노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1390
+   ],
+   "fill_hex": "#F9FEAB",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "반짝이 지팡이(노랑 별가루 꼬리)",
+     "x": 600,
+     "y": 1330,
+     "w": 200,
+     "t_in": 0.2,
+     "t_out": 0.45,
+     "anim": "글자 따라 왼→오 별가루"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "수건으로 머리 닦는 상반신",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.9,
+   "t1": 1.467,
+   "speaker": "원음:최은경",
+   "text": "뿌리도 연결이",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(연초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#B0FFCE",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "젖은 갈색 머리 정수리 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.2,
+   "speaker": "원음:최은경",
+   "text": "너무 잘 됐는데?",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "typing(1.6 '너무 잘' + 흰 집중선 → 1.8 전체)",
+   "enter_ms": 200,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1391
+   ],
+   "fill_hex": "#F7F2F2",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 집중선(짧은 선 여러 개가 글자 둘레로 튐)",
+     "x": 540,
+     "y": 1320,
+     "w": 420,
+     "t_in": 1.6,
+     "t_out": 1.75,
+     "anim": "글자 둘레 짧은 흰 선 → 1~2프레임 뒤 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "젖은 머리를 손으로 넘김",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.333,
+   "t1": 2.833,
+   "speaker": "원음:최은경",
+   "text": "아 향도 좋다",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(연초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#C3FFCF",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 밑줄 곡선(글자 아래 휘어진 선)",
+     "x": 540,
+     "y": 1395,
+     "w": 300,
+     "t_in": 2.333,
+     "t_out": 2.5,
+     "anim": "글자 아래 곡선이 그려졌다 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "머리카락을 코에 대고 냄새 맡음",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.867,
+   "t1": 3.467,
+   "speaker": "원음:최은경",
+   "text": "이히~",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1329,
+    1389
+   ],
+   "fill_hex": "#F5DAEE",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "젖은 머리 옆모습(웃음)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.467,
+   "t1": 4.6,
+   "speaker": "나레",
+   "text": "최은경이 집에서 쓰는",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1293
+   ],
+   "fill_hex": "#F4FF1D",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "비닐장갑 낀 손이 머리에 염색약 바름",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.6,
+   "t1": 5.767,
+   "speaker": "나레",
+   "text": "인생 염색약이라는데",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1284
+   ],
+   "fill_hex": "#F4FF1F",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "빗으로 염색약 바르는 손",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.833,
+   "t1": 7.0,
+   "speaker": "원음:최은경",
+   "text": "염색은 꺼매야 된다",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "fade(5.8 흐림 → 5.87 선명)",
+   "enter_ms": 67,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#F5E6E5",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "염색",
+     "hex": "#F891B8",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "최은경 상반신, 염색약 상자 듦",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.133,
+   "t1": 8.0,
+   "speaker": "원음:최은경",
+   "text": "어두워야 된다 생각을",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1391
+   ],
+   "fill_hex": "#F7DCF3",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "염색약 상자 들고 말함",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.133,
+   "t1": 8.8,
+   "speaker": "원음:최은경",
+   "text": "아예 그냥 버리세요",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(빨강)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1389
+   ],
+   "fill_hex": "#CD1D60",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 구름 덩어리(글자 양옆에서 뭉게 퍼짐)",
+     "x": 540,
+     "y": 1350,
+     "w": 600,
+     "t_in": 8.133,
+     "t_out": 8.35,
+     "anim": "구름이 퍼졌다 사라짐(펑)"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 감고 손바닥 펴 흔듦(버리라는 손짓)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.9,
+   "t1": 9.9,
+   "speaker": "원음:최은경",
+   "text": "염색약을 만든지도",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#F6F7DD",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "염색약 상자 두 개 들고 말함",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.067,
+   "t1": 10.6,
+   "speaker": "원음:최은경",
+   "text": "100년이 넘어",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "pop(10.0 숫자 그림 '100' 먼저 → 10.2 글자)",
+   "enter_ms": 170,
+   "variant": "원음(초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1390
+   ],
+   "fill_hex": "#5EF49F",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "초록 '100' 숫자 그림 + 반짝 점(글자 앞)",
+     "x": 450,
+     "y": 1240,
+     "w": 220,
+     "t_in": 10.0,
+     "t_out": 10.2,
+     "anim": "크게 튀어나왔다가 글자로 바뀜"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "염색약 상자 들고 말함",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.6,
+   "t1": 11.867,
+   "speaker": "원음:최은경",
+   "text": "그대로 잘 유지되고 있어요",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1298,
+    1367
+   ],
+   "fill_hex": "#ECA2D4",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "반짝이 니트 입은 최은경 웃는 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "자막이 위아래로 출렁임(10.6~11.8 y 차 약 15px)",
+   "motion_caption": "float"
+  },
+  {
+   "t0": 11.867,
+   "t1": 12.733,
+   "speaker": "나레",
+   "text": "100년 된 기술이라",
+   "layer": "만템",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1293
+   ],
+   "fill_hex": "#F2FF2A",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "단발 갈색 머리 뒷모습",
+   "fit": 7,
+   "cut_at": [
+    12.567
+   ],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.733,
+   "t1": 13.733,
+   "speaker": "나레",
+   "text": "확실히 다르다네요",
+   "layer": "만템",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1293
+   ],
+   "fill_hex": "#F0FF33",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃으며 돌아보는 최은경",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.2,
+   "첫 6프레임 자막 없음"
+  ]
+ ],
+ "beats": "원음 훅 5줄(0.2~3.47 '완전 부드러워'·'뿌리도 연결이'·'너무 잘 됐는데?'·'아 향도 좋다'·'이히~' — 줄마다 다른 색·반짝이·집중선·밑줄 그림) → 나레 다리 2줄(3.47~5.77 '최은경이 집에서 쓰는 / 인생 염색약이라는데' + 염색 장면) → 원음 본문·증거(5.83~11.87 생각을 버리세요·100년, 빨강 줄+구름·초록 숫자 그림) → 나레 끝 2줄(11.87~13.73 '~라네요', CTA 없음)",
+ "narr_share": "나레 줄 4/15, 나레 4.2초/13.816초",
+ "notes": [
+  "원음 줄 색이 줄마다 돈다: 연노랑·연초록·흰·연초록·흰·흰+분홍강조·분홍·빨강·흰·초록·분홍 — 강한 말('아예 그냥 버리세요')은 빨강+구름 그림.",
+  "훅 5줄 중 4줄에 그림(반짝이·집중선·밑줄)·타이핑 — 꾸밈이 훅에 몰림.",
+  "화면 글 '꺼매야'(말은 '꼼꼼해야'에 가까움 — 받아쓰기 엇갈림), 글자는 화면 그대로 적음."
+ ],
+ "name_evidence": [
+  "제목 '머릿결 살아난 최은경'",
+  "출처 줄 '출처 : 최은경의 관리사무소'",
+  "나레 자막 '최은경이 집에서 쓰는'"
+ ],
+ "frame0": {
+  "what": "최은경이 수건으로 젖은 머리를 감싸 닦는 모습(얼굴 반쯤 가림) — 자막 0.2초부터",
+  "face_frac": "약 0.06(가려진 얼굴, 눈)",
+  "text": "염색약 바꾸고 / 머릿결 살아난 최은경(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

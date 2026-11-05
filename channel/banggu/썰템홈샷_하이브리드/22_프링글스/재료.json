@@ -1,0 +1,422 @@
+{
+ "_note": "22 프링글스 — 훅 = Pringles U.S. 공식 「The Duck King」 9mswA9LLz7Q(통 근접·오리 입) · 푸드네트워크 공식 「How Pringles Are Made (from Unwrapped)」 6k7rN_GHfkw(실험실·쌓인 칩·통들, 오른쪽 아래 food 표식은 자르기 밖, Lay's 봉지 구간 안 씀) · 미국 특허 US3498798 도면(patz, 구글 특허 PDF) · ShabbyTrick 「Grave of Fredric J Baur」 ptxFkLOG7cI(묘지·BAUR 동판, Baur 얼굴 사진 구간 안 씀) · 프링글스 한국 공식 nj7SQZItw9U(여러 맛) · 뒤 = 쿠팡 6810393879 상품 사진 + 오리지널 개봉 손 영상 otnY6wHBGgo(unpacking)·oHxpS6GolY8(Candy ASMR Tina)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/22_프링글스/src",
+ "shots": [
+  {
+   "src": "9mswA9LLz7Q.mp4",
+   "ss": 1.9,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "9mswA9LLz7Q.mp4",
+     "ss": 1.9,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      720,
+      120,
+      636,
+      840
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chipmunk.mp4",
+     "ss": 0.0,
+     "dur": 1.89,
+     "fit": "cover",
+     "src_crop": [
+      69,
+      0,
+      182,
+      240
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "프링글스 공식(Pringles U.S. 「The Duck King」): 손에 든 프링글스 통 근접 → 홱 돌아보는 다람쥐 짤",
+   "why": "훅 = '프링글스 통을 처음 만든 사람, 결국 그 통 안에 묻혔대요'"
+  },
+  {
+   "src": "flz.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "flz.mp4",
+     "ss": 0.0,
+     "dur": 1.85,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "6k7rN_GHfkw.mp4",
+     "ss": 48.95,
+     "dur": 0.94,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "푸드네트워크 공식 「How Pringles Are Made」: 실험실 플라스크 → 저울 위 컵(사람 얼굴 없음)",
+   "why": "'피앤지에서 일하던, 한 화학자였는데'"
+  },
+  {
+   "src": "chz.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "chz.mp4",
+     "ss": 0.0,
+     "dur": 3.32,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "푸드네트워크 공식: 말안장 모양 칩이 한 줄로 가지런히 겹쳐 쌓인 장면",
+   "why": "'감자칩을 원통 안에, 가지런히 쌓아 담는 방법'"
+  },
+  {
+   "src": "patz.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "patz.mp4",
+     "ss": 0.0,
+     "dur": 2.11,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      1080,
+      1428
+     ]
+    }
+   ],
+   "ours": "미국 특허 US3498798(1966 출원·1970 등록, F. J. BAUR 외) 도면 1쪽 — 칩이 쌓인 원통 그림에 다가감",
+   "why": "'그 통으로 특허까지 받을 만큼'"
+  },
+  {
+   "src": "6k7rN_GHfkw.mp4",
+   "ss": 147.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "6k7rN_GHfkw.mp4",
+     "ss": 147.0,
+     "dur": 1.44,
+     "fit": "cover",
+     "src_crop": [
+      800,
+      0,
+      760,
+      1004
+     ]
+    }
+   ],
+   "ours": "푸드네트워크 공식: 빨간 프링글스 오리지널 통 근접",
+   "why": "'정말 자랑스러워했대요'"
+  },
+  {
+   "src": "oHxpS6GolY8.mp4",
+   "ss": 0.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "oHxpS6GolY8.mp4",
+     "ss": 0.3,
+     "dur": 2.1,
+     "fit": "cover",
+     "src_crop": [
+      580,
+      0,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "작은 프링글스 오리지널 통을 두 손으로 감싸는 장면(손만)",
+   "why": "'그래서 가족들한테, 나 죽으면 이 통에 묻어'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_spongepanic.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_spongepanic.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      114,
+      0,
+      272,
+      360
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "놀라 소리치는 스폰지밥 짤",
+   "why": "'달라고 부탁했는데'"
+  },
+  {
+   "src": "ptxFkLOG7cI.mp4",
+   "ss": 53.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ptxFkLOG7cI.mp4",
+     "ss": 53.0,
+     "dur": 1.44,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      750,
+      990
+     ]
+    },
+    {
+     "src": "ptxFkLOG7cI.mp4",
+     "ss": 48.0,
+     "dur": 1.95,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      0,
+      750,
+      990
+     ]
+    }
+   ],
+   "ours": "실제 Baur 가 묻힌 오하이오 묘지 전경 → 'BAUR' 동판(오른쪽 아래 InShot 표식은 자르기 밖)",
+   "why": "'실제로 자녀들이 그 부탁대로, 유골 일부를 프링글스 통에'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cryingjordan.mp4",
+   "ss": 0.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cryingjordan.mp4",
+     "ss": 0.2,
+     "dur": 1.05,
+     "fit": "cover",
+     "src_crop": [
+      95,
+      0,
+      451,
+      596
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "우는 조던 짤",
+   "why": "'담아 묻었대요'"
+  },
+  {
+   "src": "nj7SQZItw9U.mp4",
+   "ss": 55.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "nj7SQZItw9U.mp4",
+     "ss": 55.3,
+     "dur": 1.15,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "oHxpS6GolY8.mp4",
+     "ss": 8.0,
+     "dur": 2.15,
+     "fit": "cover",
+     "src_crop": [
+      580,
+      0,
+      757,
+      1000
+     ]
+    }
+   ],
+   "ours": "프링글스 한국 공식 「THE ALL-NEW PRINGLES」 여러 맛 통 → ORIGINAL 글자가 보이는 오리지널 통",
+   "why": "'맛은 잠깐 고민하다가, 오리지널로 골랐다는'"
+  },
+  {
+   "src": "9mswA9LLz7Q.mp4",
+   "ss": 4.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "9mswA9LLz7Q.mp4",
+     "ss": 4.55,
+     "dur": 1.35,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      120,
+      636,
+      840
+     ]
+    },
+    {
+     "src": "6k7rN_GHfkw.mp4",
+     "ss": 136.0,
+     "dur": 2.12,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "프링글스 공식: 칩을 입에 문 오리 입 → 쌓인 프링글스 통들",
+   "why": "'그래서 다들, 자기 작품에 진짜 뼈를 묻은 사람이라고'"
+  },
+  {
+   "src": "cp_6810393879.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "cp_6810393879.jpg",
+     "ss": 0,
+     "dur": 3.32,
+     "fit": "cover",
+     "src_crop": [
+      220,
+      30,
+      560,
+      740
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 6810393879 프링글스 오리지날 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서, 오리지널로 한 통' — 같은 제품"
+  },
+  {
+   "src": "otnY6wHBGgo.mp4",
+   "ss": 20.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "otnY6wHBGgo.mp4",
+     "ss": 20.55,
+     "dur": 2.88,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      816,
+      1078
+     ]
+    }
+   ],
+   "ours": "오리지널 통 뚜껑·은박을 벗기자 칩이 차곡차곡 쌓여 있는 장면(손만, InShot 표식 자르기 밖)",
+   "why": "'뚜껑 열자마자, 칩이 한 줄로 가지런히 쌓여'"
+  },
+  {
+   "src": "otnY6wHBGgo.mp4",
+   "ss": 28.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "otnY6wHBGgo.mp4",
+     "ss": 28.0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      816,
+      1078
+     ]
+    },
+    {
+     "src": "cp_6810393879.jpg",
+     "ss": 0,
+     "dur": 1.59,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      80,
+      400,
+      528
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "통을 기울여 칩을 다 쏟아 낸 통 → 상품 사진 속 프링글스 아저씨 얼굴(다가감)",
+   "why": "'다 먹은 빈 통을 보니까, 괜히 한 번 더 쳐다보게'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 1.3,
+   "db": -3,
+   "why": "다람쥐 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 4,
+   "dt": 2.1,
+   "db": -3,
+   "why": "스폰지밥 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 5,
+   "dt": 3.39,
+   "db": -4,
+   "why": "우는 조던 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 8,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 10,
+   "dt": 0.0,
+   "db": -3,
+   "why": "끝 줄 띵"
+  }
+ ]
+}

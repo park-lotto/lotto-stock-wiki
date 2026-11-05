@@ -1,0 +1,161 @@
+{
+ "topic": "필라델피아 크림치즈 × 필라델피아에서 만든 적 없음 — 1872년부터 뉴욕주에서 만들었고, 1880년 치즈 유통업자 레이놀즈가 '좋은 유제품 = 필라델피아' 평판을 빌려 이름을 붙임, 펜실베이니아에서 만든 적 없음(TODAY 2020 브랜드 매니저 인용 · Billy Penn 2015 · Tasting Table) · 뒤 체험: 쿠팡 필라델피아 크림치즈(7319954910, 같은 제품)",
+ "brand": "Philadelphia",
+ "scene_query": "Philadelphia cream cheese commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "np",
+  "why": "누구나 아는 베이글 크림치즈 '필라델피아' — 정작 필라델피아에서 만든 적이 없고 이름은 평판을 빌린 것(기사 둘 이상 + 브랜드 매니저 인용)"
+ },
+ "hook": [
+  "필라델피아 크림치즈,",
+  "필라델피아랑 상관없다고?"
+ ],
+ "post": "필라델피아 크림치즈는 필라델피아에서 만든 적이 없다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "np": {
+   "text": "TODAY(2020-01-16): the brand 'has been making its cream cheese in New York since 1872' · 'has never been manufactured in the state of Pennsylvania' / Billy Penn(2015): 'the \"Philadelphia\" in the name stems not from location, but from reputation'",
+   "url": "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+  },
+  "ny": {
+   "text": "Billy Penn: 'It was in Chester, N.Y., however, that dairyman Lawrence boosted the cream content' · TODAY: 'making its cream cheese in New York since 1872'",
+   "url": "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/"
+  },
+  "rn": {
+   "text": "Billy Penn: 1880 broker Alvah Reynolds approached dairyman William Lawrence about a new name · TODAY: 'In 1880, he partnered with A.L. Reynolds', 브랜드 매니저 Blythe Jeckel 'Reynolds wanted people to know the cheese was high quality'",
+   "url": "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/"
+  },
+  "rp": {
+   "text": "TODAY: Philadelphia was associated with high-quality dairy products at the time(브랜드 매니저 인용) · Billy Penn: Philadelphia then widely seen as a top source of high-quality dairy · Tasting Table 같은 내용",
+   "url": "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+  },
+  "rx": {
+   "text": "사회 반응(§0-1 14 — 반응은 출처 없이도 됨) · 같은 소재 영상 댓글(포인트.md)",
+   "url": "포인트.md"
+  },
+  "p1": {
+   "text": "쿠팡 7319954910 '[로켓프레시] 필라델피아 크림치즈'(파트너스 API 2026-10-29 — 대표 사진을 열어 PHILADELPHIA ORIGINAL 통 확인)",
+   "url": "https://www.coupang.com/vp/products/7319954910"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(필라델피아에서 안 만듦)",
+    "seg": "A",
+    "text": "베이글에 발라 먹는 필라델피아 크림치즈, 필라델피아에선 만든 적이 없대요",
+    "facts": [
+     "np"
+    ],
+    "sources": [
+     "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(뉴욕)",
+    "seg": "A",
+    "text": "처음 만든 곳은, 뉴욕주의 한 작은 마을이었는데",
+    "facts": [
+     "ny"
+    ],
+    "sources": [
+     "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/"
+    ]
+   },
+   {
+    "fn": "계기(치즈 상인)",
+    "seg": "A",
+    "text": "이걸 받아 팔던 치즈 상인이, 새 이름을 붙이자고 했대요",
+    "facts": [
+     "rn"
+    ],
+    "sources": [
+     "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/",
+     "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+    ]
+   },
+   {
+    "fn": "공개(평판)",
+    "seg": "A",
+    "text": "그 시절엔 좋은 우유랑 치즈 하면, 다들 필라델피아를 떠올렸거든요",
+    "facts": [
+     "rp"
+    ],
+    "sources": [
+     "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953",
+     "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "그래서 뉴욕에서 만든 치즈에, 필라델피아 이름을 떡하니 붙인 거죠",
+    "facts": [
+     "rn",
+     "rp"
+    ],
+    "sources": [
+     "https://billypenn.com/2015/07/25/why-its-called-philadelphia-cream-cheese-even-though-its-not-from-here-fertile-land-and-clever-marketing/"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그 뒤로 지금까지도, 필라델피아가 있는 주에선 만든 적이 없대요",
+    "facts": [
+     "np"
+    ],
+    "sources": [
+     "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+    ]
+   },
+   {
+    "fn": "사회 반응",
+    "seg": "A",
+    "text": "이름 하나 잘 빌려서, 크림치즈 하면 떠오르는 이름이 된 셈이죠",
+    "facts": [
+     "rx"
+    ],
+    "sources": [
+     "포인트.md"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "궁금해서 저도 쿠팡에서, 필라델피아 크림치즈를 주문해 봤는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7319954910"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "베이글에 쓱 펴 발라 보니까, 꾸덕하면서도 부드럽게 잘 발리고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7319954910"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "한 입 먹어 보니까, 왜 그 이름을 갖다 붙였는지 알 것 같더라고요",
+    "facts": [
+     "rp"
+    ],
+    "sources": [
+     "https://www.today.com/food/philadelphia-cream-cheese-isn-t-actually-philly-t171953"
+    ]
+   }
+  ]
+ }
+}

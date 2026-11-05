@@ -1,0 +1,200 @@
+{
+ "src": "v_junnnF3cRuQ.mp4",
+ "ss": 0.0,
+ "to": 160.7,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 7.12,
+   "text": "Is that a phone, a camera, or a robot? Chinese smart device maker Honor is betting its latest device can be all three.",
+   "ko": "스마트폰일까요, 카메라일까요, 아니면 로봇일까요? 중국 스마트 기기 제조업체 아너는 최신 기기가 이 세 가지 역할을 모두 할 수 있다고 장담합니다.",
+   "abs_start": 0.0,
+   "abs_end": 7.12
+  },
+  {
+   "start": 7.12,
+   "end": 15.3,
+   "text": "It has launched what it calls the world's first 'robot phone', starting at around $1,500 US dollars or 10,000 yuan.",
+   "ko": "아너는 약 1,500달러(약 10,000 위안)부터 시작하는 세계 최초의 '로봇폰'을 출시했습니다.",
+   "abs_start": 7.12,
+   "abs_end": 15.3
+  },
+  {
+   "start": 15.3,
+   "end": 19.46,
+   "text": "Honor says 400,000 pre-orders have been made in just two weeks.",
+   "ko": "아너는 불과 2주 만에 40만 건의 사전 주문이 들어왔다고 밝혔습니다.",
+   "abs_start": 15.3,
+   "abs_end": 19.46
+  },
+  {
+   "start": 19.46,
+   "end": 29.8,
+   "text": "The launch comes as Chinese tech firms scramble to bring AI into everyday devices and gain an edge in a fiercely competitive smartphone market. Deborah Wong reports from Guangzhou.",
+   "ko": "이번 출시는 치열하게 경쟁하는 스마트폰 시장에서 중국 테크 기업들이 AI를 일상 기기에 도입하고 우위를 점하기 위해 다투는 가운데 이뤄졌습니다. 광저우에서 데보라 왕 기자가 보도합니다.",
+   "abs_start": 19.46,
+   "abs_end": 29.8
+  },
+  {
+   "start": 29.8,
+   "end": 33.72,
+   "text": "Hello, can you describe yourself in a few words?",
+   "ko": "안녕하세요, 당신 자신을 몇 단어로 소개해 줄 수 있나요?",
+   "abs_start": 29.8,
+   "abs_end": 33.72
+  },
+  {
+   "start": 33.72,
+   "end": 40.32,
+   "text": "I am a smart assistant developed by Honor. I'm here to chat with you and help with whatever you need.",
+   "ko": "저는 아너가 개발한 스마트 어시스턴트입니다. 당신과 대화를 나누고 필요한 일 무엇이든 돕기 위해 여기에 있습니다.",
+   "abs_start": 33.72,
+   "abs_end": 40.32
+  },
+  {
+   "start": 40.32,
+   "end": 45.32,
+   "text": "Chinese smart device maker Honor calls this a new species of smartphone.",
+   "ko": "중국 스마트 기기 제조업체 아너는 이를 스마트폰의 새로운 종이라고 부릅니다.",
+   "abs_start": 40.32,
+   "abs_end": 45.32
+  },
+  {
+   "start": 45.32,
+   "end": 51.52,
+   "text": "You see the retractable gimbal here. It can track my movements wherever I go.",
+   "ko": "여기 접이식 짐벌이 보이시죠. 제가 어디를 가든 제 움직임을 추적할 수 있습니다.",
+   "abs_start": 45.32,
+   "abs_end": 51.52
+  },
+  {
+   "start": 51.52,
+   "end": 58.74,
+   "text": "It can also rotate up to 180 degrees, opening up more angles for cinematic shots.",
+   "ko": "또한 최대 180도까지 회전하여 영화 같은 촬영을 위한 다양한 각도를 제공합니다.",
+   "abs_start": 51.52,
+   "abs_end": 58.74
+  },
+  {
+   "start": 58.74,
+   "end": 107.78,
+   "text": "Its super steady mode keeps footage smooth and the subject centered, even with big movements, all that powered by AI and robot grade motion control.",
+   "ko": "슈퍼 스태디 모드는 큰 움직임 속에서도 영상을 부드럽게 유지하고 피사체를 중앙에 맞춥니다. 이 모든 것은 AI와 로봇급 모션 제어 기술로 작동합니다.",
+   "abs_start": 58.74,
+   "abs_end": 107.78
+  },
+  {
+   "start": 107.78,
+   "end": 110.82,
+   "text": "We believe it is just a start,",
+   "ko": "저희는 이것이 시작에 불과하다고 믿습니다.",
+   "abs_start": 107.78,
+   "abs_end": 110.82
+  },
+  {
+   "start": 110.82,
+   "end": 121.08,
+   "text": "because this is only the first generation, but we will continuously work on this prototype and make it more stable and make it more powerful,",
+   "ko": "이것은 1세대 제품일 뿐이지만, 저희는 이 프로토타입 작업을 지속해서 추진하여 더 안정적이고 강력하게 만들 것입니다.",
+   "abs_start": 110.82,
+   "abs_end": 121.08
+  },
+  {
+   "start": 121.08,
+   "end": 133.72,
+   "text": "and we believe in the future there are many other brands that will come out with the same idea and they will follow up and that will be definitely a trend for the next generation of AI device.",
+   "ko": "앞으로 다른 많은 브랜드에서도 동일한 아이디어를 내놓고 추종할 것이며, 이는 차세대 AI 기기의 확실한 트렌드가 될 것이라고 믿습니다.",
+   "abs_start": 121.08,
+   "abs_end": 133.72
+  },
+  {
+   "start": 133.72,
+   "end": 136.88,
+   "text": "But reactions to this new concept were mixed.",
+   "ko": "하지만 이 새로운 콘셉트에 대한 반응은 엇갈렸습니다.",
+   "abs_start": 133.72,
+   "abs_end": 136.88
+  },
+  {
+   "start": 136.88,
+   "end": 143.9,
+   "text": "这种手机确实新，就是这个想法很新颖，但还是需要时间来接受嘛。",
+   "ko": "이런 스마트폰은 확실히 신선해요. 아이디어가 아주 신선하지만, 받아들이는 데는 시간이 좀 걸릴 것 같아요.",
+   "abs_start": 136.88,
+   "abs_end": 143.9
+  },
+  {
+   "start": 143.9,
+   "end": 154.68,
+   "text": "不会考虑。因为我觉得它可能就是会比较脆。如果说日常使用的时候它如果磕碰什么的，云台打不开，维修的成本很高。",
+   "ko": "구매는 고려하지 않을 것 같아요. 왜냐하면 내구성이 좀 약할 것 같거든요. 일상적인 사용 중에 부딪히거나 해서 짐벌이 안 열리면 수리비가 엄청 많이 들잖아요.",
+   "abs_start": 143.9,
+   "abs_end": 154.68
+  },
+  {
+   "start": 154.68,
+   "end": 158.82,
+   "text": "我觉得男孩喜欢吧，像机器人一样。",
+   "ko": "남자들이 좋아할 것 같아요. 로봇 같잖아요.",
+   "abs_start": 154.68,
+   "abs_end": 158.82
+  },
+  {
+   "start": 158.82,
+   "end": 204.56,
+   "text": "In 2007, the first iPhone was a sleek slab of a touchscreen, revolutionary at the time.",
+   "ko": "2007년, 최초의 아이폰은 세련된 터치스크린 형태였으며 당시에는 혁명적이었습니다.",
+   "abs_start": 158.82,
+   "abs_end": 204.56
+  },
+  {
+   "start": 204.56,
+   "end": 209.92,
+   "text": "In 2019, Samsung launched a foldable phone, others soon followed.",
+   "ko": "2019년 삼성이 폴더블폰을 출시했고, 곧 다른 기업들도 그 뒤를 따랐습니다.",
+   "abs_start": 204.56,
+   "abs_end": 209.92
+  },
+  {
+   "start": 209.92,
+   "end": 215.92,
+   "text": "Seven years on, the smartphone is changing shape again. But is the robot phone a gimmick or a game-changer?",
+   "ko": "7년이 지난 지금, 스마트폰의 형태가 다시 바뀌고 있습니다. 하지만 로봇폰은 단순한 눈속임일까요, 아니면 게임 체인저일까요?",
+   "abs_start": 209.92,
+   "abs_end": 215.92
+  },
+  {
+   "start": 215.92,
+   "end": 221.02,
+   "text": "We are not seeing the other OEM try to be similar thing because it's...",
+   "ko": "다른 OEM 제조업체들이 비슷한 시도를 하는 모습은 아직 보이지 않는데, 왜냐하면...",
+   "abs_start": 215.92,
+   "abs_end": 221.02
+  },
+  {
+   "start": 221.02,
+   "end": 230.98,
+   "text": "...need some time to prove if this concept can work or not. It's similar like years ago the foldable phone when it come out, a lot of OEMs actually move in very late.",
+   "ko": "...이 개념이 실제 효과가 있는지 증명하는 데 시간이 걸리기 때문입니다. 몇 년 전 폴더블폰이 처음 나왔을 때와 비슷하죠. 많은 OEM 업체들이 사실 굉장히 늦게 합류했었으니까요.",
+   "abs_start": 221.02,
+   "abs_end": 230.98
+  },
+  {
+   "start": 230.98,
+   "end": 237.78,
+   "text": "All this as competition in the smartphone market intensifies and brands look for new ways to stay one step ahead.",
+   "ko": "스마트폰 시장의 경쟁이 가열되면서 브랜드들이 한 발 앞서 나가기 위한 새로운 방법을 모색하는 가운데 일어나는 현상입니다.",
+   "abs_start": 230.98,
+   "abs_end": 237.78
+  },
+  {
+   "start": 237.78,
+   "end": 240.0,
+   "text": "Deborah Wong, CNA, Guangzhou.",
+   "ko": "광저우에서 CNA 데보라 왕입니다.",
+   "abs_start": 237.78,
+   "abs_end": 240.0
+  }
+ ]
+}

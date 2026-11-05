@@ -1,0 +1,97 @@
+{
+ "topic": "필립스 휴 플레이 그라디언트 라이트스트립(Philips Hue Play gradient lightstrip) — TV 뒤에 붙이고 처음 켜는 Justin_tech 'The moment of truth. Three. Two. One. Wow. Wow. I love it.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "F7IYKSCr1go",
+ "bench_note": "벤치 '“넷플 보고 갈래?” 필승 조명'(2.99만, 핫템리포트 10-27 목록 117편 조회수 56위, 설명란 'TV 화면 속 색상이 벽까지 이어지는 마법 같은 조명 … 필립스 휴! #필립스휴 #스마트조명') — 화면 속 제품 = 필립스 휴 TV 조명(그라디언트 라이트스트립·싱크 박스). 원음형 = 유튜브 Justin_tech 'Philips Hue Gradient Lightstrip Review - Hue Sync Elevated' wONayxL4xTY(46만, 자동 더빙 11개 — 원어 140-11) 전체. 벤치의 '넷플 보고 갈래'(넷플릭스 상표)는 안 씀.",
+ "sources": {
+  "jt": {
+   "file": "jt.mp4",
+   "who": "유튜브 Justin_tech wONayxL4xTY 전체(원어 140-11) — 116~124 TV 뒤 조명을 처음 켜는 방(사람은 옆에 쪼그려 앉은 뒷모습·옆모습 일부, 얼굴 정면 없음) · 280.41~283.48 추상 영상과 같은 색 벽 조명 · 97.96~101.33 TV 뒤에 받침을 붙이는 손",
+   "views": 464358,
+   "dur": 498.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "화면 색 따라가는\n벽 조명"
+ },
+ "facts": {
+  "f1": {
+   "text": "Justin_tech 원본(스피치매틱스) 6.2~24 'the philips hue gradient light strip … made specifically for syncing with content on your tv' · 필립스 휴 공식 유튜브 'Philips Hue Play HDMI Sync Box' cB_Xm-LEUTg 15~19초 글 'Now you can sync your smart lights with the content shown on your TV screen' · 원본 280.41~283.48 화면(영상 색과 같은 색으로 벽이 바뀜) · 쿠팡 8999566688 '필립스휴 플레이 그라디언트 라이트스트립 TV용'",
+   "kind": "리뷰·공식·판매처"
+  },
+  "f2": {
+   "text": "Justin_tech 원본 90.8~100.1 'the strip comes with adhesive mounting plates designed to fit on all different shapes of tvs' · 필립스 휴 공식 'How to install the Philips Hue Play gradient lightstrip' p9yLBy5Wk9k 15~60초 글 'Start with the center mount … Press gently to insert the lightstrip'",
+   "kind": "리뷰·공식"
+  },
+  "f3": {
+   "text": "Justin_tech 원본 115.12~124.31 'The moment of truth. Three. Two. One. Wow. Wow. I love it.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "TV 색이 그대로 벽까지 번진다는 조명이 있는데요.",
+    "caps": [
+     "TV 색이 그대로",
+     "벽까지 번진다는",
+     "조명이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "원음 뒤 한 줄(붙이는 법) → 뒤로",
+    "text": "TV 뒤에 줄 하나만 붙이면 된다네요.",
+    "caps": [
+     "TV 뒤에 줄 하나만",
+     "붙이면 된다네요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jz",
+    "span": [
+     0.09,
+     7.97
+    ],
+    "en": "Three. Two. One. Wow. Wow. I love it.",
+    "caps": [
+     "3, 2, 1…",
+     "와아아!",
+     "와, 좋아요!"
+    ],
+    "check": "사본 jtz 시각(원래 −116.36): 앞 truth 115.84~116.20 · Three 116.56 · Wow 119.84~120.60 · Wow 121.79 · it 123.67~124.31 · 다음 Uh 124.39 · 원본 샷 116.35~124.62 안(119.19·119.92 장면 점수는 조명이 켜지며 밝기가 바뀐 것 — 같은 샷) — 꺼진 TV 뒤 벽이 켜지는 방, 사람은 옆에 쪼그려 앉은 몸 일부 · 자막 칸은 말소리 구간 글자 수 비례라 배경음악이 깔려 말소리 구간이 통째라 글 수 3:3:4 로 말 차례(Wow 119.84 → 완성본 6.32 · Wow 121.79 → 8.27)에 맞춤"
+   }
+  ],
+  "dropped": {
+   "벤치 '넷플 보고 갈래?'": "남의 상표(넷플릭스) — 안 씀",
+   "색 구역 수(7구역·5구역)": "매체마다 달라 숫자 안 씀",
+   "브리지·싱크 박스 필요": "가격·구성 얘기가 되어 안 씀(근거.md 에 적음)",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

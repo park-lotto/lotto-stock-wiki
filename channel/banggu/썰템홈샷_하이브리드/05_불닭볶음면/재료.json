@@ -1,0 +1,421 @@
+{
+ "_note": "05 불닭볶음면 — 훅 = 영국남자 본인 채널 원본(2014). 계획 12컷 순서 그대로(make.py plan).",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/05_불닭볶음면/src",
+ "shots": [
+  {
+   "src": "JWZmdWP67DA.mp4",
+   "ss": 80.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JWZmdWP67DA.mp4",
+     "ss": 80.3,
+     "dur": 1.25,
+     "src_crop": [
+      400,
+      0,
+      1022,
+      1080
+     ]
+    },
+    {
+     "src": "JWZmdWP67DA.mp4",
+     "ss": 83.4,
+     "dur": 1.1,
+     "src_crop": [
+      560,
+      0,
+      1022,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_peelesweat.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "kind": "짤"
+    }
+   ],
+   "ours": "영국남자 본인 채널 원본 '런던의 불닭볶음면 도전'(2014, JWZmdWP67DA): 불닭 컵을 들고 먹다 눈을 질끈(80.3) → FIRE 소화 양동이를 끌어안음(83.4) → 짤 식은땀 조던 필",
+   "why": "'영국 사람들 혼쭐 낸 이 영상' = 그 영상 원본 장면 자체(훅 장면이 곧 '이 영상이 시작?' 질문)",
+   "full": true
+  },
+  {
+   "src": "JWZmdWP67DA.mp4",
+   "ss": 218.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JWZmdWP67DA.mp4",
+     "ss": 218.6,
+     "dur": 1.8,
+     "src_crop": [
+      800,
+      0,
+      640,
+      840
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ewfallon.mp4",
+     "ss": 0.0,
+     "dur": 1.86,
+     "src_crop": [
+      0,
+      40,
+      640,
+      420
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "영국남자 같은 영상 뒤쪽: 매워서 이마를 짚는 친구(아래 자막 crop 밖) → 짤 'Eww' 질색",
+   "why": "'사람이 먹을 수 없는 맛이란 소리' — 매운맛에 질색"
+  },
+  {
+   "src": "QcJ6_JD6nQA.mp4",
+   "ss": 89.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "QcJ6_JD6nQA.mp4",
+     "ss": 89.0,
+     "dur": 1.3,
+     "src_crop": [
+      1080,
+      150,
+      840,
+      930
+     ]
+    },
+    {
+     "src": "QcJ6_JD6nQA.mp4",
+     "ss": 93.8,
+     "dur": 1.73,
+     "src_crop": [
+      1300,
+      200,
+      620,
+      880
+     ]
+    }
+   ],
+   "ours": "SBS STORY 공식 식자회담: 김정수 부회장 옆 명동 거리 그림 → 매운 음식을 땀 흘리며 먹는 사람들 그림(아래 자막·SBS 로고 crop 밖)",
+   "why": "'시작은 명동, 매운 걸 땀 흘리며 즐기는 사람들'"
+  },
+  {
+   "src": "moXXygl9_SQ.mp4",
+   "ss": 139.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "moXXygl9_SQ.mp4",
+     "ss": 139.1,
+     "dur": 2.0,
+     "src_crop": [
+      1000,
+      60,
+      820,
+      1020
+     ]
+    },
+    {
+     "src": "moXXygl9_SQ.mp4",
+     "ss": 145.0,
+     "dur": 1.48,
+     "src_crop": [
+      560,
+      170,
+      780,
+      910
+     ]
+    }
+   ],
+   "ours": "tvN 유퀴즈 공식 클립: 삼양 조미개발 팀장(닭 1200마리·소스 2톤을 말하기 직전 장면, 방송 자막 뜨기 전) → 유재석·팀장 3인 장면",
+   "why": "'연구원들이 먹은 닭만 천이백 마리, 소스는 2톤' — 그 말을 한 연구원 본인"
+  },
+  {
+   "src": "moXXygl9_SQ.mp4",
+   "ss": 158.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "moXXygl9_SQ.mp4",
+     "ss": 158.55,
+     "dur": 1.3,
+     "src_crop": [
+      700,
+      150,
+      560,
+      640
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_spongepanic.mp4",
+     "ss": 0.0,
+     "dur": 1.5,
+     "kind": "짤"
+    }
+   ],
+   "ours": "유퀴즈 팀장 근접(아래 자막 crop 밖) → 짤 비명 지르는 스펀지밥",
+   "why": "'닭 소리만 들어도 헛구역질' — 질려서 비명"
+  },
+  {
+   "src": "JWZmdWP67DA.mp4",
+   "ss": 65.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JWZmdWP67DA.mp4",
+     "ss": 65.0,
+     "dur": 3.05,
+     "src_crop": [
+      560,
+      0,
+      1000,
+      1080
+     ]
+    }
+   ],
+   "ours": "영국남자 원본: 빅벤 앞에서 조쉬(오른쪽 모자)와 올리가 불닭을 먹다 올리가 얼굴을 감쌈(이름 글자 사라진 65.0초부터)",
+   "why": "'2014년, 영국남자의 이 영상으로' — 조쉬 본인이 나오는 원본 장면"
+  },
+  {
+   "src": "moXXygl9_SQ.mp4",
+   "ss": 103.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "moXXygl9_SQ.mp4",
+     "ss": 103.1,
+     "dur": 0.9,
+     "src_crop": [
+      200,
+      180,
+      1400,
+      900
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_supahotfire.mp4",
+     "ss": 0.0,
+     "dur": 0.74,
+     "kind": "짤"
+    }
+   ],
+   "ours": "유퀴즈 공식 클립 안 해외 불닭 챌린지 장면: 매워서 우유 마시는 아이와 아빠(방송 자막 뜨기 전) → 짤 Supa Hot Fire",
+   "why": "'파이어 누들 챌린지가 번졌고' — 해외 가족의 도전 + '파이어' 짤"
+  },
+  {
+   "src": "GsjVwiXM-VY.mp4",
+   "ss": 9.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "GsjVwiXM-VY.mp4",
+     "ss": 9.3,
+     "dur": 2.45,
+     "src_crop": [
+      500,
+      40,
+      920,
+      1000
+     ]
+    },
+    {
+     "src": "GsjVwiXM-VY.mp4",
+     "ss": 27.95,
+     "dur": 1.31,
+     "src_crop": [
+      500,
+      40,
+      920,
+      1000
+     ]
+    }
+   ],
+   "ours": "채널A 공식 현장영상: 유럽 한 마트 계산대에 산더미로 쌓인 불닭볶음면(까르보) 봉지를 바코드 찍는 계산원(9.3) → 계산 끝난 불닭 봉지를 담는 손(27.95) — 자막·Channel A 로고 crop 밖, 자막 뜨는 13.0·샷 바뀌는 29.3 전 끊음",
+   "why": "'해외 매출 80% 넘게가 불닭' — 해외 마트 계산대를 채운 불닭"
+  },
+  {
+   "src": "still_coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_coupang.jpg",
+     "ss": 0,
+     "dur": 1.9,
+     "src_crop": [
+      0,
+      300,
+      2000,
+      1700
+     ],
+     "move": "in"
+    },
+    {
+     "src": "still_coupang.jpg",
+     "ss": 0,
+     "dur": 1.72,
+     "src_crop": [
+      560,
+      1100,
+      1440,
+      900
+     ],
+     "move": "left"
+    }
+   ],
+   "ours": "쿠팡 7460681274 상품 사진: 오리지널 불닭볶음면 5개입 포장(다가감) → 포장의 불닭볶음면 그림(옆으로 흐름)",
+   "why": "B 첫 줄 '쿠팡에서 다섯 봉' — 쿠팡 같은 제품 사진",
+   "url": "https://www.coupang.com/vp/products/7460681274"
+  },
+  {
+   "src": "FE-zwbKwq3Y.mp4",
+   "ss": 27.7,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "FE-zwbKwq3Y.mp4",
+     "ss": 27.7,
+     "dur": 1.3,
+     "src_crop": [
+      300,
+      0,
+      1320,
+      980
+     ]
+    },
+    {
+     "src": "cN_uSWt06Jo.mp4",
+     "ss": 47.6,
+     "dur": 1.32,
+     "src_crop": [
+      200,
+      0,
+      1000,
+      1080
+     ]
+    }
+   ],
+   "ours": "라면한끼(조리법대로 끓이기): 면 옆에 따로 든 액상스프·후레이크 봉지(아래 설명 자막 crop 밖) → 한누렁: 냄비에 액상스프를 짜 넣음(오른쪽 글자 crop 밖)",
+   "why": "'소스가 따로라, 맵기를 입맛대로 덜 넣을 수' — 따로 든 소스 봉지를 짜 넣는 손"
+  },
+  {
+   "src": "0NIXqcwI5H4.mp4",
+   "ss": 64.8,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "0NIXqcwI5H4.mp4",
+     "ss": 64.8,
+     "dur": 2.2,
+     "src_crop": [
+      300,
+      0,
+      1320,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chefskiss.mp4",
+     "ss": 0.0,
+     "dur": 1.42,
+     "kind": "짤"
+    }
+   ],
+   "ours": "삼양식품 공식 '라면의 정수 — 불닭볶음면 치즈편 레시피': 불닭 소스 위에 치즈를 올려 녹임 → 짤 셰프 키스",
+   "why": "'치즈를 올리니, 매운맛이 한결 부드럽더라고요' — 회사 공식 치즈 레시피 장면"
+  },
+  {
+   "src": "JWZmdWP67DA.mp4",
+   "ss": 160.35,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JWZmdWP67DA.mp4",
+     "ss": 160.35,
+     "dur": 2.6,
+     "src_crop": [
+      560,
+      0,
+      1000,
+      1080
+     ]
+    },
+    {
+     "src": "0NIXqcwI5H4.mp4",
+     "ss": 87.6,
+     "dur": 1.19,
+     "src_crop": [
+      200,
+      0,
+      1520,
+      1080
+     ]
+    }
+   ],
+   "ours": "영국남자 원본 뒤쪽: 매워서 우유 통을 통째로 들이켜는 친구(160.35 — 훅 컷과 77초 떨어짐) → 삼양 공식 치즈불닭 완성 접시",
+   "why": "끝 줄 '우유 들이켜면서도 끝까지 먹던 영국 사람들' — 훅 영상 되받기 → 제품으로 맺음"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": 0,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 0,
+   "dt": 2.35,
+   "db": -2,
+   "why": "식은땀 짤 '뜨헉'"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 1,
+   "dt": 1.8,
+   "db": -3,
+   "why": "EW 짤 '삐삑' 오답"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 3,
+   "dt": 1.4,
+   "db": -3,
+   "why": "천이백 마리 공개 '띵'"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 4,
+   "dt": 1.3,
+   "db": -2,
+   "why": "스펀지밥 비명 짤 '삑끼'"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 5,
+   "dt": 0.0,
+   "db": -3,
+   "why": "영국남자 반전 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험(B) 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 9,
+   "dt": 2.2,
+   "db": -2,
+   "why": "셰프 키스 짤 '띵'"
+  }
+ ]
+}

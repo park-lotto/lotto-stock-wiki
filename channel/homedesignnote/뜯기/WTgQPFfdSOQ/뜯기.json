@@ -1,0 +1,2011 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:\\숏템_칼카피\\homedesignnote\\src\\WTgQPFfdSOQ.mp4",
+ "measured_at": "2026-10-25 00:19",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 60.0,
+  "duration": 20.183,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 60.0,
+   "nb_frames": 1211,
+   "duration": 20.183,
+   "duration_container": 20.214,
+   "vcodec": "av1",
+   "has_audio": true,
+   "asr": 48000,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "window_method": "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편",
+  "bg_rgb": [
+   154,
+   146,
+   140
+  ],
+  "ink_polarity": "bright",
+  "caption_pos": "inside",
+  "caption_band": [
+   1474,
+   1514
+  ],
+  "other_frame_segments": [],
+  "above_bands": [],
+  "bench_full_single": {
+   "window": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "bg_rgb": [
+    154,
+    146,
+    140
+   ],
+   "bg_lum": 147.7,
+   "caption": {
+    "pos": "inside",
+    "band": [
+     1474,
+     1514
+    ],
+    "ink": "bright",
+    "method": "static_ink"
+   },
+   "above_bands": [],
+   "n_samples": 40,
+   "window_method": "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "inside",
+    "band": [
+     1474,
+     1514
+    ],
+    "ink": "bright",
+    "method": "static_ink",
+    "score": 7.11,
+    "spans": 10,
+    "persist": 0.945,
+    "coverage": 0.752,
+    "change": 0.747,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1870,
+     1920
+    ],
+    "ink": "dark",
+    "score": 5.59,
+    "spans": 7,
+    "persist": 0.917,
+    "coverage": 0.871,
+    "change": 0.982,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     217,
+     240
+    ],
+    "ink": "dark",
+    "score": 4.91,
+    "spans": 12,
+    "persist": 0.435,
+    "coverage": 0.941,
+    "change": 0.979,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     166,
+     208
+    ],
+    "ink": "bright",
+    "score": 0.72,
+    "spans": 5,
+    "persist": 0.211,
+    "coverage": 0.678,
+    "change": 0.754,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     900,
+     1005
+    ],
+    "ink": "bright",
+    "score": 0.55,
+    "spans": 9,
+    "persist": 0.123,
+    "coverage": 0.752,
+    "change": 0.948,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1456,
+     1539
+    ],
+    "ink": "bright",
+    "score": 6.99,
+    "spans": 10,
+    "persist": 0.935,
+    "coverage": 0.748,
+    "change": 0.773,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     111,
+     215
+    ],
+    "ink": "bright",
+    "score": 0.65,
+    "spans": 5,
+    "persist": 0.194,
+    "coverage": 0.668,
+    "change": 0.79,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     272,
+     312
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.008,
+    "coverage": 0.545,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     404,
+     530
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.011,
+    "coverage": 0.426,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     778,
+     808
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 2,
+    "persist": 0.021,
+    "coverage": 0.649,
+    "change": 0.99,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1798,
+     1824
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.025,
+    "coverage": 0.228,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     111,
+     312
+    ],
+    "ink": "bright",
+    "score": 0.45,
+    "spans": 5,
+    "persist": 0.141,
+    "coverage": 0.634,
+    "change": 0.794,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     111,
+     530
+    ],
+    "ink": "bright",
+    "score": 0.15,
+    "spans": 4,
+    "persist": 0.054,
+    "coverage": 0.688,
+    "change": 0.866,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     272,
+     530
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.022,
+    "coverage": 0.649,
+    "change": 0.0,
+    "static": 0.0
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   1434,
+   1554
+  ],
+  "changes": [
+   3.1,
+   5.3,
+   6.2,
+   7.5,
+   8.2,
+   8.6,
+   9.8,
+   12.4,
+   14.5,
+   15.6,
+   17.1
+  ],
+  "spans": [
+   [
+    3.1,
+    5.3
+   ],
+   [
+    5.3,
+    6.2
+   ],
+   [
+    6.2,
+    7.5
+   ],
+   [
+    7.5,
+    8.2
+   ],
+   [
+    8.2,
+    8.6
+   ],
+   [
+    8.6,
+    9.8
+   ],
+   [
+    9.8,
+    12.4
+   ],
+   [
+    12.4,
+    14.5
+   ],
+   [
+    14.5,
+    15.6
+   ],
+   [
+    15.6,
+    17.1
+   ]
+  ],
+  "n_spans": 10,
+  "items": [
+   {
+    "i": 0,
+    "t0": 3.1,
+    "t1": 5.3,
+    "lines": 1,
+    "widths": [
+     710
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "이건 책상에 마운팅하는 방식의 폐그보드인데"
+    ]
+   },
+   {
+    "i": 1,
+    "t0": 5.3,
+    "t1": 6.2,
+    "lines": 1,
+    "widths": [
+     304
+    ],
+    "top_y": 1475,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "그동안 나온 것보다"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 6.2,
+    "t1": 7.5,
+    "lines": 1,
+    "widths": [
+     496
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "사이즈도 윌씬 크고"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 7.5,
+    "t1": 8.2,
+    "lines": 1,
+    "widths": [
+     650
+    ],
+    "top_y": 1457,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "폴타입 모니터 거치대와"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 4,
+    "t0": 8.2,
+    "t1": 8.6,
+    "lines": 2,
+    "widths": [
+     254,
+     584
+    ],
+    "top_y": 1434,
+    "leading": 29,
+    "mark": false,
+    "text": [
+     "폴타입 모니터 거치대와"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 5,
+    "t0": 8.6,
+    "t1": 9.8,
+    "lines": 1,
+    "widths": [
+     712
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "호환되는 하드웨어도 달려있어서"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 6,
+    "t0": 9.8,
+    "t1": 12.4,
+    "lines": 1,
+    "widths": [
+     625
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "이거 하나면 책상이 정말 깔끔해집니다"
+    ]
+   },
+   {
+    "i": 7,
+    "t0": 12.4,
+    "t1": 14.5,
+    "lines": 1,
+    "widths": [
+     719
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "상단 선반도 기본 포함되어 있는 건 물론이고"
+    ]
+   },
+   {
+    "i": 8,
+    "t0": 14.5,
+    "t1": 15.6,
+    "lines": 1,
+    "widths": [
+     359
+    ],
+    "top_y": 1475,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "악세사리까지 달아주면"
+    ]
+   },
+   {
+    "i": 9,
+    "t0": 15.6,
+    "t1": 17.1,
+    "lines": 1,
+    "widths": [
+     443
+    ],
+    "top_y": 1474,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "책상 면적 2배는 넓어집니다"
+    ],
+    "truncated": true
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 39,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 1,
+    "anim": "없음"
+   },
+   {
+    "line_h": 97,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 2,
+    "shadow": null,
+    "i": 3,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 5,
+    "anim": "없음"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 7,
+    "anim": "없음"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 9,
+    "anim": "없음"
+   }
+  ],
+  "unstable": [
+   [
+    0.0,
+    3.1
+   ],
+   [
+    17.1,
+    20.18
+   ]
+  ],
+  "ocr": {
+   "asked": 10,
+   "read": 10,
+   "errors": [],
+   "models": []
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 62,
+  "usable": 8,
+  "per_crop": [
+   {
+    "caption": 0,
+    "text": "이건 책상에 마운팅하는 방식의 폐그보드인데",
+    "top5": [
+     {
+      "font": "NanumGothic-Bold.ttf",
+      "score": 0.1651
+     },
+     {
+      "font": "Gugi-Regular.ttf",
+      "score": 0.1606
+     },
+     {
+      "font": "NanumGothicCoding-Bold.ttf",
+      "score": 0.1603
+     },
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1477
+     },
+     {
+      "font": "Kkubulim.ttf",
+      "score": 0.1433
+     }
+    ],
+    "grid": "fonts/c00.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 건그는데드"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 건그는데드"
+     }
+    ]
+   },
+   {
+    "caption": 1,
+    "text": "그동안 나온 것보다",
+    "top5": [
+     {
+      "font": "Gugi-Regular.ttf",
+      "score": 0.1365
+     },
+     {
+      "font": "Kkubulim.ttf",
+      "score": 0.1314
+     },
+     {
+      "font": "Binggrae-Bold.otf",
+      "score": 0.1201
+     },
+     {
+      "font": "Gaegu-Bold.ttf",
+      "score": 0.1157
+     },
+     {
+      "font": "Cafe24Danjunghae.ttf",
+      "score": 0.1154
+     }
+    ],
+    "grid": "fonts/c01.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 것그나다동"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 것그나다동"
+     }
+    ]
+   },
+   {
+    "caption": 3,
+    "text": "폴타입 모니터 거치대와",
+    "top5": [
+     {
+      "font": "NanumPenScript.ttf",
+      "score": 0.1195
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.1174
+     },
+     {
+      "font": "CuteFont.ttf",
+      "score": 0.1065
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0918
+     },
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.0899
+     }
+    ],
+    "grid": "fonts/c03.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 거니대모와"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 거니대모와"
+     }
+    ]
+   },
+   {
+    "caption": 5,
+    "text": "호환되는 하드웨어도 달려있어서",
+    "top5": [
+     {
+      "font": "CuteFont.ttf",
+      "score": 0.0813
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0713
+     },
+     {
+      "font": "NanumPenScript.ttf",
+      "score": 0.0683
+     },
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.0595
+     },
+     {
+      "font": "EastSeaDokdo.ttf",
+      "score": 0.053
+     }
+    ],
+    "grid": "fonts/c05.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 는달도되드"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 는달도되드"
+     }
+    ]
+   },
+   {
+    "caption": 8,
+    "text": "악세사리까지 달아주면",
+    "top5": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1734
+     },
+     {
+      "font": "Gugi-Regular.ttf",
+      "score": 0.1571
+     },
+     {
+      "font": "NanumGothicCoding-Bold.ttf",
+      "score": 0.1428
+     },
+     {
+      "font": "Binggrae-Bold.otf",
+      "score": 0.1423
+     },
+     {
+      "font": "Kkubulim.ttf",
+      "score": 0.1318
+     }
+    ],
+    "grid": "fonts/c08.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 까달리면사"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 까달리면사"
+     }
+    ]
+   },
+   {
+    "caption": 9,
+    "text": "책상 면적 2배는 넓어집니다",
+    "top5": [
+     {
+      "font": "RIDIBatang.otf",
+      "score": 0.1285
+     },
+     {
+      "font": "SUIT-Regular.otf",
+      "score": 0.0992
+     },
+     {
+      "font": "Hahmlet-Variable.ttf",
+      "score": 0.0963
+     },
+     {
+      "font": "NanumMyeongjo-ExtraBold.ttf",
+      "score": 0.0937
+     },
+     {
+      "font": "IBMPlexSansKR-Regular.otf",
+      "score": 0.0924
+     }
+    ],
+    "grid": "fonts/c09.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 넓는니다면"
+     },
+     {
+      "font": "Righteous-Regular.ttf",
+      "why": "글자 빠짐 넓는니다면"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "Dokdo-Regular.ttf",
+    "score": 0.0929
+   },
+   {
+    "font": "EastSeaDokdo.ttf",
+    "score": 0.0846
+   },
+   {
+    "font": "Gugi-Regular.ttf",
+    "score": 0.0836
+   }
+  ],
+  "title": {
+   "failed": "창 위 고정 글자 띠 없음(layout above_bands)"
+  },
+  "brand": {
+   "failed": "브랜드 띠 없음"
+  },
+  "title_bands": {
+   "failed": "창 위 고정 글자 띠 없음(layout above_bands)"
+  }
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 0,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ],
+    "ring_rgb": [
+     160,
+     159,
+     160
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 1,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ],
+    "ring_rgb": [
+     179,
+     179,
+     176
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 3,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ],
+    "ring_rgb": [
+     139,
+     139,
+     140
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 5,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ],
+    "ring_rgb": [
+     146,
+     145,
+     146
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 8,
+    "fill_rgb": [
+     255,
+     255,
+     254
+    ],
+    "ring_rgb": [
+     152,
+     148,
+     146
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 9,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ],
+    "ring_rgb": [
+     161,
+     157,
+     157
+    ],
+    "box": null,
+    "box_note": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 39,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 1,
+    "anim": "없음"
+   },
+   {
+    "line_h": 97,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 2,
+    "shadow": null,
+    "i": 3,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 5,
+    "anim": "없음"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 7,
+    "anim": "없음"
+   },
+   {
+    "line_h": 40,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 3,
+    "shadow": null,
+    "i": 9,
+    "anim": "없음"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   1,
+   3,
+   5,
+   7,
+   9
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    255,
+    255,
+    255
+   ],
+   "outline_px": 3,
+   "outline_rgb": [
+    160,
+    159,
+    160
+   ],
+   "box": null,
+   "shadow": null,
+   "stroke_px": 2.0,
+   "line_h_px": 40.0
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 0,
+    "t0": 3.1,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 2.95,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 2.967,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 2.983,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.0,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.017,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.033,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.05,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.067,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.083,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.1,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.117,
+      "bbox": null,
+      "ink": 0
+     },
+     {
+      "t": 3.133,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8275
+     },
+     {
+      "t": 3.15,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8283
+     },
+     {
+      "t": 3.167,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8283
+     },
+     {
+      "t": 3.183,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8283
+     },
+     {
+      "t": 3.2,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8283
+     },
+     {
+      "t": 3.217,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8327
+     },
+     {
+      "t": 3.233,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8327
+     },
+     {
+      "t": 3.25,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8327
+     },
+     {
+      "t": 3.267,
+      "bbox": [
+       185,
+       1456,
+       711,
+       83
+      ],
+      "ink": 8406
+     }
+    ]
+   },
+   {
+    "caption": 5,
+    "t0": 8.6,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 8.45,
+      "bbox": [
+       90,
+       1434,
+       639,
+       105
+      ],
+      "ink": 5862
+     },
+     {
+      "t": 8.467,
+      "bbox": [
+       90,
+       1436,
+       639,
+       118
+      ],
+      "ink": 8860
+     },
+     {
+      "t": 8.483,
+      "bbox": [
+       46,
+       1434,
+       683,
+       120
+      ],
+      "ink": 7798
+     },
+     {
+      "t": 8.5,
+      "bbox": [
+       46,
+       1434,
+       683,
+       120
+      ],
+      "ink": 10850
+     },
+     {
+      "t": 8.517,
+      "bbox": [
+       46,
+       1434,
+       683,
+       120
+      ],
+      "ink": 9772
+     },
+     {
+      "t": 8.533,
+      "bbox": [
+       46,
+       1434,
+       683,
+       120
+      ],
+      "ink": 9027
+     },
+     {
+      "t": 8.55,
+      "bbox": [
+       10,
+       1434,
+       719,
+       120
+      ],
+      "ink": 8120
+     },
+     {
+      "t": 8.567,
+      "bbox": [
+       46,
+       1434,
+       683,
+       120
+      ],
+      "ink": 7440
+     },
+     {
+      "t": 8.583,
+      "bbox": [
+       68,
+       1434,
+       661,
+       120
+      ],
+      "ink": 6622
+     },
+     {
+      "t": 8.6,
+      "bbox": [
+       109,
+       1434,
+       687,
+       120
+      ],
+      "ink": 8607
+     },
+     {
+      "t": 8.617,
+      "bbox": [
+       140,
+       1434,
+       656,
+       120
+      ],
+      "ink": 7752
+     },
+     {
+      "t": 8.633,
+      "bbox": [
+       121,
+       1434,
+       675,
+       120
+      ],
+      "ink": 7174
+     },
+     {
+      "t": 8.65,
+      "bbox": [
+       58,
+       1434,
+       738,
+       120
+      ],
+      "ink": 7579
+     },
+     {
+      "t": 8.667,
+      "bbox": [
+       55,
+       1468,
+       741,
+       86
+      ],
+      "ink": 8700
+     },
+     {
+      "t": 8.683,
+      "bbox": [
+       55,
+       1456,
+       741,
+       98
+      ],
+      "ink": 8981
+     },
+     {
+      "t": 8.7,
+      "bbox": [
+       55,
+       1443,
+       741,
+       111
+      ],
+      "ink": 9878
+     },
+     {
+      "t": 8.717,
+      "bbox": [
+       55,
+       1434,
+       741,
+       120
+      ],
+      "ink": 11471
+     },
+     {
+      "t": 8.733,
+      "bbox": [
+       55,
+       1434,
+       741,
+       120
+      ],
+      "ink": 11281
+     },
+     {
+      "t": 8.75,
+      "bbox": [
+       55,
+       1434,
+       741,
+       120
+      ],
+      "ink": 9179
+     },
+     {
+      "t": 8.767,
+      "bbox": [
+       55,
+       1434,
+       741,
+       120
+      ],
+      "ink": 9044
+     }
+    ]
+   },
+   {
+    "caption": 9,
+    "t0": 15.6,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 15.45,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4456
+     },
+     {
+      "t": 15.467,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4458
+     },
+     {
+      "t": 15.483,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4459
+     },
+     {
+      "t": 15.5,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4459
+     },
+     {
+      "t": 15.517,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4459
+     },
+     {
+      "t": 15.533,
+      "bbox": [
+       360,
+       1475,
+       360,
+       39
+      ],
+      "ink": 4459
+     },
+     {
+      "t": 15.55,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5092
+     },
+     {
+      "t": 15.567,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5095
+     },
+     {
+      "t": 15.583,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5089
+     },
+     {
+      "t": 15.6,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5094
+     },
+     {
+      "t": 15.617,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5107
+     },
+     {
+      "t": 15.633,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5111
+     },
+     {
+      "t": 15.65,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5078
+     },
+     {
+      "t": 15.667,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 15.683,
+      "bbox": [
+       319,
+       1474,
+       761,
+       40
+      ],
+      "ink": 5080
+     },
+     {
+      "t": 15.7,
+      "bbox": [
+       319,
+       1474,
+       746,
+       40
+      ],
+      "ink": 5070
+     },
+     {
+      "t": 15.717,
+      "bbox": [
+       319,
+       1474,
+       761,
+       40
+      ],
+      "ink": 5103
+     },
+     {
+      "t": 15.733,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5136
+     },
+     {
+      "t": 15.75,
+      "bbox": [
+       319,
+       1434,
+       761,
+       80
+      ],
+      "ink": 5202
+     },
+     {
+      "t": 15.767,
+      "bbox": [
+       319,
+       1474,
+       749,
+       40
+      ],
+      "ink": 5173
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -21.9,
+   "LRA": 2.3,
+   "TP": -3.3,
+   "S_spread": 2.0,
+   "S_n": 173,
+   "open3s_M": -22.4,
+   "rest_M": -23.2,
+   "hf_8k16k_dbfs": -53.75,
+   "openvoice": {
+    "floor_db": -35.91,
+    "open": 19.37,
+    "body": 14.65
+   }
+  },
+  "ok": true,
+  "transcript": {
+   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+  },
+  "composition": {
+   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  }
+ },
+ "script_tone": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   0.967,
+   1.8,
+   2.533,
+   3.933,
+   10.8,
+   11.983,
+   13.933,
+   14.517,
+   15.55,
+   16.567,
+   17.217,
+   17.7,
+   18.35
+  ],
+  "shots": 14,
+  "shot_len": {
+   "median": 0.99,
+   "p10": 0.6,
+   "p90": 1.91
+  },
+  "first_cut": 0.97,
+  "cut_per_min": 38.6,
+  "cut_eq_sub": [
+   3,
+   13
+  ],
+  "cut_eq_sub_rate": 0.231,
+  "zoom": {
+   "n": 76,
+   "median_rate_pct_s": -0.01,
+   "p90_abs_rate_pct_s": 0.72,
+   "zoomin_frac": 0.053,
+   "zoomout_frac": 0.039
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    0.967,
+    1.8,
+    2.533,
+    3.933,
+    10.8,
+    11.983,
+    13.933,
+    14.517,
+    15.55,
+    16.567,
+    17.217,
+    17.35,
+    17.7,
+    18.35
+   ],
+   "raw_stats": {
+    "shots": 15,
+    "first_cut": 0.97,
+    "cut_std": 1.55,
+    "cut_eq_sub": [
+     3,
+     14
+    ]
+   },
+   "candidates": [
+    0.967,
+    1.8,
+    2.533,
+    3.933,
+    10.8,
+    11.983,
+    13.933,
+    14.517,
+    15.55,
+    16.567,
+    17.217,
+    17.7,
+    18.35
+   ],
+   "corr": [
+    0.229,
+    0.29,
+    0.396,
+    0.246,
+    0.436,
+    -0.43,
+    -0.125,
+    -0.234,
+    -0.226,
+    -0.311,
+    -0.096,
+    0.255,
+    0.144
+   ],
+   "cuts": [
+    0.967,
+    1.8,
+    2.533,
+    3.933,
+    10.8,
+    11.983,
+    13.933,
+    14.517,
+    15.55,
+    16.567,
+    17.217,
+    17.7,
+    18.35
+   ],
+   "bg_gray": null,
+   "detected": [
+    0.967,
+    1.8,
+    2.533,
+    3.933,
+    10.8,
+    11.983,
+    13.933,
+    14.517,
+    15.55,
+    16.567,
+    17.217,
+    17.35,
+    17.7,
+    18.35
+   ],
+   "moved": [],
+   "merged_out": [
+    17.35
+   ],
+   "rejected": [],
+   "shots": 14,
+   "shot_median": 0.99,
+   "shot_min": 0.48,
+   "shot_max": 6.87,
+   "first_cut": 0.97,
+   "cut_std": 1.56,
+   "cut_per_min": 38.6,
+   "cut_eq_sub": [
+    3,
+    13
+   ],
+   "longest_still": 1.78,
+   "event_gap_med": 0.8,
+   "zoom": {
+    "n": 76,
+    "median_rate_pct_s": -0.01,
+    "p90_abs_rate_pct_s": 0.72,
+    "zoomin_frac": 0.053,
+    "zoomout_frac": 0.039
+   }
+  },
+  "picture_boxes": {
+   "per_shot": [
+    {
+     "shot": 0,
+     "t": [
+      0.0,
+      0.97
+     ],
+     "box": [
+      42,
+      144,
+      1020,
+      696
+     ]
+    },
+    {
+     "shot": 1,
+     "t": [
+      0.97,
+      1.8
+     ],
+     "box": [
+      243,
+      333,
+      837,
+      738
+     ]
+    },
+    {
+     "shot": 2,
+     "t": [
+      1.8,
+      2.53
+     ],
+     "box": [
+      282,
+      0,
+      798,
+      690
+     ]
+    },
+    {
+     "shot": 3,
+     "t": [
+      2.53,
+      3.93
+     ],
+     "box": [
+      312,
+      0,
+      768,
+      576
+     ]
+    },
+    {
+     "shot": 4,
+     "t": [
+      3.93,
+      10.8
+     ],
+     "box": [
+      0,
+      0,
+      876,
+      462
+     ]
+    },
+    {
+     "shot": 5,
+     "t": [
+      10.8,
+      11.98
+     ],
+     "box": [
+      0,
+      0,
+      1074,
+      1668
+     ]
+    },
+    {
+     "shot": 6,
+     "t": [
+      11.98,
+      13.93
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      240
+     ]
+    },
+    {
+     "shot": 7,
+     "t": [
+      13.93,
+      14.52
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      792
+     ]
+    },
+    {
+     "shot": 8,
+     "t": [
+      14.52,
+      15.55
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      327
+     ]
+    },
+    {
+     "shot": 9,
+     "t": [
+      15.55,
+      16.57
+     ],
+     "box": [
+      0,
+      0,
+      678,
+      591
+     ]
+    },
+    {
+     "shot": 10,
+     "t": [
+      16.57,
+      17.22
+     ],
+     "box": [
+      0,
+      894,
+      687,
+      645
+     ]
+    },
+    {
+     "shot": 11,
+     "t": [
+      17.22,
+      17.7
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      855
+     ]
+    },
+    {
+     "shot": 12,
+     "t": [
+      17.7,
+      18.35
+     ],
+     "box": [
+      405,
+      1485,
+      675,
+      435
+     ]
+    },
+    {
+     "shot": 13,
+     "t": [
+      18.35,
+      20.18
+     ],
+     "box": [
+      0,
+      0,
+      1080,
+      810
+     ]
+    }
+   ],
+   "mode": [
+    0,
+    0,
+    1080,
+    800
+   ],
+   "mode_share": 0.143,
+   "range": {
+    "x": [
+     0,
+     405
+    ],
+    "y": [
+     0,
+     1485
+    ],
+    "w": [
+     675,
+     1080
+    ],
+    "h": [
+     240,
+     1668
+    ]
+   },
+   "kinds": 13,
+   "method": "bench.layout.picture_box(컷 가운데 프레임, 바탕색과 다른 화소 행·열 50%)"
+  }
+ },
+ "materials": {
+  "failed": "건너뜀(--no-materials)"
+ },
+ "sfx_rules": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "bgm_rules": {
+  "failed": "제미나이 배경음악 판독 없음",
+  "end": {
+   "fade": false,
+   "last0.5s_db": -30.7,
+   "prev_db": -26.1,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  }
+ },
+ "voice_rules": {
+  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+ },
+ "overlay_rules": {
+  "failed": "건너뜀(--no-materials)"
+ },
+ "unknown": [
+  "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 4개: [3, 4, 5, 9]",
+  "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+  "글꼴 1위 점수 0.0929 < 0.5 — 창고에 없는 글꼴일 수 있음",
+  "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+  "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "bgm_rules: 제미나이 배경음악 판독 없음",
+  "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+  "overlay_rules: 건너뜀(--no-materials)"
+ ],
+ "llm_calls": [],
+ "timing_sec": {
+  "probe": 0.2,
+  "layout": 169.2,
+  "captions": 58.9,
+  "fonts_fx": 3.8,
+  "caption_motion": 2.7,
+  "audio_tone": 0.7,
+  "cuts_materials": 49.1,
+  "rules": 0.1,
+  "total": 284.6
+ }
+}

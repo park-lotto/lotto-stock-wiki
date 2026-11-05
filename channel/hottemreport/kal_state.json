@@ -1,0 +1,95 @@
+{
+ "slug": "hottemreport",
+ "ref": "https://www.youtube.com/@핫템리포트",
+ "steps": {
+  "select": {
+   "state": "done",
+   "note": "channel/hottemreport/원자료/top50.json(조회 상위) — 1·2위 TinyDose 틀 제외, 검정 띠 틀 6편(3·4·6·9·10·19위)",
+   "outputs": {}
+  },
+  "collect": {
+   "state": "done",
+   "note": "C:/숏템_칼카피/hottemreport/mp4 (5편 기존 + Rpfk8Yn0Y-c 10-25 받음)",
+   "outputs": {
+    "src": "C:/숏템_칼카피/hottemreport/mp4",
+    "ids": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "RWS43GF1A_U",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c",
+     "Rpfk8Yn0Y-c"
+    ]
+   }
+  },
+  "tteutgi": {
+   "state": "done",
+   "note": "5편 기존 뜯기 · Rpfk8Yn0Y-c 뜯기 없음",
+   "outputs": {
+    "ids": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "RWS43GF1A_U",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c",
+     "Rpfk8Yn0Y-c"
+    ]
+   }
+  },
+  "readlines": {
+   "state": "done",
+   "note": "줄판독 6편 strict 통과(오푸스 눈+픽셀 10-25)",
+   "outputs": {
+    "ids": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "RWS43GF1A_U",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c",
+     "Rpfk8Yn0Y-c"
+    ]
+   }
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 02:23",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\hottemreport\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\hottemreport\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\hottemreport\\_kal\\hottemreport판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "done",
+   "sec": 54.8,
+   "at": "2026-10-25 02:24",
+   "outputs": {
+    "frames": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "RWS43GF1A_U",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c"
+    ],
+    "preset": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\hottemreport\\preset\\검정띠"
+   },
+   "note": "자동 설명서 5편 · 프리셋 검정띠"
+  },
+  "make": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-25 02:24",
+   "outputs": {},
+   "note": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "숏템리폿",
+ "hybrid": "아니오",
+ "n": 6,
+ "channel": {
+  "name": "핫템리포트"
+ }
+}

@@ -1,0 +1,2621 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/hottemreport/mp4/PIHCaioKSp4.mp4",
+ "measured_at": "2026-10-16 01:40",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 35.2,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 1056,
+   "duration": 35.2,
+   "duration_container": 35.248,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   645,
+   1080,
+   1275
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   240,
+   236,
+   236
+  ],
+  "ink_polarity": "bright",
+  "caption_pos": "above",
+  "caption_band": [
+   278,
+   579
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    0,
+    240
+   ],
+   [
+    279,
+    346
+   ],
+   [
+    385,
+    413
+   ],
+   [
+    516,
+    577
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    645,
+    1080,
+    1275
+   ],
+   "bg_rgb": [
+    240,
+    236,
+    236
+   ],
+   "bg_lum": 237.3,
+   "caption": {
+    "pos": "above",
+    "band": [
+     0,
+     589
+    ],
+    "ink": "dark"
+   },
+   "above_bands": [
+    [
+     0,
+     240
+    ],
+    [
+     279,
+     346
+    ],
+    [
+     385,
+     413
+    ],
+    [
+     516,
+     577
+    ]
+   ],
+   "n_samples": 70,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "above",
+    "band": [
+     0,
+     589
+    ],
+    "ink": "dark",
+    "score": 27.0,
+    "spans": 27,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     155,
+     242
+    ],
+    "ink": "bright",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     278,
+     579
+    ],
+    "ink": "bright",
+    "score": 27.0,
+    "spans": 27,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1268,
+     1294
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 7,
+    "persist": 0.008,
+    "coverage": 0.71
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1334,
+     1353
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 5,
+    "persist": 0.008,
+    "coverage": 0.679
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   238,
+   619
+  ],
+  "changes": [
+   2.2,
+   3.6,
+   4.2,
+   5.3,
+   6.9,
+   8.5,
+   9.9,
+   11.2,
+   12.8,
+   14.2,
+   15.9,
+   17.1,
+   18.9,
+   19.9,
+   21.0,
+   22.1,
+   23.2,
+   24.0,
+   25.7,
+   26.9,
+   28.3,
+   29.2,
+   30.3,
+   31.4,
+   33.0,
+   34.1
+  ],
+  "spans": [
+   [
+    0.0,
+    2.2
+   ],
+   [
+    2.2,
+    3.6
+   ],
+   [
+    3.6,
+    4.2
+   ],
+   [
+    4.2,
+    5.3
+   ],
+   [
+    5.3,
+    6.9
+   ],
+   [
+    6.9,
+    8.5
+   ],
+   [
+    8.5,
+    9.9
+   ],
+   [
+    9.9,
+    11.2
+   ],
+   [
+    11.2,
+    12.8
+   ],
+   [
+    12.8,
+    14.2
+   ],
+   [
+    14.2,
+    15.9
+   ],
+   [
+    15.9,
+    17.1
+   ],
+   [
+    17.1,
+    18.9
+   ],
+   [
+    18.9,
+    19.9
+   ],
+   [
+    19.9,
+    21.0
+   ],
+   [
+    21.0,
+    22.1
+   ],
+   [
+    22.1,
+    23.2
+   ],
+   [
+    23.2,
+    24.0
+   ],
+   [
+    24.0,
+    25.7
+   ],
+   [
+    25.7,
+    26.9
+   ],
+   [
+    26.9,
+    28.3
+   ],
+   [
+    28.3,
+    29.2
+   ],
+   [
+    29.2,
+    30.3
+   ],
+   [
+    30.3,
+    31.4
+   ],
+   [
+    31.4,
+    33.0
+   ],
+   [
+    33.0,
+    34.1
+   ],
+   [
+    34.1,
+    35.2
+   ]
+  ],
+  "n_spans": 27,
+  "items": [
+   {
+    "i": 0,
+    "t0": 0.0,
+    "t1": 2.2,
+    "lines": 2,
+    "widths": [
+     945,
+     922
+    ],
+    "top_y": 298,
+    "leading": 134,
+    "mark": true,
+    "text": [
+     "모기 잡는 잠자리로",
+     "20억 번 초등학생"
+    ]
+   },
+   {
+    "i": 1,
+    "t0": 2.2,
+    "t1": 3.6,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     657
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "모기 천적이 잠자리인 거"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 3.6,
+    "t1": 4.2,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     297
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "알고 있음?"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 4.2,
+    "t1": 5.3,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     577
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "미국의 한 초등학생이"
+    ]
+   },
+   {
+    "i": 4,
+    "t0": 5.3,
+    "t1": 6.9,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     565
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "수업시간에 배운걸로"
+    ]
+   },
+   {
+    "i": 5,
+    "t0": 6.9,
+    "t1": 8.5,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     743
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "모형 잠자리를 만들었는데.."
+    ]
+   },
+   {
+    "i": 6,
+    "t0": 8.5,
+    "t1": 9.9,
+    "lines": 3,
+    "widths": [
+     875,
+     948,
+     677
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "무려 10만개나 팔아버림."
+    ]
+   },
+   {
+    "i": 7,
+    "t0": 9.9,
+    "t1": 11.2,
+    "lines": 3,
+    "widths": [
+     875,
+     948,
+     429
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "아니, \"모형인데"
+    ]
+   },
+   {
+    "i": 8,
+    "t0": 11.2,
+    "t1": 12.8,
+    "lines": 3,
+    "widths": [
+     875,
+     948,
+     688
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "모기가 속겠어?\" 싶잖아?"
+    ]
+   },
+   {
+    "i": 9,
+    "t0": 12.8,
+    "t1": 14.2,
+    "lines": 3,
+    "widths": [
+     875,
+     948,
+     721
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "근데 이게 살짝만 흔들려도"
+    ]
+   },
+   {
+    "i": 10,
+    "t0": 14.2,
+    "t1": 15.9,
+    "lines": 3,
+    "widths": [
+     875,
+     948,
+     741
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "모기가 진짜 잠자리로 착각!"
+    ]
+   },
+   {
+    "i": 11,
+    "t0": 15.9,
+    "t1": 17.1,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     517
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "알아서 피하는 거임"
+    ]
+   },
+   {
+    "i": 12,
+    "t0": 17.1,
+    "t1": 18.9,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     842
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "여기서 사람들이 꽂힌 포인트는"
+    ]
+   },
+   {
+    "i": 13,
+    "t0": 18.9,
+    "t1": 19.9,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     578
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "몸에 뿌리는 스프레이"
+    ]
+   },
+   {
+    "i": 14,
+    "t0": 19.9,
+    "t1": 21.0,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     441
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "성분이 걱정됐던"
+    ]
+   },
+   {
+    "i": 15,
+    "t0": 21.0,
+    "t1": 22.1,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     462
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "아이 있는 집이나"
+    ]
+   },
+   {
+    "i": 16,
+    "t0": 22.1,
+    "t1": 23.2,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     639
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "반려동물 키우는 집에서"
+    ]
+   },
+   {
+    "i": 17,
+    "t0": 23.2,
+    "t1": 24.0,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     374
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "난리 났던 거.."
+    ]
+   },
+   {
+    "i": 18,
+    "t0": 24.0,
+    "t1": 25.7,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     678
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "심지어 사용법은 더 간단!"
+    ]
+   },
+   {
+    "i": 19,
+    "t0": 25.7,
+    "t1": 26.9,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     540
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "그냥 모기 있을 만한"
+    ]
+   },
+   {
+    "i": 20,
+    "t0": 26.9,
+    "t1": 28.3,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     557
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "곳에 툭 달아두면 끝!"
+    ]
+   },
+   {
+    "i": 21,
+    "t0": 28.3,
+    "t1": 29.2,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     379
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "모기 입장에서는"
+    ]
+   },
+   {
+    "i": 22,
+    "t0": 29.2,
+    "t1": 30.3,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     500
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "마동석급 경비원이"
+    ]
+   },
+   {
+    "i": 23,
+    "t0": 30.3,
+    "t1": 31.4,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     662
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "눈앞에 서 있는 수준이라"
+    ]
+   },
+   {
+    "i": 24,
+    "t0": 31.4,
+    "t1": 33.0,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     539
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "근처에 얼씬도 안함."
+    ]
+   },
+   {
+    "i": 25,
+    "t0": 33.0,
+    "t1": 34.1,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     459
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "올여름 침대 옆은"
+    ]
+   },
+   {
+    "i": 26,
+    "t0": 34.1,
+    "t1": 35.2,
+    "lines": 3,
+    "widths": [
+     875,
+     947,
+     400
+    ],
+    "top_y": 278,
+    "leading": 105,
+    "mark": false,
+    "text": [
+     "잠자리로 확정!"
+    ]
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 112,
+    "stroke": 1.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 5,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 15,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 20,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 26,
+    "anim": "없음"
+   }
+  ],
+  "unstable": [],
+  "ocr": {
+   "asked": 27,
+   "read": 27,
+   "errors": [],
+   "models": [
+    "gemini-3.5-flash",
+    "gemini-flash-lite-latest"
+   ]
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 61,
+  "usable": 1,
+  "per_crop": [
+   {
+    "caption": 0,
+    "text": "모기 잡는 잠자리로",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.737
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.7313
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7153
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.6927
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.668
+     }
+    ],
+    "grid": "fonts/c00.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 기는로리모"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "yg-jalnan.ttf",
+    "score": 0.737
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "score": 0.7313
+   },
+   {
+    "font": "JalnanGothic.ttf",
+    "score": 0.7153
+   }
+  ]
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 0,
+    "fill_rgb": [
+     255,
+     253,
+     253
+    ],
+    "outline": {
+     "px": 1,
+     "rgb": [
+      171,
+      144,
+      142
+     ]
+    },
+    "box": null,
+    "box_note": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 112,
+    "stroke": 1.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 5,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 15,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 20,
+    "anim": "없음"
+   },
+   {
+    "line_h": 70,
+    "stroke": 2.0,
+    "outline": true,
+    "shadow": [
+     -6,
+     2
+    ],
+    "i": 26,
+    "anim": "없음"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   5,
+   10,
+   15,
+   20,
+   26
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    255,
+    253,
+    253
+   ],
+   "outline_px": 1,
+   "outline_rgb": [
+    171,
+    144,
+    142
+   ],
+   "box": null,
+   "shadow": [
+    [
+     -6,
+     2
+    ]
+   ],
+   "stroke_px": 2.0,
+   "line_h_px": 70.0
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 1,
+    "t0": 2.2,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 1.9,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 1.933,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 1.967,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 2.0,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 2.033,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 2.067,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 2.1,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16482
+     },
+     {
+      "t": 2.133,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16487
+     },
+     {
+      "t": 2.167,
+      "bbox": [
+       67,
+       298,
+       946,
+       254
+      ],
+      "ink": 16487
+     },
+     {
+      "t": 2.2,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.233,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.267,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.3,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.333,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.367,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24333
+     },
+     {
+      "t": 2.4,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24328
+     },
+     {
+      "t": 2.433,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24328
+     },
+     {
+      "t": 2.467,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24328
+     },
+     {
+      "t": 2.5,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 24328
+     }
+    ]
+   },
+   {
+    "caption": 13,
+    "t0": 18.9,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 18.6,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26768
+     },
+     {
+      "t": 18.633,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26768
+     },
+     {
+      "t": 18.667,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26752
+     },
+     {
+      "t": 18.7,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26752
+     },
+     {
+      "t": 18.733,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26752
+     },
+     {
+      "t": 18.767,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26752
+     },
+     {
+      "t": 18.8,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26765
+     },
+     {
+      "t": 18.833,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26768
+     },
+     {
+      "t": 18.867,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 26768
+     },
+     {
+      "t": 18.9,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24198
+     },
+     {
+      "t": 18.933,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24198
+     },
+     {
+      "t": 18.967,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24198
+     },
+     {
+      "t": 19.0,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24198
+     },
+     {
+      "t": 19.033,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     },
+     {
+      "t": 19.067,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     },
+     {
+      "t": 19.1,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     },
+     {
+      "t": 19.133,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     },
+     {
+      "t": 19.167,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     },
+     {
+      "t": 19.2,
+      "bbox": [
+       0,
+       240,
+       1080,
+       338
+      ],
+      "ink": 24197
+     }
+    ]
+   },
+   {
+    "caption": 26,
+    "t0": 34.1,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 33.8,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 33.833,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 33.867,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 33.9,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 33.933,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 33.967,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 34.0,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 34.033,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 34.067,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 34.1,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 23076
+     },
+     {
+      "t": 34.133,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22613
+     },
+     {
+      "t": 34.167,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22613
+     },
+     {
+      "t": 34.2,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22613
+     },
+     {
+      "t": 34.233,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22612
+     },
+     {
+      "t": 34.267,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22610
+     },
+     {
+      "t": 34.3,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22610
+     },
+     {
+      "t": 34.333,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22610
+     },
+     {
+      "t": 34.367,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22610
+     },
+     {
+      "t": 34.4,
+      "bbox": [
+       0,
+       240,
+       1080,
+       339
+      ],
+      "ink": 22610
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -14.1,
+   "LRA": 3.5,
+   "TP": 0.8,
+   "S_spread": 2.9,
+   "S_n": 323,
+   "open3s_M": -15.2,
+   "rest_M": -15.0,
+   "hf_8k16k_dbfs": -37.1,
+   "openvoice": {
+    "floor_db": -31.84,
+    "open": 17.84,
+    "body": 18.87
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [
+    {
+     "t": 1.58,
+     "kind": "휙"
+    },
+    {
+     "t": 2.16,
+     "kind": "휙"
+    },
+    {
+     "t": 3.88,
+     "kind": "휙"
+    },
+    {
+     "t": 9.74,
+     "kind": "휙"
+    },
+    {
+     "t": 16.32,
+     "kind": "휙"
+    },
+    {
+     "t": 24.62,
+     "kind": "휙"
+    },
+    {
+     "t": 30.58,
+     "kind": "휙"
+    },
+    {
+     "t": 35.76,
+     "kind": "휙"
+    }
+   ],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "귀여운",
+     "밝은"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 들뜬 20대 여성 수다체",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "female",
+     "voice": "tts"
+    }
+   ]
+  },
+  "transcript": {
+   "model": "gemini-flash-lite-latest",
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 3.84,
+     "text": "모기 잡는 잠자리로 20억 번 초등학생? 모기 천적이 잠자리인 거 알고 있음?",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 4.04,
+     "end": 9.68,
+     "text": "미국의 한 초등학생이 수업 시간에 배운 걸로 모형 잠자리를 만들었는데, 무어 10만 개나 팔아버림.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 9.94,
+     "end": 17.38,
+     "text": "아니, 모형인데 모기가 속겠어? 싶잖아? 근데 이게 살짝만 흔들려도 모기가 진짜 잠자리로 착각. 알아서 피하는 거임.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 17.62,
+     "end": 24.58,
+     "text": "여기서 사람들이 꽂힌 포인트는 몸에 뿌리는 스프레이 성분이 걱정됐던 아이 있는 집이나 반려 동물 키우는 집에서 난리 났던 거.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 24.78,
+     "end": 30.56,
+     "text": "심지어 사용법은 더 간단. 그냥 모기 있을 만한 곳에 툭 달아두면 끝.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 30.56,
+     "end": 35.74,
+     "text": "모기 입장에선 마동석급 범죄도시 앞발 앞에 서 있는 수준이라 근처에 얼씬도 안 함. 올 여름 침대 옆은 잠자리로 확정.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 6,
+   "langs": [
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 34.84,
+   "ko_speech_sec": 34.84,
+   "speech_share_ko": 0.99,
+   "chars_nospace_ko": 252,
+   "cps": 7.23,
+   "pause_median": 0.22,
+   "pauses": 4,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "female",
+     "voice_guess": "tts",
+     "share": 1.0,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    }
+   ],
+   "narration": "tts",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 1021,
+     "f0_median_hz": 146.8,
+     "semitone_std": 5.54
+    },
+    "pause_cv": 0.12,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": false,
+   "source_evidence": {
+    "foreign_or_source_segments": 0,
+    "ambient": ""
+   },
+   "duck_db": 2.85,
+   "duck_method": "나레 구간 RMS 중앙값 − 말 없는 구간 RMS 중앙값(dB). 원음이 나레 밑에서 얼마나 눌렸는지의 근사(분리 없음)",
+   "caption_eq_narration": 0.966,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.057,
+   "sfx": {
+    "count": 2,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [
+     [
+      9.94,
+      0.2
+     ],
+     [
+      24.16,
+      0.06
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "나레 1명"
+  }
+ },
+ "script_tone": {
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 6,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 0.0,
+  "hearsay": 0,
+  "person_1st": 0,
+  "person_2nd": 0
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   2.2,
+   4.133,
+   5.2,
+   5.8,
+   6.8,
+   7.567,
+   9.867,
+   15.333,
+   17.033,
+   18.033,
+   19.2,
+   21.033,
+   22.167,
+   23.1,
+   24.0,
+   25.833,
+   27.333,
+   28.267,
+   29.167,
+   30.4,
+   31.1,
+   32.933
+  ],
+  "shots": 23,
+  "shot_len": {
+   "median": 1.17,
+   "p10": 0.79,
+   "p90": 2.25
+  },
+  "first_cut": 2.2,
+  "cut_per_min": 37.5,
+  "cut_eq_sub": [
+   15,
+   22
+  ],
+  "cut_eq_sub_rate": 0.682,
+  "zoom": {
+   "n": 123,
+   "median_rate_pct_s": 0.0,
+   "p90_abs_rate_pct_s": 27.39,
+   "zoomin_frac": 0.301,
+   "zoomout_frac": 0.39
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    2.2,
+    4.133,
+    5.2,
+    5.8,
+    6.8,
+    7.567,
+    9.867,
+    15.333,
+    17.033,
+    18.033,
+    19.2,
+    21.033,
+    22.167,
+    23.1,
+    24.0,
+    25.833,
+    27.333,
+    28.267,
+    29.167,
+    30.4,
+    31.1,
+    32.933
+   ],
+   "raw_stats": {
+    "shots": 23,
+    "first_cut": 2.2,
+    "cut_std": 0.99,
+    "cut_eq_sub": [
+     15,
+     22
+    ]
+   },
+   "candidates": [
+    2.2,
+    4.133,
+    5.2,
+    5.8,
+    6.8,
+    7.567,
+    9.867,
+    15.333,
+    17.033,
+    18.033,
+    19.2,
+    21.033,
+    22.167,
+    23.1,
+    24.0,
+    25.833,
+    27.333,
+    28.267,
+    29.167,
+    30.4,
+    31.1,
+    32.933
+   ],
+   "corr": [
+    -0.018,
+    -0.067,
+    -0.339,
+    0.283,
+    0.261,
+    -0.191,
+    0.032,
+    -0.061,
+    0.049,
+    0.552,
+    -0.191,
+    0.221,
+    -0.27,
+    -0.105,
+    -0.313,
+    -0.153,
+    -0.149,
+    -0.158,
+    0.104,
+    0.521,
+    -0.223,
+    -0.211
+   ],
+   "cuts": [
+    2.2,
+    4.133,
+    5.2,
+    5.8,
+    6.8,
+    7.567,
+    9.867,
+    15.333,
+    17.033,
+    18.033,
+    19.2,
+    21.033,
+    22.167,
+    23.1,
+    24.0,
+    25.833,
+    27.333,
+    28.267,
+    29.167,
+    30.4,
+    31.1,
+    32.933
+   ],
+   "merged_out": [],
+   "rejected": [],
+   "shots": 23,
+   "shot_median": 1.17,
+   "shot_min": 0.6,
+   "shot_max": 5.47,
+   "first_cut": 2.2,
+   "cut_std": 0.99,
+   "cut_per_min": 37.5,
+   "cut_eq_sub": [
+    15,
+    22
+   ],
+   "longest_still": 2.2,
+   "event_gap_med": 0.9,
+   "zoom": {
+    "n": 123,
+    "median_rate_pct_s": 0.0,
+    "p90_abs_rate_pct_s": 27.39,
+    "zoomin_frac": 0.301,
+    "zoomout_frac": 0.39
+   }
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     2.2
+    ],
+    "kind": "남의영상재편집",
+    "why": "채널 틀 안에 빛 아래에서 날아다니는 잠자리 모형과 모기들의 모습이 담긴 다른 영상이 편집되어 삽입되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 1,
+    "t": [
+     2.2,
+     4.13
+    ],
+    "kind": "남의영상재편집",
+    "why": "잠자리가 모기를 잡고 있는 모습을 클로즈업한 다른 출처의 영상 클립이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 2,
+    "t": [
+     4.13,
+     5.2
+    ],
+    "kind": "남의영상재편집",
+    "why": "모자에 잠자리 모형을 단 외국인 남성이 등장하는 해외 숏폼 영상 클립이 편집되어 포함되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 3,
+    "t": [
+     5.2,
+     5.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "강을 배경으로 모자에 잠자리 모형을 장착한 다른 외국인 남성의 영상이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 4,
+    "t": [
+     5.8,
+     6.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "대나무 숲을 배경으로 잠자리 모형 옆에 있는 인물이 나오는 해외 영상 클립이 삽입되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 5,
+    "t": [
+     6.8,
+     7.57
+    ],
+    "kind": "남의영상재편집",
+    "why": "손가락 위에 분홍색 모형 잠자리를 올려둔 모습을 촬영한 다른 영상 클립이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 6,
+    "t": [
+     7.57,
+     9.87
+    ],
+    "kind": "화면녹화",
+    "why": "스마트폰 쇼핑몰 애플리케이션 화면을 손가락으로 터치하며 상품을 보여주는 모바일 화면 녹화 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 7,
+    "t": [
+     9.87,
+     15.33
+    ],
+    "kind": "남의영상재편집",
+    "why": "야외 테이블에 여러 색상의 잠자리 모형과 접시를 설치해둔 외국인 남성의 영상 클립이 편집되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 8,
+    "t": [
+     15.33,
+     17.03
+    ],
+    "kind": "남의영상재편집",
+    "why": "주황색 텐트 내부 조명 주변으로 모기와 잠자리 모형이 날아다니는 다른 영상 클립이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 9,
+    "t": [
+     17.03,
+     18.03
+    ],
+    "kind": "짤·밈",
+    "why": "오디션 프로그램이나 방송 프로그램에서 한 출연자가 코와 입을 가리며 생각에 잠긴 모습의 짤막한 밈 영상 클립이 삽입되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 10,
+    "t": [
+     18.03,
+     19.2
+    ],
+    "kind": "짤·밈",
+    "why": "입술을 깨물며 곤란해하는 표정을 짓는 흑인 남성의 해외 인터넷 밈 영상이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 11,
+    "t": [
+     19.2,
+     21.03
+    ],
+    "kind": "남의영상재편집",
+    "why": "흰색 민소매를 입은 사람이 야외 풀밭을 걸어 다니며 연막 소독을 하는 다른 사람의 해외 숏폼 영상이 편집되어 들어갔습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 12,
+    "t": [
+     21.03,
+     22.17
+    ],
+    "kind": "남의영상재편집",
+    "why": "빨간색 헬멧을 쓴 어린이가 자전거 손잡이에 달린 빨간색 잠자리 모형을 만지는 해외 영상이 편집되어 들어갔습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 13,
+    "t": [
+     22.17,
+     23.1
+    ],
+    "kind": "남의영상재편집",
+    "why": "초원 위에서 반려견이 공중에 매달린 녹색 잠자리 모형을 바라보는 해외 반려견 산책 영상이 편집되어 들어갔습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 14,
+    "t": [
+     23.1,
+     24.0
+    ],
+    "kind": "남의영상재편집",
+    "why": "흰색 말의 머리에 붉은색 잠자리 모형이 장착된 상태로 산길을 걷는 시점에서 촬영된 해외 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 15,
+    "t": [
+     24.0,
+     25.83
+    ],
+    "kind": "남의영상재편집",
+    "why": "선글라스를 낀 남성이 집 현관문 옆 벽면에 잠자리 모형을 설치하는 사용법을 보여주는 해외 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 16,
+    "t": [
+     25.83,
+     27.33
+    ],
+    "kind": "남의영상재편집",
+    "why": "회색 옷을 입은 여성이 야외 테라스 의자 등받이에 초록색 잠자리 모형을 부착하는 해외 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 17,
+    "t": [
+     27.33,
+     28.27
+    ],
+    "kind": "남의영상재편집",
+    "why": "선글라스를 착용한 남성이 집 외벽 조명 근처에 잠자리 모형을 달아두는 모습을 보여주는 해외 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 18,
+    "t": [
+     28.27,
+     29.17
+    ],
+    "kind": "스톡영상",
+    "why": "사람의 피부에 앉아 피를 빠는 모기의 모습을 상세히 포착한 일반적인 스톡 영상이 사용되었습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 19,
+    "t": [
+     29.17,
+     30.4
+    ],
+    "kind": "남의영상재편집",
+    "why": "배우 마동석이 위협적인 표정으로 다가오는 영화 또는 방송 프로그램의 한 장면이 편집되어 들어갔습니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 20,
+    "t": [
+     30.4,
+     31.1
+    ],
+    "kind": "남의영상재편집",
+    "why": "바닥에 누워 있는 사람이 등장하며, 기존 외부 릴스나 SNS 영상을 가져와 채널 틀 안에 편집해 넣은 화면이기 때문이다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 21,
+    "t": [
+     31.1,
+     32.93
+    ],
+    "kind": "남의영상재편집",
+    "why": "잠자리 모양의 모형과 주변에 있는 모기들을 담은 3D 그래픽 또는 외부 촬영 영상을 가져와 채널 틀에 맞게 편집한 것이기 때문이다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 22,
+    "t": [
+     32.93,
+     35.2
+    ],
+    "kind": "남의영상재편집",
+    "why": "침대에 엎드려 있는 사람의 모습이 담긴 해외 SNS나 숏폼 원본 영상을 가져와 채널 틀 안에 배치하여 편집한 것이기 때문이다.",
+    "model": "gemini-flash-lite-latest"
+   }
+  ],
+  "share_by_time": {
+   "남의영상재편집": 0.848,
+   "화면녹화": 0.065,
+   "짤·밈": 0.062,
+   "스톡영상": 0.026
+  },
+  "share_by_count": {
+   "남의영상재편집": 19,
+   "화면녹화": 1,
+   "짤·밈": 2,
+   "스톡영상": 1
+  },
+  "models": [
+   "gemini-flash-lite-latest"
+  ],
+  "ok": true
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.057,
+  "count": 2,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.5,
+   "둘다_아님": 0.5
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)",
+  "kinds": {
+   "휙": 1.0
+  },
+  "kinds_n": 8,
+  "kinds_method": "제미나이 오디오 판독(받아쓰기와 같은 호출)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "귀여운",
+   "밝은"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": 2.85,
+  "end": {
+   "fade": true,
+   "last0.5s_db": -26.6,
+   "prev_db": -18.9,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [
+   "female"
+  ],
+  "roles": 1,
+  "speakers_all": 1,
+  "cps": 7.23,
+  "narration": "tts",
+  "tone": "빠르고 들뜬 20대 여성 수다체",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 2,
+  "per_min": 3.41,
+  "kind_share": {
+   "해외_리액션영상": 1.0
+  },
+  "slot_share": {
+   "중간": 1.0
+  },
+  "appearances": [
+   {
+    "kind": "해외_리액션영상",
+    "what": "여성 리액션 영상 작은 창",
+    "t": [
+     5.8,
+     6.8
+    ],
+    "t_pct": 16.5,
+    "len_s": 1.0,
+    "slot": "중간",
+    "full": false,
+    "size_pct": 1.0,
+    "box": [
+     0.0,
+     0.73,
+     0.11,
+     0.09
+    ],
+    "seen_at": [
+     6.5
+    ],
+    "interval_method": "1초 표본 → 양끝 1.0초를 0.1초 간격 '보이나' 판독(판독 20/20장)"
+   },
+   {
+    "kind": "해외_리액션영상",
+    "what": "입을 가리고 있는 여성의 리액션 영상",
+    "t": [
+     17.1,
+     18.6
+    ],
+    "t_pct": 48.6,
+    "len_s": 1.5,
+    "slot": "중간",
+    "full": false,
+    "size_pct": "unknown",
+    "box": "unknown",
+    "seen_at": [
+     17.5,
+     18.5
+    ],
+    "interval_method": "1초 표본 → 양끝 1.0초를 0.1초 간격 '보이나' 판독(판독 20/20장)"
+   }
+  ],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 양끝 0.1초 간격 '보이나' 판독으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 0,
+   "failed": "429",
+   "sec": 5.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "429",
+   "sec": 2.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "failed": "429",
+   "sec": 3.5
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 3,
+   "failed": "429",
+   "sec": 2.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 4,
+   "failed": "429",
+   "sec": 3.3
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "429",
+   "sec": 2.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "failed": "429",
+   "sec": 1.9
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 7,
+   "failed": "429",
+   "sec": 1.9
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 8,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 9,
+   "failed": "429",
+   "sec": 1.9
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 10,
+   "failed": "429",
+   "sec": 1.4
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 11,
+   "failed": "429",
+   "sec": 8.0
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 12,
+   "failed": "429",
+   "sec": 7.4
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "ok": true,
+   "sec": 16.5
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "failed": "503",
+   "sec": 15.5
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "failed": "429",
+   "sec": 6.9
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-flash-lite-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 12.9
+  },
+  {
+   "tag": "ocr2",
+   "model": "gemini-flash-lite-latest",
+   "key": 2,
+   "ok": true,
+   "sec": 11.1
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 3,
+   "failed": "429",
+   "sec": 4.6
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 4,
+   "failed": "429",
+   "sec": 4.3
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 8.2
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 22.1
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 13.5
+  },
+  {
+   "tag": "mat2",
+   "model": "gemini-flash-lite-latest",
+   "key": 6,
+   "ok": true,
+   "sec": 8.6
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-flash-lite-latest",
+   "key": 7,
+   "ok": true,
+   "sec": 8.2
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-flash-lite-latest",
+   "key": 8,
+   "ok": true,
+   "sec": 11.6
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-flash-lite-latest",
+   "key": 9,
+   "ok": true,
+   "sec": 9.8
+  },
+  {
+   "tag": "ov3",
+   "model": "gemini-flash-lite-latest",
+   "key": 10,
+   "ok": true,
+   "sec": 7.1
+  },
+  {
+   "tag": "ovedge",
+   "model": "gemini-flash-lite-latest",
+   "key": 11,
+   "ok": true,
+   "sec": 11.5
+  },
+  {
+   "tag": "ovedge",
+   "model": "gemini-flash-lite-latest",
+   "key": 12,
+   "ok": true,
+   "sec": 22.8
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.2,
+  "layout": 121.6,
+  "captions": 191.2,
+  "fonts_fx": 12.8,
+  "caption_motion": 14.5,
+  "audio_tone": 42.2,
+  "cuts_materials": 128.6,
+  "rules": 203.4,
+  "total": 714.5
+ }
+}

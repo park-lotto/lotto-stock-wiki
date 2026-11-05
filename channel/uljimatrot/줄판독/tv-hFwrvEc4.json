@@ -1,0 +1,912 @@
+{
+ "id": "tv-hFwrvEc4",
+ "dur": 24.967,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정이 행사비 얼마냐",
+   "box": "빨강 띠 #FF1700",
+   "colors": [
+    {
+     "word": "장윤정이 행사비 얼마냐",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "(띠)",
+     "hex": "#FF1700"
+    }
+   ]
+  },
+  {
+   "text": "묻자 박경덕 충격적 대답",
+   "box": "없음(검정 바탕·검정 외곽)",
+   "colors": [
+    {
+     "word": "묻자 박경덕 충격적 대답",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "layout": {
+  "title_y": [
+   [
+    153,
+    297
+   ],
+   [
+    312,
+    425
+   ]
+  ],
+  "window": [
+   0,
+   440,
+   1080,
+   1437
+  ],
+  "caption_band": [
+   1217,
+   1297
+  ],
+  "source_y": [
+   1510,
+   1557
+  ],
+  "source_hex": "#FFFBD2",
+  "logo_y": null,
+  "watermark": {
+   "text": null,
+   "alpha": null
+  },
+  "window_note": "21초~ 무대 화면은 창 y≈919~1397, 자막도 y918~997 로 올라감. 훅 0~4.87 은 창 없이 누끼 두 사람(y≈680~1920)"
+ },
+ "lines": [
+  {
+   "t0": 4.867,
+   "t1": 6.233,
+   "speaker": "나레",
+   "text": "장윤정과 동갑이고",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 웃는 얼굴(예능 화면)→박경덕 얼굴",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    4.87
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 6.233,
+   "t1": 7.867,
+   "speaker": "나레",
+   "text": "장민호보다 동생이라는",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박경덕 정면 얼굴 클로즈업",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 7.867,
+   "t1": 9.133,
+   "speaker": "나레",
+   "text": "충격적인 비주얼에",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장민호 웃는 얼굴",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 9.133,
+   "t1": 11.0,
+   "speaker": "나레",
+   "text": "인기를 얻었던 박경덕이",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박경덕 얼굴",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 11.0,
+   "t1": 12.133,
+   "speaker": "나레",
+   "text": "현재 돈벌이에 대해",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "패딩 입은 박경덕 대담 화면",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    11.0
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 12.133,
+   "t1": 13.433,
+   "speaker": "나레",
+   "text": "이야기한 적이 있는데요",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박경덕 대담",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    13.43
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 13.433,
+   "t1": 14.8,
+   "speaker": "나레",
+   "text": "장윤정은 솔직하게",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 대담(조끼)",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    13.43
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 14.8,
+   "t1": 16.467,
+   "speaker": "나레",
+   "text": "행사 한 번에 제일 싸게",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 질문하는 손짓",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 16.467,
+   "t1": 18.033,
+   "speaker": "나레",
+   "text": "움직인 게 얼마냐고 묻자",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    18.03
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 18.033,
+   "t1": 19.3,
+   "speaker": "나레",
+   "text": "박경덕의 입에서",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박경덕 대답 손짓",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    18.03
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 19.3,
+   "t1": 20.933,
+   "speaker": "나레",
+   "text": "충격적인 액수가 나왔습니다",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박경덕",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 21.0,
+   "t1": 22.267,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    908,
+    997
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "무대 위 마이크 든 박경덕(파란 정장)",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 5,
+   "cut_at": [
+    21.0
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 22.267,
+   "t1": 24.267,
+   "speaker": "나레",
+   "text": "두 번 누르면 공개됩니다",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    918,
+    997
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "무대 박경덕 노래",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 5,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 24.267,
+   "t1": 24.967,
+   "speaker": "불명",
+   "text": "30에 8곡도 불러봤다고",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    918,
+    996
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "무대 박경덕, 원본 이름표 '박경덕'",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 7,
+   "cut_at": [
+    24.27
+   ],
+   "confidence": "픽셀",
+   "notes": "가격 공개 줄. vtt 23.56초에서 끝나 음성 확인 안 됨 → 불명"
+  }
+ ],
+ "beats": "훅(0~4.87 누끼 두 사람, 나레가 제목 읽음·자막 없음) → 소개(4.87~11.0 박경덕 나이·비주얼) → 질문(11.0~18.0 장윤정 질문) → 고조(18.0~20.9 충격적 액수) → 유도(21.0~24.27 '화면을 톡톡 두 번') → 공개(24.27~24.97 '30에 8곡도 불러봤다고')",
+ "narr_share": "나레 줄 13/14 · 나레 초 약 19.4/24.97(훅 0~4.87 나레 자막 없음 포함 시 말 0.6~23.6초 전부 나레)",
+ "notes": [
+  "자막 y(잉크)·채움 #FFFFFF 는 픽셀 실측, 외곽 9px 는 행 스캔 눈 추정(±2px), 글꼴·size_px(잉크 높이 80px→100px 역산)·자간은 눈 추정",
+  "효과음은 들을 수 없음 — 파형 대조 안 함(sfx null = 미측정)",
+  "오른쪽 아래 빨강·흰 화살표 아이콘: 이 편에선 없음(2fps 시트·원본 프레임 확인)",
+  "로고·워터마크 없음",
+  "출처 줄은 11.0~20.9초(장공장장윤정 클립)에만, 창 아래 크림색 작은 글",
+  "나레=TTS 추정(전언체·말 끊김 없음), 목소리 성별은 귀로 확인 안 함",
+  "지휘자 관찰과 다름: 이 편 훅엔 빨간 화살표 없음 · 창 y440~1437(16:9 아님, 1080×997)·자막 y1217~1297(브리프 1080~1160 아님) · 등장은 타이핑 아님 cut"
+ ],
+ "name_evidence": [
+  "장윤정·박경덕 = 제목 2줄",
+  "장민호 = 자막 6.2초",
+  "박경덕 = 무대 원본 이름표 24.3초"
+ ],
+ "_made_by": "줄판독 워커(눈+픽셀) 10-23",
+ "frame0": {
+  "what": "얼굴",
+  "face_frac": 0.25,
+  "text": "제목 2줄 + 누끼 장윤정·박경덕(화살표 없음)"
+ },
+ "no_caption": [
+  [
+   0,
+   4.867
+  ]
+ ],
+ "hook": {
+  "t": [
+   0,
+   4.867
+  ],
+  "what": "누끼 장윤정(왼)·박경덕(오른) 검정 바탕, 정지(움직임 거의 없음)",
+  "arrow": null,
+  "exit": "원형 마스크로 창 화면 전환(4.87~4.9 검정 원호 보임)"
+ },
+ "price_reveal": {
+  "t": 24.267,
+  "form": "자막(채널 기본 꼴) '30에 8곡도 불러봤다고' — 금액 카드 없음, 0.7초만 보이고 끝"
+ }
+}

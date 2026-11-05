@@ -1,0 +1,377 @@
+{
+ "_note": "03 골든카레 재료(10-22). 방구석 영상 0. A = S&B 공식(CM Mqo50·영상 C95n·EbwdI·S&B探検隊 Nv7BH)·테레비도쿄BIZ 공식(hORMD)·무료 하늘 소재(rbzPG). B = 쿠팡 같은 제품(순한맛 MILD/甘口 고형 루) 사진 + 다른 사람 사용 영상(HeySeanEly MILD 상자·ochikeron 甘口 상자) + S&B 공식 루 장면. 남의 자막·방송 글자·아바타는 src_crop 밖. 같은 소스 ±3초 재사용 없음(HpuMa 97.2/102.0/107.3/127.0, Mqo50 17.15/18.85/24.6/26.95 — 26.95 는 24.6 컷 끝 26.3 뒤 별개 장면). · 2판(렌더 1판 눈 확인 뒤): 훅 첫 컷 1.45초(샷 경계 18.65 전), 6줄 CM 글자 컷 → 공식 상자 컷, B1 HeySean 33.65 시작. · 3판: 0초 첫 프레임이 CM 앞 장면(배우)이라 훅 첫 컷 17.3 시작(썸네일 = 상자).",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "src": "Mqo50OEuj1Q.mp4",
+   "ss": 17.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "Mqo50OEuj1Q.mp4",
+     "ss": 17.3,
+     "dur": 1.35,
+     "src_crop": [
+      640,
+      150,
+      1060,
+      1000
+     ]
+    },
+    {
+     "src": "Mqo50OEuj1Q.mp4",
+     "ss": 18.85,
+     "dur": 0.42,
+     "src_crop": [
+      500,
+      0,
+      1000,
+      650
+     ]
+    }
+   ],
+   "ours": "S&B 공식 CM 골든카레 금빛 상자(17.15~18.65) → 카레 붓는 장면 위쪽(아래 '35種…' 글자는 crop 밖)",
+   "why": "훅 '마트에서 한 번쯤 본 금빛 상자, 골든카레'",
+   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q"
+  },
+  {
+   "i": 1,
+   "src": "hORMD6plycY.mp4",
+   "ss": 196.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "hORMD6plycY.mp4",
+     "ss": 196.1,
+     "dur": 1.7,
+     "src_crop": [
+      450,
+      150,
+      820,
+      730
+     ]
+    },
+    {
+     "src": "C95nqdcDxjA.mp4",
+     "ss": 69.6,
+     "dur": 1.71,
+     "src_crop": [
+      610,
+      190,
+      700,
+      700
+     ]
+    }
+   ],
+   "ours": "S&B 간판(테레비도쿄 공식, 위 방송 글자·아래 社員数 자막 crop 밖) → S&B 공식 영상 끝 빨간 S&B 로고",
+   "why": "'상자 속 에스앤비, 스파이스 앤 허브인 줄'",
+   "url": "https://www.youtube.com/watch?v=hORMD6plycY | https://www.youtube.com/watch?v=C95nqdcDxjA"
+  },
+  {
+   "i": 2,
+   "src": "rbzPGOINa0w.mp4",
+   "ss": 18.3,
+   "fit": "cover",
+   "src_crop": [
+    671,
+    0,
+    818,
+    1080
+   ],
+   "ours": "해 뜨는 하늘과 날아가는 새(무료 4K 소재, 구독 문구·4K 마크는 0~5초뿐이라 안 씀)",
+   "why": "'알고 보니 태양 썬이랑, 새 버드의 앞 글자'",
+   "url": "https://www.youtube.com/watch?v=rbzPGOINa0w"
+  },
+  {
+   "i": 3,
+   "src": "hORMD6plycY.mp4",
+   "ss": 189.0,
+   "fit": "cover",
+   "src_crop": [
+    560,
+    160,
+    700,
+    720
+   ],
+   "ours": "옛 흑백 사진 — 카레 상자 싣는 트럭·일꾼(아래 '1923年創業' 자막·위 방송 글자 crop 밖)",
+   "why": "'백 년 전 일본 카레가루는, 영국 수입품이었다는데' — 옛 시대 화면",
+   "url": "https://www.youtube.com/watch?v=hORMD6plycY"
+  },
+  {
+   "i": 4,
+   "src": "Nv7BHxyjBf4.mp4",
+   "ss": 605.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "Nv7BHxyjBf4.mp4",
+     "ss": 605.3,
+     "dur": 1.6,
+     "src_crop": [
+      700,
+      215,
+      424,
+      540
+     ]
+    },
+    {
+     "src": "Nv7BHxyjBf4.mp4",
+     "ss": 124.0,
+     "dur": 1.54,
+     "src_crop": [
+      720,
+      200,
+      540,
+      690
+     ]
+    }
+   ],
+   "ours": "S&B 공식 채널: 스파이스 전시관의 창업자 山崎峯次郎 동상(이름표·아바타·위 쪽지 crop 밖) → 거대한 赤缶 카레가루 캔",
+   "why": "'그래서 창업자가 몇 년을 실패한 끝에, 직접 만들었고'",
+   "url": "https://www.youtube.com/watch?v=Nv7BHxyjBf4"
+  },
+  {
+   "i": 5,
+   "src": "hORMD6plycY.mp4",
+   "ss": 369.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "hORMD6plycY.mp4",
+     "ss": 369.6,
+     "dur": 1.4,
+     "src_crop": [
+      0,
+      150,
+      700,
+      900
+     ]
+    },
+    {
+     "src": "rbzPGOINa0w.mp4",
+     "ss": 7.3,
+     "dur": 1.89,
+     "src_crop": [
+      671,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "눈부신 해가 뜬 파란 하늘 → 해 앞을 나는 새",
+   "why": "'회사는 해처럼 뜨고, 제품은 새처럼 퍼지라는 뜻'",
+   "url": "https://www.youtube.com/watch?v=hORMD6plycY | https://www.youtube.com/watch?v=rbzPGOINa0w"
+  },
+  {
+   "i": 6,
+   "src": "EbwdI6H3Bqs.mp4",
+   "ss": 46.6,
+   "fit": "cover",
+   "src_crop": [
+    100,
+    200,
+    760,
+    680
+   ],
+   "ours": "S&B 공식 영상 골든카레 상자들(오른쪽 그릇·위 로고 crop 밖)",
+   "why": "'그 회사가 1966년에 내놓은 게, 이 골든카레' — 1판 CM 컷은 위 'ゴールデンカレー' 광고 글자가 걸려 뺌",
+   "url": "https://www.youtube.com/watch?v=EbwdI6H3Bqs"
+  },
+  {
+   "i": 7,
+   "src": "Mqo50OEuj1Q.mp4",
+   "ss": 26.95,
+   "fit": "cover",
+   "src_crop": [
+    520,
+    0,
+    880,
+    1080
+   ],
+   "ours": "공식 CM 끝 카드 'そこに、スパイス&ハーブ S&B'(회사 문구 그대로)",
+   "why": "'근데 2003년엔 회사 상징을 스파이스 앤 허브로 정해서'",
+   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q"
+  },
+  {
+   "i": 8,
+   "src": "EbwdI6H3Bqs.mp4",
+   "ss": 1.2,
+   "fit": "cover",
+   "src_crop": [
+    560,
+    0,
+    818,
+    1080
+   ],
+   "ours": "향신료 위 GOLDEN CURRY 글씨(공식)",
+   "why": "'헷갈릴 만하다고'",
+   "url": "https://www.youtube.com/watch?v=EbwdI6H3Bqs"
+  },
+  {
+   "i": 9,
+   "src": "prod_9499099417.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "prod_9499099417.jpg",
+     "ss": 0,
+     "dur": 2.1,
+     "src_crop": [
+      200,
+      1000,
+      2000,
+      2650
+     ],
+     "move": "in"
+    },
+    {
+     "src": "NwIget887_A.mp4",
+     "ss": 33.65,
+     "dur": 1.87,
+     "src_crop": [
+      860,
+      30,
+      580,
+      760
+     ]
+    }
+   ],
+   "ours": "쿠팡 9499099417 상품 사진(순한맛 220g, 확대) → 미국 유튜버가 들어 보이는 골든카레 MILD 상자",
+   "why": "B1 '이 얘기 듣고, 쿠팡에서 순한맛 한 상자 사 봤는데요' · 1판 시트: HeySean 34.0 시작이 35.5 샷 경계를 넘어 얼굴 컷이 0.3초 섞임 → 33.65 시작",
+   "url": "https://www.coupang.com/vp/products/9499099417 | https://www.youtube.com/watch?v=NwIget887_A"
+  },
+  {
+   "i": 10,
+   "src": "C95nqdcDxjA.mp4",
+   "ss": 33.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C95nqdcDxjA.mp4",
+     "ss": 33.6,
+     "dur": 1.9,
+     "src_crop": [
+      620,
+      100,
+      700,
+      920
+     ]
+    },
+    {
+     "src": "HpuMaXxJfzA.mp4",
+     "ss": 102.0,
+     "dur": 1.84,
+     "src_crop": [
+      700,
+      0,
+      818,
+      880
+     ]
+    }
+   ],
+   "ours": "공식 영상 루 한 조각 집어 든 손 → 일본 요리 유튜버가 甘口 루 트레이를 냄비로(아래 영어 자막 crop 밖)",
+   "why": "B2 '블록이 칸칸이 나뉘어서, 먹을 만큼만 톡톡 부숴 넣으면 되고'",
+   "url": "https://www.youtube.com/watch?v=C95nqdcDxjA | https://www.youtube.com/watch?v=HpuMaXxJfzA"
+  },
+  {
+   "i": 11,
+   "src": "HpuMaXxJfzA.mp4",
+   "ss": 97.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "HpuMaXxJfzA.mp4",
+     "ss": 97.2,
+     "dur": 1.6,
+     "src_crop": [
+      1000,
+      60,
+      840,
+      850
+     ]
+    },
+    {
+     "src": "HpuMaXxJfzA.mp4",
+     "ss": 107.3,
+     "dur": 1.5,
+     "src_crop": [
+      380,
+      0,
+      1100,
+      860
+     ]
+    }
+   ],
+   "ours": "'大人も満足のリッチな甘口' 골든카레 상자(아래 자막 crop 밖) → 녹은 카레 젓기",
+   "why": "B3 '순한맛이라, 매운 거 못 먹는 사람도 부담이 없더라고요'",
+   "url": "https://www.youtube.com/watch?v=HpuMaXxJfzA"
+  },
+  {
+   "i": 12,
+   "src": "NwIget887_A.mp4",
+   "ss": 398.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NwIget887_A.mp4",
+     "ss": 398.0,
+     "dur": 1.3,
+     "src_crop": [
+      760,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "HpuMaXxJfzA.mp4",
+     "ss": 127.0,
+     "dur": 1.26,
+     "src_crop": [
+      500,
+      0,
+      700,
+      880
+     ]
+    }
+   ],
+   "ours": "MILD 상자 옆 완성 카레 그릇 → 완성 카레라이스 접시(아래 'Done' 자막 crop 밖)",
+   "why": "B4 '괜히 60년째, 스테디셀러가 아니더라고요'",
+   "url": "https://www.youtube.com/watch?v=NwIget887_A | https://www.youtube.com/watch?v=HpuMaXxJfzA"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": 0,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 1,
+   "dt": 0.0,
+   "db": 0,
+   "why": "훅→본문 띵"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 2,
+   "dt": 0.0,
+   "db": 0,
+   "why": "잉 공개(태양·새) 띵"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 8,
+   "dt": 0.0,
+   "db": 0,
+   "why": "B 첫 줄(체험으로 넘어감) 휙"
+  }
+ ]
+}

@@ -1,0 +1,66 @@
+{
+ "n_docs": 6,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#000000",
+    "n_lines": 121,
+    "n_docs": 6,
+    "docs": [
+     "48PbLQ5az6k",
+     "8iEhEniPpjE",
+     "E9hmVYVa7OY",
+     "ILIiqCJAOSI",
+     "Kz8KlJoQ1Vc",
+     "ayNy6CSSrIQ"
+    ],
+    "members": [
+     "#000000",
+     "#010001",
+     "#020102",
+     "#040304"
+    ]
+   }
+  ],
+  "강조": [],
+  "외곽선": [],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#000000",
+    "n_lines": 6,
+    "n_docs": 6,
+    "docs": [
+     "48PbLQ5az6k",
+     "8iEhEniPpjE",
+     "E9hmVYVa7OY",
+     "ILIiqCJAOSI",
+     "Kz8KlJoQ1Vc",
+     "ayNy6CSSrIQ"
+    ],
+    "members": [
+     "#000000"
+    ]
+   }
+  ],
+  "스티커": [],
+  "출처": [
+   {
+    "hex": "#595859",
+    "n_lines": 6,
+    "n_docs": 6,
+    "docs": [
+     "48PbLQ5az6k",
+     "8iEhEniPpjE",
+     "E9hmVYVa7OY",
+     "ILIiqCJAOSI",
+     "Kz8KlJoQ1Vc",
+     "ayNy6CSSrIQ"
+    ],
+    "members": [
+     "#595859"
+    ]
+   }
+  ]
+ }
+}
