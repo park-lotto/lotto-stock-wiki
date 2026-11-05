@@ -1,0 +1,521 @@
+{
+ "name": "스냅봤니판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님(일상 클립) — 카드 얼굴 관문 끔",
+ "_note": "스냅봤니(@스냅봤니) 1차 판(2026-11-06, kal.py 11단계 · 관제 319) — 나레 없는 클립 재편집: 원본 한 장면을 2.6~4.6초 토막으로 건너뛰어 + 아래 흰 해설 자막(BMJUA 검정 테) + 원본 소리 + BGM. 근거 channel/snapbwatni/{스타일분석.md, 줄판독/ 4편 93줄, _kal/규칙빈도.json} (상태 폴더 C:/t/kal_snap/channel/snapbwatni). 브랜드 '숏템스냅' — 로고 자리 = 우리 그림(C:/t/kal_snap/brand/band.png). ★말풍선 층·끝 하트는 렌더러에 칸이 없어 1차 판에 없다(스타일분석 §8).",
+ "bench": {
+  "ko": "스냅봤니",
+  "channel": "https://www.youtube.com/@스냅봤니",
+  "analysis": "C:/t/kal_snap/channel/snapbwatni/스타일분석.md",
+  "line_reads": "C:/t/kal_snap/channel/snapbwatni/줄판독",
+  "src_dir": "C:/t/kal_snap/data/snapbwatni/src",
+  "palette": "C:/t/kal_snap/channel/snapbwatni/팔레트.json",
+  "rules_counted": "C:/t/kal_snap/channel/snapbwatni/_kal/규칙빈도.json",
+  "sfx_events": null
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [],
+  "none": true,
+  "why": "벤치 나레 0/4편(agy 귀 4/4 '나레이션 없음') — 대본에 tts 줄을 쓰지 않아 합성 안 함. 칸은 REQUIRED 라 명단 기본(남) 박창수(필재 금지)"
+ },
+ "cps_target": 7.0,
+ "_why_cps_target": "나레 없음 — 해설 글 읽기 속도 중앙 7.0~8.2자/초(편별 7.49·5.87·8.98·10.1, bench_stats sub_cps) · 계획 어림용",
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 5.0,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.5,
+  "candidates": [],
+  "why": "벤치 BGM 4/4 있음(agy: 피지카토·실로폰 / 레트로 댄스 / 'Circle of Life' 풍 / 록) — 벤치 곡은 남의 곡이라 쓰지 않고 우리 목록에서 경쾌·코믹 결(honwaka_puppu, 꿀템노트판·썰템홈샷판이 씀). 우리 소재는 사장님 말이 내용이라 원음보다 5dB 아래— 1차 렌더 10dB 아래에서 agy 귀 '배경음 작음·토막 경계마다 현장음 툭 끊김' → 5dB 로 올려 경계를 덮음(벤치 4/4 BGM 크게, agy)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18 · 지침서 §5 — 벤치 값 −7.7~−15.1 과 대조하지 않는다)"
+ },
+ "length": {
+  "min": 16.1,
+  "max": 37.6,
+  "why": "벤치 4편 16.1·16.4·34.0·37.6초"
+ },
+ "timing": {
+  "gap": 0.0,
+  "tail": 0.0,
+  "why": "나레 없음 — 줄 사이는 원본 토막이 바뀌는 자리, 해설 줄 사이 빈틈 중앙 0.0~0.5초(bench_stats sub_gap_med)"
+ },
+ "frame": {
+  "kind": "window",
+  "bg": [
+   253,
+   253,
+   253
+  ],
+  "window": [
+   0,
+   521,
+   1080,
+   1399
+  ],
+  "band": {
+   "src": "C:/t/kal_snap/brand/band.png",
+   "box": [
+    0,
+    0,
+    1080,
+    330
+   ],
+   "why": "벤치 로고 자리 y193~317 x108~408(개구리 그림 + 'Snap_This!/스냅봤니') → 우리 브랜드 그림(주황 렌즈 + 'Shortem Snap!/숏템스냅') — 바꾸는 것은 로고 자리뿐(지침서 §0-1 9)"
+  },
+  "title": [
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 92,
+    "ink_top": 332,
+    "color": "#010001",
+    "max_w": 1000,
+    "why": "1줄 검정 #010001 잉크 y332~411(h79) x107~974(z5.png 픽셀) · 글꼴 Cafe24Ohsquare 92px — 같은 글('약속 못 지킨 아빠가')을 같은 잉크 높이 80px 로 그려 벤치 5Tz 크롭과 대조: 획 14.0 vs 13.4 · 채움 0.479 vs 0.484 (후보 13개 중 가장 가까움, C:/t/kal_snap/check/title_font.py) — SBAggroB 는 획 +2.6·폭 +23% 로 1차 렌더 픽셀 자 획 15 vs 13 밖"
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 92,
+    "ink_top": 423,
+    "color": "#FB39A7",
+    "max_w": 1000,
+    "why": "2줄 분홍 #FB39A7 잉크 y423~500 · 'ㅋㅋㅋ' 작게는 미지원(제목 칸 글자 크기 1벌 — 남은 차이) · 글꼴 Cafe24Ohsquare 92px — 같은 글('약속 못 지킨 아빠가')을 같은 잉크 높이 80px 로 그려 벤치 5Tz 크롭과 대조: 획 14.0 vs 13.4 · 채움 0.479 vs 0.484 (후보 13개 중 가장 가까움, C:/t/kal_snap/check/title_font.py) — SBAggroB 는 획 +2.6·폭 +23% 로 1차 렌더 픽셀 자 획 15 vs 13 밖"
+   }
+  ],
+  "logo": null,
+  "watermark": null,
+  "credit": null,
+  "why": "bg = #FDFDFD(z5 0~150행) · window = 세로 원본 편(fFh) 실측 y521~1919 — 가로 원본 편은 y524~1533(높이 1009), 우리 소재가 세로라 세로 칸"
+ },
+ "caption": {
+  "pack": "mantem",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 18,
+  "why": "자막팩 중 BMJUA 덮기 잉크 높이가 벤치(56~60)에 가장 가까운 팩 mantem(BMJUA 잉크 55 · 테 5.0px — pack_map.pack_look/font_ink 같은 자) — 1차 렌더 itemhome 은 잉크 67(+16%)로 픽셀 자 '첫 줄 높이' 밖. 테는 벤치(compare 획 7)보다 두꺼움(남은 차이 — 판에 크기·테 칸 금지 ㉑, 자막팩 변형 요청 몫) · 조각 최대 18자"
+ },
+ "member_caption": {
+  "font": "BMJUA",
+  "dy": -75,
+  "why": "1차 판 값으로 자막팩 위에 덮는다(render_bench.snapshot captionOverride) — 글꼴 BMJUA(벤치 fontmatch 1위) · 세로 −75px(mantem 가운데 1363 → 벤치 세로 원본 편 잉크 1256~1319 가운데 1288)"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "벤치 전환 효과 0(0.1초 띠 · 4편 cut_at 전부 하드컷)"
+  },
+  "why": "카메라 = 원본 그대로(편집 줌 없음)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음: agy 두 번 답이 서로 다름(fFh 0 ↔ 7) — 규칙으로 못 박지 않음(스타일분석 §6) → 1차 판 0"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "해설 등장 instant 93/93(규칙빈도 강)"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "전환 효과 0"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0/4편"
+   },
+   "sfx": {
+    "kinds": {},
+    "max": 0,
+    "why": "효과음 근거 약함 → 0"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "C:/t/kal_snap/channel/snapbwatni/줄판독",
+   "n_videos": 4,
+   "slots": {
+    "orig.first": {
+     "n": 4,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "orig.rest": {
+     "n": 89,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.011
+    }
+   },
+   "share": {
+    "emph": 0.25,
+    "typing": 0.0,
+    "sfx": 0.0
+   },
+   "stickers": {
+    "circle_arrow": 0.25,
+    "heart": 0.75,
+    "other": 0.75,
+    "spark_lines": 0.5
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "5TzEJXTovEE",
+     "n": 15,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 14,
+       "enter": {
+        "cut": 14
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "heart": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "price": 1,
+       "none": 1
+      },
+      "heart": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글·검정 테)": 11,
+      "말풍선(흰 테)": 3,
+      "말풍선(검정 상자)": 1
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 14
+     },
+     "n_trans": 14,
+     "roles": {
+      "hook": 1,
+      "body": 9,
+      "reveal": 1,
+      "twist": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "CZdHXV0nfGw",
+     "n": 30,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 29,
+       "enter": {
+        "cut": 29
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "spark_lines": 2,
+      "other": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "ask": 1,
+       "none": 1
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글·검정 테)": 18,
+      "말풍선(검정 상자)": 11,
+      "말풍선(흰 테)": 1
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 29
+     },
+     "n_trans": 29,
+     "roles": {
+      "hook": 2,
+      "body": 19,
+      "twist": 3,
+      "reveal": 2,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "fFhPI-9EmWc",
+     "n": 14,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 13,
+       "enter": {
+        "cut": 13
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "heart": 1
+     },
+     "sticker_lex": {
+      "heart": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글·검정 테)": 10,
+      "말풍선(흰 테)": 1,
+      "말풍선(검정 상자)": 3
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 13
+     },
+     "n_trans": 13,
+     "roles": {
+      "hook": 2,
+      "body": 6,
+      "twist": 2,
+      "reveal": 1,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Z956odeOZvM",
+     "n": 34,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 33,
+       "enter": {
+        "cut": 33
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "other": 2,
+      "spark_lines": 1,
+      "heart": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      },
+      "other": {
+       "none": 2
+      },
+      "spark_lines": {
+       "none": 1
+      },
+      "heart": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글·검정 테)": 21,
+      "말풍선(흰 테)": 2,
+      "말풍선(검정 상자)": 11
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 33
+     },
+     "n_trans": 33,
+     "roles": {
+      "hook": 1,
+      "body": 23,
+      "twist": 5,
+      "reveal": 2,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 8,
+       "off": 0.8,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 11,
+       "off": 1.1,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 14,
+       "off": 0.2,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 16,
+       "off": 0.5,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "twist",
+       "t": 19,
+       "off": 0.5,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "twist",
+       "t": 21,
+       "off": 0.8,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 26,
+       "off": 0.0,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      },
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 31,
+       "off": 0.9,
+       "basis": "agy 귀(제미나이 초 단위) ±0.5초"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "rhythm": {
+  "cut_median": {
+   "v": 3.97,
+   "max": 4.53,
+   "why": "벤치 4편 창 크롭 컷 중앙(kal_analyze.media_of = 관문·재현 자) 4.53·3.70·2.67·4.23 → 중앙 3.97, 가장 느린 편 4.53"
+  },
+  "hook_cuts_3s": {
+   "min": 0,
+   "why": "0.1~3초 진짜 컷 경계 편별 0(Z956 첫 컷 9.87)·1(CZd 0.83)·1(5Tz 2.67)·0(fFh 11.2) → 최소 0"
+  },
+  "plain_share": {
+   "v": 0.8,
+   "tol": 0.13,
+   "range": [
+    0.676,
+    0.929
+   ],
+   "why": "꾸밈 없는 줄 74/93(편별 12/15·26/30·13/14·23/34) · 허용 = 편별 최대 거리 0.129"
+  },
+  "photo_share_max": {
+   "v": 0.0,
+   "why": "벤치 정지 사진 컷 0/4편"
+  }
+ },
+ "title_form": "2줄 — 1줄 상황 8~11자(검정) / 2줄 결론·반응 11~15자 + ㅋㅋㅋ(분홍) — '유치원 학예회 의자 없을 때 / 레전드 위기 대처법 ㅋㅋㅋ'",
+ "script": {
+  "brief": [
+   "나레 없음 — 모든 줄 kind:'orig'{id, src, spans[[a,b]], caps_rel[[글, s0, s1]]} — 한 줄 = 원본 한 토막 2.6~4.6초(벤치 컷 중앙 3.97), 토막 사이는 1초 넘게 건너뛴다(진짜 컷).",
+   "해설 = 3인칭 관찰 반말, 끝 줄만 '~네요'. 첫 줄 = 장소·인물·상황을 열어 두고('~에서/~의/~고'), 둘째 줄 '~라는데/~다는데 ㅋㅋㅋ'(4/4편).",
+   "한 줄 11~14자(최대 18) · 1.3~1.9초 · 'ㅋㅋㅋ' 붙은 줄 0.1~0.36 · 반전은 길이 0.3~0.7 자리 · 끝 = 감상·응원 '~네요'(4/4). CTA 0.",
+   "장면에 보이는 것·원본 말(받아쓰기·박힌 글로 확인)만 말한다 — 지어낸 사실·금액 금지."
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 16.1,
+    "max": 37.6,
+    "why": "벤치 4편 길이"
+   }
+  ]
+ },
+ "source": {
+  "min_h": 720,
+  "why": "원본 높이 720 아래면 창에 늘려져 흐리다(별헤는쏭판과 같은 선)"
+ },
+ "checks": {
+  "_why": "판 칸 결정(구현 기록 _kal구현_기록.md 판 칸·기본 꺼짐) — render_bench 길에서 이 칸을 읽는 곳은 없다(preset_make 관문 칸). 값은 우리 대본에 함수를 직접 불러 잰 결과로 정함(C:/t/kal_snap/check/checks_measure.json)",
+  "hook_ending": true,
+  "join_forbid": true,
+  "no_stretch": true,
+  "even_height": true,
+  "timing_words": false,
+  "_decide": {
+   "hook_ending": "벤치 둘째 줄 '~라는데' 반복 꼴이 훅 1·2줄 같은 어미 무리를 만들 수 있어 켬(우리 대본 측정 걸림 수는 checks_measure.json)",
+   "join_forbid": "자막 경계 18자 조각 이어붙임 — 켬(걸림 0 확인)",
+   "no_stretch": "crop 1080:1399 = 창 1080:1399 같은 비율 — 켬(늘어짐 0)",
+   "even_height": "창 높이 1399 홀수 → part_vf 짝수 높이 필요 — 켬",
+   "timing_words": "나레 없음(받아쓰기 시각으로 맞출 목소리 없음) — 끔"
+  }
+ }
+}
