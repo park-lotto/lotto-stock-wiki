@@ -142,6 +142,16 @@ export async function saveLook(pid, snapshot) {
   return { ok: true };
 }
 
+// 꾸민 모양 끄기 — 지우지 않고 빈 표식(snapshot null + 지금 시각). 지우면 서버 맞추기(syncFromServer: 서버 looks 위에 이 PC looks)에서
+//   웹에 꾸민 모양이 다시 받아졌다. 엔진은 web.look = looks[pid].snapshot || null 을 읽어 프리셋 기본 틀로 간다(11-06 문인석 #9438)
+export function clearLook(pid) {
+  if (!PID_RE.test(String(pid || ''))) return { ok: false, error: '프리셋 id 모양이 아닙니다' };
+  const s = readSettings();
+  s.looks = { ...(s.looks || {}), [pid]: { snapshot: null, updated: Date.now() } };
+  writeSettings(s);
+  return { ok: true };
+}
+
 // 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 모르면 null
 export function providerOf(t) {
   const v = String((t || {}).voice_id || '');
