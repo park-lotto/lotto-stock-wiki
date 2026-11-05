@@ -2430,7 +2430,7 @@ def c_bm_fetch(W, d):
 def c_bm_tear(W, d):
     from tools.calcopy.engine import bench_member as BM, preset_save as P
     ch = _inside(W, f"channel/{d['slug']}")
-    groups, failed = {}, []
+    groups, failed, r7, r7_failed, longs = {}, [], {}, [], {}
     llm = BM.member_llm()
     for v in d["videos"]:
         try:
@@ -2441,7 +2441,31 @@ def c_bm_tear(W, d):
             groups.setdefault(key, {"style": style, "sources": []})["sources"].append(v["id"])
         except Exception as e:  # noqa: BLE001 — 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
             failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
-    return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed}
+            continue
+        try:        # R7 편집 칸(짝 찾기 + 쇼츠 자체 실측) — 재기만, 갈래 판정은 서버(flow_bench.bm_tear_got → r7.branch_of)
+            r = _r7_of(W, v, J, longs)
+            P.save_r7(ch / "preset" / style, v["id"], r)
+            r7[v["id"]] = {"pair": r["pair"], "style": style}
+        except Exception as e:  # noqa: BLE001 — 못 잰 편은 r7_failed 에 남긴다(통과로 치지 않음 — 서버가 missing 으로 센다)
+            r7_failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed, "r7": r7, "r7_failed": r7_failed}
+
+
+def _r7_of(W: Path, v: dict, J: dict, longs: dict) -> dict:
+    """한 편 R7 재기 — info.json(설명란) + 같은 채널 롱폼 목록(채널마다 한 번) → r7.find_pair, 쇼츠 자체 실측 → r7.measure."""
+    from tools.calcopy.engine import r7 as R7, yt_channel as YC
+    ip = W / "src" / f"{v['id']}.info.json"
+    info = jload(ip) if ip.is_file() else {"id": v["id"], "title": v.get("title") or "", "description": ""}
+    chu = str(info.get("channel_url") or info.get("uploader_url") or "")
+    if chu and chu not in longs:
+        try:
+            longs[chu] = (YC.long_videos(chu), None)
+        except Exception as e:  # noqa: BLE001 — 목록을 못 읽은 것은 pair.checked.longs_err 로 남긴다
+            longs[chu] = (None, f"{type(e).__name__}: {str(e)[:120]}")
+    lv, err = longs.get(chu) or (None, "채널 주소 없음(info.json)")
+    if lv is None and not err:
+        err = "같은 채널 롱폼 목록 못 읽음"
+    return R7.measure(J, str(_inside(W, v["mp4"])), R7.find_pair(info, lv, err))
 
 
 def c_agy_read(W, d):
@@ -2473,7 +2497,7 @@ def c_bm_brief(W, d):
     z = W / "out" / f"{d['slug']}_{d['style']}.zip"
     z.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
-        for f in ("frame.json", "manifest.json", "프리셋.md", "CLAUDE.md"):
+        for f in ("frame.json", "manifest.json", "r7.json", "프리셋.md", "CLAUDE.md"):
             if (p / f).exists():
                 zf.write(p / f, f)
     return {**r, "zip": z.resolve().relative_to(W.resolve()).as_posix()}
@@ -2553,7 +2577,7 @@ def c_bm_match(W, d):
     from tools.calcopy.engine import kal_analyze as K
     src = W / "src"
     return K.bench_match([str(_inside(W, p)) for p in d.get("line_reads") or []], _inside(W, d["work"]),
-                         _inside(W, f"channel/{d['slug']}/preset/{d['style']}"), src if src.is_dir() else None, d.get("eye"))
+                         _inside(W, f"channel/{d['slug']}/preset/{d['style']}"), src if src.is_dir() else None, d.get("eye"), d.get("branch"))
 
 
 def c_bm_eye_frames(W, d):

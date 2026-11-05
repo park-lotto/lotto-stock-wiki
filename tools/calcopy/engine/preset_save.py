@@ -393,6 +393,24 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     return M
 
 
+R7_FILE = "r7.json"
+
+
+def save_r7(preset_dir: Path, source_id: str, measured: dict) -> dict:
+    """R7 편집 판단 칸(칼카피 엔진 v1 §3) 저장 — 편마다 값(per_video)을 쌓고 프리셋 칸(summary)은 r7.summarize 한 곳으로 다시 센다.
+    frame.json 과 따로 둔다(틀 합치기 merge 의 '같으면 고정·다르면 변수' 규칙을 분포 칸에 쓰지 않는다 — 칸 = 편 분포의 중앙·최빈)."""
+    from tools.calcopy.engine import r7 as R7
+    preset_dir.mkdir(parents=True, exist_ok=True)
+    p = preset_dir / R7_FILE
+    D = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {"per_video": {}}
+    D["per_video"][str(source_id)] = measured
+    D["summary"] = R7.summarize(D["per_video"])
+    D["made_by"] = R7.MADE_BY
+    D["updated_at"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    p.write_text(json.dumps(D, ensure_ascii=False, indent=1), encoding="utf-8")
+    return D
+
+
 def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
     """실측 대조로 정한 값을 프리셋 고정값으로 못 박는다(변수였으면 변수에서 뺀다). manifest.fixed 에 근거와 함께 남긴다.
     다음 save(편 추가)가 같은 자리를 다시 변수로 만들 수 있으므로 merge 는 fixed 자리를 건드리지 않는다."""

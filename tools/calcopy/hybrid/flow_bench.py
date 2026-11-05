@@ -8,8 +8,11 @@ from __future__ import annotations
 
 import json
 
-PAN_MAX = 3          # 잡도리 최대 횟수 — 넘으면 「여기까지 맞췄어요」로 멈춘다
-CONFIRM_MAX = 2      # 확정 검사·최종 판정이 틀렸다고 되돌릴 수 있는 횟수
+# 잡도리 멈춤(칼카피 엔진 v1 §2-1 A2 해결 0.97·뿌리 0.67): 같은 실패 묶음이 flow.REDO_STUCK 번 연속이면 멈춤 — 값은 flow.REDO_STUCK 한 곳을 같이 쓴다.
+#   옛 PAN_MAX 3(횟수만 차면 멈춤)·CONFIRM_MAX 2(확정 되돌림 횟수)는 이 규칙으로 합쳤다. FABLE_MAX 는 돈 상한이라 그대로.
+#   총 상한(페이블 #10 · Jev 해결 0.71·뿌리 0.53): 고친 횟수 ≤ ceil(첫 대조 실패 칸 수 × PAN_CAP_RATE), 최소 PAN_CAP_MIN — 칸이 번갈아 실패하며 끝없이 도는 것을 막는다.
+PAN_CAP_RATE = 1.5
+PAN_CAP_MIN = 3
 FABLE_MAX = 2        # 한 채널에서 페이블(bm_confirm·bm_verdict)을 부르는 횟수 — 설계서 §7 「채널당 2번만」. st["bm"]["fable_n"] 이 센다
 ALARM_KEYS = ("kind", "why", "at")
 ASKS = {   # 질문별 모델 — 페이블은 두 곳만(D6), 소넷·하이쿠 0곳(D5)
@@ -91,7 +94,21 @@ def bm_tear_got(st, m, rp, u):
     b = st["bm"]
     b["style"], b["other_styles"] = ps[0]["style"], [p["style"] for p in ps[1:]]      # 편 수가 많은 틀 하나로 간다 — 나머지는 결과에 적는다
     b["keep"] = [v["id"] for v in b["videos"] if v["id"] in set(ps[0]["sources"])]
+    _branch(st, t)
     return {"do": [{"id": "skel", "cmd": "bm_skel", "slug": b["slug"], "ids": b["keep"]}], "then": "bm_skel_got"}
+
+
+def _branch(st, t: dict) -> None:
+    """(뜯기 끝 한 곳 — 규격 §9 B1·P2) 갈래 판정. 판정 함수 = r7.branch_of(한 곳), 여기는 쓰는 편(keep)만 넘기고 결과를 st 에 둔다.
+    R7 을 못 잰 편은 missing 으로 남기고 경보 한 줄(조용히 넘어가지 않음) — 갈래는 짝 확정이 없으니 짝 없는 클립형."""
+    from tools.calcopy.engine import r7 as R7
+    b = st["bm"]
+    got = t.get("r7") or {}
+    g = R7.branch_of({vid: got.get(vid) for vid in b["keep"]})
+    b["branch"] = g
+    st["log"].append(f"갈래: {g['branch']} — {g['why']}")
+    if g["missing"]:
+        st["log"].append(f"경보: R7 칸을 못 잰 편 {g['missing']} — " + json.dumps(t.get("r7_failed") or [], ensure_ascii=False)[:300])
 
 
 def _read_do(b: dict, ids: list, errs: dict | None = None) -> list:
@@ -311,7 +328,7 @@ def _compare_do(st):
     n = int(st.get("pan_n") or 0)       # 시도 번호를 넣어 같은 입력 반복으로 오해받지 않게(flow._watch)
     return [{"id": "side", "cmd": "bm_side", "bench": b["videos"][0]["v360"], "ours": b["trial"], "try": n},
             {"id": "pan", "cmd": "bm_match", "slug": b["slug"], "style": b["style"], "work": b.get("trial_dir"), "line_reads": b.get("line_reads") or [],
-             "eye": b.get("trial_eye"), "try": n}]
+             "eye": b.get("trial_eye"), "branch": (b.get("branch") or {}).get("branch"), "try": n}]
 
 
 def bm_trial_got(st, m, rp, u):
@@ -370,7 +387,7 @@ def bm_compare(st, m, rp, u):
 
 
 def bm_panbokki(st, m, rp, u):
-    """잡도리 — 어긋난 칸을 한 번에 한 칸씩. 고칠 값 고르기는 Jev(서버). PAN_MAX 넘으면 남은 칸과 함께 멈춘다."""
+    """잡도리 — 어긋난 칸을 한 번에 한 칸씩. 고칠 값 고르기는 Jev(서버). 멈춤 = _pan_guard(같은 칸 REDO_STUCK 번 연속·총 상한)."""
     F = _F()
     from tools.calcopy.hybrid import jev_gate as J
     b = st["bm"]
@@ -385,8 +402,8 @@ def bm_panbokki(st, m, rp, u):
         return {"goto": "bm_confirm"}
     fails = p.get("fails") or b.get("fails") or []
     b["fails"] = fails
-    if int(st.get("pan_n") or 0) >= PAN_MAX:
-        raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails)) + " — 이 부분은 직접 고쳐 주세요", final=True)
+    back = bool(b.pop("pan_back", False))
+    _pan_guard(st, fails, new=bool(m.get("pan")) or back)
     cands = p.get("cands") or []
     n = int(st.get("pan_n") or 0) + 1
     if len(cands) >= 2:
@@ -411,6 +428,27 @@ def bm_panbokki(st, m, rp, u):
     return {"do": [{"id": "fix", "cmd": "bm_fix", "slug": b["slug"], "style": b["style"], "fix": fix}], "then": "bm_trial"}     # 한 칸만 고치고 시험 편부터 다시
 
 
+def _pan_guard(st, fails: list, new: bool) -> None:
+    """(판단 주인 · 잡도리 멈춤) 새 대조표가 왔을 때만 센다(Jev 쉼 뒤 다시 시도는 같은 표라 안 셈).
+    같은 실패 묶음 flow.REDO_STUCK 번 연속 → 멈춤 · 고친 횟수가 총 상한(첫 대조 실패 칸 수 × PAN_CAP_RATE, 최소 PAN_CAP_MIN) → 멈춤."""
+    import math
+    F = _F()
+    b = st["bm"]
+    if b.get("pan_cap") is None:
+        b["pan_cap"] = max(PAN_CAP_MIN, math.ceil(len(fails) * PAN_CAP_RATE))
+    hist = b.setdefault("pan_hist", [])
+    if new:
+        hist.append(sorted(map(str, fails)))
+        del hist[:-F.REDO_STUCK]
+    left = "남은 칸: " + ", ".join(map(str, fails or ["눈 판정에서 어긋남"])) + " — 이 부분은 직접 고쳐 주세요"
+    if len(hist) >= F.REDO_STUCK and all(h == hist[-1] for h in hist[-F.REDO_STUCK:]):
+        st["log"].append(f"잡도리: 같은 칸 {F.REDO_STUCK}번 연속 실패 {hist[-1]} → 멈춤")
+        raise F._Stop("여기까지 맞췄어요", left, final=True, detail=f"같은 칸 {F.REDO_STUCK}번 연속 실패")
+    if int(st.get("pan_n") or 0) >= b["pan_cap"]:
+        st["log"].append(f"잡도리: 총 상한 {b['pan_cap']}번 → 멈춤")
+        raise F._Stop("여기까지 맞췄어요", left, final=True, detail=f"잡도리 총 상한 {b['pan_cap']}번")
+
+
 def _fable_call(st):
     """페이블 요청이 나가기 직전에 부른다 — 이미 FABLE_MAX 번 불렀으면 부르지 않고 「여기까지 맞췄어요」 멈춤(조용한 초과 금지). 센 값은 st["bm"]["fable_n"]."""
     F = _F()
@@ -431,14 +469,13 @@ def bm_confirm(st, m, rp, u):
 
 
 def _back_to_pan(st, wrong, why):
-    """확정 검사·최종 판정이 틀렸다고 하면 잡도리로 되돌린다(고칠 후보가 없으면 잡도리가 바로 멈춘다). 되돌림은 CONFIRM_MAX 번까지."""
-    F = _F()
+    """확정 검사·최종 판정이 틀렸다고 하면 잡도리로 되돌린다(고칠 후보가 없으면 잡도리가 바로 멈춘다).
+    되돌림 횟수는 따로 세지 않는다 — 잡도리 멈춤 규칙(_pan_guard: 같은 칸 REDO_STUCK 번 연속·총 상한) 하나로 합쳤다(v1 §2-1 A2). 페이블 횟수는 FABLE_MAX(돈 상한)."""
     b = st["bm"]
     b["confirm_n"] = int(b.get("confirm_n") or 0) + 1
     b["fails"] = list(wrong or [])
-    if b["confirm_n"] > CONFIRM_MAX:
-        raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, b["fails"]) or ["눈 판정에서 어긋남"]) + " — 이 부분은 직접 고쳐 주세요", final=True, detail=why)
-    b["pan_last"] = {"match_ok": False, "fails": b["fails"], "cands": []}
+    b["pan_last"] = {"match_ok": False, "fails": b["fails"], "cands": [], "why": why}
+    b["pan_back"] = True
     return {"goto": "bm_panbokki"}
 
 

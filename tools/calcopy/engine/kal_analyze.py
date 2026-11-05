@@ -381,7 +381,14 @@ MATCH_RULES = [
     ("sticker.rate", "pctp", 20, True, "스티커 붙은 줄 비율 차 ≤20%p(표준 §4-1 A3)"),
     ("meme.rate", "pctp", 20, True, "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"),
     ("thumb.frame0", "eq", None, True, "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"),
+    # ↓ 칼카피 엔진 v1 §7-3 R7 칸(관제 319 묶음①). 벤치 = 프리셋 r7.json summary(bm_tear 실측), 우리 = r7.media(완성본) — 같은 자가 있는 칸만 기준(Jev 해결 0.99·뿌리 0.57).
+    #   R7 칸이 없는 판(벤치마킹 2판 프리셋이 아님 — 하이브리드 공용 렌더 등)은 'skip'(기준에서 빠짐, 사유 표시). seg(R1 구간)는 근거 Jev 미달이라 칸 없음.
+    ("crop.x", "px", 60, True, "화면 상자 x 가운데 차 중앙 ≤60px(§7-3) — 짝 없는 클립형 = 벤치 쇼츠 화면 상자 분포 중앙과 대조(짝 대조 아님)"),
+    ("end.sec", "abs", 0.5, True, "끝 검정 길이 차 ≤0.5초(§7-3 end, 같은 자 r7.media)"),
+    ("caption.size", "rel", 15, False, "자막 글자 높이 ±15%(§7-3) — 우리 쪽 같은 자 없음이라 참고"),
+    ("title.lines", "eq", None, False, "제목 줄 수 = 벤치 최빈(§7-3) — 우리 쪽 같은 자 없음이라 참고"),
 ]
+R7_KEYS = ("crop.x", "end.sec", "caption.size", "title.lines")
 # 업그레이드 판(base 있음)에서도 필수인 뼈대 칸 — 표준 §11 ③(페이블 10-25). 겉모양(바꿔도 됨) = framecmp·mix.lufs·narr.share·thumb.frame0·meme.rate·스티커 종류
 MATCH_SKELETON = ("len.duration", "cut.median", "speech.cps.나레", "chunk.chars", "chunk.sec", "enter.mode.나레", "enter.mode.원음",
                   "fx.rate.나레", "fx.rate.원음", "fx.pos", "plain.rate", "sfx.rate", "transition.rate", "sticker.rate")
@@ -540,8 +547,39 @@ def _in_span(o, span) -> bool:
     return bool(span) and isinstance(o, (int, float)) and span[0] - 1e-9 <= o <= span[1] + 1e-9
 
 
+def _r7_row(key: str, kind: str, tol, core: bool, why: str, r7: dict | None) -> dict:
+    """(판단 주인 · R7 칸 대조) r7 = {bench: r7.json summary, ours: r7.media(완성본) | None, branch: 갈래}. 못 잰 쪽 = failed(통과 아님)."""
+    if not r7 or not r7.get("bench"):
+        return {"key": key, "bench": None, "ours": None, "diff": "R7 칸 없음", "judge": "skip", "core": False,
+                "why": why + " — 이 판에 R7 칸(r7.json)이 없다(벤치마킹 2판 프리셋이 아님)"}
+    B, O = r7["bench"], r7.get("ours") or {}
+    if key == "crop.x":
+        from tools.calcopy.engine import r7 as R7
+        if r7.get("branch") != R7.BRANCH_CLIP:
+            return {"key": key, "bench": None, "ours": (O.get("crop") or {}).get("x_off_med"), "diff": "짝 대조 측정 없음", "judge": "failed", "core": core,
+                    "why": why + f" — 갈래 {r7.get('branch')}: 확정 짝과의 컷별 x 차 측정이 아직 없다(숏박스 시험 묶음)"}
+        b, o = (B.get("crop") or {}).get("x_off_med"), (O.get("crop") or {}).get("x_off_med")
+    elif key == "end.sec":
+        b, o = (B.get("end") or {}).get("sec"), (O.get("end") or {}).get("sec")
+    elif key == "caption.size":
+        b, o = (B.get("orig_caption") or {}).get("size_px"), None
+    else:
+        b, o = (B.get("title") or {}).get("lines"), None
+    if b is None or o is None:
+        return {"key": key, "bench": b, "ours": o, "diff": "미측정" if b is None else "우리 쪽 같은 자 없음", "judge": "failed", "core": core, "why": why}
+    if kind in ("px", "abs"):
+        diff = round(float(o) - float(b), 2)
+        judge = "in" if abs(diff) <= tol else "out"
+    elif kind == "rel":
+        diff = round((o - b) / b * 100, 1) if b else None
+        judge = "in" if diff is not None and abs(diff) <= tol else "out"
+    else:
+        diff, judge = ("" if o == b else "다름"), ("in" if o == b else "out")
+    return {"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": core, "why": why}
+
+
 def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None,
-                own_targets: dict | None = None) -> dict:
+                own_targets: dict | None = None, r7: dict | None = None) -> dict:
     """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다).
     own_len = 판 length (min, max). 판 길이 범위가 벤치 편 길이 범위와 **아예 안 겹치면**(하이브리드: 앞 원음 + 뒤 판매 이야기 25~30초 ↔ 벤치 단독 10~21초,
     판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로.
@@ -555,6 +593,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
     hybrid = bool(own_len and brange_all and (own_len[0] > brange_all[1] or own_len[1] < brange_all[0]))
     rows = []
     for key, kind, tol, core, why in MATCH_RULES:
+        if key in R7_KEYS:
+            rows.append(_r7_row(key, kind, tol, core, why, r7))
+            continue
         if hybrid and key == "cut.median" and key not in (own_targets or {}):     # 페이블 10-25 재검토: 컷 길이는 '비교 안 함'이 아니라 판 목표와 비교 — 목표가 없으면 미달
             rows.append({"key": key, "bench": None, "ours": om.get("cut_median"), "diff": "판 rhythm.cut_median 없음", "judge": "failed", "core": core,
                          "why": why + " — 하이브리드 판: 판 rhythm.cut_median(벤치 실측 + why)과 비교해야 하는데 칸이 없다(표준 §4-1, 페이블 10-25)"})
@@ -1068,7 +1109,7 @@ def fix_cands(T: dict, frame: dict) -> list[dict]:
     return out
 
 
-def bench_match(line_reads: list[str], work, preset_dir, bench_src=None, eye: dict | None = None) -> dict:
+def bench_match(line_reads: list[str], work, preset_dir, bench_src=None, eye: dict | None = None, branch: str | None = None) -> dict:
     """(판단 주인) 벤치마킹 시험 편 대조 — 줄 자 = match_table(벤치 줄판독 ↔ ours_from_remake), 관문 = remake.gate_of(픽셀·이음매 기록).
     픽셀 대조는 remake 가 이미 돌린 compare 기록을 읽는다(with_pixel 로 다시 돌리지 않는다 — 같은 compare 두 번, Jev 0.92).
     match_ok = 줄 판정 통과 + 관문 통과. fails = 기준 칸 중 통과 아닌 것(미측정 포함) + '관문:<칸>'. cands = fix_cands."""
@@ -1083,7 +1124,13 @@ def bench_match(line_reads: list[str], work, preset_dir, bench_src=None, eye: di
     fin = work / "final.mp4"
     om = media_of(str(fin), win) if fin.is_file() else None          # 완성본이 없으면 컷·LUFS 는 못 잰다(match_table 이 미측정으로)
     bm = bench_media_cached(str(bench_src), [d.get("id") for d in docs], win) if bench_src and Path(bench_src).is_dir() else None
-    T = match_table(docs, ours, om, bm)
+    rp = preset_dir / "r7.json"          # R7 칸(bm_tear 실측 · preset_save.save_r7) — 우리 쪽은 같은 자 r7.media(완성본, 같은 컷 자 media_of cut_at)
+    r7 = None
+    if rp.is_file():
+        from tools.calcopy.engine import r7 as R7
+        rs = json.loads(rp.read_text(encoding="utf-8")).get("summary")
+        r7 = {"bench": rs, "branch": branch, "ours": R7.media(str(fin), om.get("cut_at"), list(win) if win else None) if om else None}
+    T = match_table(docs, ours, om, bm, r7=r7)
     g = RM.gate_of(work)
     fails = [r["key"] for r in T["rows"] if r["core"] and r["judge"] != "in"] + [f"관문:{x}" for x in g["fails"]]
     return {"match_ok": T["verdict"] == "통과" and g["ok"], "fails": fails, "cands": fix_cands(T, frame), "gate_ok": g["ok"], "gate": g,

@@ -162,6 +162,29 @@ def channel_stats(ref: str, n: int = 30) -> dict | None:
     return st
 
 
+def long_videos(ref: str, n: int = 60) -> list[dict] | None:
+    """채널 '동영상' 탭(롱폼) 최근 n편 [{id, title, duration}] — R7 짝 찾기(r7.find_pair) 재료. 못 읽으면 None(빈 목록과 다르다)."""
+    url = re.sub(r"/(shorts|videos|featured)$", "", str(ref or "").rstrip("/"))
+    if not url:
+        return None
+
+    def go():
+        _bump("long_videos")
+        try:
+            with _ydl({"playlistend": n}) as y:
+                d = y.extract_info(url + "/videos", download=False)
+        except Exception as e:  # noqa: BLE001 — 동영상 탭이 없는 채널(쇼츠만)도 여기로 온다
+            return {"_fail": f"{type(e).__name__}: {str(e)[:120]}"}
+        return {"videos": [{"id": e.get("id"), "title": e.get("title"), "duration": e.get("duration")}
+                           for e in (d or {}).get("entries") or [] if e.get("id")][:n]}
+    r = _cached("longs", url, go, 24) or {}
+    if r.get("_fail"):
+        if "does not have a videos tab" in str(r["_fail"]):
+            return []
+        return None
+    return r.get("videos") or []
+
+
 def _dt(s: str) -> datetime:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 

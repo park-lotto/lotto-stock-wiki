@@ -159,7 +159,7 @@ def test_confirm_fail_goes_back_then_stops():
     st = _st("bm_confirm_got", trial="t.mp4", videos=[_vid("a")])
     r = _go(st, rp={"bm_confirm": {"ok": False, "wrong": ["caption.y"]}})      # 되돌림 → 고칠 후보 없음 → 바로 멈춤(재기 되풀이 없음)
     assert r["status"] == "stop" and "caption.y" in r["fix"] and st["bm"]["confirm_n"] == 1
-    st["bm"]["confirm_n"] = FB.CONFIRM_MAX
+    st["bm"]["confirm_n"] = 5                  # 되돌림 횟수 상한(CONFIRM_MAX)은 없어졌다 — 멈춤은 잡도리 규칙(후보 0) 하나
     st["phase"] = "bm_verdict_got"
     r = _go(st, rp={"bm_verdict": {"ok": False, "wrong": ["caption.y"]}})
     assert r["status"] == "stop" and "caption.y" in r["fix"]
