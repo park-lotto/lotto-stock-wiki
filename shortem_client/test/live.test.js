@@ -196,3 +196,26 @@ test('쉬는 Claude 깨우기: 새 메시지면 종료 코드 2 로 글을 내�
   assert.match(r.err, /다시 시도해 주세요/);
   assert.equal(fs.readFileSync(path.join(home, 'live_seen.txt'), 'utf8').trim(), '7');
 });
+
+test('명령줄(claude -p, ENTRYPOINT sdk-*)에선 깨우기 감시를 켜지 않는다 — 대화창(cli)은 그대로 깨운다 (관제 309)', async () => {
+  const { spawn } = await import('node:child_process');
+  const os = await import('node:os');
+  const wake = path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'wake.js');
+  const run = (entry) => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wake309-'));
+    fs.writeFileSync(path.join(home, 'live_inbox.json'), JSON.stringify([{ id: 9, text: '이어서 해 주세요' }]));
+    const env = { ...process.env, SHORTEM_HOME: home, SHORTEM_WAKE_POLL_MS: '40', SHORTEM_WAKE_LIFE_MS: '3000', CLAUDE_CODE_ENTRYPOINT: entry };
+    const t0 = Date.now();
+    const p = spawn(process.execPath, [wake], { env, stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', d => { err += d; });
+    return new Promise(res => p.on('exit', code => res({ code, err, ms: Date.now() - t0, seen: fs.existsSync(path.join(home, 'live_seen.txt')) })));
+  };
+  const headless = await run('sdk-cli');
+  assert.equal(headless.code, 0);
+  assert.equal(headless.err, '');
+  assert.equal(headless.seen, false, '명령줄에서 메시지를 소비하면 대화창이 못 받는다');
+  const chat = await run('cli');
+  assert.equal(chat.code, 2);
+  assert.match(chat.err, /이어서 해 주세요/);
+});
