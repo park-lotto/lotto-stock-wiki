@@ -214,6 +214,12 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
 ASR_PAR = 4      # 동시 받아쓰기 상한(스피치매틱스 작업 동시 수 — 10-26 검수 단축 ⑥: 렌더 전 ② 9작업이 순차로 56초)
 
 
+def par_ok(platform: str | None = None) -> bool:
+    """받아쓰기를 여러 스레드로 돌려도 되나 — 맥은 numpy OpenBLAS 가 스레드 여럿의 행렬곱을 잠금으로 다퉈 멈췄다
+    (11-05 박상혁 #8071 M1: 4스레드 중 3개 pthread mutex 대기·6분+ CPU 100%). 윈도는 그대로 병렬."""
+    return (platform or sys.platform) != "darwin"
+
+
 def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
     """여러 소리를 동시에 받아쓰기해 캐시(CACHE)에 채운다 — 판정은 그대로(뒤 순차 heard_words 가 캐시를 읽는다).
     실패한 것은 {경로: 오류 이름}으로 돌려주고, 같은 파일을 뒤 순차 호출이 다시 겪어 그 자리에서 멈춘다(조용히 넘기지 않음)."""
@@ -227,8 +233,8 @@ def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
             continue
         seen.add(m)
         todo.append(p)
-    if len(todo) < 2:
-        return {}
+    if len(todo) < 2 or not par_ok():
+        return {}      # 순차면 뒤 heard_words 가 하나씩 받아쓴다(판정 같음)
     errs = {}
     try:      # 병렬 전에 주 스레드에서 모델·tqdm 잠금 준비(11-05 박상혁 #8049 맥 스레드 안 첫 tqdm 멈춤)
         from tools.calcopy.engine.check_line_sync import whisper_model

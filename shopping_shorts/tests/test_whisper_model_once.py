@@ -15,3 +15,8 @@ def test_model_made_once_across_threads(monkeypatch):
     ts = [threading.Thread(target=C.whisper_model) for _ in range(6)]
     [t.start() for t in ts]; [t.join() for t in ts]
     assert len(made) == 1
+
+
+def test_mac_asr_not_parallel():
+    from tools.calcopy.engine import narr_verify as NV
+    assert NV.par_ok("darwin") is False and NV.par_ok("win32") is True
