@@ -1,0 +1,32 @@
+{
+ "made_by": "member_import v1",
+ "updated_at": "2026-11-06T00:29:16+09:00",
+ "per_video": {},
+ "summary": {
+  "crop": {
+   "mode": "center",
+   "zoom": 1.0,
+   "core": true,
+   "why": "회원 spec crop.mode"
+  },
+  "orig_caption": {
+   "mode": "burned",
+   "core": false,
+   "why": "회원 job subtitles"
+  },
+  "title": {
+   "lines": 2,
+   "chars": [
+    1,
+    11
+   ],
+   "core": false
+  },
+  "end": {
+   "sec": 1.0,
+   "kind": "black",
+   "optional": true,
+   "core": true
+  }
+ }
+}

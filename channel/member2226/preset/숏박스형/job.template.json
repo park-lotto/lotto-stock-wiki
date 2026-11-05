@@ -1,0 +1,37 @@
+{
+ "source": "원본.mp4",
+ "start": 0.0,
+ "end": 45.0,
+ "title": [
+  "윗줄 상황",
+  "아랫줄 핵심"
+ ],
+ "highlight": null,
+ "subtitles": "auto",
+ "logo": "my_logo.png",
+ "delogo": [],
+ "ending_seconds": 1.0,
+ "ending_jingle": null,
+ "enhance": null,
+ "out": "out/short_001.mp4",
+ "play": false,
+ "upload": {
+  "title": "소재 공감",
+  "hashtags": [
+   "#스케치코미디",
+   "#채널명",
+   "#소재"
+  ],
+  "tags": [
+   "스케치코미디",
+   "개그",
+   "코미디"
+  ]
+ },
+ "_메모": {
+  "delogo": "원본 방송사 로고·코너 표시가 정사각형 안에 남을 때 [[x,y,w,h]] (높이 1080 기준 원본 좌표)",
+  "enhance": "화질 개선이 필요하면 {\"model\":\"realesr-animevideov3\",\"scale\":2} (빠름) 또는 {\"model\":\"realesrgan-x4plus\",\"scale\":4} (고화질·느림)",
+  "subtitles": "auto(원본 자막 사용) · none(예능처럼 자막이 이미 많은 원본) · 카드 json 경로",
+  "play": "true 면 완성 직후 기본 재생기로 연다(SHORTBOX_PLAYER 로 다른 재생기 지정 가능)"
+ }
+}

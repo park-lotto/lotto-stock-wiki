@@ -1,0 +1,24 @@
+{
+ "_rule": "회원 프리셋 값 그대로(member_import) — 읽는 곳 tools/calcopy/preview_request.preset_defaults",
+ "_from": "회원 2226 spec.json tts_voice · job.template.json subtitles",
+ "tts": {
+  "provider": "typecast",
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "Jihoon",
+  "tempo": 1.0,
+  "use": "원본 대사가 없는 소재(대본 글 모드)나 보충 대사에만. 기본 클립 모드는 원본 음성을 그대로 쓴다"
+ },
+ "caption": {
+  "mode": "keep_burned"
+ },
+ "audio": {
+  "source": "original",
+  "keep_if_lufs_between": [
+   -18,
+   -10
+  ],
+  "target_lufs": -14,
+  "true_peak": -1.0,
+  "tail_fade_s": 0.12
+ }
+}

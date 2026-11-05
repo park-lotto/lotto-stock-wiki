@@ -1,0 +1,839 @@
+{
+ "slug": "member2226",
+ "style": "숏박스형",
+ "made_by": "member_import v1",
+ "rule": "회원 값 그대로 — member_import.RULES 갈래",
+ "created_at": "2026-11-06T00:29:16+09:00",
+ "updated_at": "2026-11-06T00:29:16+09:00",
+ "variables": [
+  "layers[text:title].text",
+  "layers[image].src"
+ ],
+ "sources": [
+  {
+   "id": "member2226",
+   "kind": "member_preset",
+   "spec_sha256": "79ac1c82181b969502881a4e685a7e28de1d02cdfaaa89b4cd5e97fd5a537838",
+   "version": "1.3.0"
+  }
+ ],
+ "format": "숏폼",
+ "member_version": "1.3.0",
+ "fonts": [
+  {
+   "name": "GmarketSansBold.otf",
+   "sha256": "811b9b9cddc4d1de447faabd5614c7bd3289c2af5638704b8714901f8c983a5c",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": true
+  },
+  {
+   "name": "GmarketSansLight.otf",
+   "sha256": "2b0095e38c5b96e073b9ecebe3923685ac71895db0b90db878a9b71eb84adb34",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  },
+  {
+   "name": "GmarketSansMedium.otf",
+   "sha256": "79d3daed9171ce738b226adee8b7fa103e82e70fb82f47228a60928166dca872",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  },
+  {
+   "name": "Pretendard-Black.otf",
+   "sha256": "94628b0bcea8936b6e5c30d98d685eb9bbaffb0fe2ed255542ecc656c248e021",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  },
+  {
+   "name": "Pretendard-ExtraBold.otf",
+   "sha256": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  },
+  {
+   "name": "Pretendard-Light.otf",
+   "sha256": "51418ee96ef96e9059db88d7da82f24fada1f4aca70d5157c878ea6b460dd343",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  },
+  {
+   "name": "Pretendard-Regular.otf",
+   "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+   "license": "fonts/LICENSE.txt·GmarketSans_NOTICE.txt",
+   "in_store": false
+  }
+ ],
+ "member_prompts": [
+  {
+   "id": "fix_subs.txt",
+   "sha256": "9699f34512d2ac78096f6a08abfdc3742765647868b70c7112525845574207c0"
+  },
+  {
+   "id": "pick_segment.txt",
+   "sha256": "58ab0722adeee67733fc59a1dc6cbdd44053262833e4edc4f676109a86c65198"
+  },
+  {
+   "id": "qa_compare.txt",
+   "sha256": "53c99b85576f05cc778db24a52b79e29af6b0a47449426170b16d3beb9896beb"
+  }
+ ],
+ "import_counts": {
+  "옮김": 22,
+  "우리 칸 없음": 32,
+  "옮길 수 없음": 13
+ },
+ "import_table": [
+  {
+   "src": "spec",
+   "key": "name",
+   "value": "숏박스형 스케치코미디 쇼츠",
+   "status": "우리 칸 없음",
+   "ours": "manifest.member_values(이름)"
+  },
+  {
+   "src": "spec",
+   "key": "version",
+   "value": "1.3.0",
+   "status": "우리 칸 없음",
+   "ours": "manifest.member_version"
+  },
+  {
+   "src": "spec",
+   "key": "measured_from",
+   "value": "숏박스 최근 인기 쇼츠 5편(노래방 진상 주의보·저 애 아닙니다·워터파크 공감·섹시한 박진영·스스로 진화하는 이병 조진세) + 공감 4편 + 원본-쇼츠 짝(야근 ↔ 혼자 야근 공감), 2026-11-04. 배경·노랑은 최근 판(#090D26·#F8DF0A), 옛 판은 #030B23·#FBE812",
+   "status": "우리 칸 없음",
+   "ours": "manifest.member_values(근거 글)"
+  },
+  {
+   "src": "spec",
+   "key": "canvas.w",
+   "value": 1080,
+   "status": "옮김",
+   "ours": "frame.canvas[0]"
+  },
+  {
+   "src": "spec",
+   "key": "canvas.h",
+   "value": 1920,
+   "status": "옮김",
+   "ours": "frame.canvas[1]"
+  },
+  {
+   "src": "spec",
+   "key": "layout.background",
+   "value": "0x090D26",
+   "status": "옮김",
+   "ours": "layers[bg].rgb"
+  },
+  {
+   "src": "spec",
+   "key": "layout.video_y",
+   "value": 420,
+   "status": "옮김",
+   "ours": "layers[video].y"
+  },
+  {
+   "src": "spec",
+   "key": "layout.video_size",
+   "value": 1080,
+   "status": "옮김",
+   "ours": "layers[video].w·h"
+  },
+  {
+   "src": "spec",
+   "key": "title.font",
+   "value": "GmarketSansBold.otf",
+   "status": "옮김",
+   "ours": "layers[text:title].font(우리 등록 글꼴이면)"
+  },
+  {
+   "src": "spec",
+   "key": "title.size",
+   "value": 92,
+   "status": "옮김",
+   "ours": "layers[text:title].size"
+  },
+  {
+   "src": "spec",
+   "key": "title.band_h",
+   "value": 420,
+   "status": "우리 칸 없음",
+   "ours": "제목 띠 = 바탕과 같은 색(투명 판) — 띠 층 없음"
+  },
+  {
+   "src": "spec",
+   "key": "title.line_centers_y",
+   "value": [
+    195,
+    316
+   ],
+   "status": "옮김",
+   "ours": "layers[text:title].y·line_h(두 줄 기준 계산 — 한 줄 제목을 아래 줄 y≈316 에 두는 회원 규칙은 우리 valign 에 없음)"
+  },
+  {
+   "src": "spec",
+   "key": "title.base",
+   "value": "#FFFFFF",
+   "status": "옮김",
+   "ours": "layers[text:title].line_rgb[0]·rgb"
+  },
+  {
+   "src": "spec",
+   "key": "title.highlight",
+   "value": "#F8DF0A",
+   "status": "옮김",
+   "ours": "layers[text:title].line_rgb[-1](두 줄 = 아랫줄)"
+  },
+  {
+   "src": "spec",
+   "key": "title.max_lines",
+   "value": 2,
+   "status": "옮김",
+   "ours": "layers[text:title].lines"
+  },
+  {
+   "src": "spec",
+   "key": "title.max_chars_per_line",
+   "value": 11,
+   "status": "우리 칸 없음",
+   "ours": "제목 글자 수 상한 — 우리 틀 칸 없음(제목 쓰는 쪽 규칙)"
+  },
+  {
+   "src": "spec",
+   "key": "title.max_width",
+   "value": 980,
+   "status": "옮김",
+   "ours": "layers[text:title].w"
+  },
+  {
+   "src": "spec",
+   "key": "title.font_note",
+   "value": "G마켓 산스 Bold(운영자 지정, 2026-11-04). 숏박스 실측 글꼴은 더 좁고 높다(Pretendard Black 106 이 실측에 가장 가깝다) — 되돌리려면 font=Pretendard-Black.otf, size=106",
+   "status": "우리 칸 없음",
+   "ours": "글꼴 메모"
+  },
+  {
+   "src": "spec",
+   "key": "title.space_em",
+   "value": 0.28,
+   "status": "우리 칸 없음",
+   "ours": "띄어쓰기 폭 0.28em — 우리 word_spacing 은 px 덧셈이라 같은 값으로 못 옮김(바꾸지 않고 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.font",
+   "value": "Pretendard-Light.otf",
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.size",
+   "value": 51,
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.color",
+   "value": "#FFFFFF",
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.box_alpha",
+   "value": 0.5,
+   "status": "우리 칸 없음",
+   "ours": "자막 상자 불투명도 0.5 — 우리 box 는 rgb·pad·radius 뿐(투명도 칸 없음)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.pad_x",
+   "value": 10,
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.pad_top",
+   "value": 10,
+   "status": "우리 칸 없음",
+   "ours": "위 여백 따로 — 우리 box.pad 하나"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.glyph_h",
+   "value": 44,
+   "status": "우리 칸 없음",
+   "ours": "글자 잉크 높이(측정값)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.last_line_center_y",
+   "value": 1401,
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.line_pitch",
+   "value": 75,
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.box_bottom_y",
+   "value": 1432,
+   "status": "우리 칸 없음",
+   "ours": "상자 아래 끝 고정 — 우리 상자는 글자 둘레"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.max_chars_per_line",
+   "value": 16,
+   "status": "우리 칸 없음",
+   "ours": "자막 한 줄 글자 수 — 우리 틀 칸 없음"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.max_lines",
+   "value": 2,
+   "status": "우리 칸 없음",
+   "ours": "글꼴 Pretendard-Light.otf 우리 등록 글꼴에 없음 — 자막 층 안 만듦(대체 금지, 값 보관)"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.min_card_s",
+   "value": 0.6,
+   "status": "옮길 수 없음",
+   "ours": "subs_speechmatics.py 카드 나누기"
+  },
+  {
+   "src": "spec",
+   "key": "subtitle.split_pause_s",
+   "value": 0.35,
+   "status": "옮길 수 없음",
+   "ours": "subs_speechmatics.py 카드 나누기"
+  },
+  {
+   "src": "spec",
+   "key": "burned_subtitle_probe",
+   "value": {
+    "y0": 945,
+    "y1": 1020,
+    "white_min": 215,
+    "box_dark_max": 120,
+    "min_text_px": 20,
+    "min_dark_ratio": 0.35
+   },
+   "status": "옮길 수 없음",
+   "ours": "make_short.burned_subtitle_span — 원본 박힌 자막 찾기(자막 다시 얹을지·자르기 범위)"
+  },
+  {
+   "src": "spec",
+   "key": "logo.center_y",
+   "value": 1660,
+   "status": "옮김",
+   "ours": "layers[image] 상자 y(그림은 상자 안 contain·가운데 = 회원 render_logo 와 같은 맞춤)"
+  },
+  {
+   "src": "spec",
+   "key": "logo.box",
+   "value": [
+    600,
+    114
+   ],
+   "status": "옮김",
+   "ours": "layers[image].w·h 상한"
+  },
+  {
+   "src": "spec",
+   "key": "ending_card",
+   "value": {
+    "seconds": 1.0,
+    "background": "black",
+    "logo_center_y": 960,
+    "logo_box": [
+     600,
+     300
+    ],
+    "optional": true
+   },
+   "status": "우리 칸 없음",
+   "ours": "끝 검정 + 로고 1초 — 우리 틀에 끝 카드 칸 없음(r7.end 는 잰 값 칸)"
+  },
+  {
+   "src": "spec",
+   "key": "crop.mode",
+   "value": "center",
+   "status": "옮김",
+   "ours": "r7.crop.mode=center · 영상 창 cover 가운데 자르기"
+  },
+  {
+   "src": "spec",
+   "key": "crop.scene_threshold",
+   "value": 0.3,
+   "status": "옮길 수 없음",
+   "ours": "make_short.detect_shots 컷 나누기"
+  },
+  {
+   "src": "spec",
+   "key": "crop.snap_to_center_px",
+   "value": 40,
+   "status": "옮길 수 없음",
+   "ours": "make_short.crop_plan"
+  },
+  {
+   "src": "spec",
+   "key": "crop.face_k",
+   "value": 0.5,
+   "status": "옮길 수 없음",
+   "ours": "make_short.crop_plan(face 모드)"
+  },
+  {
+   "src": "spec",
+   "key": "crop.face_max_shift_px",
+   "value": 140,
+   "status": "옮길 수 없음",
+   "ours": "make_short.crop_plan(face 모드)"
+  },
+  {
+   "src": "spec",
+   "key": "crop.note",
+   "value": "야근 짝 37컷 대조: 가운데 고정 평균 54px 차(25/37 컷 60px 이내) < Haar 얼굴 추적 130px. 기본 center, face 는 선택",
+   "status": "우리 칸 없음",
+   "ours": "근거 글"
+  },
+  {
+   "src": "spec",
+   "key": "crop.burned_text",
+   "value": {
+    "enabled": true,
+    "y0": 600,
+    "y1": 1075,
+    "white_min": 225,
+    "dark_max": 60,
+    "outline_px": 3,
+    "min_px": 150,
+    "pad_px": 12,
+    "comp_min_area": 8,
+    "comp_min_h": 8,
+    "comp_max_h": 90,
+    "comp_max_w": 220,
+    "min_comps": 3
+   },
+   "status": "옮길 수 없음",
+   "ours": "make_short.burned_text_span — 컷마다 박힌 예능 자막이 정사각형 안에 들게 x 를 옮김"
+  },
+  {
+   "src": "spec",
+   "key": "segment",
+   "value": {
+    "min_s": 30,
+    "max_s": 75,
+    "contiguous": true
+   },
+   "status": "옮길 수 없음",
+   "ours": "prompts/pick_segment.txt — 회원 Claude/AGY 가 구간 고름(30~75초 한 덩어리)"
+  },
+  {
+   "src": "spec",
+   "key": "audio.keep_if_lufs_between",
+   "value": [
+    -18,
+    -10
+   ],
+   "status": "우리 칸 없음",
+   "ours": "원본 −18~−10 이면 그대로 — 우리 마스터는 −14 고정(master_guard)"
+  },
+  {
+   "src": "spec",
+   "key": "audio.target_lufs",
+   "value": -14,
+   "status": "우리 칸 없음",
+   "ours": "−14 — 우리 고정 규칙과 같음"
+  },
+  {
+   "src": "spec",
+   "key": "audio.true_peak",
+   "value": -1.0,
+   "status": "우리 칸 없음",
+   "ours": "−1.0 dBTP"
+  },
+  {
+   "src": "spec",
+   "key": "audio.tail_fade_s",
+   "value": 0.12,
+   "status": "우리 칸 없음",
+   "ours": "끝 0.12초 페이드"
+  },
+  {
+   "src": "spec",
+   "key": "encode",
+   "value": {
+    "preset": "medium",
+    "crf": 18,
+    "audio_bitrate": "192k"
+   },
+   "status": "우리 칸 없음",
+   "ours": "x264 medium crf18 — 우리 인코딩 주인 = engine/encoder.venc"
+  },
+  {
+   "src": "spec",
+   "key": "tts_voice",
+   "value": {
+    "provider": "typecast",
+    "model": "ssfm-v30",
+    "voice_id": "tc_61f0859907085fc68561c9a1",
+    "name": "Jihoon",
+    "emotion": "normal",
+    "pitch": 0,
+    "tempo": 1.0,
+    "backup": {
+     "voice_id": "tc_63aaec04428dd87af3757d72",
+     "name": "Seojoon"
+    },
+    "chosen_by": "2026-11-04 Argon high 청취 비교(원본 택시 공감 주 화자 vs 후보 6명): Jihoon 88 > Seojoon 82 > Changsu 76 > Doyoon 72; 피치 -3 은 기계음으로 52",
+    "use": "원본 대사가 없는 소재(대본 글 모드)나 보충 대사에만. 기본 클립 모드는 원본 음성을 그대로 쓴다"
+   },
+   "status": "옮김",
+   "ours": "defaults.json tts(보조 — 클립 모드는 원음, TTS 안 씀)"
+  },
+  {
+   "src": "spec",
+   "key": "enhance",
+   "value": {
+    "bin_candidates": [
+     "~/.local/opt/realesrgan/v0.2.5.0/realesrgan-ncnn-vulkan",
+     "realesrgan-ncnn-vulkan"
+    ],
+    "defaults": {
+     "model": "realesr-animevideov3",
+     "scale": 2,
+     "threads": "2:4:4"
+    },
+    "intermediate_crf": 12,
+    "note": "M5 Pro 실측: animevideov3 x2 0.28초/프레임, x4plus x4 8.3초/프레임. x4plus 는 실사 얼굴이 더 자연스럽지만 62초에 약 4시간"
+   },
+   "status": "옮길 수 없음",
+   "ours": "make_short.enhance_square — Real-ESRGAN(우리 엔진에 없음)"
+  },
+  {
+   "src": "job",
+   "key": "source",
+   "value": "원본.mp4",
+   "status": "옮김",
+   "ours": "편마다 소재(재료)"
+  },
+  {
+   "src": "job",
+   "key": "start",
+   "value": 0.0,
+   "status": "옮김",
+   "ours": "편마다 구간 시작"
+  },
+  {
+   "src": "job",
+   "key": "end",
+   "value": 45.0,
+   "status": "옮김",
+   "ours": "편마다 구간 끝"
+  },
+  {
+   "src": "job",
+   "key": "title",
+   "value": [
+    "윗줄 상황",
+    "아랫줄 핵심"
+   ],
+   "status": "옮김",
+   "ours": "layers[text:title].text($per_video)"
+  },
+  {
+   "src": "job",
+   "key": "highlight",
+   "value": null,
+   "status": "옮길 수 없음",
+   "ours": "한 줄 제목 낱말 강조 — 우리 제목 층에 낱말 강조 없음"
+  },
+  {
+   "src": "job",
+   "key": "subtitles",
+   "value": "auto",
+   "status": "옮김",
+   "ours": "r7.orig_caption.mode(auto=박힌 자막 그대로)"
+  },
+  {
+   "src": "job",
+   "key": "logo",
+   "value": "my_logo.png",
+   "status": "옮김",
+   "ours": "layers[image].src($per_video)"
+  },
+  {
+   "src": "job",
+   "key": "delogo",
+   "value": [],
+   "status": "옮길 수 없음",
+   "ours": "ffmpeg delogo"
+  },
+  {
+   "src": "job",
+   "key": "ending_seconds",
+   "value": 1.0,
+   "status": "우리 칸 없음",
+   "ours": "끝 카드 길이"
+  },
+  {
+   "src": "job",
+   "key": "ending_jingle",
+   "value": null,
+   "status": "우리 칸 없음",
+   "ours": "끝 징글"
+  },
+  {
+   "src": "job",
+   "key": "enhance",
+   "value": null,
+   "status": "옮길 수 없음",
+   "ours": "Real-ESRGAN"
+  },
+  {
+   "src": "job",
+   "key": "out",
+   "value": "out/short_001.mp4",
+   "status": "우리 칸 없음",
+   "ours": "출력 경로"
+  },
+  {
+   "src": "job",
+   "key": "play",
+   "value": false,
+   "status": "우리 칸 없음",
+   "ours": "재생"
+  },
+  {
+   "src": "job",
+   "key": "upload",
+   "value": {
+    "title": "소재 공감",
+    "hashtags": [
+     "#스케치코미디",
+     "#채널명",
+     "#소재"
+    ],
+    "tags": [
+     "스케치코미디",
+     "개그",
+     "코미디"
+    ]
+   },
+   "status": "우리 칸 없음",
+   "ours": "업로드 문안"
+  },
+  {
+   "src": "job",
+   "key": "_메모",
+   "value": {
+    "delogo": "원본 방송사 로고·코너 표시가 정사각형 안에 남을 때 [[x,y,w,h]] (높이 1080 기준 원본 좌표)",
+    "enhance": "화질 개선이 필요하면 {\"model\":\"realesr-animevideov3\",\"scale\":2} (빠름) 또는 {\"model\":\"realesrgan-x4plus\",\"scale\":4} (고화질·느림)",
+    "subtitles": "auto(원본 자막 사용) · none(예능처럼 자막이 이미 많은 원본) · 카드 json 경로",
+    "play": "true 면 완성 직후 기본 재생기로 연다(SHORTBOX_PLAYER 로 다른 재생기 지정 가능)"
+   },
+   "status": "우리 칸 없음",
+   "ours": "메모"
+  }
+ ],
+ "motion": [
+  {
+   "what": "제목 등장",
+   "member": "정지 PNG overlay 0초~끝(make_short.render_title·overlay)",
+   "status": "옮김",
+   "ours": "layers[text:title].enter=null"
+  },
+  {
+   "what": "자막 카드 등장·퇴장",
+   "member": "concat 카드 바로 켬·끔, 효과 없음(make_short.sub_track)",
+   "status": "옮김",
+   "ours": "layers[text:caption].enter={kind:none}"
+  },
+  {
+   "what": "로고",
+   "member": "정지 PNG overlay",
+   "status": "옮김",
+   "ours": "layers[image] 정지"
+  },
+  {
+   "what": "영상 자르기 움직임",
+   "member": "컷마다 x 계단 바꿈(crop_expr if(lt(t,..)))",
+   "status": "옮길 수 없음",
+   "ours": "가운데 고정(컷 안·컷 사이 이동 없음)"
+  },
+  {
+   "what": "소리 끝 페이드",
+   "member": "afade 0.12초",
+   "status": "우리 칸 없음",
+   "ours": "없음"
+  }
+ ],
+ "rule_diffs": [
+  {
+   "rule": "−14 LUFS 마스터(우리 고정)",
+   "member": "원본 [-18, -10] 안이면 그대로, 밖이면 -14"
+  },
+  {
+   "rule": "확대 1.0·가운데 자르기",
+   "member": "확대 1.0 같음 · 박힌 글자 따라 컷마다 x 이동(우리 엔진에 없음)"
+  },
+  {
+   "rule": "칼카피 시험 TTS = 피쉬 차분한 해설가",
+   "member": "타입캐스트 Jihoon(보조 — 클립 모드는 원음)"
+  }
+ ],
+ "accepted_unknown": [],
+ "member_values": {
+  "spec": {
+   "name": "숏박스형 스케치코미디 쇼츠",
+   "version": "1.3.0",
+   "measured_from": "숏박스 최근 인기 쇼츠 5편(노래방 진상 주의보·저 애 아닙니다·워터파크 공감·섹시한 박진영·스스로 진화하는 이병 조진세) + 공감 4편 + 원본-쇼츠 짝(야근 ↔ 혼자 야근 공감), 2026-11-04. 배경·노랑은 최근 판(#090D26·#F8DF0A), 옛 판은 #030B23·#FBE812",
+   "canvas": {
+    "w": 1080,
+    "h": 1920
+   },
+   "layout": {
+    "background": "0x090D26",
+    "video_y": 420,
+    "video_size": 1080
+   },
+   "title": {
+    "font": "GmarketSansBold.otf",
+    "size": 92,
+    "band_h": 420,
+    "line_centers_y": [
+     195,
+     316
+    ],
+    "base": "#FFFFFF",
+    "highlight": "#F8DF0A",
+    "max_lines": 2,
+    "max_chars_per_line": 11,
+    "max_width": 980,
+    "font_note": "G마켓 산스 Bold(운영자 지정, 2026-11-04). 숏박스 실측 글꼴은 더 좁고 높다(Pretendard Black 106 이 실측에 가장 가깝다) — 되돌리려면 font=Pretendard-Black.otf, size=106",
+    "space_em": 0.28
+   },
+   "subtitle": {
+    "font": "Pretendard-Light.otf",
+    "size": 51,
+    "color": "#FFFFFF",
+    "box_alpha": 0.5,
+    "pad_x": 10,
+    "pad_top": 10,
+    "glyph_h": 44,
+    "last_line_center_y": 1401,
+    "line_pitch": 75,
+    "box_bottom_y": 1432,
+    "max_chars_per_line": 16,
+    "max_lines": 2,
+    "min_card_s": 0.6,
+    "split_pause_s": 0.35
+   },
+   "burned_subtitle_probe": {
+    "y0": 945,
+    "y1": 1020,
+    "white_min": 215,
+    "box_dark_max": 120,
+    "min_text_px": 20,
+    "min_dark_ratio": 0.35
+   },
+   "logo": {
+    "center_y": 1660,
+    "box": [
+     600,
+     114
+    ]
+   },
+   "ending_card": {
+    "seconds": 1.0,
+    "background": "black",
+    "logo_center_y": 960,
+    "logo_box": [
+     600,
+     300
+    ],
+    "optional": true
+   },
+   "crop": {
+    "mode": "center",
+    "scene_threshold": 0.3,
+    "snap_to_center_px": 40,
+    "face_k": 0.5,
+    "face_max_shift_px": 140,
+    "note": "야근 짝 37컷 대조: 가운데 고정 평균 54px 차(25/37 컷 60px 이내) < Haar 얼굴 추적 130px. 기본 center, face 는 선택",
+    "burned_text": {
+     "enabled": true,
+     "y0": 600,
+     "y1": 1075,
+     "white_min": 225,
+     "dark_max": 60,
+     "outline_px": 3,
+     "min_px": 150,
+     "pad_px": 12,
+     "comp_min_area": 8,
+     "comp_min_h": 8,
+     "comp_max_h": 90,
+     "comp_max_w": 220,
+     "min_comps": 3
+    }
+   },
+   "segment": {
+    "min_s": 30,
+    "max_s": 75,
+    "contiguous": true
+   },
+   "audio": {
+    "keep_if_lufs_between": [
+     -18,
+     -10
+    ],
+    "target_lufs": -14,
+    "true_peak": -1.0,
+    "tail_fade_s": 0.12
+   },
+   "encode": {
+    "preset": "medium",
+    "crf": 18,
+    "audio_bitrate": "192k"
+   },
+   "tts_voice": {
+    "provider": "typecast",
+    "model": "ssfm-v30",
+    "voice_id": "tc_61f0859907085fc68561c9a1",
+    "name": "Jihoon",
+    "emotion": "normal",
+    "pitch": 0,
+    "tempo": 1.0,
+    "backup": {
+     "voice_id": "tc_63aaec04428dd87af3757d72",
+     "name": "Seojoon"
+    },
+    "chosen_by": "2026-11-04 Argon high 청취 비교(원본 택시 공감 주 화자 vs 후보 6명): Jihoon 88 > Seojoon 82 > Changsu 76 > Doyoon 72; 피치 -3 은 기계음으로 52",
+    "use": "원본 대사가 없는 소재(대본 글 모드)나 보충 대사에만. 기본 클립 모드는 원본 음성을 그대로 쓴다"
+   },
+   "enhance": {
+    "bin_candidates": [
+     "~/.local/opt/realesrgan/v0.2.5.0/realesrgan-ncnn-vulkan",
+     "realesrgan-ncnn-vulkan"
+    ],
+    "defaults": {
+     "model": "realesr-animevideov3",
+     "scale": 2,
+     "threads": "2:4:4"
+    },
+    "intermediate_crf": 12,
+    "note": "M5 Pro 실측: animevideov3 x2 0.28초/프레임, x4plus x4 8.3초/프레임. x4plus 는 실사 얼굴이 더 자연스럽지만 62초에 약 4시간"
+   }
+  }
+ }
+}

@@ -1,0 +1,79 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "member_import v1",
+ "source": "member_spec",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    9,
+    13,
+    38
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 134.5,
+   "w": 980,
+   "align": "center",
+   "lines": 2,
+   "font": "GmarketSansBold",
+   "size": 92,
+   "line_h": 121.0,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     248,
+     223,
+     10
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "image",
+   "src": "$per_video",
+   "x": 240,
+   "y": 1603,
+   "w": 600,
+   "h": 114
+  }
+ ]
+}
