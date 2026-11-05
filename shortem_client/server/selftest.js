@@ -107,9 +107,13 @@ export async function elevenUsable(key, voiceId, { get = elevenGet, presets = nu
   })();
   const base = elevenBaseId(voiceId, rows);
   if (!base) return;
-  const sub = await get('/v1/user/subscription', key);
-  if (String(sub.tier || '').toLowerCase() !== 'free') return;
-  const v = await get(`/v1/voices/${base}`, key);
+  // 이 조회(요금제·목소리 종류)는 user_read·voices_read 권한이 있어야 된다 — 그 권한만 없는 키(TTS 는 됨)는 '판별 못 함'으로 막지 않는다
+  //   (11-05 이준연 #7048: 1.0.104 다시 확인이 TTS 되는 키를 '권한 꺼짐'으로 막았다). 진짜 TTS 권한 문제는 제작 합성 때 엔진이 상태별 문구로 알린다.
+  const look = async p => { try { return await get(p, key); } catch (e) { if (e && e.status === 'missing_permissions') return null; throw e; } };
+  const sub = await look('/v1/user/subscription');
+  if (!sub || String(sub.tier || '').toLowerCase() !== 'free') return;
+  const v = await look(`/v1/voices/${base}`);
+  if (!v) return;
   if (ELEVEN_FREE_OK.has(String(v.category || ''))) return;
   throw Object.assign(new Error('eleven_free_library'), {
     why: `일레븐랩스 무료 요금제는 고른 목소리(${voiceId})처럼 공유 목록 목소리를 쓸 수 없습니다`,
@@ -149,7 +153,7 @@ async function elevenGet(p, key) {
   if (r.status === 401) {
     let st = '';
     try { st = String(((await r.json()) || {}).detail?.status || ''); } catch { /* 본문 없음 = 키 문제로 */ }
-    throw Object.assign(new Error('eleven_key'), { why: elevenStatusWhy(st), fix: ELEVEN_STATUS_WHY[st] ? '' : '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
+    throw Object.assign(new Error('eleven_key'), { status: st, why: elevenStatusWhy(st), fix: ELEVEN_STATUS_WHY[st] ? '' : '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
   }
   if (!r.ok) return {};          // 조회 실패는 막지 않는다(제작 때 엔진이 실제로 부른다)
   return r.json();
