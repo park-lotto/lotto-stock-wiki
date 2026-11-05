@@ -161,3 +161,21 @@ def test_common17_guide_change_resets_human_steps(tmp_path, monkeypatch):
     g.write_text("# 지침\n## 1 절\n## 2 새 절\n", encoding="utf-8")
     ch = kal.guide_check(S)
     assert ch and "2 새 절" in ch[0] and S.step("rules")["state"] == "todo"
+
+
+def test_from_start_refuses_when_earlier_human_step_todo(tmp_path, monkeypatch):
+    """감시 적발(11-06 kal_snap run_make4): '[지침 바뀜]'으로 readlines·rules·copy 가 todo 인데 --from make 가 make·verify 를 그대로 돌렸다.
+    앞 단계가 done 이 아니면 --from 은 아무 단계도 돌리지 않고 멈춘다(Jev C:/t/fm_jev/q2.json fix_0)."""
+    S = _S(tmp_path, monkeypatch)
+    for k in kal.STEPS:
+        S.step(k)["state"] = "done"
+    S.step("rules")["state"] = "todo"
+    called = []
+    monkeypatch.setattr(kal, "RUN", {k: (lambda S, k=k: called.append(k) or ("done", {}, "")) for k in kal.STEPS})
+    logs = []
+    kal.run(S, "make", log=logs.append)
+    assert called == []
+    assert any("rules" in x and "--from rules" in x for x in logs)
+    S.step("rules")["state"] = "done"
+    kal.run(S, "verify", log=logs.append)
+    assert called == ["verify", "apply"]

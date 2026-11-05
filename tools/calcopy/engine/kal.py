@@ -1137,6 +1137,12 @@ def run(S: State, start: str | None = None, log=print) -> dict:
     i0 = STEPS.index(start) if start else 0
     for c in guide_check(S):
         log(f"[지침 바뀜] {c} — 사람 단계(readlines·rules·copy)를 다시 잰다")
+    # --from 은 시작점 앞 단계가 전부 done 일 때만(11-06 감시: 지침 바뀜으로 rules 가 todo 인데 --from make 가 make·verify 를 돌렸다 · Jev q2 fix_0 해결 0.60)
+    behind = [k for k in STEPS[:i0] if S.step(k).get("state") != "done"]
+    if behind:
+        log(f"[멈춤] 앞 단계 {behind} 가 done 이 아니다 — 그 결과로 {STEPS[i0]} 를 돌리지 않는다. --from {behind[0]} 로 다시")
+        log(f"상태 파일: {S.path}")
+        return S.d
     for name in STEPS[i0:]:
         st = S.step(name)
         if st.get("state") == "done" and not start:     # --from = 그 단계부터 **뒤 단계 전부** 다시(10-27: 받기 5편 늘었는데 frames·skeleton 이 옛 2편으로 건너뜀)

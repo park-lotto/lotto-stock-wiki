@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """말풍선 층(관제 319 11-06) — 스냅봤니 벤치 4편 말풍선 31줄(검정 둥근 상자 + 색 글 + 기울기)을 render_bench 가 판 frame.bubble 칸으로 굽는다.
-실측 근거: C:/t/snapfix_jev/bubble_measure.json(measure_bub.py) — 상자 #000000·반지름 13·여백 23/17·BMJUA 72px·기울기 중앙 +4.7도(반시계)."""
+실측 근거: C:/t/snapfix_jev/bubble_measure.json(measure_bub.py) — 상자 #000000·반지름 14(11-06 정정 — C:/t/fm_jev/bub_corner.json 모서리 윤곽)·여백 23/17·BMJUA 72px·기울기 중앙 +4.7도(반시계)."""
 import json
 
 import numpy as np
@@ -9,7 +9,7 @@ import pytest
 from tools.calcopy.hybrid import render_bench as RB
 from tools.calcopy.hybrid.common import ROOT, StageError
 
-BB = {"font": "BMJUA.ttf", "px": 72, "rot": 4.7, "box": {"rgb": "#000000", "alpha": 1.0, "radius": 13, "pad_x": 23, "pad_y": 17},
+BB = {"font": "BMJUA.ttf", "px": 72, "rot": 4.7, "box": {"rgb": "#000000", "alpha": 1.0, "radius": 14, "pad_x": 23, "pad_y": 17},
       "ring": {"px": 6, "color": "#FFFFFF"}, "colors": {"yellow": "#FCE61C", "green": "#3CF141"}}
 T = {"lines": {"O1": [0.0, 3.9], "O2": [3.9, 7.15]}, "end": 7.15}
 
@@ -56,5 +56,5 @@ def test_png_box_text_and_tilt(tmp_path):
 def test_snap_pan_has_measured_bubble_slot():
     st = json.loads((ROOT / "tools/calcopy/hybrid/styles/스냅봤니판.json").read_text(encoding="utf-8"))
     B = st["frame"]["bubble"]
-    assert B["box"]["rgb"] == "#000000" and B["box"]["radius"] == 13 and B["px"] == 72 and abs(B["rot"] - 4.7) < 0.01
+    assert B["box"]["rgb"] == "#000000" and B["box"]["radius"] == 14 and B["px"] == 72 and abs(B["rot"] - 4.7) < 0.01
     assert set(B["colors"]) == {"yellow", "green", "pink", "blue", "sky"}

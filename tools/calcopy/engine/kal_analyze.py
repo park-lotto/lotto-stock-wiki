@@ -446,6 +446,7 @@ MATCH_RULES = [
     ("transition.rate", "pctp", 20, True, "컷 전환 종류 분포(cut·flash·zoomblur·black·기타) 칸마다 차 ≤20%p(표준 §4-1 A1)"),
     ("sfx.rate", "rel0", 30, True, "효과음 발/초 차 ≤30%, 벤치 0이면 우리도 0(표준 §4-1 A2)"),
     ("sticker.rate", "pctp", 20, True, "스티커 붙은 줄 비율 차 ≤20%p(표준 §4-1 A3)"),
+    ("bubble.rate", "pctp", 20, True, "말풍선 줄 비율 차 ≤20%p(벤치 줄판독 layer/variant '말풍선' · 우리 자막표 bubbles — 11-06 감시: 우리 말풍선이 0으로 세짐)"),
     ("meme.rate", "pctp", 20, True, "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"),
     ("thumb.frame0", "eq", None, True, "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"),
     # ↓ 개정안 kal v2(11-06) — 받아쓰기 자(asr_stats, 벤치 = 뜯기 transcript · 우리 = verify 가 우리 완성본을 뜯은 transcript). 우리 받아쓰기 실측이 쌓이기 전이라 참고.
@@ -491,6 +492,11 @@ def _is_meme(l: dict) -> bool:
     return any("짤" in str(l.get(k) or "") for k in ("screen", "scene"))
 
 
+def _is_bubble(l: dict) -> bool:
+    """말풍선 줄인가(한 곳) — 벤치 줄판독 layer/variant 에 '말풍선' · 우리 렌더 자막표 bubbles 에서 온 줄(bubble=True). 11-06 감시: 우리 말풍선이 0으로 세졌다."""
+    return bool(l.get("bubble")) or any("말풍선" in str(l.get(k) or "") for k in ("layer", "variant"))
+
+
 def _sfx_n(l: dict) -> int:
     v = l.get("sfx")
     if isinstance(v, list):
@@ -523,11 +529,16 @@ def _ours_lines(o: dict) -> tuple[list[dict], float]:
         emph = r.get("emph")
         emph = [emph] if isinstance(emph, str) and emph else (emph or [])
         st = r.get("sticker") or []
-        st = [st] if isinstance(st, (str, dict)) else st
+        st = [st] if isinstance(st, (str, dict)) else list(st)
+        st += [x for x in r.get("stickers") or [] if x]     # 렌더 자막표의 스티커 목록 칸(render_bench rows.stickers — 11-06 전엔 안 읽어 sticker.rate 가 늘 0)
         t0, t1 = float(r.get("t0") or 0), float(r.get("t1") or 0)
         rows.append({"t0": t0, "t1": t1, "speaker": r.get("speaker") or r.get("kind"), "text": r.get("text"),
                      "enter": r.get("enter") or "instant", "emph": emph, "sticker": st,
                      "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널", "variant": r.get("variant")})
+    sp_of = {r.get("line"): (r.get("speaker") or r.get("kind")) for r in o.get("rows") or []}
+    for b in o.get("bubbles") or []:    # 말풍선(render_bench 자막표 bubbles) — 벤치 줄판독이 말풍선을 따로 줄로 적는 것과 같은 꼴(11-06 감시 · Jev q3 fix_0)
+        rows.append({"t0": float(b["t0"]), "t1": float(b["t1"]), "speaker": sp_of.get(b.get("line")) or "orig", "text": b.get("text"), "enter": b.get("enter") or "instant",
+                     "emph": [], "sticker": [], "sfx": None, "role": None, "layer": "채널·말풍선", "variant": "말풍선", "bubble": True})
     for c in o.get("cards") or []:      # 댓글카드 자막(render_bench frame.comment.track lines) — 줄판독의 카드 줄과 같은 칸(제3자·fade·꾸밈 없음)
         rows.append({"t0": float(c["t0"]), "t1": float(c["t1"]), "speaker": "제3자", "text": c["text"], "enter": "fade", "emph": [], "sticker": [],
                      "sfx": None, "role": None, "layer": "채널", "variant": None})
@@ -576,6 +587,7 @@ def _stats(lines: list[dict], dur: float, asr: list | None = None) -> dict:
     s["sfx.rate"] = round(sum(_sfx_n(l) for l in L) / dur, 3) if dur else None
     s["sticker.rate"] = round(sum(_has(l.get("sticker")) for l in L) / len(L), 3) if L else None
     s["meme.rate"] = round(sum(_is_meme(l) for l in L) / len(L), 3) if L else None
+    s["bubble.rate"] = round(sum(_is_bubble(l) for l in L) / len(L), 3) if L else None
     return s
 
 
@@ -1064,7 +1076,7 @@ def match_from_render(style, doc, work, media: bool | dict = True, frame0_kind_m
     tab = json.loads((R / "자막표.json").read_text(encoding="utf-8"))
     T = json.loads((R / "timeline.json").read_text(encoding="utf-8"))
     dur = float(T.get("end") or 0)
-    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "cards": tab.get("cards") or [], "lyrics": tab.get("lyrics") or [],
+    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "cards": tab.get("cards") or [], "lyrics": tab.get("lyrics") or [], "bubbles": tab.get("bubbles") or [],
                             "dur": dur, "sfx_in_video": tab.get("sfx") or []})   # 효과음 = 덩어리 꾸밈(벤치 _decorated 와 같은 자 — 10-26 전엔 안 넘겨 우리 fx.rate 가 늘 0 이었다)
     # 짤: 시간표 컷에 meme 표시가 있으면 그 컷과 겹치는 줄 = 짤 화면
     memes = [(float(c["t0"]), float(c["t1"])) for c in T.get("cuts") or [] if c.get("meme") or c.get("kind") == "meme"]

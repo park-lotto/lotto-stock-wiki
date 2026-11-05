@@ -1157,7 +1157,7 @@ def bubble_plan(S: dict, T: dict, st: dict) -> list[dict]:
 
 def bubble_png(b: dict, BB: dict, out: Path) -> tuple[int, int]:
     """말풍선 한 장(검정 둥근 상자 + 색 글, 또는 흰 테 + 색 글) → 기울여 out(RGBA) 에 저장. 반환 = 왼쪽 위 자리(x, y) — 가운데가 b.x·b.y.
-    숫자는 판 frame.bubble 칸 한 곳(벤치 실측: 상자 #000000 불투명·반지름 13·여백 23/17·BMJUA 72px·기울기 중앙 +4.7도)."""
+    숫자는 판 frame.bubble 칸 한 곳(벤치 실측: 상자 #000000 불투명·반지름 14(11-06 모서리 윤곽 정정)·여백 23/17·BMJUA 72px·기울기 중앙 +4.7도)."""
     from PIL import Image, ImageDraw
     f = _font(BB["font"], BB["px"])
     bx, rg = BB["box"], BB.get("ring") or {"px": 6, "color": "#FFFFFF"}

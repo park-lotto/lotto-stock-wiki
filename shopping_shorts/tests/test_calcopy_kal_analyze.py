@@ -198,3 +198,19 @@ def test_script_endings_and_palette():
     P = K.palette_of(docs)
     assert P["roles"]["본문"][0]["hex"] == "#FFFFFF" and P["roles"]["본문"][0]["n_docs"] == 1
     assert P["roles"]["강조"][0]["hex"] == "#FF0000"
+
+
+def test_ours_lines_counts_render_bubbles_and_stickers():
+    """감시 적발(11-06): 렌더 자막표 bubbles 7개가 verify 에서 0 — 우리 줄에 말풍선이 들어가고 bubble.rate 를 양쪽 같은 자로 잰다(Jev q3 fix_0)."""
+    from tools.calcopy.engine import kal_analyze as K
+    rows = [{"line": "O1", "t0": 0.0, "t1": 1.0, "text": "가", "speaker": "orig", "emph": [], "sticker": "", "stickers": [{"what": "눈"}]},
+            {"line": "O2", "t0": 1.0, "t1": 2.0, "text": "나", "speaker": "orig", "emph": [], "sticker": "", "stickers": []}]
+    bub = [{"line": "O1", "t0": 0.2, "t1": 0.9, "text": "뭐지?", "style": "box"}]
+    L, _ = K._ours_lines({"rows": rows, "bubbles": bub, "dur": 2.0})
+    assert len(L) == 3
+    s = K._stats(L, 2.0)
+    assert s["bubble.rate"] == round(1 / 3, 3) and s["sticker.rate"] == round(1 / 3, 3)
+    b = K._stats([{"t0": 0, "t1": 1, "speaker": "원음", "text": "x", "layer": "스냅봤니·말풍선", "variant": "말풍선(흰 테)"},
+                  {"t0": 1, "t1": 2, "speaker": "원음", "text": "y", "layer": "스냅봤니·해설"}], 2.0)
+    assert b["bubble.rate"] == 0.5
+    assert any(r[0] == "bubble.rate" and r[3] is True for r in K.MATCH_RULES)
