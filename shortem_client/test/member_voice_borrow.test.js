@@ -14,9 +14,15 @@ test('이 프리셋 목소리를 안 정했고 타입캐스트 키가 없으면 
   assert.deepEqual(memberVoice(st, 'p_a', TC, has('fish')), { voice_id: 'fs-abc', name: '내 피쉬', provider: 'fishaudio' });
 });
 
-test('프리셋 회사 키가 있으면 프리셋 목소리 그대로', () => {
+test('프리셋 회사 키가 있으면 프리셋 목소리 그대로 — 엔진이 판 voice 로 가지 않게 정체를 실어 보낸다(11-05 얜샷템)', () => {
   const st = { current: 'p_b', channels: { p_a: { pack: {} }, p_b: { pack: { tts: FISH } } } };
-  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast', 'fish')), {});
+  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast', 'fish')), { voice_id: 'tc_preset', name: '프리셋' });
+});
+
+test('이름만 남은 반쪽 목소리는 버리고 프리셋 목소리 + 회원 빠르기(11-05 얜샷템: {name:박창수} → 판 일레븐 미나로 합성돼 멈춤)', () => {
+  const st = { current: 'p_a', channels: { p_a: { pack: { tts: { name: '박창수', tempo: 1.25 } } } } };
+  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast')), { voice_id: 'tc_preset', name: '프리셋', tempo: 1.25 });
+  assert.deepEqual(memberVoice(st, 'p_a', TC, has()), { tempo: 1.25 }, '키가 없으면 이름 없이 빠르기만');
 });
 
 test('회원이 이 프리셋 목소리를 정했으면 그대로 — 빌리지 않는다', () => {
@@ -30,7 +36,7 @@ test('처음 세팅에 일레븐 키만 = 미나, 피쉬 키만 = 일반여성2 
   const st = { current: 'p_a', channels: { p_a: { pack: {} } } };
   assert.equal(memberVoice(st, 'p_a', TC, has('elevenlabs')).voice_id, 'kr-mina-expressive');
   assert.equal(memberVoice(st, 'p_a', TC, has('fish')).voice_id, 'fs-ilban2-stable');
-  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast', 'elevenlabs')), {}, '프리셋 회사 키가 있으면 사장님이 세팅한 프리셋 목소리');
+  assert.deepEqual(memberVoice(st, 'p_a', TC, has('typecast', 'elevenlabs')), { voice_id: 'tc_preset', name: '프리셋' }, '프리셋 회사 키가 있으면 사장님이 세팅한 프리셋 목소리');
   assert.equal(DEFAULT_VOICES.typecast.voice_id.startsWith('tc_'), true);
 });
 

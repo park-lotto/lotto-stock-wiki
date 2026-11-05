@@ -165,11 +165,19 @@ export const DEFAULT_VOICES = {
 //   ③ 회원이 다른 프리셋에서 고른 목소리 중 키가 있는 것(지금 채널 먼저) — #1186·#953·#1846
 //   ④ 키가 있는 회사의 기본 성우(DEFAULT_VOICES, 일레븐 → 피쉬 → 타입캐스트) — 처음 세팅에 일레븐 키만 있는 회원(사장님 11-03 '셋 중 하나만')
 //   반환 = 팩 member.tts 에 넣을 칸(빈 객체 = 프리셋 목소리). hasKey(회사) 는 키 파일 판정(engine/voice.keyStatus).
+//   ★11-05 얜샷템 회원 편: ② 에서 {} 를 돌려주면 엔진은 프리셋 목소리가 아니라 **판 voice**(키치잇판 = 일레븐 미나)로 합성했다 —
+//   여기가 '프리셋 목소리(문정, 타입캐스트)'라고 판단해 타입캐스트 키만 본 회원이 렌더에서 막혔다. 그래서 ② 는 프리셋 목소리 정체를 실어 보낸다
+//   (여기가 판단한 목소리 = 엔진이 합성하는 목소리). 회원 칸에 voice_id 없이 이름만 남은 반쪽({name:'박창수'})은 목소리를 못 고르므로 이름을 버리고 빠르기·감정만 남긴다.
+const VOICE_ID_KEYS = ['voice_id', 'name', 'provider', 'preset_id'];
 export function memberVoice(settings, pid, presetTts, hasKey) {
   const ch = (settings || {}).channels || {};
-  const own = ((ch[pid] || {}).pack || {}).tts || {};
-  if (own.voice_id) return own;
-  if (hasKey(providerOf(presetTts) || 'typecast')) return own;
+  const own0 = ((ch[pid] || {}).pack || {}).tts || {};
+  if (own0.voice_id) return own0;
+  const own = Object.fromEntries(Object.entries(own0).filter(([k]) => !VOICE_ID_KEYS.includes(k)));
+  if (hasKey(providerOf(presetTts) || 'typecast')) {
+    const pre = presetTts && presetTts.voice_id ? Object.fromEntries(VOICE_KEYS.filter(k => presetTts[k] != null).map(k => [k, presetTts[k]])) : {};
+    return { ...pre, ...own };
+  }
   const other = [(settings || {}).current, ...Object.keys(ch)].filter(p => p && p !== pid)
     .map(p => ((ch[p] || {}).pack || {}).tts).find(t => t && t.voice_id && hasKey(providerOf(t)));
   const pick = other || DEFAULT_VOICES[['elevenlabs', 'fish', 'typecast'].find(k => hasKey(k))];
