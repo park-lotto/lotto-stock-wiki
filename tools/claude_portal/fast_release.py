@@ -60,7 +60,8 @@ def norm(b: bytes) -> bytes:
 
 
 def failed_tests() -> set:
-    r = subprocess.run("node --test --test-reporter=tap test/*.test.js", shell=True, cwd=TESTS, capture_output=True, encoding="utf-8", errors="replace")
+    r = subprocess.run("node --test --test-reporter=tap ../test/*.test.js", shell=True, cwd=TESTS / "server",   # 시험은 server 폴더 기준(REPO = cwd/../..) — 11-05 shortem_client 에서 돌려 live·member_guide 가 늘 실패
+                       capture_output=True, encoding="utf-8", errors="replace")
     return {m.group(1).strip() for m in re.finditer(r"^not ok \d+ - (.+)$", r.stdout, re.M)}
 
 
