@@ -63,6 +63,18 @@
       "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp_macos",
       "sha256": "0f192b7ec147ab6288885d6351d9ab67367640029b4377576ef46dd79cf7b202",
       "note": "yt-dlp_macos 는 universal2 한 파일(arm64·x64 공용)"
+    },
+    "ffmpeg": {
+      "version": "9.0.2",
+      "url": "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2/ffmpeg.zip",
+      "sha256": "c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924",
+      "verify_source": "https://ffmpeg.martin-riedl.de (9.0.2 release, versions.txt: --enable-gpl --enable-libx264 --enable-libass libass 0.17.5 freetype 2.13.0 harfbuzz 14.4.0, .sha256 파일 2026-11-05)"
+    },
+    "ffprobe": {
+      "version": "9.0.2",
+      "url": "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2/ffprobe.zip",
+      "sha256": "fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6",
+      "verify_source": "https://ffmpeg.martin-riedl.de (9.0.2 release, versions.txt: --enable-gpl --enable-libx264 --enable-libass libass 0.17.5 freetype 2.13.0 harfbuzz 14.4.0, .sha256 파일 2026-11-05)"
     }
   },
   "darwin-x64": {
@@ -86,6 +98,18 @@
       "version": "2026.08.19",
       "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp_macos",
       "sha256": "0f192b7ec147ab6288885d6351d9ab67367640029b4377576ef46dd79cf7b202"
+    },
+    "ffmpeg": {
+      "version": "9.0.2",
+      "url": "https://ffmpeg.martin-riedl.de/download/macos/amd64/1789931006_9.0.2/ffmpeg.zip",
+      "sha256": "7c6b4125b191cbf773832dc51f424cf2b6bb7da43007d1e066f95909e47cacd4",
+      "verify_source": "https://ffmpeg.martin-riedl.de (9.0.2 release, versions.txt: --enable-gpl --enable-libx264 --enable-libass libass 0.17.5 freetype 2.13.0 harfbuzz 14.4.0, .sha256 파일 2026-11-05)"
+    },
+    "ffprobe": {
+      "version": "9.0.2",
+      "url": "https://ffmpeg.martin-riedl.de/download/macos/amd64/1789931006_9.0.2/ffprobe.zip",
+      "sha256": "2322438ed2f6319a691291b247d09c69dcaa3a982460d1f269a7e1af335cfdfd",
+      "verify_source": "https://ffmpeg.martin-riedl.de (9.0.2 release, versions.txt: --enable-gpl --enable-libx264 --enable-libass libass 0.17.5 freetype 2.13.0 harfbuzz 14.4.0, .sha256 파일 2026-11-05)"
     }
   },
   "python_packages": {
@@ -146,5 +170,9 @@
       "requirements": "common/requirements-py312-mac-extra.txt",
       "note": "맥은 PyInstaller 한 파일(yt-dlp_macos) 대신 동봉 파이썬 패키지로 넣는다 — 재서명·공증 때 한 파일 실행기의 압축 해제 라이브러리 서명 문제를 피한다"
     }
+  },
+  "mac_install_sh": {
+    "_comment": "맥 한 줄 설치(installer/install.sh, 관제 328)가 쓰는 것: darwin-*.{node,chrome-headless-shell,python,ffmpeg,ffprobe} + 엔진 부품 requirements-engine-py312-mac.txt. 맥 최소 14.0 = av 19.0.1·onnxruntime 1.31(arm64)·opencv 5.0 x86_64 wheel 기준(mac_requirements.py)",
+    "macos_min": "14.0"
   }
 }

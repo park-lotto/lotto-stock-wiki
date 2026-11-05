@@ -119,3 +119,56 @@ def test_메뉴_스크립트에_비밀이_없다():
     from fastapi.testclient import TestClient
     r = TestClient(app_module.app).get("/api/claude/start_menu.ps1")
     assert r.status_code == 200 and "숏클 시작" in r.text and "SHORTEM-L1." not in r.text
+
+
+# ── 맥 한 줄 설치(관제 328) ─────────────────────────────────────────────────────
+def test_맥_설치_줄에_키_원문이_없고_인증값으로_키를_받는다(st):
+    import re
+    key = cp.issue_license(7, st)["key"]
+    line = cp.start_line(7, "https://x.test", "mac")
+    assert key not in line and "/api/claude/start.sh" in line and line.startswith("SHORTEM_START='")
+    tok = re.match(r"SHORTEM_START='([^']+)'", line).group(1)
+    assert cp.start_redeem(tok, st)["key"] == key
+    assert cp.start_line(7, "https://x.test").startswith("$env:SHORTEM_START=")     # 윈도 줄은 그대로
+
+
+def test_맥_설치_스크립트에_주소가_채워지고_비밀이_없다():
+    from fastapi.testclient import TestClient
+    r = TestClient(app_module.app).get("/api/claude/start.sh", headers={"host": "stmaker.kr"})
+    assert r.status_code == 200 and r.text.startswith("#!/bin/bash")
+    assert "https://stmaker.kr" in r.text and "__BASE__" not in r.text and "SHORTEM-L1." not in r.text
+
+
+def test_맥_스크립트가_부르는_묶음_종류는_서버가_아는_것():
+    from pathlib import Path
+    body = (Path(app_module.__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
+    for plat in ("mac-arm64", "mac-x64"):
+        assert f"PLAT={plat}" in body and plat in cp.INSTALL_PLATS
+
+
+def test_맥_엔진_부품_목록이_윈도_목록을_다_담는다():
+    import re
+    from pathlib import Path
+    common = Path(app_module.__file__).resolve().parents[1] / "installer" / "common"
+    norm = lambda n: re.sub(r"[-_.]+", "-", n).lower()
+    win = {norm(n) for n in re.findall(r"(?m)^([A-Za-z0-9_.\-]+)==", (common / "requirements-engine-py312-win.txt").read_text(encoding="utf-8"))}
+    mac = {norm(n) for n in re.findall(r"(?m)^([A-Za-z0-9_.\-]+)==", (common / "requirements-engine-py312-mac.txt").read_text(encoding="utf-8"))}
+    assert win <= mac
+
+
+def test_맥_묶음은_윈도_도구를_빼고_맥_목록을_넣는다(tmp_path):
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(app_module.__file__).resolve().parents[1] / "tools" / "claude_portal"))
+    import make_mac_bundle as mb
+    src = tmp_path / "win.zip"
+    with zipfile.ZipFile(src, "w") as z:
+        for n in ("server/index.js", "server/license.js", "postinstall.js", "claude-plugin/shortem/x.json",
+                  "engine/a.py", "tools/node/node.exe", "tools/tools.manifest.json", "server/vcrt/msvcp140.dll"):
+            z.writestr(n, "x")
+    rep = mb.build(src, tmp_path / "mac.zip")
+    with zipfile.ZipFile(tmp_path / "mac.zip") as z:
+        names = set(z.namelist())
+    assert not any(n.startswith(("tools/", "server/vcrt/")) for n in names)
+    assert {"engine/a.py", "mac/tools.lock.json", "mac/requirements-engine-py312-mac.txt", "mac/write_manifest.js"} <= names
+    assert rep["dropped"] == 3

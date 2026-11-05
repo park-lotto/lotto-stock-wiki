@@ -162,22 +162,53 @@ def test_페이지에_계정값이_안_나간다(m):
 
 
 # ── 동시 접속 ─────────────────────────────────────────────────────────────
-def test_다른_PC가_켜져_있으면_막힌다(m):
+def _acquire(m, k, fp, job="job-1"):
+    return m["client"].post("/api/claude/lease", headers=_h(k, fp), json={"action": "acquire", "job_id": job})
+
+
+def test_켜져만_있는_PC는_자리를_못_뺏는다(m):
     k = _full(m)
     assert _session(m, k, FP1).json()["ok"]
-    r = _lic(m, k, FP2)
+    r = _session(m, k, FP2)                                      # 노트북에 숏클만 켜져 있다(저절로 나가는 신호)
     assert r.status_code == 409 and r.json()["code"] == "busy_session" and "PC-a" in r.json()["msg"]
+    assert m["client"].get("/api/claude/me/home").json()["session"]["device"] == "PC-a"
+
+
+def test_실제로_쓰면_자리를_가져온다(m):
+    k = _full(m)
+    _session(m, k, FP1)                                          # 노트북이 자리를 잡고 있어도
+    assert _lic(m, k, FP2).status_code == 200                    # 데스크탑에서 실제로 쓰면 바로 된다
+    assert _acquire(m, k, FP2).json()["ok"]
+    assert _session(m, k, FP1).status_code == 409                # 이제 노트북 신호가 막힌다
+    assert m["client"].get("/api/claude/me/home").json()["session"]["device"] == "PC-b"
+
+
+def test_다른_PC가_만드는_중이면_기다린다(m):
+    k = _full(m)
+    _session(m, k, FP1)
+    assert _acquire(m, k, FP1).json()["ok"]                      # 노트북이 영상을 만드는 중
+    r = _lic(m, k, FP2)
+    assert r.status_code == 409 and r.json()["code"] == "busy_session" and "만드는 중" in r.json()["msg"]
+    assert _acquire(m, k, FP2, "job-2").json()["code"] == "busy_session"
+
+
+def test_창_하나가_닫혀_자리를_뺏겨도_제작은_이어진다(m):
+    """11-04 회원 572 재현: 데스크탑 창 하나가 닫히며 자리가 비자 노트북 신호가 가져가 데스크탑 제작이 3시간 막혔다."""
+    k = _full(m)
+    _session(m, k, FP1)                                          # 데스크탑(창 여러 개)
+    assert _acquire(m, k, FP1).json()["ok"]
+    _session(m, k, FP1, "release")                               # 데스크탑 창 하나가 닫힌다
+    assert _session(m, k, FP2).json()["ok"]                      # 켜만 둔 노트북 신호가 빈자리를 잡는다
+    r = m["client"].post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "job-1"})
+    assert r.json()["ok"]                                        # 데스크탑 제작은 막히지 않는다
     assert _session(m, k, FP2).status_code == 409
-    r = m["client"].post("/api/claude/lease", headers=_h(k, FP2), json={"action": "acquire", "job_id": "job-1"})
-    assert r.json()["code"] == "busy_session"
-    assert _lic(m, k, FP1).status_code == 200                    # 자리 잡은 PC 는 그대로
 
 
 def test_닫으면_다른_PC가_쓴다(m):
     k = _full(m)
     _session(m, k, FP1)
     assert _session(m, k, FP1, "release").json()["ok"]
-    assert _session(m, k, FP2).json()["ok"] and _lic(m, k, FP1).status_code == 409
+    assert _session(m, k, FP2).json()["ok"] and _session(m, k, FP1).status_code == 409
 
 
 def test_신호가_끊기면_3분_뒤_풀린다(m, monkeypatch):
@@ -185,9 +216,9 @@ def test_신호가_끊기면_3분_뒤_풀린다(m, monkeypatch):
     _session(m, k, FP1)
     now = cp._now()
     monkeypatch.setattr(cp, "_now", lambda: now + cp.SESSION_TTL - 1)
-    assert _lic(m, k, FP2).status_code == 409
+    assert _session(m, k, FP2).status_code == 409
     monkeypatch.setattr(cp, "_now", lambda: now + cp.SESSION_TTL + 1)
-    assert _lic(m, k, FP2).status_code == 200
+    assert _session(m, k, FP2).status_code == 200
 
 
 def test_강제_해제로_끊으면_앞_PC가_바로_되찾지_못한다(m):
@@ -205,7 +236,8 @@ def test_작업_중이면_첫_해제는_접속을_끊지_않는다(m):
     assert m["client"].post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "job-1"}).json()["ok"]
     r = m["client"].post("/api/claude/me/lease/force_release").json()
     assert r["released"] is True and r["kicked"] is False
-    assert _lic(m, k, FP2).status_code == 409
+    assert _session(m, k, FP1).status_code == 200                # 접속 자리는 그대로
+    assert _session(m, k, FP2).status_code == 409
 
 
 def test_막힌_PC도_새_판은_받는다(m):

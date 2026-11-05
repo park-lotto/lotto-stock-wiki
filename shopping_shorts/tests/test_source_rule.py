@@ -48,7 +48,7 @@ def test_fill_shot_max_centers_main():
     M = {"cuts": {"N1": [{"src": "o.mp4", "ss": 1.0, "face": "이미도", "crop": "face"}]}}
     RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 9 / 16)
     c = M["cuts"]["N1"][0]
-    assert c["max"] == 3.0 and c["center"] == "주인공"
+    assert "max" not in c and c["center"] == "주인공"      # 샷 한도는 렌더 shot_cap 이 관문 경계로(관제 318)
     assert abs((c["crop"][0] + c["crop"][2] / 2) - 0.75 * 1920) <= 1      # 주인공 얼굴 가운데
 
 
@@ -70,7 +70,7 @@ def test_fill_shot_max_keeps_numeric_crop_and_alternates_stills():
     M = {"cuts": {"N1": [{"src": "o.mp4", "ss": 1.0, "face": "주인공", "crop": [680, 0, 600, 1080]}],
                   "N2": [{"src": "prod_1_0.jpg"}, {"src": "prod_1_0.jpg"}]}}
     RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 9 / 16)
-    assert M["cuts"]["N1"][0]["crop"] == [680, 0, 600, 1080] and M["cuts"]["N1"][0]["max"] == 3.0
+    assert M["cuts"]["N1"][0]["crop"] == [680, 0, 600, 1080] and "max" not in M["cuts"]["N1"][0]
     assert [c["move"] for c in M["cuts"]["N2"]] == ["in", "left"]
 
 
