@@ -198,12 +198,96 @@ def load(name: str, patch: dict | None = None, _skip_packs: bool = False) -> dic
 
 
 def member_font_file(name: str) -> str:
-    """화면 글꼴 이름 → 글꼴 파일 이름. 없으면 멈춘다(조용히 판 글꼴로 돌아가지 않는다)."""
-    fonts = DIR.parents[3] / "shopping_shorts/static/fonts"
-    hit = [p.name for p in fonts.glob(f"{name}.*") if p.suffix.lower() in (".ttf", ".otf")]
+    """화면 글꼴 이름 → 글꼴 파일(fonts 폴더 기준). 주인 = preview_request.font_files. 없으면 멈춘다(조용히 판 글꼴로 돌아가지 않는다)."""
+    from tools.calcopy.preview_request import font_files
+    hit = font_files().get(name)
     if not hit:
         raise StyleError(f"회원 제목 글꼴 '{name}' 파일이 없다")
-    return sorted(hit)[0]
+    return hit
+
+
+def member_tempo(st: dict) -> float | None:
+    """(판단 주인 — 회원이 말 빠르기를 정했나) 회원이 바꾼 칸(member_voice.tempo)만 본다 — 프리셋 기본값은 회원 팩 member 에 없다(local_settings.packFile).
+    정했으면 렌더가 판 cps_target 에 맞추지 않고 그 빠르기로 내고, 길이가 판 범위 밖이어도 경고만 한다(#1893 김만기 1.05 → 판 8.6자/초 맞춤 1.2288 이 덮음 ·
+    사장님 11-02 '회원 요청이 판·검사를 이긴다')."""
+    t = (st.get("member_voice") or {}).get("tempo")
+    return float(t) if t else None
+
+
+def name_look(items: list, scale, color) -> None:
+    """(판단 주인 — 채널명 크기·색, #1631 김유선·#1950 이성택) 채널명을 그리는 세 자리(로고·워터마크·머리띠 글자)에 같은 배율·색.
+    안 정했으면 그대로(프리셋 그림). 색은 칸 꼴에 맞춰 — 로고는 rgba(투명도 그대로), 워터마크·머리띠 글자는 color."""
+    for it in items:
+        if not it:
+            continue
+        if scale and it.get("px"):
+            it["px"] = round(float(it["px"]) * float(scale))
+            if it.get("max_w"):
+                it["max_w"] = round(float(it["max_w"]) * float(scale))
+        if color:
+            if "rgba" in it:
+                it["rgba"] = [int(color[i:i + 2], 16) for i in (1, 3, 5)] + [list(it["rgba"])[3]]
+            else:
+                it["color"] = color
+
+
+MEMBER_EMPH_BENCH = {"color": ("mark", ""), "grow": ("mark", "pop"), "underline": ("underline", "")}   # 회원 강조 → bench 스냅샷 wordFx(style, grow)
+
+
+def _member_caption_fx(st: dict, text: dict, cap: dict) -> None:
+    """(판단 주인 — 회원 자막 등장·강조·외곽선·자막팩 → bench 렌더 칸, 11-05 문인석·박은숙) member_frame 이 부른다.
+    등장·외곽선 = cap(→ render_bench.snapshot captionOverride → precision20-ui.js 가 팩 base·variants·speakers 에 입힘).
+    강조 = st['member_wordfx'](스냅샷 wordFx — bench 는 핵심 단어 고정 색칠 mark 를 그대로 두고 색·키우기만, 밑줄은 underline).
+    자막팩 = st.packs.caption.pack·옛 칸 caption.pack(새 팩에 없는 변형은 뺀다). 이 판에서 영상에 안 닿는 회원 칸은 st['member_unused'] 로 알린다."""
+    from shopping_shorts import scene_style
+    c = text.get("caption") or {}
+    unused = []
+    bench = st.get("renderer") == "bench"
+    if "enter" in c and c["enter"] is not None:
+        spec = scene_style.clean_caption_enter({"kind": "none"} if c["enter"] == "none" else c["enter"])
+        if spec:
+            cap["enter"] = spec
+    if "outline_px" in c or "outline_rgb" in c:
+        o = {}
+        if isinstance(c.get("outline_px"), (int, float)):
+            o["px"] = c["outline_px"]
+        if isinstance(c.get("outline_rgb"), list):
+            o["rgb"] = "#%02X%02X%02X" % tuple(c["outline_rgb"])
+        if o:
+            cap["outline"] = o
+    m = c.get("emphasis")
+    if m == "none":
+        st["member_wordfx"] = {"style": "", "color": "", "grow": ""}
+    elif isinstance(m, dict) and m.get("style") in MEMBER_EMPH_BENCH:
+        style, grow = MEMBER_EMPH_BENCH[m["style"]]
+        st["member_wordfx"] = {"style": style, "color": "#%02X%02X%02X" % tuple(m["rgb"]), "grow": grow}
+    if c.get("mode") and bench:
+        unused.append(f"text.caption.mode(자막 쌓기 {c['mode']}) — 이 프리셋은 판 caption.stack 으로 쌓아 영상에 안 닿는 칸")
+    name = text.get("caption_pack")
+    if name:
+        from tools.calcopy.hybrid import pack_map
+        packs = pack_map.caption_packs()
+        if name not in packs:
+            raise StyleError(f"회원 자막팩 '{name}' 이 자막팩 목록에 없다")
+        if not bench:
+            unused.append(f"text.caption_pack({name}) — 이 프리셋은 전용 렌더러라 자막팩을 쓰지 않는다")
+        else:
+            P = st.get("packs") or {}
+            if P.get("caption") is not None:
+                PC = P["caption"]
+                PC["pack"] = name
+                have = set((packs[name].get("variants") or {}))
+                if PC.get("variants"):
+                    PC["variants"] = {a: v for a, v in PC["variants"].items() if v in have}
+                errs = pack_map.check(P)
+                if errs:
+                    raise StyleError("회원 자막팩 반영 뒤 팩 검사 실패: " + " / ".join(errs))
+            if isinstance(st.get("caption"), dict):
+                st["caption"]["pack"] = name
+    if (cap.get("enter") or cap.get("outline") or st.get("member_wordfx")) and not bench:
+        unused.append("text.caption 등장·강조·외곽선 — 이 프리셋은 전용 렌더러라 자막팩 스냅샷을 쓰지 않는다")
+    if unused:
+        st["member_unused"] = unused
 
 
 def member_frame(st: dict) -> dict:
@@ -217,13 +301,21 @@ def member_frame(st: dict) -> dict:
     if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
         st["voice"] = {**st.get("voice", {}), **tts}
         st["member_voice"] = tts
-    cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy") if text.get(f"caption_{k}")}
-    if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기) — 자막팩 위에 덮는다(render_bench.snapshot)
+    bgm = pack.get("bgm") or {}
+    if bgm.get("gain") == 0:          # 소리 단계 '배경음악 없음'(음악 크기 0) — 0 은 거짓값이라 or 로 읽지 않는다
+        st["member_bgm"] = {"none": True}
+    elif (bgm.get("candidates") or [None])[0]:      # 소리 단계에서 고른 곡(11-03: 회원 팩 bgm 이 판에 안 들어가 프리셋 곡만 나왔다)
+        st["member_bgm"] = {"id": bgm["candidates"][0]}
+    cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy", "scale") if text.get(f"caption_{k}")}
+    _member_caption_fx(st, text, cap)
+    if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기)·크기(#1949 이성택 — 팩 size·강조 size 배율) — 자막팩 위에 덮는다(render_bench.snapshot)
         st["member_caption"] = cap
     F = st.get("frame")
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st
+    _member_layout(F, st, text)
     name = brand.get("channel_name")
+    wm = brand.get("watermark") if isinstance(brand.get("watermark"), dict) else {}     # 회원 워터마크 자리(없으면 {}) — 본 틀·구간 틀이 같이 쓴다
     bar = (F.get("post") or {}).get("head_bar") or {}
     bar_text = [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"]
     if bar_text:       # 머리띠 글자 = 회원 채널명 한 칸(고정 글자 포함), 안 넣었으면 비운다 — 프리셋 원래 채널 글자를 내보내지 않는다(사장님 11-02)
@@ -240,25 +332,113 @@ def member_frame(st: dict) -> dict:
         if F.get("watermark"):
             head = F["watermark"]["text"].split(" ", 1)
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
-        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02)
+        if not F.get("logo") and not F.get("watermark") and not bar_text:      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02) — 머리띠 글자 칸이 있으면 그게 채널명 자리(11-03 김준용 썰템쇼 두 번 찍힘)
             F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
+        wm = brand.get("watermark") if isinstance(brand.get("watermark"), dict) else {}
+        if wm:     # 회원이 정한 워터마크 자리·크기·투명도(#3951 김효준, 범위 = preview_request.watermark_errors) — 틀 워터마크를 덮거나 새로 만든다
+            base = dict(F.get("watermark") or {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name})
+            if "cx" in wm:
+                base.pop("x1", None)      # 오른쪽 맞춤 틀(x1)보다 회원 가운데 자리가 이긴다(render_bench: cx 가 있으면 cx)
+            base.update({k: int(wm[k]) for k in ("cx", "cy", "alpha") if k in wm})
+            F["watermark"] = base
+        name_look([F.get("logo"), F.get("watermark")] + [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"],
+                  brand.get("name_scale"), brand.get("name_color"))
+        if wm.get("px"):
+            F["watermark"]["px"] = int(wm["px"])     # 회원이 정한 크기는 그대로(채널명 배율 name_scale 을 또 곱하지 않는다)
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)
+    PA = (F.get("post") or {}).get("author_line")
+    if PA and isinstance(text.get("post_author"), str):     # 게시글형 작성자 줄 — '' = 그리지 않음, 글 = 그 글로 고정(대본 post.author 보다 먼저, 11-03 강태경 '익명' 빼기)
+        if text["post_author"].strip():
+            F["post"]["author_line"] = {**PA, "text": text["post_author"].strip(), "member": True}
+        else:
+            del F["post"]["author_line"]
+    _member_titles(F.get("title") or [], text)
+    L = brand.get("logo")
+    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
+        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
+    for sg in F.get("segments") or []:         # 구간 틀(훅 카드 등)이 덮는 칸에도 회원이 바꾼 칸만 — 안 바꾼 칸은 구간 판 값(#4901 김효준: 첫 장면만 회원 색·채널명 빠짐)
+        _member_segment(sg.get("frame") or {}, F, brand, text, name, wm)
+    return st
+
+
+# 회원 전체 화면(text.layout='full') 제목 두 줄 — 11-05 박은숙 회원 Claude 손수정(styles._member_fullscreen·member_fullscreen.json)과 같은 값. 회원 제목 칸(_member_titles)이 그 위에 덮는다
+MEMBER_FULL_TITLE = [
+    {"font": "Pretendard-Bold.otf", "px": 104, "color": "#FFFFFF", "hi": "#FFE600", "center": 250, "max_w": 980, "stroke": {"px": 10, "color": "#000000"}},
+    {"font": "Pretendard-Bold.otf", "px": 116, "color": "#FFE600", "hi": "#FFE600", "center": 385, "max_w": 980, "stroke": {"px": 10, "color": "#000000"}},
+]
+MEMBER_FULL_DROP = ("window", "window_radius", "post", "band", "credit", "segments")
+
+
+def _member_layout(F: dict, st: dict, text: dict) -> None:
+    """(판단 주인 — 회원 화면 틀·자막 쌓기 자리, 11-05 박은숙 썰템쇼판 9:16 전체 화면) member_frame 이 부른다.
+    text.layout='full' = 판 틀을 전체 화면(kind full, 창·게시글·띠·출처·구간 틀 없음)으로 바꾸고 제목 두 줄을 영상 위에(MEMBER_FULL_TITLE).
+    text.caption_stack{y,pitch,break} = 판 caption.stack 의 자리·간격·끊기만 덮는다(줄 수 lines 는 판 값). 판에 쌓기가 없으면 member_unused 로 알린다.
+    허용 값 검사 = preview_request.check(break 목록 주인 render_bench.STACK_BREAKS)."""
+    if text.get("layout") == "full":
+        F["kind"] = "full"
+        for k in MEMBER_FULL_DROP:
+            F.pop(k, None)
+        F["full"] = {}
+        F["title"] = [dict(t, stroke=dict(t["stroke"])) for t in MEMBER_FULL_TITLE]
+    cs = text.get("caption_stack")
+    if isinstance(cs, dict) and cs:
+        SK = (st.get("caption") or {}).get("stack")
+        if isinstance(SK, dict):
+            SK.update({k: cs[k] for k in ("y", "pitch", "break") if k in cs})
+        else:
+            st.setdefault("member_unused", []).append("text.caption_stack — 이 프리셋은 자막을 쌓지 않아(판 caption.stack 없음) 영상에 안 닿는 칸")
+
+
+def _member_titles(titles: list, text: dict) -> None:
+    """회원 제목 꾸미기(글꼴·줄 색·크기·세로 위치) — 본 틀과 구간 틀이 같은 규칙. 안 고른 줄·칸은 그대로."""
     colors = text.get("title_colors") or []
-    for i, T in enumerate(F.get("title") or []):
+    for i, T in enumerate(titles):
         if text.get("title_font"):
             T["font"] = member_font_file(text["title_font"])
         if i < len(colors) and colors[i]:      # 안 고른 줄은 프리셋 색
             T["color"] = colors[i]
-        if text.get("title_scale"):
+        if text.get("title_scale") and T.get("px"):
             T["px"] = round(T["px"] * float(text["title_scale"]))
         if text.get("title_dy") and "center" in T:   # 미리보기에서 끌어 옮긴 세로 거리(px, 1080×1920 기준)
             T["center"] += int(text["title_dy"])
-    L = brand.get("logo")
-    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
-        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
-    return st
+
+
+def _member_segment(Fs: dict, F: dict, brand: dict, text: dict, name, wm: dict) -> None:
+    """구간 틀 Fs 가 덮는 칸 중 회원이 바꾼 것만 본 틀과 같은 값으로. 구간 틀이 안 덮는 칸은 합칠 때 본 틀(회원 값)이 그대로 쓰인다."""
+    bg = (brand.get("colors") or {}).get("bg")
+    if bg and "bg" in Fs:
+        Fs["bg"] = list(bg)
+    if "title" in Fs:
+        _member_titles(Fs.get("title") or [], text)
+    if "watermark" in Fs:
+        if wm and F.get("watermark"):              # 회원이 워터마크 자리를 정했다 = 구간에서도 같은 자리
+            Fs["watermark"] = dict(F["watermark"])
+        elif Fs.get("watermark"):
+            if name:
+                head = str(Fs["watermark"].get("text") or "").split(" ", 1)
+                Fs["watermark"] = {**Fs["watermark"], "text": f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name}
+                name_look([Fs["watermark"]], brand.get("name_scale"), brand.get("name_color"))
+            else:
+                Fs["watermark"] = None
+    fb = (Fs.get("post") or {}).get("head_bar")
+    if name and isinstance(fb, dict) and not [ic for ic in fb.get("icons") or [] if ic.get("kind") == "text"]:
+        # 본 틀 머리띠에만 채널명 자리가 있는 판(썰템쇼판) — 훅 카드 머리띠가 비어 그 구간에 채널명이 안 나왔다(11-05 김효준 #7230). 같은 자리·같은 모양으로
+        mine = [dict(ic) for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or [] if ic.get("kind") == "text" and ic.get("text") == name]
+        # 구간 제목 줄이 그 자리를 차지하면 붙이지 않는다 — 썰템쇼판 훅 카드 제목 1줄(141~255)이 채널명 자리(143~236)와 겹쳤다(11-05 김미향 #7844, 68f7e7629 회귀)
+        def _over(ic):
+            a0, a1 = ic["cy"] - ic["px"] / 2, ic["cy"] + ic["px"] / 2
+            return any(t.get("center") is not None and t["center"] - t["px"] / 2 < a1 and a0 < t["center"] + t["px"] / 2 for t in Fs.get("title") or [])
+        mine = [ic for ic in mine if not _over(ic)]
+        if mine:
+            fb["icons"] = list(fb.get("icons") or []) + mine
+    if "logo" in Fs and Fs.get("logo"):
+        if name:
+            Fs["logo"] = {**Fs["logo"], "text": name}
+            name_look([Fs["logo"]], brand.get("name_scale"), brand.get("name_color"))
+        else:
+            Fs["logo"] = None
 
 
 def save_counted(name: str, counted: dict):

@@ -2132,5 +2132,15 @@
    "color": "빨강",
    "jump": 12.5
   }
- ]
+ ],
+ "sound": {
+  "bgm": {
+   "present": true,
+   "on_rate": 0.998,
+   "floor_db": -18.7,
+   "med_db": -10.9,
+   "confidence": "신호",
+   "how": "원본 mp4 20ms 창 RMS — 바닥 p10 > -40.0dB 이고 소리 이어짐 95% 이상(tools/calcopy/bgm_signal.py)"
+  }
+ }
 }

@@ -341,3 +341,15 @@ def test_metrics_records_numbers_only_for_long_steps(tmp_path):
     rows = LIVE.events(st, limit=10)["events"]
     assert len(rows) == 1 and rows[0]["kind"] == "metric" and rows[0]["urgent"] is False
     assert "plan 780초" in rows[0]["text"] and "코어 8" in rows[0]["text"] and "비밀" not in rows[0]["text"]
+
+
+def test_멈춤_원문은_관리자_사건에만(env, tg, monkeypatch):
+    # 11-05: '이 PC 준비가 아직 덜 됐어요' 3명 — 원인 원문을 회원·CS 모두 못 봤다. 상태 기록의 '멈춤 속사정'을 관리자 사건에 붙인다
+    c, key = _flow_setup(env, monkeypatch, [
+        {"status": "stop", "message": "멈춤", "stage": {"no": 1, "total": 13, "text": "준비 확인"}, "why": "이 PC 준비가 아직 덜 됐어요", "fix": "점검 뒤 다시",
+         "state_extra": {"log": ["준비 확인 실패: lease busy_other_device", "멈춤 속사정: lease busy_other_device"]}},
+    ])
+    res = _go(c, key, env).json()
+    ev = live.events(env["store"])["events"]
+    assert ev and "속사정: lease busy_other_device" in ev[-1]["text"]
+    assert "busy_other_device" not in str(res.get("fail") or res.get("why") or "")       # 회원 응답엔 원문이 안 간다

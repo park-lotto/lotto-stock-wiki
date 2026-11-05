@@ -32,7 +32,7 @@ PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> status        # 어디까지 �
 - `sections` 를 적으면 그 구간 ±20초만 받는다(20분 리뷰에서 3분만). 뺀 영상도 `rejected` 로 남긴다(다음 편이 같은 조사를 안 하게).
 
 ## 재료가 모자랄 때
-- 리뷰 영상이 0개면: 공식 몰·쿠팡 상품 사진을 **움직이는 컷**으로(재료.json 컷 `move`: in·out·left·right, 기본 1.2배 — 주인 `tools/calcopy/narr_video.py:still_move`. 정지 사진 금지, 사장님 10-18). 김나영 벳우먼 = 공식 몰 사진 10장 6초 느린 확대 + 원본 착용 장면.
+- 리뷰 영상이 0개면: 공식 몰·쿠팡 상품 사진을 **움직이는 컷**으로(재료.json 컷 `move`: in·out·left·right, 기본 1.2배 — 주인 `tools/calcopy/narr_video.py:still_move`. 정지 사진 금지, 사장님 10-18). **영상 컷**(src 가 mp4)의 move 는 sway·bounce·punch·shake 만(주인 `narr_video.move_vf`) — in·out·left·right 를 영상 컷에 넣으면 계획 관문이 반려한다. 김나영 벳우먼 = 공식 몰 사진 10장 6초 느린 확대 + 원본 착용 장면.
 - 원본 자체의 제품 장면(연예인이 쓰는 장면)도 B 컷 재료다.
 - 쿠팡 상품평 사진은 영상이 없을 때만.
 

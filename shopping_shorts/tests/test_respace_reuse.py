@@ -48,3 +48,17 @@ def test_render_bench_timeline_이_respace_를_부른다():
     src = Path(RB.__file__).read_text(encoding="utf-8")
     body = src[src.index("def timeline("):src.index("def pause_targets(")]
     assert "respace_reuse(cuts" in body
+
+
+def test_재사용만_걸린_컷은_빼지_않는다_3590(monkeypatch, tmp_path):
+    """#3590 김효준: 원본이 짧아 재사용(B13 경고)을 못 피하자 relocate_cuts 가 같은 줄 다른 컷에 시간을 넘기고 제품 컷을 뺐다 — 경고는 컷을 지우지 않는다."""
+    from tools.calcopy.hybrid import runner_ops as RO
+    _setup(monkeypatch, tmp_path, [27.0, 30.0])
+    monkeypatch.setattr(RO, "jump_free_spans", lambda src, spans: spans)
+    monkeypatch.setattr(RO, "_cut_jumps", lambda *a, **k: [])
+    monkeypatch.setattr(RO, "_jumpy", lambda *a, **k: False)
+    monkeypatch.setattr(RB, "short_pieces", lambda st, a, b: [])
+    cuts = [_cut("orig", 31.0, 0.0, 3.0, "O1"), _cut("tts", 28.0, 3.0, 4.5, "N1"), _cut("tts", 50.0, 4.5, 6.0, "N1")]
+    cuts[1]["reuse_unfixed"] = True
+    MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None)
+    assert any(c["ss"] == 28.0 and c["t0"] == 3.0 for c in cuts), cuts       # 제품 컷이 그대로 남는다

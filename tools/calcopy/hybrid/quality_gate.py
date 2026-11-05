@@ -816,7 +816,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
 
     # ── 규격
     if want("규격"):
-        row("규격", "길이", lambda: (LD["min"] - 0.5 <= dur() <= LD["max"] + 0.5, f"{dur():.2f}초 (판 {LD['min']}~{LD['max']})"), "판 length · ffprobe")
+        row("규격", "길이", lambda: (LD["min"] - 0.5 <= dur() <= LD["max"] + 0.5, f"{dur():.2f}초 (판 {LD['min']}~{LD['max']})"), "판 length · ffprobe",
+            ref=bool(ST.member_tempo(st)))      # 회원이 정한 말 빠르기 = 길이는 참고(막지 않음, #1893)
         row("규격", "화면=시간표", lambda: (abs(dur() - T["end"]) <= 1 / FPS + 0.01, f"{dur():.3f} vs {T['end']}"), "timeline.end")
         row("규격", "음량", lambda: (abs(loud()[0] - L["lufs"]) <= 0.5, f"{loud()[0]} LUFS (목표 {L['lufs']})"), "ebur128")
         row("규격", "최고점", lambda: (loud()[1] <= L["tp"] + 0.5, f"{loud()[1]} dBFS (≤ {L['tp']}+0.5)"), "ebur128 peak")

@@ -70,7 +70,16 @@
   "why": "전체화면 창 5/6편(스타일분석 §2 행 밝기) · 상시 제목 0 · 로고·출처 0/6 · 워터마크 = 벤치 반투명 흰 손글씨 '@Maison_HomeDino/@Home_Design_Note' x 373~706·y 1423~1475(25/50편 — manifest watermark) → 우리 '잇썸홈'(사장님 10-17) 같은 자리·HiMelody 46px(frame.json brand 층)·가운데 x540(x1 = 540+글 폭/2)·cy 1455·불투명 0.8(벤치 눈 0.8 — 줄판독 layout.watermark.alpha) · bg 검정 = 전체화면이라 안 보임(frame.json bg 는 편마다 값 — 쓰지 않음)",
   "_pending": {
    "caption_enter": "frame.json caption.enter none — 판 placement.rules.enter cut 이 같은 뜻(옮김)"
+  },
+  "fit": {
+   "landscape": "pic",
+   "aspect": 1.0,
+   "why": "사장님 11-03 'EINo 편처럼 · 잘랐을 때 자연스러우면 된다 · 너무 확대되고 가운데로 안 되어 있다' — 가로 원본(1920×1080)을 세로 창 가득 채우면 가운데 1/3(608×1080)을 1.78배 키워 확대가 크고 제품이 벗어난다. 벤치 EINo(260만)는 검정 바탕 가운데 창에 비율대로(창 높이 507~1079). 1.0 = 원본 높이 전체 정사각(확대 없음, 창 폭 1080 = 원본 높이) · 가운데 = 회원 crop 가운데(제품). 주인 rules.fit_window"
   }
+ },
+ "orig_text": {
+  "mode": "vmake",
+  "why": "사장님 11-03 \"원본 자막은 v메이크로 지운다 / 자르기 가리기 없다 / 고급형으로 부분만 한장으로 이어서\" — 박힌 글자는 VMake 고급형(vmake_clean.TIER=pro)으로 글자 컷 구간만 이어 붙여 한 번에(send_joined) 지운다. 잘라 피하기·흐림 가리기 쓰지 않는다"
  },
  "caption": {
   "pack_default": {

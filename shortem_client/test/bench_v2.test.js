@@ -153,6 +153,11 @@ test('시험 편을 만드는 동안(회원 과제 대기)은 회원 Claude 답 
   assert.equal(s2 && s2.sid, S5);
   assert.match(s2.text, /시험 편 제작/);
   assert.doesNotMatch(s2.text, /회원 Claude 답을/);
+  // 11-05 김하영 #8553·8563·8568: 같은 사건을 1분마다 다시 알렸다 — 한 번 알린 표시는 디스크에도 남아 다시 읽어도(다른 창 프로그램도) 또 알리지 않는다
+  const d = JSON.parse(fs.readFileSync(path.join(flowRoot(), S5, 'flow.json'), 'utf8'));
+  assert.ok(d.stallSaid, '알린 표시가 디스크에 있다');
+  const s3 = flowStall(at - 10 * 60000 + STALL_MS() + 120000);
+  assert.equal(s3 && s3.sid === S5 ? s3.text : null, null, '1분 뒤 다시 알리지 않는다');
   cancelFlow(S5);
 });
 

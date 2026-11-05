@@ -97,8 +97,81 @@ def _proc_slots() -> list:
         time.sleep(1.0)
 
 
+SPEECH_ALIGN_MIN = 0.6     # 받아쓰기로 시각을 찾은 글자 비율이 이보다 낮으면 만든 글자 시각을 믿지 않는다(옛 길 — 소리 틈 어림)
+
+
+def speech_align(text: str, mp3, log=print) -> dict | None:
+    """(글자 시각이 없는 목소리 — 피쉬·일레븐 검색 성우 등) 받아쓰기 낱말 시각(narr_verify.heard_words)으로 글자 시각을 만든다 — 꼴은 합성 align 그대로
+    (characters = 보낸 글 한 글자씩 · 시작·끝 초). 받아쓰기와 맞은 글자는 그 시각, 문장부호·띄어쓰기·못 맞춘 글자는 앞뒤 맞은 글자 사이를 고르게 나눈다.
+    자막 덩어리·줄 경계·이름 끊김이 모두 이 한 시계를 쓴다(#1625 김미향 피쉬 — 줄 경계만 받아쓰기, 자막은 글자 수 어림이라 앞 줄 끝 덩어리가 늦게 넘어감)."""
+    from tools.calcopy.engine import narr_verify as NV
+    try:
+        hyp, ts = NV.words_chars(NV.heard_words(mp3))
+    except Exception as e:  # noqa: BLE001 — 받아쓰기를 못 하면 옛 길(소리 틈 어림)
+        log(f"[tts] 받아쓰기로 글자 시각 못 만듦: {type(e).__name__}: {str(e)[:120]}")
+        return None
+    ref, owner = "", []
+    for m in re.finditer(r"\d[\d,\.]*%?|.", text, re.S):       # 숫자는 묶어 읽기(norm 이 '25'→'이십오'), 나머지는 한 글자씩
+        n = NV.norm(m.group())
+        ref += n
+        owner += [m.start()] * len(n)
+    cmap = NV.char_map(ref, hyp)
+    s, e = [None] * len(text), [None] * len(text)
+    for k, h in enumerate(cmap):
+        if h is None:
+            continue
+        i = owner[k]
+        s[i] = ts[h][0] if s[i] is None else min(s[i], ts[h][0])
+        e[i] = ts[h][1] if e[i] is None else max(e[i], ts[h][1])
+    from tools.calcopy.hybrid.common import SPOKEN
+    want = [i for i, c in enumerate(text) if re.match(SPOKEN, c)]
+    got = sum(1 for i in want if s[i] is not None)
+    if not want or got < len(want) * SPEECH_ALIGN_MIN:
+        log(f"[tts] 받아쓰기로 찾은 글자 {got}/{len(want)} — 글자 시각을 만들지 않는다")
+        return None
+    known = [i for i in range(len(text)) if s[i] is not None]
+    i = 0
+    while i < len(text):
+        if s[i] is not None:
+            i += 1
+            continue
+        j = i
+        while j < len(text) and s[j] is None:
+            j += 1
+        a = e[i - 1] if i > 0 else s[known[0]]
+        b = s[j] if j < len(text) else e[known[-1]]
+        step = max(0.0, b - a) / (j - i)
+        for k in range(i, j):
+            s[k], e[k] = a + step * (k - i), a + step * (k - i + 1)
+        i = j
+    log(f"[tts] 글자 시각 없음 → 받아쓰기로 만듦({got}/{len(want)}자)")
+    return {"characters": list(text), "character_start_times_seconds": [round(x, 3) for x in s],
+            "character_end_times_seconds": [round(x, 3) for x in e], "from": "speech"}
+
+
 def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print,
                  provider: str | None = None, emotion: str | None = None) -> dict | None:
+    """합성(캐시) → align|None. 목소리가 글자 시각을 안 주면 받아쓰기로 만들어(speech_align) 사이드카에 같이 둔다 — 시계 한 벌."""
+    align = _synth_cached(text, voice_id, tempo, out_mp3, model, log, provider, emotion)
+    if align is not None:
+        return align
+    out = Path(out_mp3)
+    sc = sidecar_of(out)
+    try:
+        meta = json.loads(sc.read_text(encoding="utf-8")) if sc.exists() else {}
+    except ValueError:
+        meta = {}
+    if meta.get("align_from") == "speech_failed" or not out.exists():
+        return None
+    align = speech_align(text, out, log)
+    if sc.exists():
+        meta.update({"align": align, "align_from": "speech" if align else "speech_failed"})
+        sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return align
+
+
+def _synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print,
+                  provider: str | None = None, emotion: str | None = None) -> dict | None:
     """합성 1회(캐시) → align|None. 캐시 열쇠가 다르면(글·목소리·배속 바뀜) 다시 합성하고 그 사실을 로그에 적는다.
     사이드카 없는 옛 mp3 는 '그 글로 만든 것'으로 받아들여 사이드카만 적는다(유료 재합성 금지 — 10-18 진행 중인 편들).
     provider·emotion(회원 팩 tts, 관제 266): 옛 길(old_path)이면 옛 그대로, 아니면 열쇠에 넣고 합성은 아래 _synth_member."""
@@ -172,6 +245,21 @@ def fixed_tempo(voice_id: str) -> float | None:
     return float(p["default_speed"])
 
 
+def synth_takes_tempo(voice_id: str, provider: str | None = None) -> bool:
+    """합성이 배속(tempo)을 소리에 이미 넣나 — 타입캐스트만(audio_tempo · typecast_tts speed). 일레븐·피쉬는 1.0 으로 받고 렌더러 atempo 가 맞춘다(voice_synth._make_synth)."""
+    prov, _ = voice_of(voice_id, provider)
+    return not is_eleven(voice_id) and prov in (None, "typecast")
+
+
+# (판단 주인 — 일레븐 오류 본문 status → 회원이 할 일) 401 이라도 키가 틀린 게 아닌 경우가 있다(11-04 김미화 #4038 payment_issue · 11-03 박준영 #3698 missing_permissions).
+#   서버 숏템메이커는 app._TTS_VENDOR_RULES 가 같은 갈래를 맡는다(회원 PC 엔진은 app.py 를 부르지 않는다). 모르는 status 는 상태코드 문구 그대로.
+ELEVEN_STATUS_WHY = {
+    "payment_issue": "일레븐랩스 계정의 구독 결제가 실패(또는 미완료)해 사용이 멈췄습니다 — elevenlabs.io 에서 최근 청구서 결제를 마치거나, 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요",
+    "missing_permissions": "일레븐랩스 키는 맞지만 필요한 권한(음성 만들기 text_to_speech 등)이 꺼진 키입니다 — elevenlabs.io ▸ API Keys 에서 권한을 켠 새 키를 만들어 설정 화면에 넣으세요",
+    "detected_unusual_activity": "일레븐랩스가 무료 요금제의 비정상 사용으로 이 키를 막았습니다 — 유료 요금제로 바꾸거나 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요",
+}
+
+
 def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | None:
     """회원 PC(사장님 10-21 '미나 = 회원 본인 일레븐랩스 키'): 회원 키로 일레븐랩스를 직접 — 요청 꼴은 서버 서비스와 같다
     (shopping_shorts/tts.py synthesize_tts: POST /v1/text-to-speech/<voice>/with-timestamps · xi-api-key · {text, model_id, voice_settings}, v3 는 use_speaker_boost 뺌).
@@ -197,6 +285,17 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
             data = json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         why = {401: "일레븐랩스 키가 맞지 않습니다", 402: "일레븐랩스 크레딧이 부족합니다", 429: "일레븐랩스 사용량 한도에 걸렸습니다"}.get(e.code, f"일레븐랩스 오류 {e.code}")
+        try:      # 본문의 status·message 를 붙인다(11-03 '키 ID 를 키로 씀'이 '오류 400' 한 줄로만 보였다) — 키 값은 본문에 없다
+            det = (json.loads(e.read().decode('utf-8', 'replace')) or {}).get('detail') or {}
+            if isinstance(det, dict) and (det.get('status') or det.get('message')):
+                if e.code == 402 and "library voices" in str(det.get('message') or ""):      # 크레딧이 아니라 요금제 — 무료는 공유 목록 목소리를 API 로 못 쓴다(11-03 윤상길)
+                    why = ("일레븐랩스 무료 요금제는 공유 목록 목소리(미나 등)를 API 로 쓸 수 없습니다 — 설정 화면 소리 단계의 '내가 만든 목소리'"
+                           "(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 목소리를 고르세요")
+                else:
+                    why = ELEVEN_STATUS_WHY.get(str(det.get('status') or ''), why)     # 키는 맞는데 계정·권한 문제(401) — 할 일을 먼저 말한다
+                    why += f" — {det.get('status') or ''} {str(det.get('message') or '')[:160]}".rstrip()
+        except Exception:  # noqa: BLE001 — 본문이 없으면 코드만
+            pass
         raise RuntimeError(why) from None
     if not data.get("audio_base64"):
         raise RuntimeError("일레븐랩스 응답에 소리가 없습니다")
@@ -272,9 +371,10 @@ def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: 
 
 def punct_marks(text: str) -> list[tuple[str, int]]:
     """글의 문장부호 순서대로 (종류, 앞까지 읽는 글자 수). ?·! 은 마침표."""
+    from tools.calcopy.hybrid.common import SPOKEN
     out = []
     for m in PUNCT_RE.finditer(text):
-        out.append((NORM[m.group()], len(re.findall(r"[가-힣A-Za-z0-9]", text[:m.start()]))))
+        out.append((NORM[m.group()], len(re.findall(SPOKEN, text[:m.start()]))))
     return out
 
 

@@ -15,6 +15,7 @@ from tools.calcopy.engine import encoder as ENC  # noqa: E402
 ROOT = Path(__file__).resolve().parents[3]
 FONT = ROOT / "shopping_shorts/static/fonts/Pretendard-Bold.otf"
 TEXT = "광고"
+TEXT_BY_LANG = {"ja": "PR"}     # 일본 시청자용 광고 표시(일본 쇼츠 관례 PR) — 언어 = common.script_lang(11-03 윤상길 일본어판)
 FONT_FRAC = 0.028      # 글자 크기 = 화면 너비 × 이 값
 MARGIN_FRAC = 0.022    # 오른쪽·위 가장자리
 MARK = "ad_mark:v1"    # 완성본 표식(comment) — 두 번 덮지 않는다
@@ -32,15 +33,17 @@ def _probe(p: Path) -> tuple[int, int, str]:
 def badge(width: int, dst: Path) -> tuple[Path, int]:
     """'광고' 상자 그림(반투명 검정 둥근 상자 + 흰 글자) → (파일, 가장자리 px)."""
     from PIL import Image, ImageDraw, ImageFont
+    from tools.calcopy.hybrid.common import script_lang
+    text = TEXT_BY_LANG.get(script_lang(), TEXT)
     px = max(18, round(width * FONT_FRAC))
     f = ImageFont.truetype(str(FONT), px)
-    l, t, r, b = f.getbbox(TEXT)
+    l, t, r, b = f.getbbox(text)
     pad_x, pad_y = round(px * 0.45), round(px * 0.28)
     w, h = (r - l) + pad_x * 2, (b - t) + pad_y * 2
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rounded_rectangle((0, 0, w - 1, h - 1), radius=round(h * 0.25), fill=(0, 0, 0, 150))
-    d.text((pad_x - l, pad_y - t), TEXT, font=f, fill=(255, 255, 255, 235))
+    d.text((pad_x - l, pad_y - t), text, font=f, fill=(255, 255, 255, 235))
     dst.parent.mkdir(parents=True, exist_ok=True)
     im.save(dst)
     return dst, max(8, round(width * MARGIN_FRAC))

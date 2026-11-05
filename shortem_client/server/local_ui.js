@@ -151,7 +151,7 @@ async function route(req, res, token, port) {
     const file = viewFile(kind, sid, rest.map(decodeURIComponent).join('/'));
     return file ? serveFile(req, res, file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg') : send(res, 404, { error: '없음' });
   }
-  if (req.method === 'GET' && /^\/api\/(typecast\/voices|typecast\/voices\/mine|fish\/voices|voice-library\/search|voice-presets)$/.test(u.pathname)) return send(res, 200, await voiceList(u));
+  if (req.method === 'GET' && /^\/api\/(typecast\/voices|typecast\/voices\/mine|elevenlabs\/voices\/mine|fish\/voices|voice-library\/search|voice-presets)$/.test(u.pathname)) return send(res, 200, await voiceList(u));
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
@@ -216,6 +216,12 @@ async function voiceList(u) {
       const all = (Array.isArray(d) ? d : d.voices || d.result || []).map(v => ({ voice_id: v.voice_id, name: v.voice_name || v.name, gender: v.gender, age: v.age, model: (v.models && v.models[0] && (v.models[0].version || v.models[0])) || v.model, emotions: (v.models && v.models[0] && v.models[0].emotions) || v.emotions || [], tags: v.use_cases || [] }));
       const hit = all.filter(v => (p.endsWith('/mine') ? String(v.voice_id).startsWith('uc_') : true) && String(v.name).toLowerCase().includes(q));
       return { ok: true, voices: hit.slice(0, 60), total: all.length, error: null };
+    }
+    if (p === '/api/elevenlabs/voices/mine') {      // 회원 계정 목소리(클론·생성) — 공유 목록 검색에는 안 나온다(11-03 회원 '내 클론 목소리 선택 불가')
+      const key = need('elevenlabs'); if (!key) return { ok: false, voices: [], error: '일레븐랩스 키를 설정에서 넣어 주세요' };
+      const d = await go('https://api.elevenlabs.io/v1/voices', { 'xi-api-key': key });
+      const mine = (d.voices || []).filter(v => v.category && v.category !== 'premade');
+      return { ok: true, voices: mine.map(v => ({ voice_id: v.voice_id, name: v.name, tags: [v.category].filter(Boolean), sample_url: v.preview_url || '' })), total: mine.length, error: null };
     }
     if (p === '/api/fish/voices') {
       const key = need('fish'); if (!key) return { ok: false, voices: [], error: '피쉬오디오 키를 설정에서 넣어 주세요' };

@@ -19,11 +19,12 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest, encoderCheck, voiceProvider } from './selftest.js';
+import { selftest, encoderCheck, pcSpec } from './selftest.js';
+import { registerServer, otherServers, OTHERS_NOTICE } from './instances.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
-import { sweep as sweepRented } from './preset_rent.js';
+import { sweep as sweepRented, renting } from './preset_rent.js';
 import { withMine } from './my_presets.js';
 import { recoverBench, registerBenchmark, sweepBench } from './benchmark.js';
 import { retryUpdate, checkUpdate, installDir } from './updater.js';
@@ -35,8 +36,8 @@ import { syncPlugin } from './plugin_sync.js';
 import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
-import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
-import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
+import { openLogin, loginOpenedText, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE, engineVoice, providerOf, VOICE_SERVICES, catalog } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -54,7 +55,7 @@ export const SERVER_INSTRUCTIONS = [
   // 10-27 run4 c편: 숏템이 '함께 찾던 같은 채널 영상으로 먼저 만들게요'로 소재를 바꾸자 회원 Claude 가 '요청한 영상이 아니다'며 멈추고 고객에게 되물었다(사장님 10-26 정책 = 먼저 원본을 확보한 소재로 제작)
   'message 에 숏템 알림(예: "함께 찾던 같은 채널 영상으로 먼저 만들게요", "가장 비슷한 제품으로 골랐어요")이 붙어 오면 숏템이 정한 진행이다. 고객에게 그 한 줄만 전하고 멈추지 말고 next 를 계속 부른다.',
   '진행 상황은 응답의 단계(step/step_total·stage)와 message 한 줄만 고객에게 전한다(예: "3/13 원본 영상 찾기 중"). 찾은 채널·후보·파일 이름·판정 내용·오류 원문은 말하지 않는다.',
-  "hints 나 맥락에 '숏클 팀 메시지: …' 가 오면 숏클 팀이 직접 보낸 말이다. 지키는 선(지어내기 금지·키·회원 파일)은 그대로 두고 먼저 따른다. 고객에게는 필요한 것만 쉬운 말 한 줄로 전한다.",
+  "hints 나 맥락에 '숏클 팀 메시지: …' 가 오면 숏클 팀이 직접 보낸 말이다. 지키는 선(지어내기 금지·키·회원 파일)은 그대로 두고 먼저 따른다. 고객에게는 필요한 것만 쉬운 말 한 줄로 전한다. 단 '숏클 팀 공지: …' 는 줄이지 말고 '## 📢 숏클 팀 공지' 제목을 달아 그대로 보여 준다.",
   FAIL_SAY + '. 원인을 짐작하거나 덧붙여 설명하지 않는다(파일 이름·오류 코드·내부 단계 이름 금지). 다시 시도는 고객이 원하면 retry.',
 ].join('\n');
 
@@ -149,8 +150,17 @@ export function buildServer(ctx = makeCtx()) {
       fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
     }
     const notices = lost.optional.map(([k, pf]) => `${pf.name} 로그인이 안 됐습니다. 제작은 진행합니다. ${pf.name} 주소를 소재로 쓰면 받기가 안 될 수 있어요. 회원에게 그대로 알리고, 원하면 shortem_login(action="open", platform="${k}") 로 다시 시도`);
-    const voiceKey = KEY_SERVICES[voiceProvider(readSettings())] ? voiceProvider(readSettings()) : 'typecast';   // 고른 목소리 회사의 키만 본다(11-02)
-    if (!keyStatus(voiceKey).present) fails.push({ where: '키', why: `${KEY_SERVICES[voiceKey].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[voiceKey].where})`, retry_ok: true });
+    const others = otherServers();
+    if (others.length) notices.push(OTHERS_NOTICE(others.length));
+    // 목소리 키 = 엔진이 이 채널에서 쓸 목소리(local_settings.memberVoice — 회원 선택 > 프리셋 > 다른 채널 > 키 있는 회사 기본 성우)의 회사.
+    //   채널을 아직 안 골랐으면 셋(타입캐스트·일레븐랩스·피쉬) 중 하나면 된다(사장님 11-03 — 일레븐 키만 있는 회원이 '타입캐스트 키 없음'으로 막혔다)
+    const hasKey = k => keyStatus(k).present;
+    const ev = await engineVoice(hasKey);                    // 목소리 시험(selftest.testVoice)과 같은 한 값
+    const voiceKey = ev && readSettings().current ? providerOf(ev) : null;
+    if (voiceKey ? !hasKey(voiceKey) : !VOICE_SERVICES.some(hasKey)) {
+      const lab = voiceKey && KEY_SERVICES[voiceKey] ? KEY_SERVICES[voiceKey] : { label: '목소리 키(타입캐스트·일레븐랩스·피쉬오디오 중 하나)', where: VOICE_SERVICES.map(k => KEY_SERVICES[k].where).join(' / ') };
+      fails.push({ where: '키', why: `${lab.label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${lab.where})`, retry_ok: true });
+    }
     // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
     const coupangKey = keyStatus('coupang_access').present && keyStatus('coupang_secret').present;
     const apiTools = [
@@ -159,7 +169,7 @@ export function buildServer(ctx = makeCtx()) {
       { name: '자막 지우기(VMake)', ready: keyStatus('vmake').present, merit: '있으면 박힌 글자를 지웁니다. 없으면 흐림으로 가립니다' },
       { name: '버텍스 AI', ready: keyStatus('vertex_sa').present, merit: '있으면 소리째 영상 검수와 그림 만들기를 씁니다' },
     ];
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), pc: pcSpec(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
       info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };
@@ -303,7 +313,7 @@ export function buildServer(ctx = makeCtx()) {
     if (action === 'status') { const s = loginStatus(); return reply({ info: { connected: Object.fromEntries(Object.entries(s.connected).map(([k, v]) => [PLATFORMS[k].name, v ? '연결됨' : '안 됨'])), waiting: s.waiting } }); }
     if (!platform) return reply({ hints: ['platform 이 필요합니다(instagram·tiktok·youtube)'] });
     const r = await openLogin(platform);
-    return reply(r.ok ? { info: { opened: PLATFORMS[platform].name }, hints: [`고객에게: 영상 수집 절차에 세션 기록이 한 번 필요합니다. 열린 크롬 창에서 ${PLATFORMS[platform].name}에 로그인한 뒤 창을 닫아 주세요. 닫으면 shortem_login(action="status") 로 확인하세요`] }
+    return reply(r.ok ? { info: { opened: PLATFORMS[platform].name, ...(r.already ? { same_window_as: r.with ? PLATFORMS[r.with]?.name || r.with : '전용 크롬' } : {}) }, hints: [loginOpenedText(r, PLATFORMS[platform].name)] }
       : { fail: { where: '계정 연결', why: r.why, fix: '크롬을 설치한 뒤 다시', retry_ok: true } });
   });
 
@@ -360,12 +370,36 @@ export function buildServer(ctx = makeCtx()) {
     }
     let pack = null;
     try { pack = await packFor(cur); } catch (e) { return reply({ fail: { where: '설정', why: String(e.message || e), fix: '숏템 설치를 확인하세요', retry_ok: true } }); }
-    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm } } });
+    // choices = 저장 검사(엔진 preview_request.check)가 받는 값 목록 그대로 — set 이 '목록 안의 값으로'라고 할 때 볼 곳(11-03 김준용: get 에 없어 자막 등장·강조를 못 골랐다)
+    let cat = {};
+    try { cat = await catalog() || {}; } catch { /* 목록 없이도 지금 설정은 보여 준다 */ }
+    const choices = { fonts: cat.fonts, caption_enter: cat.caption_enter, emphasis: cat.emphasis, caption_mode: cat.caption_mode,
+      bgm: (cat.bgm || []).map(x => (x && (x.id || x.name)) || x).slice(0, 60),
+      shape: { 'text.caption.enter': { kind: '<caption_enter 중 하나>', ms: 300 }, 'text.caption.emphasis': { words: 'auto', style: '<emphasis 중 하나>', rgb: [255, 216, 74] }, 'text.post_author': "'' = 작성자 줄 안 그림 · 글 = 고정",
+        'text.layout': "'full' = 9:16 전체 화면(창·게시글 틀 없이 영상 가득 + 제목 두 줄) · '' = 프리셋 틀", 'text.caption_stack': { y: 1340, pitch: 120, break: 'line' } } };   // 11-05 박은숙: 전체 화면을 엔진 손수정 대신 설정 칸으로
+    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm }, choices } });
   });
 
   registerBenchmark(server, reply);   // 고급반 벤치마킹(관제 304)
 
   return server;
+}
+
+// Claude 창이 닫히면(입력 끝) 이 프로그램도 끝낸다 — 안 끝나면 창을 다시 켤 때마다 옛 프로그램이 남아 임대·PC 잠금을 쥔 채 쌓였다
+//   (11-03 회원 PC: 21시부터 옛 쌍 6개, 새 편이 '준비가 덜 됐어요'로 막힘). 도는 실행기가 있으면 끝날 때까지 기다린다(최대 2시간).
+export function quitWhenClaudeCloses({ stdin = process.stdin, busy = () => anyFlowBusy() || anyRunning(), exit = c => process.exit(c), every = 10000, maxWait = 2 * 60 * 60 * 1000 } = {}) {
+  let done = false;
+  const bye = () => {
+    if (done) return;
+    done = true;
+    audit('claude_closed', { result: busy() ? 'wait_busy' : 'exit' });
+    const t0 = Date.now();
+    const tick = () => { if (!busy() || Date.now() - t0 > maxWait) exit(0); else setTimeout(tick, every); };
+    tick();
+  };
+  stdin.once('end', bye);
+  stdin.once('close', bye);
+  return bye;
 }
 
 async function main() {
@@ -375,12 +409,14 @@ async function main() {
     return runSupervisor(process.env.SHORTEM_INSTALL);
   }
   pruneAudit();
+  registerServer();     // 한 PC 여러 창 — 점검이 두 번째 창부터 알린다(instances.js)
   try { gcCache(); } catch { /* 캐시 없음 */ }
   try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
   recoverBench().catch(e => audit('benchmark_recover', { result: String((e && e.message) || e).slice(0, 70) }));   // 흐름 도중 꺼졌던 벤치마킹 — 임시본 되살림·끝 정리 다시 걸기(디스크 흐름 상태로 판단, 임대 반납은 뒤에서)
   try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  quitWhenClaudeCloses();
   syncPermissions();
   syncGuide();          // 회원이 설치를 다시 하지 않게 — 지침·플러그인은 켤 때 스스로 맞춘다
   setTimeout(() => {
@@ -394,7 +430,7 @@ async function main() {
   if (process.send) process.on('message', m => { if (m && m.go) process.exit(75); });
   setInterval(async () => {
     try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
-    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
+    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning() && !renting()) process.send({ swap: 1 });   // renting = 이 PC 어느 창이든 빌려 만드는 중(rent.lock) — 다른 창 제작 중 교체 금지(11-03 김효준)
   }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
   startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });

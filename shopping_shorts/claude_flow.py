@@ -27,6 +27,9 @@ from shopping_shorts import claude_portal as CP
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
     phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
+# 직전 응답(편마다 하나) — 회원 PC 가 응답을 못 받고 같은 요청을 다시 보내면(네트워크·502 재시도) 그 응답을 그대로 돌려준다.
+#   없으면 서버는 seq 를 올린 뒤라 'stale' 로 거절하고, 회원 PC 는 새 payload 를 영영 못 받아 편이 죽었다(11-03 김유선 retry 마다 stale)
+_SCHEMA_LAST = """CREATE TABLE IF NOT EXISTS claude_flow_last (sid TEXT PRIMARY KEY, seq INTEGER NOT NULL, req TEXT NOT NULL, res TEXT NOT NULL)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -48,6 +51,7 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        c.execute(_SCHEMA_LAST)
         # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
         if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
             c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
@@ -70,6 +74,14 @@ def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
             out[side + "_n"] += 1
             out[side + "_stop"] += r["status"] == "stop"
     return out
+
+
+def _req_key(kind: str, body: dict) -> str:
+    """같은 요청인가 — 단계 종류·payload·measure·replies·revise 의 해시."""
+    import hashlib
+    j = json.dumps({"k": kind, "p": body.get("payload"), "m": body.get("measure"), "r": body.get("replies"), "v": body.get("revise")},
+                   ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(j.encode("utf-8")).hexdigest()
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -154,6 +166,29 @@ def knowhow(ctx: dict, body: dict, store=None) -> dict:
     return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
 
 
+def sign_memes(res: dict, cid, sid, store) -> None:
+    """지시서 do 의 memes{stems} → 받을 주소·지문(claude_assets 'meme:<번호>', 짝 = hybrid/meme_catalog.json). 회원 PC 실행기 c_memes 가 받는다.
+    목록에 없는 이름·서버에 없는 자산은 뺀다(실행기는 받은 것만 시트에 올린다). 주소 서명 주인 = claude_portal.asset_url."""
+    dos = [d for d in (res.get("do") or []) if isinstance(d, dict) and d.get("cmd") == "memes"]
+    if not dos:
+        return
+    try:
+        cat = {m["stem"]: m for m in json.loads((engine_root() / "tools/calcopy/hybrid/meme_catalog.json").read_text(encoding="utf-8"))["memes"]}
+    except (OSError, ValueError, KeyError):      # 목록이 없는 판 — 짤만 빠지고 단계는 간다(실행기는 받은 짤만 시트에 올린다)
+        CP.log.warning("claude_flow: meme_catalog.json 없음 — 짤 후보 주소를 못 붙였다")
+        cat = {}
+    with CP._tx(store) as c:
+        for d in dos:
+            items = []
+            for stem in list(d.pop("stems", None) or [])[:20]:
+                m = cat.get(str(stem))
+                a = CP._row(c, "SELECT * FROM claude_assets WHERE id=?", (m["asset"],)) if m else None
+                if a:
+                    url, _ = CP.asset_url(a, cid, sid)
+                    items.append({"stem": m["stem"], "url": url, "sha256": a["sha256"], "tone": m["tone"], "title": m["title"]})
+            d["items"] = items
+
+
 ALARM_RULE = "jev_down"      # 지시서가 state["alarm"]["kind"] 로 남기는 이름 = 경보 규칙 이름(제목은 claude_portal.RULE_TITLE)
 
 
@@ -224,20 +259,26 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, n=300, offset=offset, used=used, seed=cid))   # 창고 전체를 고객이 고른다(사장님 10-31)
             return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
         auto = None
-        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
+        topic = "" if url else str((body.get("source") or {}).get("topic") or "").strip()[:300]
+        if topic and not (hasattr(flow, "takes_topic") and flow.takes_topic(line["version"])):
+            # 주제 시작을 못 하는 형식 — 회원 앱이 이 거절('단계 진행')을 보고 옛 길로 간다(make_flow.js)
+            raise CP.PortalError("bad_request", "이 프리셋은 주제만으로 단계 진행을 시작하지 않습니다")
+        if not topic and not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
             auto = flow.pick_source(line["version"], made, **_pool_kw(flow.pick_source, used=used, seed=cid))
             if not auto:
                 raise CP.PortalError("bad_request", "이 프리셋의 소재 창고(벤치 채널)에 아직 안 만든 영상이 없어요 — 영상 주소를 주세요")
             url = auto["url"]
-        why = flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
-            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요")   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
+        why = "" if topic else (flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
+            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요"))   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
         if why:
             raise CP.PortalError("bad_request", why)
         sid = uuid.uuid4().hex[:12]
         # 고객이 정한 쿠팡 제품(이름·주소) — 원본에 제품이 말로만 나올 때 쓴다(사장님 10-23)
         product = str((body.get("source") or {}).get("product") or "")[:200]
         # 제품을 정했을 때만 넘긴다 — 엔진이 이 인자를 모르는 옛판이어도 정하지 않은 편은 그대로 돈다
-        st, seq = (flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
+        # 주제 시작(#3207) = 소재 영상 없이 회원이 준 주제·제품으로(PC제작형: 소재 판독 → 근거 조사부터)
+        st, seq = (flow.start("", line["version"], sid, product, topic=topic) if topic else
+                   flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
         st["made_refs"] = made[:200]          # 둘째 소재(pick_alt_source)도 이 회원이 만든 것을 뺀다
         st["pool_used"], st["pool_seed"] = dict(sorted(used.items(), key=lambda x: -x[1])[:200]), cid   # 다음 소재·둘째 소재도 같은 순서
         if auto:
@@ -254,6 +295,10 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if not row:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
+            with CP._tx(store) as c:
+                last = CP._row(c, "SELECT * FROM claude_flow_last WHERE sid=?", (sid,))
+            if last and int(last["seq"]) == seq and last["req"] == _req_key(kind, body):
+                return json.loads(zlib.decompress(base64.b64decode(last["res"])).decode("utf-8"))      # 같은 요청 다시 = 같은 응답
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
     user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
     try:
@@ -264,6 +309,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         LIVE.flow_crash(store, cid, sid, e)
         raise
     st2 = res.pop("state")
+    sign_memes(res, cid, sid, store)      # 짤 후보 받을 주소(PC 제작 라인 짤 단계)
     _raise_flow_alarm(store, cid, sid, st2)
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
@@ -273,4 +319,8 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
+    if kind not in ("start", "sources"):
+        with CP._tx(store, write=True) as c:
+            c.execute("INSERT OR REPLACE INTO claude_flow_last(sid, seq, req, res) VALUES(?,?,?,?)",
+                      (sid, seq, _req_key(kind, body), base64.b64encode(zlib.compress(json.dumps(res, ensure_ascii=False).encode("utf-8"), 6)).decode()))
     return res

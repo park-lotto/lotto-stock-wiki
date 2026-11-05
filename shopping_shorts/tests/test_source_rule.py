@@ -133,7 +133,8 @@ def test_origin_from_source_label_first():
     r = flow.ph_probe_got(st, {"probe": {"matched": {}, "sheets": sheets, "hits": {"v20": [{"term": "서촌", "origin_t": 640}]}}}, {}, {})
     assert r["review"][0]["id"] == "origin_sb" and list(st["sb"]) == ["v20", "v21"]          # 장면 낱말이 걸린 후보가 앞
     r = flow.ph_sb_pick(st, {}, {"origin_sb": {"origin_id": "v20", "origin_t": [302, 330]}}, {})
-    assert r["do"][0] == {"id": "origin", "cmd": "origin_get", "vid": "v20", "a": 0.0, "b": 725.0, "ts": [], "full": True}
+    # 725초 원본 > 통째 상한 600(사장님 11-02 '긴 원본 통째 금지', yt_fetch.FULL_MAX_SEC 한 곳 — 29ae24e6d) → 맞은 시각 ±90초 구간만 받는다
+    assert r["do"][0] == {"id": "origin", "cmd": "origin_get", "vid": "v20", "a": 212.0, "b": 420.0, "ts": [302.0, 330.0], "full": False}
 
 
 def test_source_channel_title_words_before_recency():

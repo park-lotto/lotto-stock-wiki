@@ -98,6 +98,19 @@ def will_erase(version: str | None) -> bool:
     return ready(style_mode(version))["mode"] != "blur"
 
 
+def erase_why(version: str | None) -> str:
+    """계획 기록용 한 줄 — 지우나/안 지우나와 그 이유(어느 칸이 방식을 정했나). 판단은 will_erase 그대로(여기는 읽기만)."""
+    m = (os.environ.get("SHORTEM_TEXT_MODE") or "").strip().lower()
+    src = f"회원 설정 {m}" if m in ("vmake", "blur") else "회원 설정 없음 → 판 칸"
+    mode = style_mode(version)
+    if not _flow_erases(version):
+        return f"안 지움 — 이 형식에 지우기 단계 없음({src} {mode})"
+    if mode == "blur":
+        return f"안 지움(흐림) — {src} blur"
+    r = ready(mode)
+    return f"{'지움' if r['mode'] != 'blur' else '안 지움(흐림)'} — {src} {mode} · 준비 {r['mode']}{(' · ' + str(r.get('why'))) if r.get('why') else ''}"
+
+
 def _flow_erases(version: str | None) -> bool:
     e = os.environ.get("CALCOPY_ERASE")          # 회원 PC = 지시서가 계획·렌더 명령에 실어 보낸 값(runner_ops 가 그 일 동안만 둔다 — 회원 엔진엔 flow.py 가 없다)
     if e in ("0", "1"):
@@ -132,15 +145,71 @@ def erase_engine() -> str:
 
 
 # VMake 확정 실패(다시 보내도 같다) — 판단 주인 hard_fail. 시간 초과·일시 실패는 여기 없다(다시 보내면 지워질 수 있다)
-HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"))
+#   free_left = 무료 엔진이 지웠는데 글자가 남음(text_left) — 같은 엔진·같은 조각은 다시 지워도 같다(11-05 꿀템샷 94a65c1f2077)
+HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"),
+              ("free_left", r"지운 뒤에도 글자가 남음|지운 결과를 못 잼"))
 HARD_FIX = {"new_api": "VMake 새 API 키를 넣으면 다음 편부터 지워요", "not_pro": "VMake Pro 요금제에서 지워져요",
-            "sign": "VMake 키를 다시 확인해 주세요"}
+            "sign": "VMake 키를 다시 확인해 주세요", "free_left": "무료 지우기로 다 지워지지 않았어요 — VMake 키를 넣으면 깨끗하게 지워요"}
 
 
 def hard_fail(text: str) -> str:
     """실패 글 → 확정 실패 종류('new_api'·'not_pro'·'sign') 또는 ''."""
     import re
     return next((k for k, rx in HARD_FAILS if re.search(rx, str(text or ""), re.I)), "")
+
+
+BAD_KEY_FILE = MEMBER_KEY_FILE.with_name("vmake.bad")     # 확정 실패한 회원 키의 지문(값 아님) — 키가 바뀌면 다시 시도
+
+
+def _key_fp(k: str) -> str:
+    import hashlib
+    return hashlib.sha256(k.encode("utf-8")).hexdigest()[:12]
+
+
+def note_hard(text: str) -> str:
+    """(판단 주인 — 이 키로는 다시 보내도 같다) 회원 키 확정 실패를 기록한다. 편마다 다시 보내 같은 실패를 겪던 것(11-03 이정민·홍광수·김형관·임수정·한정수)."""
+    k = hard_fail(text)
+    if not k or k in BASIC_OK or k == "free_left" or key_source() != "member" or not member_key():     # free_left 는 키 탓이 아니다
+        return ""
+    BAD_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    BAD_KEY_FILE.write_text(json.dumps({"fp": _key_fp(member_key()), "kind": k}), encoding="utf-8")
+    return k
+
+
+TIER_FILE = MEMBER_KEY_FILE.with_name("vmake.tier")     # 이 회원 키로 되는 등급(지문·등급, 값 아님) — 기본형 키면 처음부터 기본으로
+
+
+def key_tier() -> str:
+    """(판단 주인 — 이 회원 키의 VMake 등급) 'basic' = 고급이 거절된 적이 있는 키(옛 방식·Pro 아님) → 처음부터 기본으로 보낸다.
+    '' = 모름(고급 먼저). 키를 바꾸면 지문이 달라 다시 모름(사장님 11-03 '기본형은 기본으로, 두 번 할 필요 없게')."""
+    try:
+        j = json.loads(TIER_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    k = member_key()
+    return str(j.get("tier") or "") if k and j.get("fp") == _key_fp(k) else ""
+
+
+def note_tier(tier: str) -> None:
+    k = member_key()
+    if not k:
+        return
+    TIER_FILE.parent.mkdir(parents=True, exist_ok=True)
+    TIER_FILE.write_text(json.dumps({"fp": _key_fp(k), "tier": tier}), encoding="utf-8")
+
+
+def bad_key() -> str:
+    """지금 회원 키가 확정 실패로 기록돼 있으면 그 종류, 아니면 ''(키를 바꾸면 지문이 달라 '' — 다시 시도한다)."""
+    try:
+        j = json.loads(BAD_KEY_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    k = member_key()
+    kind = str(j.get("kind") or "") if k and j.get("fp") == _key_fp(k) else ""
+    return "" if kind in BASIC_OK else kind      # 고급만 안 되는 키는 기본으로 지운다(member_clean) — 옛 기록이 흐림에 묶어 두지 않게
+
+
+BASIC_OK = ("new_api", "not_pro")      # 고급(Pro)만 막는 실패 — 기본 등급은 된다(사장님 11-03 '고급 있음 고급으로, 없음 기본으로')
 
 
 def ready(mode: str = "vmake") -> dict:
@@ -153,6 +222,9 @@ def ready(mode: str = "vmake") -> dict:
         return {"mode": "vmake", "via": "server", "why": ""}
     if not member_key():                   # 키 없음 = 흐림(사장님 10-30 — 멈추고 키를 묻지 않는다)
         return {"mode": "blur", "why": "VMake 키 없음 — 흐림으로 가린다", "fix": NO_KEY_FIX}
+    bk = bad_key()
+    if bk:                                 # 이 키는 확정 실패 — 보내지 않고 흐림(돈·시간 낭비 없음), 키를 바꾸면 다시 시도
+        return {"mode": "blur", "why": f"VMake 키 확정 실패({bk}) — 흐림으로 가린다", "fix": HARD_FIX[bk]}
     return {"mode": "vmake", "via": "member", "why": ""}
 
 
@@ -321,8 +393,11 @@ def cut_piece(f: Path, a: float, b: float, where: Path | None = None) -> Path:
     out = _piece_name(f, a, b)
     if where:
         out = Path(where) / out.name
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
-                    "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], check=True, stdin=subprocess.DEVNULL)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
+                        "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], stdin=subprocess.DEVNULL, capture_output=True)
+    if r.returncode != 0:      # 원문을 남긴다 — 뒤 프로세스(bg_run)는 출력이 버려져 'CalledProcessError' 만 남아 원인을 못 갈랐다(#5298 김유선, 손으로는 재현 안 됨)
+        err = (r.stderr or b"").decode("utf-8", "replace").strip()[-600:]
+        raise RuntimeError(f"조각 자르기 ffmpeg 실패 rc={r.returncode} ffmpeg={shutil.which('ffmpeg')} {f.name}@{a:.2f}-{b:.2f}: {err}")
     return out
 
 
@@ -473,12 +548,75 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print, spots
 
 def _cut_send(src_dir: Path, spans: dict, rd: dict, spots: dict | None, log=print, where: Path | None = None) -> tuple:
     """구간마다 잘라 보낸다 — ({이름: [(조각,a,b)…]}, {cleaned, fail, calls}). 돈이 드는 곳은 여기 한 곳(앞에서 기다리는 길·뒤에서 도는 길이 같이 부른다). 원본은 건드리지 않는다."""
+    keys = {n: _cache_src(src_dir / n) for n in spans}          # 원본 정체는 자르기 전에(덮은 뒤엔 크기가 바뀐다)
     pieces = {n: [(cut_piece(src_dir / n, a, b, where), a, b) for a, b in iv] for n, iv in spans.items()}
-    files = [p for ps in pieces.values() for p, _, _ in ps]
     if rd["via"] == "free":
-        return pieces, free_clean(files, spots or {}, log=log)
+        return pieces, free_clean([p for ps in pieces.values() for p, _, _ in ps], spots or {}, log=log)
+    hit = _cache_take(pieces, keys, rd["via"], log)               # 돈 드는 길만 — 앞 편에서 이미 지운 조각은 다시 보내지 않는다
+    files = [p for ps in pieces.values() for p, _, _ in ps if p.name not in hit]
     send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
-    return pieces, send_joined(files, send, log=log)
+    r = send_joined(files, send, log=log) if files else {"cleaned": [], "fail": {}, "calls": 0}
+    if rd["via"] == "member" and files:
+        note_hard(json.dumps(r.get("fail") or {}, ensure_ascii=False) + " " + str(r.get("error") or ""))
+    _cache_put(pieces, keys, rd["via"], set(r.get("cleaned") or []) - hit)
+    r["cleaned"] = list(r.get("cleaned") or []) + sorted(hit)
+    return pieces, r
+
+
+# (판단 주인 — 이미 지운 조각을 다시 쓰나) 같은 원본으로 편을 새로 시작하면 지운 구간 기록(서버 tf.done)·이어받기 장부(작업 폴더 옆 24시간)가
+#   없어 같은 구간을 다시 보내 회원 크레딧이 또 빠졌다(11-04 이성택 문의 점검). 보관함 = 회원 PC 공용 폴더, 열쇠 = 원본 이름·크기·구간·길·등급.
+#   쓰기 전에 새로 자른 조각과 프레임 수가 같은지 본다(다르면 버리고 보낸다). 30일 지난 것은 지운다.
+CACHE_DAYS = 30
+
+
+def cache_dir() -> Path:
+    return Path(os.environ.get("SHORTEM_VMAKE_CACHE") or (Path(os.environ.get("SHORTEM_HOME") or (Path.home() / ".shortem")) / "vmake_cache"))
+
+
+def _cache_src(f: Path) -> str:
+    try:
+        return f"{f.name}:{f.stat().st_size}"
+    except OSError:
+        return ""
+
+
+def _cache_file(src_key: str, a: float, b: float, via: str) -> Path:
+    import hashlib
+    k = hashlib.sha1(f"{src_key}|{a:.3f}|{b:.3f}|{via}|{TIER}".encode("utf-8")).hexdigest()[:20]
+    return cache_dir() / f"{k}.mp4"
+
+
+def _cache_take(pieces: dict, keys: dict, via: str, log=print) -> set:
+    hit = set()
+    for n, ps in pieces.items():
+        for p, a, b in ps:
+            c = _cache_file(keys.get(n) or "", a, b, via)
+            try:
+                if keys.get(n) and c.exists() and _frames(c) == _frames(p):
+                    shutil.copyfile(c, p)
+                    hit.add(p.name)
+                    log_entry(p.parent, {"file": p.name, "mode": via, "ok": True, "calls": 0, "cache": True, "sent_sec": 0})
+            except Exception as e:  # noqa: BLE001 — 보관함을 못 쓰면 보낸다(돈은 들지만 결과는 같다)
+                log(f"[vmake] 보관함 읽기 실패 {p.name}: {type(e).__name__}")
+    if hit:
+        log(f"[vmake] 앞 편에서 지운 조각 {len(hit)}개 다시 씀 — 보내지 않음")
+    return hit
+
+
+def _cache_put(pieces: dict, keys: dict, via: str, cleaned: set) -> None:
+    d = cache_dir()
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        old = time.time() - CACHE_DAYS * 86400
+        for x in d.glob("*.mp4"):
+            if x.stat().st_mtime < old:
+                x.unlink()
+        for n, ps in pieces.items():
+            for p, a, b in ps:
+                if p.name in cleaned and keys.get(n) and p.exists():
+                    shutil.copyfile(p, _cache_file(keys[n], a, b, via))
+    except OSError:
+        pass                                   # 보관 실패는 다음에 다시 보낼 뿐
 
 
 def _put_back(src_dir: Path, spans: dict, pieces: dict, r: dict, rd: dict) -> dict:
@@ -544,6 +682,8 @@ def bg_run(d: Path) -> None:
         out = {"pieces": {n: [[str(p), a, b] for p, a, b in ps] for n, ps in pieces.items()}, **r}
     except Exception as e:  # noqa: BLE001 — 뒤 프로세스 실패는 result 로 알린다(조용히 죽지 않는다)
         out = {"error": f"{type(e).__name__}: {str(e)[:300]}", "calls": 0, "cleaned": [], "fail": {}}
+        if (job.get("rd") or {}).get("via") == "member":
+            note_hard(str(e))
     led = d / LEDGER
     if led.exists():                  # 장부는 원본 폴더 한 곳 — 늦어서 안 쓴 호출도 센다
         rows = json.loads((src / LEDGER).read_text(encoding="utf-8")) if (src / LEDGER).exists() else []
@@ -647,6 +787,9 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
     from concurrent.futures import ThreadPoolExecutor
     out = {"cleaned": [], "calls": 0, "fail": {}}
     lock = threading.Lock()
+    if tier != "basic" and key_tier() == "basic":      # 이 키는 고급이 안 된다고 이미 안다 — 고급을 다시 보내 거절받지 않는다
+        log("[vmake] 이 키는 기본형 — 처음부터 기본으로")
+        tier = "basic"
 
     def one(f):
         f = Path(f)
@@ -655,7 +798,16 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
         with lock:
             out["calls"] += 1
         try:
-            VC.remove_subtitles(str(f), api_key, str(tmp), tier=tier, resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
+            try:
+                VC.remove_subtitles(str(f), api_key, str(tmp), tier=tier, resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
+            except Exception as e:  # noqa: BLE001 — 고급이 안 되는 키면 기본으로(사장님 11-03 '고급 있음 고급으로, 없음 기본으로')
+                if tier == "basic" or hard_fail(str(e)) not in ("new_api", "not_pro"):
+                    raise
+                log(f"[vmake] {f.name}: 고급 안 됨({hard_fail(str(e))}) → 기본으로(이 키는 다음부터 처음부터 기본)")
+                note_tier("basic")
+                with lock:
+                    out["calls"] += 1
+                VC.remove_subtitles(str(f), api_key, str(tmp), tier="basic", resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
             swap_in(f, tmp)
             with lock:
                 out["cleaned"].append(f.name)
@@ -669,6 +821,42 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
     with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎 — 서버 길과 같게 동시에(10-26)
         list(ex.map(one, files))
     return out
+
+
+# (판단 주인 — 무료 엔진이 지운 조각에 글자가 남았나) 11-05 꿀템샷 회원 편 94a65c1f2077: 무료 엔진이 끝나기만 하면 '지움'으로 세어
+#   영어 박힌 자막이 일그러진 채 완성본 3~6초에 남았다(자동 검사 전부 ○). 관문④와 같은 검출기(vision.text_boxes_scored)로 지운 결과를 다시 잰다.
+#   실측(같은 편): 덜 지운 프레임 = 띠 안 폭 196~344px 상자 점수 0.92~0.98 · 글자 없는 장면 6장 = 상자 없음 또는 폭 12px 0.71 하나.
+LEFT_SCORE, LEFT_W, LEFT_FILL, LEFT_AT = 0.85, 0.06, 0.5, (0.2, 0.5, 0.8)
+
+
+def text_left(video: Path, spot: dict) -> str:
+    """지운 조각에 글자가 남았으면 이유 한 줄, 깨끗하면 ''. 띠(bands) 안만 잰다. 프레임 셋 중 둘 이상에서 남으면 남은 것. 잴 수 없으면 남은 것으로(조용히 통과 금지)."""
+    bands = (spot or {}).get("bands") or []
+    if not bands:
+        return ""
+    try:
+        import cv2
+        from shopping_shorts.channelkit import vision as V
+        cap = cv2.VideoCapture(str(video))
+        n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        hit = []
+        for q in LEFT_AT:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, int(n * q)))
+            ok, im = cap.read()
+            if not ok:
+                continue
+            H, W = im.shape[:2]
+            for b in V.text_boxes_scored(im):
+                x0, y0, x1, y1 = b["box"]
+                cy = (y0 + y1) / 2 / H
+                if (any(z["y0"] <= cy <= z["y1"] for z in bands) and b["score"] >= LEFT_SCORE
+                        and (x1 - x0) >= LEFT_W * W and b["fill"] >= LEFT_FILL):
+                    hit.append(f"{q:.0%} 점수 {b['score']} 폭 {x1 - x0}px")
+                    break
+        cap.release()
+    except Exception as e:  # noqa: BLE001 — 못 재면 지운 것으로 치지 않는다
+        return f"지운 결과를 못 잼({type(e).__name__}) — 흐림으로"
+    return f"지운 뒤에도 글자가 남음({' · '.join(hit)}) — 흐림으로" if len(hit) >= 2 else ""
 
 
 def free_clean(files: list, spots: dict, log=print) -> dict:
@@ -685,6 +873,10 @@ def free_clean(files: list, spots: dict, log=print) -> dict:
         tmp = f.with_name(f.stem + "_fclean" + f.suffix)
         try:
             res = FE.clean_file(f, tmp, spot)
+            left = text_left(tmp, spot)
+            if left:            # 덜 지움 — 원본에 끼우지 않고 실패로(흐림이 덮는다)
+                tmp.unlink(missing_ok=True)
+                raise RuntimeError(left)
             swap_in(f, tmp)
             out["cleaned"].append(f.name)
             log_entry(f.parent, {"file": f.name, "mode": "free", "ok": True, "sec": round(time.time() - t0, 1), "calls": 0, **_sent(f), **res})

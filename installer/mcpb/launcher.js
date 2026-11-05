@@ -308,31 +308,59 @@ function runFallback(reason, home) {
 
 // 켤 때 자동 업데이트 — 바꾸기 쪽(관제 234 5판). 받기는 서버(server/updater.js)가 지난번에 <설치>/_update/<판>/ 에 풀어 두었다.
 //   서버를 띄우기 전에 server·engine 을 새 판으로 바꾼다. 하나라도 실패하면 되돌리고 그대로 예전 판으로 뜬다.
+// 만드는 중엔 서버가 표시를 pending.hold.json 으로 숨긴다(preset_rent.holdPending) — 뜻은 '돌고 있는 제작 중엔 바꾸지 마라'.
+//   제작 잠금(rent.lock) 주인이 죽었으면 지금 도는 제작은 없으니 표시를 되살린다. 제작 중에 창을 닫으면 숨김이 남아 앱 판이 영영 안 바뀌던 것(#1507).
+//   supervisor.unhidePending 과 같은 판단(launcher 는 업데이트 묶음에 없어 두 벌).
+function unhidePending(up) {
+  const pend = path.join(up, 'pending.json'), hold = path.join(up, 'pending.hold.json');
+  if (fs.existsSync(pend) || !fs.existsSync(hold)) return;
+  let o = null;
+  try {
+    const t = fs.readFileSync(path.join(process.env.SHORTEM_HOME || path.join(os.homedir(), '.shortem'), 'rent.lock'), 'utf8');
+    o = t.trim().startsWith('{') ? JSON.parse(t) : { pid: Number(t) };   // 옛 잠금 = pid 숫자만
+  } catch (_) { /* 잠금 없음 = 아무도 안 만든다 */ }
+  if (o && o.pid) { try { process.kill(o.pid, 0); return; } catch (_) { /* 주인 죽음 */ } }
+  try { fs.renameSync(hold, pend); } catch (_) { /* 다른 창이 먼저 되살렸다 */ }
+}
+
 function applyPending(home) {
   const up = path.join(home, '_update');
   const pend = path.join(up, 'pending.json');
+  unhidePending(up);
   let p;
   try { p = JSON.parse(fs.readFileSync(pend, 'utf8')); } catch (_) { return null; }
   if (!/^\d+\.\d+\.\d+$/.test(String(p.version)) || p.dir !== p.version) { try { fs.unlinkSync(pend); } catch (_) {} return null; }
   const src = path.join(up, p.dir);
   const old = path.join(up, 'old-' + Date.now());
-  const moved = [];
+  const moved = [], placed = [];
   try {
     fs.mkdirSync(old, { recursive: true });
     for (const d of ['server', 'engine']) {
       if (!fs.existsSync(path.join(src, d))) throw new Error('덜 찬 업데이트: ' + d);
-      if (fs.existsSync(path.join(home, d))) { fs.renameSync(path.join(home, d), path.join(old, d)); moved.push(d); }
+      if (fs.existsSync(path.join(home, d))) {
+        try { fs.renameSync(path.join(home, d), path.join(old, d)); moved.push(d); }
+        catch (e) {
+          // 돌고 있는(멈춘) 실행기가 engine 을 현재 폴더로 쥐면 이름을 못 바꾼다(#1397) — 받을 때(updater.applyDownloaded)처럼 자리에 덮는다
+          if (d !== 'engine') throw e;
+          fs.cpSync(path.join(src, d), path.join(home, d), { recursive: true, force: true });
+          continue;
+        }
+      }
       // 서버 node_modules 는 묶음에 있다(빌드가 만든 server/ 통째)
       fs.renameSync(path.join(src, d), path.join(home, d));
+      placed.push(d);
     }
     fs.copyFileSync(path.join(src, 'app_version.json'), path.join(home, 'app_version.json'));
-    fs.unlinkSync(pend);
+    fs.rmSync(pend, { force: true });             // 같은 설치의 다른 창이 먼저 지웠어도 바꾸기는 끝난 것
     fs.rmSync(src, { recursive: true, force: true });
     try { fs.rmSync(old, { recursive: true, force: true }); } catch (_) { /* 다음에 */ }
     return p.version;
   } catch (e) {
-    for (const d of moved) {                      // 되돌리기
-      try { fs.rmSync(path.join(home, d), { recursive: true, force: true }); fs.renameSync(path.join(old, d), path.join(home, d)); } catch (_) {}
+    for (const d of ['engine', 'server']) {       // 되돌리기 — 새 판은 지우지 않고 받은 폴더로 돌려준다(지우면 _update/<판> 에 engine 만 남아 다시 못 바꾼다 #1397)
+      try {
+        if (placed.includes(d)) fs.renameSync(path.join(home, d), path.join(src, d));
+        if (moved.includes(d)) fs.renameSync(path.join(old, d), path.join(home, d));
+      } catch (_) {}
     }
     try { fs.unlinkSync(pend); } catch (_) {}
     process.stderr.write('[숏템] 업데이트 적용 실패 — 예전 판으로 시작합니다: ' + e.message + '\n');
@@ -342,7 +370,7 @@ function applyPending(home) {
 
 function main() {
   const home = installHome();
-  if (!process.argv.includes('--where') && fs.existsSync(path.join(home, '_update', 'pending.json'))) applyPending(home);
+  if (!process.argv.includes('--where') && fs.existsSync(path.join(home, '_update'))) applyPending(home);   // 표시가 숨어 있어도(pending.hold.json) 본다
   if (process.argv.includes('--where')) {
     process.stdout.write(JSON.stringify({ home, node: nodeExe(home), problem: problem(home) }) + '\n');
     return;

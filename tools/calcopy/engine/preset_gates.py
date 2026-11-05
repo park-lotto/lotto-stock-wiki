@@ -101,7 +101,7 @@ def text_gate(w: dict) -> list[str]:
     sp = Path(w["dir"]) / "대본.json" if w.get("dir") else None
     if sp and sp.exists():
         try:
-            r = SA.audit(sp)
+            r = SA.audit(sp, version=w.get("style_version"))      # 프리셋 짝 판(preset_make.make_one) — 없으면 옛 짐작
         except Exception as e:  # noqa: BLE001 — 못 쟀으면 통과로 치지 않는다
             return bad + [f"G-1 대본 규칙 못 잼({type(e).__name__}: {str(e)[:160]})"]
         for x in r.get("rules") or []:

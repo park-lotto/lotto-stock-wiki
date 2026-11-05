@@ -60,6 +60,12 @@ def _isolate_key_vault_state(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _isolate_vmake_cache(tmp_path, monkeypatch):
+    """VMake 지운 조각 보관함(vmake_clean.cache_dir)은 시험마다 따로 — 공용 홈 보관함을 쓰면 앞 시험 조각으로 뒤 시험이 호출을 건너뛴다."""
+    monkeypatch.setenv("SHORTEM_VMAKE_CACHE", str(tmp_path / "_vmake_cache"))
+
+
+@pytest.fixture(autouse=True)
 def _vertex_cutoff_off(monkeypatch):
     """사장님 프로젝트 공유 차단 시각(vertex_route.OWNER_CUTOFF_DEFAULT, 관제 159)을 테스트에선 끈다.
 

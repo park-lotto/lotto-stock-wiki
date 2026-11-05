@@ -183,7 +183,10 @@ HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", 
     "tools/calcopy/oneshot/__init__.py", "tools/calcopy/oneshot/scene_fit.py",   # 완성본 검사(check)가 부른다 — 10-29 회원 12/13 ModuleNotFoundError
     "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
     "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py", "shopping_shorts/channelkit/vision/facelib_cv.py",
-    "shopping_shorts/script_translate.py", "tools/free_subclean/__init__.py", "tools/free_subclean/engine.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
+    "shopping_shorts/script_translate.py", "tools/free_subclean/__init__.py", "tools/free_subclean/engine.py",       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
+    # PC 제작 라인 손(11-04 관제 265 판단 대기 → HAND, Jev 0.78·위험 0.28): 썰템쇼 PC제작형 회원 실행기 c_pm 이 PC 와 같은 굽기·검사(preset_make·preset_gates)를 부른다.
+    #   노하우(작품·manifest = channel/, 지시서 flow_pm)는 서버·빌림 그대로, 프리셋 만드는 기술(preset_save)은 계속 서버 전용
+    "tools/calcopy/engine/preset_make.py", "tools/calcopy/engine/preset_gates.py")
 
 
 # HAND 가 부르는 hybrid 모듈 중 회원 PC 에 안 보내는 것(서버·개발 전용) — 여기도 HAND 에도 없으면 build 가 멈춘다(관제 265, 10-25:
@@ -194,8 +197,12 @@ HAND_SERVER_ONLY = {
     #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
     # 10-26 엔진 runner_ops 가 preset_make(make_synth — 회원 목소리 합성 한 곳)를 부른다 — preset_* 는 묶음 금지 꼴이라 발행 때 판단(관제 265): HAND 로 옮기거나 make_synth 를 금지 밖 파일로
-    "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
+    # 11-04 preset_gates → quality_gate → styles → preview_request → calcopy_make → topic_find 가 함수 안에서 부르는 서버 수집·접속(회원 PC 갈래 아님)
+    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",
+    "tools/live_admin.py",       # worker.py 가 함수 안에서 부르는 관리자 쿠키(서버 주소·키 이름) — 회원 PC 엔 절대 안 보낸다(검사 SECRETS 에 걸림)
+    # ★preset_save.py(프리셋 만드는 기술)는 고급반 벤치마킹 묶음(benchmark_pack)으로만 빌려준다 — 기본 묶음 회원 렌더가 다시 부르면 안 된다(11-04 preset_make→preset_save 로 멈춘 사고).
+    #   적용(load·apply·규칙·글꼴)은 shopping_shorts/calcopy_frame/preset_apply.py(묶음 안) — 회원 쪽이 preset_save 를 다시 부르면 hand_unresolved 가 빨강
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
     # 관제 319 과제 9: 실행기 벤치마킹 2판 명령(bm_*)이 함수 안에서 부른다 — 기본 묶음엔 안 넣고 고급반 묶음(benchmark_pack.RELEASED)으로만 빌려준다
     "tools/calcopy/engine/bench_member.py", "tools/calcopy/engine/preset_brief.py",
@@ -203,14 +210,15 @@ HAND_SERVER_ONLY = {
     #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
     "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
     "shopping_shorts/instagram_playwright.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/engine/gemini_server.py",
-    "tools/calcopy/engine/to_frame.py", "tools/calcopy/transcribe_free.py",
+    "tools/calcopy/engine/to_frame.py",   # 글꼴은 preset_apply 로 옮김. 남은 것: style_writer.width_estimator 폭 모형(_css_line·_ink_x) — script_engine 이 try 안에서 불러 회원 PC 에선 폭 검사만 빠진다(할 일)
+    "tools/calcopy/transcribe_free.py",
     # 개발 PC 스위치(CALCOPY_DEV_COUPANG_SERVER·CALCOPY_DEV_MINA_SERVER)에서만 도는 서버 접속 — 우리 서버 SSH 정보가 들어 있어 보내면 안 된다(묶음 검사 SECRETS)
     "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
     # 10-30 지시서(노하우) = 서버 한 곳 — vmake_clean 이 형식 판단(flow.erases_text)을 함수 안에서 부르지만 회원 PC 는 지시서가 명령에 실은 erase(CALCOPY_ERASE)를 쓴다
     "tools/calcopy/hybrid/flow.py",
-    # 11-04 엔진 topic_find 가 community_mine(커뮤니티 소재 캐기)·_server_access(우리 서버 SSH 정보)를, runner_ops 가 preset_gates 를 부른다 —
-    #   셋 다 묶음 금지 꼴이라 회원 PC 로 안 보낸다(보낼지는 관제 265 발행 판단). 이 PC 병합 관문이 test_hand_deps_all_resolved 로 막혀 적어 둔다
-    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py", "tools/calcopy/engine/preset_gates.py",
+    # 11-03 topic_find 가 함수 안에서 부르는 우리 PC 전용 갈래 — 서버 SSH 정보(_server_access, 관제 234)·커뮤니티 수집(community_mine, 보배드림 크롤)
+    #   회원 PC 소재는 서버 소재 창고가 준다(make_flow startFlow) — 이 갈래가 회원 PC 에서 돌면 그 자리에서 멈춘다(묶음 금지 꼴 tools/calcopy/community_*.py)
+    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",   # preset_gates 는 PC제작형으로 회원 PC 에 보낸다(위 HAND, 11-04 Jev 0.78)
 }
 
 

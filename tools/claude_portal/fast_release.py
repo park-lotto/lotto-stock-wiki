@@ -60,7 +60,8 @@ def norm(b: bytes) -> bytes:
 
 
 def failed_tests() -> set:
-    r = subprocess.run("node --test --test-reporter=tap test/*.test.js", shell=True, cwd=TESTS, capture_output=True, encoding="utf-8", errors="replace")
+    r = subprocess.run("node --test --test-reporter=tap ../test/*.test.js", shell=True, cwd=TESTS / "server",   # 시험은 server 폴더 기준(REPO = cwd/../..) — 11-05 shortem_client 에서 돌려 live·member_guide 가 늘 실패
+                       capture_output=True, encoding="utf-8", errors="replace")
     return {m.group(1).strip() for m in re.finditer(r"^not ok \d+ - (.+)$", r.stdout, re.M)}
 
 
@@ -69,8 +70,42 @@ def bump(v: str) -> str:
     return f"{a}.{b}.{int(c) + 1}"
 
 
+def live_table() -> dict:
+    return json.loads(U.ssh(f"cat {U.STORE}/updates/latest.json"))
+
+
 def live() -> str:
-    return json.loads(U.ssh(f"cat {U.STORE}/updates/latest.json"))["version"]
+    return live_table()["version"]
+
+
+def vkey(v: str) -> tuple:
+    return tuple(int(x) for x in v.split("."))
+
+
+def catch_up(rows: list) -> list:
+    """장부가 서버 판보다 뒤처졌으면(다른 PC 가 판을 냈을 때 — 11-05 헬로2 PC 가 1.0.105) 서버 묶음을 받아 그 판을 바탕으로 장부에 넣는다(관제 330).
+    서버 판 = 회원이 실제로 받는 것이라 바탕도 그것이어야 한다. 받은 묶음은 지문(sha256)을 서버 표와 대조한다."""
+    t = live_table()
+    cur = rows[-1]["version"] if rows else "0.0.0"
+    if vkey(t["version"]) <= vkey(cur):
+        return rows
+    print(f"[빠른배포] 장부 끝 {cur} < 서버 판 {t['version']} — 서버 묶음으로 바탕을 맞춘다")
+    import zipfile
+    root = STAGES / t["version"]
+    if root.exists():
+        shutil.rmtree(root)
+    root.mkdir(parents=True)
+    z = root / f"server-{t['version']}.zip"
+    U.sh(["scp", "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=15", "-i", U.KEY, f"{U.HOST}:{U.STORE}/assets/{t['sha256']}", str(z)], timeout=3600)
+    if U.sha256(z) != t["sha256"]:
+        shutil.rmtree(root)
+        raise SystemExit(f"[빠른배포] 받은 서버 묶음 지문이 표와 다르다 — 바탕을 만들지 않는다")
+    with zipfile.ZipFile(z) as zf:
+        zf.extractall(root / "Shortem", [n for n in zf.namelist() if n.startswith(("server/", "engine/"))])
+    z.unlink()
+    rows = rows + [{"version": t["version"], "sha256": t["sha256"], "rev": "server", "notes": f"서버 판에서 바탕 맞춤: {t.get('notes', '')}", "files": []}]
+    LEDGER.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+    return rows
 
 
 def register(uz: Path, version: str, notes: str, sha: str) -> None:
@@ -132,9 +167,8 @@ def main(argv=None) -> int:
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--rollback", action="store_true")
     a = ap.parse_args(argv)
-    if not LEDGER.is_file():
-        raise SystemExit(f"[빠른배포] 장부가 없다: {LEDGER}")
-    rows = json.loads(LEDGER.read_text(encoding="utf-8"))
+    STAGES.mkdir(parents=True, exist_ok=True)
+    rows = catch_up(json.loads(LEDGER.read_text(encoding="utf-8")) if LEDGER.is_file() else [])   # 장부 없는 PC 도 서버 판에서 시작
     cur = rows[-1]
     if a.publish and live() != cur["version"]:
         raise SystemExit(f"[빠른배포] 서버 판 {live()} ≠ 장부 끝 {cur['version']} — 전체 빌드가 올라갔다면 장부에 그 바탕을 먼저 넣어라")

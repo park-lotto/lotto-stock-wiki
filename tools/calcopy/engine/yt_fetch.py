@@ -31,6 +31,8 @@ SORT_1080 = ["-S", "res:1080,vcodec:h264"]
 Q_CAP = "[width<=1920][height<=1920]"
 BENCH_CAP = "[width<=1280][height<=1280]"
 FULL_MAX_SEC = 600          # 이보다 긴 원본은 통째로 받지 않는다(11-02 사장님 — 37분 원본 722MB·최대 30분 대기). 벤치는 앞부분만
+BENCH_LONG_SEC = 90         # 이보다 긴 소재(롱폼)는 통째 받아쓰기 안 함 — 유튜브 자막 먼저, 없으면 앞부분만(runner_ops.bench_lines, 11-05)
+BENCH_ASR_MAX_SEC = 180     # 자막 없는 롱폼 소재 받아쓰기 상한(초)
 SORT_720 = ["-S", "res:720,vcodec:h264"]
 CAP_LONG = 1920             # Q_CAP 의 숫자 — 형식 표를 직접 고르는 dash_pick 이 같은 값을 쓴다
 _VIDEO_SEL = re.compile(r"^(?:bv\*|bv|bestvideo\*|bestvideo|b|best|wv\*|wv|worstvideo\*|worstvideo|w|worst|\d+)(?:\[|$)")

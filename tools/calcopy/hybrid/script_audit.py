@@ -99,7 +99,13 @@ def speech_rule(st: dict) -> dict | None:
 
 def as_lines(d: dict) -> dict:
     """대본 꼴 맞추기(주인 한 곳): 최상위 lines(하이브리드 판들) 그대로 / 없고 final.lines(샥탬 shark 대본)면 그것을 lines 로 —
-    샥탬 kind '나레/원음' 은 'tts/orig' 로. 최상위 lines 가 있으면 아무것도 안 바꾼다(옛 동작 그대로)."""
+    샥탬 kind '나레/원음' 은 'tts/orig' 로. PC 제작기(preset_make) 작품 대본(frame_vars 칸)은 화자 speaker → who · 줄 종류 없으면 tts ·
+    훅 제목('\\n' 2줄) → title_lines(11-03: 썰템쇼 PC 10편이 꼴을 못 읽혀 화자 0줄·제목 0줄로 전부 미달). 그 밖은 아무것도 안 바꾼다(옛 동작 그대로)."""
+    if d.get("frame_vars") and d.get("lines"):
+        lines = [{"id": l.get("id") or f"줄{i + 1}", **l, "kind": l.get("kind") or "tts",
+                  **({"who": l["speaker"]} if l.get("speaker") and not l.get("who") else {})} for i, l in enumerate(d["lines"])]
+        hook = next((v for k, v in d["frame_vars"].items() if "hook" in k and "title" in k and isinstance(v, str)), "")
+        return {**d, "lines": lines, **({"title_lines": [[[t, None]] for t in hook.split("\n") if t.strip()]} if hook and not d.get("title_lines") else {})}
     if d.get("lines") or not (d.get("final") or {}).get("lines"):
         return d
     return {**d, "lines": [{**l, "kind": KIND.get(l.get("kind"), l.get("kind"))} for l in d["final"]["lines"]]}
@@ -450,7 +456,9 @@ def text_defects(d: dict, joined: bool = True) -> list[dict]:
     return out
 
 
-LATIN_READ = {"TV": "티비", "AI": "에이아이", "LED": "엘이디", "USB": "유에스비", "PC": "피씨", "OK": "오케이"}
+LATIN_READ = {"TV": "티비", "AI": "에이아이", "LED": "엘이디", "USB": "유에스비", "PC": "피씨", "OK": "오케이",
+              # 흔한 단위 — 읽기가 하나뿐이라 코드가 고친다(11-05 박은숙 #7759 'kg' 이 관문에 걸려 제작자 과제). g·l 한 글자는 낱말과 헷갈려 뺀다
+              "KG": "킬로그램", "MG": "밀리그램", "ML": "밀리리터", "CM": "센티미터", "MM": "밀리미터", "KM": "킬로미터", "KCAL": "킬로칼로리", "MAH": "밀리암페어"}
 _LETTER = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "에이 비 씨 디 이 에프 지 에이치 아이 제이 케이 엘 엠 엔 오 피 큐 알 에스 티 유 브이 더블유 엑스 와이 지".split()))
 
 
@@ -534,7 +542,10 @@ def alt_disclosed(d: dict) -> dict | None:
     """(판단 주인) product_mode 'alt' 대본에 '같은 제품이 아니라 비슷한 제품' 이라고 말하는 나레 줄이 있나 → 걸리면 {rule, line, why}, 아니면 None."""
     if str(d.get("product_mode") or "") != "alt":
         return None
-    hit = [l.get("id") for l in narr_lines(d) if ALT_SAY.search(_say(l))]
+    nl = narr_lines(d)
+    if nl and all(l.get("about") for l in nl) and not any(l.get("about") == "product" for l in nl):
+        return None      # 제품을 말하는 줄이 없다(회원이 '제품 안내 빼고 정보만') — 밝힐 대상이 없다(11-05 강태경 #7691 3번 연속)
+    hit = [l.get("id") for l in nl if ALT_SAY.search(_say(l))]
     if hit:
         ids = [l.get("id") for l in narr_lines(d)]
         if len(ids) > 1 and ids[-1] in hit and len(hit) == 1:      # 사장님 11-01: 끝은 고지가 아니라 맺음말

@@ -275,9 +275,11 @@ def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = 
                 out.append(f"{tag}: crop 은 'face' 또는 [x, y, w, h](원본 픽셀 정수)여야 한다({cr!r})")
             wh = (dims or {}).get(src)
             fh = fit_height(wh[0], wh[1], ar) if wh else 0
-            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < fh * ZOOM_MIN_H:
-                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {fh / max(1, cr[3]):.2f}배 확대 — 확대는 1.0(높이 {int(fh)}px 그대로), "
-                           f"원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22)")
+            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < zoom_floor(c, fh):
+                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {fh / max(1, cr[3]):.2f}배 확대 — "
+                           + (f"회원이 요청한 확대도 높이 {int(zoom_floor(c, fh))}px 이상(화질 하한)" if c.get("zoom") is True else
+                              f"확대는 1.0(높이 {int(fh)}px 그대로), 원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22). "
+                              f"회원이 확대를 요청했으면 그 컷에 \"zoom\": true"))
             if still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr):
                 iw, ih = wh
                 if cr[0] + cr[2] > iw + 2 or cr[1] + cr[3] > ih + 2:
@@ -413,6 +415,16 @@ def alt_scene_fix(S: dict, M: dict, origin_names: set, photos: list) -> list[str
 
 STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
 ZOOM_MIN_H = 0.95     # 영상 컷 crop 높이 하한(원본 높이 비율) = 확대 1.0(사장님 10-22 "확대 과다 → 확대 1.0 + 원본 글 흐림") — 여유 5%
+ZOOM_MEMBER_MIN_H = 0.6   # 회원이 확대를 요청한 컷(재료 컷 zoom: true — #1963 한정수 '박힌 자막은 흐림 말고 확대로') = 1.67배까지
+ZOOM_MIN_PX = 540         # 그래도 원본에서 이 높이(px)보다 적게 잘라 키우지 않는다 — 화질 하한(뭉개짐, 10-22 강주은 첫 컷)
+
+
+def zoom_floor(c: dict, fh: float) -> float:
+    """(판단 주인 — 영상 컷을 얼마나 잘라 키워도 되나) 기본 확대 1.0. 회원이 요청한 컷(zoom: true)은 ZOOM_MEMBER_MIN_H 까지,
+    단 원본 ZOOM_MIN_PX 높이 아래로는 안 된다(사장님 11-02 '회원 요청이 판·검사를 이긴다' — 화질 하한은 진짜 품질 값이라 남긴다)."""
+    if c.get("zoom") is True:
+        return min(fh * ZOOM_MIN_H, max(fh * ZOOM_MEMBER_MIN_H, ZOOM_MIN_PX))
+    return fh * ZOOM_MIN_H
 
 
 def text_blur(boxes: list, a: float, b: float) -> list:
@@ -455,6 +467,9 @@ def merge_blur(M: dict, blur: dict) -> int:
     return n
 
 
+WHOLE_END = 99999.0     # 통째 흐림의 끝(초) — 렌더 between(t,a,b) 에 그대로 들어간다
+
+
 def blur_minus_spans(M: dict, done: dict) -> int:
     """VMake 로 지운 구간(done = {파일 이름: [[a,b]…]} 원본 초 — vmake_clean.clean_used)의 흐림을 뺀다. 흐림 칸 [x,y,w,h,a,b] 를 지운 구간 밖 조각만 남긴다.
     지우기 전·실패 구간은 그대로 흐림(대체 길 유지). 바뀐 칸 수."""
@@ -465,8 +480,10 @@ def blur_minus_spans(M: dict, done: dict) -> int:
             continue
         out = []
         for r in rows:
-            if len(r) < 6:
+            if len(r) < 4:
                 out.append(r); continue
+            if len(r) < 6:          # 통째 흐림 [x,y,w,h] = 파일 처음~끝(11-05 김효준 #6290: 지운 파일에도 그대로 남았다) — 같은 빼기, 남은 조각은 6칸
+                r = list(r[:4]) + [0.0, WHOLE_END]
             parts = [[float(r[4]), float(r[5])]]
             for a, b in iv:
                 parts = [q for s0, s1 in parts for q in (([[s0, s1]] if b <= s0 or a >= s1 else []) + ([[s0, a]] if s0 < a < s1 else []) + ([[b, s1]] if s0 < b < s1 else []))
@@ -476,6 +493,26 @@ def blur_minus_spans(M: dict, done: dict) -> int:
             out += [list(r[:4]) + [round(s0, 3), round(s1, 3)] + list(r[6:]) for s0, s1 in parts]
         M["blur"][name] = out
     return n
+
+
+def accept_erased(M: dict, tf: dict | None, res: dict) -> int:
+    """(판단 주인 — 지우기 결과를 받은 뒤 할 일, 11-05 사장님 '두더지잡기 그만') 모든 길이 이 함수만 부른다:
+    서버 지시서(flow.f_bg_got·f_render_clean_got) · 회원 PC 다시 만들기(runner_ops._c_render RESTYLE) · 점검 도구(patch_render_check).
+    ① 호출 수는 성공·실패 상관없이 센다(돈은 이미 나갔다) ② 지운 구간(res.done)을 tf.done·cleaned 에 더하고 보낸 초를 센다
+    ③ 지금까지 지운 구간 전부(tf.done)의 흐림을 재료.blur 에서 뺀다. 돌려줌 = 뺀 흐림 칸 수.
+    tf=None 이면(회원 PC — 편 상태를 모른다) 이번에 받은 구간만으로 ③.
+    11-04 사고: 같은 순서가 네 곳에 따로 적혀 restyle 길만 흐림 빼기가 없었고(#5864), 보낸 초를 한 곳은 sec·한 곳은 send_sec 로 셌다."""
+    tf = tf if tf is not None else {}
+    tf["calls"] = int(tf.get("calls") or 0) + int(res.get("calls") or 0)
+    done = res.get("done") or {}
+    if res.get("error") or not done:
+        return 0
+    for n, iv in done.items():
+        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        if n not in tf.setdefault("cleaned", []):
+            tf["cleaned"].append(n)
+    tf["sec"] = round(float(tf.get("sec") or 0) + float(res.get("send_sec") if res.get("send_sec") is not None else res.get("sec") or 0), 3)
+    return blur_minus_spans(M, tf["done"])
 
 
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
@@ -547,6 +584,38 @@ def fix_crop_units(M: dict, dims: dict) -> list[str]:
             if new != cr:
                 out.append(f"{lid}: crop {cr} → {new}")
                 c["crop"] = new
+    return out
+
+
+def fit_window(M: dict, dims: dict, fit: dict | None, win: list) -> list[str]:
+    """가로 원본을 세로 창에 넣는 법(판단 주인) — 판 frame.fit 이 있으면(두유노판, 사장님 11-03 'EINo 편처럼 · 잘랐을 때 자연스러우면 된다 ·
+    너무 확대되고 가운데로 안 되어 있다'): 가로 원본 컷은 원본 **높이 전체**를 fit.aspect(가로/세로) 비율로 자르고(확대 없음 — 창 폭 1080 = 원본 높이 1080),
+    자르는 가운데 = 회원이 고른 crop 의 가운데(제품 자리, 없으면 원본 가운데) · 그 그림을 창 가운데 칸(pic)에 넣고 위아래는 판 바탕색.
+    벤치 EINo(260만): 가로 원본을 검정 바탕 가운데 창 y420~1499 / 706~1213 / 544~1375 로 비율대로. 세로 원본·사진·이미 pic 이 있는 컷은 그대로.
+    win = [x, y, w, h](판 창). 바꾼 것을 돌려준다."""
+    if not fit or fit.get("landscape") != "pic":
+        return []
+    ww, wh = int(win[2]), int(win[3])
+    if ww >= wh:
+        return []
+    asp = float(fit.get("aspect") or 1.0)
+    out = []
+    for lid, cuts in (M.get("cuts") or {}).items():
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            src = str(c.get("src") or "")
+            if c.get("pic") or src not in dims or src.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                continue
+            sw, sh = dims[src]
+            if not (sw and sh) or sw <= sh:
+                continue
+            cr = c.get("crop")
+            cx = (cr[0] + cr[2] / 2) if isinstance(cr, list) and len(cr) == 4 else sw / 2
+            cw = min(sw, int(round(sh * asp))) // 2 * 2
+            x = int(round(max(0, min(cx - cw / 2, sw - cw))))
+            ph = min(wh, int(round(ww * sh / cw))) // 2 * 2
+            c["crop"] = [x, 0, cw, sh // 2 * 2]
+            c["pic"] = [0, (wh - ph) // 2 // 2 * 2, ww, ph]
+            out.append(f"{lid} {src}: 가운데 x{int(cx)} → crop {c['crop']} · 창 {c['pic']}")
     return out
 
 

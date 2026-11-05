@@ -2521,6 +2521,64 @@
    "bench": "잉크 y457~514(가운데 485.5/1920)"
   }
  },
+ "hottemreport_v2": {
+  "label": "숏템리폿 검정 상자",
+  "desc": "흰 프리텐다드 볼드 · 검정 둥근 상자(반지름 22) · 외곽선 없음 · 강조 분홍 — PC 숏템리폿 납품 겉모습(make_frame_숏템리폿.py 외관 B, 10-17)",
+  "font": "CcPretendard-Bold",
+  "size": 62,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "box": {
+   "color": "#0A0A0E",
+   "alpha": 100,
+   "radius": 22,
+   "fit": true,
+   "pad": 30
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "CcPretendard-Bold",
+   "size": 62,
+   "color": "#FF82C3",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "speakers": {
+   "orig": {
+    "text": {
+     "color": "#68C8E8"
+    }
+   }
+  },
+  "stickers": {},
+  "bench": "PC 숏템리폿 납품(현장썰 4차 23~34편) 손 스크립트 값 — cap y1500·line_h 88·box pad 30 radius 22 rgb(10,10,14)",
+  "place": {
+   "y": 80.42,
+   "bench": "자막 칸 y1500 + line_h 88/2 = 가운데 1544/1920"
+  }
+ },
  "ititemlog_v2": {
   "label": "잇템로그 화자색(업그레이드)",
   "desc": "굵은 고딕 + 두꺼운 검정 테 · 화자마다 색(나레 노랑·원음 흰) · 전부 즉시 · 편 첫 나레 줄만 빨강, 그 끝 덩어리 팝+빨강 잔상 · 강조 색 후보 5개(훅 빨강 줄에도 강조가 남게)",

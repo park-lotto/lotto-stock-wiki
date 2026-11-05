@@ -79,9 +79,9 @@ def test_unproved_never_finishes_at_limit():
     st = _eye_st()
     F.ph_check_look(st, {}, {"eye_x": {"E1": {"v": "○"}}}, {})
     st["tries"].update(look=F.LIMITS["look"], eye_proof=F.LIMITS["eye_proof"])
-    with pytest.raises(F._Stop):
-        F.ph_check_judge(st, {}, {}, {})
-    assert not st.get("look_left")
+    # 11-02 21:16 ede07250b(관제 304 '눈 증거 한도 뒤에도 멈추지 않고 알리고 완성') — 멈춤 대신 남은 지적을 알리고 완성(통과 허가는 아님: look.ok 그대로 False)
+    assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "deliver"}
+    assert st["look"]["ok"] is False and any("제목" in x for x in st["look_left"]) and st["notice"].startswith("완성했어요")
 
 
 def test_wrong_title_is_problem():
