@@ -2102,7 +2102,8 @@ def admin_members(store=None) -> dict:
     out = []
     for cid in cids:
         ds = [{"id": d["dev_id"], "name": d["name"] or "이름 없는 PC", "slot": d["slot"], "last_seen": d["last_seen"],
-               "engine": d["engine"] or "", "engine_old": bool(want and (_semver(d["engine"] or "") or (0, 0, 0)) < want)}
+               "engine": d["engine"] or "",
+               "engine_old": bool(want and d["engine"] and (_semver(d["engine"]) or (0, 0, 0)) < want)}   # 모르는 판(배포 전 기록)은 옛 엔진이라 하지 않는다
               for d in devs.get(cid, [])]
         s, ls = sess.get(cid), leases.get(cid)
         out.append({"cid": cid, "member": _member_name(store, cid), "staff": _is_staff(cid), "revoked": cid in revoked,
