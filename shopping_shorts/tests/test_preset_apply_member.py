@@ -12,6 +12,7 @@ import engine_bundle as EB  # noqa: E402
 
 PRESET = ROOT / "channel" / "humorshowshow" / "preset" / "썰템쇼_화자썰"
 MEMBER_RENDER = ("tools/calcopy/engine/preset_make.py", "tools/calcopy/hybrid/render_itssum.py")
+RENDER_ROOTS = MEMBER_RENDER + ("tools/calcopy/engine/preset_gates.py",)   # 기본 렌더 길 출발점(PC제작형 c_pm 이 preset_gates 를 부른다)
 
 
 def test_member_render_does_not_import_preset_save():
@@ -29,10 +30,15 @@ def test_member_importing_preset_save_is_caught(monkeypatch, tmp_path):
         if (ROOT / r).is_file():
             (eng / r).parent.mkdir(parents=True, exist_ok=True)
             (eng / r).write_bytes((ROOT / r).read_bytes())
+    # 11-05: main 관제 319 고급반 명령(runner_ops.c_bm_*)이 preset_save 를 고급반 꾸러미로 빌려 쓰므로 HAND_SERVER_ONLY 가 preset_save 를 가린다.
+    #   그래서 묶음 전체가 아니라 '기본 렌더 길'(preset_make·render_itssum·preset_gates 출발, preset_save 를 가리지 않음)로 본다(Jev 0.79·위험 0.19)
+    ps = "tools/calcopy/engine/preset_save.py"
+    monkeypatch.setattr(EB, "HAND", RENDER_ROOTS)
+    monkeypatch.setattr(EB, "HAND_SERVER_ONLY", {x for x in EB.HAND_SERVER_ONLY if x != ps})
+    assert ps not in EB.hand_deps(eng)                     # 사보타주 전 = 렌더 길은 preset_save 에 안 닿는다
     pm = eng / "tools/calcopy/engine/preset_make.py"
     pm.write_text(pm.read_text(encoding="utf-8") + "\n\ndef _bad():\n    from tools.calcopy.engine import preset_save as P\n", encoding="utf-8")
-    bad = EB.hand_unresolved(eng)
-    assert any("preset_save.py" in b for b in bad), bad
+    assert EB.hand_deps(eng).get(ps) == "tools/calcopy/engine/preset_make.py"
 
 
 def test_one_owner_and_applies_pc_deliverable():

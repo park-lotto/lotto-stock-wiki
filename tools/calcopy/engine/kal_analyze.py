@@ -1048,8 +1048,8 @@ def ours_from_remake(out_dir, frame: dict | None = None, eye: dict | None = None
 
 def fix_cands(T: dict, frame: dict) -> list[dict]:
     """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 잡도리 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
-    from tools.calcopy.engine import preset_save as P
-    F = P.flat(frame)
+    from shopping_shorts.calcopy_frame.per_video import flat   # preset_save.flat 과 같은 함수 — preset_save(고급반 꾸러미 전용)를 회원 묶음 렌더 길에서 부르지 않게(11-05 Jev 0.79)
+    F = flat(frame)
     cap, head = _caption_at(frame)
     cap = cap or {}
     out, seen = [], set()
