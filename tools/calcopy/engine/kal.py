@@ -725,6 +725,49 @@ def _rendered(mp4: str) -> bool:
     return bool(want) and hashlib.md5(p.read_bytes()).hexdigest() == want
 
 
+def preset_fonts(pdir: Path) -> list[str]:
+    """프리셋 frame.json 글 층 글꼴 이름($ 자리표 뺌) → 파일 경로(fontmatch.font_paths 이름 대조). 못 찾은 이름은 '없음:<이름>'."""
+    from tools.calcopy.engine.fontmatch import font_paths
+    names = set()
+
+    def walk(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k == "font" and isinstance(v, str) and v and not v.startswith("$"):
+                    names.add(v)
+                else:
+                    walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    for f in pdir.glob("frame*.json"):
+        try:
+            walk(json.loads(f.read_text(encoding="utf-8")))
+        except ValueError:
+            pass
+    by = {Path(p).stem.lower(): p for p in font_paths()}
+    return [by.get(Path(n).stem.lower(), f"없음:{n}") for n in sorted(names)]
+
+
+def glyph_gate(pdir: Path, wdir: Path) -> list[str]:
+    """(make-화면자막-06 · Jev 해결 0.57) 렌더 전 — 대본 모든 줄 글자를 판 글꼴마다 fontmatch.missing_glyphs 로 대조. 빠진 글자·못 찾은 글꼴 목록."""
+    from tools.calcopy.engine.fontmatch import missing_glyphs
+    sp = wdir / "대본.json"
+    if not sp.exists():
+        return []
+    S_ = json.loads(sp.read_text(encoding="utf-8"))
+    text = "".join(str(l.get("text") or l.get("line") or "") for l in (S_.get("lines") or S_.get("spine55") or [])).replace("/", "")
+    out = []
+    for fp in preset_fonts(pdir):
+        if fp.startswith("없음:"):
+            out.append(f"글꼴 파일 못 찾음 {fp[3:]}")
+            continue
+        m = missing_glyphs(fp, text)
+        if m:
+            out.append(f"{Path(fp).name}: {''.join(m[:10])!r}")
+    return out
+
+
 def step_make(S: State):
     """제작 — 판단 주인 preset_make.make_one 을 부른다(make-00 Jev 해결 0.88 · 구현 방식 해결 0.74). 입력 = copy 단계 프리셋 폴더 + --work 작업 폴더(대본.json·재료.json).
     출력 = final.mp4 + 우리줄.json(kal_analyze.ours_from_preset_make). make_one 미달·멈춤 = failed. --ours-mp4 직접 넣기는 렌더 기록(_rendered)이 있을 때만."""
@@ -744,6 +787,9 @@ def step_make(S: State):
     pdir = (S.step("copy").get("outputs") or {}).get("preset")
     if not pdir or not (Path(pdir) / "manifest.json").exists():
         return "failed", {}, f"copy 단계 프리셋 폴더 없음({pdir}) — copy 부터"
+    miss = glyph_gate(Path(pdir), Path(wd))
+    if miss:
+        return "failed", {}, f"판 글꼴에 없는 대본 글자 — {miss[:6]} (글꼴 몰래 바꾸기 금지 · make-화면자막-06)"
     from types import SimpleNamespace
     from tools.calcopy.engine import preset_make
     a = SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=str(Path(wd) / f"kal_make_{time.strftime('%m%d_%H%M%S')}"), tag=None, cache=None,   # common-10: 매번 새 이름(지난 편 덮어쓰기 금지)

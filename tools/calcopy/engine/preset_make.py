@@ -412,6 +412,16 @@ def timing(w: dict, narr: Path, log: dict, cfg: dict | None = None, cache: Path 
         timed = [{**s, "t0": round(starts[i], 3), "t1": round(starts[i + 1] if i + 1 < len(starts) else dur, 3)} for i, s in enumerate(order)]
         log["line_timing"] = {"way": "TTS 덩어리 길이(줄 시작 계산)", "line_starts": W[:-1]}
         return timed, dur
+    if ((cfg or {}).get("checks") or {}).get("timing_words"):     # make-m03(Jev 판 칸 안 해결 0.64): 켠 판만 받아쓰기(낱말) 시각 1순위 — 깨지면 글자 비율 + 경보
+        hit = find_asr_cache(narr, w["data"])
+        m3 = []
+        t2, d2 = N.time_steps(steps, str(narr), lines=lines, log=m3.append, asr=True)
+        bad = timing_broken(t2, d2)
+        if not bad:
+            log["line_timing"] = {"way": "받아쓰기 1순위(timing_words)", "asr_cache": hit or "새로 부름", "경보": m3}
+            return t2, d2
+        print(f"  [경보] timing_words: 받아쓰기 시각이 깨져 글자 비율로 — {bad}", flush=True)
+        msgs.append(f"[경보] timing_words 받아쓰기 버림: {bad}")
     timed, dur = N.time_steps(steps, str(narr), lines=lines, log=msgs.append, asr=False)
     log["line_timing"] = {"way": "무음+글자비율", "경보": msgs, **({"덩어리 방식 안 씀": CHUNK_WHY[-1]} if CHUNK_WHY else {})}
     if not any("[경보]" in m for m in msgs) and ((cfg or {}).get("checks") or {}).get("line_sync"):
@@ -560,6 +570,9 @@ def _move(c, W, H) -> str:
 def part_vf(c, W, H2) -> str:
     """(판단 주인) 컷 조각이 어떤 그림이 되나 — 늘림(setpts)·크롭·창 크기·fps·move. render_parts(굽기)·preset_gates(멈춤 재기)가 같이 부른다."""
     x, y, cw, ch = c["box"]
+    H2 = int(H2) + (int(H2) % 2)                       # make-렌더-02: 홀수 높이 인코딩 실패 — render_parts 와 같은 올림(짝수)
+    if ch and abs(cw / ch - W / H2) > 0.01:            # make-소재-06: 늘어짐(비율 다른 상자를 창에 맞춰 늘림) 거절
+        raise ValueError(f"컷 상자 비율 {cw}x{ch}={cw / ch:.3f} ≠ 창 {W}x{H2}={W / H2:.3f} — 늘어짐(재료 box 를 창 비율로)")
     return ((f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
             f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2))
 
@@ -581,10 +594,14 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
         if not dst.exists():
             jobs.append((c, dst))
 
+    from tools.calcopy.engine import encoder as _E
+    slots = cfg.get("render_slots")                     # make-렌더-01(Jev 판 칸 안 해결 0.64): 켠 판만 PC 전체 동시 렌더 자리(encoder.slot)
+
     def one(job):
         c, dst = job
         tmp = dst.with_name(dst.stem + ".part.mp4")
-        run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf", part_vf(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
+        with (_E.slot(slots) if slots else _E.no_slot()):
+            run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf", part_vf(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
         tmp.replace(dst)
     with cf.ThreadPoolExecutor(FF_PAR) as ex:
         list(ex.map(one, jobs))
@@ -840,26 +857,41 @@ def sound(w, cfg, narr: Path, total: float, out: Path, log: dict) -> Path:
         (out / "sfx_events.json").write_text(json.dumps({"pack": pname, "density": pack["density"], "events": evs, "timeline": stl},
                                                         ensure_ascii=False, indent=1), encoding="utf-8")
         base = len(ins) // 2 if not bgm else 2
+        if sfx.get("db_below_voice") is not None:          # make-m02(Jev 해결 0.71): 효과음 = 나레 LUFS − 판 칸(BGM 과 같은 식), 칸 없으면 팩 값 그대로
+            nI2, _ = lufs(narr)
+            gl = {}
+            for pth in {e[0] for e in evs}:
+                sI, _ = lufs(pth)
+                gl[pth] = 10 ** (((nI2 + ngain - float(sfx["db_below_voice"])) - sI) / 20) if sI is not None and sI > -70 else 1.0
+            evs = [(pth, t, gl.get(pth, 1.0)) for pth, t, _mul in evs]
+            log["sfx_gain"] = {"rule": f"나레 LUFS − {sfx['db_below_voice']}dB", "files": {Path(k).name: round(20 * __import__('math').log10(v), 2) for k, v in gl.items() if v > 0}}
         for j, (path, t, mul) in enumerate(evs):
             ins += ["-i", path]
             ms = int(round(t * 1000))
             flt.append(f"[{base + j}:a]aresample=44100,aformat=channel_layouts=mono,volume={mul:.4f},adelay={ms}|{ms}[s{j}]")
             lab.append(f"[s{j}]")
         log["sfx"] = {"pack": pname, "density": pack["density"], "count": len(evs)}
-    flt.append(f"[n]{''.join(lab)}amix=inputs={1 + len(lab)}:normalize=0:duration=first[o]")
+    m = cfg["master"]
+    bed_only = m.get("limiter_bus") == "bed" and lab        # make-목소리-05(Jev 판 칸 안 해결 0.64): 켠 판만 — 나레는 고정 게인, 리미터는 배경 버스에만
+    if bed_only:
+        tp = 10 ** (float(m["tp_limit_db"]) / 20)
+        flt.append(f"{''.join(lab)}amix=inputs={len(lab)}:normalize=0:duration=longest,alimiter=limit={tp:.4f}:level=false:attack=1:release=30[bed]")
+        flt.append(f"[n][bed]amix=inputs=2:normalize=0:duration=first[o]")
+    else:
+        flt.append(f"[n]{''.join(lab)}amix=inputs={1 + len(lab)}:normalize=0:duration=first[o]")
     raw = out / "mix_raw.wav"
     run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(flt), "-map", "[o]", "-ar", "44100", "-ac", "2", raw])
-    m = cfg["master"]
     mix, gain, gmax = out / "mix.wav", float(m["gain_start"]), float(m.get("gain_max", 40))
     pre = (m.get("pre") + ",") if m.get("pre") else ""
     for _ in range(10):
-        run(["ffmpeg", "-y", "-i", raw, "-af", f"{pre}volume={gain:.2f}dB,alimiter=limit={10 ** (float(m['tp_limit_db']) / 20):.4f}:level=false:attack=1:release=30",
+        lim = "" if bed_only else f",alimiter=limit={10 ** (float(m['tp_limit_db']) / 20):.4f}:level=false:attack=1:release=30"   # bed_only: 최고점은 master_guard.encode_final 이 지킨다
+        run(["ffmpeg", "-y", "-i", raw, "-af", f"{pre}volume={gain:.2f}dB{lim}",
              "-ar", "44100", mix])
         oI, _ = lufs(mix)
         if abs(oI - float(m["lufs"])) <= 0.4 or gain >= gmax and oI < float(m["lufs"]):
             break
         gain = min(gmax, gain + (float(m["lufs"]) - oI) * 0.9)
-    log["master"] = {"gain_db": round(gain, 2), "mix_lufs": oI}
+    log["master"] = {"gain_db": round(gain, 2), "mix_lufs": oI, **({"limiter_bus": "bed"} if bed_only else {})}
     return mix, len(evs)
 
 
@@ -988,8 +1020,8 @@ def plan_rules(w, cfg, plan) -> list:
     mc = max(len(re.sub(r"^[^:\n]{1,10} : ", "", x)) for p in w["pieces"] for x in p["text"].split("\n"))   # 화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌)
     rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {C['caption_max_chars']}", "ok": mc <= C["caption_max_chars"]})
     if C.get("tts_no_jamo"):   # A11: 읽는 글에 ㅋㅋ·ㄷㄷ 같은 낱자 금지(자막엔 둔다)
-        jamo = [l["tts"] for l in w["lines"] if re.search(r"[ㄱ-ㅎㅏ-ㅣ]", l["tts"])]
-        rows.append({"B": "A11", "항목": "TTS 글 낱자(ㅋㅋ·ㄷㄷ) 없음", "값": jamo or 0, "ok": not jamo, "기준": "0 — 대본 줄 tts 칸에서 뺄 것"})
+        jamo = [l["tts"] for l in w["lines"] if re.search(r"[ㄱ-ㅎㅏ-ㅣ/¦‖|]", l["tts"])]      # make-목소리-08: 화면용 끊김 기호(/ ¦ ‖ |)도 읽는 글에 금지
+        rows.append({"B": "A11", "항목": "TTS 글 낱자(ㅋㅋ·ㄷㄷ)·끊김 기호(/ ¦ ‖) 없음", "값": jamo or 0, "ok": not jamo, "기준": "0 — 대본 줄 tts 칸에서 뺄 것"})
     rule = cfg.get("tts_split")
     if rule:
         long = [f"{nchar(c)}자 '{c[:14]}…'" for c in tts_chunks([l["tts"] for l in w["lines"]], rule) if nchar(c) > int(rule["max_chars"])]

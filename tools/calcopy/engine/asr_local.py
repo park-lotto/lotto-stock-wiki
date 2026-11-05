@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import subprocess
 
 SR = 16000
@@ -110,32 +111,82 @@ def _whisper(a) -> dict:
     return {"engine": f"whisper:{name}", "lang": info.language, "segments": out}
 
 
+_SM_DEAD: set = set()        # common-20: 이 프로세스에서 401/402/403/429 난 키(값 대신 번호 — 키 값은 어디에도 안 적는다)
+SM_ROTATE = (401, 402, 403, 429)
+
+
+def speechmatics_keys() -> list[str]:
+    """(키 자리 한 곳 · common-20) 쓸 수 있는 스피치매틱스 키 목록 — 환경변수 SPEECHMATICS_API_KEY·SPEECHMATICS_KEY·SPEECHMATICS_KEY_2..9 →
+    키 파일(~/.shortem/keys/speechmatics → ~/.volcano/keys/speechmatics)의 줄마다 한 키. 같은 키는 한 번, 죽은 키(_SM_DEAD 번호)는 뺀다."""
+    out = []
+    for name in ("SPEECHMATICS_API_KEY", "SPEECHMATICS_KEY", *[f"SPEECHMATICS_KEY_{i}" for i in range(2, 10)]):
+        v = (os.environ.get(name) or "").strip()
+        if v:
+            out.append(v)
+    for p in (os.path.expanduser("~/.shortem/keys/speechmatics"), os.path.expanduser("~/.volcano/keys/speechmatics")):
+        if os.path.exists(p):
+            out += [x.strip() for x in open(p, encoding="utf-8").read().splitlines() if x.strip() and not x.strip().startswith("#")]
+    seen, keys = set(), []
+    for k in out:
+        if k not in seen:
+            seen.add(k)
+            keys.append(k)
+    return [k for i, k in enumerate(keys) if i not in _SM_DEAD]
+
+
 def speechmatics_key() -> str:
     """키 자리 한 곳: 환경변수 SPEECHMATICS_API_KEY → SPEECHMATICS_KEY → ~/.volcano/keys/speechmatics(외부 사례 실행기와 같은 자리, 값 한 줄).
     10-21 사장님 '스피치매틱스 승인' — 서버(/etc/shopping-shorts.env·DB)에는 키가 없고 이 PC 외부 사례 키 파일에 있다(실측).
     10-26 사장님 '스피치매틱스도 무료 API 필요' — 회원 PC 는 회원 본인 키(~/.shortem/keys/speechmatics, 숏템 설정 화면이 저장) = 첫 준비 점검 필수 항목(runner_ops.need_list)."""
-    v = (os.environ.get("SPEECHMATICS_API_KEY") or os.environ.get("SPEECHMATICS_KEY") or "").strip()
-    if v:
-        return v
-    for p in (os.path.expanduser("~/.shortem/keys/speechmatics"), os.path.expanduser("~/.volcano/keys/speechmatics")):   # 회원 키 자리(숏템 설정 화면 · 다른 회원 키와 같은 방식) → 외부 사례 자리
+    ks = speechmatics_keys()       # 11-06: 목록 주인 speechmatics_keys 의 첫 살아 있는 키(키 파일 여러 줄 지원 — common-20)
+    return ks[0] if ks else ""
+
+
+def _sm_post(path: str, cfg: dict, post=None):
+    """common-20: 키를 돌려 가며 작업을 만든다 — 401/402/403/429 면 그 키를 이 프로세스에서 죽은 키로 두고 다음 키. → (응답, 키)."""
+    import json
+    if post is None:
+        import requests
+        post = requests.post
+    keys = speechmatics_keys()
+    if not keys:
+        raise RuntimeError("스피치매틱스 키 없음")
+    last = None
+    for key in keys:
+        with open(path, "rb") as f:
+            r = post("https://asr.api.speechmatics.com/v2/jobs", headers={"Authorization": f"Bearer {key}"}, files={"data_file": f},
+                     data={"config": json.dumps(cfg)}, timeout=120)
+        if getattr(r, "status_code", 200) in SM_ROTATE:
+            _mark_dead(key)
+            last = r
+            continue
+        return r, key
+    raise RuntimeError(f"스피치매틱스 키 {len(keys)}개 다 거절(마지막 {getattr(last, 'status_code', '?')})")
+
+
+def _mark_dead(key: str) -> None:
+    out = []
+    for name in ("SPEECHMATICS_API_KEY", "SPEECHMATICS_KEY", *[f"SPEECHMATICS_KEY_{i}" for i in range(2, 10)]):
+        v = (os.environ.get(name) or "").strip()
+        if v:
+            out.append(v)
+    for p in (os.path.expanduser("~/.shortem/keys/speechmatics"), os.path.expanduser("~/.volcano/keys/speechmatics")):
         if os.path.exists(p):
-            v = open(p, encoding="utf-8").read().strip()
-            if v:
-                return v
-    return ""
+            out += [x.strip() for x in open(p, encoding="utf-8").read().splitlines() if x.strip() and not x.strip().startswith("#")]
+    uniq = list(dict.fromkeys(out))
+    if key in uniq:
+        _SM_DEAD.add(uniq.index(key))
+        print(f"[경보] 스피치매틱스 키 #{uniq.index(key) + 1} 거절 — 다음 키로", file=sys.stderr)
 
 
-def _speechmatics(path: str) -> dict:
-    """고객 키 스피치매틱스(batch). 실패하면 예외 — 부르는 쪽이 위스퍼로 다시."""
+def _speechmatics(path: str, post=None) -> dict:
+    """고객 키 스피치매틱스(batch). 실패하면 예외 — 부르는 쪽이 정한다(engine='speechmatics' 명시면 위스퍼로 안 넘어감, make-공통-05)."""
     import json
     import time
     import requests
-    key = speechmatics_key()
-    H = {"Authorization": f"Bearer {key}"}
     cfg = {"type": "transcription", "transcription_config": {"language": "auto", "operating_point": "enhanced"}}
-    with open(path, "rb") as f:
-        r = requests.post("https://asr.api.speechmatics.com/v2/jobs", headers=H, files={"data_file": f},
-                          data={"config": json.dumps(cfg)}, timeout=120)
+    r, key = _sm_post(path, cfg, post)
+    H = {"Authorization": f"Bearer {key}"}
     r.raise_for_status()
     jid = r.json()["id"]
     for _ in range(120):
@@ -170,7 +221,19 @@ def transcribe(path: str, engine: str | None = None) -> dict:
     """engine='speechmatics' = 프리셋 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로)."""
     a = pcm(path)
     res = None
-    if (engine or os.environ.get("SHORTEM_ASR")) == "speechmatics" and speechmatics_key():
+    if engine == "speechmatics":      # make-공통-05(Jev 해결 0.79): 명시로 부르면 공급자를 몰래 바꾸지 않는다 — 1회 다시 뒤 실패면 예외
+        if not speechmatics_key():
+            raise RuntimeError("스피치매틱스 키 없음 — 위스퍼로 몰래 바꾸지 않는다(engine='speechmatics' 명시)")
+        err = None
+        for _ in range(2):
+            try:
+                res = _speechmatics(path)
+                break
+            except Exception as e:  # noqa: BLE001 — 한 번 더, 그래도 실패면 이유와 함께 올린다
+                err = e
+        if res is None:
+            raise RuntimeError(f"스피치매틱스 2번 실패: {type(err).__name__} {str(err)[:160]}")
+    elif os.environ.get("SHORTEM_ASR") == "speechmatics" and speechmatics_key():
         try:
             res = _speechmatics(path)
         except Exception as e:  # noqa: BLE001 — 고객 키 실패는 이유를 남기고 위스퍼로(조용히 삼키지 않는다)

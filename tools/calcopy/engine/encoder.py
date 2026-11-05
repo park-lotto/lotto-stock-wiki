@@ -75,3 +75,52 @@ def run(cmd, **kw) -> subprocess.CompletedProcess:
     if check and r.returncode != 0:
         raise subprocess.CalledProcessError(r.returncode, r.args, r.stdout, r.stderr)
     return r
+
+
+SLOT_DIR = os.path.join(os.path.expanduser("~"), ".shortem", "render_slots")
+SLOTS_DEFAULT = {"cpu": 2, "gpu": 6}      # make-렌더-01 회원 값: CPU 2·GPU 6
+
+
+import contextlib  # noqa: E402
+
+
+@contextlib.contextmanager
+def no_slot():
+    yield None
+
+
+@contextlib.contextmanager
+def slot(n: int | dict | None = None, timeout: float = 1800.0):
+    """(판단 주인 · make-렌더-01) PC 전체 동시 렌더 자리 — 자리 파일 slot_<i>.lock 을 O_EXCL 로 잡은 프로세스만 렌더. n 은 수 또는 {cpu,gpu}(기본 SLOTS_DEFAULT[kind()]).
+    죽은 프로세스 자리는 filelock.STALE_SEC 넘으면 치운다(같은 규칙). 자리를 못 잡으면 기다린다(timeout 넘으면 TimeoutError — 조용히 넘어가지 않는다)."""
+    import time
+    from tools.calcopy.engine.filelock import STALE_SEC
+    k = kind()
+    cnt = int((n or SLOTS_DEFAULT).get(k, 2) if isinstance(n, dict) or n is None else n)
+    os.makedirs(SLOT_DIR, exist_ok=True)
+    t0, got = time.time(), None
+    while got is None:
+        for i in range(cnt):
+            p = os.path.join(SLOT_DIR, f"slot_{i}.lock")
+            try:
+                fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.write(fd, str(os.getpid()).encode()); os.close(fd)
+                got = p
+                break
+            except FileExistsError:
+                try:
+                    if time.time() - os.stat(p).st_mtime > STALE_SEC * 15:     # 렌더 한 조각은 길다 — 30분 넘은 자리만 죽은 것으로
+                        os.unlink(p)
+                except OSError:
+                    pass
+        if got is None:
+            if time.time() - t0 > timeout:
+                raise TimeoutError(f"렌더 자리 {cnt}개가 {timeout:.0f}초 동안 다 찼다({SLOT_DIR})")
+            time.sleep(0.5)
+    try:
+        yield got
+    finally:
+        try:
+            os.unlink(got)
+        except OSError:
+            pass

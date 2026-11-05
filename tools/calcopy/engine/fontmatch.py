@@ -84,7 +84,10 @@ def missing_glyphs(path: str, text: str) -> list[str]:
         return im.tobytes()
 
     notdef = g("\U000F0000")
-    return [ch for ch in sorted(set(text)) if not ch.isspace() and g(ch) == notdef]
+    miss = [ch for ch in sorted(set(text)) if not ch.isspace() and g(ch) == notdef]
+    if " " in text and f.getlength(" ") <= 0:      # copy-01: 공백 폭 0(띄어쓰기가 붙어 버림)도 빠진 글자
+        miss.insert(0, " ")
+    return miss
 
 
 @lru_cache(maxsize=4096)

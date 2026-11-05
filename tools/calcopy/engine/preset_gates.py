@@ -92,12 +92,39 @@ def to_bench(w: dict, cfg: dict, name: str = "") -> dict:
 
 
 # ── 관문 ─────────────────────────────────────────────────────────────────
+JOIN_FORBID = ("시발", "씨발", "병신", "개새", "존나", "좆", "썅", "엿먹", "니미", "느금")   # make-화면자막-11 끊어 붙이면 욕이 되는 조합(경계 앞 끝+뒤 첫 글자)
+
+
+def hook_ending_gate(lines: list[dict]) -> list[str]:
+    """(판단 주인 · make-대본-04) 훅 1·2줄 어미가 같은 무리면 실패 — 어미 자르기는 kal_analyze._ending 한 곳, '~데' 무리(는데·던데·인데)는 하나로 본다."""
+    from tools.calcopy.engine.kal_analyze import _ending, _ENDINGS
+    t = [str(l.get("text") or "") for l in lines[:2]]
+    if len(t) < 2 or not all(x.strip() for x in t):
+        return []
+    a, b = _ending(t[0]), _ending(t[1])
+    same = (a.endswith("데") and b.endswith("데")) or (a == b and a in _ENDINGS)   # '~데' 무리 또는 어미 표(_ENDINGS)에 있는 같은 어미 — 명사 끝('이야기')은 어미가 아니다
+    return [f"G-1 훅 1·2줄 같은 어미 무리 '{a}'·'{b}'(~데 ~데 금지)"] if same else []
+
+
+def join_gate(pieces: list[dict]) -> list[str]:
+    """(판단 주인 · make-화면자막-11) 자막 조각 경계 앞 끝 2글자 + 뒤 첫 2글자를 붙이면 금칙어가 되는데 각 조각엔 없으면 실패."""
+    bad = []
+    tx = [str(p.get("text") or "").replace("\n", " ") for p in pieces]
+    for a, b in zip(tx, tx[1:]):
+        j = (a.replace(" ", "")[-2:] + b.replace(" ", "")[:2])
+        for w_ in JOIN_FORBID:
+            if w_ in j and w_ not in a.replace(" ", "") and w_ not in b.replace(" ", ""):
+                bad.append(f"G-1 자막 경계 '{a[-6:]}|{b[:6]}' 이어 읽으면 '{w_}'")
+    return bad
+
+
 def text_gate(w: dict) -> list[str]:
     """G-1(TTS 전) — preset_make 는 TTS 를 덩어리마다 따로 합성하므로 joined=False(줄 끝 부호 규칙 없음).
     + 판 대본 규칙 = script_audit.audit(대본.json) 의 실패 규칙(10-26 — 재미썸홈 beats·sibling_repeat, 잇썸홈 itssum 엔진·forbid·alt_disclosed).
     audit 안의 text: 규칙은 joined=True 판정이라 빼고 위 joined=False 판정만 센다(같은 글 규칙 두 번 세지 않게)."""
     from tools.calcopy.hybrid import script_audit as SA
     bad = [f"G-1 {x['line']} {x['rule']}: {x['why']}" for x in SA.text_defects(bench_script(w), joined=False)]
+    bad += hook_ending_gate(w.get("lines") or []) + join_gate(w.get("pieces") or [])     # 11-06 make-대본-04 · make-화면자막-11
     sp = Path(w["dir"]) / "대본.json" if w.get("dir") else None
     if sp and sp.exists():
         try:
