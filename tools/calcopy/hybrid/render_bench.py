@@ -1118,6 +1118,68 @@ def comment_card_png(c: dict, CT: dict, out: Path) -> tuple[int, int]:
     return w, h
 
 
+# ── 말풍선 층(관제 319 11-06 스냅봤니) ──────────────────────────────────────────
+# 판 frame.bubble 칸(벤치 실측 숫자 한 곳) + 대본 줄 bubbles → render_base 가 파이썬으로 굽는다(댓글카드와 같은 꼴). 자막팩 줄(caption_rows)에는 안 넣는다(두 번 안 그린다).
+# 자막팩에는 아직 '말풍선' 종류가 없다(caption-motions.js·precision20-ui.js 0건) — 고객 편집기용 종류는 자막팩보강(관제 235) 요청서로 넘겼다.
+#   그쪽에 종류가 생기면 이 층을 그쪽 그리기로 옮기고 여기서 지운다(한 판단 한 곳).
+BUBBLE_STYLES = ("box", "ring")
+
+
+def bubble_plan(S: dict, T: dict, st: dict) -> list[dict]:
+    """(판단 주인: 말풍선 시각·자리·색) — 대본 줄 bubbles [[글, s0, s1, {x, y, color?, rot?, style?}]] (s0·s1 = 줄 시작부터 초, caps_rel 과 같은 셈).
+    x·y = 말풍선 가운데(화면 px, 인물 머리 옆 — 대본 쓰는 쪽이 장면을 보고 고른다). color = 판 colors 이름 또는 #hex, rot = 도(반시계 +, 없으면 판 rot).
+    판에 frame.bubble 칸이 없는데 대본에 bubbles 가 있으면 멈춘다(조용히 빼지 않는다). 둘 다 없으면 [] — 다른 판 그림 그대로."""
+    BB = (st.get("frame") or {}).get("bubble")
+    want = [(L, b) for L in S.get("lines") or [] for b in (L.get("bubbles") or [])]
+    if not want:
+        return []
+    if not BB:
+        raise StageError(f"대본에 말풍선 {len(want)}개가 있는데 판 frame.bubble 칸이 없다 — 판에 실측 칸을 먼저 넣는다")
+    out = []
+    for L, b in want:
+        if L["id"] not in T["lines"]:
+            raise StageError(f"말풍선 줄 {L['id']} 이 시간표에 없다")
+        txt, s0, s1 = str(b[0]), float(b[1]), float(b[2])
+        o = b[3] if len(b) > 3 and isinstance(b[3], dict) else {}
+        a0, a1 = T["lines"][L["id"]]
+        t0, t1 = round(a0 + s0, 3), round(min(T["end"], a0 + s1), 3)
+        if not txt.strip() or t1 - t0 < 1 / FPS or "x" not in o or "y" not in o:
+            raise StageError(f"말풍선 {L['id']} '{txt}' — 글·시각(s0<s1)·자리(x,y) 가 다 있어야 한다")
+        col = o.get("color") or next(iter(BB["colors"]))
+        hexc = col if str(col).startswith("#") else BB["colors"].get(col)
+        sty = o.get("style", "box")
+        if not hexc or sty not in BUBBLE_STYLES:
+            raise StageError(f"말풍선 {L['id']} 색 {col}·꼴 {sty} — 판 colors {list(BB['colors'])} · 꼴 {BUBBLE_STYLES}")
+        out.append({"line": L["id"], "t0": t0, "t1": t1, "text": txt, "x": int(o["x"]), "y": int(o["y"]), "color": hexc,
+                    "rot": float(o.get("rot", BB.get("rot", 0.0))), "style": sty})
+    return out
+
+
+def bubble_png(b: dict, BB: dict, out: Path) -> tuple[int, int]:
+    """말풍선 한 장(검정 둥근 상자 + 색 글, 또는 흰 테 + 색 글) → 기울여 out(RGBA) 에 저장. 반환 = 왼쪽 위 자리(x, y) — 가운데가 b.x·b.y.
+    숫자는 판 frame.bubble 칸 한 곳(벤치 실측: 상자 #000000 불투명·반지름 13·여백 23/17·BMJUA 72px·기울기 중앙 +4.7도)."""
+    from PIL import Image, ImageDraw
+    f = _font(BB["font"], BB["px"])
+    bx, rg = BB["box"], BB.get("ring") or {"px": 6, "color": "#FFFFFF"}
+    sw = int(rg["px"]) if b["style"] == "ring" else 0
+    probe_d = ImageDraw.Draw(Image.new("RGBA", (8, 8)))
+    l, t, r, btm = probe_d.textbbox((0, 0), b["text"], font=f, stroke_width=sw)
+    tw, th = r - l, btm - t
+    px_, py_ = (int(bx["pad_x"]), int(bx["pad_y"])) if b["style"] == "box" else (sw + 4, sw + 4)
+    w, h = tw + 2 * px_, th + 2 * py_
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    if b["style"] == "box":
+        d.rounded_rectangle([0, 0, w - 1, h - 1], radius=int(bx["radius"]), fill=_rgb(bx["rgb"]) + (int(round(255 * float(bx.get("alpha", 1.0)))),))
+    d.text((px_ - l, py_ - t), b["text"], font=f, fill=_rgb(b["color"]) + (255,), stroke_width=sw, stroke_fill=_rgb(rg["color"]) + (255,) if sw else None)
+    if b["rot"]:
+        im = im.rotate(b["rot"], resample=Image.BICUBIC, expand=True)      # PIL + = 반시계(오른쪽이 올라감) — 벤치 실측 부호와 같다
+    x0 = max(0, min(W - im.width, b["x"] - im.width // 2))
+    y0 = max(0, min(H - im.height, b["y"] - im.height // 2))
+    im.save(out)
+    return x0, y0
+
+
 def lyric_plan(S: dict, st: dict, end: float) -> list[dict]:
     """(판단 주인: 가사 화면 시각) — 곡 옆 가사표 bgm_lib/<id>.lyrics.json [{t0,t1,jp,ko}](곡 기준 초) − 대본 bgm.ss(곡 몇 초부터 쓰나).
     판 frame.lyrics 가 없거나 가사표가 없으면 []."""
@@ -3092,6 +3154,14 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         ins += ["-loop", "1", "-framerate", str(FPS), "-t", f"{end:.3f}", "-i", R / f"lyric_{i}.png"]
         fc += f";[{last}][{k}:v]overlay=0:0:enable='between(t,{x['t0']:.3f},{x['t1'] - 1 / FPS:.3f})'[ly{i}]"
         last = f"ly{i}"
+    BB = F.get("bubble")
+    for i, b in enumerate(placed.get("bubbles") or []):    # 말풍선(판 frame.bubble · 대본 bubbles) — 즉시 뜨고 즉시 사라짐(벤치 instant 31/31)
+        bx0, by0 = bubble_png(b, BB, R / f"bubble_{i}.png")
+        b["png_xy"] = [bx0, by0]
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-loop", "1", "-framerate", str(FPS), "-t", f"{end:.3f}", "-i", R / f"bubble_{i}.png"]
+        fc += f";[{last}][{k}:v]overlay={bx0}:{by0}:enable='between(t,{b['t0']:.3f},{b['t1'] - 1 / FPS:.3f})'[bb{i}]"
+        last = f"bb{i}"
     for j, m in enumerate(meme_overlays(placed)):
         k = len([a for a in ins if a == "-i"])
         mx, my, mw, mh = m["box"]
@@ -3598,6 +3668,9 @@ def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
         placed["log"].append(f"댓글 카드 {t0:.2f}~{t1:.2f}")
     placed["cards"] = card_plan(S, T, st)               # 댓글카드 자막(판 frame.comment.track lines) — 그 줄은 자막팩이 안 그린다(caption_rows)
     placed["lyrics"] = lyric_plan(S, st, T["end"])
+    placed["bubbles"] = bubble_plan(S, T, st)          # 말풍선(판 frame.bubble) — render_base 가 굽는다, 자막팩 줄에는 없다
+    if placed["bubbles"]:
+        placed["log"].append(f"말풍선 {len(placed['bubbles'])}개")
     if placed["cards"]:
         placed["log"].append(f"댓글카드 {len(placed['cards'])}장")
     if placed["lyrics"]:
@@ -4249,6 +4322,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "memes": meme_overlays(placed), "comment": placed.get("comment"),
            **({"cards": placed["cards"]} if placed.get("cards") else {}), **({"lyrics": placed["lyrics"]} if placed.get("lyrics") else {}),
+           **({"bubbles": placed["bubbles"]} if placed.get("bubbles") else {}),
            **({"segments": [{k: g[k] for k in ("t0", "t1", "kind", "window", "captions", "body_text")} for g in segs]} if segs else {}),
            "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)

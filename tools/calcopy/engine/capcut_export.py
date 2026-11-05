@@ -344,6 +344,14 @@ def export(work_dir, out_root=None, doc=None, project_name: str | None = None, l
         F = st["frame"]
         pc = _full_canvas(R / "comment.png", ((W - cw_) // 2, F["comment"]["bottom"] - ch_), tmp / "comment_full.png")
         G.visual(G.track("video", "댓글 카드", 4), G.bring(pc, "comment_card.png"), C["t0"], C["t1"] - C["t0"])
+    tbub = None
+    for i, b in enumerate(tab.get("bubbles") or []):   # 말풍선(render_bench.render_base 가 구운 bubble_<i>.png 그대로 — 자리 png_xy)
+        pb = R / f"bubble_{i}.png"
+        if not (pb.exists() and b.get("png_xy")):
+            warnings.append(f"말풍선 {i} 그림 없음: {pb.name}")
+            continue
+        tbub = tbub or G.track("video", "말풍선", 4)
+        G.visual(tbub, G.bring(_full_canvas(pb, tuple(b["png_xy"]), tmp / f"bubble_full_{i}.png"), f"bubble_{i:02d}.png"), b["t0"], b["t1"] - b["t0"])
 
     # 4) 자막(장면꾸미기 층) · 스티커 · 자막 글자(편집용)
     rows, scenes, layers = tab["rows"], D["scenes"], D["layers"]

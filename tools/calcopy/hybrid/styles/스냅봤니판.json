@@ -90,7 +90,49 @@
   "logo": null,
   "watermark": null,
   "credit": null,
-  "why": "bg = #FDFDFD(z5 0~150행) · window = 세로 원본 편(fFh) 실측 y521~1919 — 가로 원본 편은 y524~1533(높이 1009), 우리 소재가 세로라 세로 칸"
+  "why": "bg = #FDFDFD(z5 0~150행) · window = 세로 원본 편(fFh) 실측 y521~1919 — 가로 원본 편은 y524~1533(높이 1009), 우리 소재가 세로라 세로 칸",
+  "bubble": {
+   "font": "BMJUA.ttf",
+   "px": 72,
+   "rot": 4.7,
+   "box": {
+    "rgb": "#000000",
+    "alpha": 1.0,
+    "radius": 13,
+    "pad_x": 23,
+    "pad_y": 17
+   },
+   "ring": {
+    "px": 6,
+    "color": "#FFFFFF"
+   },
+   "colors": {
+    "yellow": "#FCE61C",
+    "green": "#3CF141",
+    "pink": "#F741A4",
+    "blue": "#4EA1FB",
+    "sky": "#7EE9FA"
+   },
+   "share": {
+    "yellow": 10,
+    "green": 9,
+    "pink": 8,
+    "blue": 3,
+    "sky": 1,
+    "ring_style": "5/31",
+    "per_10s": 2.98,
+    "show_sec": [
+     0.7,
+     2.6
+    ],
+    "enter": "instant 31/31",
+    "center_y": [
+     642,
+     826
+    ]
+   },
+   "bench": "벤치 4편 말풍선 31줄 프로그램 실측(C:/t/snapfix_jev/measure_bub.py → bubble_measure.json, 11-06): 상자 안 색 중앙 #000000(밝은 배경 위 = 불투명) · 꽉 찬 상자(fill 0.995) 모서리 반지름 13 · 여백 가로 23·세로 17(잘 잡힌 9개 중앙) · 글 폭이 BMJUA 72px 와 3/4 편 0.98~1.0 · 잉크 높이 62 · 글 기울기 중앙 +4.7도(반시계, 29개 -3.9~13.4) · 글색 = 실제 픽셀 중앙(팔레트.json 눈값과 다름). 흰 테 꼴 크기는 기울기 섞여 미측정 — 같은 px. 자리 = 인물 머리 옆(편마다 다름) → 대본 bubbles 의 x·y"
+  }
  },
  "caption": {
   "pack": "mantem",
