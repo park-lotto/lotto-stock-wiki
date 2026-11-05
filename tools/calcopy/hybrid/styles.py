@@ -337,6 +337,11 @@ def _member_segment(Fs: dict, F: dict, brand: dict, text: dict, name, wm: dict) 
     if name and isinstance(fb, dict) and not [ic for ic in fb.get("icons") or [] if ic.get("kind") == "text"]:
         # 본 틀 머리띠에만 채널명 자리가 있는 판(썰템쇼판) — 훅 카드 머리띠가 비어 그 구간에 채널명이 안 나왔다(11-05 김효준 #7230). 같은 자리·같은 모양으로
         mine = [dict(ic) for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or [] if ic.get("kind") == "text" and ic.get("text") == name]
+        # 구간 제목 줄이 그 자리를 차지하면 붙이지 않는다 — 썰템쇼판 훅 카드 제목 1줄(141~255)이 채널명 자리(143~236)와 겹쳤다(11-05 김미향 #7844, 68f7e7629 회귀)
+        def _over(ic):
+            a0, a1 = ic["cy"] - ic["px"] / 2, ic["cy"] + ic["px"] / 2
+            return any(t.get("center") is not None and t["center"] - t["px"] / 2 < a1 and a0 < t["center"] + t["px"] / 2 for t in Fs.get("title") or [])
+        mine = [ic for ic in mine if not _over(ic)]
         if mine:
             fb["icons"] = list(fb.get("icons") or []) + mine
     if "logo" in Fs and Fs.get("logo"):

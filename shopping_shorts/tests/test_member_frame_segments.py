@@ -38,4 +38,5 @@ def test_hook_card_gets_channel_name_when_only_head_bar_has_it(tmp_path, monkeyp
     # 11-05 김효준 #7230: 썰템쇼판은 본 틀 머리띠에만 채널명 자리 — 훅 카드 머리띠가 비어 첫 구간에 채널명이 안 나왔다(렌더 길 frame_segments 로 잰다)
     Fi = _hook(tmp_path, monkeypatch, "썰템쇼판", {"brand": {"channel_name": "살까말까잡화점"}})
     icons = ((Fi.get("post") or {}).get("head_bar") or {}).get("icons") or []
-    assert any(ic.get("text") == "살까말까잡화점" for ic in icons), "훅 카드에 채널명이 없다"
+    # 11-05 김미향 #7844: 썰템쇼판 훅 카드는 제목 1줄이 머리띠 채널명 자리를 차지해 붙이면 겹친다 — 겹치는 자리면 붙이지 않는다
+    assert not any(ic.get("text") == "살까말까잡화점" for ic in icons), "훅 카드 제목과 겹치는 자리에 채널명을 붙였다"
