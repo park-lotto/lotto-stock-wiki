@@ -313,6 +313,7 @@ def member_frame(st: dict) -> dict:
     F = st.get("frame")
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st
+    _member_layout(F, st, text)
     name = brand.get("channel_name")
     wm = brand.get("watermark") if isinstance(brand.get("watermark"), dict) else {}     # 회원 워터마크 자리(없으면 {}) — 본 틀·구간 틀이 같이 쓴다
     bar = (F.get("post") or {}).get("head_bar") or {}
@@ -360,6 +361,34 @@ def member_frame(st: dict) -> dict:
     for sg in F.get("segments") or []:         # 구간 틀(훅 카드 등)이 덮는 칸에도 회원이 바꾼 칸만 — 안 바꾼 칸은 구간 판 값(#4901 김효준: 첫 장면만 회원 색·채널명 빠짐)
         _member_segment(sg.get("frame") or {}, F, brand, text, name, wm)
     return st
+
+
+# 회원 전체 화면(text.layout='full') 제목 두 줄 — 11-05 박은숙 회원 Claude 손수정(styles._member_fullscreen·member_fullscreen.json)과 같은 값. 회원 제목 칸(_member_titles)이 그 위에 덮는다
+MEMBER_FULL_TITLE = [
+    {"font": "Pretendard-Bold.otf", "px": 104, "color": "#FFFFFF", "hi": "#FFE600", "center": 250, "max_w": 980, "stroke": {"px": 10, "color": "#000000"}},
+    {"font": "Pretendard-Bold.otf", "px": 116, "color": "#FFE600", "hi": "#FFE600", "center": 385, "max_w": 980, "stroke": {"px": 10, "color": "#000000"}},
+]
+MEMBER_FULL_DROP = ("window", "window_radius", "post", "band", "credit", "segments")
+
+
+def _member_layout(F: dict, st: dict, text: dict) -> None:
+    """(판단 주인 — 회원 화면 틀·자막 쌓기 자리, 11-05 박은숙 썰템쇼판 9:16 전체 화면) member_frame 이 부른다.
+    text.layout='full' = 판 틀을 전체 화면(kind full, 창·게시글·띠·출처·구간 틀 없음)으로 바꾸고 제목 두 줄을 영상 위에(MEMBER_FULL_TITLE).
+    text.caption_stack{y,pitch,break} = 판 caption.stack 의 자리·간격·끊기만 덮는다(줄 수 lines 는 판 값). 판에 쌓기가 없으면 member_unused 로 알린다.
+    허용 값 검사 = preview_request.check(break 목록 주인 render_bench.STACK_BREAKS)."""
+    if text.get("layout") == "full":
+        F["kind"] = "full"
+        for k in MEMBER_FULL_DROP:
+            F.pop(k, None)
+        F["full"] = {}
+        F["title"] = [dict(t, stroke=dict(t["stroke"])) for t in MEMBER_FULL_TITLE]
+    cs = text.get("caption_stack")
+    if isinstance(cs, dict) and cs:
+        SK = (st.get("caption") or {}).get("stack")
+        if isinstance(SK, dict):
+            SK.update({k: cs[k] for k in ("y", "pitch", "break") if k in cs})
+        else:
+            st.setdefault("member_unused", []).append("text.caption_stack — 이 프리셋은 자막을 쌓지 않아(판 caption.stack 없음) 영상에 안 닿는 칸")
 
 
 def _member_titles(titles: list, text: dict) -> None:

@@ -224,7 +224,7 @@ def preset_defaults_table() -> dict:
 
 
 EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color", "watermark"),
-            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "caption_pack", "orig_text", "post_author"),
+            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "caption_pack", "orig_text", "post_author", "layout", "caption_stack"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -270,6 +270,19 @@ def check(pack: dict, cat: dict | None = None) -> list:
             err.append(f"모르는 글꼴: {tx[key]}")
     if tx.get("caption_pack") is not None and tx["caption_pack"] not in (cat.get("caption_packs") or ()):
         err.append(f"모르는 자막팩: {tx['caption_pack']}")
+    if tx.get("layout") not in (None, "", "full"):      # 화면 틀: full = 9:16 전체 화면(주인 styles._member_layout, 11-05 박은숙)
+        err.append(f"모르는 화면 틀: {tx.get('layout')} (full)")
+    cs = tx.get("caption_stack")
+    if cs is not None:      # 자막 쌓기 자리 — 판 caption.stack 의 y·pitch(짝)·break 만(주인 styles._member_layout · 끊기 목록 주인 render_bench.STACK_BREAKS)
+        from tools.calcopy.hybrid.render_bench import STACK_BREAKS
+        num = lambda v, lo, hi: isinstance(v, (int, float)) and not isinstance(v, bool) and lo <= v <= hi      # noqa: E731
+        if not isinstance(cs, dict) or set(cs) - {"y", "pitch", "break"} or ("y" in cs) != ("pitch" in cs):
+            err.append("자막 쌓기 칸은 y·pitch(짝)·break 만 받습니다")
+        else:
+            if "y" in cs and not (num(cs["y"], 200, 1800) and num(cs["pitch"], 40, 300)):
+                err.append("자막 쌓기 y 는 200~1800, pitch 는 40~300 입니다")
+            if "break" in cs and cs["break"] not in STACK_BREAKS:
+                err.append(f"자막 쌓기 끊기는 {STACK_BREAKS} 중 하나입니다")
     pa = tx.get("post_author")
     if pa is not None and (not isinstance(pa, str) or len(pa) > 20 or re.search(r"[<>{}$\\]", pa)):
         err.append("게시글 작성자 줄은 20자 이하 글자여야 합니다('' = 안 그림)")
