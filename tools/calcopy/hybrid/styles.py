@@ -333,6 +333,12 @@ def _member_segment(Fs: dict, F: dict, brand: dict, text: dict, name, wm: dict) 
                 name_look([Fs["watermark"]], brand.get("name_scale"), brand.get("name_color"))
             else:
                 Fs["watermark"] = None
+    fb = (Fs.get("post") or {}).get("head_bar")
+    if name and isinstance(fb, dict) and not [ic for ic in fb.get("icons") or [] if ic.get("kind") == "text"]:
+        # 본 틀 머리띠에만 채널명 자리가 있는 판(썰템쇼판) — 훅 카드 머리띠가 비어 그 구간에 채널명이 안 나왔다(11-05 김효준 #7230). 같은 자리·같은 모양으로
+        mine = [dict(ic) for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or [] if ic.get("kind") == "text" and ic.get("text") == name]
+        if mine:
+            fb["icons"] = list(fb.get("icons") or []) + mine
     if "logo" in Fs and Fs.get("logo"):
         if name:
             Fs["logo"] = {**Fs["logo"], "text": name}
