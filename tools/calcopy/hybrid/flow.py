@@ -1008,6 +1008,10 @@ def ph_sb_pick(st, m, rp, u):
     st["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": [{"bench": "(화면 대조)", "origin_t": t} for t in ts],
                     "window": [0.0, dur], "visual": True, "info": {k: c.get(k) for k in ("id", "title", "channel", "dur")}}
     st["log"].append(f"원본 = 출처 채널 미리보기 대조({oid}): {a.get('why')}")
+    if dur > full_max():      # 긴 원본 = 맞은 시각 앞뒤만(통째는 받는 쪽이 거절한다 — full_max 주석)
+        a0, b0 = max(0.0, min(ts) - 90), max(ts) + 90
+        st["origin"]["window"] = [a0, b0]
+        return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": a0, "b": b0, "ts": ts, "full": False}], "then": "origin_got"}
     return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": 0.0, "b": dur, "ts": [], "full": True}], "then": "origin_got"}
 
 
@@ -1237,13 +1241,18 @@ def ph_pick_got(st, m, rp, u):
     a, b = max(0.0, min(ts) - 90), max(ts) + 90
     st["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": p.get("matched") or [], "window": [a, b],
                     "info": next((c for c in st["scored"] if c["id"] == oid), {})}
-    full = float((st["origin"]["info"] or {}).get("dur") or 1e9) <= FULL_MAX
+    full = float((st["origin"]["info"] or {}).get("dur") or 1e9) <= full_max()
     if full:
         st["origin"]["window"] = [0.0, float(st["origin"]["info"]["dur"])]
     return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": a, "b": b, "ts": ts, "full": full}], "then": "origin_got"}
 
 
-FULL_MAX = 1800      # 이 길이(초) 이하 원본은 통째로 바로 — 구간 받기가 멈추는 회선에서 150초+ 기다림(10-22 실측 12분 원본 통째 47~53초)
+def full_max() -> float:
+    """통째로 받을 원본 길이 상한(초) — 주인은 받는 쪽 yt_fetch.FULL_MAX_SEC 한 곳(사장님 11-02 '긴 원본 통째 금지').
+    11-05 얜샷템 회원 편 0e227a6917c6: 여기 따로 둔 1800 이 21분 원본(8Vhy53eDdS8, PC 04편 원본)에 통째를 지시 → 받는 쪽 600 이 거절 →
+    매칭 시각(365~387초)을 알고도 구간 받기로 가지 않고 원본을 잃었다. 이하만 통째(구간 받기가 멈추는 회선 대비, 10-22), 넘으면 구간."""
+    from tools.calcopy.engine.yt_fetch import FULL_MAX_SEC
+    return float(FULL_MAX_SEC)
 
 
 def ph_origin_fetch(st, m, rp, u):
