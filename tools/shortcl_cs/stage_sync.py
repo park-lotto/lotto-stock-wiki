@@ -60,6 +60,13 @@ def main() -> None:
             continue
         if not os.path.exists(sp) or norm(sp) != norm(rel):
             diff.append((rel, sp))
+    # 플러그인(깨우기 훅 등) — 설치본 두 자리(설치 때 · 업데이트 때 받자마자) 모두. 11-05: 이 폴더를 안 대조해 1.0.104 가 옛 wake.js 로 나가 관제 309 수리를 되돌렸다
+    plg = "installer/plugin/shortem/"
+    for rel in [t for t in tracked if t.startswith(plg)]:
+        for dst in ("claude-plugin/shortem", "server/plugin_update/shortem"):
+            sp = os.path.join(STAGE, dst, rel[len(plg):])
+            if not os.path.exists(sp) or norm(sp) != norm(rel):
+                diff.append((rel, sp))
     for g in GUIDE[1]:
         sp = os.path.join(STAGE, g)
         if not os.path.exists(sp) or norm(sp) != norm(GUIDE[0]):
