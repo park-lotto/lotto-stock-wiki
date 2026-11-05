@@ -290,7 +290,9 @@ def test_runner_makes_alt_dir(tmp_path):
         out = R.run_do(tmp_path, [{"id": "s2:p", "cmd": "_t_probe", "sub": "alt1"}], log=lambda s: None)
     finally:
         R.CMDS.pop("_t_probe", None)
-    assert out["s2:p"] == {"ok": True} and seen["w"].endswith("alt1")
+    res = dict(out["s2:p"])
+    assert isinstance(res.pop("_sec", None), float)        # a4ccc02fe(관제 304) 실행기가 일마다 걸린 시간을 붙인다
+    assert res == {"ok": True} and seen["w"].endswith("alt1")
 
 
 def test_progress_line_when_one_source_stopped():

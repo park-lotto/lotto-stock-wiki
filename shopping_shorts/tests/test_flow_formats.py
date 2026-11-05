@@ -235,12 +235,13 @@ def test_celeb_stage_numbers_unchanged():
 
 # ── 3. check = quality_gate + 눈 2단, 미통과면 고치기 2회 뒤 멈춤(done 아님) ─────
 def test_gate_fail_finishes_with_notice_after_two_fixes():
-    """11-02 사장님 "권고사항": 두 번 고쳐도 남으면 멈추지 않고 알림과 함께 완성한다."""
+    """11-02 사장님 "권고사항": 걸린 것이 남아도 멈추지 않고 알림과 함께 완성한다.
+    11-02 22:09 aa31b3da2(관제 304 '완성본 뒤 재계획 금지·렌더 두 번 금지') 로 고치기 한도 LIMITS['look'] = 0 — 고치기 라운드 없이 검사 1번 뒤 알림 완성."""
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"gate_fail": True})
     assert res["status"] == "done", tr[-3:]
-    assert sum(1 for t in tr if any(r.startswith("final_fix_") for r in t[3])) == 2
-    assert sum(1 for t in tr if "check" in t[2]) == 3
+    assert sum(1 for t in tr if any(r.startswith("final_fix_") for r in t[3])) == F.LIMITS["look"] == 0
+    assert sum(1 for t in tr if "check" in t[2]) == 1
     assert any("음량" in x for x in st2["look_left"])
 
 
