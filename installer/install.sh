@@ -94,6 +94,8 @@ else
   if [ -d "$APP" ]; then OLD="$APP.old-$(date +%Y%m%d%H%M%S)"; mv "$APP" "$OLD"; fi
   mv "$FRESH" "$APP"
   printf '%s' "$SHA" > "$MARK"
+  # 묶음에는 tools/ 가 없다 — 치워 둔 실행 도구를 '이미 깔림' 확인 전에 제자리로(11-05 리허설: 순서가 뒤라 매번 다시 받았다, Jev 뿌리 0.93)
+  [ -d "$APP/tools.prev" ] && [ ! -e "$APP/tools" ] && mv "$APP/tools.prev" "$APP/tools"
   rm -f "$ZIP"
   [ -n "$OLD" ] && rm -rf "$OLD"
 fi

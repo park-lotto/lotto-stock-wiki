@@ -225,6 +225,20 @@ def test_전체_판_등록은_단계_배포를_덮지_않고_회수_기록을_�
     assert "1.0.2" in _table()["recalled"], "등록해도 회수 기록은 남는다"
 
 
+def test_전체_판_등록은_서버_판보다_낮거나_같은_번호를_거절한다(env, tmp_path):
+    """관제 330 — 다른 PC 가 먼저 낸 판(1.0.105)을 모르고 같은 번호로 덮으면 그 판을 받은 회원이 새 내용을 못 받는다."""
+    s = _stage(tmp_path, env)                                     # 서버 판 1.0.1
+    for bad in ("1.0.1", "1.0.0", "0.9.9", "1.0", "x"):
+        with pytest.raises(cp.PortalError) as e:
+            cp.update_register(bad, s["new"], s["new_size"])
+        assert "높아야" in e.value.msg or "꼴" in e.value.msg
+    assert _table()["version"] == "1.0.1", "거절되면 표는 그대로"
+    cp.update_register("1.0.2", s["new"], s["new_size"], "다음 판")
+    assert _table()["version"] == "1.0.2"
+    cp.update_register("1.1.0", s["new"], s["new_size"])           # 기능 추가 칸 올림도 된다(숫자 비교)
+    assert _table()["version"] == "1.1.0"
+
+
 def test_판_표를_직접_쓰는_길이_도구에_남아_있지_않다():
     root = Path(__file__).resolve().parents[2]
     for f in ("publish_update.py", "upload_release.py", "fast_release.py"):
