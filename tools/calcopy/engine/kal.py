@@ -913,6 +913,32 @@ def frame_texts(S: State) -> list[str]:
     return out
 
 
+def pixel_ref(S: State, bench: list, ours_win) -> tuple[Path | None, str]:
+    """(판단 주인 · verify 픽셀 자의 기준 벤치, Jev 뿌리 0.87·해결 0.80 11-06) 벤치 mp4 중 뜯기 layout.window 가 우리 창과 가장 닮은 편 —
+    비율(h/w) 차 먼저, 그다음 높이 차. 옛 동작(파일 순서 첫 편)은 우리 창을 못 쟀을 때만, 이유를 남긴다(11-06 스냅봤니: 가로 원본 5Tz 와 세로 원본 우리 편을 비교)."""
+    cands = []
+    for d in bench:
+        vid = d.get("id")
+        p = DATA / S.d["slug"] / "src" / f"{vid}.mp4"
+        if not p.exists():
+            continue
+        win = None
+        tp = S.dir / "뜯기" / str(vid) / "뜯기.json"
+        if tp.exists():
+            try:
+                win = (json.loads(tp.read_text(encoding="utf-8")).get("layout") or {}).get("window")
+            except ValueError:
+                win = None
+        cands.append((p, win))
+    if not cands:
+        return None, "벤치 mp4 없음"
+    if not ours_win or not all(w for _, w in cands):
+        return cands[0][0], f"우리 창 또는 벤치 창 못 잼 → 첫 편 {cands[0][0].stem}(옛 동작)"
+    ow, oh = float(ours_win[2]), float(ours_win[3])
+    best = min(cands, key=lambda c: (abs(c[1][3] / c[1][2] - oh / ow), abs(c[1][3] - oh)))
+    return best[0], f"창 {list(best[1])} ≈ 우리 {list(ours_win)} — 벤치 {len(cands)}편 중 비율·높이 가장 닮은 편"
+
+
 def _sha256(p: str) -> str:
     import hashlib
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -942,8 +968,16 @@ def step_verify(S: State):
     kd = S.dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
     out = kd / "재현일치도.md"
-    bmp4 = next((p for p in (DATA / S.d["slug"] / "src" / f"{d.get('id')}.mp4" for d in bench) if p.exists()), None)
+    ours_win = None
+    if ot.get("tteutgi"):
+        try:
+            ours_win = (json.loads(Path(ot["tteutgi"]).read_text(encoding="utf-8")).get("layout") or {}).get("window")
+        except (OSError, ValueError):
+            ours_win = None
+    bmp4, ref_why = pixel_ref(S, bench, ours_win)
+    T["pixel_ref"] = {"bench_mp4": str(bmp4) if bmp4 else None, "why": ref_why}
     if bmp4:   # 1차 프리셋 관문 하나 = 줄 단위 자 + 픽셀·소리 자(compare) — 둘 다 통과여야 통과(지침서 맨 위 엔진 순서)
+        print(f"[픽셀 자 기준 벤치] {bmp4.stem} — {ref_why}")
         K.with_pixel(T, str(bmp4), o["ours_mp4"], str(kd / "재현일치도_픽셀"))
     else:
         T["pixel"] = {"verdict": "미측정", "n_in": 0, "n_criteria": 0, "out": [], "failed": ["벤치 mp4 없음 — 픽셀·소리 자 못 잼"], "table": ""}

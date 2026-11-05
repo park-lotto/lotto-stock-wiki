@@ -50,3 +50,24 @@ def test_make_bench_rejects_non_bench_style(tmp_path, monkeypatch):
     S = _state(tmp_path, monkeypatch, "잇썸홈판")
     st, out, note = kal.step_make(S)
     assert st == "failed" and "bench" in note
+
+
+def test_verify_pixel_ref_by_window(tmp_path, monkeypatch):
+    """verify 픽셀 자의 기준 벤치 = 우리 창과 가장 닮은 벤치(Jev 뿌리 0.87·해결 0.80, C:/t/kal_snap_jev/q_verify_ref.json).
+    옛 kal 은 파일 순서 첫 편(가로 원본)을 골랐다 — 세로 원본 우리 편과 창·길이를 엉뚱하게 비교."""
+    monkeypatch.setattr(kal, "ROOT", tmp_path)
+    monkeypatch.setattr(kal, "DATA", tmp_path / "data")
+    S = kal.State("snap_t", "@x", "브랜드", 1, "아니오")
+    src = tmp_path / "data" / "snap_t" / "src"
+    src.mkdir(parents=True)
+    wins = {"5TzEJXTovEE": [0, 524, 1080, 1009], "CZdHXV0nfGw": [0, 517, 1080, 884], "fFhPI-9EmWc": [0, 521, 1080, 1399]}
+    for vid, w in wins.items():
+        (src / f"{vid}.mp4").write_bytes(b"x")
+        d = S.dir / "뜯기" / vid
+        d.mkdir(parents=True)
+        (d / "뜯기.json").write_text(json.dumps({"layout": {"window": w}}), encoding="utf-8")
+    bench = [{"id": v} for v in sorted(wins)]
+    p, why = kal.pixel_ref(S, bench, [0, 521, 1080, 1399])
+    assert Path(p).stem == "fFhPI-9EmWc" and "창" in why
+    p2, _ = kal.pixel_ref(S, bench, None)                       # 우리 창을 못 재면 옛 동작(첫 편) + 이유
+    assert Path(p2).stem == "5TzEJXTovEE"
