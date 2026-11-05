@@ -33,14 +33,30 @@ test('쿠키 → Netscape 한 파일·인스타 세션 JSON·yt-dlp 설정, 숏�
   assert.ok(conf.includes(L.cookiesFile().replace(/\\/g, '/')));
 });
 
+// 바깥 사이트에 접속하지 않는다 — yt-dlp 는 --cookies 파일을 시작 때 읽어 꼴이 틀리면 'does not look like a Netscape format' 을 낸다(주소 없이도).
+//   11-05: 실제 틱톡 주소로 종료코드 0 까지 요구해, 틱톡이 자동 접속에 챌린지 화면을 주자 쿠키 꼴과 무관하게 빨강 → 1.0.106 빠른배포가 멈췄다.
+const ytdlpRead = (env) => {
+  const r = spawnSync(process.platform === 'win32' ? 'py' : 'python3', ['-m', 'yt_dlp', '--verbose', '--simulate', 'notaurl'], { env, encoding: 'utf8', timeout: 120000 });
+  return (r.stdout || '') + (r.stderr || '');
+};
+
 test('만든 쿠키 파일·설정을 yt-dlp 가 그대로 읽는다(파일 꼴 오류 없음)', () => {
-  const env = { ...process.env, ...L.engineCookieEnv() };
-  const r = spawnSync(process.platform === 'win32' ? 'py' : 'python3', ['-m', 'yt_dlp', '--verbose', '--simulate', 'https://www.tiktok.com/@11street_official/video/7512363471871216903'],
-    { env, encoding: 'utf8', timeout: 120000 });
-  const log = (r.stdout || '') + (r.stderr || '');
+  L.writeCookies(ck);
+  const log = ytdlpRead({ ...process.env, ...L.engineCookieEnv() });
   assert.match(log, /User config .*yt-dlp.config.*--cookies/, '설정 파일을 안 읽었다');
-  assert.doesNotMatch(log, /does not look like a Netscape format|cookies.*(error|invalid)/i, log.slice(-500));
-  assert.equal(r.status, 0, log.slice(-500));
+  assert.doesNotMatch(log, /does not look like a Netscape format|skipping cookie file entry/i, log.slice(-500));
+  assert.match(log, /not a valid URL/, '쿠키를 읽은 뒤 주소 단계까지 와야 한다 — ' + log.slice(-300));
+});
+
+test('사보타주: 쿠키 파일 꼴이 깨지면 위 시험이 잡는다', () => {
+  L.writeCookies(ck);
+  const keep = fs.readFileSync(L.cookiesFile(), 'utf8');
+  try {
+    fs.writeFileSync(L.cookiesFile(), 'this is not a cookie file\n\tbroken\tline\n');
+    assert.match(ytdlpRead({ ...process.env, ...L.engineCookieEnv() }), /does not look like a Netscape format|skipping cookie file entry/i);
+  } finally {
+    fs.writeFileSync(L.cookiesFile(), keep);
+  }
 });
 
 test('홈 경로에 한글이 있어도 yt-dlp 가 설정 파일을 읽는다(98 #158 — 한국어 윈도 cp949)', () => {

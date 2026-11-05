@@ -1147,6 +1147,22 @@ def _cp_cached(f: Path):
     return None
 
 
+def merge_items(results: list) -> list:
+    """(판단 주인 — 검색어 여러 개의 쿠팡 결과를 후보 한 줄로) 검색어마다 1위·2위…를 번갈아 넣는다(같은 상품은 한 번).
+    11-05 숏템리폿 회원 편(체스넛 무브): 검색어 순서대로 이어 붙이고 앞 12개만 판정에 보내, 첫 검색어(한글 음역 → 신발 12개)가
+    자리를 다 차지했다 — 둘째·셋째 검색어 1위였던 같은 제품(Chessnut Move 로봇 체스보드)이 판정에 실리지 않아 소재를 버렸다."""
+    lists = [list((v or {}).get("items") or []) for v in results]
+    items, seen = [], set()
+    for rank in range(max((len(x) for x in lists), default=0)):
+        for x in lists:
+            if rank < len(x):
+                it = x[rank]
+                k = str(it.get("product_id") or it.get("productId") or it.get("id") or it.get("name"))
+                if k not in seen:
+                    seen.add(k); items.append(it)
+    return items
+
+
 def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
@@ -1175,12 +1191,7 @@ def c_coupang(W, d):
         sys.stderr.write(f"[coupang] 저장본 재사용 {len(hit)}개 · 새로 부름 {len(miss)}개\n")
     found = {**hit, **found}
     jsave(W / "look" / f"coupang_{int(time.time())}.json", found)
-    items, seen = [], set()
-    for v in found.values():
-        for it in (v or {}).get("items") or []:
-            k = str(it.get("product_id") or it.get("productId") or it.get("id") or it.get("name"))
-            if k not in seen:
-                seen.add(k); items.append(it)
+    items = merge_items([found.get(q) or {} for q in qs] + [v for q, v in found.items() if q not in qs])
     # 검색어가 하나도 성공 못 했으면(쿠팡이 회선을 막음·창 실패) '제품 없음'이 아니다 — flow 가 '막힘·다시 시도'로 멈추게 표시(10-26)
     failed = bool(found) and not any((v or {}).get("ok") for v in found.values())
     return {"items": items[:16], **({"search_failed": True} if failed and not items else {})}
