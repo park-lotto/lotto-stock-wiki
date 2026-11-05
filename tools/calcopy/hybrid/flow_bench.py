@@ -82,6 +82,7 @@ def stop_kind(errs) -> str:
 #   WAIT_MEM_GB 4 = Jev 최선 후보(해결 0.79·뿌리 0.48 — 채택 기준 미달이나 사장님 직접 지시로 기다림 문턱에만 씀, 시작을 막지는 않는다).
 WAIT_MEM_GB = 4.0
 WAIT_MAX_S = 900
+SERVER_WAIT_S = 60      # 서버(판단 서버 Jev) 쉼 = 회원 PC 정리 없이 이만큼 기다렸다 같은 단계(Jev 해결 0.76·뿌리 0.64)
 
 
 def _fail_stop(st, errs, why: str, fix: str, retry: str | None, retry_content: bool = True, **kw):
@@ -473,10 +474,14 @@ def bm_panbokki(st, m, rp, u):
         try:
             d = J.decide(f"잡도리 {n}회차 — 벤치와 다른 칸 {fails[:5]}", [json.dumps(p, ensure_ascii=False)[:3000]],
                          [json.dumps(c, ensure_ascii=False) for c in cands])
-        except J.JevDown as e:       # 서버 쪽 문제 — 회원 과제로 넘기지 않고(ask_member) 경보를 남기고 멈춘다
+        except J.JevDown as e:       # 서버 쪽 문제 — 경보 + '서버' 종류 자동 재시도(정리 없이 SERVER_WAIT_S 기다렸다 같은 단계, Jev 해결 0.76·뿌리 0.64). 3번이면 멈춤
             st["alarm"] = {"kind": "jev_down", "why": str(e), "at": "bm_panbokki"}
             st["log"].append(f"경보: 벤치마킹 판단 서버(Jev) 실패 — {e}")
-            raise F._Stop("잠시 판단 서버가 쉬고 있어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=str(e))
+            k = b.setdefault("env_fail", {}).get("server:bm_panbokki", 0) + 1
+            b["env_fail"]["server:bm_panbokki"] = k
+            if k >= F.REDO_STUCK:
+                raise F._Stop("잠시 판단 서버가 쉬고 있어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=f"Jev {k}번 연속 실패: {e}")
+            return {"do": [{"id": "wait", "cmd": "bm_wait", "sec": SERVER_WAIT_S, "try": k}], "then": "bm_panbokki"}
         if not d["ok"]:      # 확신 없이 고르지 않는다 — 같은 표를 되풀이해 재지 않고 남은 칸과 함께 멈춘다
             st["log"].append(f"잡도리 {n}: 고를 칸 확신 부족(Jev {d['conf']}) → 멈춤")
             raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, fails)) + " — 이 부분은 직접 고쳐 주세요", final=True, detail=f"Jev 확신 부족 {d['conf']}")

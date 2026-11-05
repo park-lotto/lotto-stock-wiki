@@ -2473,21 +2473,23 @@ def c_bm_tear(W, d):
     return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed, "r7": r7, "r7_failed": r7_failed}
 
 
-TEMP_PREFIXES = ("claude_ma_",)       # %TEMP% 아래 엔진 임시 폴더(claude_cli.ask) — 이 접두어만
+def run_id(W: Path) -> str:
+    """작업 꼬리표 = 작업 폴더 경로 해시 12자. 이 실행기가 띄운 claude_cli 임시 폴더 접두에 붙는다(claude_cli.temp_prefix)."""
+    return hashlib.sha1(str(Path(W).resolve()).lower().encode("utf-8")).hexdigest()[:12]
 
 
 def clean_targets(W: Path) -> list[Path]:
     """(판단 주인 · 지울 목록 한 곳) 용량 부족 되살리기에서 지워도 되는 것 = 엔진이 만든 중간 파일만.
     ① 이 작업 폴더의 뜯기 중간물(channel/*/뜯기/<편>/ 안 뜯기.json·frame.json 밖의 것 — 프레임·자막 조각, 다음 단계가 안 읽는다)
-    ② %TEMP% 아래 TEMP_PREFIXES 폴더. 절대 안 지움: src(받은 영상)·완성본·preset·줄판독·뼈대·장부·사용자 파일·다른 작업 폴더 ·
+    ② %TEMP% 아래 이 작업 꼬리표가 붙은 claude_cli 임시 폴더(claude_ma_<run_id>_*)만 — 공용 접두(claude_ma_)·다른 작업·다른 트랙 폴더는 안 지움. 절대 안 지움: src(받은 영상)·완성본·preset·줄판독·뼈대·장부·사용자 파일·다른 작업 폴더 ·
        나란히 놓기(side/)·눈 판정 그림(eye/) — 상태에 경로가 남아 뒤 단계(확정 검사·눈 판정 다시 묻기)가 읽는다."""
     import tempfile
     out = []
     for td in sorted(W.glob("channel/*/뜯기/*")):
         if td.is_dir():
             out += [p for p in td.iterdir() if p.name not in ("뜯기.json", "frame.json")]
-    tmp = Path(tempfile.gettempdir())
-    out += [p for p in tmp.iterdir() if p.is_dir() and p.name.startswith(TEMP_PREFIXES)] if tmp.is_dir() else []
+    tmp, mine = Path(tempfile.gettempdir()), f"claude_ma_{run_id(W)}_"
+    out += [p for p in tmp.iterdir() if p.is_dir() and p.name.startswith(mine)] if tmp.is_dir() else []
     return out
 
 
@@ -2519,6 +2521,16 @@ def c_bm_clean(W, d):
         mem = mem_free_gb()
     return {"removed": gone, "freed_mb": round(freed / 1e6, 1), "mem_free_gb": mem, "waited_s": round(time.time() - t0, 1),
             "mem_ok": mem is None or not need or mem >= need, "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1)}
+
+
+def c_bm_wait(W, d):
+    """서버 쉼 기다리기(판단 없음) — sec 초(최대 300) 동안 10초마다 진행 신호."""
+    import time
+    sec, t0 = min(float(d.get("sec") or 60), 300.0), time.time()
+    while time.time() - t0 < sec:
+        jsave(W / "_wait.json", {"waited_s": round(time.time() - t0, 1), "sec": sec})
+        time.sleep(min(10.0, max(0.0, sec - (time.time() - t0))))
+    return {"waited_s": round(time.time() - t0, 1)}
 
 
 def _r7_of(W: Path, v: dict, J: dict, longs: dict) -> dict:
@@ -2667,7 +2679,7 @@ def c_bm_eye_frames(W, d):
     return {"frames": out, "failed": failed}
 
 
-CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames, "bm_clean": c_bm_clean})
+CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames, "bm_clean": c_bm_clean, "bm_wait": c_bm_wait})
 CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
 
 
@@ -2709,7 +2721,7 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
              "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
-             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인", "bm_clean": "PC 정리하고 기다리기"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인", "bm_clean": "PC 정리하고 기다리기", "bm_wait": "잠시 기다리기"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}
@@ -2857,6 +2869,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
     일마다 시간 예산(BUDGET)·진행 감시(STALL_SEC) — 넘으면 '시간 초과' 오류로 끝낸다(멈춘 채 대기 금지)."""
     _guard_cache_mode()
     W.mkdir(parents=True, exist_ok=True)
+    from tools.calcopy.engine import claude_cli as CC
+    os.environ[CC.RUN_ENV] = run_id(W)          # 이 실행기가 만드는 claude_cli 임시 폴더에 작업 꼬리표(정리는 자기 것만)
     out = {}
     stall = STALL_SEC if stall is None else stall
 

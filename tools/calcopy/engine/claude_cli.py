@@ -27,6 +27,16 @@ MODEL_DEFAULT = "sonnet"
 MODEL_TABLE = (("ma_fit", "opus"), ("ma_ref", "opus"), ("fx_target", "opus"))
 
 
+RUN_ENV = "SHORTEM_RUN_ID"      # 이 작업 꼬리표 — 실행기(runner_ops.run_do)가 작업 폴더로 정한다. 정리(runner_ops.clean_targets)는 자기 꼬리표 폴더만 지운다
+
+
+def temp_prefix() -> str:
+    """임시 폴더 접두 = claude_ma_<작업 꼬리표>_ (꼬리표 없으면 claude_ma_ — 그런 폴더는 어떤 정리도 지우지 않는다)."""
+    import os
+    tag = re.sub(r"[^0-9A-Za-z]", "", os.environ.get(RUN_ENV, ""))[:16]
+    return f"claude_ma_{tag}_" if tag else "claude_ma_"
+
+
 def model_for(tag: str) -> str:
     t = str(tag or "")
     return next((m for head, m in MODEL_TABLE if t.startswith(head)), MODEL_DEFAULT)
@@ -63,7 +73,7 @@ def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tu
         import sys
         print(f"[경보] claude_cli 모델 표와 다름: tag={tag} 넘긴={model} 표={want} — 표 값으로 부른다", file=sys.stderr)
     model = want
-    d = Path(tempfile.mkdtemp(prefix="claude_ma_"))
+    d = Path(tempfile.mkdtemp(prefix=temp_prefix()))
     try:
         names = []
         for k, b in enumerate(parts or []):

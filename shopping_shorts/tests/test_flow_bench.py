@@ -84,9 +84,13 @@ def test_jev_down_stops_without_task(monkeypatch):
     monkeypatch.setattr(jev_gate, "decide", boom)
     st = {"fmt": "벤치마킹", "phase": "bm_panbokki", "pan_n": 0, "log": [], "tries": {}, "bm": {}}
     r = _go(st, {"pan": {"match_ok": False, "fails": ["caption.y"], "cands": [{"path": "a"}, {"path": "b"}]}})
-    assert r["status"] == "stop" and r["why"] == "잠시 판단 서버가 쉬고 있어요" and r["fix"] == "잠시 뒤 다시 해 주세요"
-    assert r["retry_ok"] is True and "_task" not in r["state"] and r["state"]["alarm"]["kind"] == "jev_down"
-    assert st["pan_n"] == 0 and any("경보" in x for x in st["log"])
+    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_wait"]        # 서버 쉼 = 회원 질문 없이 잠깐 기다렸다 같은 단계(Jev 0.76·0.64)
+    assert "_task" not in r["state"] and r["state"]["alarm"]["kind"] == "jev_down" and st["pan_n"] == 0 and any("경보" in x for x in st["log"])
+    for _ in range(2):
+        st["phase"] = "bm_panbokki"
+        r = _go(st, {"wait": {"waited_s": 60}})
+    assert r["status"] == "stop" and r["why"] == "잠시 판단 서버가 쉬고 있어요" and r["fix"] == "잠시 뒤 다시 해 주세요" and r["retry_ok"] is True
+    st["bm"]["env_fail"] = {}
     # 다시 시도: Jev 가 살아나면 직전 대조표로 이어 간다
     monkeypatch.setattr(jev_gate, "decide", lambda *a, **k: {"pick": 1, "conf": 0.9, "fixroot": [0.1, 0.9], "ok": True})
     st["phase"] = "bm_panbokki"

@@ -226,8 +226,8 @@ def test_jev_retry_does_not_count_same_table(monkeypatch):
     _pan(st, ["x"], [{"path": "a"}, {"path": "b"}])
     for _ in range(3):                                         # 같은 표로 다시 시도 3번 — 같은 칸 연속으로 안 센다
         st["phase"] = "bm_panbokki"
-        r = _go(st)
-        assert r["why"] == "잠시 판단 서버가 쉬고 있어요"
+        r = _go(st, {"wait": {"waited_s": 60}})
+    assert r["why"] == "잠시 판단 서버가 쉬고 있어요"
     assert len(st["bm"]["pan_hist"]) == 1
 
 
@@ -256,10 +256,11 @@ def test_tear_memory_error_cleans_waits_then_retries_tear_not_asks_member():
 def test_clean_targets_only_engine_intermediates(tmp_path, monkeypatch):
     import tempfile
     tmpd = tmp_path / "tmp"
-    (tmpd / "claude_ma_x").mkdir(parents=True)
-    (tmpd / "user_stuff").mkdir()
-    monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmpd))
     W = tmp_path / "W"
+    mine = tmpd / f"claude_ma_{R.run_id(W)}_y"
+    for d in (mine, tmpd / "claude_ma_x", tmpd / "claude_ma_0123456789ab_z", tmpd / "user_stuff"):   # 공용 접두·다른 작업(다른 트랙) 폴더는 지우면 안 된다
+        d.mkdir(parents=True)
+    monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmpd))
     td = W / "channel/s/뜯기/a"
     (td / "captions").mkdir(parents=True)
     (td / "captions/c0.png").write_bytes(b"x" * 10)
@@ -268,9 +269,23 @@ def test_clean_targets_only_engine_intermediates(tmp_path, monkeypatch):
         (W / keep).write_bytes(b"k")
     out = R.run_do(W, [{"id": "c", "cmd": "bm_clean", "wait_mem_gb": 0}])["c"]
     gone = {p["path"] for p in out["removed"]}
-    assert str(td / "captions") in gone and str(tmpd / "claude_ma_x") in gone and len(gone) == 2
+    assert str(td / "captions") in gone and str(mine) in gone and len(gone) == 2
+    assert (tmpd / "claude_ma_x").exists() and (tmpd / "claude_ma_0123456789ab_z").exists()
     assert all((W / k).exists() for k in ("src/a.mp4", "channel/s/뜯기/a/뜯기.json", "channel/s/preset/틀/r7.json", "side/a.mp4", "eye/a/frame0.jpg", "make/t1/final.mp4"))
     assert (tmpd / "user_stuff").exists() and out["freed_mb"] >= 0 and "mem_free_gb" in out
+
+
+def test_claude_cli_temp_prefix_carries_run_tag(tmp_path, monkeypatch):
+    from tools.calcopy.engine import claude_cli as CC
+    monkeypatch.setenv(CC.RUN_ENV, R.run_id(tmp_path))
+    assert CC.temp_prefix() == f"claude_ma_{R.run_id(tmp_path)}_"
+    monkeypatch.delenv(CC.RUN_ENV)
+    assert CC.temp_prefix() == "claude_ma_"
+
+
+def test_wait_command(tmp_path):
+    out = R.run_do(tmp_path, [{"id": "w", "cmd": "bm_wait", "sec": 0.2}])["w"]
+    assert 0.15 <= out["waited_s"] < 5 and (tmp_path / "_wait.json").is_file()
 
 
 def test_clean_waits_for_memory_with_cap(tmp_path, monkeypatch):
