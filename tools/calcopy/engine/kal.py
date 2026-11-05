@@ -29,7 +29,11 @@ from tools.calcopy.engine import kal_analyze as K  # noqa: E402
 DATA = Path("C:/숏템_칼카피")
 YTDLP_F = "137+ba[ext=m4a]/bv*[height>=1080]+ba/b"       # 담당_공통규칙 (web 클라이언트, android 금지)
 YTDLP_LITE = "bv*[height<=720]+ba/b[height<=720]/b"       # 시운전·디스크 부족 때(--lite): 720p 까지만
-DISK_WARN_GB, DISK_STOP_GB = 15, 3                        # 루트 CLAUDE.md 디스크 병목 규칙 + 사장님 10-20 "3GB 밑이면 즉시 멈춤"
+DISK_WARN_GB, DISK_STOP_GB = 15, 3
+LONG_MIN_S = 480                                          # outside-01 롱폼 갈래: 가로 8분+ (개정안 outside-01 회원 값)
+DETAIL_MAX = 18                                           # select-07: 업로드일을 재려고 상세(yt-dlp -J)를 여는 상한 편 수
+STALL_SEC = 60                                            # collect-01: 받는 파일이 이 동안 안 자라면 멈춘 것(yt_fetch.STALL_SEC 와 같은 값)
+GUIDE_FILES = ("tools/calcopy/칼카피_분석지침서.md", "channel/production_guide/98_error_log.md")   # common-17 시작 때 읽음 확인                        # 루트 CLAUDE.md 디스크 병목 규칙 + 사장님 10-20 "3GB 밑이면 즉시 멈춤"
 
 
 def disk_free_gb(path: str = "C:/") -> float:
@@ -237,18 +241,44 @@ def stage_upgrade(S) -> dict:
             "kyeol": rec["kyeol"], "kyeol_src": rec["kyeol_src"], "candidates": rec["candidates"], "cannot_build": rec["cannot_build"]}
 
 
+def _is_video_ref(r: str) -> bool:
+    return Path(r).is_file() or bool(re.search(r"(shorts/|watch\?v=|youtu\.be/|/reel/|/video/)", r))
+
+
+def _expand_refs(refs: list[str]) -> list[str]:
+    """폴더면 안의 mp4 전부(이름순)."""
+    out = []
+    for r in refs:
+        p = Path(r)
+        out += [str(x) for x in sorted(p.glob("*.mp4"))] if p.is_dir() else [r]
+    return out
+
+
 def _slug_of(ref: str) -> str:
     h = re.sub(r"^https?://(www\.)?youtube\.com/", "", ref.strip()).split("/")[0].lstrip("@")
     return re.sub(r"[^0-9a-zA-Z가-힣]+", "_", h).strip("_").lower() or "channel"
 
 
+def ref_key(ref) -> str:
+    """같은 벤치인가 대조용 — 주소 꼴(https·www·/shorts·/videos·끝 /)·대소문자를 접는다. 목록 입구(common-23)는 정렬한 목록 글."""
+    if isinstance(ref, (list, tuple)):
+        return "|".join(sorted(ref_key(x) for x in ref))
+    r = str(ref).strip().rstrip("/")
+    r = re.sub(r"^https?://(www\.|m\.)?", "", r)
+    r = re.sub(r"/(shorts|videos)$", "", r)
+    return r.replace("youtube.com/", "").lower()
+
+
 class State:
-    def __init__(self, slug: str, ref: str, brand: str | None, n: int, hybrid: str | None, voice: str | None = None):
+    def __init__(self, slug: str, ref, brand: str | None, n: int, hybrid: str | None, voice: str | None = None, fmt: str | None = None):
         self.dir = ROOT / "channel" / slug
         self.path = self.dir / "kal_state.json"
         self.d = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {"slug": slug, "ref": ref, "steps": {}, "asked": {}}
-        self.d.update({k: v for k, v in (("brand", brand), ("n", n), ("hybrid", hybrid), ("voice", voice)) if v is not None})
+        if ref_key(self.d.get("ref")) != ref_key(ref):   # select-12(Jev 해결 0.67): 같은 slug 에 다른 채널 상태를 이어 쓰지 않는다
+            raise ValueError(f"{self.path} 는 다른 벤치({self.d.get('ref')}) 상태다 — 이번 ref {ref}. --slug 새 이름으로 다시(옛 상태 이어 쓰기 금지)")
+        self.d.update({k: v for k, v in (("brand", brand), ("n", n), ("hybrid", hybrid), ("voice", voice), ("format", fmt)) if v is not None})
         self.d.setdefault("n", n)
+        self.d.setdefault("format", "shorts")
 
     def save(self):
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -267,29 +297,138 @@ def _run(cmd: list[str], timeout=1800) -> subprocess.CompletedProcess:
 
 
 # ------------------------------------------------------------------ 단계들 (각각 (state, outputs, note) 를 돌려준다)
+def _detail(vid: str) -> dict:
+    """편 하나 상세(yt-dlp -J, 받지 않음) — 업로드일·길이. 실패면 {}(이유는 부르는 쪽이 셈)."""
+    r = _run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "-J", f"https://www.youtube.com/watch?v={vid}"], timeout=120)
+    if r.returncode != 0 or not r.stdout.strip():
+        return {}
+    try:
+        d = json.loads(r.stdout)
+    except ValueError:
+        return {}
+    return {"upload_date": d.get("upload_date"), "duration": d.get("duration"), "title": d.get("title")}
+
+
+def _per_day(views, upload_date: str | None, now: float) -> float | None:
+    """select-07(Jev 해결 0.78): 누적 조회를 경과일로 나눈다(측정 시각 기준, 최소 1일)."""
+    if not upload_date or not views:
+        return None
+    try:
+        t = time.mktime(time.strptime(str(upload_date), "%Y%m%d"))
+    except ValueError:
+        return None
+    return round(views / max(1.0, (now - t) / 86400), 1)
+
+
+def write_pick_table(base: Path, rows: list[dict], meta: dict) -> Path:
+    """select-04(Jev 해결 0.69): 레퍼런스 선정표 — 편마다 주소·제목·조회·업로드일·길이·하루당 조회·주제(사람 칸). 빈 칸이 있으면 부르는 쪽이 멈춘다."""
+    L = [f"# 레퍼런스 선정표 — {meta.get('name')} ({meta.get('url')}) · 측정 {meta.get('measured_at')} · 형식 {meta.get('format')}", "",
+         "| 순 | id | 주소 | 제목 | 조회 | 업로드일 | 길이(초) | 하루당 조회 | 주제(한 줄 — 사람) |", "|---|---|---|---|---|---|---|---|---|"]
+    for i, r in enumerate(rows, 1):
+        L.append(f"| {i} | {r['id']} | {r['url']} | {str(r.get('title') or '').replace('|', '/')} | {r.get('views')} | {r.get('upload_date') or ''} | {r.get('duration') or ''} | {r.get('per_day') or ''} | |")
+    p = base / "선정표.md"
+    p.write_text("\n".join(L) + "\n", encoding="utf-8")
+    return p
+
+
 def step_select(S: State):
+    base = DATA / S.d["slug"]
+    base.mkdir(parents=True, exist_ok=True)
+    now = time.time()
+    fmt = S.d.get("format") or "shorts"
+    if S.d.get("given"):       # common-23: 영상 주소·파일 목록 입구 — 채널 목록을 읽지 않고 그 편만(엔진이 편을 더하지 않는다)
+        rows = [{"id": g["id"], "url": g["url"], "title": g.get("title") or "", "views": g.get("views"), **({} if Path(g["url"]).is_file() else _detail(g["id"]))} for g in S.d["given"]]
+        for r in rows:
+            r["per_day"] = _per_day(r.get("views"), r.get("upload_date"), now)
+        meta = {"name": "(지정 편)", "url": None, "subs": None, "total": len(rows), "view_median": None, "view_max": None,
+                "top_ids": [r["id"] for r in rows], "views_per_sub": None, "measured_at": time.strftime("%Y-%m-%d %H:%M", time.localtime(now)), "format": fmt, "given": True}
+        (base / "top.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+        S.d["channel"] = meta
+        pt = write_pick_table(base, rows, meta)
+        return "done", {"top": str(base / "top.json"), "pick_table": str(pt)}, f"지정 편 {len(rows)}편(select 건너뜀 — 목록 그대로)"
     u = S.d["ref"].rstrip("/")
     if not u.startswith("http"):
         u = "https://www.youtube.com/" + (u if u.startswith("@") else "@" + u)
-    u = u if u.endswith("/shorts") else u + "/shorts"
+    tab = "/videos" if fmt == "long" else "/shorts"            # outside-01: 형식 한 칸(State.format)이 탭·길이 하한을 정한다
+    u = re.sub(r"/(shorts|videos)$", "", u) + tab
     r = _run(["yt-dlp", "--encoding", "utf-8", "--flat-playlist", "-J", u], timeout=300)
     if r.returncode != 0 or not r.stdout.strip():
         return "failed", {}, f"yt-dlp flat-playlist 실패: {r.stderr[-300:]}"
     d = json.loads(r.stdout)
     E = sorted([e for e in d.get("entries") or [] if e.get("view_count")], key=lambda e: -e["view_count"])
+    if fmt == "long":
+        E = [e for e in E if (e.get("duration") or 0) >= LONG_MIN_S]
     if not E:
-        return "failed", {}, "조회수 있는 편 0"
+        return "failed", {}, "조회수 있는 편 0" + (f"(롱폼 {LONG_MIN_S}초 이상)" if fmt == "long" else "")
     views = [e["view_count"] for e in E]
     med = views[len(views) // 2]
-    base = DATA / S.d["slug"]
-    base.mkdir(parents=True, exist_ok=True)
-    (base / "top.json").write_text(json.dumps([{"id": e["id"], "views": e["view_count"], "title": e.get("title", "")} for e in E[:50]], ensure_ascii=False, indent=1), encoding="utf-8")
+    rows = [{"id": e["id"], "url": f"https://www.youtube.com/{'watch?v=' if fmt == 'long' else 'shorts/'}{e['id']}", "views": e["view_count"],
+             "title": e.get("title", ""), "duration": e.get("duration"), "upload_date": e.get("upload_date")} for e in E[:50]]
+    k = min(len(rows), max(DETAIL_MAX, S.d["n"] * 3))            # select-07: 업로드일은 flat 목록에 없어 상위 k 편만 상세를 연다
+    miss = [x for x in rows[:k] if not x.get("upload_date")]
+    with ThreadPoolExecutor(4) as ex:
+        for x, det in zip(miss, ex.map(lambda x: _detail(x["id"]), miss)):
+            x.update({kk: v for kk, v in det.items() if v and not x.get(kk)})
+    for x in rows:
+        x["per_day"] = _per_day(x["views"], x.get("upload_date"), now)
+    ranked = sorted(rows[:k], key=lambda x: -(x["per_day"] if x["per_day"] is not None else -1))   # 정렬 = 하루당 조회(못 잰 편은 뒤)
+    no_date = [x["id"] for x in rows[:k] if x["per_day"] is None]
+    (base / "top.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
     meta = {"name": d.get("channel") or d.get("uploader"), "url": u, "subs": d.get("channel_follower_count"), "total": len(E), "view_median": med,
-            "view_max": views[0], "top_ids": [e["id"] for e in E[:S.d["n"]]], "views_per_sub": round(med / d["channel_follower_count"], 2) if d.get("channel_follower_count") else None}
+            "view_max": views[0], "top_ids": [x["id"] for x in ranked[:S.d["n"]]], "views_per_sub": round(med / d["channel_follower_count"], 2) if d.get("channel_follower_count") else None,
+            "measured_at": time.strftime("%Y-%m-%d %H:%M", time.localtime(now)), "format": fmt, "rank": "하루당 조회(select-07)"}
     S.d["channel"] = meta
+    pt = write_pick_table(base, ranked[:S.d["n"]], meta)
     # 선정 기준(시작 문서 §9 1단계: 구독 대비 조회·업로드 빈도·결) — 숫자는 적고 판정은 사람
-    note = f"{meta['name']} 구독 {meta['subs']} 편 {meta['total']} 조회중앙 {med:,} 최대 {views[0]:,} (구독 대비 중앙 {meta['views_per_sub']})"
-    return "done", {"top": str(base / "top.json")}, note
+    note = (f"{meta['name']} 구독 {meta['subs']} 편 {meta['total']} 조회중앙 {med:,} 최대 {views[0]:,} (구독 대비 중앙 {meta['views_per_sub']}) · 하루당 조회순 상위 {S.d['n']}"
+            + (f" · 업로드일 못 잼 {len(no_date)}편(뒤로)" if no_date else ""))
+    return "done", {"top": str(base / "top.json"), "pick_table": str(pt)}, note
+
+
+def _sha256_file(p: Path) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def dedupe_ids(base: Path, ids: list[str]) -> tuple[list[str], list[str]]:
+    """collect-m01(Jev 해결 0.79): 받은 mp4 sha256 이 같은 편은 앞 편 하나만 남긴다 → (남긴 ids, 뺀 'id=앞id' 목록)."""
+    seen, keep, drop = {}, [], []
+    for i in ids:
+        h = _sha256_file(base / f"{i}.mp4")
+        if h in seen:
+            drop.append(f"{i}={seen[h]}")
+            continue
+        seen[h] = i
+        keep.append(i)
+    return keep, drop
+
+
+def _fmt_alts(fmt: str) -> list[str]:
+    return [a for a in fmt.split("/") if a]
+
+
+def fetch_one(base: Path, vid: str, url: str, fmt: str, ytdlp=None) -> tuple[int, str]:
+    """collect-01(Jev 해결 0.57): 받기 = yt_fetch.ytdlp(멈춤 감시 STALL_SEC · 로그인 쿠키 · 화질 상한 한 곳). 멈춤·형식 없음이면 fmt 의 '/' 대안을 하나씩 따로 다시."""
+    if ytdlp is None:
+        from tools.calcopy.engine.yt_fetch import ytdlp
+    args = ["--encoding", "utf-8", "--merge-output-format", "mp4", "--write-info-json", "-o", str(base / "%(id)s.%(ext)s"), url]
+    tried = []
+    for f in [fmt] + _fmt_alts(fmt)[1:]:
+        try:
+            r = ytdlp(["-f", f, *args], timeout=900, stall_sec=STALL_SEC, watch=base / vid)
+        except PermissionError as e:       # 전용 계정 없음 — 로그인 없이 회선 두드리지 않는다(조용히 넘기지 않고 실패)
+            return 1, f"로그인 계정 없음: {e}"
+        why = "멈춤" if r.stalled else "시간 초과" if r.timed_out else "형식 없음" if "Requested format is not available" in (r.stderr or "") else ""
+        if r.returncode == 0 and (base / f"{vid}.mp4").exists():
+            return 0, ("" if not tried else f"대안 형식 {f} 로 받음(앞: {tried})")
+        tried.append(f"{f}:{why or 'rc=' + str(r.returncode)}")
+        if not why:                         # 멈춤·형식 없음이 아닌 실패(404 등)는 대안을 돌려도 같다
+            break
+    return 1, " | ".join(tried) + " " + (r.stderr or "")[-160:]
 
 
 def step_collect(S: State):
@@ -299,29 +438,51 @@ def step_collect(S: State):
     base = DATA / S.d["slug"] / "src"
     base.mkdir(parents=True, exist_ok=True)
     ids = S.d["channel"]["top_ids"]
+    given = {g["id"]: g for g in S.d.get("given") or []}
     fmt = YTDLP_LITE if S.d.get("lite") else YTDLP_F
     todo = [i for i in ids if not (base / f"{i}.mp4").exists()]
 
     def dl(vid):
-        # 영상·info 먼저, 자막은 따로 — 자막 429 하나로 영상까지 버리던 결함(10-27 별헤는쏭 3/5편 실패)
-        url = f"https://www.youtube.com/shorts/{vid}"
-        r = _run(["yt-dlp", "--encoding", "utf-8", "-f", fmt, "--merge-output-format", "mp4", "--write-info-json",
-                  "-o", str(base / "%(id)s.%(ext)s"), url], timeout=900)
-        if r.returncode == 0 and not list(base.glob(f"{vid}*.vtt")):
+        g = given.get(vid)
+        if g and Path(g["url"]).is_file():          # common-23: 로컬 파일은 복사만
+            import shutil
+            shutil.copyfile(g["url"], base / f"{vid}.mp4")
+            return vid, 0, "로컬 파일 복사"
+        url = (g or {}).get("url") or (f"https://www.youtube.com/watch?v={vid}" if S.d.get("format") == "long" else f"https://www.youtube.com/shorts/{vid}")
+        # 영상·info 먼저, 자막·댓글은 따로 — 자막 429 하나로 영상까지 버리던 결함(10-27 별헤는쏭 3/5편 실패)
+        rc, err = fetch_one(base, vid, url, fmt)
+        if rc == 0 and not list(base.glob(f"{vid}*.vtt")):
             s = _run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--write-auto-subs", "--sub-langs", "ko",
                       "-o", str(base / "%(id)s.%(ext)s"), url], timeout=300)
             if s.returncode != 0:
                 print(f"[경보] {vid} 자막(ko.vtt) 못 받음 — 영상은 받음, 받아쓰기는 스피치매틱스로: {s.stderr[-120:]}")
-        return vid, r.returncode, r.stderr[-200:]
-    errs = []
+        if rc == 0 and not (base / f"{vid}.comments.json").exists():     # collect-04(Jev 해결 0.61): 댓글 전부 따로(추리지 않음) — 실패해도 영상은 성공
+            c = _run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--write-comments", "--extractor-args", "youtube:max_comments=all",
+                      "-o", str(base / f"{vid}.comments.%(ext)s"), url], timeout=600)
+            got = list(base.glob(f"{vid}.comments*.info.json"))
+            if c.returncode != 0 or not got:
+                print(f"[경보] {vid} 댓글 못 받음 — 영상은 받음: {c.stderr[-120:]}")
+            else:
+                try:
+                    cm = json.loads(got[0].read_text(encoding="utf-8")).get("comments") or []
+                    (base / f"{vid}.comments.json").write_text(json.dumps(cm, ensure_ascii=False), encoding="utf-8")
+                    got[0].unlink()
+                except (ValueError, OSError) as e:
+                    print(f"[경보] {vid} 댓글 파일 읽기 실패: {e}")
+        return vid, rc, err
+    errs, notes = [], []
     with ThreadPoolExecutor(2) as ex:        # 무거운 프로세스 동시 ≤4(공통규칙) — 받기는 2
         for vid, rc, err in ex.map(dl, todo):
             if rc != 0:
                 errs.append(f"{vid}: {err}")
+            elif err:
+                notes.append(f"{vid}: {err}")
     have = [i for i in ids if (base / f"{i}.mp4").exists()]
-    if len(have) < max(2, len(ids) // 2):
-        return "failed", {"have": have}, "받은 편이 절반 미만: " + " | ".join(errs)
-    return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)" + (f" 실패 {errs}" if errs else "")
+    have, dup = dedupe_ids(base, have)
+    if len(have) < max(2, len(ids) // 2) and not (given and len(have) == len(ids) - len(dup)):
+        return "failed", {"have": have}, "받은 편이 절반 미만: " + " | ".join(errs) + (f" · 같은 파일 뺌 {dup}" if dup else "")
+    return "done", {"src": str(base), "ids": have}, (f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)"
+                                                     + (f" 실패 {errs}" if errs else "") + (f" · 같은 파일(sha256) 뺌 {dup}" if dup else "") + (f" · {notes}" if notes else ""))
 
 
 def _stale_tear(p: Path) -> str | None:
@@ -344,6 +505,9 @@ def step_tteutgi(S: State):
     base = DATA / S.d["slug"] / "src"
     out_root = S.dir / "뜯기"
     done, errs, redo = [], [], []
+    extra = [v for v in S.step("collect")["outputs"]["ids"] if v not in ((S.d.get("channel") or {}).get("top_ids") or [])]
+    if extra:      # select-04 J137: 선정(또는 회원 지정) 밖 편을 엔진이 뜯지 않는다
+        return "failed", {}, f"선정 밖 편 {extra} — select 의 top_ids/지정 편만 뜯는다(select 부터 다시)"
     for vid in S.step("collect")["outputs"]["ids"]:
         out = out_root / vid
         if (out / "뜯기.json").exists():
@@ -571,7 +735,7 @@ def step_make(S: State):
         return "failed", {}, f"copy 단계 프리셋 폴더 없음({pdir}) — copy 부터"
     from types import SimpleNamespace
     from tools.calcopy.engine import preset_make
-    a = SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=None, tag=None, cache=None,
+    a = SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=str(Path(wd) / f"kal_make_{time.strftime('%m%d_%H%M%S')}"), tag=None, cache=None,   # common-10: 매번 새 이름(지난 편 덮어쓰기 금지)
                         desktop_dir=str(Path.home() / "Desktop"), results=str(preset_make.RESULTS))   # test=True: 바탕화면·결과물 등록은 사람 판정(verify) 뒤
     try:
         r = preset_make.make_one(Path(pdir), Path(wd), a)
@@ -640,6 +804,9 @@ def step_verify(S: State):
 def step_apply(S: State):
     from shopping_shorts import calcopy_board as B
     ch = S.d.get("channel") or {}
+    om = (S.step("make").get("outputs") or {}).get("ours_mp4")
+    if om and om not in (S.d.get("made") or []):
+        S.d.setdefault("made", []).append(om)          # 확정 시험편 = 지킬 파일(common-10 write_guard)
     B.set_step(S.d["slug"], "2", "done", f"kal.py 분석 {len(S.step('tteutgi')['outputs']['ids'])}편 · 재현일치도 {S.step('verify')['outputs'].get('verdict')}",
                [f"channel/{S.d['slug']}/스타일분석.md", f"channel/{S.d['slug']}/팔레트.json"], name=ch.get("name"), url=ch.get("url"), stats={"subs": ch.get("subs"), "total": ch.get("total")})
     todo = S.dir / "_kal" / "장부_할일.md"
@@ -654,18 +821,73 @@ RUN = {"select": step_select, "collect": step_collect, "tteutgi": step_tteutgi, 
        "rules": step_rules, "copy": step_copy, "make": step_make, "verify": step_verify, "apply": step_apply}
 
 
+def guard_snapshot(S: State) -> dict:
+    """common-10(Jev 해결 0.52): 지킬 파일 md5 — 확정 프리셋(manifest.frozen_at 있는 channel/<slug>/preset/*/ 전부) + 지난 시험편(S.d.made 에 적힌 완성본)."""
+    import hashlib
+    out = {}
+    for m in sorted((S.dir / "preset").glob("*/manifest.json")) if (S.dir / "preset").exists() else []:
+        try:
+            frozen = json.loads(m.read_text(encoding="utf-8")).get("frozen_at")
+        except ValueError:
+            frozen = None
+        if frozen:
+            for f in sorted(m.parent.rglob("*")):
+                if f.is_file():
+                    out[str(f)] = hashlib.md5(f.read_bytes()).hexdigest()
+    for f in S.d.get("made") or []:
+        if Path(f).is_file():
+            out[f] = hashlib.md5(Path(f).read_bytes()).hexdigest()
+    return out
+
+
+def write_guard(before: dict, after: dict) -> list[str]:
+    """단계 전후 md5 대조 — 바뀌거나 없어진 지킬 파일 목록(새로 생긴 것은 문제 아님)."""
+    return [f"{k}({'없어짐' if k not in after else '바뀜'})" for k, v in before.items() if after.get(k) != v]
+
+
+def guide_check(S: State) -> list[str]:
+    """common-17(Jev 해결 0.60): 지침서·98 오류 기록 md5 를 지난번 읽은 값과 대조 — 바뀐 파일과 바뀐 절 제목(## 줄) 목록을 돌려주고 State 에 읽음 기록.
+    바뀌었으면 사람 단계(readlines·rules·copy)를 todo 로 돌려 다시 재게 한다(바뀐 규칙으로 done 을 그대로 두지 않는다)."""
+    import hashlib
+    seen = S.d.setdefault("read_md5", {})
+    heads = S.d.setdefault("read_heads", {})
+    changed = []
+    for rel in GUIDE_FILES:
+        p = ROOT / rel
+        if not p.exists():
+            continue
+        t = p.read_text(encoding="utf-8")
+        h = hashlib.md5(t.encode("utf-8")).hexdigest()
+        hs = [ln.strip() for ln in t.splitlines() if ln.startswith("#")]
+        if seen.get(rel) and seen[rel] != h:
+            new = [x for x in hs if x not in set(heads.get(rel) or [])]
+            changed.append(f"{rel} 바뀜" + (f" — 새/바뀐 절: {new[:8]}" if new else ""))
+        seen[rel], heads[rel] = h, hs
+    if changed:
+        for k in ("readlines", "rules", "copy"):
+            if S.step(k).get("state") == "done":
+                S.step(k)["state"] = "todo"
+    return changed
+
+
 def run(S: State, start: str | None = None, log=print) -> dict:
     i0 = STEPS.index(start) if start else 0
+    for c in guide_check(S):
+        log(f"[지침 바뀜] {c} — 사람 단계(readlines·rules·copy)를 다시 잰다")
     for name in STEPS[i0:]:
         st = S.step(name)
         if st.get("state") == "done" and not start:     # --from = 그 단계부터 **뒤 단계 전부** 다시(10-27: 받기 5편 늘었는데 frames·skeleton 이 옛 2편으로 건너뜀)
             log(f"[건너뜀] {name}: {st.get('note', '')}")
             continue
         t = time.time()
+        g0 = guard_snapshot(S)
         try:
             state, outputs, note = RUN[name](S)
         except Exception as e:
             state, outputs, note = "failed", {}, f"{type(e).__name__}: {str(e)[:200]}"
+        bad = write_guard(g0, guard_snapshot(S))
+        if bad:
+            state, note = "failed", f"지킬 파일(확정 프리셋·지난 시험편)이 {name} 단계에서 바뀜: {bad[:5]} — " + note
         S.mark(name, state, time.time() - t, outputs, note)
         log(f"[{state}] {name} {S.step(name)['sec']}초 — {note}")
         if state != "done":
@@ -677,7 +899,8 @@ def run(S: State, start: str | None = None, log=print) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("ref", help="채널 주소 또는 @핸들")
+    ap.add_argument("ref", nargs="+", help="채널 주소·@핸들 하나, 또는 영상 주소·영상 파일·폴더 목록(common-23 — 그 편만 분석)")
+    ap.add_argument("--format", dest="fmt", choices=["shorts", "long"], help="shorts(기본) | long(가로 8분+ 롱폼 갈래, outside-01)")
     ap.add_argument("--slug"); ap.add_argument("--brand"); ap.add_argument("--n", type=int, default=6); ap.add_argument("--from", dest="start", choices=STEPS)
     ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--voice", help="TTS voice_id(사장님이 고른 것 — 판 파일 voice 한 곳에 적힌다)")
     ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
@@ -686,12 +909,22 @@ def main(argv=None) -> int:
     ap.add_argument("--lite", action="store_true", help="시운전·디스크 부족: 720p 까지만 받기")
     ap.add_argument("--stage", choices=["upgrade"], help="upgrade = 업그레이드 단계 자리(1차 판 초안 복사 + 메뉴 + 기록 파일)")
     A = ap.parse_args(argv)
+    refs = _expand_refs(A.ref)
+    given = None
+    if len(refs) > 1 or _is_video_ref(refs[0]):
+        from tools.calcopy.engine.bench_member import given_videos   # 영상 주소·파일 → id 주인 한 곳
+        given = given_videos(refs)
+        if not A.slug:
+            raise SystemExit("영상 목록 입구는 --slug 를 정해 주세요(채널 핸들에서 이름을 못 뽑는다)")
+    A.ref = refs if given else refs[0]
     slug = A.slug or _slug_of(A.ref)
     if A.menu:
         for r in menu(A.menu):
             print(f"[{r['axis']}({r['axis_src']})] {r['kind']} | {str(r['what'])[:90]} | 출처 {r['channel']} | 엔진 {r['engine']} | 판 칸 {r['style_cell']}")
         return 0
-    S = State(slug, A.ref, A.brand, A.n, A.hybrid, A.voice)
+    S = State(slug, A.ref, A.brand, A.n, A.hybrid, A.voice, A.fmt)
+    if given:
+        S.d["given"], S.d["n"] = given, len(given)        # 지정 편이 있으면 엔진이 n 을 늘리지 않는다(select-04)
     if A.lite:
         S.d["lite"] = True
     print(f"C 여유 {disk_free_gb()}GB (경고 {DISK_WARN_GB} · 거절 {DISK_STOP_GB})")

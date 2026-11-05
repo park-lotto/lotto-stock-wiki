@@ -128,6 +128,7 @@ def test_tear_llm_images_go_to_claude(monkeypatch):
 def test_tteutgi_uses_materials_and_tear_llm(tmp_path, monkeypatch):
     S = _state(tmp_path, monkeypatch)
     S.step("collect").update({"state": "done", "outputs": {"ids": ["a", "b"]}})
+    S.d["channel"] = {"top_ids": ["a", "b"]}
     old = tmp_path / "channel/t1/뜯기/b"
     old.mkdir(parents=True)
     (old / "뜯기.json").write_text(json.dumps({"overlay_rules": {"failed": "건너뜀(--no-materials)"}}, ensure_ascii=False), encoding="utf-8")
