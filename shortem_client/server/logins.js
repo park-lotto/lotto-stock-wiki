@@ -198,6 +198,12 @@ export async function retrying(fn, waits, sleep = ms => new Promise(r => setTime
   return { ok: false, why: String((last && last.message) || last).slice(0, 160) };
 }
 let refreshing = null, refreshFailed = false;
+// 쿠키 읽는 크롬 실행 옵션 — 맥은 puppeteer 기본 '--use-mock-keychain' 을 뺀다: 로그인 창(일반 크롬)은 진짜 키체인으로 쿠키를 암호화해
+//   목 키체인으로 열면 0개로 보였다(11-05 박상혁 #7788 틱톡 로그인 마쳤는데 '안 됨'). 윈도는 키체인이 없어(DPAPI) 그대로.
+export function cookieLaunchOpts(exe, dir, platform = process.platform) {
+  return { executablePath: exe, headless: 'new', userDataDir: dir, args: ['--no-first-run'], ...(platform === 'darwin' ? { ignoreDefaultArgs: ['--use-mock-keychain'] } : {}) };
+}
+
 export async function refreshCookies() {
   if (open && !open.done) return status();
   if (!fs.existsSync(path.join(profileDir(), 'Default'))) return status();
@@ -207,7 +213,7 @@ export async function refreshCookies() {
   refreshing = retrying(async () => {
     let br = null;
     try {
-      br = await puppeteer().launch({ executablePath: exe, headless: 'new', userDataDir: profileDir(), args: ['--no-first-run'] });
+      br = await puppeteer().launch(cookieLaunchOpts(exe, profileDir()));
       writeCookies(await allCookies(br));
     } finally { if (br) await br.close().catch(() => {}); }
   }, [1500, 4000, 8000]);

@@ -22,3 +22,8 @@ test('맥이면 Cmd+Q 로 크롬을 끝내라고 안내한다(11-05 박상혁 #7
   assert.match(loginOpenedText({}, '인스타그램', 'darwin'), /Cmd\+Q/);
   assert.doesNotMatch(loginOpenedText({}, '인스타그램', 'win32'), /Cmd\+Q/);
 });
+test('맥 쿠키 읽기는 목 키체인을 쓰지 않는다(11-05 박상혁 #7788)', async () => {
+  const { cookieLaunchOpts } = await import('../server/logins.js');
+  assert.deepEqual(cookieLaunchOpts('c', 'd', 'darwin').ignoreDefaultArgs, ['--use-mock-keychain']);
+  assert.equal(cookieLaunchOpts('c', 'd', 'win32').ignoreDefaultArgs, undefined);
+});
