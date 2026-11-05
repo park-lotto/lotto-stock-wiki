@@ -48,9 +48,9 @@ def test_graph_sees_known_edges():
 def _work(tmp_path, lines=None, tear_extra=None):
     ch = tmp_path / "channel" / "s"
     (ch / "뜯기" / "a").mkdir(parents=True)
-    J = {"probe": {"w": 1080, "h": 1920}, "layout": {"window": [0, 0, 1080, 1920], "caption_band": [1200, 1400], "bg_rgb": [0, 0, 0]},
+    J = {"probe": {"w": 1080, "h": 1920}, "layout": {"window": [0, 0, 1080, 1920], "caption_band": [1200, 1400], "bg_rgb": [0, 0, 0], "above_bands": []},
          "captions": {"items": [{"t0": 0, "t1": 1}]}, "cuts": {"times": [], "zoom": {"n": 1}}, "fonts": {"top3": ["a"], "title": {"x": 1}},
-         "audio": {"bench": {"I": -14.0}}, "sfx_rules": {}, "bgm_rules": {}, "voice_rules": {}, "overlay_rules": {}, "text_fx": {}, "caption_motion": {}}
+         "audio": {"bench": {"I": -14.0, "TP": -1.0, "LRA": 6.0}}, "sfx_rules": {}, "bgm_rules": {}, "voice_rules": {}, "overlay_rules": {}, "text_fx": {}, "caption_motion": {"starts": [{"t": 0}], "ends": [{"t": 1}]}}
     J.update(tear_extra or {})
     (ch / "뜯기" / "a" / "뜯기.json").write_text(json.dumps(J), encoding="utf-8")
     (ch / "뜯기" / "a" / "frame.json").write_text("{}", encoding="utf-8")

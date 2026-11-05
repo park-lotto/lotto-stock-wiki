@@ -1,0 +1,5724 @@
+{
+ "spec": "C:\\숏템_칼카피\\_cafe45_cards\\_엔진v1규격.md",
+ "spec_lines": 2306,
+ "made_from": "규격 v1.4 §0-1 156줄 + §9 갈래 + §2-1 자리",
+ "count_line_01": "줄 수: 전체 **156**(v1.4 +2 — ①b 1 · ③a 1, §17)(주인 함수 이름이 원문에 없어 '코드 단계에서 한 곳 정함'으로 남은 줄 62) — — 9 · ① 20 · ①② 6 · ② 5 · ②+ 2 · ③ 80 · ③·⑤ 1 · ④ 2 · ⑤ 29",
+ "rows": [
+  {
+   "id": "V001",
+   "sec": "1",
+   "kan": "§1 #1",
+   "decision": "단계 1 setup 준비 확인",
+   "gist": "agy 없음·키 없음 = 시작 전 멈춤(V3b)",
+   "value": "agy 없음·키 없음 = 시작 전 멈춤(V3b)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_setup(있음) · runner_ops.c_bm_env(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_setup",
+     "new": false
+    },
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_env",
+     "new": false
+    }
+   ],
+   "stage": "bm_setup",
+   "gate": "agy 없음·키 없음 = 시작 전 멈춤(V3b)",
+   "gate_mode": "막음",
+   "bundle": "②(멈춤·메모리 칸 077fb2508·a005fab58)",
+   "src": [
+    29,
+    357
+   ]
+  },
+  {
+   "id": "V002",
+   "sec": "1",
+   "kan": "§1 #2",
+   "decision": "단계 2 **bm_pick 벤치 채널 고르기** (새로)",
+   "gist": "점수 = 최근 30편 조회 중앙값·떡상 배수(채널 평균 1.4배 이상 비율)·구독 대비 조회 배수·세로 쇼츠·**원본 롱폼 짝 찾기 가능**·고정 규칙(연예인 원본) 위반 0. 조건이 빡빡해 0개면…",
+   "value": "점수 = 최근 30편 조회 중앙값·떡상 배수(채널 평균 1.4배 이상 비율)·구독 대비 조회 배수·세로 쇼츠·원본 롱폼 짝 찾기 가능·고정 규칙(연예인 원본) 위반 0. 조건이 빡빡해 0개면 떡상 3→2→1편으로 넓힌다(J104·N230). (v1.2 바꿈) 1·2위 차 10% 안이면 두 채널 5편씩 받아 실제 판독 통과율로 정함 — d1 H14 해결 0.96 · 뿌리 0.52 · 위험 0.43 채택",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.52,
+    "risk": 0.43,
+    "raw": "해결 0.96 · 뿌리 0.52 · 위험 0.43"
+   },
+   "refs": [
+    "J104",
+    "N230"
+   ],
+   "owner_raw": "cf.find_channels(있음) · bm.pick_videos(있음) · fb.bm_pick(새로)",
+   "owners": [
+    {
+     "file": "engine/channel_find.py",
+     "name": "find_channels",
+     "new": false
+    },
+    {
+     "file": "engine/bench_member.py",
+     "name": "pick_videos",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_pick",
+     "new": true
+    }
+   ],
+   "stage": "bm_pick",
+   "gate": "점수 = 최근 30편 조회 중앙값·떡상 배수(채널 평균 1.4배 이상 비율)·구독 대비 조회 배수·세로 쇼츠·원본 롱폼 짝 찾기 가능·고정 규칙(연예인 원본) 위반 0. 조건이 빡빡해 0개면 떡상 3→2→1편으로 넓힌다(J104·N230). (v1.2 바꿈) 1·2위 차 10% 안이면 두 채널 5편씩 받아 실제 판독 통과율로 정함 — d1 H14 해결 0.96 · 뿌리 0.52 · 위험 0.43 채택",
+   "gate_mode": "막음",
+   "bundle": "④",
+   "src": [
+    30,
+    358
+   ]
+  },
+  {
+   "id": "V003",
+   "sec": "1",
+   "kan": "§1 #3",
+   "decision": "단계 3 bm_fetch 벤치 영상 받기",
+   "gist": "받기 0편 = 다른 채널 순위로(같은 일 3번이면 멈춤) · 외부 호출은 속도표 한 함수(J53)",
+   "value": "받기 0편 = 다른 채널 순위로(같은 일 3번이면 멈춤) · 외부 호출은 속도표 한 함수(J53)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [
+    "J53"
+   ],
+   "owner_raw": "bm.pick_videos(있음) · runner_ops.c_bm_fetch(있음)",
+   "owners": [
+    {
+     "file": "engine/bench_member.py",
+     "name": "pick_videos",
+     "new": false
+    },
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_fetch",
+     "new": false
+    }
+   ],
+   "stage": "bm_fetch",
+   "gate": "받기 0편 = 다른 채널 순위로(같은 일 3번이면 멈춤) · 외부 호출은 속도표 한 함수(J53)",
+   "gate_mode": "막음",
+   "bundle": "— 있음(바꿈 없음)",
+   "src": [
+    31,
+    359
+   ]
+  },
+  {
+   "id": "V004",
+   "sec": "1",
+   "kan": "§1 #4",
+   "decision": "단계 4 bm_tear 영상 뜯기 + **원본 짝 찾기**",
+   "gist": "짝이 있는 편으로 §3 R7 칸(구간·자르는 위치·원본 자막)을 잰다",
+   "value": "짝이 있는 편으로 §3 R7 칸(구간·자르는 위치·원본 자막)을 잰다 · (v1.4) 층 목록은 프로그램 측정(0.5초 간격 프레임 픽셀)으로만 쓰고 agy 는 종류 이름만 — 층이 bg·video·title·caption 넷뿐인데 벤치 프레임에 다른 층이 보이면 뜯기 다시(같은 일 3번이면 멈춤)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "runner_ops.c_bm_tear(있음)",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_tear",
+     "new": false
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": "짝이 있는 편으로 §3 R7 칸(구간·자르는 위치·원본 자막)을 잰다 · (v1.4) 층 목록은 프로그램 측정(0.5초 간격 프레임 픽셀)으로만 쓰고 agy 는 종류 이름만 — 층이 bg·video·title·caption 넷뿐인데 벤치 프레임에 다른 층이 보이면 뜯기 다시(같은 일 3번이면 멈춤)",
+   "gate_mode": "막음",
+   "bundle": "①",
+   "src": [
+    32,
+    360
+   ]
+  },
+  {
+   "id": "V005",
+   "sec": "1",
+   "kan": "§1 #5",
+   "decision": "단계 5 bm_read 영상 보기",
+   "gist": "ka.check_doc 못 넘으면 다시 읽기 1회(REREAD_MAX)",
+   "value": "ka.check_doc 못 넘으면 다시 읽기 1회(REREAD_MAX)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_read_got(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_read_got",
+     "new": false
+    }
+   ],
+   "stage": "bm_read",
+   "gate": "ka.check_doc 못 넘으면 다시 읽기 1회(REREAD_MAX)",
+   "gate_mode": "막음",
+   "bundle": "— 있음(바꿈 없음)",
+   "src": [
+    33,
+    361
+   ]
+  },
+  {
+   "id": "V006",
+   "sec": "1",
+   "kan": "§1 #6",
+   "decision": "단계 6 **bm_voice 목소리 고르기** (새)",
+   "gist": "명단 5명(벤치 성별 먼저, 필재 금지) 같은 대사·같은 음량 합성 → agy 청취 점수 1위, 피치 조정 금지, tempo = 벤치 자/분 실측(atempo ≤1.27, 넘으면 쉼 줄이기 먼저)",
+   "value": "명단 5명(벤치 성별 먼저, 필재 금지) 같은 대사·같은 음량 합성 → agy 청취 점수 1위, 피치 조정 금지, tempo = 벤치 자/분 실측(atempo ≤1.27, 넘으면 쉼 줄이기 먼저)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "voice_synth.make_synth(있음) · fb.bm_voice(새로)",
+   "owners": [
+    {
+     "file": "engine/voice_synth.py",
+     "name": "make_synth",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_voice",
+     "new": true
+    }
+   ],
+   "stage": "bm_voice",
+   "gate": "명단 5명(벤치 성별 먼저, 필재 금지) 같은 대사·같은 음량 합성 → agy 청취 점수 1위, 피치 조정 금지, tempo = 벤치 자/분 실측(atempo ≤1.27, 넘으면 쉼 줄이기 먼저)",
+   "gate_mode": "막음",
+   "bundle": "③",
+   "src": [
+    34,
+    362
+   ]
+  },
+  {
+   "id": "V007",
+   "sec": "1",
+   "kan": "§1 #7",
+   "decision": "단계 7 bm_trial 시험 영상 만들기",
+   "gist": "회원 과제 답 없음 = 다시(같은 일 3번이면 멈춤)",
+   "value": "회원 과제 답 없음 = 다시(같은 일 3번이면 멈춤)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_trial(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_trial",
+     "new": false
+    }
+   ],
+   "stage": "bm_trial",
+   "gate": "회원 과제 답 없음 = 다시(같은 일 3번이면 멈춤)",
+   "gate_mode": "막음",
+   "bundle": "— 있음(⑤ L43 샘플 2컷 앞에 붙음)",
+   "src": [
+    35,
+    363
+   ]
+  },
+  {
+   "id": "V008",
+   "sec": "1",
+   "kan": "§1 #8",
+   "decision": "단계 8 bm_pan 잡도리",
+   "gist": "MATCH_RULES + §7 새 칸. 한 칸씩 고침, **같은 칸 3번 연속 실패면 멈춤**(b-A2)",
+   "value": "MATCH_RULES + §7 새 칸. 한 칸씩 고침, 같은 칸 3번 연속 실패면 멈춤(b-A2)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_panbokki(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_panbokki",
+     "new": false
+    }
+   ],
+   "stage": "bm_pan",
+   "gate": "MATCH_RULES + §7 새 칸. 한 칸씩 고침, 같은 칸 3번 연속 실패면 멈춤(b-A2)",
+   "gate_mode": "막음",
+   "bundle": "②(_pan_guard)",
+   "src": [
+    36,
+    364
+   ]
+  },
+  {
+   "id": "V009",
+   "sec": "1",
+   "kan": "§1 #9",
+   "decision": "단계 9 bm_confirm 판 확정 검사",
+   "gist": "틀리면 잡도리로 되돌림",
+   "value": "틀리면 잡도리로 되돌림",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_confirm(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_confirm",
+     "new": false
+    }
+   ],
+   "stage": "bm_confirm",
+   "gate": "틀리면 잡도리로 되돌림",
+   "gate_mode": "막음",
+   "bundle": "— 있음(바꿈 없음)",
+   "src": [
+    37,
+    365
+   ]
+  },
+  {
+   "id": "V010",
+   "sec": "1",
+   "kan": "§1 #10",
+   "decision": "단계 10 **bm_s6 새 소재 1편** (새)",
+   "gist": "§7 재현 점수판 + 벤치 상위 10편 중앙값. 미달 칸은 잡도리로 되돌림(같은 칸 3번이면 멈춤)",
+   "value": "§7 재현 점수판 + 벤치 상위 10편 중앙값. 미달 칸은 잡도리로 되돌림(같은 칸 3번이면 멈춤) · (v1.4) 소재 후보가 원본 확보 불가로 0 이 되면 §17-3(임시: 같은 꼴 다른 소재를 출처 분명한 원 촬영자·권리 있는 영상에서 다시 고름 → 넓히기 3번이면 '원본 확보 불가' 멈춤)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_s6(새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_s6",
+     "new": true
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "§7 재현 점수판 + 벤치 상위 10편 중앙값. 미달 칸은 잡도리로 되돌림(같은 칸 3번이면 멈춤) · (v1.4) 소재 후보가 원본 확보 불가로 0 이 되면 §17-3(임시: 같은 꼴 다른 소재를 출처 분명한 원 촬영자·권리 있는 영상에서 다시 고름 → 넓히기 3번이면 '원본 확보 불가' 멈춤)",
+   "gate_mode": "막음",
+   "bundle": "③",
+   "src": [
+    38,
+    366
+   ]
+  },
+  {
+   "id": "V011",
+   "sec": "1",
+   "kan": "§1 #11",
+   "decision": "단계 11 **bm_freeze 확정 기록** (새)",
+   "gist": "§6 필수 칸 없음 = 확정 거절 · 벤치 채널명·실제 제목 문자열 있음 = 거절(J10)",
+   "value": "§6 필수 칸 없음 = 확정 거절 · 벤치 채널명·실제 제목 문자열 있음 = 거절(J10)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [
+    "J10"
+   ],
+   "owner_raw": "preset_check(새로)",
+   "owners": [
+    {
+     "file": "engine/preset_check.py",
+     "name": null,
+     "new": true
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "§6 필수 칸 없음 = 확정 거절 · 벤치 채널명·실제 제목 문자열 있음 = 거절(J10)",
+   "gate_mode": "막음",
+   "bundle": "③",
+   "src": [
+    39,
+    367
+   ]
+  },
+  {
+   "id": "V012",
+   "sec": "1",
+   "kan": "§1 #12",
+   "decision": "단계 12 bm_make 프리셋 묶음",
+   "gist": "zip 없음 = 다시(J8 막힘)",
+   "value": "zip 없음 = 다시(J8 막힘)",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [
+    "J8"
+   ],
+   "owner_raw": "fb.bm_brief(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_brief",
+     "new": false
+    }
+   ],
+   "stage": "bm_make",
+   "gate": "zip 없음 = 다시(J8 막힘)",
+   "gate_mode": "막음",
+   "bundle": "— 있음(바꿈 없음)",
+   "src": [
+    40,
+    368
+   ]
+  },
+  {
+   "id": "V013",
+   "sec": "1",
+   "kan": "§1 #13",
+   "decision": "단계 13 done 완성",
+   "gist": "—",
+   "value": "—",
+   "status": "채택(b-A1 0.97·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-A1 0.97·0.79"
+   },
+   "refs": [
+    "J136"
+   ],
+   "owner_raw": "fb.bm_done(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_done",
+     "new": false
+    }
+   ],
+   "stage": "done",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(bm_done 보고 칸)",
+   "src": [
+    41,
+    369
+   ]
+  },
+  {
+   "id": "V014",
+   "sec": "0-1",
+   "kan": "§17-2 · §1 #4 · §3 R4 · §7-3",
+   "decision": "**화면 전체 뜯기 층 목록** (v1.4 새로)",
+   "gist": "frame.json layers[](로고·채널명·제목 줄별 색·나레 자막 색/외곽선·효과 자막·움직임) = bm_tear 프로그램 측정, 점수판 core",
+   "value": "frame.json layers[](로고·채널명·제목 줄별 색·나레 자막 색/외곽선·효과 자막·움직임) = bm_tear 프로그램 측정, 점수판 core",
+   "status": "채택(f1 A 1.00·0.77)",
+   "state": "채택",
+   "jev": {
+    "conf": 1.0,
+    "root": 0.77,
+    "risk": null,
+    "raw": "A 1.00·0.77"
+   },
+   "refs": [],
+   "owner_raw": "runner_ops.c_bm_tear(있음 — 층 칸 있음/새로는 다른 작업이 코드 확인 중) · ka(점수판 새 칸)",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_tear",
+     "new": true
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①b(③a 앞)",
+   "src": [
+    42,
+    2289,
+    786
+   ]
+  },
+  {
+   "id": "V015",
+   "sec": "0-1",
+   "kan": "§17-3 · §1 #10",
+   "decision": "**원본 출처 후보 0** (v1.4 새로)",
+   "gist": "같은 꼴 다른 소재를 출처 분명한 원 촬영자·권리 있는 영상에서(형식만 벤치) → 넓히기 3번이면 '원본 확보 불가' 멈춤 · 회원에게 소재 받기 없음",
+   "value": "같은 꼴 다른 소재를 출처 분명한 원 촬영자·권리 있는 영상에서(형식만 벤치) → 넓히기 3번이면 '원본 확보 불가' 멈춤 · 회원에게 소재 받기 없음",
+   "status": "임시(f1 B 0.69·0.41 / #2 0.73·0.40)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.73,
+    "root": 0.4,
+    "risk": null,
+    "raw": "#2 0.73·0.40"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_s6 소재 함수(새로) · hybrid/origin_trace(있음, 85476b05d) · rules.source_rule_static(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_s6",
+     "new": true
+    },
+    {
+     "file": "hybrid/rules.py",
+     "name": "source_rule_static",
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③a",
+   "src": [
+    43,
+    2300
+   ]
+  },
+  {
+   "id": "V016",
+   "sec": "3",
+   "kan": "§3 R1",
+   "decision": "R1 구간 고르기",
+   "gist": "(v1.2 바꿈) **보류 칸(시험에서 확정)** — 경계 주인 = 프로그램 한 함수 seg_snap: AI(agy)는 '어느 에피소드(펀치라인 줄)'만 고르고 시각은 고르지 않음 · 시작 = 첫 …",
+   "value": "(v1.2 바꿈) 보류 칸(시험에서 확정) — 경계 주인 = 프로그램 한 함수 seg_snap: AI(agy)는 '어느 에피소드(펀치라인 줄)'만 고르고 시각은 고르지 않음 · 시작 = 첫 대사 앞 비대사 틈의 샷 경계(없으면 첫 낱말 시작 −0.1초) · 끝 = 마지막 대사 낱말 끝 +0.3초와 다음 낱말 시작 −0.1초 중 이른 것 · 펀치라인+반응 ≥1초 · core=False 로 시작, 짝 10편 시험에서 2초 안 ≥80%·펀치라인 100% 면 core",
+   "status": "보류 칸(기본값 채택)",
+   "state": "보류",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.73,
+    "risk": 0.38,
+    "raw": "해결 0.93 · 뿌리 0.73 · 위험 0.38"
+   },
+   "refs": [],
+   "owner_raw": "ps.merge(있음) · flow.ph_plan_got(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "merge",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow.py",
+     "name": "ph_plan_got",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "① 코드 보정(C4)",
+   "src": [
+    44,
+    531
+   ]
+  },
+  {
+   "id": "V017",
+   "sec": "3",
+   "kan": "§3 R2",
+   "decision": "R2 자르는 위치",
+   "gist": "crop{mode = center \\/ subject — bm_tear 가 벤치 짝 컷별 x 오차로 둘 다 재서 작은 쪽, subject 면 컷마다 피사체(얼굴 → 없으면 움직임) 중심을 프로그램이…",
+   "value": "crop{mode = center \\| subject — bm_tear 가 벤치 짝 컷별 x 오차로 둘 다 재서 작은 쪽, subject 면 컷마다 피사체(얼굴 → 없으면 움직임) 중심을 프로그램이 계산, AI 는 피사체만 지목} + 확대 1.0 유지 + 관문(짝 컷별 x 차 중앙 ≤60px)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.74,
+    "risk": 0.5,
+    "raw": "해결 0.99 · 뿌리 0.74 · 위험 0.50"
+   },
+   "refs": [],
+   "owner_raw": "ps.merge(있음) · flow.fill_shot_max(새로)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "merge",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow.py",
+     "name": "fill_shot_max",
+     "new": true
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "① 코드 보정(C2)",
+   "src": [
+    45,
+    532
+   ]
+  },
+  {
+   "id": "V018",
+   "sec": "3",
+   "kan": "§3 R3",
+   "decision": "R3 원본 자막",
+   "gist": "orig_caption{mode = keep \\/ reoverlay \\/ none — bm_tear 가 짝 대조(원본 박힌 자막 vs 쇼츠 화면 자막의 글·위치·크기)로 정함. reoverlay 면…",
+   "value": "orig_caption{mode = keep \\| reoverlay \\| none — bm_tear 가 짝 대조(원본 박힌 자막 vs 쇼츠 화면 자막의 글·위치·크기)로 정함. reoverlay 면 흐림 상자를 글자 상자에 딱 맞게(VMake/흐림, J27) + 그 위에 벤치 실측 크기로 우리 자막} + 관문(자막 크기 ±15%·자리)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.68,
+    "risk": 0.41,
+    "raw": "해결 0.97 · 뿌리 0.68 · 위험 0.41"
+   },
+   "refs": [
+    "J27"
+   ],
+   "owner_raw": "flow.text_blur_all(새로) · ps.merge(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow.py",
+     "name": "text_blur_all",
+     "new": true
+    },
+    {
+     "file": "engine/preset_save.py",
+     "name": "merge",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①(orig_caption 측정) + 보정(C6)",
+   "src": [
+    46,
+    533
+   ]
+  },
+  {
+   "id": "V019",
+   "sec": "3",
+   "kan": "§3 R4",
+   "decision": "R4 제목·끝·꾸밈 종류",
+   "gist": "문구는 소재마다 AI 가 새로 짓고 꼴은 칸으로 박는다: title{lines = 벤치 최빈, chars 범위, 0초~끝 유지 여부(J129)} · end{sec, kind = loop \\/ car…",
+   "value": "문구는 소재마다 AI 가 새로 짓고 꼴은 칸으로 박는다: title{lines = 벤치 최빈, chars 범위, 0초~끝 유지 여부(J129)} · end{sec, kind = loop \\| card \\| black(J55)} · deco_kinds(벤치에 나온 꾸밈 종류 목록). MATCH_RULES 에 title.lines·end.sec·deco.kinds_missing 칸을 더하고, 미달이면 그 칸만 다시 · (v1.4 · §17-2) 화면 층 칸 layers[] — 제목 줄마다 색·나레 자막 글자색·외곽선 px·효과 자막(종류·글자색·상자색·기울기·위치 상자)·등장 움직임을 bm_tear 가 벤치에서 재서 박고, 렌더·캡컷·썸네일 세 길이 같은 칸을 읽음",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.56,
+    "risk": 0.49,
+    "raw": "해결 0.99 · 뿌리 0.56 · 위험 0.49"
+   },
+   "refs": [
+    "J129",
+    "J55"
+   ],
+   "owner_raw": "rb._title_line(있음) · ka.MATCH_RULES(있음) · placement.place(있음)",
+   "owners": [
+    {
+     "file": "hybrid/render_bench.py",
+     "name": "_title_line",
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "MATCH_RULES",
+     "new": false
+    },
+    {
+     "file": "hybrid/placement.py",
+     "name": "place",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①(title·end 측정) + 보정(C3·C5)",
+   "src": [
+    47,
+    534
+   ]
+  },
+  {
+   "id": "V020",
+   "sec": "3",
+   "kan": "§3 컷 나누기",
+   "decision": "컷 나누기",
+   "gist": "그대로(preset_make.build_cuts·fit_shot, 컷 안 장면이 바뀌면 샷 경계에서 나눔 — V2)",
+   "value": "그대로(preset_make.build_cuts·fit_shot, 컷 안 장면이 바뀌면 샷 경계에서 나눔 — V2)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.63,
+    "risk": null,
+    "raw": "b-V2 0.96·0.63"
+   },
+   "refs": [],
+   "owner_raw": "preset_make.build_cuts(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_make.py",
+     "name": "build_cuts",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "— 있음",
+   "src": [
+    48,
+    535
+   ]
+  },
+  {
+   "id": "V021",
+   "sec": "3",
+   "kan": "§3 대사·자막 문장",
+   "decision": "대사·자막 문장",
+   "gist": "문장은 소재마다 새로 짓는다(소재가 다르므로). 꼴은 sa 칸(first_line·ending·est_length·sibling_repeat) + narr_share 상한 칸(J115)",
+   "value": "문장은 소재마다 새로 짓는다(소재가 다르므로). 꼴은 sa 칸(first_line·ending·est_length·sibling_repeat) + narr_share 상한 칸(J115)",
+   "status": "임시",
+   "state": "임시",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.3,
+    "risk": null,
+    "raw": "b-S2 0.88·0.30"
+   },
+   "refs": [
+    "J115",
+    "J96"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(sa 칸)",
+   "src": [
+    49,
+    536
+   ]
+  },
+  {
+   "id": "V022",
+   "sec": "3",
+   "kan": "§3 짝 없는 채널",
+   "decision": "짝 없는 채널",
+   "gist": "(v1.2 바꿈 — 보류 → **결정**) **'짝 없는 클립형 채널' 갈래 G10**(§9): bm_pick 은 짝 찾기 가능을 점수에 넣되 짝이 없으면 G10 으로 감 — 원본 추적·출처 칸·재…",
+   "value": "(v1.2 바꿈 — 보류 → 결정) '짝 없는 클립형 채널' 갈래 G10(§9): bm_pick 은 짝 찾기 가능을 점수에 넣되 짝이 없으면 G10 으로 감 — 원본 추적·출처 칸·재사용 위험 관문을 더하고 R1~R3 기본값 = seg_snap·crop=subject·orig_caption=keep(core=False). 계획서 판 3: 사장님 지시 '스냅봤니 먼저'",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.59,
+    "risk": null,
+    "raw": "해결 0.89 · 뿌리 0.59"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①(branch_of) + 보정(C1·C6)",
+   "src": [
+    50,
+    537
+   ]
+  },
+  {
+   "id": "V023",
+   "sec": "4",
+   "kan": "§4 #1",
+   "decision": "§4 #1 음량",
+   "gist": "**보류 칸(시험에서 확정)** — 기본값: 섞기 주인 한 함수 — 원음↔나레 상대 음량·LRA 는 벤치 칸 값으로 섞을 때 맞추고 마지막 −14±1(고정)은 2-pass loudnorm 전체 이득…",
+   "value": "보류 칸(시험에서 확정) — 기본값: 섞기 주인 한 함수 — 원음↔나레 상대 음량·LRA 는 벤치 칸 값으로 섞을 때 맞추고 마지막 −14±1(고정)은 2-pass loudnorm 전체 이득 한 번(상대값 보존) · 본문 무음 0 은 섞기 함수가 만들 때 채움(실측 벤치 본문 무음 0). 잴 것: bm_s6 원음↔나레 상대 음량 벤치 ±2dB. 반대 값: N19 −18~−10 이면 손대지 않음(10글) · 벤치 숏박스 실측 −17.1/−16.4(LRA 13.4/9.6)",
+   "status": "보류 칸(기본값 채택)",
+   "state": "보류",
+   "jev": {
+    "conf": 0.81,
+    "root": 0.53,
+    "risk": 0.49,
+    "raw": "해결 0.81 · 뿌리 0.53 · 위험 0.49"
+   },
+   "refs": [
+    "N19"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    51,
+    547
+   ]
+  },
+  {
+   "id": "V024",
+   "sec": "4",
+   "kan": "§4 #2",
+   "decision": "§4 #2 리미터",
+   "gist": "**임시** — 방향 = 리미터 빼고 2-pass loudnorm(linear) + AAC 뒤 트루피크 −1.5dBTP 넘을 때만 전체 이득을 내림(뿌리 0.48 > 리미터 유지 안 0.16 — #…",
+   "value": "임시 — 방향 = 리미터 빼고 2-pass loudnorm(linear) + AAC 뒤 트루피크 −1.5dBTP 넘을 때만 전체 이득을 내림(뿌리 0.48 > 리미터 유지 안 0.16 — #2 '다른 안이 뿌리 더 높음'). 잴 것: 우리 완성본 2편 리미터 판 vs 2-pass 판 목소리 구간 단기 음량 폭·TP·떨림 청취 — 관문 bm_s6. 실측: 벤치 refA TP +0.3dBTP(리미터 없음/약함). 반대 값: 리미터 씀(rb:3490·2164)",
+   "status": "임시",
+   "state": "임시",
+   "jev": {
+    "conf": 0.84,
+    "root": 0.48,
+    "risk": 0.49,
+    "raw": "해결 0.84 · 뿌리 0.48 · 위험 0.49"
+   },
+   "refs": [
+    "J58",
+    "N131"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    52,
+    548
+   ]
+  },
+  {
+   "id": "V025",
+   "sec": "4",
+   "kan": "§4 #3",
+   "decision": "§4 #3 원본 확대·반전",
+   "gist": "우리 값 · 회원 값은 관찰만(R6)",
+   "value": "우리 값 · 회원 값은 관찰만(R6)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.8,
+    "risk": 0.31,
+    "raw": "해결 0.93 · 뿌리 0.80 · 위험 0.31"
+   },
+   "refs": [
+    "J71"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    53,
+    549
+   ]
+  },
+  {
+   "id": "V026",
+   "sec": "4",
+   "kan": "§4 #4",
+   "decision": "§4 #4 박힌 자막",
+   "gist": "orig_caption 칸(프리셋마다, 짝으로 정함)",
+   "value": "orig_caption 칸(프리셋마다, 짝으로 정함)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.84,
+    "root": 0.6,
+    "risk": null,
+    "raw": "b-R3 0.84·0.60"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    54,
+    550
+   ]
+  },
+  {
+   "id": "V027",
+   "sec": "4",
+   "kan": "§4 #5",
+   "decision": "§4 #5 세로 원본",
+   "gist": "source_aspect 칸과 다르면 자동 건너뛰기",
+   "value": "source_aspect 칸과 다르면 자동 건너뛰기",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.63,
+    "risk": 0.32,
+    "raw": "해결 0.96 · 뿌리 0.63 · 위험 0.32"
+   },
+   "refs": [
+    "J4"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    55,
+    551
+   ]
+  },
+  {
+   "id": "V028",
+   "sec": "4",
+   "kan": "§4 #6",
+   "decision": "§4 #6 컷 안 장면 바뀜",
+   "gist": "우리 값",
+   "value": "우리 값",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "N45"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    56,
+    552
+   ]
+  },
+  {
+   "id": "V029",
+   "sec": "4",
+   "kan": "§4 #7",
+   "decision": "§4 #7 글꼴 없을 때",
+   "gist": "자동 대체 + 글리프 검사 + 미확인 표식 + history(규격 원칙5 의 '사람이 고름'을 이것으로 바꾼다) — **임시**(칸 유지, 잴 것 §8: 대체 글꼴 자막 폭·높이 벤치 ±10%·글리…",
+   "value": "자동 대체 + 글리프 검사 + 미확인 표식 + history(규격 원칙5 의 '사람이 고름'을 이것으로 바꾼다) — 임시(칸 유지, 잴 것 §8: 대체 글꼴 자막 폭·높이 벤치 ±10%·글리프 누락 0, 관문 bm_s6)",
+   "status": "임시",
+   "state": "임시",
+   "jev": {
+    "conf": 0.67,
+    "root": 0.28,
+    "risk": null,
+    "raw": "b-V3a 0.67·0.28"
+   },
+   "refs": [
+    "N50",
+    "J17"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    57,
+    553
+   ]
+  },
+  {
+   "id": "V030",
+   "sec": "4",
+   "kan": "§4 #8",
+   "decision": "§4 #8 받아쓰기 키 없을 때",
+   "gist": "(v1.2 바꿈) 키 확인 주인 = setup(runner_ops.c_bm_env) 한 곳 — 시작 전에 받아쓰기 키(서버 공용 풀 포함)를 확인해 없으면 시작 전 멈춤, 중간 단계의 위스퍼 대체 …",
+   "value": "(v1.2 바꿈) 키 확인 주인 = setup(runner_ops.c_bm_env) 한 곳 — 시작 전에 받아쓰기 키(서버 공용 풀 포함)를 확인해 없으면 시작 전 멈춤, 중간 단계의 위스퍼 대체 길은 없앰",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.7,
+    "risk": 0.58,
+    "raw": "해결 0.91 · 뿌리 0.70 · 위험 0.58"
+   },
+   "refs": [
+    "N53"
+   ],
+   "owner_raw": "runner_ops.c_bm_env(있음)",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_env",
+     "new": false
+    }
+   ],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    58,
+    554
+   ]
+  },
+  {
+   "id": "V031",
+   "sec": "4",
+   "kan": "§4 #9",
+   "decision": "§4 #9 대본 초안 AI",
+   "gist": "오푸스",
+   "value": "오푸스",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.72,
+    "risk": 0.44,
+    "raw": "해결 0.95 · 뿌리 0.72 · 위험 0.44"
+   },
+   "refs": [
+    "N73"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    59,
+    555
+   ]
+  },
+  {
+   "id": "V032",
+   "sec": "4",
+   "kan": "§4 #10",
+   "decision": "§4 #10 첫 화면",
+   "gist": "카드 고정. **ka.MATCH_RULES thumb.frame0 을 core=False(참고)로 내리고 대조 때 맨 앞 2프레임은 빼고 잰다** — 두 규칙이 서로 반대이던 것을 qg 한 곳으로",
+   "value": "카드 고정. ka.MATCH_RULES thumb.frame0 을 core=False(참고)로 내리고 대조 때 맨 앞 2프레임은 빼고 잰다 — 두 규칙이 서로 반대이던 것을 qg 한 곳으로",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.69,
+    "risk": 0.48,
+    "raw": "해결 0.93 · 뿌리 0.69 · 위험 0.48"
+   },
+   "refs": [
+    "J47"
+   ],
+   "owner_raw": "ka.MATCH_RULES(있음)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "MATCH_RULES",
+     "new": false
+    }
+   ],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    60,
+    556
+   ]
+  },
+  {
+   "id": "V033",
+   "sec": "4",
+   "kan": "§4 #11",
+   "decision": "§4 #11 프리셋 저장 꼴",
+   "gist": "공용 렌더러",
+   "value": "공용 렌더러",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.83,
+    "risk": 0.49,
+    "raw": "해결 0.93 · 뿌리 0.83 · 위험 0.49"
+   },
+   "refs": [
+    "N143"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    61,
+    557
+   ]
+  },
+  {
+   "id": "V034",
+   "sec": "4",
+   "kan": "§4 #12",
+   "decision": "§4 #12 티저·리플레이",
+   "gist": "카드 고정 + 본문 재사용 0(J135)",
+   "value": "카드 고정 + 본문 재사용 0(J135)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J135",
+    "N152"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    62,
+    558
+   ]
+  },
+  {
+   "id": "V035",
+   "sec": "4",
+   "kan": "§4 #13",
+   "decision": "§4 #13 소재 금지",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "N165"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    63,
+    559
+   ]
+  },
+  {
+   "id": "V036",
+   "sec": "4",
+   "kan": "§4 #14",
+   "decision": "§4 #14 벤치에 더 가깝게",
+   "gist": "확정 전 = 벤치 쪽으로, 확정(frozen_at) 뒤 = version+why 없으면 거절",
+   "value": "확정 전 = 벤치 쪽으로, 확정(frozen_at) 뒤 = version+why 없으면 거절",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.92,
+    "root": 0.67,
+    "risk": 0.46,
+    "raw": "해결 0.92 · 뿌리 0.67 · 위험 0.46"
+   },
+   "refs": [
+    "N204"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    64,
+    560
+   ]
+  },
+  {
+   "id": "V037",
+   "sec": "4",
+   "kan": "§4 #15",
+   "decision": "§4 #15 원음 번역",
+   "gist": "프리셋마다 칸(벤치 실측 번역 꼴)",
+   "value": "프리셋마다 칸(벤치 실측 번역 꼴)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.8,
+    "root": 0.57,
+    "risk": 0.58,
+    "raw": "해결 0.80 · 뿌리 0.57 · 위험 0.58"
+   },
+   "refs": [
+    "N238"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    65,
+    561
+   ]
+  },
+  {
+   "id": "V038",
+   "sec": "4",
+   "kan": "§4 #16",
+   "decision": "§4 #16 파일명",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "N246"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    66,
+    562
+   ]
+  },
+  {
+   "id": "V039",
+   "sec": "4",
+   "kan": "§4 #17",
+   "decision": "§4 #17 효과음",
+   "gist": "(v1.2 바꿈) 효과음 주인 = sfx 칸 하나(벤치 실측 종류·횟수·출처) — 팩 기본값 자동 삽입을 없애고 칸에 있는 것만 렌더, 벤치가 0이면 0",
+   "value": "(v1.2 바꿈) 효과음 주인 = sfx 칸 하나(벤치 실측 종류·횟수·출처) — 팩 기본값 자동 삽입을 없애고 칸에 있는 것만 렌더, 벤치가 0이면 0",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.85,
+    "root": 0.65,
+    "risk": 0.68,
+    "raw": "해결 0.85 · 뿌리 0.65 · 위험 0.68"
+   },
+   "refs": [
+    "N270",
+    "J103"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    67,
+    563
+   ]
+  },
+  {
+   "id": "V040",
+   "sec": "4",
+   "kan": "§4 #18",
+   "decision": "§4 #18 합성 전 허락",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "N272"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    68,
+    564
+   ]
+  },
+  {
+   "id": "V041",
+   "sec": "4",
+   "kan": "§4 #19",
+   "decision": "§4 #19 CTA",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J134"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    69,
+    565
+   ]
+  },
+  {
+   "id": "V042",
+   "sec": "4",
+   "kan": "§4 #20",
+   "decision": "§4 #20 과장어",
+   "gist": "**임시** — 기본 허용(고정 규칙) + 벤치 과장어 빈도를 칸으로 대본 지시에(sa 는 기록만). 잴 것: 벤치 n편 과장어 빈도 vs 우리 대본 — 관문 bm_s6 대본",
+   "value": "임시 — 기본 허용(고정 규칙) + 벤치 과장어 빈도를 칸으로 대본 지시에(sa 는 기록만). 잴 것: 벤치 n편 과장어 빈도 vs 우리 대본 — 관문 bm_s6 대본",
+   "status": "임시",
+   "state": "임시",
+   "jev": {
+    "conf": 0.61,
+    "root": 0.29,
+    "risk": 0.55,
+    "raw": "해결 0.61 · 뿌리 0.29 · 위험 0.55"
+   },
+   "refs": [
+    "N393"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    70,
+    566
+   ]
+  },
+  {
+   "id": "V043",
+   "sec": "4",
+   "kan": "§4 #21",
+   "decision": "§4 #21 사람 승인",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J126"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    71,
+    567
+   ]
+  },
+  {
+   "id": "V044",
+   "sec": "4",
+   "kan": "§4 #22",
+   "decision": "§4 #22 썸네일",
+   "gist": "카드 고정",
+   "value": "카드 고정",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J141"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    72,
+    568
+   ]
+  },
+  {
+   "id": "V045",
+   "sec": "4",
+   "kan": "§4 #23",
+   "decision": "§4 #23 말 속도",
+   "gist": "tempo = 벤치 자/분 실측(bm_voice), atempo ≤1.27",
+   "value": "tempo = 벤치 자/분 실측(bm_voice), atempo ≤1.27",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J105"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    73,
+    569
+   ]
+  },
+  {
+   "id": "V046",
+   "sec": "4",
+   "kan": "§4 #24",
+   "decision": "§4 #24 TTS 엔진",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    74,
+    570
+   ]
+  },
+  {
+   "id": "V047",
+   "sec": "4",
+   "kan": "§4 #25",
+   "decision": "§4 #25 필재",
+   "gist": "우리 값(고정)",
+   "value": "우리 값(고정)",
+   "status": "채택",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    75,
+    571
+   ]
+  },
+  {
+   "id": "V048",
+   "sec": "4",
+   "kan": "§4 #26",
+   "decision": "§4 #26 zoompan",
+   "gist": "(v1.2 바꿈) push 줌 렌더 주인 = rb 한 함수: 영상 컷 줌은 zoompan 대신 프레임 시각을 바꾸지 않는 scale+crop 시간식으로, zoompan 은 사진에만 — 끝 A/V 차…",
+   "value": "(v1.2 바꿈) push 줌 렌더 주인 = rb 한 함수: 영상 컷 줌은 zoompan 대신 프레임 시각을 바꾸지 않는 scale+crop 시간식으로, zoompan 은 사진에만 — 끝 A/V 차·프레임 수는 확인만",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.8,
+    "root": 0.79,
+    "risk": 0.53,
+    "raw": "해결 0.80 · 뿌리 0.79 · 위험 0.53"
+   },
+   "refs": [
+    "N344",
+    "J121"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    76,
+    572
+   ]
+  },
+  {
+   "id": "V049",
+   "sec": "4",
+   "kan": "§4 #27",
+   "decision": "§4 #27 자막 시각 배분",
+   "gist": "우리 값",
+   "value": "우리 값",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.66,
+    "risk": 0.39,
+    "raw": "해결 0.91 · 뿌리 0.66 · 위험 0.39"
+   },
+   "refs": [
+    "N333",
+    "N370"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    77,
+    573
+   ]
+  },
+  {
+   "id": "V050",
+   "sec": "4",
+   "kan": "§4 #28",
+   "decision": "§4 #28 원본 화면 크기",
+   "gist": "우리 값(고정) — crop 계산 주인 = 렌더 crop 한 함수: crop 높이 = 원본 높이 강제(확대 불가) + 얼굴이 작으면 fit_shot 이 얼굴 큰 샷",
+   "value": "우리 값(고정) — crop 계산 주인 = 렌더 crop 한 함수: crop 높이 = 원본 높이 강제(확대 불가) + 얼굴이 작으면 fit_shot 이 얼굴 큰 샷",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.62,
+    "risk": 0.56,
+    "raw": "해결 0.95 · 뿌리 0.62 · 위험 0.56"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    78,
+    574
+   ]
+  },
+  {
+   "id": "V051",
+   "sec": "4",
+   "kan": "§4 #29",
+   "decision": "§4 #29 쇼츠 만드는 법(N224 7글)",
+   "gist": "기본 = 원본 재편집 한 덩어리 + 쇼츠 방식 주인 = bm_tear 짝 대조 한 칸(shorts_derive{cut\\/own_script, 편수, 길이}) — 벤치 쇼츠가 그 채널 롱폼 구간이면 …",
+   "value": "기본 = 원본 재편집 한 덩어리 + 쇼츠 방식 주인 = bm_tear 짝 대조 한 칸(shorts_derive{cut\\|own_script, 편수, 길이}) — 벤치 쇼츠가 그 채널 롱폼 구간이면 cut, 아니면 own_script, 그 칸으로 G1 갈래(회원 값은 칸 선택지)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.92,
+    "root": 0.68,
+    "risk": 0.35,
+    "raw": "해결 0.92 · 뿌리 0.68 · 위험 0.35"
+   },
+   "refs": [
+    "N224",
+    "J241"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    79,
+    575
+   ]
+  },
+  {
+   "id": "V052",
+   "sec": "4",
+   "kan": "§4 #30",
+   "decision": "§4 #30 방송 표시(로고·코너·띠) 처리(N17 7글…",
+   "gist": "(v1.2 바꿈) 박힌 글자·방송 표시 = 한 함수 한 칸(orig_caption 안 mark: blur\\/crop\\/delogo\\/keep), bm_tear 가 짝 대조로 재서 씀 — 본인 채널 …",
+   "value": "(v1.2 바꿈) 박힌 글자·방송 표시 = 한 함수 한 칸(orig_caption 안 mark: blur\\|crop\\|delogo\\|keep), bm_tear 가 짝 대조로 재서 씀 — 본인 채널 원본이면 keep(숏박스 실측 delogo []) · crop 은 확대 1.0 안 R2 이동",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.68,
+    "risk": 0.41,
+    "raw": "해결 0.97 · 뿌리 0.68 · 위험 0.41"
+   },
+   "refs": [
+    "N17"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    80,
+    576
+   ]
+  },
+  {
+   "id": "V053",
+   "sec": "4",
+   "kan": "§4 #31",
+   "decision": "§4 #31 화질 올리기 ESRGAN(N28 6글·N29…",
+   "gist": "기본 안 씀 · 해상도 하한(J128) 못 넘는 소재만 '화질 갈래' 칸(x4plus·영상 영역만·캐시) + 적용 뒤 A/V 길이 차·얼굴 대조 관문",
+   "value": "기본 안 씀 · 해상도 하한(J128) 못 넘는 소재만 '화질 갈래' 칸(x4plus·영상 영역만·캐시) + 적용 뒤 A/V 길이 차·얼굴 대조 관문",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.66,
+    "risk": 0.41,
+    "raw": "해결 0.88 · 뿌리 0.66 · 위험 0.41"
+   },
+   "refs": [
+    "N28",
+    "N29",
+    "J128",
+    "J226"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    81,
+    577
+   ]
+  },
+  {
+   "id": "V054",
+   "sec": "4",
+   "kan": "§4 #32",
+   "decision": "§4 #32 원본 받기 포맷(N345)",
+   "gist": "(v1.2 바꿈) 원본 받기 주인 한 함수(c_bm_fetch·flow 받기 공용): 포맷 목록(-F)을 먼저 받아 1080+·비트레이트 최고·h264 우선, 받은 파일 실측(크기>0·길이·해상도)…",
+   "value": "(v1.2 바꿈) 원본 받기 주인 한 함수(c_bm_fetch·flow 받기 공용): 포맷 목록(-F)을 먼저 받아 1080+·비트레이트 최고·h264 우선, 받은 파일 실측(크기>0·길이·해상도)이 안 맞으면 다음 포맷(616→248→137 포함)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.87,
+    "root": 0.71,
+    "risk": 0.42,
+    "raw": "해결 0.87 · 뿌리 0.71 · 위험 0.42"
+   },
+   "refs": [
+    "N345"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    82,
+    578
+   ]
+  },
+  {
+   "id": "V055",
+   "sec": "4",
+   "kan": "§4 #33",
+   "decision": "§4 #33 효과음 출처(N148 6글·N270 3글·2…",
+   "gist": "(v1.2 바꿈) #17 과 한 칸: sfx{source pack\\/synth\\/recorded\\/none·종류·횟수} 를 bm_tear 가 벤치에서 재서 씀, 팩 자동 삽입 없음(벤치 0 = 0)",
+   "value": "(v1.2 바꿈) #17 과 한 칸: sfx{source pack\\|synth\\|recorded\\|none·종류·횟수} 를 bm_tear 가 벤치에서 재서 씀, 팩 자동 삽입 없음(벤치 0 = 0)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.85,
+    "root": 0.65,
+    "risk": 0.68,
+    "raw": "해결 0.85 · 뿌리 0.65 · 위험 0.68"
+   },
+   "refs": [
+    "N148",
+    "N270",
+    "J240"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    83,
+    579
+   ]
+  },
+  {
+   "id": "V056",
+   "sec": "4",
+   "kan": "§4 #34",
+   "decision": "§4 #34 녹음 순서·컷 길이 격자(N38 4글)",
+   "gist": "(v1.2 바꿈) 컷 길이 주인 한 함수: 컷 길이는 TTS 실측 길이에서만 ceil((음성+0.08)×fps)/fps — 다른 곳에서 컷 길이를 정하지 않음(A/V 끝 차가 구조상 1프레임 미만)",
+   "value": "(v1.2 바꿈) 컷 길이 주인 한 함수: 컷 길이는 TTS 실측 길이에서만 ceil((음성+0.08)×fps)/fps — 다른 곳에서 컷 길이를 정하지 않음(A/V 끝 차가 구조상 1프레임 미만)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.79,
+    "risk": 0.25,
+    "raw": "해결 0.96 · 뿌리 0.79 · 위험 0.25"
+   },
+   "refs": [
+    "N38"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    84,
+    580
+   ]
+  },
+  {
+   "id": "V057",
+   "sec": "4",
+   "kan": "§4 #35",
+   "decision": "§4 #35 정지 화면(N312)",
+   "gist": "(v1.2 바꿈) 정지·슬로우 주인 = cut_fx 칸 하나: 벤치 짝 대조에서 잰 자리·배속만 렌더가 그림, 그 밖에는 렌더 경로에 정지 수단(tpad·freeze) 없음 — 11:21 관문은 확…",
+   "value": "(v1.2 바꿈) 정지·슬로우 주인 = cut_fx 칸 하나: 벤치 짝 대조에서 잰 자리·배속만 렌더가 그림, 그 밖에는 렌더 경로에 정지 수단(tpad·freeze) 없음 — 11:21 관문은 확인만, 벤치 같은 자리 정지(2226 1.835초)는 뺌",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.81,
+    "root": 0.69,
+    "risk": 0.48,
+    "raw": "해결 0.81 · 뿌리 0.69 · 위험 0.48"
+   },
+   "refs": [
+    "N312"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①",
+   "src": [
+    85,
+    581
+   ]
+  },
+  {
+   "id": "V058",
+   "sec": "4",
+   "kan": "§4 #36",
+   "decision": "§4 #36 구독 요청(N353·J134·N460)",
+   "gist": "우리 값(CTA 없음). **회원 반대 값**: 770·J134·N460 — 근거 글 그대로 남김",
+   "value": "우리 값(CTA 없음). 회원 반대 값: 770·J134·N460 — 근거 글 그대로 남김",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.92,
+    "root": 0.57,
+    "risk": 0.21,
+    "raw": "해결 0.92 · 뿌리 0.57 · 위험 0.21"
+   },
+   "refs": [
+    "N353",
+    "J134",
+    "N460"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    86,
+    582
+   ]
+  },
+  {
+   "id": "V059",
+   "sec": "4",
+   "kan": "§4 #37",
+   "decision": "§4 #37 설명란·해시태그(N419 3글 ↔ J157)",
+   "gist": "G6 업로드 칸 meta{설명 틀·해시태그 수}: bm_fetch 가 벤치 n편 info.json 을 받아 bm_tear 가 최빈값으로 채움, 엔진 초안은 그 칸에서만 — 발행은 사장님",
+   "value": "G6 업로드 칸 meta{설명 틀·해시태그 수}: bm_fetch 가 벤치 n편 info.json 을 받아 bm_tear 가 최빈값으로 채움, 엔진 초안은 그 칸에서만 — 발행은 사장님",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.68,
+    "risk": 0.58,
+    "raw": "해결 0.95 · 뿌리 0.68 · 위험 0.58"
+   },
+   "refs": [
+    "N419",
+    "J157"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    87,
+    583
+   ]
+  },
+  {
+   "id": "V060",
+   "sec": "4",
+   "kan": "§4 #38",
+   "decision": "§4 #38 착수 방식(N252 7글 ↔ N262)",
+   "gist": "묻지 않음(우리) + 제0단계 기획 한 장(핵심 메시지·반전·팩트·키 비주얼)을 flow 대본 단계 앞 **한 단계**로 엔진이 만들고 대본은 그 장에서만 지음 · 공정표는 시작 보고에만. **반대…",
+   "value": "묻지 않음(우리) + 제0단계 기획 한 장(핵심 메시지·반전·팩트·키 비주얼)을 flow 대본 단계 앞 한 단계로 엔진이 만들고 대본은 그 장에서만 지음 · 공정표는 시작 보고에만. 반대 값: N252 승인 2번",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.63,
+    "risk": 0.53,
+    "raw": "해결 0.89 · 뿌리 0.63 · 위험 0.53"
+   },
+   "refs": [
+    "N252",
+    "N262"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    88,
+    584
+   ]
+  },
+  {
+   "id": "V061",
+   "sec": "4",
+   "kan": "§4 #39",
+   "decision": "§4 #39 성우 고르기(J3 18글)",
+   "gist": "v1 결정(§1 단계 6) 그대로 + **임시** — 잴 것(§8): bm_voice 1위와 사장님 귀 판정 일치 여부를 bm_s6 2편에서",
+   "value": "v1 결정(§1 단계 6) 그대로 + 임시 — 잴 것(§8): bm_voice 1위와 사장님 귀 판정 일치 여부를 bm_s6 2편에서",
+   "status": "임시",
+   "state": "임시",
+   "jev": {
+    "conf": 0.72,
+    "root": 0.63,
+    "risk": null,
+    "raw": "b-A4 0.72·0.63"
+   },
+   "refs": [
+    "J3"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    89,
+    585
+   ]
+  },
+  {
+   "id": "V062",
+   "sec": "4",
+   "kan": "§4 #40",
+   "decision": "§4 #40 회원 지시 ↔ 우리 고정 규칙(J184·J1…",
+   "gist": "**우리 규칙** + 반대 값·근거 글·원문을 해당 칸 옆에 그대로(일부러 반대 — 버리지 않음). J229 지상파 금지 ↔ 우리는 방송사 공식 원본을 정본으로(#13)",
+   "value": "우리 규칙 + 반대 값·근거 글·원문을 해당 칸 옆에 그대로(일부러 반대 — 버리지 않음). J229 지상파 금지 ↔ 우리는 방송사 공식 원본을 정본으로(#13)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.81,
+    "root": 0.71,
+    "risk": 0.3,
+    "raw": "해결 0.81 · 뿌리 0.71 · 위험 0.30"
+   },
+   "refs": [
+    "J184",
+    "J1",
+    "J229",
+    "J185",
+    "J214",
+    "J257",
+    "J256",
+    "N465",
+    "J268",
+    "J190",
+    "N409"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    90,
+    586
+   ]
+  },
+  {
+   "id": "V063",
+   "sec": "4",
+   "kan": "§4 #41",
+   "decision": "§4 #41 출력 fps(N403)",
+   "gist": "(v1.2 바꿈) fps·색공간 주인 = 프리셋 칸 하나: bm_tear 가 벤치 fps·색공간을 재서 쓰고 렌더는 칸 값으로(숏박스 실측 23.976·bt709), 칸이 비면 30fps",
+   "value": "(v1.2 바꿈) fps·색공간 주인 = 프리셋 칸 하나: bm_tear 가 벤치 fps·색공간을 재서 쓰고 렌더는 칸 값으로(숏박스 실측 23.976·bt709), 칸이 비면 30fps",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.78,
+    "risk": 0.4,
+    "raw": "해결 0.88 · 뿌리 0.78 · 위험 0.40"
+   },
+   "refs": [
+    "N403"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    91,
+    587
+   ]
+  },
+  {
+   "id": "V064",
+   "sec": "4",
+   "kan": "§4 #42",
+   "decision": "§4 #42 긴 컷 쪼개기(N472/J270)",
+   "gist": "min_cut 칸 = 벤치 하한(없으면 1.2초)·샷 경계 안 넘음 · 컷 중앙이 느리면 원본 다음 샷 경계에서 나눔(확대 1.0). **반대 값**: 확대로 끊기",
+   "value": "min_cut 칸 = 벤치 하한(없으면 1.2초)·샷 경계 안 넘음 · 컷 중앙이 느리면 원본 다음 샷 경계에서 나눔(확대 1.0). 반대 값: 확대로 끊기",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.57,
+    "risk": 0.46,
+    "raw": "해결 0.95 · 뿌리 0.57 · 위험 0.46"
+   },
+   "refs": [
+    "N472",
+    "J270"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    92,
+    588
+   ]
+  },
+  {
+   "id": "V065",
+   "sec": "4",
+   "kan": "§4 #43",
+   "decision": "§4 #43 배경음악 출처(N471·N148·J60)",
+   "gist": "기본 창고 bgm_pick + bgm.source{store\\/generated\\/none} 칸 — 창고에 벤치 분위기 곡이 없을 때만 generated, 볼륨 = 벤치 실측",
+   "value": "기본 창고 bgm_pick + bgm.source{store\\|generated\\|none} 칸 — 창고에 벤치 분위기 곡이 없을 때만 generated, 볼륨 = 벤치 실측",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.61,
+    "risk": 0.38,
+    "raw": "해결 0.83 · 뿌리 0.61 · 위험 0.38"
+   },
+   "refs": [
+    "N471",
+    "N148",
+    "J60"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "제작",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(제작·시험 단계에서 읽음)",
+   "src": [
+    93,
+    589
+   ]
+  },
+  {
+   "id": "V066",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 version",
+   "gist": "필수 — 없으면 확정 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.save(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "save",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "없으면 확정 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    94,
+    730
+   ]
+  },
+  {
+   "id": "V067",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 format(\"숏폼\")",
+   "gist": "필수 — 〃",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.save(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "save",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "〃",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    95,
+    731
+   ]
+  },
+  {
+   "id": "V068",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 engine(엔진 판)",
+   "gist": "필수 — 〃",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.save(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "save",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "〃",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    96,
+    732
+   ]
+  },
+  {
+   "id": "V069",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 frozen_at",
+   "gist": "필수(확정 때) — 확정 뒤 version·why 없는 변경 거절(ps.fix_value·unfix_value·rebuild)",
+   "value": "필수(확정 때)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "새 bm_freeze → ps(새 freeze)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_freeze",
+     "new": true
+    },
+    {
+     "file": "engine/preset_save.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "확정 뒤 version·why 없는 변경 거절(ps.fix_value·unfix_value·rebuild)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    97,
+    733
+   ]
+  },
+  {
+   "id": "V070",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 fonts[{name, sha256, license, …",
+   "gist": "필수 — in_store 거짓·글리프 누락 = 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.save(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "save",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "in_store 거짓·글리프 누락 = 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    98,
+    734
+   ]
+  },
+  {
+   "id": "V071",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 provenance{자리:{src, how}}",
+   "gist": "필수 — 꼬리표 없는 칸 = 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.save(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "save",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "꼬리표 없는 칸 = 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    99,
+    735
+   ]
+  },
+  {
+   "id": "V072",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 history[{v, when, who, why, ch…",
+   "gist": "필수 — why 빈칸 = 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.fix_value(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "fix_value",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "why 빈칸 = 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    100,
+    736
+   ]
+  },
+  {
+   "id": "V073",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 confidence(\"low\" = n<3)",
+   "gist": "필수 — low 는 확정을 막지 않는다(규격 판정 0.75)",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.merge(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "merge",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "low 는 확정을 막지 않는다(규격 판정 0.75)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    101,
+    737
+   ]
+  },
+  {
+   "id": "V074",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 checks{validate, final}",
+   "gist": "필수 — 없으면 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "새 bm_freeze(§7 점수판 문턱을 씀)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_freeze",
+     "new": true
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "없으면 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    102,
+    738
+   ]
+  },
+  {
+   "id": "V075",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 reference{final_sha256, sheet}",
+   "gist": "필수 — 없으면 거절",
+   "value": "필수",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "bm_s6 합격본",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_s6",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "없으면 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    103,
+    739
+   ]
+  },
+  {
+   "id": "V076",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 SHA256.json",
+   "gist": "필수(생성) — 파일 해시 불일치 = 거절",
+   "value": "필수(생성)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "preset_brief",
+   "owners": [
+    {
+     "file": "engine/preset_brief.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "파일 해시 불일치 = 거절",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    104,
+    740
+   ]
+  },
+  {
+   "id": "V077",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 job.template.json",
+   "gist": "필수(생성) — 〃",
+   "value": "필수(생성)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "preset_brief",
+   "owners": [
+    {
+     "file": "engine/preset_brief.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "〃",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    105,
+    741
+   ]
+  },
+  {
+   "id": "V078",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 R7 칸 seg·crop·orig_caption·tit…",
+   "gist": "필수(v1 에서 새로) — 칸 없음 = 거절(R1 seg 는 보류라 v1 에서는 '참고'로만 둔다)",
+   "value": "필수(v1 에서 새로)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps.merge(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "merge",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "칸 없음 = 거절(R1 seg 는 보류라 v1 에서는 '참고'로만 둔다)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    106,
+    742
+   ]
+  },
+  {
+   "id": "V079",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 tests/",
+   "gist": "조건부(잡도리가 있을 때) — J9 = 보류 칸(시험에서 확정) — 확정 전 tests/ 를 돌리는 것은 bm_s6 시험 뒤 확정 조건으로 올린다",
+   "value": "조건부(잡도리가 있을 때)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [
+    "J9"
+   ],
+   "owner_raw": "ps.fix_value(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "fix_value",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "J9 = 보류 칸(시험에서 확정) — 확정 전 tests/ 를 돌리는 것은 bm_s6 시험 뒤 확정 조건으로 올린다",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    107,
+    743
+   ]
+  },
+  {
+   "id": "V080",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 accepted_unknown",
+   "gist": "조건부(미확인 칸이 있을 때) — 미확인 칸 수 = accepted_unknown 수",
+   "value": "조건부(미확인 칸이 있을 때)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "미확인 칸 수 = accepted_unknown 수",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    108,
+    744
+   ]
+  },
+  {
+   "id": "V081",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 secrets_from",
+   "gist": "조건부(키를 쓰는 자산이 있을 때) — `--doctor` 가 위치 확인",
+   "value": "조건부(키를 쓰는 자산이 있을 때)",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "ps",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": "`--doctor` 가 위치 확인",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    109,
+    745
+   ]
+  },
+  {
+   "id": "V082",
+   "sec": "6",
+   "kan": "§6",
+   "decision": "§6 README·changelog",
+   "gist": "선택 — —",
+   "value": "선택",
+   "status": "임시(b-K1 0.84·0.52 → f2 #2 0.83·0.45 갈림 — v1.4)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.45,
+    "risk": null,
+    "raw": "#2 0.83·0.45"
+   },
+   "refs": [],
+   "owner_raw": "preset_brief",
+   "owners": [
+    {
+     "file": "engine/preset_brief.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(bm_freeze·preset_check)",
+   "src": [
+    110,
+    746
+   ]
+  },
+  {
+   "id": "V083",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 틀",
+   "gist": "그대로",
+   "value": "ka.MATCH_RULES 기존 칸(길이 ±15%·컷 중앙 ±30%·cps ±10%·자막 조각 ±15%·꾸밈 비율 ±20%p·전환·sfx·스티커)",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka.MATCH_RULES",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "MATCH_RULES",
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "그대로",
+   "gate_mode": "막음",
+   "bundle": "— 있음(ka.MATCH_RULES)",
+   "src": [
+    111,
+    777
+   ]
+  },
+  {
+   "id": "V084",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 자르는 위치 crop.x",
+   "gist": "중앙 ≤60px **그리고** 60px 이내 컷 ≥60%(2226 프리셋은 25%)",
+   "value": "짝 원본 프레임과 컷별 x 차",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka(새 칸)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "중앙 ≤60px 그리고 60px 이내 컷 ≥60%(2226 프리셋은 25%)",
+   "gate_mode": "막음",
+   "bundle": "① 코드 보정(C2)",
+   "src": [
+    112,
+    778
+   ]
+  },
+  {
+   "id": "V085",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 구간 seg",
+   "gist": "≤2초 · 펀치라인 포함",
+   "value": "짝 원본에서 실제 구간과 시작·끝 차, 펀치라인 줄 포함 여부",
+   "status": "채택(d2 b-T2 0.99·0.79) · 참고 core=False",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka(새 칸) — **R1 보류 칸(시험에서 확정)이라 참고(core=False)** · v1.2 실측 22…",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "≤2초 · 펀치라인 포함",
+   "gate_mode": "막음",
+   "bundle": "① 코드 보정(C4)",
+   "src": [
+    113,
+    779
+   ]
+  },
+  {
+   "id": "V086",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 원본 자막 caption",
+   "gist": "같음 · ±15%",
+   "value": "mode 같음 · 글자 크기",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka(새 칸)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "같음 · ±15%",
+   "gate_mode": "막음",
+   "bundle": "① 코드 보정(C5)",
+   "src": [
+    114,
+    780
+   ]
+  },
+  {
+   "id": "V087",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 제목 title",
+   "gist": "벤치 최빈과 같음",
+   "value": "줄 수",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka(새 칸)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "벤치 최빈과 같음",
+   "gate_mode": "막음",
+   "bundle": "① 코드 보정(C5)",
+   "src": [
+    115,
+    781
+   ]
+  },
+  {
+   "id": "V088",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 끝 end",
+   "gist": "±0.5초",
+   "value": "끝 길이",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka(새 칸)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "±0.5초",
+   "gate_mode": "막음",
+   "bundle": "① 코드 보정(C3)",
+   "src": [
+    116,
+    782
+   ]
+  },
+  {
+   "id": "V089",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 소리",
+   "gist": "−14±1(고정 규칙) · 상대 음량 벤치 ±2dB(보류 칸) · 본문 무음 0",
+   "value": "통합 LUFS · 원음↔나레 상대 음량 · 본문 무음",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "qg(섞기 함수와 같은 측정)",
+   "owners": [
+    {
+     "file": "hybrid/quality_gate.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "−14±1(고정 규칙) · 상대 음량 벤치 ±2dB(보류 칸) · 본문 무음 0",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 점수판)",
+   "src": [
+    117,
+    783
+   ]
+  },
+  {
+   "id": "V090",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 대본·장면",
+   "gist": "벤치 상위 10편 중앙값 이상",
+   "value": "bench_compare_script_scene",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "기존",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "벤치 상위 10편 중앙값 이상",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 점수판)",
+   "src": [
+    118,
+    784
+   ]
+  },
+  {
+   "id": "V091",
+   "sec": "7-3",
+   "kan": "§7-3",
+   "decision": "§7-3 썸네일",
+   "gist": "참고(core=False, V4) — 맨 앞 2프레임 빼고 잼",
+   "value": "thumb.frame0",
+   "status": "채택(d2 b-T2 0.99·0.79)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.79,
+    "risk": null,
+    "raw": "b-T2 0.99·0.79"
+   },
+   "refs": [],
+   "owner_raw": "ka",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "참고(core=False, V4) — 맨 앞 2프레임 빼고 잼",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 점수판)",
+   "src": [
+    119,
+    785
+   ]
+  },
+  {
+   "id": "V092",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 R1 구간 고르기",
+   "gist": "seg_snap(프로그램 경계: AI 는 에피소드만, 시작 = 비대사 틈 샷 경계, 끝 = 마지막 낱말 끝+0.3초와 다음 낱말 시작−0.1초 중 이른 것) core=False",
+   "value": "seg_snap(프로그램 경계: AI 는 에피소드만, 시작 = 비대사 틈 샷 경계, 끝 = 마지막 낱말 끝+0.3초와 다음 낱말 시작−0.1초 중 이른 것) core=False",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.73,
+    "risk": 0.38,
+    "raw": "해결 0.93 · 뿌리 0.73 · 위험 0.38"
+   },
+   "refs": [
+    "N12",
+    "N277",
+    "J14",
+    "J5"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": "bm_s6 · bm_tear 짝",
+   "gate_mode": "기록만",
+   "bundle": "① 코드 보정(C4)",
+   "src": [
+    120,
+    801
+   ]
+  },
+  {
+   "id": "V093",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 #1 음량",
+   "gist": "섞기 한 함수: 원음↔나레 상대·LRA = 벤치 칸, 마지막 −14±1 = 2-pass loudnorm 전체 이득, 본문 무음 0 은 섞을 때 채움",
+   "value": "섞기 한 함수: 원음↔나레 상대·LRA = 벤치 칸, 마지막 −14±1 = 2-pass loudnorm 전체 이득, 본문 무음 0 은 섞을 때 채움",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.81,
+    "root": 0.53,
+    "risk": 0.49,
+    "raw": "해결 0.81 · 뿌리 0.53 · 위험 0.49"
+   },
+   "refs": [
+    "N19",
+    "J152",
+    "N106",
+    "J240"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    121,
+    802
+   ]
+  },
+  {
+   "id": "V094",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 #2 리미터",
+   "gist": "리미터 빼고 2-pass loudnorm(linear) + AAC 뒤 TP −1.5 넘을 때만 전체 이득 내림",
+   "value": "리미터 빼고 2-pass loudnorm(linear) + AAC 뒤 TP −1.5 넘을 때만 전체 이득 내림",
+   "status": "임시(방향 = 리미터 빼기 — 뿌리 더 높음)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.84,
+    "root": 0.48,
+    "risk": 0.49,
+    "raw": "해결 0.84 · 뿌리 0.48 · 위험 0.49"
+   },
+   "refs": [
+    "N131",
+    "N179",
+    "J77"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    122,
+    803
+   ]
+  },
+  {
+   "id": "V095",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J121 이음매·A/V",
+   "gist": "av{끝 영상·소리 길이 차 ≤0.1초, 실제 프레임 수 = 계획 ±1} (V12 컷 길이 한 함수 채택으로 구조상 1프레임 미만이 기대값)",
+   "value": "av{끝 영상·소리 길이 차 ≤0.1초, 실제 프레임 수 = 계획 ±1} (V12 컷 길이 한 함수 채택으로 구조상 1프레임 미만이 기대값)",
+   "status": "보류 칸 — 임시",
+   "state": "보류",
+   "jev": {
+    "conf": 0.53,
+    "root": 0.17,
+    "risk": null,
+    "raw": "b-J121 0.53·0.17"
+   },
+   "refs": [
+    "J121",
+    "N429",
+    "N466"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    123,
+    804
+   ]
+  },
+  {
+   "id": "V096",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J111 육성 비율",
+   "gist": "narr_share 범위(벤치 p10~p90, n<3 참고) — J115 와 한 칸",
+   "value": "narr_share 범위(벤치 p10~p90, n<3 참고) — J115 와 한 칸",
+   "status": "보류 칸 — 임시",
+   "state": "보류",
+   "jev": {
+    "conf": 0.65,
+    "root": 0.33,
+    "risk": null,
+    "raw": "b-J111 0.65·0.33"
+   },
+   "refs": [
+    "J111",
+    "J115"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    124,
+    805
+   ]
+  },
+  {
+   "id": "V097",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J114·J131 화면 소스",
+   "gist": "source_mix = bm_tear 한 함수 칸(숏박스 실측 원본 100%), 제작 재료는 칸 비율 안 소스만",
+   "value": "source_mix = bm_tear 한 함수 칸(숏박스 실측 원본 100%), 제작 재료는 칸 비율 안 소스만",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.8,
+    "root": 0.56,
+    "risk": 0.65,
+    "raw": "해결 0.80 · 뿌리 0.56 · 위험 0.65"
+   },
+   "refs": [
+    "J114",
+    "J131",
+    "N400",
+    "N219"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    125,
+    806
+   ]
+  },
+  {
+   "id": "V098",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J117 자막 겹침",
+   "gist": "자막 배치 주인 = frame.json 틀 좌표 한 곳(겹침 회피 이동 없앰) · 한 글은 한 길로만",
+   "value": "자막 배치 주인 = frame.json 틀 좌표 한 곳(겹침 회피 이동 없앰) · 한 글은 한 길로만",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.77,
+    "risk": 0.49,
+    "raw": "해결 0.99 · 뿌리 0.77 · 위험 0.49"
+   },
+   "refs": [
+    "J117",
+    "J220",
+    "N436"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    126,
+    807
+   ]
+  },
+  {
+   "id": "V099",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J123 첫 화면 밝기",
+   "gist": "카드 생성 함수가 YAVG ≥ 벤치 첫 프레임 최솟값 프레임에서만 고름",
+   "value": "카드 생성 함수가 YAVG ≥ 벤치 첫 프레임 최솟값 프레임에서만 고름",
+   "status": "보류 칸(시험에서 확정) — 임시",
+   "state": "보류",
+   "jev": {
+    "conf": 0.85,
+    "root": 0.46,
+    "risk": 0.63,
+    "raw": "해결 0.85 · 뿌리 0.46 · 위험 0.63"
+   },
+   "refs": [
+    "J123",
+    "N468",
+    "N404",
+    "J175"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6(core=False)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    127,
+    808
+   ]
+  },
+  {
+   "id": "V100",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J9 잡도리→시험",
+   "gist": "ps.fix_value 가 history 1줄·tests/ 1개를 같이 만듦 · '되돌리지 말 것' = frozen",
+   "value": "ps.fix_value 가 history 1줄·tests/ 1개를 같이 만듦 · '되돌리지 말 것' = frozen",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.76,
+    "root": 0.74,
+    "risk": 0.29,
+    "raw": "해결 0.76 · 뿌리 0.74 · 위험 0.29"
+   },
+   "refs": [
+    "J9",
+    "N318"
+   ],
+   "owner_raw": "ps.fix_value(있음)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "fix_value",
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "bm_freeze(§1 단계 11)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    128,
+    809
+   ]
+  },
+  {
+   "id": "V101",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J6 자동 열기",
+   "gist": "bm_done 이 완성 폴더 + 좌우 대조 시트를 열고 알림(auto_open 칸, 기본 켬)",
+   "value": "bm_done 이 완성 폴더 + 좌우 대조 시트를 열고 알림(auto_open 칸, 기본 켬)",
+   "status": "결정",
+   "state": "채택",
+   "jev": {
+    "conf": 0.83,
+    "root": 0.55,
+    "risk": null,
+    "raw": "H8 0.83·0.55"
+   },
+   "refs": [
+    "J6",
+    "N464"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    129,
+    810
+   ]
+  },
+  {
+   "id": "V102",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J127 꾸밈 상한",
+   "gist": "placement.place 가 종류별 남은 횟수(벤치 최댓값)를 들고 가 넘는 자리는 배치 안 함",
+   "value": "placement.place 가 종류별 남은 횟수(벤치 최댓값)를 들고 가 넘는 자리는 배치 안 함",
+   "status": "보류 칸(시험에서 확정) — 기본값 채택",
+   "state": "보류",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.78,
+    "risk": 0.42,
+    "raw": "해결 0.96 · 뿌리 0.78 · 위험 0.42"
+   },
+   "refs": [
+    "J127",
+    "J211"
+   ],
+   "owner_raw": "placement.place(있음)",
+   "owners": [
+    {
+     "file": "hybrid/placement.py",
+     "name": "place",
+     "new": false
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    130,
+    811
+   ]
+  },
+  {
+   "id": "V103",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 글꼴 자동 대체",
+   "gist": "자동 대체 + 글리프 검사 + 미확인 표식(§4 #7)",
+   "value": "자동 대체 + 글리프 검사 + 미확인 표식(§4 #7)",
+   "status": "보류 칸 — 임시",
+   "state": "보류",
+   "jev": {
+    "conf": 0.67,
+    "root": 0.28,
+    "risk": null,
+    "raw": "b-V3a 0.67·0.28"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    131,
+    812
+   ]
+  },
+  {
+   "id": "V104",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 J132 줌",
+   "gist": "placement: push 줌은 원본 컷이 정지·느린 샷일 때만, 움직이는 컷 비율 벤치 ±20%p",
+   "value": "placement: push 줌은 원본 컷이 정지·느린 샷일 때만, 움직이는 컷 비율 벤치 ±20%p",
+   "status": "결정(v1.2 바꿈)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.63,
+    "risk": 0.56,
+    "raw": "해결 0.93 · 뿌리 0.63 · 위험 0.56"
+   },
+   "refs": [
+    "J132",
+    "J264"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    132,
+    813
+   ]
+  },
+  {
+   "id": "V105",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 대본 S2(제목 3안)",
+   "gist": "점수표 항목·벤치 중앙값을 대본 지시에 먼저 → 같은 함수로 미달 칸만 · 반전 수 칸 · voice_style(O10d 0.60·0.51 → f2 #2 0.61·0.44 **임시**)",
+   "value": "점수표 항목·벤치 중앙값을 대본 지시에 먼저 → 같은 함수로 미달 칸만 · 반전 수 칸 · voice_style(O10d 0.60·0.51 → f2 #2 0.61·0.44 임시)",
+   "status": "결정(O10b 만 보류 칸)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.71,
+    "risk": 0.34,
+    "raw": "해결 0.99 · 뿌리 0.71 · 위험 0.34"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6 대본",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    133,
+    814
+   ]
+  },
+  {
+   "id": "V106",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 짝 없는 채널 R7 기본값",
+   "gist": "원본 추적·출처 칸·재사용 위험 관문 + seg_snap·crop=subject·orig_caption=keep(core=False)",
+   "value": "원본 추적·출처 칸·재사용 위험 관문 + seg_snap·crop=subject·orig_caption=keep(core=False)",
+   "status": "결정 — 갈래 G10 '짝 없는 클립형 채널'(§9)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.59,
+    "risk": null,
+    "raw": "해결 0.89·뿌리 0.59"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": "bm_s6(스냅봤니)",
+   "gate_mode": "막음",
+   "bundle": "①(G10 branch_of) + 보정(C1·C6)",
+   "src": [
+    134,
+    815
+   ]
+  },
+  {
+   "id": "V107",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 재사용 콘텐츠(수익 정지)",
+   "gist": "signature 칸을 렌더 틀(frame.json) 필수 층으로 · 회피 관행(N470·J261·J267·J71)은 관찰만",
+   "value": "signature 칸을 렌더 틀(frame.json) 필수 층으로 · 회피 관행(N470·J261·J267·J71)은 관찰만",
+   "status": "결정(H13a) + 사장님 예외 5(H13b — 관찰)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.73,
+    "risk": 0.49,
+    "raw": "해결 0.96 · 뿌리 0.73 · 위험 0.49"
+   },
+   "refs": [
+    "N470",
+    "J261",
+    "J267",
+    "J71",
+    "N442",
+    "J232"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    135,
+    816
+   ]
+  },
+  {
+   "id": "V108",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 A3 채널 자동 고르기",
+   "gist": "bm_pick 점수 + 1·2위 차 10% 안이면 두 채널 5편씩 실제 판독 통과율",
+   "value": "bm_pick 점수 + 1·2위 차 10% 안이면 두 채널 5편씩 실제 판독 통과율",
+   "status": "결정",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.52,
+    "risk": 0.43,
+    "raw": "해결 0.96 · 뿌리 0.52 · 위험 0.43"
+   },
+   "refs": [
+    "N230",
+    "J242",
+    "N186",
+    "N139"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": null,
+   "gate": "단계 2",
+   "gate_mode": "막음",
+   "bundle": "④",
+   "src": [
+    136,
+    817
+   ]
+  },
+  {
+   "id": "V109",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 성우 고르기(J3)",
+   "gist": "§1 단계 6 + 점수표 history",
+   "value": "§1 단계 6 + 점수표 history",
+   "status": "임시 표식(v1 bm_voice 그대로)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.72,
+    "root": 0.63,
+    "risk": null,
+    "raw": "b-A4 0.72·0.63"
+   },
+   "refs": [
+    "J3"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6 · 사장님 귀",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    137,
+    818
+   ]
+  },
+  {
+   "id": "V110",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 참고 클립 박힌 글자(J210)",
+   "gist": "재료 단계 한 함수: crop 창을 박힌 글 밖으로만, 못 피하면 그 컷을 뺌, 원음 0",
+   "value": "재료 단계 한 함수: crop 창을 박힌 글 밖으로만, 못 피하면 그 컷을 뺌, 원음 0",
+   "status": "결정(v1.2 — 보류 칸에서 올림)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.61,
+    "root": 0.65,
+    "risk": 0.68,
+    "raw": "해결 0.61 · 뿌리 0.65 · 위험 0.68"
+   },
+   "refs": [
+    "J210"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6",
+   "gate_mode": "막음",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    138,
+    819
+   ]
+  },
+  {
+   "id": "V111",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 거울상(J223)",
+   "gist": "소재 출처 = source_rule_static(재업로드본 거름) + hflip 금지",
+   "value": "소재 출처 = source_rule_static(재업로드본 거름) + hflip 금지",
+   "status": "임시(v1.2 새로)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.49,
+    "risk": 0.39,
+    "raw": "해결 0.88 · 뿌리 0.49 · 위험 0.39"
+   },
+   "refs": [
+    "J223"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6(소재 단계)",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    139,
+    820
+   ]
+  },
+  {
+   "id": "V112",
+   "sec": "8-1",
+   "kan": "§8-1",
+   "decision": "§8 과장어(§4 #20)",
+   "gist": "기본 허용 + 벤치 과장어 빈도 칸을 대본 지시에",
+   "value": "기본 허용 + 벤치 과장어 빈도 칸을 대본 지시에",
+   "status": "임시(v1.2 새로)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.61,
+    "root": 0.29,
+    "risk": 0.55,
+    "raw": "해결 0.61 · 뿌리 0.29 · 위험 0.55"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 원문에 함수 이름 없음(코드 단계에서 한 곳 정함)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": "bm_s6 대본",
+   "gate_mode": "기록만",
+   "bundle": "③(bm_s6 관문)",
+   "src": [
+    140,
+    821
+   ]
+  },
+  {
+   "id": "V113",
+   "sec": "0-1",
+   "kan": "§0-3 · 됐다 2",
+   "decision": "멈춤 종류 분류(환경 → 자동 재시도 / 내용만 사람)",
+   "gist": "stop_kind 한 곳 · 실패 목록 있는 멈춤 자리 10곳이 부름",
+   "value": "stop_kind 한 곳 · 실패 목록 있는 멈춤 자리 10곳이 부름",
+   "status": "채택(판 4 해결 0.97·뿌리 0.85·위험 0.25)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.85,
+    "risk": 0.25,
+    "raw": "해결 0.97·뿌리 0.85·위험 0.25"
+   },
+   "refs": [],
+   "owner_raw": "fb.stop_kind·_fail_stop(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "stop_kind",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "_fail_stop",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "② 077fb2508",
+   "src": [
+    141
+   ]
+  },
+  {
+   "id": "V114",
+   "sec": "0-1",
+   "kan": "§0-3",
+   "decision": "모델 표 한 곳(기본 sonnet · 판정 창구 opus · 하이쿠 0)",
+   "gist": "claude_cli.MODEL_TABLE — 부르는 쪽 model 인자 없앰, 하이쿠 0 시험",
+   "value": "claude_cli.MODEL_TABLE — 부르는 쪽 model 인자 없앰, 하이쿠 0 시험",
+   "status": "채택(판 4 해결 0.89·뿌리 0.85·위험 0.28)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.85,
+    "risk": 0.28,
+    "raw": "해결 0.89·뿌리 0.85·위험 0.28"
+   },
+   "refs": [],
+   "owner_raw": "claude_cli.MODEL_TABLE(있음)",
+   "owners": [
+    {
+     "file": "engine/claude_cli.py",
+     "name": "MODEL_TABLE",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "② 077fb2508·a005fab58",
+   "src": [
+    142
+   ]
+  },
+  {
+   "id": "V115",
+   "sec": "0-1",
+   "kan": "§0-3 · §1 #6",
+   "decision": "칼카피 TTS = 피쉬 'fish-s2.1-pro-free' 차분한 해설가 9a50287ddd26414690b538539ad52d61 · 완성본·회원 제작 = 타입캐스트",
+   "gist": "voices.tts_for(calcopy/production) 한 곳",
+   "value": "voices.tts_for(calcopy/production) 한 곳",
+   "status": "채택(사장님 판 5 · Jev 무료 TTS 한 곳 0.76·0.54)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.76,
+    "root": 0.54,
+    "risk": null,
+    "raw": "곳 0.76·0.54"
+   },
+   "refs": [],
+   "owner_raw": "voices.tts_for(있음) · preset_make.voice_purpose(있음)",
+   "owners": [
+    {
+     "file": "engine/voices.py",
+     "name": "tts_for",
+     "new": false
+    },
+    {
+     "file": "engine/preset_make.py",
+     "name": "voice_purpose",
+     "new": false
+    }
+   ],
+   "stage": "bm_voice",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "② 077fb2508",
+   "src": [
+    143
+   ]
+  },
+  {
+   "id": "V116",
+   "sec": "0-1a",
+   "kan": "§0-3 · 됐다 2",
+   "decision": "환경 실패 = 중간 파일(clean_targets 목록)만 지우고 메모리 기다린 뒤 그 단계부터 재시작, 같은 단계 REDO_STUCK 번이면 멈춤",
+   "gist": "WAIT_MEM_GB 4 · WAIT_MAX_S 900 · 자기 run_id 꼬리표 임시 폴더만",
+   "value": "v1 에 코드 그대로 적음(stop_kind → clean_targets 목록만 지움 → 메모리 기다림 → 그 단계부터, REDO_STUCK 번이면 멈춤)",
+   "status": "채택(e5 C7 해결 0.91 · 뿌리 0.51 · 위험 0.24 → e6 C7#2 해결 0.88 · 뿌리 0.51 · 위험 0.23)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.51,
+    "risk": 0.23,
+    "raw": "해결 0.88 · 뿌리 0.51 · 위험 0.23"
+   },
+   "refs": [],
+   "owner_raw": "fb._fail_stop(있음) · runner_ops.clean_targets·c_bm_clean(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "_fail_stop",
+     "new": false
+    },
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "clean_targets",
+     "new": false
+    },
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_clean",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②+ a005fab58·3907b32d0",
+   "src": [
+    144,
+    196
+   ]
+  },
+  {
+   "id": "V117",
+   "sec": "0-1",
+   "kan": "§0-3",
+   "decision": "판단 서버(Jev) 쉼 = 60초 기다렸다 같은 단계, 3번이면 멈춤",
+   "gist": "JevDown → bm_wait SERVER_WAIT_S 60",
+   "value": "JevDown → bm_wait SERVER_WAIT_S 60",
+   "status": "채택(커밋 기록 Jev 해결 0.76·뿌리 0.64 — 이번 세션 안 물음)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.76,
+    "root": 0.64,
+    "risk": null,
+    "raw": "해결 0.76·뿌리 0.64"
+   },
+   "refs": [],
+   "owner_raw": "fb(JevDown) · runner_ops.c_bm_wait(있음)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": null,
+     "new": false
+    },
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_wait",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②+ 3907b32d0",
+   "src": [
+    145
+   ]
+  },
+  {
+   "id": "V118",
+   "sec": "0-1",
+   "kan": "§7-1·§7-2",
+   "decision": "시험 순서 = 스냅봤니(G10) → 숏박스(짝)",
+   "gist": "실행 순서(코드 칸 아님)",
+   "value": "실행 순서(코드 칸 아님)",
+   "status": "임시(판 2 #1 해결 0.95·뿌리 0.37) → §7-1 d6 b-T1 채택",
+   "state": "임시",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.37,
+    "risk": null,
+    "raw": "해결 0.95·뿌리 0.37"
+   },
+   "refs": [],
+   "owner_raw": "— (실행 순서)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "—",
+   "src": [
+    146
+   ]
+  },
+  {
+   "id": "V119",
+   "sec": "0-1",
+   "kan": "됐다 3 · §1 #10",
+   "decision": "됐다 3 '+알파 한 칸 다름' → (v1.4) 됐다 5 잴 것으로 옮김",
+   "gist": "bm_s6 2편째 한 칸만 다름",
+   "value": "bm_s6 2편째 한 칸만 다름",
+   "status": "(v1.4) 됐다 3 에서 뗌 — 계획서 판 6 해결 0.85·뿌리 0.79 채택 · 임시(판 2 해결 0.68·뿌리 0.50 · v1.3 L74 e1 L74 해결 0.68 · 뿌리 0.38 · 위험 0.54 → e2 L74r 해결 0.63 · 뿌리 0.36 · 위험 0.52 (뿌리 더 높은 다른 안 f2 0.39))",
+   "state": "임시",
+   "jev": {
+    "conf": 0.63,
+    "root": 0.36,
+    "risk": 0.52,
+    "raw": "해결 0.63 · 뿌리 0.36 · 위험 0.52"
+   },
+   "refs": [
+    "L74"
+   ],
+   "owner_raw": "ka 점수판 함수(새로)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": true
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③·⑤",
+   "src": [
+    147
+   ]
+  },
+  {
+   "id": "V120",
+   "sec": "0-1",
+   "kan": "됐다 5 · §1 #13",
+   "decision": "됐다 5 '완성본 발행 뒤 7일 조회·시청률 기록(발행은 사장님)'",
+   "gist": "bm_done 기록 칸(7일 뒤 조회) + (v1.4 판 6) '+알파 한 칸 다름' 잴 것",
+   "value": "bm_done 기록 칸(7일 뒤 조회) + (v1.4 판 6) '+알파 한 칸 다름' 잴 것",
+   "status": "임시(판 2 해결 0.68·뿌리 0.50 한 번만 → v1.4 f1 됐다5 해결 0.88 · 뿌리 0.45 · 위험 0.32 · #2 해결 0.88 · 뿌리 0.44 · 위험 0.32 두 번 다 뿌리 미달 — §0 됐다 5)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.44,
+    "risk": 0.32,
+    "raw": "해결 0.88 · 뿌리 0.44 · 위험 0.32"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_done(있음, 칸 새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_done",
+     "new": true
+    }
+   ],
+   "stage": "done",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "③",
+   "src": [
+    148
+   ]
+  },
+  {
+   "id": "V121",
+   "sec": "0-1",
+   "kan": "§0-1",
+   "decision": "결정 동결선 — 코드가 읽는 결정은 이 표 한 곳, 닫히기 전 그 칸 읽는 코드 금지",
+   "gist": "이 표",
+   "value": "이 표",
+   "status": "채택(판 4 해결 0.95·뿌리 0.69·위험 0.37)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.69,
+    "risk": 0.37,
+    "raw": "해결 0.95·뿌리 0.69·위험 0.37"
+   },
+   "refs": [],
+   "owner_raw": "— (문서 규칙)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "—",
+   "src": [
+    149
+   ]
+  },
+  {
+   "id": "V122",
+   "sec": "16",
+   "kan": "#7 bm_trial·#10 bm_s6 앞 '샘플 2컷'",
+   "decision": "새 규칙 L43",
+   "gist": "bm_trial·bm_s6 앞에 '샘플 2컷' 단계: 같은 렌더 함수(rb)에 컷 범위만 줘서 첫 2컷(제목·자막·소리 포함)을 먼저 만들고 ka.MATCH_RULES 중 화면비·글꼴·자막 자리·A…",
+   "value": "bm_trial·bm_s6 앞에 '샘플 2컷' 단계: 같은 렌더 함수(rb)에 컷 범위만 줘서 첫 2컷(제목·자막·소리 포함)을 먼저 만들고 ka.MATCH_RULES 중 화면비·글꼴·자막 자리·A/V 싱크 칸만 대조 — 통과해야 전체 렌더(렌더 판단은 한 함수, 샘플은 그 함수의 범위 인자)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.65,
+    "risk": 0.39,
+    "raw": "해결 0.97 · 뿌리 0.65 · 위험 0.39"
+   },
+   "refs": [
+    "L43"
+   ],
+   "owner_raw": "rb(렌더 함수 컷 범위 인자) + ka.MATCH_RULES 일부 칸 (새로)",
+   "owners": [
+    {
+     "file": "hybrid/render_bench.py",
+     "name": null,
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "MATCH_RULES",
+     "new": true
+    }
+   ],
+   "stage": "bm_trial",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    150,
+    2214
+   ]
+  },
+  {
+   "id": "V123",
+   "sec": "16",
+   "kan": "#8 bm_pan(숫자 칸 4안)",
+   "decision": "새 규칙 L59",
+   "gist": "bm_pan 의 숫자 칸(길이·속도·쉼) 실패가 같은 칸 2번째면 그 칸만 4안(벤치 범위 p25·p50·p75·현재값)으로 짧게 렌더해 ka 같은 측정으로 벤치와 가장 가까운 안을 칸 값으로 저장…",
+   "value": "bm_pan 의 숫자 칸(길이·속도·쉼) 실패가 같은 칸 2번째면 그 칸만 4안(벤치 범위 p25·p50·p75·현재값)으로 짧게 렌더해 ka 같은 측정으로 벤치와 가장 가까운 안을 칸 값으로 저장(고르는 것은 측정, 사람 아님) — 4안 만들기는 bm_pan 한 함수 안",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.74,
+    "risk": 0.3,
+    "raw": "해결 0.96 · 뿌리 0.74 · 위험 0.30"
+   },
+   "refs": [
+    "L59"
+   ],
+   "owner_raw": "fb.bm_panbokki 안 (고침)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_panbokki",
+     "new": false
+    }
+   ],
+   "stage": "bm_pan",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    151,
+    2215
+   ]
+  },
+  {
+   "id": "V124",
+   "sec": "16",
+   "kan": "#11 bm_freeze · §8 J9",
+   "decision": "새 규칙 L66",
+   "gist": "칸 상태 주인 = ps.fix_value 한 함수: 모든 칸에 상태 하나(연습/확정)를 두고 이 함수만 상태를 바꿈 — 확정 조건 = 그 칸이 bm_s6 새 소재 편에서 통과(시험 편만으로는 확정 …",
+   "value": "칸 상태 주인 = ps.fix_value 한 함수: 모든 칸에 상태 하나(연습/확정)를 두고 이 함수만 상태를 바꿈 — 확정 조건 = 그 칸이 bm_s6 새 소재 편에서 통과(시험 편만으로는 확정 안 됨), bm_freeze 는 연습 칸이 남으면 거절",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.68,
+    "root": 0.63,
+    "risk": 0.44,
+    "raw": "해결 0.68 · 뿌리 0.63 · 위험 0.44"
+   },
+   "refs": [
+    "L66",
+    "J9"
+   ],
+   "owner_raw": "ps.fix_value(칸 상태 연습/확정) (고침)",
+   "owners": [
+    {
+     "file": "engine/preset_save.py",
+     "name": "fix_value",
+     "new": false
+    }
+   ],
+   "stage": "bm_freeze",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    152,
+    2216
+   ]
+  },
+  {
+   "id": "V125",
+   "sec": "16",
+   "kan": "#5 bm_read·#10 소재 입력(strategy 칸)",
+   "decision": "새 규칙 L14·보A-79",
+   "gist": "조회 요인 주인 = 프로그램 한 함수(새 channel_why, cf 곁): 벤치 채널 최근 n편의 제목 낱말·주제·길이·업로드 시각별 조회 중앙값 차를 계산해 strategy 칸에 숫자로 쓰고(a…",
+   "value": "조회 요인 주인 = 프로그램 한 함수(새 channel_why, cf 곁): 벤치 채널 최근 n편의 제목 낱말·주제·길이·업로드 시각별 조회 중앙값 차를 계산해 strategy 칸에 숫자로 쓰고(agy 판독 글은 근거 시각으로만 붙음) bm_s6 소재 고르기·+알파가 이 칸만 읽음",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.92,
+    "root": 0.69,
+    "risk": 0.32,
+    "raw": "해결 0.92 · 뿌리 0.69 · 위험 0.32"
+   },
+   "refs": [
+    "L14",
+    "보A-79"
+   ],
+   "owner_raw": "새 channel_why(cf 곁) (새로)",
+   "owners": [
+    {
+     "file": null,
+     "name": "channel_why",
+     "new": true
+    }
+   ],
+   "stage": "bm_read",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    153,
+    2217
+   ]
+  },
+  {
+   "id": "V126",
+   "sec": "16",
+   "kan": "#10 bm_s6 2편째 +알파 · 됐다 3",
+   "decision": "새 규칙 L74",
+   "gist": "+알파 주인 = 점수판 함수 한 곳(ka): bm_s6 2편째는 strategy 숫자 칸(조회 요인 상위)에서 고른 한 칸만 다르게 만들고, ka 가 '다른 칸 = 1개·나머지 core 칸 통과'를…",
+   "value": "+알파 주인 = 점수판 함수 한 곳(ka): bm_s6 2편째는 strategy 숫자 칸(조회 요인 상위)에서 고른 한 칸만 다르게 만들고, ka 가 '다른 칸 = 1개·나머지 core 칸 통과'를 같은 측정으로 판정 — 발행 뒤 7일 조회(됐다 5)가 그 칸을 프리셋 기본으로 올릴지 정함(장부 history)",
+   "status": "임시 — 잴 것: bm_s6 2편째 = 한 칸만 다른 편이 나머지 core 칸 통과 · 발행 뒤 7일 조회(발행은 사장님) —…",
+   "state": "임시",
+   "jev": {
+    "conf": 0.63,
+    "root": 0.36,
+    "risk": 0.52,
+    "raw": "해결 0.63 · 뿌리 0.36 · 위험 0.52"
+   },
+   "refs": [
+    "L74"
+   ],
+   "owner_raw": "ka 점수판 함수 (새로)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": true
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "bm_s6 2편째 = 한 칸만 다른 편이 나머지 core 칸 통과 · 발행 뒤 7일 조회(발행은 사장님) — 관문 bm_s6·됐다 5",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    154,
+    2218
+   ]
+  },
+  {
+   "id": "V127",
+   "sec": "16",
+   "kan": "#10 bm_s6 소재 함수",
+   "decision": "새 규칙 보B-85",
+   "gist": "소재 고르기 주인 = bm_s6 소재 함수 하나: 후보 점수 = 벤치 상위 편과의 주제 거리(가까울수록 재현 시험이 됨) − 채널이 이미 다룬 주제와 같음(벤치 영상 100편 제목·설명에서 같은 주…",
+   "value": "소재 고르기 주인 = bm_s6 소재 함수 하나: 후보 점수 = 벤치 상위 편과의 주제 거리(가까울수록 재현 시험이 됨) − 채널이 이미 다룬 주제와 같음(벤치 영상 100편 제목·설명에서 같은 주제면 0점 — 재사용 위험과 같은 판정 함수) — 생산 단계도 이 함수를 부름",
+   "status": "임시 — 잴 것: 스냅봤니·숏박스 시험 소재가 벤치 상위 편과 주제 거리·채널 기존 주제 겹침 0 — 관문 bm_s6 소재",
+   "state": "임시",
+   "jev": {
+    "conf": 0.71,
+    "root": 0.48,
+    "risk": 0.54,
+    "raw": "해결 0.71 · 뿌리 0.48 · 위험 0.54"
+   },
+   "refs": [
+    "보B-85"
+   ],
+   "owner_raw": "새 bm_s6 소재 함수 (새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_s6",
+     "new": true
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "스냅봤니·숏박스 시험 소재가 벤치 상위 편과 주제 거리·채널 기존 주제 겹침 0 — 관문 bm_s6 소재",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    155,
+    2219
+   ]
+  },
+  {
+   "id": "V128",
+   "sec": "16",
+   "kan": "#10 bm_s6 소재 함수(입력)",
+   "decision": "새 규칙 보B-33",
+   "gist": "보B-85 의 bm_s6 소재 함수 하나에 입력만 더함: 벤치 채널 최근 30편 조회 상위 주제(cf.channel_stats 이미 재는 조회) — 같은 함수가 '인기 주제 근처 + 안 다룬 것'으…",
+   "value": "보B-85 의 bm_s6 소재 함수 하나에 입력만 더함: 벤치 채널 최근 30편 조회 상위 주제(cf.channel_stats 이미 재는 조회) — 같은 함수가 '인기 주제 근처 + 안 다룬 것'으로 점수, 통로 하나",
+   "status": "임시 — 잴 것: 보B-85 와 같이(채널 최근 30편 조회 상위 주제 입력) — 관문 bm_s6 소재",
+   "state": "임시",
+   "jev": {
+    "conf": 0.84,
+    "root": 0.43,
+    "risk": 0.44,
+    "raw": "해결 0.84 · 뿌리 0.43 · 위험 0.44"
+   },
+   "refs": [
+    "보B-33",
+    "보B-85"
+   ],
+   "owner_raw": "새 bm_s6 소재 함수 (새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_s6",
+     "new": true
+    }
+   ],
+   "stage": "bm_s6",
+   "gate": "보B-85 와 같이(채널 최근 30편 조회 상위 주제 입력) — 관문 bm_s6 소재",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    156,
+    2220
+   ]
+  },
+  {
+   "id": "V129",
+   "sec": "16",
+   "kan": "§3 대사·자막 문장(sa beats 칸)",
+   "decision": "새 규칙 보B-173",
+   "gist": "대본 꼴 주인 sa 에 beats 칸: 새 소재 대본의 이야기 순서(beat 종류·순서·비율)가 프리셋 beats 와 같아야 하고 sa 가 대조(문장은 새로) — 대본 지시는 같은 beats 를 입…",
+   "value": "대본 꼴 주인 sa 에 beats 칸: 새 소재 대본의 이야기 순서(beat 종류·순서·비율)가 프리셋 beats 와 같아야 하고 sa 가 대조(문장은 새로) — 대본 지시는 같은 beats 를 입력으로",
+   "status": "임시 — 잴 것: bm_s6 새 소재 대본 beats 순서·비율 = 벤치 beats 일치 · 대본·장면 점수 중앙값 이상 — …",
+   "state": "임시",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.48,
+    "risk": 0.61,
+    "raw": "해결 0.91 · 뿌리 0.48 · 위험 0.61"
+   },
+   "refs": [
+    "보B-173"
+   ],
+   "owner_raw": "sa(script_audit) (고침)",
+   "owners": [
+    {
+     "file": "hybrid/script_audit.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": "bm_s6 새 소재 대본 beats 순서·비율 = 벤치 beats 일치 · 대본·장면 점수 중앙값 이상 — 관문 bm_s6 대본",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    157,
+    2221
+   ]
+  },
+  {
+   "id": "V130",
+   "sec": "16",
+   "kan": "#1 setup·#6 bm_voice 앞 · 됐다 2 ② 돈 상한",
+   "decision": "새 규칙 보B-193",
+   "gist": "과금 주인 한 함수(spend 장부): 유료 호출(타입캐스트·EvoLink·SerpAPI·페이블)마다 같은 함수로 기록하고 편당·하루 상한 칸을 넘으면 멈춤(돈 = 사장님 몫이라 그때만 묻기) — …",
+   "value": "과금 주인 한 함수(spend 장부): 유료 호출(타입캐스트·EvoLink·SerpAPI·페이블)마다 같은 함수로 기록하고 편당·하루 상한 칸을 넘으면 멈춤(돈 = 사장님 몫이라 그때만 묻기) — 상한 값은 사장님이 한 번 정함, 칼카피 시험 편은 무료 TTS 라 기본 0원",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.75,
+    "root": 0.59,
+    "risk": 0.48,
+    "raw": "해결 0.75 · 뿌리 0.59 · 위험 0.48"
+   },
+   "refs": [
+    "보B-193"
+   ],
+   "owner_raw": "새 spend 장부 한 함수 (새로)",
+   "owners": [
+    {
+     "file": null,
+     "name": "spend",
+     "new": true
+    }
+   ],
+   "stage": "bm_setup",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    158,
+    2222
+   ]
+  },
+  {
+   "id": "V131",
+   "sec": "16",
+   "kan": "#4 bm_tear 받아쓰기",
+   "decision": "새 규칙 보B-124",
+   "gist": "받아쓰기 주인 asr_cross 한 함수: 두 받아쓰기가 다른 낱말·숫자·고유명사 구간만 agy 로 그 구간 재청취 → 다수결로 교정한 낱말표 하나를 내보냄(뒤 단계는 이 표만 씀)",
+   "value": "받아쓰기 주인 asr_cross 한 함수: 두 받아쓰기가 다른 낱말·숫자·고유명사 구간만 agy 로 그 구간 재청취 → 다수결로 교정한 낱말표 하나를 내보냄(뒤 단계는 이 표만 씀)",
+   "status": "임시 — 잴 것: 두 받아쓰기 불일치 구간 수 · agy 재청취 교정 뒤 화면 글자 오류 0 — 관문 bm_s6",
+   "state": "임시",
+   "jev": {
+    "conf": 0.61,
+    "root": 0.46,
+    "risk": 0.31,
+    "raw": "해결 0.61 · 뿌리 0.46 · 위험 0.31"
+   },
+   "refs": [
+    "보B-124"
+   ],
+   "owner_raw": "runner_ops.asr_cross (고침)",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "asr_cross",
+     "new": false
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": "두 받아쓰기 불일치 구간 수 · agy 재청취 교정 뒤 화면 글자 오류 0 — 관문 bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    159,
+    2223
+   ]
+  },
+  {
+   "id": "V132",
+   "sec": "16",
+   "kan": "실행기(전 단계) · #1 setup 메모리 칸",
+   "decision": "새 규칙 보A-21·L05·L75",
+   "gist": "실행기 동시 수 주인 한 함수: 단계마다 무게 칸(가벼움 = 받기·메타·대본·TTS / 무거움 = 렌더·agy 영상 판독)을 두고, 가벼운 것은 병렬(상한 칸), 무거운 것은 setup 이 잰 메모…",
+   "value": "실행기 동시 수 주인 한 함수: 단계마다 무게 칸(가벼움 = 받기·메타·대본·TTS / 무거움 = 렌더·agy 영상 판독)을 두고, 가벼운 것은 병렬(상한 칸), 무거운 것은 setup 이 잰 메모리 여유로 동시 수를 정함(기본 1) — 여러 편은 재료 병렬·렌더 순차",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.93,
+    "root": 0.57,
+    "risk": 0.41,
+    "raw": "해결 0.93 · 뿌리 0.57 · 위험 0.41"
+   },
+   "refs": [
+    "보A-21",
+    "L05",
+    "L75"
+   ],
+   "owner_raw": "실행기 동시 수 한 함수(runner_ops) (새로)",
+   "owners": [],
+   "stage": "bm_setup",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    160,
+    2224
+   ]
+  },
+  {
+   "id": "V133",
+   "sec": "16",
+   "kan": "§9 G1 shorts_derive · §3 R1",
+   "decision": "새 규칙 보A-63",
+   "gist": "G1 의 shorts_derive 칸(이미 있음) 한 곳에 '원본 하나 → 겹치지 않는 n편' 규칙: 경계는 R1 seg_snap 한 함수, n 상한 = 원본 분 ÷ 15(50분 → 3), 편끼리 …",
+   "value": "G1 의 shorts_derive 칸(이미 있음) 한 곳에 '원본 하나 → 겹치지 않는 n편' 규칙: 경계는 R1 seg_snap 한 함수, n 상한 = 원본 분 ÷ 15(50분 → 3), 편끼리 겹침 0 을 같은 함수가 확인 — 숏폼 기본 길 bm_s6 는 1편 그대로",
+   "status": "임시 — 잴 것: 원본 하나 → n편 겹침 0 · seg 2초 안(R1 시험과 같이) — 관문 bm_s6·G1",
+   "state": "임시",
+   "jev": {
+    "conf": 0.67,
+    "root": 0.41,
+    "risk": 0.64,
+    "raw": "해결 0.67 · 뿌리 0.41 · 위험 0.64"
+   },
+   "refs": [
+    "보A-63"
+   ],
+   "owner_raw": "seg_snap(새) (새로)",
+   "owners": [
+    {
+     "file": null,
+     "name": "seg_snap",
+     "new": true
+    }
+   ],
+   "stage": null,
+   "gate": "원본 하나 → n편 겹침 0 · seg 2초 안(R1 시험과 같이) — 관문 bm_s6·G1",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    161,
+    2225
+   ]
+  },
+  {
+   "id": "V134",
+   "sec": "16",
+   "kan": "#4 bm_tear lang 칸 · §9 G4",
+   "decision": "새 규칙 보A-80",
+   "gist": "lang 판정 주인 = bm_tear 한 함수: 받아쓰기 전에 앞 15초 로컬(asr_local) 언어 판별 → 그 lang 으로 받아쓰기·갈래(G4) 판정을 같은 값으로(두 번 판정 안 함)",
+   "value": "lang 판정 주인 = bm_tear 한 함수: 받아쓰기 전에 앞 15초 로컬(asr_local) 언어 판별 → 그 lang 으로 받아쓰기·갈래(G4) 판정을 같은 값으로(두 번 판정 안 함)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.7,
+    "risk": 0.41,
+    "raw": "해결 0.91 · 뿌리 0.70 · 위험 0.41"
+   },
+   "refs": [
+    "보A-80"
+   ],
+   "owner_raw": "bm_tear lang 판정(runner_ops.c_bm_tear) (고침)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_tear",
+     "new": false
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    162,
+    2226
+   ]
+  },
+  {
+   "id": "V135",
+   "sec": "16",
+   "kan": "§9 G6 · #13 done",
+   "decision": "새 규칙 보A-56",
+   "gist": "G6 갈래 그대로 + 업로드 txt 꼴을 bm_done 한 함수가 만듦: 제목 3안(첫째 = 화면 제목)·요약 2줄·해시태그(벤치 최빈 개수)·태그 — 댓글 유도 질문은 CTA 없음 규칙에 걸리면 …",
+   "value": "G6 갈래 그대로 + 업로드 txt 꼴을 bm_done 한 함수가 만듦: 제목 3안(첫째 = 화면 제목)·요약 2줄·해시태그(벤치 최빈 개수)·태그 — 댓글 유도 질문은 CTA 없음 규칙에 걸리면 빼고 반대 값으로 기록",
+   "status": "임시 — 잴 것: 업로드 txt 꼴(제목 3안·해시태그 개수)을 벤치 상위 편 설명란과 대조 — 관문 done(G6)",
+   "state": "임시",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.47,
+    "risk": 0.56,
+    "raw": "해결 0.91 · 뿌리 0.47 · 위험 0.56"
+   },
+   "refs": [
+    "보A-56"
+   ],
+   "owner_raw": "fb.bm_done (고침)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_done",
+     "new": false
+    }
+   ],
+   "stage": "done",
+   "gate": "업로드 txt 꼴(제목 3안·해시태그 개수)을 벤치 상위 편 설명란과 대조 — 관문 done(G6)",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    163,
+    2227
+   ]
+  },
+  {
+   "id": "V136",
+   "sec": "16",
+   "kan": "§3 R4 deco_kinds · 밈",
+   "decision": "새 규칙 보A-26·보A-39",
+   "gist": "밈 주인 pick_memes 한 함수에 소재 민감 칸: 대본 분류(사망·사고·질병·범죄 피해)면 밈 0, 그 밖은 토막 감정과 짤 감정이 같을 때만 — 벤치 deco_kinds 에 밈이 없으면 원래…",
+   "value": "밈 주인 pick_memes 한 함수에 소재 민감 칸: 대본 분류(사망·사고·질병·범죄 피해)면 밈 0, 그 밖은 토막 감정과 짤 감정이 같을 때만 — 벤치 deco_kinds 에 밈이 없으면 원래 0",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.64,
+    "risk": 0.52,
+    "raw": "해결 0.89 · 뿌리 0.64 · 위험 0.52"
+   },
+   "refs": [
+    "보A-26",
+    "보A-39"
+   ],
+   "owner_raw": "material_auto.pick_memes (고침)",
+   "owners": [
+    {
+     "file": "engine/material_auto.py",
+     "name": "pick_memes",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    164,
+    2228
+   ]
+  },
+  {
+   "id": "V137",
+   "sec": "16",
+   "kan": "§7-3 틀 chunk 칸 · §9 G4",
+   "decision": "새 규칙 L84",
+   "gist": "자막 조각 주인 = 벤치 실측 칸(chunk.chars·chunk.sec) 그대로, 넷플릭스 값은 벤치 n<3 일 때 기본값과 G4 언어별 기본값으로만(같은 자막 나누기 함수의 기본값 표) — 반대…",
+   "value": "자막 조각 주인 = 벤치 실측 칸(chunk.chars·chunk.sec) 그대로, 넷플릭스 값은 벤치 n<3 일 때 기본값과 G4 언어별 기본값으로만(같은 자막 나누기 함수의 기본값 표) — 반대 값 기록",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.68,
+    "risk": 0.31,
+    "raw": "해결 0.99 · 뿌리 0.68 · 위험 0.31"
+   },
+   "refs": [
+    "L84"
+   ],
+   "owner_raw": "자막 나누기 기본값 표(ka chunk 칸 옆) (고침)",
+   "owners": [],
+   "stage": "bm_s6",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    165,
+    2229
+   ]
+  },
+  {
+   "id": "V138",
+   "sec": "16",
+   "kan": "§3 R4 title 칸",
+   "decision": "새 규칙 L32",
+   "gist": "제목 꼴 주인 = ka 한 함수(벤치·우리 같은 측정): title 칸 = 줄 수·글자·어절·끝 부호·이모지를 벤치 상위 10편에서 재고, 제목을 짓는 지시는 그 칸 + 벤치 상위 편 제목 원문 5…",
+   "value": "제목 꼴 주인 = ka 한 함수(벤치·우리 같은 측정): title 칸 = 줄 수·글자·어절·끝 부호·이모지를 벤치 상위 10편에서 재고, 제목을 짓는 지시는 그 칸 + 벤치 상위 편 제목 원문 5개를 입력으로 — 미달이면 그 칸만 다시(점수판 참고 칸)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.65,
+    "root": 0.53,
+    "risk": 0.35,
+    "raw": "해결 0.65 · 뿌리 0.53 · 위험 0.35"
+   },
+   "refs": [
+    "L32"
+   ],
+   "owner_raw": "ka(벤치·우리 같은 측정) + 제목 지시 (고침)",
+   "owners": [
+    {
+     "file": "engine/kal_analyze.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    166,
+    2230
+   ]
+  },
+  {
+   "id": "V139",
+   "sec": "16",
+   "kan": "§3 R2 crop(headroom)",
+   "decision": "새 규칙 L49",
+   "gist": "R2 crop 칸 한 곳에 세로 자리 더함: subject 모드면 피사체 머리 위 여백 비율을 벤치에서 재서(headroom 칸) 같은 함수가 y 도 계산 — 확대는 1.0 그대로(능동 확대·키프레…",
+   "value": "R2 crop 칸 한 곳에 세로 자리 더함: subject 모드면 피사체 머리 위 여백 비율을 벤치에서 재서(headroom 칸) 같은 함수가 y 도 계산 — 확대는 1.0 그대로(능동 확대·키프레임 줌은 반대 값 기록)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.58,
+    "risk": 0.32,
+    "raw": "해결 0.96 · 뿌리 0.58 · 위험 0.32"
+   },
+   "refs": [
+    "L49"
+   ],
+   "owner_raw": "R2 crop 함수(rb crop·flow crop 제안) (고침)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    167,
+    2231
+   ]
+  },
+  {
+   "id": "V140",
+   "sec": "16",
+   "kan": "#4 bm_tear color 칸",
+   "decision": "새 규칙 L52",
+   "gist": "bm_tear 가 짝(쇼츠↔원본) 프레임으로 채도·밝기 비율을 재서 color{sat, bright} 칸에 쓰고 렌더는 칸만 따름(짝 없으면 쇼츠 자체 평균, core=False) — 값은 벤치마다…",
+   "value": "bm_tear 가 짝(쇼츠↔원본) 프레임으로 채도·밝기 비율을 재서 color{sat, bright} 칸에 쓰고 렌더는 칸만 따름(짝 없으면 쇼츠 자체 평균, core=False) — 값은 벤치마다(1.9 고정 아님)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.82,
+    "risk": 0.26,
+    "raw": "해결 0.97 · 뿌리 0.82 · 위험 0.26"
+   },
+   "refs": [
+    "L52"
+   ],
+   "owner_raw": "bm_tear(r7 곁 color 측정) (새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_tear",
+     "new": true
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    168,
+    2232
+   ]
+  },
+  {
+   "id": "V141",
+   "sec": "16",
+   "kan": "#4 bm_tear 틀 뜯기(frame.json 질감 층)",
+   "decision": "새 규칙 보B-31",
+   "gist": "질감 주인 = bm_tear 틀 뜯기 한 함수: 벤치 프레임에서 움직이지 않는 겹(비네팅·도트·종이결)을 프레임 중앙값으로 떼어 frame.json 층 파일로 저장 → 렌더는 층을 얹기만(질감 종류…",
+   "value": "질감 주인 = bm_tear 틀 뜯기 한 함수: 벤치 프레임에서 움직이지 않는 겹(비네팅·도트·종이결)을 프레임 중앙값으로 떼어 frame.json 층 파일로 저장 → 렌더는 층을 얹기만(질감 종류 판정 없이 벤치 것 그대로), 점수판 참고 칸 = 층 유무",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.63,
+    "root": 0.57,
+    "risk": 0.62,
+    "raw": "해결 0.63 · 뿌리 0.57 · 위험 0.62"
+   },
+   "refs": [
+    "보B-31"
+   ],
+   "owner_raw": "runner_ops.c_bm_tear 틀 뜯기 (고침)",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_tear",
+     "new": false
+    }
+   ],
+   "stage": "bm_tear",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    169,
+    2233
+   ]
+  },
+  {
+   "id": "V142",
+   "sec": "16",
+   "kan": "frame.json surfaces(자막바) · §8 글꼴",
+   "decision": "새 규칙 보B-27",
+   "gist": "자막바 = frame.json surfaces 칸(bm_tear 가 벤치 자막 뒤 바 모양·색·질감을 잼) 한 곳 · 글꼴은 벤치 대조 그대로(굵은 고딕 필수는 강의 값으로 기록하고, 대조 미확인일…",
+   "value": "자막바 = frame.json surfaces 칸(bm_tear 가 벤치 자막 뒤 바 모양·색·질감을 잼) 한 곳 · 글꼴은 벤치 대조 그대로(굵은 고딕 필수는 강의 값으로 기록하고, 대조 미확인일 때 대체 후보 1순위로만)",
+   "status": "임시 — 잴 것: 벤치 자막바 유무·모양 측정 vs 렌더 층 · 대체 글꼴 폭 ±10% — 관문 bm_s6",
+   "state": "임시",
+   "jev": {
+    "conf": 0.87,
+    "root": 0.53,
+    "risk": 0.41,
+    "raw": "해결 0.87 · 뿌리 0.53 · 위험 0.41"
+   },
+   "refs": [
+    "보B-27"
+   ],
+   "owner_raw": "bm_tear 틀 뜯기 + fontmatch (고침)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_tear",
+     "new": false
+    },
+    {
+     "file": "engine/fontmatch.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": "벤치 자막바 유무·모양 측정 vs 렌더 층 · 대체 글꼴 폭 ±10% — 관문 bm_s6",
+   "gate_mode": "기록만",
+   "bundle": "⑤",
+   "src": [
+    170,
+    2234
+   ]
+  },
+  {
+   "id": "V143",
+   "sec": "16",
+   "kan": "멈춤 종류(②) · 됐다 2",
+   "decision": "새 규칙 보B-145",
+   "gist": "멈춤 주인 stop_kind 한 함수에 '알려진 막힘 → 해결' 표를 더함(인코딩 cp949·경로 한글·로그인 끊김·용량 부족 → 정해진 해결 뒤 같은 단계 재시도) — 자리마다 고친 cp949 3…",
+   "value": "멈춤 주인 stop_kind 한 함수에 '알려진 막힘 → 해결' 표를 더함(인코딩 cp949·경로 한글·로그인 끊김·용량 부족 → 정해진 해결 뒤 같은 단계 재시도) — 자리마다 고친 cp949 3곳도 이 표 한 곳으로 모음, 모르는 막힘·내용 실패만 멈춤",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.87,
+    "root": 0.59,
+    "risk": 0.28,
+    "raw": "해결 0.87 · 뿌리 0.59 · 위험 0.28"
+   },
+   "refs": [
+    "보B-145"
+   ],
+   "owner_raw": "fb.stop_kind(알려진 막힘 표) (고침)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "stop_kind",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    171,
+    2235
+   ]
+  },
+  {
+   "id": "V144",
+   "sec": "16",
+   "kan": "#1 setup",
+   "decision": "새 규칙 L97",
+   "gist": "setup(단계 1) 한 함수가 프리셋 history·잡도리 장부(98 오류 기록)를 읽어 이번 판에 걸린 함정 칸을 관문 목록으로 불러옴 — 사람은 안 읽어도 됨",
+   "value": "setup(단계 1) 한 함수가 프리셋 history·잡도리 장부(98 오류 기록)를 읽어 이번 판에 걸린 함정 칸을 관문 목록으로 불러옴 — 사람은 안 읽어도 됨",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.87,
+    "root": 0.61,
+    "risk": 0.51,
+    "raw": "해결 0.87 · 뿌리 0.61 · 위험 0.51"
+   },
+   "refs": [
+    "L97"
+   ],
+   "owner_raw": "fb.bm_setup 곁 history·98 함정 목록 불러오기(새로)",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_setup",
+     "new": true
+    }
+   ],
+   "stage": "bm_setup",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    172,
+    2236
+   ]
+  },
+  {
+   "id": "V145",
+   "sec": "16",
+   "kan": "§8 글꼴 자동 대체 보류 칸",
+   "decision": "새 규칙 보A-38",
+   "gist": "§8 '글꼴 자동 대체' 보류 칸의 잴 것(대체 글꼴 자막 폭·높이 벤치 ±10%)에 근거로 더함 — 대체 글꼴로 바뀌면 같은 측정 함수가 폭 표를 다시 재고 칸 값 보정",
+   "value": "§8 '글꼴 자동 대체' 보류 칸의 잴 것(대체 글꼴 자막 폭·높이 벤치 ±10%)에 근거로 더함 — 대체 글꼴로 바뀌면 같은 측정 함수가 폭 표를 다시 재고 칸 값 보정",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.95,
+    "root": 0.66,
+    "risk": 0.34,
+    "raw": "해결 0.95 · 뿌리 0.66 · 위험 0.34"
+   },
+   "refs": [
+    "보A-38"
+   ],
+   "owner_raw": "fontmatch + 자막 폭 측정(같은 측정 함수)",
+   "owners": [
+    {
+     "file": "engine/fontmatch.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    173,
+    2237
+   ]
+  },
+  {
+   "id": "V146",
+   "sec": "16",
+   "kan": "공통 bgm.source 칸(§10 P13)",
+   "decision": "새 규칙 보충 N보29",
+   "gist": "공통 bgm.source 칸(§10 P13): bm_tear 가 벤치 배경음 유무·종류를 재서 없으면 원본 현장음만(팩 기본 배경음 자동 삽입 안 함, V11 효과음과 같은 원리)",
+   "value": "공통 bgm.source 칸(§10 P13): bm_tear 가 벤치 배경음 유무·종류를 재서 없으면 원본 현장음만(팩 기본 배경음 자동 삽입 안 함, V11 효과음과 같은 원리)",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.79,
+    "root": 0.59,
+    "risk": 0.24,
+    "raw": "해결 0.79 · 뿌리 0.59 · 위험 0.24"
+   },
+   "refs": [
+    "N보29"
+   ],
+   "owner_raw": "칸 주인(규칙 안 글)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    174,
+    2238
+   ]
+  },
+  {
+   "id": "V147",
+   "sec": "16",
+   "kan": "R2·frame 칸",
+   "decision": "새 규칙 보충 N보32",
+   "gist": "R2·frame 칸: 같은 채널 판형이 둘이면 판형 목록(영상 칸 y·h) 을 칸으로 두고 편마다 가까운 판형 — r7.media 화면 상자 분포와 같은 측정",
+   "value": "R2·frame 칸: 같은 채널 판형이 둘이면 판형 목록(영상 칸 y·h) 을 칸으로 두고 편마다 가까운 판형 — r7.media 화면 상자 분포와 같은 측정",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.88,
+    "root": 0.51,
+    "risk": 0.35,
+    "raw": "해결 0.88 · 뿌리 0.51 · 위험 0.35"
+   },
+   "refs": [
+    "N보32"
+   ],
+   "owner_raw": "칸 주인(규칙 안 글)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    175,
+    2239
+   ]
+  },
+  {
+   "id": "V148",
+   "sec": "16",
+   "kan": "공통 관문 문턱 주인(qg 한 함수)",
+   "decision": "새 규칙 보충 J보3",
+   "gist": "공통 관문 문턱 주인(qg 한 함수): 컷 종류(감동·보통)별 문턱 칸 — 한 문턱을 모든 컷에 쓰지 않음",
+   "value": "공통 관문 문턱 주인(qg 한 함수): 컷 종류(감동·보통)별 문턱 칸 — 한 문턱을 모든 컷에 쓰지 않음",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.83,
+    "risk": 0.28,
+    "raw": "해결 0.99 · 뿌리 0.83 · 위험 0.28"
+   },
+   "refs": [
+    "J보3"
+   ],
+   "owner_raw": "칸 주인(규칙 안 글)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    176,
+    2240
+   ]
+  },
+  {
+   "id": "V149",
+   "sec": "16",
+   "kan": "공통 관문 면제 규칙(preset tests·qg)",
+   "decision": "새 규칙 보충 J보4",
+   "gist": "공통 관문 면제 규칙(preset tests·qg): 새 관문 면제는 확정된 옛 편 이름 목록으로만, 새 편은 면제 불가",
+   "value": "공통 관문 면제 규칙(preset tests·qg): 새 관문 면제는 확정된 옛 편 이름 목록으로만, 새 편은 면제 불가",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.67,
+    "root": 0.63,
+    "risk": 0.37,
+    "raw": "해결 0.67 · 뿌리 0.63 · 위험 0.37"
+   },
+   "refs": [
+    "J보4"
+   ],
+   "owner_raw": "칸 주인(규칙 안 글)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    177,
+    2241
+   ]
+  },
+  {
+   "id": "V150",
+   "sec": "16",
+   "kan": "공통 측정 원칙(ka)",
+   "decision": "새 규칙 보충 J보7",
+   "gist": "공통 측정 원칙(ka): 길이·글자 수 기준은 회원·벤치 요약 숫자를 쓰지 않고 본문·실물을 다시 잼",
+   "value": "공통 측정 원칙(ka): 길이·글자 수 기준은 회원·벤치 요약 숫자를 쓰지 않고 본문·실물을 다시 잼",
+   "status": "채택",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.72,
+    "risk": 0.25,
+    "raw": "해결 0.97 · 뿌리 0.72 · 위험 0.25"
+   },
+   "refs": [
+    "J보7"
+   ],
+   "owner_raw": "칸 주인(규칙 안 글)",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "⑤",
+   "src": [
+    178,
+    2242
+   ]
+  },
+  {
+   "id": "V151",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C1: G10 crop.x core",
+   "gist": "r7.summarize 갈래별 core(G10 = crop·orig_caption·seg core=False)",
+   "value": "r7.summarize 갈래별 core(G10 = crop·orig_caption·seg core=False)",
+   "status": "채택(e5 C1 해결 1.00 · 뿌리 0.86 · 위험 0.22)",
+   "state": "채택",
+   "jev": {
+    "conf": 1.0,
+    "root": 0.86,
+    "risk": 0.22,
+    "raw": "해결 1.00 · 뿌리 0.86 · 위험 0.22"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py:summarize·branch_of · kal_analyze._r7_row",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": "summarize",
+     "new": false
+    },
+    {
+     "file": "engine/r7.py",
+     "name": "branch_of",
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "_r7_row",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    179,
+    190
+   ]
+  },
+  {
+   "id": "V152",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C2: 짝 있는 갈래 crop.x 늘 failed · in60_share 판정 안 씀",
+   "gist": "r7 짝 프레임 대조 측정(crop.mode·x_off·in60_share) + 판정 = 중앙 ≤60px 그리고 in60 ≥60%",
+   "value": "r7 짝 프레임 대조 측정(crop.mode·x_off·in60_share) + 판정 = 중앙 ≤60px 그리고 in60 ≥60%",
+   "status": "채택(e5 C2 해결 0.89 · 뿌리 0.72 · 위험 0.37)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.72,
+    "risk": 0.37,
+    "raw": "해결 0.89 · 뿌리 0.72 · 위험 0.37"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py(새 짝 대조) · kal_analyze._r7_row",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": null,
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "_r7_row",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    180,
+    191
+   ]
+  },
+  {
+   "id": "V153",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C3: end.sec = 끝 검정만, kind 판정 없음",
+   "gist": "r7.media 가 end.kind 도 재고 kind 같음 + sec ±0.5초",
+   "value": "r7.media 가 end.kind 도 재고 kind 같음 + sec ±0.5초",
+   "status": "채택(e5 C3 해결 0.91 · 뿌리 0.74 · 위험 0.42)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.91,
+    "root": 0.74,
+    "risk": 0.42,
+    "raw": "해결 0.91 · 뿌리 0.74 · 위험 0.42"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py:media · kal_analyze._r7_row",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": "media",
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "_r7_row",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    181,
+    192
+   ]
+  },
+  {
+   "id": "V154",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C4: seg(R1) 칸 없음 — v1.2 H1 채택과 다름",
+   "gist": "r7 칸 seg{start,end,punch} core=False + seg_snap 한 함수, MATCH_RULES seg 참고",
+   "value": "r7 칸 seg{start,end,punch} core=False + seg_snap 한 함수, MATCH_RULES seg 참고",
+   "status": "채택(e5 C4 해결 0.99 · 뿌리 0.70 · 위험 0.30)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.7,
+    "risk": 0.3,
+    "raw": "해결 0.99 · 뿌리 0.70 · 위험 0.30"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py · 새 seg_snap · kal_analyze.MATCH_RULES",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": null,
+     "new": false
+    },
+    {
+     "file": null,
+     "name": "seg_snap",
+     "new": true
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "MATCH_RULES",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    182,
+    193
+   ]
+  },
+  {
+   "id": "V155",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C5: caption.size·title.lines 우리 쪽 측정 없음(늘 못 잼)",
+   "gist": "r7.media(같은 자)가 우리 완성본 자막 높이·제목 줄 수도 잼",
+   "value": "r7.media(같은 자)가 우리 완성본 자막 높이·제목 줄 수도 잼",
+   "status": "채택(e5 C5 해결 0.97 · 뿌리 0.74 · 위험 0.39)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.97,
+    "root": 0.74,
+    "risk": 0.39,
+    "raw": "해결 0.97 · 뿌리 0.74 · 위험 0.39"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py:media",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": "media",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    183,
+    194
+   ]
+  },
+  {
+   "id": "V156",
+   "sec": "0-1a",
+   "kan": "§0-1 보정",
+   "decision": "코드 보정 C6: G10 crop.mode·orig_caption.mode = null",
+   "gist": "r7.summarize 가 갈래 기본값 채움(G10 → subject·keep, core=False)",
+   "value": "r7.summarize 가 갈래 기본값 채움(G10 → subject·keep, core=False)",
+   "status": "채택(e5 C6 해결 0.99 · 뿌리 0.81 · 위험 0.21)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.99,
+    "root": 0.81,
+    "risk": 0.21,
+    "raw": "해결 0.99 · 뿌리 0.81 · 위험 0.21"
+   },
+   "refs": [],
+   "owner_raw": "engine/r7.py:summarize",
+   "owners": [
+    {
+     "file": "engine/r7.py",
+     "name": "summarize",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "①② 코드 보정",
+   "src": [
+    184,
+    195
+   ]
+  },
+  {
+   "id": "V9-G1",
+   "sec": "9",
+   "kan": "§9 G1",
+   "decision": "G1 롱폼(해설·리뷰·다큐·전쟁사·정지 그림 롱폼·롱폼 파생 쇼츠)",
+   "gist": "bm_tear format = 롱폼(벤치 편 길이 중앙 > 180초) 또는 벤치 채널이 롱폼 채널",
+   "value": "장 구조·블록(지도 줌인→클립 2~4개) 계획 · 대본 뼈대 칸(교육 6요소·숨은 사연·큰 질문→목차→계단) · 길이 칸(8분 중간 광고·장마다 1분40초~2분10초) · 채널 인트로·범퍼·엔딩 카드 · 합본(단편 → 60~90분) · 파생 쇼츠 shorts_derive(§4 #29) · 재연 육성(기록된 실제 발언만) · 음악만 구간(그때도 화면은 움직임) · 다음 편 예고로 길이 채우기",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "N397",
+    "J217",
+    "J98",
+    "J119",
+    "J120",
+    "J133",
+    "J212",
+    "J233",
+    "J239",
+    "J241",
+    "J254",
+    "N208",
+    "N211",
+    "N224",
+    "N231",
+    "N319",
+    "N402",
+    "N406",
+    "N425",
+    "N432",
+    "N435",
+    "N444",
+    "N451",
+    "N452",
+    "N453",
+    "N461"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "장 비중·길이 범위 · signature(원본성, §8) · 엔드스크린 요소 y≤918·겹침 0 · 음악만 구간 −50dB 0.7초 무음 0 · 과학 다큐 사실 규칙(상상도를 «실제»라 하지 않음, N397) · 남의 밈을 채널 시그니처로 반복 금지(J217)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    843
+   ],
+   "when": "bm_tear format = 롱폼(벤치 편 길이 중앙 > 180초) 또는 벤치 채널이 롱폼 채널"
+  },
+  {
+   "id": "V9-G2",
+   "sec": "9",
+   "kan": "§9 G2",
+   "decision": "G2 AI 그림·영상 생성",
+   "gist": "source_mix 의 AI 비율 > 0(숏폼 실사 기본은 0)",
+   "value": "생성 단계(시작 그림 검수 → 영상화, 출력 1개씩, 같은 컷 두 판 실패면 중단·깨끗한 구간 잘라 쓰기) · 요청문 고정 문장(SOLO·시선 3/4·의상 고정·역할명만·no text·no debris·no music) · 받은 zip 짝짓기(받아쓰기↔대본 difflib, 빠진 컷 확인) · 캐릭터 자산 모음판 · 역사 고증 상수표(FACTION·LANG) · 그림체 기준 사진부터 · 대사 = 생성 원래 목소리(립싱크) · 브라우저 조작 안전(진짜 클릭·IME·확장 끄기 — 속도표는 J53 한 함수)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J53",
+    "N219",
+    "N460",
+    "J45",
+    "J49",
+    "J52",
+    "J94",
+    "J100",
+    "J101",
+    "J107",
+    "J151",
+    "J153",
+    "J174",
+    "J176",
+    "J177",
+    "J178",
+    "J180",
+    "J189",
+    "J192",
+    "J230",
+    "J235",
+    "J236",
+    "J237",
+    "J238",
+    "J244",
+    "J245",
+    "J246",
+    "J248",
+    "J250",
+    "J253",
+    "N128",
+    "N142",
+    "N216",
+    "N254",
+    "N408",
+    "N434",
+    "N440",
+    "N443",
+    "N446",
+    "N447",
+    "N449",
+    "N450",
+    "N454",
+    "N455",
+    "N456",
+    "N458",
+    "N462"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "실존 인물 얼굴 생성 0 · 로고·글자 든 그림 0 · 한 컷 여러 사람 0(요청문) · 정책 거절 낱말(돈 대사·이름+나이) 0 · 폭발 파편 0(컷시트 0.125~0.25초) · 군중 한 방향 · 앵글 반복 0 · 워터마크 0 · 실사 하한(source_mix — 실제 사진 8~10장·실제 영상 3~5개, N219) · AI 표시 · 끝 구독 한 줄(N460)은 반대 값(우리 CTA 없음)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    844
+   ],
+   "when": "source_mix 의 AI 비율 > 0(숏폼 실사 기본은 0)"
+  },
+  {
+   "id": "V9-G3",
+   "sec": "9",
+   "kan": "§9 G3",
+   "decision": "G3 3D 모델링·3D 지도",
+   "gist": "source_mix 3D > 0 또는 bm_read 판정 '벤치 영상미 = 3D 모델링'",
+   "value": "Blender(+MPFB) 인물·장소·소품·동작 · 3D 지도 2종(전체 가속 하강 → 지역) · 카메라문법 문서 먼저",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J234",
+    "J259",
+    "J263",
+    "N448",
+    "N467"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "인물 결(찰흙·실사 둘 다 아님 — 레퍼런스 결) · 움직이는 컷 비율 = motion.rate(§8, 2045 88%) · 지도 무브 2종+·같은 무브 연속 0 · 화면 평균 밝기(공통 H6 칸)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    845
+   ],
+   "when": "source_mix 3D > 0 또는 bm_read 판정 '벤치 영상미 = 3D 모델링'"
+  },
+  {
+   "id": "V9-G4",
+   "sec": "9",
+   "kan": "§9 G4",
+   "decision": "G4 다국어·외국어판",
+   "gist": "lang ≠ ko(사장님 lang 지정 또는 벤치 언어)",
+   "value": "남의 나라 채널 틀을 다른 언어로(원본·대본은 옮기지 않고 주제만) · 글자는 편집에서 언어별(그림 안 글자 0) · 1080×1920 구역표 언어 공통 · 발음 대조(가나 kana_check)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J57",
+    "J59",
+    "N126",
+    "N407",
+    "J49"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "언어별 TTS 고주파 검사(묶음마다 쉼 구간 +15dB 넘으면 멈춤) · 반대 값: VOICEVOX 등 다른 TTS(우리 고정 = 타입캐스트만 — 그 언어 성우가 없을 때 다시 묻는다)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    846
+   ],
+   "when": "lang ≠ ko(사장님 lang 지정 또는 벤치 언어)"
+  },
+  {
+   "id": "V9-G5",
+   "sec": "9",
+   "kan": "§9 G5",
+   "decision": "G5 해설·팟캐스트",
+   "gist": "벤치 없이 서버 프리셋 팩으로 시작(J193) 또는 얼굴 없는 1인·2인 내레이션 해설",
+   "value": "주제 종류별 대본 뼈대(제도·사업·백서·종류별) · 2인 대화 합성(줄마다 화자·0.35초 쉼) · 자료 조사(웹 원문 주력·NotebookLM 보조·로그인된 명령 먼저) · 예시 카드·콜아웃·PIP 마스크 · 새편_준비(팩 복사·직전 편 값 대조) · 사진 수집(AI 가 내용에 맞게 수집·누끼)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J193",
+    "J203",
+    "J142",
+    "J173",
+    "J75",
+    "J139",
+    "J159",
+    "J161",
+    "J194",
+    "J200",
+    "J202",
+    "N411",
+    "N414"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "사진 수집에 방송사 로고·일반인 사진 0(J203 — 우리 연예인 판은 방송사 공식을 정본으로 씀: 방향 다름) · 사람 화면 한국인만(J142) · 콜아웃 수 = 나레 숫자 수(J173) · 서버 프리셋을 쓸 때도 로컬 렌더 가능(J75)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    847
+   ],
+   "when": "벤치 없이 서버 프리셋 팩으로 시작(J193) 또는 얼굴 없는 1인·2인 내레이션 해설"
+  },
+  {
+   "id": "V9-G6",
+   "sec": "9",
+   "kan": "§9 G6",
+   "decision": "G6 업로드·운영",
+   "gist": "완성 뒤(발행·채널 운영은 사장님 몫 — 엔진은 초안·보고까지)",
+   "value": "업로드 썸네일 JPG 3안(벤치 상위 20장 공통점·240×135 축소 대조 시트, O11) · 설명란·해시태그 초안(벤치 최빈, §4 #37) · 납품 3종 같은 이름(mp4·txt·jpg) · 소재 기획·수집(주제 검증·수요 신호·댓글 전부 수집) · 채널 운영(두 채널 겹침 금지·연작) · 인수인계 README",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J188",
+    "J179",
+    "J186",
+    "J92",
+    "J267",
+    "J51",
+    "J87",
+    "J88",
+    "J112",
+    "J122",
+    "J138",
+    "J157",
+    "J195",
+    "N140",
+    "N141",
+    "N247",
+    "N248",
+    "N404",
+    "N405",
+    "N419"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "예약·인증 막힘이면 그 자리에서 멈추고 한 줄 보고(J188) · 성과 비교는 업로드 경과 시간·평균 조회율로 정규화(J179) · 이미 올린 편은 소급 수정 안 함(J186, 공통) · 중복 업로드 막기(J92) · 관찰만: 부진 편 다른 채널 재업로드(J267)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    848
+   ],
+   "when": "완성 뒤(발행·채널 운영은 사장님 몫 — 엔진은 초안·보고까지)"
+  },
+  {
+   "id": "V9-G7",
+   "sec": "9",
+   "kan": "§9 G7",
+   "decision": "G7 예능·일반인 재편집",
+   "gist": "벤치 소재에 일반인이 나오거나 예능 자막 꼴(bm_read 판정)",
+   "value": "예능 자막 팩(띠·흰 바탕 없음·핵심 낱말 강조·흰 말상자·이름표·붓글씨) · 누끼 까딱 꾸밈",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.67,
+    "root": 0.68,
+    "risk": null,
+    "raw": "해결 0.67·뿌리 0.68"
+   },
+   "refs": [
+    "J224",
+    "N438",
+    "N439"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "(v1.2) 일반인 얼굴 처리는 공통으로 옮김 — 소재 단계 얼굴 거름 함수(d6 O7b 해결 0.67·뿌리 0.68 채택), 이 갈래는 일반인 컷이 많아 실제로 자주 걸림 · 다시 딴 누끼가 나쁘면 처음 것(공통)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    849
+   ],
+   "when": "벤치 소재에 일반인이 나오거나 예능 자막 꼴(bm_read 판정)"
+  },
+  {
+   "id": "V9-G8",
+   "sec": "9",
+   "kan": "§9 G8",
+   "decision": "G8 사진 소재",
+   "gist": "source_mix 사진 > 0",
+   "value": "파노라마 검은 가장자리 자르기 + inpaint(TELEA) · 사진 zoompan 은 2배로 키운 뒤(떨림)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J102",
+    "J103",
+    "J109",
+    "N401"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "사진 라이선스(CC만, J102 일부) · 같은 사진 최장 초(J103)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    850
+   ],
+   "when": "source_mix 사진 > 0"
+  },
+  {
+   "id": "V9-G10",
+   "sec": "9",
+   "kan": "§9 G10",
+   "decision": "G10 짝 없는 클립형 채널(v1.2 새로 — 계획서 판 3 해결 0.89·뿌리 0.59, 사장님 지시 '스냅봤니 먼저')",
+   "gist": "bm_pick·bm_tear 가 벤치 쇼츠의 원본 롱폼 짝을 못 찾음(설명란 원본 링크 0·같은 채널 롱폼 없음) — 남의 클립을 모은 채널(스포츠 클립·해외 짜깁기·외국인 반응·클립 짜깁기)",
+   "value": "원본 추적 단계(설명란·화면 글자·역검색으로 원 출처 찾기) · 출처 칸(원 채널·원 주소·권리) · R1~R3 기본값 = seg_snap·crop=subject·orig_caption=keep(core=False)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.89,
+    "root": 0.59,
+    "risk": null,
+    "raw": "해결 0.89·뿌리 0.59"
+   },
+   "refs": [],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "출처 못 찾은 클립은 쓰지 않음(연예인 원본 규칙과 같은 함수 rules.source_rule_static) · 재사용 위험 관문(signature 필수 층, §8) · 짝 없음 칸은 core=False",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    851
+   ],
+   "when": "bm_pick·bm_tear 가 벤치 쇼츠의 원본 롱폼 짝을 못 찾음(설명란 원본 링크 0·같은 채널 롱폼 없음) — 남의 클립을 모은 채널(스포츠 클립·해외 짜깁기·외국인 반응·클립 짜깁기)"
+  },
+  {
+   "id": "V9-G9",
+   "sec": "9",
+   "kan": "§9 G9",
+   "decision": "G9 화질",
+   "gist": "원본 세로 해상도가 하한(J128 720p) 못 넘는 소재",
+   "value": "ESRGAN x4plus 영상 영역만·캐시(§4 #31)",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": null,
+   "refs": [
+    "J128",
+    "J226",
+    "N28",
+    "N29"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "적용 뒤 A/V 길이 차·얼굴 대조(2116 사고: 얼굴 그림·싱크 어긋남)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    852
+   ],
+   "when": "원본 세로 해상도가 하한(J128 720p) 못 넘는 소재"
+  },
+  {
+   "id": "V9-G11",
+   "sec": "9",
+   "kan": "§9 G11",
+   "decision": "G11 모션그래픽 렌더러(하이퍼프레임)(v1.3 새 — 임시 분류, e3 GR-G11 해결 0.53 · 뿌리 0.32 · 위험 0.52 (뿌리 더 높은 다른 안 f2 0.47))",
+   "gist": "벤치가 인포그래픽 모션·가로 롱폼(1920×1080)이고 렌더가 하이퍼프레임형",
+   "value": "npx hyperframes init→check→preview→render · Node 22+ · 글꼴 subset(woff2) · GSAP 단어 하이라이트(L89) — 우리 렌더러에 없는 도구라 코드 반영 보류, 원문 유지",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.53,
+    "root": 0.32,
+    "risk": 0.52,
+    "raw": "해결 0.53 · 뿌리 0.32 · 위험 0.52"
+   },
+   "refs": [
+    "L89",
+    "J204",
+    "N420",
+    "J130",
+    "보A-89",
+    "보B-12"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "lint 줄 수 한도(J204·N420) · 회원 그래픽 엔진 함정(J130)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    853
+   ],
+   "when": "벤치가 인포그래픽 모션·가로 롱폼(1920×1080)이고 렌더가 하이퍼프레임형"
+  },
+  {
+   "id": "V9-G12",
+   "sec": "9",
+   "kan": "§9 G12",
+   "decision": "G12 숏폼 밖 상품 형식(v1.3 새 — 임시 분류, e3 GR-G12 해결 0.80 · 뿌리 0.33 · 위험 0.40)",
+   "gist": "요청이 플리·음악·카드뉴스·전자책·앱·여행 PDF",
+   "value": "칼카피 엔진 단계에는 넣지 않음 — 볼케이노/숏템 프리셋 길(플리·전자책 메이커·카드뉴스) · Suno·Flow Music·나노바나나 표지",
+   "status": "채택(§9 갈래 — v1.1)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.8,
+    "root": 0.33,
+    "risk": 0.4,
+    "raw": "해결 0.80 · 뿌리 0.33 · 위험 0.40"
+   },
+   "refs": [
+    "보B-72"
+   ],
+   "owner_raw": "주인 함수 칸 없음 — 갈래 판정 주인 = bm_tear 칸 하나(§10 P2)",
+   "owners": [],
+   "stage": "bm_tear",
+   "gate": "형식마다 원문 기록(§14)",
+   "gate_mode": "기록만",
+   "bundle": "①(branch_of)",
+   "src": [
+    854
+   ],
+   "when": "요청이 플리·음악·카드뉴스·전자책·앱·여행 PDF"
+  },
+  {
+   "id": "V2-01",
+   "sec": "2-1",
+   "kan": "§2-1 fb:389 PAN_MAX 3 넘음",
+   "decision": "fb:389 PAN_MAX 3 넘음",
+   "gist": "곧바로 「직접 고쳐 주세요」",
+   "value": "같은 칸 3번 연속 실패일 때만 멈춤. 다른 칸이면 계속. 멈춤 기준 값은 flow.REDO_STUCK(3) 하나를 같이 쓴다",
+   "status": "채택(b-A2 해결 0.96 · 뿌리 0.69 · 위험 0.23 채택)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.69,
+    "risk": 0.23,
+    "raw": "해결 0.96 · 뿌리 0.69 · 위험 0.23"
+   },
+   "refs": [],
+   "owner_raw": "fb.bm_panbokki · flow:117 REDO_STUCK",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_panbokki",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_pan",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    382
+   ]
+  },
+  {
+   "id": "V2-02",
+   "sec": "2-1",
+   "kan": "§2-1 fb:402 Jev 확신 부족",
+   "decision": "fb:402 Jev 확신 부족",
+   "gist": "1회차라도 곧바로 멈춤",
+   "value": "멈추지 않고 '다시 재기'로 간다(짝 프레임·편 수를 늘려 다시 잼). 같은 칸이 3번째에도 확신 부족이면 그때 멈춤",
+   "status": "채택(b-A2)",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "fb.bm_panbokki · bm_compare",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_panbokki",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_compare",
+     "new": false
+    }
+   ],
+   "stage": "bm_pan",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    383
+   ]
+  },
+  {
+   "id": "V2-03",
+   "sec": "2-1",
+   "kan": "§2-1 fb:407 고칠 후보 0개",
+   "decision": "fb:407 고칠 후보 0개",
+   "gist": "첫 잡도리에서 곧바로 멈춤",
+   "value": "bm_match 가 실패 칸마다 벤치 실측값(중앙값·최근 판 값)으로 후보를 만든다. 그래도 0개가 3번이면 멈춤",
+   "status": "채택(b-A2)",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "runner_ops.c_bm_match · ka.match_table · fb.bm_panbokki",
+   "owners": [
+    {
+     "file": "hybrid/runner_ops.py",
+     "name": "c_bm_match",
+     "new": false
+    },
+    {
+     "file": "engine/kal_analyze.py",
+     "name": "match_table",
+     "new": false
+    },
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "bm_panbokki",
+     "new": false
+    }
+   ],
+   "stage": "bm_pan",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    384
+   ]
+  },
+  {
+   "id": "V2-04",
+   "sec": "2-1",
+   "kan": "§2-1 fb:419 FABLE_MAX 2",
+   "decision": "fb:419 FABLE_MAX 2",
+   "gist": "멈춤",
+   "value": "그대로. 이것은 돈 상한이다(사장님 몫 = 돈)",
+   "status": "채택(b-A2(돈 상한으로 남김))",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "fb._fable_call",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "_fable_call",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    385
+   ]
+  },
+  {
+   "id": "V2-05",
+   "sec": "2-1",
+   "kan": "§2-1 fb:440 CONFIRM_MAX 2",
+   "decision": "fb:440 CONFIRM_MAX 2",
+   "gist": "멈춤",
+   "value": "되돌림 횟수는 같은 칸 3번 규칙으로 합친다(CONFIRM_MAX 는 없애고 REDO_STUCK 하나만 둔다)",
+   "status": "채택(b-A2)",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "fb._back_to_pan",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": "_back_to_pan",
+     "new": false
+    }
+   ],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    386
+   ]
+  },
+  {
+   "id": "V2-06",
+   "sec": "2-1",
+   "kan": "§2-1 설계:136 사장님 좌우 눈 판정",
+   "decision": "설계:136 사장님 좌우 눈 판정",
+   "gist": "사람",
+   "value": "그대로(사장님 몫 = 눈). 완성 뒤 한 번만 한다",
+   "status": "채택(0원칙(사장님 몫))",
+   "state": "채택",
+   "jev": null,
+   "refs": [],
+   "owner_raw": "—",
+   "owners": [],
+   "stage": null,
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    387
+   ]
+  },
+  {
+   "id": "V2-07",
+   "sec": "2-1",
+   "kan": "§2-1 지침서:65 채널 최종 선정 = 사람",
+   "decision": "지침서:65 채널 최종 선정 = 사람",
+   "gist": "사람",
+   "value": "bm_pick 이 자동으로 고른다(§1 단계 2)",
+   "status": "채택(b-A3 해결 0.76 · 뿌리 0.62 · 위험 0.53 채택 · 40편판 d1 H14 해결 0.96 · 뿌리 0.52 · 위험 0.43 채택)",
+   "state": "채택",
+   "jev": {
+    "conf": 0.96,
+    "root": 0.52,
+    "risk": 0.43,
+    "raw": "해결 0.96 · 뿌리 0.52 · 위험 0.43"
+   },
+   "refs": [],
+   "owner_raw": "fb 새 bm_pick · cf.find_channels",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": null,
+     "new": false
+    },
+    {
+     "file": "engine/channel_find.py",
+     "name": "find_channels",
+     "new": false
+    }
+   ],
+   "stage": "bm_pick",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    388
+   ]
+  },
+  {
+   "id": "V2-08",
+   "sec": "2-1",
+   "kan": "§2-1 지침서:44 TTS 는 시작 때 사람에게",
+   "decision": "지침서:44 TTS 는 시작 때 사람에게",
+   "gist": "사람",
+   "value": "bm_voice 가 자동으로 고른다(§1 단계 6)",
+   "status": "채택(b-A4 해결 0.72 · 뿌리 0.63 · 위험 0.63 채택 (40편판 재질문 V17b 0.21 임시 — §8, 칸은 그대로))",
+   "state": "채택",
+   "jev": {
+    "conf": 0.72,
+    "root": 0.63,
+    "risk": 0.63,
+    "raw": "해결 0.72 · 뿌리 0.63 · 위험 0.63"
+   },
+   "refs": [],
+   "owner_raw": "fb 새 bm_voice",
+   "owners": [
+    {
+     "file": "hybrid/flow_bench.py",
+     "name": null,
+     "new": false
+    }
+   ],
+   "stage": "bm_voice",
+   "gate": null,
+   "gate_mode": null,
+   "bundle": "②",
+   "src": [
+    389
+   ]
+  }
+ ]
+}

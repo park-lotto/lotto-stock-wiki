@@ -62,8 +62,10 @@ STEPS = [
       note="스타일분석.md 손 문서 대신 규칙빈도.json(분모 포함)"),
     R("G0-strip", "bm_read", "0.1초 띠·원본 프레임(전환·0초)", K + "eye_frames", LR + "frame0", ("have",), [23, 80],
       note="frames_cmd(사람용 2fps 시트·10fps 띠) 대체 — 판독자 = agy(영상 직접)·오푸스(컷 앞뒤 프레임). Jev W2 해결 0.50·위험 0.32"),
-    R("G0-num", "bm_read", "등장 곡선·타이핑 cps 숫자", K + "check_doc", LR + "lines[].enter_curve", ("lines", 1.0), [24, 153, 282],
-      wait=W("칸", _W_ASK + " (enter_curve·type_cps)")),
+    R("G0-num", "bm_read", "등장 곡선 숫자(enter_curve)", K + "check_doc", LR + "lines[].enter_curve", ("lines", 1.0), [24, 153, 282],
+      wait=W("칸", _W_ASK + " (enter_curve)")),
+    R("G0-cps", "bm_read", "타이핑 cps(type_cps)", K + "check_doc", LR + "lines[].type_cps", ("lines", 1.0), [24, 153, 282],
+      wait=W("칸", _W_ASK + " (type_cps)")),
     R("G0-hex", "bm_read", "색 hex + 몇 편(팔레트)", K + "palette_of", "{ch}/팔레트.json#roles.본문", ("full",), [25, 81, 153],
       wait=W("칸", "팔레트 입력 fill_hex 가 " + _W_ASK)),
     R("G0-name", "bm_read", "이름 = 화면 글자로 확인된 것만", K + "check_doc", "{ch}/줄판독/{id}.json", ("files", 1), [26, 84, 85, 283],
@@ -107,7 +109,9 @@ STEPS = [
     R("S22-cap", "bm_tear", "자막 줄(OCR items)", AN, TJ + "captions.items", ("full",), [80]),
     R("S22-cuts", "bm_tear", "컷 시각(cuts.times)", AN, TJ + "cuts.times", ("have",), [80, 142, 163]),
     R("S22-font", "bm_tear", "글꼴 후보", AN, TJ + "fonts.top3", ("full",), [80, 94, 140, 153]),
-    R("S22-lufs", "bm_tear", "LUFS·TP(audio.bench)", AN, TJ + "audio.bench.I", ("have",), [80, 146, 183]),
+    R("S22-lufs", "bm_tear", "통합 음량 LUFS(audio.bench.I)", AN, TJ + "audio.bench.I", ("have",), [80, 146, 183]),
+    R("S22-tp", "bm_tear", "트루피크(audio.bench.TP)", AN, TJ + "audio.bench.TP", ("have",), [80, 146, 183]),
+    R("S22-lra", "bm_tear", "음량 범위(audio.bench.LRA)", AN, TJ + "audio.bench.LRA", ("have",), [80, 146, 183]),
     R("S22-skel", "bm_read", "줄판독 뼈대(기계값)", K + "skeleton", "{ch}/줄판독_뼈대/{id}.json", ("files", 1), [80, 284], at="analyze.analyze"),
     R("S22-script", "bm_read", "어미·말꼴·자수(대본 언어)", K + "script_of", "{ch}/_kal/대본언어.json", ("files", 1), [81, 82, 145, 178]),
     R("S22-enter", "bm_read", "등장 어휘 정규화(enter_key)", K + "enter_key", "{ch}/_kal/규칙빈도.json#by_speaker", ("full",), [81, 84, 283]),
@@ -146,6 +150,9 @@ STEPS = [
       wait=_W_EAR),
     R("S3-over", "bm_tear", "스티커·짤(overlay_rules)", AN, TJ + "overlay_rules", ("have",), [147, 188]),
     R("S3-f0", "bm_read", "0초 첫 화면(frame0)", K + "apply_eye", LR + "frame0", ("have",), [148, 193, 282]),
+    R("S3-face", "bm_read", "0초 얼굴 비율(frame0.face_frac)", K + "apply_eye", LR + "frame0.face_frac", ("have",), [193, 282], wait=W("칸", _W_ASK + " (frame0.face_frac)")),
+    R("S35-reveal", "bm_read", "반전·공개 시점(초)", "hybrid/flow_bench.py:_fill_of", LR + "reveal_t", ("have",), [173], wait=W("칸", "beats 는 순서만 — 반전·공개 줄 시각 칸 없음")),
+    R("S39-thumb", "bm_trial", "썸네일 jpg(벤치 대조)", "hybrid/flow_bench.py:bm_trial", "{work}/*.jpg", ("files", 1), [193], wait=W("칸", "시험 편 썸네일 jpg 를 벤치 첫 화면과 대조하는 자리 없음")),
     N("S3-topic", [149, 150], "소재·제품·채널 단위 — 시험 편 소재는 회원 과제(1판 규칙), 채널 통계는 집 PC 선정"),
     N("S31", [152, 154, 155], _N_ENGINE, at="### 3-1. 자막"),
     R("S31-sp", "bm_read", "화자(speaker) 줄마다", K + "check_doc", LR + "lines[].speaker", ("lines", 1.0), [153, 283]),
@@ -153,16 +160,47 @@ STEPS = [
     R("S31-enter", "bm_read", "등장 종류(enter) 줄마다", K + "check_doc", LR + "lines[].enter", ("lines", 1.0), [153]),
     R("S31-y", "bm_read", "자막 위치 y", K + "skeleton", LR + "lines[].y", ("lines", 0.9), [153]),
     R("S31-emph", "bm_read", "강조·스티커·효과음 칸(꾸밈 없는 줄도 분모)", K + "check_doc", LR + "lines[].emph", ("slot",), [153, 188, 284]),
-    R("S31-px", "bm_read", "글꼴·크기 px·자간·행간·외곽·그림자·상자(줄마다)", K + "check_doc", LR + "lines[].size_px", ("lines", 1.0), [153, 282],
-      wait=W("칸", _W_ASK + " (font·size_px·letter_gap_px·line_gap_px·outline·ring·shadow·glow·box)")),
+    R("S31-font", "bm_read", "글꼴(font) 줄마다", K + "check_doc", LR + "lines[].font", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (font)")),
+    R("S31-px", "bm_read", "크기 px(size_px) 줄마다", K + "check_doc", LR + "lines[].size_px", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (size_px)")),
+    R("S31-lgap", "bm_read", "자간 px(letter_gap_px) 줄마다", K + "check_doc", LR + "lines[].letter_gap_px", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (letter_gap_px)")),
+    R("S31-lngap", "bm_read", "행간 px(line_gap_px) 줄마다", K + "check_doc", LR + "lines[].line_gap_px", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (line_gap_px)")),
+    R("S31-outline", "bm_read", "외곽선 px·hex(outline) 줄마다", K + "check_doc", LR + "lines[].outline", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (outline)")),
+    R("S31-ring", "bm_read", "테(ring) 줄마다", K + "check_doc", LR + "lines[].ring", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (ring)")),
+    R("S31-shadow", "bm_read", "그림자(shadow) 줄마다", K + "check_doc", LR + "lines[].shadow", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (shadow)")),
+    R("S31-glow", "bm_read", "글로우(glow) 줄마다", K + "check_doc", LR + "lines[].glow", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (glow)")),
+    R("S31-box", "bm_read", "상자 hex·alpha·pad·radius(box) 줄마다", K + "check_doc", LR + "lines[].box", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (box)")),
+    # 지침서 §3-1 A·§6 칸 하나 = 행 하나(감시 적발 A, 11-06) — 판독 질문에 없거나 뜯기가 안 내는 칸은 잇기 대기(기록만)
+    R("S31-x", "bm_read", "가로 위치 x 줄마다", K + "check_doc", LR + "lines[].x", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (x)")),
+    R("S31-align", "bm_read", "정렬(align) 줄마다", K + "check_doc", LR + "lines[].align", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (align)")),
+    R("S31-maxw", "bm_read", "줄 최대 폭(max_w) 줄마다", K + "check_doc", LR + "lines[].max_w", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (max_w)")),
+    R("S31-wrap", "bm_read", "줄바꿈 규칙(wrap) 줄마다", K + "check_doc", LR + "lines[].wrap", ("lines", 1.0), [153], wait=W("칸", _W_ASK + " (wrap — 지침서 §3-1 A '줄바꿈 규칙', line_read.md 에도 칸 없음)")),
+    R("S31-enterms", "bm_read", "등장 ms(enter_ms) 줄마다", K + "check_doc", LR + "lines[].enter_ms", ("lines", 1.0), [153, 281], wait=W("칸", _W_ASK + " (enter_ms — line_read.md 기본 칸)")),
+    R("S31-variant", "bm_read", "등장 변형(variant) 줄마다", K + "check_doc", LR + "lines[].variant", ("slot",), [281], wait=W("칸", _W_ASK + " (variant — line_read.md 기본 칸)")),
+    R("S31-cutat", "bm_read", "컷 시각(cut_at) 줄마다", K + "skeleton", LR + "lines[].cut_at", ("slot",), [281, 284], wait=W("칸", "뼈대 칸 — 막기 전 실측 필요(편마다 칸 있는 줄 대조)")),
+    R("S31-sfx", "bm_read", "줄별 효과음 칸(sfx — 없음 null 도 분모)", K + "check_doc", LR + "lines[].sfx", ("slot",), [153, 281], wait=W("칸", "LINE_SCHEMA 에 sfx 있음 — 막기 전 실측 필요(편마다 칸 있는 줄 대조)")),
+    R("S31-emhex", "bm_read", "강조 낱말 색(emph[].hex)", K + "check_doc", LR + "lines[].emph_hex", ("lines", 1.0), [153], wait=W("칸", "emph 안쪽 {word,hex,grow,outline} 을 재기(runner_ops._gate_path)가 못 보고 판독 질문에도 없다 — 줄 칸으로 묻거나 재기가 안쪽을 보게(실행 끝난 뒤)")),
+    R("S31-emgrow", "bm_read", "강조 낱말 커짐(emph[].grow)", K + "check_doc", LR + "lines[].emph_grow", ("lines", 1.0), [153], wait=W("칸", "emph 안쪽 grow — S31-emhex 와 같은 이유")),
+    R("S31-react", "bm_read", "잉?·와우 반응 스티커 자리", K + "check_doc", LR + "lines[].sticker_xy", ("lines", 1.0), [153, 188], wait=W("칸", _W_ASK + " (sticker 자리 x·y)")),
+    R("S31-duck", "bm_read", "원음 구간 나레 끔(줄마다)", K + "check_doc", LR + "lines[].narr_off", ("slot",), [146, 183], wait=W("칸", _W_ASK + " (원음 줄에서 나레를 끄는지)")),
     R("S31-fill", "bm_read", "채움색 hex 줄마다", K + "palette_of", LR + "lines[].fill_hex", ("lines", 1.0), [153], wait=W("칸", _W_ASK + " (fill_hex)")),
-    R("S31-exit", "bm_read", "퇴장·커서", K + "check_doc", LR + "lines[].exit", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (exit·cursor)")),
+    R("S31-exit", "bm_read", "퇴장(exit) 줄마다", K + "check_doc", LR + "lines[].exit", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (exit)")),
+    R("S31-cursor", "bm_read", "커서(cursor) 줄마다", K + "check_doc", LR + "lines[].cursor", ("lines", 1.0), [153, 282], wait=W("칸", _W_ASK + " (cursor)")),
     R("S31-glyph", "bm_tear", "글자 꾸밈(획·외곽선·그림자 실측)", AN, TJ + "text_fx", ("have",), [153]),
-    R("S31-motion", "bm_tear", "자막 등장 움직임 곡선(caption_motion)", AN, TJ + "caption_motion", ("have",), [153]),
+    R("S31-motion", "bm_tear", "자막 등장 곡선 줄 비율(starts ÷ 자막 수 ≥ 0.9)", AN, TJ + "caption_motion.starts", ("ratio", "S22-cap", 0.9), [153],
+      note="감시 적발 B(11-06): '값 있음'이면 스냅봤니 22줄 중 3줄로 통과했다 — 줄마다 센다(지침서 §0)"),
+    R("S31-motion-end", "bm_tear", "자막 퇴장 곡선 줄 비율(ends ÷ 자막 수 ≥ 0.9)", AN, TJ + "caption_motion.ends", ("ratio", "S22-cap", 0.9), [153]),
     N("S32", [157, 159, 160], _N_ENGINE, at="### 3-2. 제목"),
-    R("S32-bg", "bm_tear", "배경색(bg_rgb)·제목 띠(above_bands)", AN, TJ + "layout.bg_rgb", ("have",), [158]),
+    R("S32-bg", "bm_tear", "배경색(bg_rgb)", AN, TJ + "layout.bg_rgb", ("have",), [158]),
+    R("S32-band", "bm_tear", "제목 띠(above_bands)", AN, TJ + "layout.above_bands", ("have",), [158]),
     R("S32-title", "bm_tear", "제목 글꼴·줄", AN, TJ + "fonts.title", ("have",), [158]),
-    R("S32-src", "bm_read", "출처 줄 hex·워터마크 투명도", K + "check_doc", LR + "layout.source_hex", ("have",), [158, 282], wait=W("칸", _W_ASK + " (layout.source_hex·watermark.alpha)")),
+    R("S32-tpx", "bm_tear", "제목 px·줄 높이·잉크 y(띠별)", AN, TJ + "fonts.title.bands", ("full",), [158], wait=W("칸", "fonts.title 이 실패면 띠별 값도 없다 — S32-title 이 먼저(스냅봤니 3편 모두 failed)")),
+    R("S32-slant", "bm_tear", "제목 기울임°", AN, TJ + "fonts.title.slant_deg", ("have",), [158], wait=W("칸", "analyze 가 fontmatch.slant_deg 를 띠 안에만 적는다 — 칸 이름 확인 필요")),
+    R("S32-word", "bm_tear", "제목 낱말 색 hex", AN, TJ + "fonts.title.word_hex", ("have",), [158], wait=W("칸", "뜯기에 제목 낱말별 색 칸 없음(지침서 §3-2 B '스키마 밖')")),
+    R("S32-tbox", "bm_tear", "제목 상자 hex", AN, TJ + "fonts.title.box_hex", ("have",), [158], wait=W("칸", "뜯기에 제목 상자 색 칸 없음")),
+    R("S32-logo", "bm_tear", "로고 자리·그림", AN, TJ + "fonts.brand", ("have",), [158], wait=W("칸", "로고 자리는 brand 띠 OCR 만, 그림은 안 뜯음(지침서 §3-2 B '로고 그림 = 스키마 밖')")),
+    R("S32-src", "bm_read", "출처 줄 hex", K + "check_doc", LR + "layout.source_hex", ("have",), [158, 282], wait=W("칸", _W_ASK + " (layout.source_hex)")),
+    R("S32-srcpx", "bm_read", "출처 줄 px·y", K + "check_doc", LR + "layout.source_px", ("have",), [158], wait=W("칸", _W_ASK + " (layout.source_px·source_y)")),
+    R("S32-wm", "bm_read", "워터마크 투명도", K + "check_doc", LR + "layout.watermark.alpha", ("have",), [158, 282], wait=W("칸", _W_ASK + " (layout.watermark.alpha)")),
     N("S33", [162, 164, 165], _N_ENGINE, at="### 3-3. 장면 전환"),
     R("S33-still", "bm_tear", "정지 화면 비율", "narr_video.py:still_move", None, ("owner",), [163], wait=W("함수", "회원 흐름에 정지 비율 측정 없음")),
     R("S33-motion", "bm_read", "카메라 움직임(motion) 줄마다", K + "check_doc", LR + "lines[].motion", ("lines", 1.0), [163, 282], wait=W("칸", _W_ASK + " (motion)")),
@@ -195,6 +233,16 @@ STEPS = [
     N("S10", [(317, 326)], "알려진 숙제·기록", at="## 10. 알려진 숙제"),
 ]
 BY_ID = {r["id"]: r for r in STEPS}
+
+
+# ---------------------------------------------------------------- 엔진 v1 결정 파일 행(hybrid/engine_v1.json — 판단 주인은 그 파일)
+# Jev(해결 1.00·뿌리 0.79·위험 0.19, C:	\main_jev1gate_q1.out): 결정 파일의 '채택 + 관문 조건 있음 + 벤치 관문 단계' 행을 같은 R 꼴로 받아
+#   evaluate 가 STEPS 와 같이 판정한다. 산출물 자리(out)가 없는 행은 wait(기록만 — 이유 = 안 이음/측정 자리 없음), out 이 생기면 같은 길로 막는다.
+#   gate_rows(실행기 do)는 out 있는 행만이라 결정 파일 행이 늘어도 회원 PC 재기는 그대로다.
+@lru_cache(maxsize=1)
+def v1_rows() -> tuple:
+    from tools.calcopy.hybrid import engine_v1 as E
+    return tuple(E.gate_rows_for_bench(GATE_PHASES))
 
 
 # ---------------------------------------------------------------- 지침서 덮임
@@ -338,8 +386,8 @@ def wiring() -> dict:
 # ---------------------------------------------------------------- 재기(실행기 bm_gate — 판단 없음)
 def gate_rows(phase: str) -> list[dict]:
     """그 단계에서 잴 행(산출물 자리만) — 서버가 do 에 실어 보낸다. 회원 PC 는 표를 갖지 않고 이 목록대로 읽기만 한다(runner_ops.gate_measure)."""
-    return [{"id": r["id"], "out": r["out"]} for r in STEPS
-            if r["phase"] == phase and r["out"] and (r["check"] or ("owner",))[0] != "owner"]
+    return [{"id": r["id"], "out": r["out"]} for r in (*STEPS, *v1_rows())
+            if r["phase"] == phase and r["out"] and (r["check"] or ("owner",))[0] not in ("owner", "v1")]
 
 
 def measure(W, phase: str, slug: str, ids: list[str] | None = None, work: str | None = None) -> dict:
@@ -382,11 +430,21 @@ def evaluate(phase: str, got: dict, ids: list[str] | None = None) -> dict:
     """(판단 주인 · 단계 칸 통과) got = measure 결과의 rows. ids = 이 단계에서 쓰는 편(그 밖 편은 안 본다).
     → {miss: [막는 행 id], wait: [안 이은 행 id(막지 않음)], ok: [통과 id], why: {id: 글}}. 잰 값이 없는 막는 행 = miss(조용한 통과 금지)."""
     miss, wait, ok, why = [], [], [], {}
-    for r in STEPS:
+    for r in v1_rows():          # 결정 파일 행 — 측정 자리가 생기기 전엔 기록만
+        if r["phase"] == phase and (not r["out"] or r["check"][0] == "v1"):
+            wait.append(r["id"])
+            why[r["id"]] = r["wait"]["why"]
+    for r in (*STEPS, *(x for x in v1_rows() if x["out"] and x["check"][0] != "v1")):
         if r["phase"] != phase or not r["out"] or not r["check"] or r["check"][0] == "owner":
             continue
         row = (got or {}).get(r["id"])
-        good, w = _ok(r["check"], row["per"], ids) if row else (False, "잰 값 없음")
+        if row and r["check"][0] == "ratio":       # 줄 비율 — 이 칸 개수 ÷ 짝 칸 개수(같은 편끼리) ≥ 문턱
+            base = ((got or {}).get(r["check"][1]) or {}).get("per") or {}
+            per = {k: ({**v, "num": round((v.get("len") or 0) / (base.get(k) or {}).get("len"), 3)}
+                       if (base.get(k) or {}).get("len") else {**v, "num": None}) for k, v in row["per"].items()}
+            good, w = _ok(("ge", r["check"][2]), per, ids)
+        else:
+            good, w = _ok(r["check"], row["per"], ids) if row else (False, "잰 값 없음")
         why[r["id"]] = w
         (ok if good else (wait if r["wait"] else miss)).append(r["id"])
     return {"miss": miss, "wait": wait, "ok": ok, "why": why}
@@ -396,7 +454,13 @@ def evaluate(phase: str, got: dict, ids: list[str] | None = None) -> dict:
 STAGE_KO = {"bm_setup": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "영상 뜯기", "bm_read": "영상 보기(줄판독·규칙)", "bm_trial": "시험 영상 만들기",
             "bm_pan": "잡도리(같은 자 대조)", "bm_confirm": "판 확정", "bm_make": "프리셋 묶음 만들기"}
 CHECK_KO = {"files": "파일 {0}개 이상", "have": "값 있음(실패 아님)", "full": "비어 있지 않음", "lines": "줄 {0:.0%} 이상 채움", "slot": "줄마다 칸 있음(없음도 분모)",
-            "ge": "≥ {0}", "owner": "주인 함수 안 판정이 관문"}
+            "ge": "≥ {0}", "owner": "주인 함수 안 판정이 관문", "ratio": "개수 ÷ {0} 개수 ≥ {1}", "v1": "결정 파일 관문(측정 자리 없음)"}
+
+
+def wait_counts() -> dict:
+    """잇기 대기 수는 표에서 센다(손으로 적지 않는다)."""
+    w = [r for r in STEPS if r["wait"]]
+    return {"all": len(w), "칸": sum(r["wait"]["kind"] == "칸" for r in w), "함수": sum(r["wait"]["kind"] == "함수" for r in w)}
 
 
 def _doc_s(doc) -> str:
@@ -414,9 +478,11 @@ def render_md() -> str:
            "> 주인 = `tools/calcopy/hybrid/bench_steps.py` STEPS. 고칠 땐 표를 고치고 `py -X utf8 -m tools.calcopy.hybrid.bench_steps doc` 로 다시 만든다.",
            f"> 원본 지침서 `tools/calcopy/칼카피_분석지침서.md` 줄 덮임 {cov['covered']}/{cov['lines']} ({cov['pct']}%) · 표 {len(STEPS)}행",
            f"> 관문 = `flow_bench._step_gate` — 단계 끝마다 이 표의 칸을 재고(`bm_gate`) 막는 칸이 미달이면 다시 재기, 같은 칸 {_stuck()}번 연속이면 멈춤.",
-           f"> 대조표: 주인 함수 닿음 {len(wr['reached'])} · 안 닿음 {len(wr['unreached'])} (이어야 할 것 {len(wr['missing'])})", ""]
+           f"> 대조표: 주인 함수 닿음 {len(wr['reached'])} · 안 닿음 {len(wr['unreached'])} (이어야 할 것 {len(wr['missing'])})",
+           f"> 잇기 대기 {wait_counts()['all']} (칸 {wait_counts()['칸']} · 함수 {wait_counts()['함수']}) — 표에서 센 값",
+           f"> 엔진 v1 결정 파일 행(관문 단계, 기록만) {len(v1_rows())} — 주인 `hybrid/engine_v1.json`, 전체 결정표 `tools/calcopy/엔진v1_결정표.md`", ""]
     for ph in ("bm_setup", "bm_fetch", "bm_tear", "bm_read", "bm_trial", "bm_pan", "bm_confirm", "bm_make"):
-        rows = [r for r in STEPS if r["phase"] == ph]
+        rows = [r for r in (*STEPS, *v1_rows()) if r["phase"] == ph]
         if not rows:
             continue
         out += [f"## {STAGE_KO[ph]} (`{ph}`)" + (" — 관문 단계" if ph in GATE_PHASES else ""), "",
