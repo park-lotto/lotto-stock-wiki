@@ -57,3 +57,14 @@ def test_source_rule_static_rejects_bench_ids():
     M = {"cuts": {"L1": [{"src": "src_Z956odeOZvM.mp4", "face": "없음"}], "L2": [{"src": "origin_2.mp4", "face": "없음"}]}}
     bad = RU.source_rule_static(M, {"origin_2.mp4"}, "", {}, bench_ids=["Z956odeOZvM"])
     assert len(bad) == 1 and bad[0].startswith("L1") and "벤치" in bad[0]
+
+
+def test_list_and_desc_survive_ytdlp_null(monkeypatch):
+    """yt-dlp 가 추출 실패 때 stdout 'null' 을 찍는다(11-06 실측 틱톡 @glitter_esther) — trace 가 터지지 않고 이유를 남긴다."""
+    import subprocess as SP
+
+    class R:
+        stdout, stderr, returncode = "null", "ERROR: Unable to extract secondary user ID", 1
+    monkeypatch.setattr(SP, "run", lambda *a, **k: R())
+    assert OT._list("https://www.tiktok.com/@x") == []
+    assert "secondary user ID" in OT._desc("https://www.youtube.com/shorts/aaaaaaaaaaa")["error"]

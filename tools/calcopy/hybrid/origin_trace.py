@@ -51,7 +51,9 @@ def _desc(url: str) -> dict:
     try:
         j = json.loads(r.stdout)
     except ValueError:
-        return {"error": (r.stderr or "")[-200:]}
+        j = None
+    if not isinstance(j, dict):        # yt-dlp 추출 실패 = stdout 'null'(11-06 실측) → 이유를 남긴다
+        return {"error": (r.stderr or "")[-200:] or "yt-dlp 답 없음"}
     return {"description": j.get("description") or "", "channel_id": j.get("channel_id"), "duration": j.get("duration")}
 
 
@@ -59,9 +61,10 @@ def _list(url: str, n: int = LIST_N) -> list[dict]:
     r = subprocess.run(["yt-dlp", "--flat-playlist", "--no-warnings", "--playlist-end", str(n), "-J", url], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=240)
     try:
-        ents = json.loads(r.stdout).get("entries") or []
+        j = json.loads(r.stdout)
     except ValueError:
-        return []
+        j = None
+    ents = (j.get("entries") or []) if isinstance(j, dict) else []      # 'null' = 목록 추출 실패(틱톡 secondary user ID 등) → 빈 목록, trace 가 '목록 없음' 으로 남긴다
     out = []
     for e in ents:
         th = e.get("thumbnail") or next((t.get("url") for t in reversed(e.get("thumbnails") or []) if t.get("url")), None)

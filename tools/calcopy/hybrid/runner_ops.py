@@ -2453,6 +2453,11 @@ def c_bm_tear(W, d):
     ch = _inside(W, f"channel/{d['slug']}")
     groups, failed, r7, r7_failed, longs = {}, [], {}, [], {}
     llm = BM.member_llm()
+    with _Alive(W, "벤치 뜯기"):      # 꾸밈 판독(materials=True) LLM 이 수 분 무음 → 감시 '진행 신호 180초 없음' 끊김(11-06 스냅봤니, Jev 뿌리 0.90·해결 0.82)
+        return _bm_tear_loop(W, d, BM, P, ch, groups, failed, r7, r7_failed, longs, llm)
+
+
+def _bm_tear_loop(W, d, BM, P, ch, groups, failed, r7, r7_failed, longs, llm):
     for v in d["videos"]:
         try:
             J, frame, jp = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
