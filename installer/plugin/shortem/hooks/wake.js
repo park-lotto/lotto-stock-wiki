@@ -41,6 +41,10 @@ function tick() {
   } catch { process.exit(0); }     // 파일 문제로 회원 작업을 막지 않는다
 }
 
+// 명령줄(claude -p · SDK) 호출엔 깨울 대화가 없다 — 감시가 6시간 살아 있으면 호출이 끝나지 않는다(관제 309, 11-03 실측: 켜면 120초+ 무응답 / 끄면 7초).
+//   대화창 = CLAUDE_CODE_ENTRYPOINT 'cli'(데스크톱·IDE 도 sdk- 가 아니다) / 명령줄 = 'sdk-cli' 등 sdk- 로 시작.
+if (/^sdk/i.test(process.env.CLAUDE_CODE_ENTRYPOINT || '')) process.exit(0);
+
 try {
   fs.mkdirSync(home, { recursive: true });
   fs.writeFileSync(ownerFile, me);
