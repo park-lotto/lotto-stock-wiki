@@ -315,6 +315,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     order = [L["id"] for L in S["lines"]]
     Lm = {L["id"]: L for L in S["lines"]}
     cuts, log_drop = [], []
+    bad: list[str] = []      # 재료 꼴 문제는 줄 전체에서 모아 한 번에(11-05 한정수 #7670: 한 줄씩 알려 L2→L4→L6 '같은 원인 3번 연속')
     for i, lid in enumerate(order):
         a = lines[lid][0]
         nxt = lines[order[i + 1]][0] if i + 1 < len(order) else end
@@ -359,33 +360,39 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                             p, c = near[1], {**c, "ss": round(near[2], 3)}
                     if p is None:   # 조용히 at 0 에 겹쳐 놓지 않는다(10-29 회원 잇템로그 O2: ss 8.4·11.9 가 줄 맨 앞에 쌓여 컷 길이 -3.2초 → '컷 수 줄여라'만 듣고 더 쪼갬)
                         spans = [p_["span"] for p_ in opos if p_["line"] == lid]
-                        raise StageError(f"{lid} 원음 줄 컷 ss {c['ss']} 가 그 줄 원음 구간 {spans} 밖 — 원음 줄 컷은 들리는 구간 안 원본 초(입 맞춤)만 적는다. "
-                                         f"다른 장면을 끼우려면 at(줄 안 시각 초)을 같이 적거나 그 컷을 앞뒤 나레 줄로 옮겨라")
+                        bad.append(f"{lid} 원음 줄 컷 ss {c['ss']} 가 그 줄 원음 구간 {spans} 밖 — 원음 줄 컷은 들리는 구간 안 원본 초(입 맞춤)만 적는다. "
+                                   f"다른 장면을 끼우려면 at(줄 안 시각 초)을 같이 적거나 그 컷을 앞뒤 나레 줄로 옮겨라")
+                        continue
                     c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3)}
                 c0 = a + float(c.get("at", 0.0))
                 ss = c.get("ss")
                 if ss is None:      # 입 맞춤: 그 시각에 들리는 원음 조각의 원본 초
                     p = next((p for p in opos if p["line"] == lid and p["t0"] - 1e-3 <= c0 < p["t1"]), None)
                     if not p:
-                        raise StageError(f"{lid} 컷 at {c.get('at')} 가 원음 조각 밖")
+                        bad.append(f"{lid} 컷 at {c.get('at')} 가 원음 조각 밖")
+                        continue
                     ss = round(p["span"][0] + (c0 - p["t0"]), 3)
                 cuts.append({**c, "line": lid, "ss": ss, "src": c.get("src", L["src"]), "t0": round(c0, 3), "kind": "orig",
                              "lip": c.get("src", L["src"]) == L["src"]})     # 입 맞춤 = 원음 줄의 그 원본(settle_edges·measure_over 의 lip 과 같은 정의)
         else:
             if not cs:
-                raise StageError(f"재료.json cuts 에 나레 줄 {lid} 컷이 없다")
+                bad.append(f"재료.json cuts 에 나레 줄 {lid} 컷이 없다")
+                continue
             ws = [float(c.get("w", 1)) for c in cs]
             acc = 0.0
             for c, w in zip(cs, ws):
                 if "cap" in c:        # 자막 덩어리 j 가 뜨는 순간에 컷(자막 한 덩어리 = 컷 하나 — 두유노 벤치 cut_eq_sub 94%, 10-26 material_bank)
                     hit = [r["t0"] for r in rows if r["line"] == lid and r["j"] == int(c["cap"])]
                     if not hit:
-                        raise StageError(f"{lid} 컷 cap {c['cap']} — 그 줄에 자막 덩어리 {c['cap']} 이 없다")
+                        bad.append(f"{lid} 컷 cap {c['cap']} — 그 줄에 자막 덩어리 {c['cap']} 이 없다")
+                        continue
                     c0 = hit[0]
                 else:
                     c0 = a + float(c["at"]) if "at" in c else a + (nxt - a) * acc / sum(ws)
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
+    if bad:
+        raise StageError(" / ".join(bad))
     cuts[0]["t0"] = 0.0
     one_shot_chain(cuts, st)
     from tools.calcopy.hybrid.material_fit import fix_aba
