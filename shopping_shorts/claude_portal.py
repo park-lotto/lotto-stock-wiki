@@ -1305,6 +1305,11 @@ def update_register(version: str, sha256: str, size: int, notes: str = "") -> di
         raise PortalError("bad_request", f"단계 배포 중({d['rollout']['version']})입니다 — publish_update --rollout-finish 또는 --rollout-rollback 뒤에 올리세요")
     if version in (d.get("recalled") or {}):
         raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    # 번호는 서버 판보다 높아야 한다(관제 330) — 다른 PC 가 먼저 낸 판을 모르고 같은 번호로 덮으면, 그 판을 받은 회원은 '같은 판'이라 새 내용을 못 받는다
+    if not _semver(version):
+        raise PortalError("bad_request", f"판 번호 꼴이 아닙니다: {version}")
+    if d.get("version") and _semver(d["version"]) and _semver(version) <= _semver(d["version"]):
+        raise PortalError("bad_request", f"판 번호 {version} 은 서버 판({d['version']})보다 높아야 합니다 — 다음 번호로 올리세요")
     d.update(version=version, sha256=sha256, size=size, notes=notes)
     _update_save(d)
     return d
