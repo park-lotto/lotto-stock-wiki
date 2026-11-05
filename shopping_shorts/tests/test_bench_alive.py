@@ -12,4 +12,4 @@ def test_bench_heavy_part_inside_alive():
     withs = [n for n in ast.walk(tree) if isinstance(n, ast.With) and any(isinstance(i.context_expr, ast.Call) and getattr(i.context_expr.func, "id", "") == "_Alive" for i in n.items)]
     assert withs, "소재 처리에 진행 신호(_Alive)가 없다"
     calls = {getattr(c.func, "id", "") for w in withs for c in ast.walk(w) if isinstance(c, ast.Call)}
-    assert {"sheet", "asr"} <= calls, "시트·받아쓰기가 진행 신호 밖에 있다"
+    assert {"sheet", "bench_lines"} <= calls, "시트·받아쓰기가 진행 신호 밖에 있다"
