@@ -155,12 +155,18 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
       <h2>한 줄 붙여넣기로 설치</h2>
       <p class="qsub">Claude 구독만 있으면 나머지는 알아서 설치됩니다.</p>
       <button class="btn pri qbtn" id="startCopy">설치 명령 복사하기</button>
-      <ol class="qsteps">
+      <ol class="qsteps" id="stepsWin">
         <li><span>1</span><div>위 버튼을 누릅니다</div></li>
         <li><span>2</span><div><b>윈도우 키</b>를 누르고 <b>powershell</b> 입력 후 <b>엔터</b></div></li>
         <li><span>3</span><div>열린 창에서 <b>마우스 오른쪽 버튼</b>을 누르고 <b>엔터</b></div></li>
       </ol>
+      <ol class="qsteps" id="stepsMac" style="display:none">
+        <li><span>1</span><div>위 버튼을 누릅니다</div></li>
+        <li><span>2</span><div><b>⌘ + 스페이스</b>를 누르고 <b>터미널</b> 입력 후 <b>엔터</b></div></li>
+        <li><span>3</span><div>열린 창에서 <b>⌘ + V</b>를 누르고 <b>엔터</b> (macOS 14 이상 · 애플 칩·인텔 모두)</div></li>
+      </ol>
       <div class="qmsg" id="startMsg">내 회원 인증이 들어 있습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div>
+      <div class="qmsg"><a href="#" id="osSwitch" style="color:inherit">맥에서 설치하나요?</a></div>
     </div>
     <details class="more"><summary>PC 관리 · 다른 설치 방법</summary>
       <div class="grid">
@@ -388,8 +394,18 @@ function renderInstall(){
        :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
 }
 
+// 설치 줄은 서버 claude_portal.start_line(os) 한 곳이 만든다. 화면은 이 컴퓨터가 맥인지만 보고 고른다(관제 328)
+let startOs=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent)?'mac':'win';
+function showOs(){
+  $('stepsWin').style.display=startOs==='win'?'':'none';
+  $('stepsMac').style.display=startOs==='mac'?'':'none';
+  $('osSwitch').textContent=startOs==='mac'?'윈도에서 설치하나요?':'맥에서 설치하나요?';
+}
+$('osSwitch').onclick=e=>{ e.preventDefault(); startOs=startOs==='mac'?'win':'mac'; showOs(); };
+showOs();
 $('startCopy').onclick=async()=>{
-  try{ const r=await api('/api/claude/me/start_line'); await navigator.clipboard.writeText(r.line); $('startMsg').textContent='복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
+  try{ const r=await api('/api/claude/me/start_line?os='+startOs); await navigator.clipboard.writeText(r.line);
+    $('startMsg').textContent=startOs==='mac'?'복사했습니다. 이제 터미널을 열고 ⌘ + V 를 누른 뒤 엔터를 치세요.':'복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
   catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
 };
 
