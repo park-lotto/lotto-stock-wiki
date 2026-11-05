@@ -88,11 +88,20 @@ _C = SNAP / "data/snapbwatni/src/CZdHXV0nfGw.mp4"
 
 
 @pytest.mark.skipif(not (_B.exists() and _O.exists() and _U.exists() and _C.exists()), reason="스냅봤니 실측 영상 없음(CH PC 전용)")
-def test_frame_match_separates_same_shop_other_episode():
-    assert OF.frame_match(_B, _O)["same"] is False          # 같은 가게 다른 편(오판 사례)
-    assert OF.frame_match(_C, _O)["same"] is False          # 같은 가게 또 다른 편
-    r = OF.frame_match(_U, _O)                              # 같은 촬영분 재편집(자막·머리띠·자르기 다름)
-    assert r["same"] is True and r["share"] >= OF.FRAME_SHARE
+def test_frame_match_three_way_on_snap_samples():
+    """11-06 재조정(장부 표본 같음 21·다름 37 — C:/t/fm_jev/fm_table_seedpairs.json): 확정은 '같음'만, 못 잡으면 '미확정'(다름 아님)."""
+    assert OF.frame_match(_B, _O)["verdict"] == "unconfirmed"    # 같은 가게 다른 편(오판 사례) — 프레임으로는 '다름'을 증명 못 한다
+    assert OF.frame_match(_C, _O)["verdict"] == "unconfirmed"
+    r = OF.frame_match(_U, _O)                                  # 같은 촬영분 재편집
+    assert r["verdict"] == "same" and r["hits"] >= OF.FRAME_MIN_HITS
+
+
+def test_frame_verdict_rule():
+    """판정식 한 곳: 0.8 넘는 씨앗 프레임 5개 이상 = 같음 확정, 그 밖 = 미확정(다른 편 37짝 최대 4프레임 · 같음 쪽 0~4프레임 11짝이 겹친다)."""
+    import numpy as np
+    assert OF.frame_verdict(np.array([0.81] * 5 + [0.1] * 50))["verdict"] == "same"
+    v = OF.frame_verdict(np.array([0.81] * 4 + [0.1] * 50))
+    assert v["verdict"] == "unconfirmed" and v["hits"] == 4 and v["share"] == round(4 / 54, 3)
 
 
 def _jpeg():
@@ -100,33 +109,7 @@ def _jpeg():
     b = io.BytesIO(); Image.new("RGB", (40, 70), "gray").save(b, "JPEG"); return b.getvalue()
 
 
-def test_judge_same_eye_yes_but_frames_no_is_not_same(tmp_path, monkeypatch):
-    """눈이 '같다'고 해도 프레임 대조가 못 받치면 같은 영상이 아니다 — 눈은 후보 줄이기만."""
-    import urllib.request
-    from PIL import Image
-    from tools.calcopy.engine import claude_cli as CC
-    s = tmp_path / "seed"; s.mkdir()
-    Image.new("RGB", (40, 70), "white").save(s / "f15.jpg")
-
-    class Resp:
-        def read(self):
-            return _jpeg()
-    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: Resp())
-    monkeypatch.setattr(CC, "ask", lambda parts, prompt, tag="", model=None: ({"same": [1, 2], "why": "같은 가게"}, None))
-    cands = [{"key": "a", "url": "u/a", "thumb": "http://t/a"}, {"key": "b", "url": "u/b", "thumb": "http://t/b"}, {"key": "c", "url": "u/c", "thumb": "http://t/c"}]
-    seen = []
-
-    def confirm(seed, v, d):
-        seen.append(v["key"])
-        return {"same": v["key"] == "b", "share": 0.5 if v["key"] == "b" else 0.0}
-    out = OF.judge_same([s / "f15.jpg"], cands, tmp_path, log=print, confirm=confirm)
-    assert out == {"a": False, "b": True, "c": False}
-    assert seen == ["a", "b"]                                # 눈이 '다름'이라 한 c 는 받지 않는다(비용)
-    assert cands[0]["frame_match"]["share"] == 0.0           # 근거 수치를 후보에 남긴다
-
-
-def test_judge_same_frames_unavailable_is_undetermined(tmp_path, monkeypatch):
-    """후보를 못 받으면(confirm None) '같음'으로 두지 않고 미판정으로 뺀다(조용한 통과 금지)."""
+def _judge_env(tmp_path, monkeypatch, eye_same):
     import urllib.request
     from PIL import Image
     from tools.calcopy.engine import claude_cli as CC
@@ -136,6 +119,31 @@ def test_judge_same_frames_unavailable_is_undetermined(tmp_path, monkeypatch):
         def read(self):
             return _jpeg()
     monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: Resp())
-    monkeypatch.setattr(CC, "ask", lambda parts, prompt, tag="", model=None: ({"same": [1]}, None))
-    out = OF.judge_same([s / "f15.jpg"], [{"key": "a", "url": "u/a", "thumb": "http://t/a"}], tmp_path, log=lambda m: None, confirm=lambda *a: None)
-    assert out == {}
+    monkeypatch.setattr(CC, "ask", lambda parts, prompt, tag="", model=None: ({"same": eye_same, "why": "같은 가게"}, None))
+    return s / "f15.jpg"
+
+
+def test_judge_same_frame_unconfirmed_keeps_eye_with_alarm(tmp_path, monkeypatch):
+    """프레임이 못 잡으면 '다름'이 아니라 미확정 — 눈 판정(같음)을 유지하고 경보 + 후보에 verdict 기록(11-06 사장님 지시 · Jev q1c fix_0)."""
+    img = _judge_env(tmp_path, monkeypatch, [1, 2])
+    cands = [{"key": "a", "url": "u/a", "thumb": "http://t/a"}, {"key": "b", "url": "u/b", "thumb": "http://t/b"}, {"key": "c", "url": "u/c", "thumb": "http://t/c"}]
+    seen, logs = [], []
+
+    def confirm(seed, v, d):
+        seen.append(v["key"])
+        return {"verdict": "same" if v["key"] == "b" else "unconfirmed", "hits": 6 if v["key"] == "b" else 0, "share": 0.0}
+    out = OF.judge_same([img], cands, tmp_path, log=logs.append, confirm=confirm)
+    assert out == {"a": True, "b": True, "c": False}
+    assert seen == ["a", "b"]                                    # 눈이 '다름'이라 한 c 는 받지 않는다(비용)
+    assert cands[0]["frame_match"]["verdict"] == "unconfirmed" and cands[1]["frame_match"]["verdict"] == "same"
+    assert any("경보" in x and "a" in x for x in logs)
+
+
+def test_judge_same_frames_unavailable_keeps_eye_with_alarm(tmp_path, monkeypatch):
+    """후보 영상을 못 받아도(confirm None) 미확정 — 눈 판정 유지 + 경보(인스타 받기 고장으로 원본을 통째로 버리지 않는다)."""
+    img = _judge_env(tmp_path, monkeypatch, [1])
+    logs = []
+    c = [{"key": "a", "url": "u/a", "thumb": "http://t/a"}]
+    out = OF.judge_same([img], c, tmp_path, log=logs.append, confirm=lambda *a: None)
+    assert out == {"a": True} and c[0]["frame_match"]["verdict"] == "unconfirmed"
+    assert any("경보" in x for x in logs)

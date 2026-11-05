@@ -7,7 +7,7 @@
 
 판단 주인(이 파일 한 곳):
   · 한국/해외 가르기 = is_korean (제목·채널 이름에 한글)
-  · 같은 영상인지 = judge_same (씨앗 장면 + 후보 썸네일 → Claude 눈(소넷)이 후보를 줄이고, 프레임 대조 frame_match 로 확정 — 11-06). 같다고 본 것만 원본·짝으로 등록 — same_video(ORB)는 VERIFY 때만(10-21 점수 겹쳐 끔)
+  · 같은 영상인지 = judge_same (씨앗 장면 + 후보 썸네일 → Claude 눈(소넷)이 후보를 줄이고, 프레임 대조 frame_match 가 같음을 확정하거나 미확정이면 눈 판정 유지 + 경보 — 11-06 재조정). 같다고 본 것만 원본·짝으로 등록 — same_video(ORB)는 VERIFY 때만(10-21 점수 겹쳐 끔)
   · 원본 고르기 = pick_origins (같은 영상 판정 통과 + 해외 채널마다 가장 먼저 올라온 것 — 모음 편은 원본이 여럿)
   · 잇템로그/숏템로그 = brand_of (제목 화장품 낱말)
 결과물 검사 = 장부의 짝마다 match(특징점 수)·근거 장면이 남는다. 짝 수·원본 수는 `report` 로 본다.
@@ -358,7 +358,8 @@ def run_one(L: dict, pg, url: str, log=print) -> dict:
         judged = judge_same(imgs, cands, seed_dir, log)
         for v in cands:
             v["match"] = None if v["key"] not in judged else (MATCH_MIN if judged[v["key"]] else 0)
-            v["judge"] = "eye" if v["key"] in judged else None
+            fv = (v.get("frame_match") or {}).get("verdict")
+            v["judge"] = None if v["key"] not in judged else "eye+frame" if fv == "same" else "eye(프레임 미확정)" if fv == "unconfirmed" else "eye"   # 장부에 확정 근거를 남긴다(11-06)
     same = [v for v in cands if (v.get("match") or 0) >= MATCH_MIN]
     seed_brand = cat_brand(i) or brand_of(seed.get("title", ""))   # 브랜드 = 씨앗 한 편 기준(편 안 후보마다 갈리지 않게)
     origins = pick_origins([seed] + same)
@@ -412,22 +413,42 @@ JUDGE_PROMPT = ("맨 위 줄(S1~S4)은 씨앗 쇼츠의 장면이다. 그 아래
 
 # ── 같은 영상 확정 = 프레임 대조(프로그램 수치, 관제 319 11-06) ─────────────────────────
 # 실사고: 눈(썸네일 한 장)이 벤치 h3RPb5yZ9Ew 의 원본을 같은 가게·같은 작가의 다른 편(@glitter_esther DeaeUEbzy6E '2탄')으로 골랐다.
-# 실측(11-06): 0.8 넘는 씨앗 프레임 비율 — 같은 촬영분 재편집 0.52·원본끼리 0.59 / 다른 편 0.00(5쌍, 같은 가게 다른 편 포함).
-#   같은 가게 다른 편은 0.6 문턱이면 0.87 까지 올라온다 → 문턱은 0.8. ORB(same_video)와 다르다: 정규화 상관이라 같은 결 다른 영상이 안 겹친다.
+# 11-06 재조정(감시 적발: 첫 문턱 '비율>=0.25'는 표본 7쌍에 맞춰져 장부 실제 원본 짝 4/4 를 '다름'으로 버렸다):
+#   장부 표본 = 눈이 씨앗↔원본을 직접 본 같음 20짝 + 우리 렌더 1 / 같은 작가 다른 편 35짝 + 같은 가게 다른 편 2 (C:/t/fm_jev/fm_eval.py · fm_table_seedpairs.json)
+#   꼴 5종 × 문턱 0.7~0.9 × 판정식 8종을 다 잰 결과 FP 0 에서 가장 많이 잡는 것 = 창 y40~80% + 가로 밀기 5칸 + 확대 1.0~1.4, '0.8 넘는 씨앗 프레임 5개 이상'
+#   → 같음 10/21 확정 · 다른 편 37짝 FP 0(다름 쪽 최대 4프레임). 같음 쪽 0~4프레임 11짝이 다름과 겹친다(짧은 원본·모음 편·레터박스·확대 재편집)
+#     — 그 11짝 중 8짝을 눈 시트로 봐서 7짝이 진짜 같은 촬영분. 그래서 못 잡은 것은 '다름'이 아니라 '미확정'(눈 판정 유지 + 경보) — 사장님 11-06 · Jev q1c fix_0(해결 0.49·위험 0.24, 신뢰 0.70)
 FRAME_CORR = 0.8        # 씨앗 프레임 하나가 후보 어느 프레임과 이 상관 이상이면 '맞는 프레임'
-FRAME_SHARE = 0.25      # 맞는 프레임 비율이 이 이상이면 같은 영상(실측 같은 0.52~0.59 / 다른 0.00)
+FRAME_MIN_HITS = 5      # 맞는 프레임이 이 개수 이상이면 같은 영상 확정(다른 편 최대 4 — 여유 1프레임). 못 미치면 미확정(다름 아님)
 FRAME_ZOOMS = (1.0, 1.2, 1.4)
-FRAME_OFFS = 9
+FRAME_OFFS = 9          # 세로 밀기 칸
+FRAME_XOFFS = 5         # 가로 밀기 칸(가로 원본·옆으로 자른 재편집 — 11-06 전엔 가운데만)
 
 
-def _gray_frames(video: Path, fps: float, h: int = 360):
+def frame_verdict(best) -> dict:
+    """(판정식 한 곳) 씨앗 프레임별 최고 상관 → {verdict: 'same'|'unconfirmed', hits, share, median, n}. 'different' 는 내지 않는다(프레임으로 다름을 증명 못 함)."""
+    import numpy as np
+    best = np.asarray(best, dtype=float)
+    hits = int((best >= FRAME_CORR).sum())
+    return {"verdict": "same" if hits >= FRAME_MIN_HITS else "unconfirmed", "hits": hits, "share": round(hits / max(1, len(best)), 3),
+            "median": round(float(np.median(best)), 3) if len(best) else None, "n": int(len(best))}
+
+
+FRAME_H = 180           # 대조 높이 — 재조정 표본(fm_eval.py)과 같은 값. 바꾸면 FRAME_MIN_HITS 를 다시 재야 한다
+FRAME_LONG_S, FRAME_LONG_FPS = 150, 2.0   # 150초 넘는 후보는 2fps(표본과 같은 자 · 긴 영상 메모리)
+
+
+def _gray_frames(video: Path, fps: float, h: int = FRAME_H):
     import json as _j
     import numpy as np
-    pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "json", str(video)],
+    pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", str(video)],
                         capture_output=True, text=True, encoding="utf-8", errors="replace")
-    st = (_j.loads(pr.stdout or "{}").get("streams") or [{}])[0]
+    j = _j.loads(pr.stdout or "{}")
+    st = (j.get("streams") or [{}])[0]
     if not st.get("width") or not st.get("height"):
         return None
+    if float((j.get("format") or {}).get("duration") or 0) > FRAME_LONG_S:
+        fps = min(fps, FRAME_LONG_FPS)
     w = max(2, int(round(st["width"] * h / st["height"] / 2)) * 2)
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"fps={fps},scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True)
     a = np.frombuffer(r.stdout, np.uint8)
@@ -436,13 +457,13 @@ def _gray_frames(video: Path, fps: float, h: int = 360):
 
 def frame_match(seed_video: Path, cand_video: Path, seed_fps: float = 1.0, cand_fps: float = 4.0) -> dict:
     """씨앗 영상 1fps 의 창 영역(가로 10~90%·세로 40~80% — 위 제목 띠·아래 자막을 피한다) 32x32 회색 정규화 상관 →
-    후보 4fps 의 확대(1.0/1.2/1.4)·세로 밀기(9칸)·좌우반전 중 가장 높은 값. 0.8 넘는 씨앗 프레임 비율 >= 0.25 = 같은 영상.
-    반환 {same, share, median, n} — 영상을 못 읽으면 same None."""
+    후보 4fps 의 확대(1.0/1.2/1.4)·가로 밀기(5칸)·세로 밀기(9칸)·좌우반전 중 가장 높은 값 → frame_verdict.
+    반환 {verdict: same|unconfirmed, hits, share, median, n} — 영상을 못 읽으면 verdict None."""
     import cv2
     import numpy as np
     S, C = _gray_frames(seed_video, seed_fps), _gray_frames(cand_video, cand_fps)
     if S is None or C is None or not len(S) or not len(C):
-        return {"same": None, "share": None, "median": None, "n": 0, "why": "영상 못 읽음"}
+        return {"verdict": None, "hits": None, "share": None, "median": None, "n": 0, "why": "영상 못 읽음"}
 
     def sig(c):
         v = cv2.resize(c, (32, 32), interpolation=cv2.INTER_AREA).ravel()
@@ -458,15 +479,14 @@ def frame_match(seed_video: Path, cand_video: Path, seed_fps: float = 1.0, cand_
         cw = int(.8 * Wc / z); ch = int(cw / asp)
         if ch > Hc:
             ch = Hc; cw = int(ch * asp)
-        cx = (Wc - cw) // 2
-        for yo in np.linspace(0, Hc - ch, FRAME_OFFS).astype(int):
-            cs = []
-            for f in C:
-                c = f[yo:yo + ch, cx:cx + cw]
-                cs.append(sig(c)); cs.append(sig(c[:, ::-1]))
-            best = np.maximum(best, (ss @ np.stack(cs).T).max(1))
-    share = float((best >= FRAME_CORR).mean())
-    return {"same": share >= FRAME_SHARE, "share": round(share, 3), "median": round(float(np.median(best)), 3), "n": int(len(best))}
+        for cx in np.linspace(0, Wc - cw, FRAME_XOFFS).astype(int):
+            for yo in np.linspace(0, Hc - ch, FRAME_OFFS).astype(int):
+                cs = []
+                for f in C:
+                    c = f[yo:yo + ch, cx:cx + cw]
+                    cs.append(sig(c)); cs.append(sig(c[:, ::-1]))
+                best = np.maximum(best, (ss @ np.stack(cs).T).max(1))
+    return frame_verdict(best)
 
 
 def _frame_confirm(seed_imgs: list[Path], v: dict, d: Path) -> dict | None:
@@ -486,13 +506,13 @@ def _frame_confirm(seed_imgs: list[Path], v: dict, d: Path) -> dict | None:
     if not cv.exists():
         return None
     r = frame_match(sv, cv)
-    return r if r.get("same") is not None else None
+    return r if r.get("verdict") is not None else None
 
 
 def judge_same(seed_imgs: list[Path], cands: list[dict], d: Path, log=print, confirm=None) -> dict:
-    """같은 영상 판정 = ① Claude 눈(소넷, 씨앗 장면 + 후보 썸네일 한 장)으로 후보 줄이기 → ② 눈이 '같음'이라 한 후보만 프레임 대조(frame_match)로 확정.
-    눈만으로는 같은 가게·같은 사람 다른 촬영분을 못 가른다(11-06 스냅봤니 2탄 오판). confirm = 시험용 바꿔 끼우기(seed_imgs, v, d) → {same, share…}|None.
-    반환 {key: True|False} — 썸네일을 못 받았거나, 눈은 같다는데 후보 영상을 못 받은 후보는 빠진다(미판정)."""
+    """같은 영상 판정 = ① Claude 눈(소넷, 씨앗 장면 + 후보 썸네일 한 장)으로 후보 줄이기 → ② 눈이 '같음'이라 한 후보만 프레임 대조(frame_match).
+    프레임 '같음' = 확정. 프레임이 못 잡거나(미확정) 후보 영상을 못 받으면 눈 판정(같음)을 유지하고 경보 + 후보 frame_match.verdict='unconfirmed'(11-06 재조정 — 프레임으로는 '다름'을 증명 못 한다).
+    confirm = 시험용 바꿔 끼우기(seed_imgs, v, d) → {verdict, hits…}|None. 반환 {key: True|False} — 썸네일을 못 받은 후보만 빠진다(미판정)."""
     confirm = confirm or _frame_confirm
     import io
     import urllib.request
@@ -537,13 +557,13 @@ def judge_same(seed_imgs: list[Path], cands: list[dict], d: Path, log=print, con
             if (j + 1) not in same:
                 out[v["key"]] = False
                 continue
-            fm = confirm(seed_imgs, v, d)
-            if fm is None:
-                log(f"  프레임 대조 못 함 {v['key']} — 미판정(같음으로 두지 않는다)")
-                continue
+            fm = confirm(seed_imgs, v, d) or {"verdict": "unconfirmed", "hits": None, "share": None, "why": "후보 영상 못 받음"}
             v["frame_match"] = fm
-            out[v["key"]] = bool(fm.get("same"))
-            log(f"  프레임 대조 {v['key']}: 0.8 넘는 비율 {fm.get('share')} 중앙 {fm.get('median')} → {'같음' if out[v['key']] else '다름'}")
+            out[v["key"]] = True                       # 눈 '같음' 유지 — 프레임은 확정만 한다(다름으로 접지 않는다)
+            if fm.get("verdict") == "same":
+                log(f"  프레임 대조 {v['key']}: 0.8 넘는 프레임 {fm.get('hits')}개(비율 {fm.get('share')}) → 같음 확정")
+            else:
+                log(f"  [경보] 프레임 대조 미확정 {v['key']}: 0.8 넘는 프레임 {fm.get('hits')}개 {fm.get('why') or ''} — 눈 판정(같음) 유지, 같은 가게 다른 편일 수 있다(사람 확인 권장)")
     return out
 
 

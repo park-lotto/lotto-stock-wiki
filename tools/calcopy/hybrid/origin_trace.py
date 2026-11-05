@@ -6,7 +6,7 @@
   · 설명란의 원 출처(링크 또는 ＠핸들)를 읽어 원 출처 영상을 찾는다 — 찾은 원본만 재료(받기는 worker_steps.step_source 'url:' 갈래)
   · 못 찾으면 그 편은 소재 후보에서 뺀다(조용히 클립 편으로 되돌아가지 않는다 — 이유를 남긴다)
 부르는 곳: engine/topic_find.channel_candidates(채널 행 role='bench') · 재료 검사 hybrid/rules.source_rule_static ①(bench_ids)
-같은 영상 판정 = origin_find.judge_same(씨앗 장면 + 후보 썸네일 → Claude 눈이 후보를 줄이고 → frame_match 프레임 상관으로 확정, 11-06 같은 가게 2탄 오판 수리). 핸들 목록 = yt-dlp flat(틱톡·유튜브, 인스타 프로필은 yt-dlp 고장 — 실측 11-06).
+같은 영상 판정 = origin_find.judge_same(씨앗 장면 + 후보 썸네일 → Claude 눈이 후보를 줄이고 → frame_match 가 '같음 확정' 또는 '미확정(눈 유지 + 경보)', 11-06 재조정). 핸들 목록 = yt-dlp flat(틱톡·유튜브, 인스타 프로필은 yt-dlp 고장 — 실측 11-06).
 """
 from __future__ import annotations
 
