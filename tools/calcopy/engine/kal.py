@@ -565,7 +565,13 @@ def step_skeleton(S: State):
             continue
         tt = json.loads((S.dir / "뜯기" / vid / "뜯기.json").read_text(encoding="utf-8"))
         vtt = base / "src" / f"{vid}.ko.vtt"
-        d = K.skeleton(vid, tt, str(vtt) if vtt.exists() else None)
+        mp4 = base / "src" / f"{vid}.mp4"
+        try:
+            loud = K.loud_track(str(mp4)) if mp4.exists() else None     # skeleton-01 0.25초 음량 열
+        except Exception as e:  # noqa: BLE001 — 음량 열만 빠지고 뼈대는 만든다(이유를 남김)
+            loud = None
+            print(f"[경보] {vid} 음량 열 못 잼: {type(e).__name__} {str(e)[:80]}")
+        d = K.skeleton(vid, tt, str(vtt) if vtt.exists() else None, loud=loud)
         p.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
         made.append(vid)
     ids = S.step("tteutgi")["outputs"]["ids"]
@@ -658,9 +664,14 @@ def step_rules(S: State):
             "cps_target": round(statistics.median(narr_cps), 2) if narr_cps else None,
             "bgm": {"id": None, "db_below_voice": None, "duck_orig_db": None, "fade_out": None, "why": "engine/sound/bgm_fp.py·뜯기 audio"},
             "loudness": {"lufs": -14, "tp": -1.5},
-            "length": {"min": round(min(durs), 1) if durs else None, "max": round(max(durs), 1) if durs else None},
-            "script": {"brief": [f"{k}: 어미 " + ", ".join(e["ending"] for e in v["endings"][:4]) + f" · 존댓말 {v['honorific_rate']} · 전언 {v['report_rate']} · 자수 중앙 {v['chars']['med']}" for k, v in Sc.items()],
-                       "example": (Sc.get("나레") or {}).get("first_lines", [])[:3], "audit": []},
+            "length": {"min": round(min(durs), 1) if durs else None, "max": round(max(durs), 1) if durs else None,
+                       "by_form": R.get("by_form") or {}},      # rules-05 형식별 길이(줄판독 form 칸)
+            "script": {"brief": [f"{k}: 어미 " + ", ".join(e["ending"] for e in v["endings"][:4]) + f" · 존댓말 {v['honorific_rate']} · 전언 {v['report_rate']} · 자수 중앙 {v['chars']['med']}"
+                      + f" · 같은 어미 연달아 {v.get('same_ending_run')} · 잇는:맺는 {v.get('connect_vs_close')}" for k, v in Sc.items() if not k.startswith("_")]
+                     + [f"박자: {r} 첫 등장 {b['med_pct']}%({b['min_pct']}~{b['max_pct']}, {b['n']}편)" for r, b in (R.get("beat_pos") or {}).items()],
+                       "example": (Sc.get("나레") or {}).get("first_lines", [])[:3], "audit": [],
+                       "beat_pos": R.get("beat_pos") or {}, "tail_s": R.get("tail_s"),           # rules-09 박자 시점 %·끝 꼬리 초
+                       "end_forms": Sc.get("_end_forms"), "title_stats": Sc.get("_title_stats")},  # rules-11·25
             "frame": {"window": lay.get("window"), "title": [], "logo": None, "credit": None, "watermark": None, "comment": None},
             "caption": {"pack": None, "pack_default": None, "variant_for": {}, "typing_cps": (sp.get("나레") or {}).get("cps")},
             "timing": None, "cuts": None, "sfx_files": None,
@@ -751,6 +762,30 @@ def step_make(S: State):
     return "done", {"ours_mp4": str(out / "final.mp4"), "ours_lines": str(lp), "out": str(out)}, f"preset_make 통과 {r.get('seconds')}초 · {r.get('note')}"
 
 
+def frame_texts(S: State) -> list[str]:
+    """copy 단계 프리셋 설명서(frame.json·manifest)의 글 칸(text·title·brand·channel_name) 전부 — 화면 틀 글 관문(verify-m01) 재료."""
+    out = []
+    pd = (S.step("copy").get("outputs") or {}).get("preset")
+
+    def walk(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k in ("text", "title", "brand", "channel_name", "label") and isinstance(v, str):
+                    out.append(v)
+                else:
+                    walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    if pd and Path(pd).exists():
+        for f in Path(pd).glob("*.json"):
+            try:
+                walk(json.loads(f.read_text(encoding="utf-8")))
+            except ValueError:
+                pass
+    return out
+
+
 def _sha256(p: str) -> str:
     import hashlib
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -762,11 +797,18 @@ def step_verify(S: State):
     o = S.step("make")["outputs"]
     bench = K._load_docs([str(S.dir / "줄판독")])
     ours = json.loads(Path(o["ours_lines"]).read_text(encoding="utf-8"))
+    K.attach_bench_asr(bench, S.dir / "뜯기")          # readlines-09·11 받아쓰기 자(벤치 = 뜯기 transcript)
     win = K._win_arg(None, bench)
     om = K.media_of(o["ours_mp4"], win)
     bm = K.bench_media_src(str(DATA / S.d["slug"] / "src"), [d.get("id") for d in bench], win)
     T = K.match_table(bench, ours, om, bm)
     T["ours_media"], T["bench_media"] = om, bm
+    texts = [str(l.get("text") or "") for l in K._ours_lines(ours)[0]] + frame_texts(S)
+    ch = S.d.get("channel") or {}
+    T["name_check"] = K.name_check(texts, [ch.get("name") or "", S.d["slug"]], S.d.get("brand"))     # verify-m01
+    T["hygiene"] = K.text_hygiene(texts)                                                             # verify-14
+    if T["name_check"] or T["hygiene"]:
+        T["verdict"] = "미달"
     kd = S.dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
     out = kd / "재현일치도.md"
@@ -780,6 +822,8 @@ def step_verify(S: State):
     out.write_text(K.match_md(T, S.d["slug"]), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(T, ensure_ascii=False, indent=1), encoding="utf-8")
     res = {"table": str(out), "verdict": T["verdict"]}
+    if T["name_check"] or T["hygiene"]:
+        return "failed", res, f"글 관문 미달 — 채널명 {T['name_check']} · 금지 낱말 {T['hygiene']}"
     if not bmp4:
         return "failed", res, "벤치 mp4 없음 — collect 를 다시 돌려 벤치 원본을 받은 뒤 verify"
     if T["verdict"] != "통과":
@@ -803,6 +847,20 @@ def step_verify(S: State):
 
 def step_apply(S: State):
     from shopping_shorts import calcopy_board as B
+    kd = S.dir / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)
+    mo = S.step("make").get("outputs") or {}
+    if mo.get("out") and (Path(mo["out"]) / "timeline.json").exists():      # apply-15(Jev 해결 0.64): 완료 보고에 장면표 — 행 = 컷, 빈칸 0
+        md, empty = K.scene_table(mo["out"])
+        (kd / "장면표.md").write_text(f"# 장면표 — {mo.get('ours_mp4')}\n\n" + md, encoding="utf-8")
+        if empty:
+            return "waiting_human", {"scene_table": str(kd / "장면표.md")}, f"장면표 빈칸 {len(empty)}: {empty[:6]} — 채운 뒤 다시"
+    top = DATA / S.d["slug"] / "top.json"
+    pp = kd / f"{S.d['slug']}판_초안.json"
+    if top.exists() and pp.exists():                                          # apply-08(Jev 해결 0.62): 벤치 제목 꼴 → 판 초안 upload.title
+        plan = json.loads(pp.read_text(encoding="utf-8"))
+        plan.setdefault("upload", {})["title"] = {**K.title_of(json.loads(top.read_text(encoding="utf-8"))), "_rule": "편마다 3안은 이 꼴로(사람) · 같은 문장 0"}
+        pp.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     ch = S.d.get("channel") or {}
     om = (S.step("make").get("outputs") or {}).get("ours_mp4")
     if om and om not in (S.d.get("made") or []):

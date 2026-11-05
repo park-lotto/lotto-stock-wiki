@@ -216,13 +216,26 @@ def _vtt(path: str) -> list[dict]:
     return out
 
 
-def skeleton(vid: str, tteutgi: dict, vtt: str | None = None) -> dict:
-    """줄판독 뼈대 — 기계값만 채우고 눈으로 볼 칸은 null. check 가 _todo 로 거절한다."""
+LOUD_STEP_S = 0.25    # skeleton-01 원본 시간표 음량 열 간격(회원 2170: 0.25초 음량)
+
+
+def loud_track(mp4: str, step: float = LOUD_STEP_S) -> list[float]:
+    """(프로그램) 0.25초마다 RMS dB — 원본 시간표 음량 열(skeleton-01). 소리 읽기는 asr_local.pcm(16k) 한 곳."""
+    from tools.calcopy.engine.asr_local import pcm, _db, SR
+    a = pcm(mp4)
+    n = max(1, int(SR * step))
+    return [round(_db(a[i:i + n]), 1) for i in range(0, len(a), n)]
+
+
+def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None = None) -> dict:
+    """줄판독 뼈대 — 기계값만 채우고 눈으로 볼 칸은 null. check 가 _todo 로 거절한다.
+    skeleton-01: 받아쓰기 낱말 시각(뜯기 audio.transcript.words — tear_llm 스피치매틱스)을 줄마다 words 열로, loud(0.25초 RMS dB, loud_track)를 줄 구간 loud 열로."""
     pr = tteutgi.get("probe") or {}
     lay = tteutgi.get("layout") or {}
     items = (tteutgi.get("captions") or {}).get("items") or []
     cuts = [float(c) for c in (tteutgi.get("cuts") or {}).get("times") or []]
     asr = _vtt(vtt) if vtt else []
+    words = [w for w in (((tteutgi.get("audio") or {}).get("transcript") or {}).get("words") or []) if isinstance(w, dict)]
     lines = []
     for it in items:
         t0, t1 = float(it.get("t0", 0)), float(it.get("t1", 0))
@@ -232,10 +245,13 @@ def skeleton(vid: str, tteutgi: dict, vtt: str | None = None) -> dict:
                       "enter": None, "y": [it.get("top_y"), None] if it.get("top_y") else None, "fill_hex": None,
                       "emph": [], "sticker": [], "sfx": None, "scene": None, "fit": None,
                       "cut_at": [round(c, 2) for c in cuts if cut_in_line(c, t0, t1)],
+                      "words": [{"t0": round(float(w["start"]), 2), "t1": round(float(w["end"]), 2), "text": w.get("text")} for w in words
+                                if float(w["start"]) < t1 and float(w["end"]) > t0],
+                      "loud": loud[int(t0 / LOUD_STEP_S):max(int(t0 / LOUD_STEP_S) + 1, int(t1 / LOUD_STEP_S))] if loud else None,
                       "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)"})
-    todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share"]
+    todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share", "form"]
     return {"id": vid, "dur": pr.get("duration"), "fps": pr.get("fps"), "size": [pr.get("w"), pr.get("h")],
-            "title_lines": [], "source_label": None,
+            "title_lines": [], "source_label": None, "form": None, "_form_vocab": "형식(유형) 한 낱말 — 예 리액션·랭킹·사연·정보·리뷰(rules-05, 형식별 집계)",
             "layout": {"window": lay.get("window"), "caption_band": lay.get("caption_band"), "title_y": None, "source_y": None, "logo_y": None, "watermark": None},
             "lines": lines, "beats": None, "narr_share": None, "notes": [], "name_evidence": [],
             "_todo": todo, "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"}
@@ -260,6 +276,10 @@ def rules_of(docs: list[dict]) -> dict:
     first_chunk = defaultdict(lambda: {"n": 0, "enter": Counter()})   # 화자 바뀐 첫 덩어리
     plain = {"n": 0, "denom": 0}
     eps = []
+    beats = defaultdict(list)          # rules-09 역할별 첫 등장 %
+    gaps = defaultdict(list)           # rules-09 같은 역할 반복 간격(초)
+    tails = []                         # rules-09 마지막 말 줄 끝 → 영상 끝(초)
+    by_layer = defaultdict(lambda: {"n": 0, "enter": Counter(), "hex": set(), "y": [], "repeat": 0})   # rules-18
     for d in docs:
         dur = float(d.get("dur") or 0)
         lines = [l for l in d.get("lines") or [] if (l.get("layer") or "채널") != "원본박힘"]
@@ -281,9 +301,29 @@ def rules_of(docs: list[dict]) -> dict:
             prev = n["sp"]
             plain["denom"] += 1
             plain["n"] += int(not n["any"])
+        for role in BEAT_ROLES:
+            ts = [float(l.get("t0") or 0) for l in lines if str(l.get("role") or "").split("·")[0] == role]
+            if ts and dur:
+                beats[role].append(round(ts[0] / dur * 100, 1))
+                gaps[role] += [round(b - a, 2) for a, b in zip(ts, ts[1:])]
+        spk = [l for l in lines if _sp(l.get("speaker")) in ("나레", "원음")]
+        if spk and dur:
+            tails.append(round(dur - max(float(l.get("t1") or 0) for l in spk), 2))
+        main_lines = [l for l in lines if (l.get("layer") or "채널") == "채널"]
+        for l in d.get("lines") or []:
+            lay = str(l.get("layer") or "채널")
+            r = by_layer[lay]
+            r["n"] += 1
+            r["enter"][enter_key(l.get("enter"))] += 1
+            r["hex"].update(_hexes(l.get("fill_hex")))
+            y = l.get("y")
+            if isinstance(y, (list, tuple)) and y and isinstance(y[0], (int, float)):
+                r["y"].append(y[0])
+            if lay != "채널" and _repeats(l, main_lines):
+                r["repeat"] += 1
         narr = [n for n in N if n["sp"] == "나레"]
         cuts = sorted({round(float(c), 2) for l in lines for c in (l.get("cut_at") or []) if isinstance(c, (int, float))})
-        eps.append({"id": d.get("id"), "dur": dur, "lines": len(N), "narr_lines": len(narr),
+        eps.append({"id": d.get("id"), "dur": dur, "form": d.get("form"), "lines": len(N), "narr_lines": len(narr),
                     "narr_sec": round(sum(n["sec"] for n in narr), 2), "speech_sec": round(sum(n["sec"] for n in N), 2),
                     "narr_share_lines": round(len(narr) / len(N), 3) if N else None,
                     "narr_share_dur": round(sum(n["sec"] for n in narr) / dur, 3) if dur and narr else (0.0 if dur else None),
@@ -323,9 +363,36 @@ def rules_of(docs: list[dict]) -> dict:
                 o["cps"] = round(sum(r["chars"]) / max(1e-6, sum(r["sec"])), 2)
             out[k] = o
         return out
+    by_form = defaultdict(list)
+    for e in eps:
+        by_form[e.get("form") or "형식 미기입"].append(e["dur"])
+    beat_pos = {r: {"n": len(v), "med_pct": statistics.median(v), "min_pct": min(v), "max_pct": max(v),
+                    "gap_med_s": statistics.median(gaps[r]) if gaps[r] else None} for r, v in beats.items() if v}
+    layers = {k: {"n": v["n"], "enter": dict(v["enter"]), "hex_kinds": len(v["hex"]), "y_med": statistics.median(v["y"]) if v["y"] else None,
+                  "repeat_rate": round(v["repeat"] / v["n"], 2) if v["n"] and k != "채널" else None} for k, v in by_layer.items()}
     return {"n_docs": len(docs), "episodes": eps, "by_speaker": fin(by_sp), "by_pos": fin(by_pos), "by_role": fin(by_role),
+            "by_form": {k: {"n": len(v), "min": min(v), "max": max(v)} for k, v in by_form.items()},
+            "beat_pos": beat_pos, "tail_s": {"med": statistics.median(tails), "min": min(tails), "max": max(tails)} if tails else None,
+            "by_layer": layers,
             "first_chunk": {k: {"n": v["n"], "enter": dict(v["enter"])} for k, v in first_chunk.items()},
             "plain": plain, "base_rate": {k: round(v, 2) for k, v in base.items()}, "rules": rules, "min_n": MIN_N}
+
+
+BEAT_ROLES = ("반전", "공개", "고조", "끝")   # rules-09 박자 시점 % 를 재는 역할(ROLE_VOCAB 안)
+
+
+def _repeats(l: dict, main_lines: list[dict]) -> bool:
+    """rules-18: 다른 층 줄 글이 같은 시각 본 자막 줄 글을 되풀이하나(공백 뺀 글자 절반 이상 겹침)."""
+    a = re.sub(r"\s", "", str(l.get("text") or ""))
+    if len(a) < 2:
+        return False
+    t0, t1 = float(l.get("t0") or 0), float(l.get("t1") or 0)
+    for m in main_lines:
+        if float(m.get("t0") or 0) < t1 and float(m.get("t1") or 0) > t0:
+            b = re.sub(r"\s", "", str(m.get("text") or ""))
+            if b and sum(c in b for c in a) >= len(a) / 2:
+                return True
+    return False
 
 
 def rules_md(R: dict, title: str = "") -> str:
@@ -381,6 +448,11 @@ MATCH_RULES = [
     ("sticker.rate", "pctp", 20, True, "스티커 붙은 줄 비율 차 ≤20%p(표준 §4-1 A3)"),
     ("meme.rate", "pctp", 20, True, "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"),
     ("thumb.frame0", "eq", None, True, "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"),
+    # ↓ 개정안 kal v2(11-06) — 받아쓰기 자(asr_stats, 벤치 = 뜯기 transcript · 우리 = verify 가 우리 완성본을 뜯은 transcript). 우리 받아쓰기 실측이 쌓이기 전이라 참고.
+    ("speech.cps.asr", "rel", 10, False, "말 구간 음절/초(받아쓰기 구절 글자 ÷ 말 구간 합) 차 ≤10%(readlines-09 — 자막 표시 초가 아닌 말 시각)"),
+    ("speech.gap", "rel0", 50, False, "1.5초 넘는 말 빈틈 수 ±50%, 벤치 0이면 우리도 0(readlines-09)"),
+    ("first.land", "db", 1.0, False, "첫 문장 착지 시각(받아쓰기 첫 문장 끝) 차 ≤1초(readlines-11)"),
+    ("end.form", "eq", None, False, "끝맺음 꼴(end_form — 구독CTA·질문·예고·요약·쿠션·전언·감상·없음) = 벤치 최빈(rules-11)"),
     # ↓ 칼카피 엔진 v1 §7-3 R7 칸(관제 319 묶음①). 벤치 = 프리셋 r7.json summary(bm_tear 실측), 우리 = r7.media(완성본) — 같은 자가 있는 칸만 기준(Jev 해결 0.99·뿌리 0.57).
     #   R7 칸이 없는 판(벤치마킹 2판 프리셋이 아님 — 하이브리드 공용 렌더 등)은 'skip'(기준에서 빠짐, 사유 표시). seg(R1 구간)는 근거 Jev 미달이라 칸 없음.
     ("crop.x", "px", 60, True, "화면 상자 x 가운데 차 중앙 ≤60px(§7-3) — 짝 없는 클립형 = 벤치 쇼츠 화면 상자 분포 중앙과 대조(짝 대조 아님)"),
@@ -466,9 +538,26 @@ def _ours_lines(o: dict) -> tuple[list[dict], float]:
     return rows, float(o.get("dur") or (max((r["t1"] for r in rows), default=0)))
 
 
-def _stats(lines: list[dict], dur: float) -> dict:
+SPEECH_GAP_S = 1.5   # readlines-09 '말 빈틈' = 받아쓰기 구절 사이 1.5초 넘는 쉼
+
+
+def asr_stats(asr: list | None) -> dict:
+    """(판단 주인 · readlines-09·11) 받아쓰기 구절(뜯기 audio.transcript.segments 꼴 start/end/text) → 말 구간 음절/초 · 1.5초 넘는 빈틈 수 · 첫 문장 착지(첫 구절 끝).
+    벤치·우리 같은 함수(받아쓰기 없으면 None — match 가 미측정)."""
+    seg = sorted([x for x in asr or [] if isinstance(x, dict) and str(x.get("text") or "").strip()], key=lambda x: float(x["start"]))
+    if not seg:
+        return {"speech.cps.asr": None, "speech.gap": None, "first.land": None}
+    sec = sum(max(0.0, float(x["end"]) - float(x["start"])) for x in seg)
+    ch = sum(len(re.sub(r"\s", "", str(x["text"]))) for x in seg)
+    gaps = sum(1 for a, b in zip(seg, seg[1:]) if float(b["start"]) - float(a["end"]) > SPEECH_GAP_S)
+    first = next((x for x in seg if re.search(r"[.?!]$|[다요죠래]$", str(x["text"]).strip())), seg[0])
+    return {"speech.cps.asr": round(ch / sec, 2) if sec else None, "speech.gap": gaps, "first.land": round(float(first["end"]), 2)}
+
+
+def _stats(lines: list[dict], dur: float, asr: list | None = None) -> dict:
     N = [_norm_line(l, dur) for l in lines if (l.get("layer") or "채널") != "원본박힘"]
-    s = {"n": len(N), "dur": dur}
+    s = {"n": len(N), "dur": dur, **asr_stats(asr)}
+    s["end.form"] = end_form(_last_texts(lines))["form"] if lines else None
     for sp in ("나레", "원음"):
         g = [n for n in N if n["sp"] == sp]
         s[f"fx.rate.{sp}"] = round(sum(n["any"] for n in g) / len(g), 3) if g else None
@@ -585,9 +674,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
     판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로.
     own_targets = style_targets(판). 하이브리드 판(위 조건)의 HYBRID_OWN_KEYS 칸은 벤치가 아니라 판 목표값과 같은 자·같은 합격선으로 비교하고,
     판 목표가 없는 칸은 비교하지 않는다(judge 'skip', 사유 표시 — 미측정 아님, 기준 칸에서 빠짐). 코디네이터 10-25 결정(페이블 재검토 대기, 표준 §12)."""
-    B = [_stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in bench_docs]
+    B = [_stats(d.get("lines") or [], float(d.get("dur") or 0), d.get("_asr")) for d in bench_docs]
     ol, odur = _ours_lines(ours)
-    O = _stats(ol, odur)
+    O = _stats(ol, odur, ours.get("_asr"))
     om, bm = ours_media or {}, bench_media or {}
     brange_all = (min(s["dur"] for s in B), max(s["dur"] for s in B)) if B else None
     hybrid = bool(own_len and brange_all and (own_len[0] > brange_all[1] or own_len[1] < brange_all[0]))
@@ -1144,6 +1233,109 @@ def watch_pack(bench_mp4: str, ours_mp4: str, out_dir) -> dict:
     return {"dir": str(out), "side": str(side), "tail": str(tail), "bench": bench_mp4, "ours": ours_mp4, "frames": [str(p) for p in imgs]}
 
 
+def _flat(s: str) -> str:
+    return re.sub(r"\s", "", str(s or "")).lower()
+
+
+def _near(a: str, b: str) -> bool:
+    """글자 1~2개만 다른가(같은 길이 바꿈·한 글자 빠짐/더함) — 리포트↔리포터."""
+    if a == b or abs(len(a) - len(b)) > 1 or len(b) < 3:
+        return False
+    if len(a) == len(b):
+        return 0 < sum(x != y for x, y in zip(a, b)) <= 2
+    s_, l_ = (a, b) if len(a) < len(b) else (b, a)
+    return any(l_[:i] + l_[i + 1:] == s_ for i in range(len(l_)))
+
+
+def name_check(texts: list[str], bench_names: list[str], brand: str | None) -> list[str]:
+    """(판단 주인 · verify-m01) 우리 편 글(대본 줄·화면 틀 글)에 벤치 채널명이 남았나 · 우리 브랜드 철자가 1~2자 다른 낱말이 있나(공백 뺀 비교)."""
+    bad = []
+    flat = [_flat(t) for t in texts if t]
+    for n in [x for x in bench_names if x and len(_flat(x)) >= 2]:
+        hit = [t for t in flat if _flat(n) in t]
+        if hit:
+            bad.append(f"벤치 채널명 '{n}' 남음 {len(hit)}곳")
+    if brand and len(_flat(brand)) >= 3:
+        b = _flat(brand)
+        for t in texts:
+            for w in re.findall(r"[0-9A-Za-z가-힣]+", str(t or "")):
+                if b in w.lower():            # 철자 맞는 브랜드가 든 낱말은 통과
+                    continue
+                for k in range(len(w) - len(b) + 2):
+                    for L in (len(b) - 1, len(b), len(b) + 1):
+                        piece = w[k:k + L].lower()
+                        if len(piece) == L and _near(piece, b):
+                            bad.append(f"브랜드 철자 다름 '{w}' ≠ '{brand}'")
+                            break
+    return sorted(set(bad))
+
+
+HYGIENE = {   # verify-14(J124) 금지 표 한 곳 — 개인정보 낱말 + 유도 말 짝이 같은 줄에 있으면 미달
+    "개인정보": ("생년월일", "주민번호", "주민등록", "전화번호", "휴대폰번호", "핸드폰번호", "집주소", "주소"),
+    "유도": ("댓글", "적어", "남겨", "알려", "써주", "써 주"),
+}
+
+
+def text_hygiene(texts: list[str], table: dict = HYGIENE) -> list[str]:
+    """(판단 주인 · verify-14) 낱말 단위 — 개인정보 낱말과 유도 말이 같은 글에 함께 있으면 그 글. 띠·년생은 허용(표에 없음)."""
+    out = []
+    for t in texts:
+        t = str(t or "")
+        toks = re.findall(r"[가-힣A-Za-z0-9]+", t)
+        pi = [w for w in toks if any(w.startswith(k) for k in table["개인정보"])]
+        lure = [w for w in toks if any(w.startswith(k) for k in table["유도"])]
+        if pi and lure:
+            out.append(f"'{t[:40]}' — {pi[0]} + {lure[0]}")
+    return out
+
+
+def attach_bench_asr(docs: list[dict], tteutgi_dir) -> int:
+    """verify 가 벤치 줄판독마다 뜯기.json 받아쓰기 구절을 _asr 로 붙인다(asr_stats 재료) → 붙인 편 수."""
+    n = 0
+    for d in docs:
+        p = Path(tteutgi_dir) / str(d.get("id")) / "뜯기.json"
+        if p.is_file():
+            seg = (((json.loads(p.read_text(encoding="utf-8")).get("audio") or {}).get("transcript") or {}).get("segments"))
+            if seg:
+                d["_asr"] = seg
+                n += 1
+    return n
+
+
+def title_of(top: list[dict], k: int = 10) -> dict:
+    """(판단 주인 · apply-08) 벤치 제목 꼴 — 조회순 제목들의 길이 중앙·두 토막 비율(쉼표·／·| 나 따옴표로 두 덩이)·숫자·따옴표·물음표 비율 + 조회 상위 k편 제목.
+    3안 짓기·같은 문장 0 검사는 사람/대본 단계(이 함수는 꼴만)."""
+    T = [x for x in sorted(top or [], key=lambda x: -(x.get("views") or 0)) if str(x.get("title") or "").strip()]
+    if not T:
+        return {"n": 0}
+    ts = [str(x["title"]).strip() for x in T]
+    two = re.compile(r"[,，/／|｜]|[\"“”'‘’「」『』].+[\"“”'‘’「」『』]\s*\S")
+    return {"n": len(ts), "chars_med": statistics.median(len(t) for t in ts),
+            "two_part_rate": round(sum(bool(two.search(t)) for t in ts) / len(ts), 2),
+            "number_rate": round(sum(bool(re.search(r"\d", t)) for t in ts) / len(ts), 2),
+            "quote_rate": round(sum(bool(re.search(r"[\"“”'‘’「」『』]", t)) for t in ts) / len(ts), 2),
+            "question_rate": round(sum("?" in t for t in ts) / len(ts), 2),
+            "top": [{"title": x["title"], "views": x.get("views")} for x in T[:k]]}
+
+
+def scene_table(out_dir) -> tuple[str, list[str]]:
+    """(apply-15) 시험편 make 출력(timeline.json groups·pieces) → 장면표.md 글 + 빈칸 목록. 행 = 컷(group) 하나. 화면 상황 칸은 사람(Claude 눈)이 채운다 — 빈칸 검사에서 뺀다."""
+    T = json.loads((Path(out_dir) / "timeline.json").read_text(encoding="utf-8"))
+    G, P = T.get("groups") or [], T.get("pieces") or []
+    L = ["| # | 시각 | 클립(원본·구간) | 화면 상황(앵글 — 사람) | 자막·나레 |", "|---|---|---|---|---|"]
+    empty = []
+    for i, g in enumerate(G, 1):
+        t0 = float(g.get("t0") or 0)
+        t1 = t0 + float(g.get("dur") or 0)
+        cap = " / ".join(str(p.get("text") or "").replace("\n", " ") for p in P if float(p.get("t0") or 0) < t1 and float(p.get("t1") or 0) > t0)
+        clip = f"{Path(str(g.get('src') or '')).name} {g.get('ss')}s+{g.get('src_span') or g.get('dur')}s"
+        for k, v in (("시각", g.get("dur")), ("클립", g.get("src")), ("자막·나레", cap)):
+            if v in (None, "", 0):
+                empty.append(f"#{i} {k}")
+        L.append(f"| {i} | {t0:.2f}~{t1:.2f} | {clip} | | {cap} |")
+    return "\n".join(L) + "\n", empty
+
+
 def fix_cands(T: dict, frame: dict) -> list[dict]:
     """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 잡도리 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
     from tools.calcopy.engine import preset_save as P
@@ -1368,8 +1560,101 @@ def script_of(docs: list[dict]) -> dict:
                    "honorific_rate": round(honor / n, 2), "report_rate": round(report / n, 2), "question_rate": round(q / n, 2),
                    "chars": {"med": statistics.median(chars), "p10": sorted(chars)[int(len(chars) * .1)], "p90": sorted(chars)[int(len(chars) * .9)], "max": max(chars)},
                    "connectors": dict(conn.most_common(10)), "exclaims": dict(exc.most_common(10)),
-                   "first_lines": [str((d.get("lines") or [{}])[0].get("text") or "") for d in docs if _sp((d.get("lines") or [{}])[0].get("speaker")) == sp][:8]}
+                   "first_lines": [str((d.get("lines") or [{}])[0].get("text") or "") for d in docs if _sp((d.get("lines") or [{}])[0].get("speaker")) == sp][:8],
+                   **_flow_of(docs, sp)}
+    out["_end_forms"] = end_forms(docs)        # rules-11 (편 단위 — 화자 무관)
+    out["_title_stats"] = title_stats(docs)    # rules-25
     return out
+
+
+_CONNECT_END = ("는데", "은데", "고", "더니", "면서", "서", "니까", "지만")     # rules-12 이어지는 조각 끝
+_CLOSE_END = ("다", "요", "죠", "까", "네", "래")                                 # rules-12 맺는 조각 끝
+
+
+def _flow_of(docs: list[dict], sp: str) -> dict:
+    """rules-12(Jev 해결 0.64): 자리별(훅·본문·끝 — _pos) 어미 분포 · 같은 어미 연달아 비율 · 잇는 끝:맺는 끝 · 문장(맺는 끝까지 조각 합침) 자수 중앙."""
+    pos_end, runs, pairs, sent_chars = defaultdict(Counter), 0, 0, []
+    conn = close = 0
+    for d in docs:
+        dur = float(d.get("dur") or 0)
+        L = [l for l in d.get("lines") or [] if _sp(l.get("speaker")) == sp and "원본" not in str(l.get("layer") or "")]
+        prev, acc = None, 0
+        for l in L:
+            t = str(l.get("text") or "").strip()
+            e = _ending(t)
+            pos_end[_pos(l, dur)][e] += 1
+            if prev is not None:
+                pairs += 1
+                runs += int(e == prev)
+            prev = e
+            bare = re.sub(r"[\s.…?!~]+$", "", t)
+            acc += _chars(t)
+            if bare.endswith(_CONNECT_END):
+                conn += 1
+            elif bare.endswith(_CLOSE_END) or re.search(r"[?!.]$", t):
+                close += 1
+                sent_chars.append(acc)
+                acc = 0
+    return {"endings_by_pos": {k: dict(v.most_common(5)) for k, v in pos_end.items()},
+            "same_ending_run": round(runs / pairs, 2) if pairs else None,
+            "connect_vs_close": f"{conn}:{close}", "sentence_chars_med": statistics.median(sent_chars) if sent_chars else None}
+
+
+END_FORMS = ("구독CTA", "질문", "예고", "요약", "쿠션", "전언", "감상", "없음")   # rules-11 끝맺음 꼴(분류기 end_form 한 곳 — 벤치·우리 같은 자)
+
+
+def end_form(texts: list[str]) -> dict:
+    """(판단 주인 · rules-11) 마지막 3줄 글 → {form, cta, teaser}. 낱말 규칙 — 벤치 줄판독·우리 우리줄 둘 다 이것으로 잰다."""
+    t = " ".join(str(x or "") for x in texts[-3:])
+    cta = bool(re.search(r"구독|좋아요|알림", t))
+    teaser = "다음 편" in t or "다음편" in t or "2탄" in t
+    if cta:
+        f = "구독CTA"
+    elif teaser:
+        f = "예고"
+    elif t.strip().endswith("?") or re.search(r"(어떠|어때|어떻게 생각)", t):
+        f = "질문"
+    elif re.search(r"도움이 되|참고하", t):
+        f = "쿠션"
+    elif re.search(r"(결국|정리하면|한마디로|요약)", t):
+        f = "요약"
+    elif any(r in t for r in _REPORT):
+        f = "전언"
+    elif re.search(r"(ㅋㅋ|ㅠ|대박|소름|미쳤|감동|놀랍)", t):
+        f = "감상"
+    else:
+        f = "없음"
+    return {"form": f, "cta": cta, "teaser": teaser}
+
+
+def _last_texts(lines: list[dict]) -> list[str]:
+    L = sorted([l for l in lines if (l.get("layer") or "채널") != "원본박힘" and str(l.get("text") or "").strip()], key=lambda l: float(l.get("t0") or 0))
+    return [str(l.get("text")) for l in L[-3:]]
+
+
+def end_forms(docs: list[dict]) -> dict:
+    rows = [end_form(_last_texts(d.get("lines") or [])) for d in docs]
+    c = Counter(r["form"] for r in rows)
+    return {"mode": c.most_common(1)[0][0] if c else None, "dist": dict(c), "cta_rate": round(sum(r["cta"] for r in rows) / len(rows), 2) if rows else None,
+            "teaser_n": sum(r["teaser"] for r in rows), "n": len(rows)}
+
+
+def title_stats(docs: list[dict]) -> dict | None:
+    """rules-25: 줄판독 화면 제목 줄(title_lines) — 자수 중앙(공백 포함/뺌)·어절 중앙·줄 수 최빈·마침표/느낌표/물음표/이모지 비율."""
+    T = []
+    for d in docs:
+        ls = [str(t.get("text") if isinstance(t, dict) else t or "") for t in d.get("title_lines") or []]
+        ls = [x for x in ls if x.strip()]
+        if ls:
+            T.append(ls)
+    if not T:
+        return None
+    full = [" ".join(x) for x in T]
+    emo = re.compile(r"[\U0001F300-\U0001FAFF\u2600-\u27BF]")
+    return {"n": len(T), "chars_med": statistics.median(len(x) for x in full), "chars_nospace_med": statistics.median(len(re.sub(r"\s", "", x)) for x in full),
+            "words_med": statistics.median(len(x.split()) for x in full), "lines_mode": Counter(len(x) for x in T).most_common(1)[0][0],
+            **{f"{k}_rate": round(sum(ch in x for x in full) / len(full), 2) for k, ch in (("period", "."), ("bang", "!"), ("question", "?"))},
+            "emoji_rate": round(sum(bool(emo.search(x)) for x in full) / len(full), 2)}
 
 
 def write_rules(ch_dir, docs: list[dict], title: str = "") -> dict:
@@ -1413,6 +1698,16 @@ def _lab(rgb):
     return np.array([116 * f[1] - 16, 500 * (f[0] - f[1]), 200 * (f[1] - f[2])])
 
 
+DARK_BG_V = 60   # readlines-08: 고리 바깥 배경 밝기 중앙이 이보다 어두우면 검정 외곽선을 배경과 못 가른다
+
+
+def outline_of(dark_hex: str | None, bg_v: float | None) -> dict:
+    """(판단 주인 · readlines-08) 외곽선 색 — 배경이 어두우면(V < DARK_BG_V) 판별 불가(None)로 적고 판에서는 외곽선 없음으로 둔다."""
+    if bg_v is not None and bg_v < DARK_BG_V:
+        return {"outline_hex": None, "outline": "판별 불가", "bg_v": round(bg_v, 1)}
+    return {"outline_hex": dark_hex, "outline": "있음" if dark_hex else "없음", "bg_v": None if bg_v is None else round(bg_v, 1)}
+
+
 def frame_metrics(png: str, band: tuple) -> dict:
     """한 프레임의 자막 띠 안 글자 잉크: 상자(x0,y0,x1,y1)·높이·채움색 중앙값 hex·외곽 어두운 색 중앙값."""
     import cv2
@@ -1447,7 +1742,10 @@ def frame_metrics(png: str, band: tuple) -> dict:
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
     bright = (hsv[..., 2] > 215)
     fill = crop[(m > 0) & bright]
-    dark = crop[(cv2.dilate(m, np.ones((7, 7), np.uint8)) > 0) & (hsv[..., 2] < 60)]
+    ring = (cv2.dilate(m, np.ones((7, 7), np.uint8)) > 0)
+    dark = crop[ring & (hsv[..., 2] < 60)]
+    outside = (cv2.dilate(m, np.ones((21, 21), np.uint8)) > 0) & ~ring       # 고리 바깥 배경(readlines-08)
+    bg_v = float(np.median(hsv[..., 2][outside])) if outside.any() else None
     def med(px):
         if len(px) == 0:
             return None
@@ -1460,7 +1758,7 @@ def frame_metrics(png: str, band: tuple) -> dict:
     gaps_c = [len(g) for g in re.findall(r"0+", "".join(map(str, cols[int(xs.min()):int(xs.max()) + 1])))]
     letters = [g for g in gaps_c if g <= 40]       # 40px 넘는 빈 칸 = 어절·줄 끝 — 글자 사이가 아니다. 전부 넘으면 표본 0(미측정 — median([]) 로 죽지 않는다, 10-25)
     return {"ink": int(m.sum()), "box": box, "h": box[3] - box[1], "cx": (box[0] + box[2]) // 2,
-            "fill_hex": med(fill), "outline_hex": med(dark),
+            "fill_hex": med(fill), **outline_of(med(dark), bg_v),
             "line_gap_px": statistics.median(gaps_r) if gaps_r else 0,
             "letter_gap_px": statistics.median(letters) if letters else (0 if not gaps_c else None),
             "letter_gap_n": len(letters), "letter_gap_dropped": len(gaps_c) - len(letters)}

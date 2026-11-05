@@ -543,6 +543,7 @@ def audio_and_tone(path, meta, llm, R: dict | None = None) -> tuple[dict, dict]:
     langs = sorted({s["lang"] for s in seg if s["lang"]})
     res["asr_extra"] = {k: (d or {}).get(k) for k in ("sfx", "bgm", "voice_tone", "speakers")}
     res["transcript"] = {"model": (d or {}).get("_model"), "warnings": warn, "segments": seg, "n": len(seg), "langs": langs, "ambient": (d or {}).get("ambient") or "",
+                         "words": (d or {}).get("words") or [],      # 스피치매틱스 낱말 시각(tear_llm) — skeleton-01 원본 시간표
                          "speech_sec_all": round(sum(max(0.0, s["end"] - s["start"]) for s in seg), 2),
                          "ko_speech_sec": round(speak, 2), "speech_share_ko": round(speak / meta["duration"], 3) if meta["duration"] else None,
                          "chars_nospace_ko": chars, "cps": round(chars / speak, 2) if speak > 0 else None,
