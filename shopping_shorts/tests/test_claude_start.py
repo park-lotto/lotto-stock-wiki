@@ -189,3 +189,12 @@ def test_맥_도구는_전부_sha256_으로_대조한다():
     for plat in ("darwin-arm64", "darwin-x64"):
         for n in ("node", "chrome-headless-shell", "python", "ffmpeg", "ffprobe"):
             assert len(lock[plat][n].get("sha256") or "") == 64, (plat, n)
+
+
+def test_맥_스크립트에_파이프_grep_q_꼴이_없다():
+    # set -o pipefail 아래 'cmd | grep -q' 는 grep 이 먼저 끝나 cmd 가 SIGPIPE 로 죽어 '없다'가 된다(고객 맥미니 11-05 자막 기능 오판)
+    import re
+    from pathlib import Path
+    body = (Path(app_module.__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
+    code = "\n".join(l for l in body.splitlines() if not l.lstrip().startswith("#"))
+    assert "pipefail" in code and not re.search(r"\|\s*grep\s+-[A-Za-z]*q", code)
