@@ -2698,7 +2698,11 @@ def ph_plan_look(st, m, rp, u):
         return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in add]}}, {}, {})
     more = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
     if more and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:     # 맞는 장면이 재료에 없다 — 그 자리에서 재료만 더(대본·앞 단계 그대로, 숏클 지침 4②)
-        return _more_material(st, more)
+        go = _more_material(st, more)
+        M = _take_fix(st, r) if isinstance(r.get("재료"), dict) else None
+        if M is not None:      # 같은 답의 재료 수정을 먼저 받는다 — 안 그러면 다음 검수에 옛 재료가 다시 보였다(11-05 박은숙 #6604·한정수 #6675·김효준 #6079)
+            go["do"] = [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}] + go["do"]
+        return go
     if isinstance(r.get("대본줄"), dict) and r["대본줄"]:                    # 장면에 맞게 그 줄 문장만(재료 답이 같이 오면 같이)
         if isinstance(r.get("재료"), dict):
             _take_fix(st, r)
@@ -3097,7 +3101,7 @@ def ph_check_judge(st, m, rp, u):
 
 
 CODE_ONLY_ROWS = ("배치(본보기 벤치 편 대조)",)     # 완성본 1단 칸 중 재료·대본이 아니라 코드가 정하는 것 — 걸리면 헛바퀴 없이 멈춘다(ph_check_judge)
-VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS")   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
+VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS|줄 캐시|글자 시각")   # 11-05 한정수 #6678: 줄 캐시 글자 시각 어긋남(render_bench StageError)이 안 걸려 재료 고리로 가 '3번 연속'   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
 
 
 LINE_FIX_MAX = 2      # 그 자리 줄 고치기 한도 — 넘으면 대본 전체 다시(옛 길)
