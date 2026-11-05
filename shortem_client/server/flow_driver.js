@@ -364,6 +364,8 @@ export function flowStall(now = Date.now()) {
     const moved = task ? Math.max(lastMove(f), trialMove()) : lastMove(f);
     if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
     f.stallSaid = moved;
+    // 디스크에도 — fresh() 가 디스크의 옛 표시로 덮어 같은 사건을 1분마다 다시 알렸고, 같은 PC 다른 창 프로그램도 따로 알렸다(11-05 김하영 #8553·8563·8568)
+    try { save(f); } catch { /* 못 쓰면 메모리 표시만 — 다음 검사에 한 번 더 알릴 수 있다 */ }
     const min = Math.round((now - moved) / 60000);
     return { kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text,
       text: f.status === 'execute' ? `실행기 일이 ${min}분째 안 끝난다` : task ? `시험 편 제작(shortem_make)이 ${min}분째 움직이지 않는다(회원 Claude 사용 한도·창 닫힘일 수 있다)` : `회원 Claude 답을 ${min}분째 기다린다(사용 한도·창 닫힘일 수 있다)` };
