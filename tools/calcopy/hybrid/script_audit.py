@@ -346,10 +346,24 @@ def rule_text(r: dict, st: dict) -> str:
     return ""
 
 
-def rules_text(version: str) -> str:
-    """판 script.audit 전부를 처음 질문 글로 — 주인 = 판 칸(rule_check 와 같은 칸)."""
+def audit_rules(st: dict, no_orig: bool = False) -> list[dict]:
+    """(판단 주인 — 이 편에 거는 판 대본 규칙) 판 script.audit 그대로 / no_orig(원본에 말·소리 없음 — flow._no_speech)면 원음 줄 수(count of orig)를 0~0 으로,
+    원음 길이(orig_span)는 뺀다. 원음 없는 원본에 판 원음 줄 3~8 을 걸어 회원 Claude 가 sub 줄로 바꾸고 반려를 넘기던 것(김하영 #8834 · 이성택 #9390).
+    검사(audit)·처음 질문 글(rules_text)이 이 목록 하나를 쓴다."""
+    out = []
+    for r in list((st.get("script") or {}).get("audit") or []):
+        if no_orig and r.get("kind") == "orig_span":
+            continue
+        if no_orig and r.get("kind") == "count" and r.get("of") == "orig":
+            r = {**r, "min": 0, "max": 0, "why": "원본에 말·소리가 없다 — 원음 줄 0(나레·자막 줄로)"}
+        out.append(r)
+    return out
+
+
+def rules_text(version: str, no_orig: bool = False) -> str:
+    """판 script.audit 전부를 처음 질문 글로 — 주인 = 판 칸(rule_check 와 같은 칸, 목록 = audit_rules)."""
     st = ST.load(version)
-    rows = [rule_text(r, st) for r in (st.get("script") or {}).get("audit") or []]
+    rows = [rule_text(r, st) for r in audit_rules(st, no_orig)]
     return "\n".join("- " + x for x in rows if x)
 
 
@@ -652,7 +666,7 @@ def sibling_repeat(path: Path, d: dict, r: dict, version: str | None) -> dict:
     return {"worst": worst, "n": len(sib), "bad": bad, "pairs": sorted(pairs, key=lambda x: -x["share"])[:5]}
 
 
-def audit(path: Path, version: str | None = None) -> dict:
+def audit(path: Path, version: str | None = None, no_orig: bool = False) -> dict:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     d = as_lines(raw)
     v = version_of(Path(path), version, raw)
@@ -661,7 +675,7 @@ def audit(path: Path, version: str | None = None) -> dict:
     lines = tts_lines(d)
     res = {"file": str(path), "version": v, "n_lines": len(lines), "chars": sum(nchar(l["text"]) for l in lines), "rules": []}
     ok = True
-    rules = list(st["script"].get("audit") or [])
+    rules = audit_rules(st, no_orig)
     if not any(r.get("kind") == "tts_cps_spread" for r in rules) and speech_rule(st):
         rules.append(speech_rule(st))
     for r in rules:

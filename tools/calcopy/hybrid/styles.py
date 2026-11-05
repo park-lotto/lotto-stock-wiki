@@ -297,6 +297,7 @@ def member_frame(st: dict) -> dict:
         return st
     pack = json.loads(open(f, encoding="utf-8").read()).get("member") or {}
     brand, text = pack.get("brand") or {}, pack.get("text") or {}
+    st["member_channel"] = str(brand.get("channel_name") or "").strip()     # 회원 채널명(안 넣었으면 '') — 판 틀(아래 로고·워터마크·머리띠)과 꾸민 모양 길(render_bench.member_texts)이 같이 읽는다
     tts = {k: v for k, v in (pack.get("tts") or {}).items() if k in ("voice_id", "name", "provider", "tempo", "emotion") and v is not None}
     if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
         st["voice"] = {**st.get("voice", {}), **tts}

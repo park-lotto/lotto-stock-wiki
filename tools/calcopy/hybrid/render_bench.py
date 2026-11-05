@@ -2341,6 +2341,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         for (k, c, src, n, crop, regs, key) in jobs:
             r = cache.get(key)
             if r is None:
+                log(f"[관문④] 컷 {k} {c['src']}@{float(c['ss']):.2f} 판정 시작 {time.strftime('%H:%M:%S')}(저장 없는 컷 — 진단 기록)")
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
                 r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
@@ -3366,13 +3367,29 @@ def member_look(pack: Path | str | None) -> dict | None:
         raise StageError(f"회원 꾸민 모양(web.look) 검사 실패: {e}") from None
 
 
-def look_snapshot(st: dict, look: dict) -> dict:
-    """회원 꾸민 모양 + 판 자막팩 — 틀·글·색·자리는 회원 것, 자막팩·움직임팩은 회원이 안 정했으면(없음·'off') 판 것(snapshot(st) 의 칸)."""
+def member_texts(S: dict, st: dict) -> dict:
+    """(판단 주인 — 꾸민 모양 길의 글) 이 편의 채널명·제목 칸 {channel, hook1, hook2, bodyTitle, supportTitle}.
+    채널명 = 회원 팩 brand.channel_name(styles.member_frame 이 st['member_channel'] 로 남긴 것 — 판 틀 로고·워터마크와 같은 값). 안 넣었으면 ''
+    (빈 글이 렌더러 기본 '숏템메이커'(scene_style.DEFAULT_CHANNEL)를 덮어 아무것도 안 그린다 — 판 틀 길도 채널명 없으면 로고·워터마크를 지운다).
+    제목 = 대본 title_lines(일반 길 frame_png·title_segs 와 같은 칸) → 고객 길 규칙 template_copy.scene_text(두 줄 = hook1·hook2, 남은 줄은 hook2 에 잇기, bodyTitle 도 그 규칙).
+    #8959 서지환: 이 칸을 아무도 안 채워 compose 가 기본 채널명·대본 첫 문장 자동 제목(중복)을 그렸다."""
+    from shopping_shorts.template_copy import scene_text
+    lines = ["".join(str(c[0]) for c in ln if isinstance(c, (list, tuple)) and c) if isinstance(ln, list) else str(ln)
+             for ln in S.get("title_lines") or []]
+    lines = [t.strip() for t in lines if t.strip()]
+    return {"channel": st.get("member_channel") or "", **scene_text({"text": "\n".join(lines)})}
+
+
+def look_snapshot(st: dict, look: dict, S: dict | None = None) -> dict:
+    """회원 꾸민 모양 + 판 자막팩 — 틀·글·색·자리는 회원 것, 자막팩·움직임팩은 회원이 안 정했으면(없음·'off') 판 것(snapshot(st) 의 칸).
+    글(채널명·제목) = 이 편 것(member_texts). S 없음 = 글 칸 비움(옛 동작 — 시험용)."""
     from shopping_shorts import scene_style
     base = snapshot(st)
     snap = dict(look)
     for k in ("text", "sceneTexts", "captionTexts", "manualText"):   # 편집 화면의 견본 글 — 제목·자막 글은 이 편 대본이 주인
         snap.pop(k, None)
+    if S is not None:
+        snap["text"] = member_texts(S, st)
     for k in ("captionPack", "motionPack"):
         if (not snap.get(k) or snap.get(k) == "off") and base.get(k):
             snap[k] = base[k]
@@ -4184,6 +4201,13 @@ LENGTH_MEMBER = "⑧ 길이 · 회원 빠르기"     # 회원이 말 빠르기�
 ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용", LENGTH_MEMBER}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
+def _gate_step(name, fn, log):
+    """관문 하나 돌리기 — 시작 시각을 한 줄 남긴다(진단 기록, 판정은 그대로). 11-05 삼현정·이용재: 장면 맞추기가 '[박힌 글자] 지움' 뒤
+    기록 없이 75분 CPU 만 쓰다 끝나 어느 관문에서 멈췄는지 가를 수 없었다(Jev 진단 기록 best 0.83·위험 0.09)."""
+    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}")
+    return (name, fn())
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None, near: list | None = None, moved: bool = False) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -4200,20 +4224,20 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
         if moved:
             out += [("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])), ("사진", photo_gate(T, st, M)), ("사진 연속", photo_run_gate(T, M)), ("B13 재사용", plan_reuse_gate(T, M, st))]
         return soften(out, log)
-    out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
-           (length_gate_name(st), plan_length_gate(T, st, measured)),
-           ("⑥ 카드 글", TR.card_text_gate(doc)),
-           ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
-           ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
-           ("⑤ 컷 길이", cut_length_gate(T, st)),
-           ("⑦ 멈춤", cut_still_gate(T, M, st, R=R)),
-           ("사진", photo_gate(T, st, M)),
-           ("흐림 면적", blur_cut_gate(T, M, st)),
-           ("사진 연속", photo_run_gate(T, M)),
-           ("자를 칸 비율", crop_ar_gate(T, M, st)),
-           ("B13 재사용", plan_reuse_gate(T, M, st)),
-           ("리듬", rhythm_gate(T, st, src_dir))]
+    out = [_gate_step("넘침", lambda: over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured), log),
+           _gate_step(length_gate_name(st), lambda: plan_length_gate(T, st, measured), log),
+           _gate_step("⑥ 카드 글", lambda: TR.card_text_gate(doc), log),
+           _gate_step("⑥ 카드 얼굴", lambda: TR.card_face_gate(st, doc, T, M["cand_dir"]), log),
+           _gate_step("③ 경계", lambda: cut_boundary_gate(T, M, st), log),
+           _gate_step("④ 글자·얼굴", lambda: cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True), log),
+           _gate_step("⑤ 컷 길이", lambda: cut_length_gate(T, st), log),
+           _gate_step("⑦ 멈춤", lambda: cut_still_gate(T, M, st, R=R), log),
+           _gate_step("사진", lambda: photo_gate(T, st, M), log),
+           _gate_step("흐림 면적", lambda: blur_cut_gate(T, M, st), log),
+           _gate_step("사진 연속", lambda: photo_run_gate(T, M), log),
+           _gate_step("자를 칸 비율", lambda: crop_ar_gate(T, M, st), log),
+           _gate_step("B13 재사용", lambda: plan_reuse_gate(T, M, st), log),
+           _gate_step("리듬", lambda: rhythm_gate(T, st, src_dir), log)]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
     out = soften(out, log)
@@ -4506,7 +4530,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     segs = [] if look else frame_segments(S, T, st)
     rows = caption_rows(placed, st, segs)
-    snap = look_snapshot(st, look) if look else None
+    snap = look_snapshot(st, look, S) if look else None
     ranges = []
     if scope and not (rows or snap):      # 자막이 없으면 칸 조각도 없다 — 바탕이 곧 완성본이라 구간으로 못 나눈다
         scope = None
