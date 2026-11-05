@@ -556,7 +556,7 @@ async function renderClaudeMembers(){
     let cells='';
     for(let i=1;i<=nSlot;i++){
       const x=m.devices.find(v=>v.slot===i);
-      cells+=x?'<td><div>'+_abEsc(x.name)+'</div><div style="font-size:11px;color:'+(x.engine_old?'#ff8080':'#8a8a92')+'">'+(x.engine?'엔진 '+_abEsc(x.engine):'엔진 모름')+(x.engine_old?' (옛 엔진)':'')+' · '+_cmTime(x.last_seen)+'</div>'
+      cells+=x?'<td><div>'+_abEsc(x.name)+'</div><div style="font-size:11px;color:'+(x.engine_old?'#ff8080':'#8a8a92')+'">'+(x.engine?'엔진 '+_abEsc(x.engine):'엔진 모름(다음 실행 때 기록)')+(x.engine_old?' (옛 엔진)':'')+' · '+_cmTime(x.last_seen)+'</div>'
         +'<button class=bdel style="margin-top:4px;padding:4px 9px;font-size:12px" data-cid="'+m.cid+'" data-dev="'+_abEsc(x.id)+'" data-name="'+_abEsc(x.name)+'" onclick="cmRemoveDevice(this)">빼기</button></td>'
         :'<td style="color:#55555c">'+(m.devices.length>=g.devices_max?'한도 참':'빈 칸')+'</td>';
     }
