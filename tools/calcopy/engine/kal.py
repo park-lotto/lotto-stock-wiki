@@ -806,6 +806,8 @@ def step_make(S: State):
         return "done", {"ours_mp4": om, "ours_lines": ol}, "시험편 있음(렌더 기록 md5 일치)"
     if not wd:
         return "waiting_human", {}, HUMAN["make"]
+    if S.d.get("style"):          # 판 renderer=bench(원음·자막 줄·나레 없는 판) = 공용 렌더러 render_bench (지침서 §2-4·§10, Jev fix_A 해결 0.86)
+        return make_bench(S, S.d["style"], Path(wd))
     pdir = (S.step("copy").get("outputs") or {}).get("preset")
     if not pdir or not (Path(pdir) / "manifest.json").exists():
         return "failed", {}, f"copy 단계 프리셋 폴더 없음({pdir}) — copy 부터"
@@ -828,6 +830,44 @@ def step_make(S: State):
     lp.write_text(json.dumps(lines, ensure_ascii=False, indent=1), encoding="utf-8")
     S.d["ours_mp4"], S.d["ours_lines"] = str(out / "final.mp4"), str(lp)
     return "done", {"ours_mp4": str(out / "final.mp4"), "ours_lines": str(lp), "out": str(out)}, f"preset_make 통과 {r.get('seconds')}초 · {r.get('note')}"
+
+
+def make_bench(S: State, style: str, wd: Path):
+    """make 갈래 2 — 판(styles/<판>.json renderer=='bench')을 공용 렌더러 render_bench.render 로(렌더러를 새로 만들지 않는다, 부르기만).
+    매번 새 폴더 kal_make_<시각>(common-10) · 완성본 옆 run_log.json final.md5(_rendered 짝) · 장면표용 timeline.json(groups·pieces, apply-15)
+    · 우리줄 = render_bench 자막표.json(_ours_lines 가 rows 꼴을 읽는다). 관제 319 11-06 스냅봤니(나레 없음 = 자막 + 원음)."""
+    import hashlib
+    from tools.calcopy.hybrid import render_bench as RB
+    from tools.calcopy.hybrid import styles as ST
+    st = ST.load(style)
+    if st.get("renderer") != "bench":
+        return "failed", {}, f"판 {style} renderer={st.get('renderer')} — make 갈래 2 는 bench 판만(itssum·jaemi 는 그 렌더러 run.py)"
+    pdir = (S.step("copy").get("outputs") or {}).get("preset")
+    if pdir and (Path(pdir) / "manifest.json").exists():
+        miss = glyph_gate(Path(pdir), wd)
+        if miss:
+            return "failed", {}, f"판 글꼴에 없는 대본 글자 — {miss[:6]} (make-화면자막-06)"
+    out = wd / f"kal_make_{time.strftime('%m%d_%H%M%S')}"
+    try:
+        info = RB.render(style, wd, out)
+    except (Exception, SystemExit) as e:      # 관문 멈춤(StageError·GateStop)도 이유를 적고 failed
+        return "failed", {"out": str(out)}, f"render_bench 멈춤: {type(e).__name__} {str(e)[:300]}"
+    R = out / "render"
+    final = R / "final.mp4"
+    if not final.is_file():
+        return "failed", {"out": str(out)}, f"render_bench 가 final.mp4 를 안 남김({R})"
+    fm = hashlib.md5(final.read_bytes()).hexdigest()
+    (R / "run_log.json").write_text(json.dumps({"final": {"path": str(final), "md5": fm, "seconds": info.get("final_dur")}, "renderer": "render_bench",
+                                                "style": style, "work": str(wd), "made_by": "kal.make_bench"}, ensure_ascii=False, indent=1), encoding="utf-8")
+    tab = json.loads((R / "자막표.json").read_text(encoding="utf-8"))
+    groups = [{"src": c.get("src"), "ss": c.get("ss"), "t0": c.get("t0"), "dur": c.get("dur"), "src_span": c.get("dur"), "line": c.get("line")}
+              for c in info.get("cuts_flat") or []]
+    pieces = [{"text": r.get("text"), "t0": r.get("t0"), "t1": r.get("t1"), "line": r.get("line")} for r in tab.get("rows") or []]
+    (out / "timeline.json").write_text(json.dumps({"groups": groups, "pieces": pieces, "from": "render_bench render_info.cuts_flat + 자막표.rows"},
+                                                  ensure_ascii=False, indent=1), encoding="utf-8")
+    S.d["ours_mp4"], S.d["ours_lines"] = str(final), str(R / "자막표.json")
+    return "done", {"ours_mp4": str(final), "ours_lines": str(R / "자막표.json"), "out": str(out), "renderer": "render_bench", "style": style}, \
+        f"render_bench({style}) {info.get('final_dur')}초 · 컷 {len(groups)} · 자막 {len(pieces)}줄"
 
 
 def tear_ours(S: State, mp4: str) -> dict:
@@ -1094,6 +1134,7 @@ def main(argv=None) -> int:
     ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--voice", help="TTS voice_id(사장님이 고른 것 — 판 파일 voice 한 곳에 적힌다)")
     ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
     ap.add_argument("--work", help="제작 작업 폴더(대본.json·재료.json) — make 단계가 preset_make.make_one 으로 렌더한다")
+    ap.add_argument("--style", help="make 를 공용 렌더러 render_bench 로 — 판 이름(styles/<판>.json, renderer=bench · 원음·자막 줄·나레 없는 판)")
     ap.add_argument("--menu", help="장점 카탈로그만 보기: 축 이름 또는 all (채널 분석 없이)")
     ap.add_argument("--lite", action="store_true", help="시운전·디스크 부족: 720p 까지만 받기")
     ap.add_argument("--stage", choices=["upgrade"], help="upgrade = 업그레이드 단계 자리(1차 판 초안 복사 + 메뉴 + 기록 파일)")
@@ -1123,6 +1164,8 @@ def main(argv=None) -> int:
         S.d["ours_lines"] = A.ours_lines
     if A.work:
         S.d["work"] = str(Path(A.work).resolve())
+    if A.style:
+        S.d["style"] = A.style
     ask = [q for q, v in (("우리 브랜드 이름(--brand)", S.d.get("brand")), ("하이브리드 여부(--hybrid)", S.d.get("hybrid")), ("TTS 누구로(--voice <voice_id>)", S.d.get("voice"))) if not v]
     if ask:
         print("사장님께 시작할 때 한 번에 물을 것(답을 받으면 같은 명령에 옵션으로): " + " · ".join(ask) + " · 과금 단계(TTS)는 허락됨")
