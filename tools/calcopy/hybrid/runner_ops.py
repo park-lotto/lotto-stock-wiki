@@ -3190,6 +3190,25 @@ def _end_now() -> None:
     os._exit(0)
 
 
+def keep_awake(platform: str | None = None) -> str:
+    """(판단 주인 — 실행기 일을 도는 동안 PC 절전 막기) 이 프로세스가 사는 동안만 — 끝나면 저절로 풀린다. 화면 끄기는 허용.
+    11-06 삼현정 #10009·#10010: 전원 5분·배터리 3분 절전(Modern Standby)에 렌더·계획이 잠들어 기다림 무응답 21702초·렌더 프로세스 사라짐
+    (시스템 로그 Kernel-Power 506/507 이 무응답과 일치). 반환 = 쓴 방법('win'·'mac'·'' — 진단·시험용)."""
+    plat = platform or sys.platform
+    try:
+        if plat == "win32":
+            import ctypes
+            ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+            return "win"
+        if plat == "darwin":
+            subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return "mac"
+    except Exception as e:  # noqa: BLE001 — 절전 막기 실패는 일을 막지 않는다(기록만)
+        print(f"[절전 막기] 못 함 {type(e).__name__}: {str(e)[:120]}", file=sys.stderr)
+    return ""
+
+
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
     res_file, log_file = os.environ.get("SHORTEM_RESULT"), os.environ.get("SHORTEM_RUNNER_LOG")
@@ -3197,6 +3216,7 @@ def main():
         _log_to_file(log_file)
     _HANG["on"] = True
     _hang_arm()
+    keep_awake()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
     body = json.dumps(res, ensure_ascii=False)
     if res_file:        # 새 앱(engine_bridge.runOps)은 이 파일을 읽는다 — 파이프에 안 쓴다(앱이 못 읽으면 print 가 막힌다)
