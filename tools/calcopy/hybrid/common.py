@@ -60,6 +60,25 @@ def dur_of(p) -> float:
     return float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p]).stdout.strip())
 
 
+def video_dur(p) -> float:
+    """영상 스트림 길이(초) — 파일 길이(format)는 소리가 더 길면 화면 끝보다 길다. 스트림 칸이 없으면 파일 길이."""
+    j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration:format=duration", "-of", "json", p]).stdout)
+    return float((j.get("streams") or [{}])[0].get("duration") or (j.get("format") or {}).get("duration") or 0)
+
+
+def orig_span_over(b: float, f: dict) -> float:
+    """(판단 주인 — 원음 구간 끝이 원본 화면 안인가, #4089 박영상) 넘은 초(0 = 안 넘음). f = 원본 파일 정보(runner_ops.dims).
+    화면 끝 = 영상 스트림 길이 − 1프레임 = render_bench.src_left(src, 0) 과 같은 자 — 조사·대본 검사(flow)와 계획이 같은 끝을 본다.
+    vdur 가 없는 옛 회원 엔진 결과면 옛 기준(파일 길이 + 0.5)으로 — 거짓 반려를 내지 않는다."""
+    if f.get("vdur"):
+        end = float(f["vdur"]) - 1 / FPS
+    elif f.get("dur"):
+        end = float(f["dur"]) + 0.5
+    else:
+        return 0.0
+    return max(0.0, round(float(b) - end, 3))
+
+
 def probe(p) -> tuple[int, int, float]:
     j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", p]).stdout)
     return j["streams"][0]["width"], j["streams"][0]["height"], float((j.get("format") or {}).get("duration") or 0)   # 사진(jpg)은 길이 칸이 없을 수 있다(10-27 run4 a편 쿠팡 사진 2장 KeyError → 제품 사진 0장)

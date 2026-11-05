@@ -201,12 +201,14 @@ HAND_SERVER_ONLY = {
     # 11-04 preset_gates → quality_gate → styles → preview_request → calcopy_make → topic_find 가 함수 안에서 부르는 서버 수집·접속(회원 PC 갈래 아님)
     "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",
     "tools/live_admin.py",       # worker.py 가 함수 안에서 부르는 관리자 쿠키(서버 주소·키 이름) — 회원 PC 엔 절대 안 보낸다(검사 SECRETS 에 걸림)
-    "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+    # preset_save.py(프리셋 만드는 기술)는 여기 두지 않는다 — 11-04 회원 렌더가 preset_make→preset_save import 로 멈췄는데 이 목록이 가려 의존 검사가 못 잡았다.
+    #   적용(load·apply·규칙·글꼴)은 shopping_shorts/calcopy_frame/preset_apply.py(묶음 안) — 회원 쪽이 preset_save 를 다시 부르면 hand_unresolved 가 빨강
     # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
     #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
     "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
     "shopping_shorts/instagram_playwright.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/engine/gemini_server.py",
-    "tools/calcopy/engine/to_frame.py", "tools/calcopy/transcribe_free.py",
+    "tools/calcopy/engine/to_frame.py",   # 글꼴은 preset_apply 로 옮김. 남은 것: style_writer.width_estimator 폭 모형(_css_line·_ink_x) — script_engine 이 try 안에서 불러 회원 PC 에선 폭 검사만 빠진다(할 일)
+    "tools/calcopy/transcribe_free.py",
     # 개발 PC 스위치(CALCOPY_DEV_COUPANG_SERVER·CALCOPY_DEV_MINA_SERVER)에서만 도는 서버 접속 — 우리 서버 SSH 정보가 들어 있어 보내면 안 된다(묶음 검사 SECRETS)
     "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
     # 10-30 지시서(노하우) = 서버 한 곳 — vmake_clean 이 형식 판단(flow.erases_text)을 함수 안에서 부르지만 회원 PC 는 지시서가 명령에 실은 erase(CALCOPY_ERASE)를 쓴다

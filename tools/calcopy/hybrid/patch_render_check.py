@@ -30,6 +30,7 @@ from tools.calcopy.hybrid import render_bench as RB  # noqa: E402
 from tools.calcopy.hybrid import render_itssum as RI  # noqa: E402
 
 LINE_SEC = 2.0
+SAME_DB = 48.0      # 다시 만들기 완성본 = 지시서 길 완성본 판정(지운 구간 프레임 PSNR 최소)
 VMAKE_SEC = 1.0      # 가짜 VMake 가 걸리는 초
 
 
@@ -166,9 +167,85 @@ def vmake_round(W: Path, style: str, cut: int, fail: bool) -> dict:
     waited = round(time.time() - t0, 3)
     r = VC.bg_take(W / "src", 60)
     if r.get("done"):
-        RU.blur_minus_spans(M, r["done"])
+        RU.accept_erased(M, None, r)     # 지시서·회원 PC 와 같은 함수
         p.write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
     return {"start_sec": waited, "state": r["state"], "done": r["done"], "calls": len(calls), "error": r.get("error")}
+
+
+def restyle_check(base: Path, style: str, cut: int, n_lines: int = 4) -> dict:
+    """뿌리 수리 2단계(11-05 사장님 '두더지잡기 그만') — 늦게 온 VMake 결과를 '다시 만들기'(회원 PC runner_ops._c_render RESTYLE)로 받은 완성본이
+    지시서 길(받기 → accept_erased → 렌더)과 같은 그림인가. 11-04 #5864: 다시 만들기 길만 흐림 빼기가 없어 지운 구간에 흐림 띠가 남았다.
+    자기 시험: 다시 만들기 완성본은 첫 완성본(흐림)과 그 구간이 달라야 한다(같으면 아무것도 안 받은 것)."""
+    from tools.calcopy import vmake_clean as VC
+    from tools.calcopy.hybrid import runner_ops as RO
+    stub_voice()
+    lean_encoder()
+    timed()
+    W0 = base / "w0"
+    make_episode(W0, style, n_lines)
+    change(W0, style, "tempblur", cut)
+    t = {}
+    t["첫 렌더(임시 흐림)"], _, _ = _render(W0, style)
+    first = base / "first.mp4"
+    shutil.copy2(W0 / style / "render" / "final.mp4", first)
+    calls = fake_vmake(False)
+    M = json.loads((W0 / "doc" / style / "재료.json").read_text(encoding="utf-8"))
+    c = M["cuts"][f"N{cut + 1}"][0]
+    span = {c["src"]: [[round(float(c["ss"]) - 0.2, 3), round(float(c["ss"]) + LINE_SEC + 0.2, 3)]]}
+    assert VC.bg_start(W0 / "src", span, "vmake"), "뒤로 못 보냄"
+    t0 = time.time()
+    while not (W0 / "src" / VC.BG_DIR / "result.json").exists():     # 완성 직전 대기는 지났다(흐림 판 완성) — 결과가 늦게 도착
+        if time.time() - t0 > 120:
+            raise SystemExit("가짜 VMake 결과가 오지 않았다")
+        time.sleep(0.2)
+    pl = W0 / "doc" / style / "plan" / "계획_시간표.json"      # 회원 길엔 계획 단계가 남긴다(받기가 '쓰는 구간'을 잴 때 읽는다) — 합성 편은 렌더 시간표로
+    if not pl.exists():
+        pl.parent.mkdir(parents=True, exist_ok=True)
+        pl.write_text(json.dumps({"timeline": json.loads((W0 / style / "render" / "timeline.json").read_text(encoding="utf-8"))}, ensure_ascii=False), encoding="utf-8")
+    keep = base / "w0_copy"
+    shutil.copytree(W0, keep, copy_function=shutil.copy2)
+    old = {k: os.environ.get(k) for k in ("SHORTEM_RESTYLE", "SHORTEM_WAIVE_GATE")}
+    os.environ.update({"SHORTEM_RESTYLE": "1", "SHORTEM_WAIVE_GATE": "1"})
+    real = (RO.tts_cache_miss, RO.source_rule_scan)
+    RO.tts_cache_miss, RO.source_rule_scan = (lambda W, v: ""), (lambda *a, **k: [])
+    try:
+        t0 = time.time()
+        RO._c_render(W0, {"version": style})
+        t["다시 만들기"] = round(time.time() - t0, 2)
+    finally:
+        RO.tts_cache_miss, RO.source_rule_scan = real
+        for k, v in old.items():
+            os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    restyled = base / "restyle.mp4"
+    shutil.copy2(W0 / style / "render" / "final.mp4", restyled)
+    shutil.rmtree(W0)
+    shutil.move(str(keep), str(W0))
+    vmake_take_ref(W0, style)
+    t["기준(지시서 길) 렌더"], _, _ = _render(W0, style, full=True)
+    ref = base / "ref.mp4"
+    shutil.copy2(W0 / style / "render" / "final.mp4", ref)
+    a, b = int(round((cut * LINE_SEC + 0.3) * 30)), int(round(((cut + 1) * LINE_SEC - 0.3) * 30))     # 그 컷 안쪽 프레임(경계 빼고)
+    fr = lambda x, y: [v for i, v in enumerate(psnr_frames(x, y)) if a <= i < b]
+    same_ref = fr(restyled, ref)
+    vs_first = fr(restyled, first)
+    bad = []
+    if not same_ref or min(same_ref) < SAME_DB:     # 실측 11-05: 수리 뒤 57.3 · 수리 전(흐림 띠 남음) 38.2 — 35 로는 흐림 띠를 못 잡았다
+        bad.append(f"다시 만들기 완성본이 지시서 길과 다르다(지운 구간 PSNR 최소 {min(same_ref) if same_ref else None}) — 흐림 띠가 남았거나 결과를 안 받았다")
+    if vs_first and min(vs_first) >= 45:
+        bad.append("자기 시험 실패: 다시 만들기 완성본이 첫 흐림 판과 같다(아무것도 안 바뀜)")
+    return {"changed": "늦은 VMake → 다시 만들기", "sec": t, "calls": len(calls), "psnr_vs_ref_min": min(same_ref) if same_ref else None,
+            "psnr_vs_first_min": min(vs_first) if vs_first else None, "bad": bad}
+
+
+def vmake_take_ref(W: Path, style: str) -> None:
+    """기준 = 지시서 길: 받기(bg_take) → accept_erased → 재료 저장."""
+    from tools.calcopy import vmake_clean as VC
+    from tools.calcopy.hybrid import rules as RU
+    p = W / "doc" / style / "재료.json"
+    M = json.loads(p.read_text(encoding="utf-8"))
+    r = VC.bg_take(W / "src", 60)
+    RU.accept_erased(M, None, r)
+    p.write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
 
 
 def change(W: Path, style: str, how: str, cut: int) -> str:
@@ -304,7 +381,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("folder")
     ap.add_argument("--style", default="키치잇판")
-    ap.add_argument("--change", default="blur", choices=("blur", "move", "vmake", "vmake_fail"))
+    ap.add_argument("--change", default="blur", choices=("blur", "move", "vmake", "vmake_fail", "vmake_restyle"))
     ap.add_argument("--cut", type=int, default=2)
     ap.add_argument("--lines", type=int, default=4)
     ap.add_argument("--thumb", action="store_true", help="바뀐 컷을 고른 썸네일 카드도 있는 편")
@@ -314,7 +391,7 @@ def main():
     base = Path(a.folder)
     shutil.rmtree(base, ignore_errors=True)
     base.mkdir(parents=True)
-    rep = run_check(base, a.style, a.change, a.cut, a.lines, a.thumb, a.trouble)
+    rep = restyle_check(base, a.style, a.cut, a.lines) if a.change == "vmake_restyle" else run_check(base, a.style, a.change, a.cut, a.lines, a.thumb, a.trouble)
     print(json.dumps(rep, ensure_ascii=False, indent=1))
     if not a.keep:
         shutil.rmtree(base, ignore_errors=True)

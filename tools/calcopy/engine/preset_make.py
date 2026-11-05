@@ -665,7 +665,7 @@ def hook_end_s(w, cfg) -> float:
 
 def frame_spans(pre: dict, t: float) -> dict:
     """틀 2장(훅+본문) 프리셋의 span 변수 = [0, t] · [t, 끝]. span 이 고정값이면 손대지 않는다(프리셋이 이긴다)."""
-    from tools.calcopy.engine import preset_save as P
+    from shopping_shorts.calcopy_frame import preset_apply as P   # 적용만(만들기 preset_save 는 고객 묶음 밖)
     fr = pre["frames"]
     if len(fr) != 2:
         raise ValueError(f"틀 {len(fr)}장 — 제작기는 훅+본문 2장만 안다(경계를 정할 규칙을 manifest 에 먼저 적어라)")
@@ -677,7 +677,7 @@ def snapshot_and_timeline(w, M, cfg, pdir: Path):
     from shopping_shorts import scene_style
     fr = cfg["frame"]["kind"]
     if fr == "preset_save":
-        from tools.calcopy.engine import preset_save as P
+        from shopping_shorts.calcopy_frame import preset_apply as P   # 적용만(만들기 preset_save 는 고객 묶음 밖)
         from shopping_shorts.calcopy_frame import to_snapshot
         from shopping_shorts.calcopy_frame import schema
         pre, Mf = P.load(pdir)

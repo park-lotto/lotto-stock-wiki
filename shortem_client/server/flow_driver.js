@@ -10,7 +10,7 @@ import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { packFile, PID_RE } from './local_settings.js';
 import { refreshCookies } from './logins.js';
-import { setupPassed } from './selftest.js';
+import { setupPassed, recheckVoice } from './selftest.js';
 import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
@@ -53,7 +53,12 @@ function fresh(f) {
   } catch { /* 파일 없음 = 메모리 그대로 */ }
   return f;
 }
-export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review')));
+// 이 프로그램이 돌리지 않는 execute 편은 마지막 움직임이 DEAD_MS 안일 때만 돈다고 본다 — 실행기는 단계마다 최대 3×예산(가장 긴 1800초×3)에 끊기고
+//   살아 있으면 진행 신호로 progress.json 을 갱신한다. PC 가 꺼져 죽은 편이 execute 로 남아 업데이트·벤치마킹을 영영 막았다(#3954 김미화 1462분).
+//   움직임 기록이 없는 편(0)과 review(회원 Claude 답 대기 — 사용 한도 뒤 돌아온다)는 예전처럼 바쁨으로 둔다.
+export const DEAD_MS = () => Number(process.env.SHORTEM_DEAD_MS) || 2 * 60 * 60 * 1000;
+const deadExecute = f => f.status === 'execute' && !f.busy && (() => { const t = lastMove(f); return t > 0 && Date.now() - t > DEAD_MS(); })();
+export const flowBusy = f => !!fresh(f) && (f.busy || (!f.cancelled && f.status !== 'done' && (f.status === 'execute' || f.status === 'review') && !deadExecute(f)));
 export const anyFlowBusy = () => [...flows.values()].some(flowBusy);
 
 function reqId(tag) {
@@ -283,6 +288,7 @@ export async function settled(sid) { const f = flows.get(sid); if (f && f.runnin
 export function recleanFlow(sid) {
   const f = loadFlow(sid); if (!f || f.busy) return f;
   f.fail = null; f.cancelled = false; f.status = 'reclean';
+  save(f);       // pump 가 디스크 상태로 시작한다(1c7e4f4e0) — 저장 안 하면 바꾼 상태가 되돌아가 아무 일도 안 한다(#4162)
   f.running = pump(f);
   return f;
 }
@@ -291,6 +297,13 @@ export async function startFlow({ preset, video, product, topic }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
+  if (resolveTools().mode !== 'dev') {   // 점검 뒤 목소리·키가 바뀌었으면 목소리만 다시 본다(#3698 박준영 — 바뀐 일레븐 제한 키가 8/11 에서야 멈췄다)
+    try { await recheckVoice(preset); } catch (e) {
+      if (e.why) throw new ApiError(409, { code: 'voice_recheck', msg: e.fix ? `${e.why} — ${e.fix}` : e.why });
+      process.stderr.write(`[flow] 목소리 다시 보기 실패(그대로 진행): ${e.message || e}
+`);
+    }
+  }
   const ending = [...flows.values()].filter(g => g.cancelled && g.busy);      // 막 멈춘 편 — 빌림을 다 돌려준 뒤 시작한다(#2027)
   if (ending.length) await Promise.race([Promise.all(ending.map(g => settled(g.sid))), new Promise(r => setTimeout(r, 15000).unref())]);
   await refreshCookies();
@@ -358,6 +371,7 @@ export function retryFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
   if (f.status === 'error') { f.fail = null; f.status = f.do ? 'execute' : (f.asks ? 'review' : f.status); }
   else if (f.fail && f.fail.server_stop && f.fail.retry_ok) { f.fail = null; f.status = 'retry'; }   // 서버가 '다시 시도하면 이어 간다'고 한 멈춤(받기 실패 등)
+  save(f);       // pump 가 디스크 상태로 시작한다(1c7e4f4e0) — 저장 안 하면 retry 가 error 로 되돌아가 매번 같은 오류(#4162 이성택)
   f.running = pump(f);
   return f;
 }

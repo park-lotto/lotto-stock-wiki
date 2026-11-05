@@ -420,7 +420,8 @@ def move_vf(move, n: int, ow: int, oh: int) -> str:
         z, f = float(mv.get("zoom", 1.06)), max(1, round(float(mv.get("ms", 500)) / 1000 * FPS))
         d = f"max(0,1-on/{f})"
         return (f"zoompan=z='{z:.4f}':x='{c[0]}*(1+0.9*{d}*sin(on*2.7))':y='{c[1]}*(1+0.9*{d}*cos(on*3.3))':d=1:s={ow}x{oh}:fps={FPS}")
-    raise ValueError(f"move 종류 모름: {kind} (가능: in·out·left·right·{'·'.join(LIVE_MOVES)})")
+    raise ValueError(f"move 종류 모름: {kind} (영상 컷 가능: {'·'.join(LIVE_MOVES)} — in·out·left·right 는 사진 파일 컷 전용"
+                     f"(still_move). 영상 컷에 넣으면 이 값으로 반려된다 — 11-05 회원 편 f65c321f656a 가 문구를 믿고 in 을 두 번 넣음)")
 
 
 def box_top(by: int, min_y: int, anchor: bool = True, cap_top: int | None = None) -> int:

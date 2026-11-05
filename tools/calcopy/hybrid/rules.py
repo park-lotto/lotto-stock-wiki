@@ -467,6 +467,9 @@ def merge_blur(M: dict, blur: dict) -> int:
     return n
 
 
+WHOLE_END = 99999.0     # 통째 흐림의 끝(초) — 렌더 between(t,a,b) 에 그대로 들어간다
+
+
 def blur_minus_spans(M: dict, done: dict) -> int:
     """VMake 로 지운 구간(done = {파일 이름: [[a,b]…]} 원본 초 — vmake_clean.clean_used)의 흐림을 뺀다. 흐림 칸 [x,y,w,h,a,b] 를 지운 구간 밖 조각만 남긴다.
     지우기 전·실패 구간은 그대로 흐림(대체 길 유지). 바뀐 칸 수."""
@@ -477,8 +480,10 @@ def blur_minus_spans(M: dict, done: dict) -> int:
             continue
         out = []
         for r in rows:
-            if len(r) < 6:
+            if len(r) < 4:
                 out.append(r); continue
+            if len(r) < 6:          # 통째 흐림 [x,y,w,h] = 파일 처음~끝(11-05 김효준 #6290: 지운 파일에도 그대로 남았다) — 같은 빼기, 남은 조각은 6칸
+                r = list(r[:4]) + [0.0, WHOLE_END]
             parts = [[float(r[4]), float(r[5])]]
             for a, b in iv:
                 parts = [q for s0, s1 in parts for q in (([[s0, s1]] if b <= s0 or a >= s1 else []) + ([[s0, a]] if s0 < a < s1 else []) + ([[b, s1]] if s0 < b < s1 else []))
@@ -488,6 +493,26 @@ def blur_minus_spans(M: dict, done: dict) -> int:
             out += [list(r[:4]) + [round(s0, 3), round(s1, 3)] + list(r[6:]) for s0, s1 in parts]
         M["blur"][name] = out
     return n
+
+
+def accept_erased(M: dict, tf: dict | None, res: dict) -> int:
+    """(판단 주인 — 지우기 결과를 받은 뒤 할 일, 11-05 사장님 '두더지잡기 그만') 모든 길이 이 함수만 부른다:
+    서버 지시서(flow.f_bg_got·f_render_clean_got) · 회원 PC 다시 만들기(runner_ops._c_render RESTYLE) · 점검 도구(patch_render_check).
+    ① 호출 수는 성공·실패 상관없이 센다(돈은 이미 나갔다) ② 지운 구간(res.done)을 tf.done·cleaned 에 더하고 보낸 초를 센다
+    ③ 지금까지 지운 구간 전부(tf.done)의 흐림을 재료.blur 에서 뺀다. 돌려줌 = 뺀 흐림 칸 수.
+    tf=None 이면(회원 PC — 편 상태를 모른다) 이번에 받은 구간만으로 ③.
+    11-04 사고: 같은 순서가 네 곳에 따로 적혀 restyle 길만 흐림 빼기가 없었고(#5864), 보낸 초를 한 곳은 sec·한 곳은 send_sec 로 셌다."""
+    tf = tf if tf is not None else {}
+    tf["calls"] = int(tf.get("calls") or 0) + int(res.get("calls") or 0)
+    done = res.get("done") or {}
+    if res.get("error") or not done:
+        return 0
+    for n, iv in done.items():
+        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        if n not in tf.setdefault("cleaned", []):
+            tf["cleaned"].append(n)
+    tf["sec"] = round(float(tf.get("sec") or 0) + float(res.get("send_sec") if res.get("send_sec") is not None else res.get("sec") or 0), 3)
+    return blur_minus_spans(M, tf["done"])
 
 
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:

@@ -49,6 +49,11 @@ def _to_rows(st):
     out = _go(st, {"mats": {"sheets": ["_sheet_abc.jpg"]}})
     assert out["review"][0]["id"] == "pm_script" and "frame_vars" in out["review"][0]["ask"]
     S = json.loads((EX / "대본.json").read_text(encoding="utf-8"))
+    bare = json.loads(json.dumps(S))
+    out = _go(st, rp={"pm_script": {"대본": bare}})          # 줄마다 장면 증거가 없으면 그 자리에서 다시
+    assert out["review"][0]["id"] == "pm_script" and "장면 증거 없음" in out["review"][0]["ask"]
+    for l in S["lines"]:
+        l["scene"] = "src_abc.mp4@1.0 — 손에 든 병"
     out = _go(st, rp={"pm_script": {"대본": S}})
     assert out["review"][0]["id"] == "pm_memes" and "fm_travolta" in out["review"][0]["ask"] or out["review"][0]["id"] == "pm_memes"
     out = _go(st, rp={"pm_memes": {"stems": ["fm_travolta", "gfr_Xh3A"]}})
@@ -89,7 +94,14 @@ def test_walk_to_done():
 def test_script_rejected_then_fixed():
     st = _start()
     st, out = _to_rows(st)
-    assert st["tries"].get("pm_script", 0) == 0           # PC 본보기 대본은 한 번에 통과
+    assert st["tries"].get("pm_script", 0) == 1           # 장면 증거 없는 첫 답만 다시(PC 본보기 대본 규칙은 통과)
+
+
+def test_scene_from_unknown_source_is_rejected():
+    from tools.calcopy.hybrid import flow_pm as PMF
+    st = {"material": {"files": [{"name": "src_abc.mp4"}]}}
+    bad = PMF.scene_problems(st, {"lines": [{"scene": "src_zzz.mp4@3 — 병"}, {"scene": "src_abc.mp4@2.5 — 병"}]})
+    assert len(bad) == 1 and "src_zzz.mp4" in bad[0]
 
 
 def test_topic_start_without_video_goes_to_research():
@@ -110,3 +122,38 @@ def test_topic_start_refused_for_other_formats():
     import pytest
     with pytest.raises(F.FormatError):
         F.start("", "잇썸홈판", "pmtopic0002", topic="x")
+
+
+def _to_make_task():
+    """만들기가 계속 실패해 제작자 과제(task_*, 단계 render)가 나온 PC 편."""
+    st, out = _to_rows(_start())
+    R = {"shots": [{"src": "src_abc.mp4", "ss": 1.0}]}
+    for _ in range(5):
+        if out["review"][0]["id"].startswith("task"):
+            return st, out
+        out = _go(st, rp={"pm_rows": {"재료": R}})
+        out = _go(st, {"save_pm": {}, "crop": {"sheets": []}, "pm": {"ok": None, "sheets": ["doc/pm/plan/계획_접촉시트.jpg"]}})
+        out = _go(st, rp={"pm_plan_eye": {"ok": True, "cuts": [{"no": 0}, {"no": 1}, {"no": 2}], "problems": []}})
+        out = _go(st, {"pm": {"ok": False, "error": "ImportError preset_save"}})
+    raise AssertionError(out)
+
+
+def test_make_task_answers_stay_on_pc_line():
+    """11-04 회원 시험: 렌더 실패 → 제작자 과제에 waive → 보통 라인 render 처리기(_fix_review, st['script'] 전제) → KeyError 'script' → http_500 영영.
+    PC제작형 과제 답은 PC 처리기로 가야 한다(waive·back render = 만들기 한 번 더, back plan = 재료만 다시, submit = 멈춤 안내)."""
+    import copy
+    st0, out = _to_make_task()
+    tid = out["review"][0]["id"]
+    assert st0["_task"]["stage"] == "render"
+    for act, to, want in (("waive", "", "pm"), ("back", "render", "pm"), ("back", "plan", "pm_rows")):
+        st = copy.deepcopy(st0)
+        out = _go(st, rp={tid: {"action": act, "to": to, "note": "t"}})
+        got = (out.get("do") or [{}])[0].get("cmd") if out.get("do") else (out.get("review") or [{}])[0].get("id")
+        assert got == want, (act, to, out)
+        assert "script" not in st
+        if want == "pm":                       # 만들기 성공 → 완성본 눈 확인(PC 길 그대로)
+            out = _go(st, {"pm": {"ok": True, "final": "C:/W/pm/make/final.mp4", "rows": [], "sheets": ["pm/make/sheet_1s.jpg"]}})
+            assert out["review"][0]["id"] == "pm_eye"
+    st = copy.deepcopy(st0)
+    out = _go(st, rp={tid: {"action": "submit", "note": "t"}})          # PC 라인은 직접 만든 결과를 판정할 길이 없다 → 멈춤 안내(500 아님)
+    assert out["status"] == "stop" and "script" not in st, out

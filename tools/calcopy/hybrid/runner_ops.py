@@ -285,8 +285,10 @@ def asr_cross(path: Path) -> dict:
 
 def dims(p: Path) -> dict:
     from tools.calcopy.hybrid.common import probe
+    from tools.calcopy.hybrid.common import video_dur
     w, h, d = probe(p)
-    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2)}
+    vd = video_dur(p) if p.suffix.lower() in (".mp4", ".mkv", ".webm", ".mov") else 0.0
+    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2), **({"vdur": round(vd, 3)} if vd else {})}   # vdur = 화면 끝(원음 구간 검사 common.orig_span_over)
 
 
 def vtt_words(p: Path) -> list:
@@ -1278,7 +1280,7 @@ def section_fallback_warn(vid: str, spans: list, f: Path) -> str:
 
 def c_download(W, d):
     src = W / "src"; src.mkdir(exist_ok=True)
-    files, warns = [], []
+    files, warns, fail = [], [], {}
     for it in d.get("items") or []:
         vid = it["id"]
         if CACHE:
@@ -1290,11 +1292,16 @@ def c_download(W, d):
         from tools.calcopy.engine import yt_fetch as YF
         from tools.calcopy.hybrid import screen
         secs = [tuple(x) for x in it.get("sections") or []] or None
-        for f in screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD):
+        try:      # 영상마다 따로 — 하나 실패(403 등)가 이미 받은 다른 영상까지 날리지 않게(#4732 강태경). 실패는 fail 로 지시서에(조용히 넘기지 않는다)
+            got = screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD)
+        except StageError as e:
+            fail[vid] = str(e)[:300]
+            continue
+        for f in got:
             files.append(dims(Path(f)))
             if secs and not YF.sections_meta(Path(f)) and dims(Path(f))["dur"] > sum(b - a for a, b in secs) + 2 * SECTION_PAD * len(secs) + 120:
                 warns.append(section_fallback_warn(vid, secs, Path(f)))
-    return {"files": files, **({"warn": warns} if warns else {})}
+    return {"files": files, **({"warn": warns} if warns else {}), **({"fail": fail} if fail else {})}
 
 
 def c_product_stills(W, d):
@@ -1783,6 +1790,14 @@ def _c_render(W, d):
         #   다시 만들기도 받지 않아 박힌 글자가 그대로 남았다(11-03 강병주: bg_take 를 손으로 불러야 지워짐). 판단 주인 = vmake_clean.bg_take
         tk = c_clean_take(W, {"version": v, "wait": 0})
         sys.stderr.write(f"[다시 만들기] 뒤 지우기 결과 {tk.get('state')}\n")
+        if tk.get("state") == "done" and not tk.get("error") and tk.get("done"):
+            # 지운 구간의 흐림도 뺀다 — 안 빼면 지운 원본 위에 흐림 띠를 다시 덮는다(11-04 강병주 #5656·#5864). 판단 주인 = rules.accept_erased(지시서와 같은 함수)
+            mp = W / "doc" / v / "재료.json"
+            M = jload(mp)
+            nb = RU.accept_erased(M, None, tk)
+            if nb:
+                jsave(mp, M)
+                sys.stderr.write(f"[다시 만들기] 지운 구간의 흐림 {nb}칸 뺌\n")
     try:
         with _Alive(W, "영상 만들기"):
             info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))

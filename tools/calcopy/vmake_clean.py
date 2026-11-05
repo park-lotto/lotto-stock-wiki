@@ -391,8 +391,11 @@ def cut_piece(f: Path, a: float, b: float, where: Path | None = None) -> Path:
     out = _piece_name(f, a, b)
     if where:
         out = Path(where) / out.name
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
-                    "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], check=True, stdin=subprocess.DEVNULL)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
+                        "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], stdin=subprocess.DEVNULL, capture_output=True)
+    if r.returncode != 0:      # 원문을 남긴다 — 뒤 프로세스(bg_run)는 출력이 버려져 'CalledProcessError' 만 남아 원인을 못 갈랐다(#5298 김유선, 손으로는 재현 안 됨)
+        err = (r.stderr or b"").decode("utf-8", "replace").strip()[-600:]
+        raise RuntimeError(f"조각 자르기 ffmpeg 실패 rc={r.returncode} ffmpeg={shutil.which('ffmpeg')} {f.name}@{a:.2f}-{b:.2f}: {err}")
     return out
 
 
@@ -543,15 +546,75 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print, spots
 
 def _cut_send(src_dir: Path, spans: dict, rd: dict, spots: dict | None, log=print, where: Path | None = None) -> tuple:
     """구간마다 잘라 보낸다 — ({이름: [(조각,a,b)…]}, {cleaned, fail, calls}). 돈이 드는 곳은 여기 한 곳(앞에서 기다리는 길·뒤에서 도는 길이 같이 부른다). 원본은 건드리지 않는다."""
+    keys = {n: _cache_src(src_dir / n) for n in spans}          # 원본 정체는 자르기 전에(덮은 뒤엔 크기가 바뀐다)
     pieces = {n: [(cut_piece(src_dir / n, a, b, where), a, b) for a, b in iv] for n, iv in spans.items()}
-    files = [p for ps in pieces.values() for p, _, _ in ps]
     if rd["via"] == "free":
-        return pieces, free_clean(files, spots or {}, log=log)
+        return pieces, free_clean([p for ps in pieces.values() for p, _, _ in ps], spots or {}, log=log)
+    hit = _cache_take(pieces, keys, rd["via"], log)               # 돈 드는 길만 — 앞 편에서 이미 지운 조각은 다시 보내지 않는다
+    files = [p for ps in pieces.values() for p, _, _ in ps if p.name not in hit]
     send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
-    r = send_joined(files, send, log=log)
-    if rd["via"] == "member":
+    r = send_joined(files, send, log=log) if files else {"cleaned": [], "fail": {}, "calls": 0}
+    if rd["via"] == "member" and files:
         note_hard(json.dumps(r.get("fail") or {}, ensure_ascii=False) + " " + str(r.get("error") or ""))
+    _cache_put(pieces, keys, rd["via"], set(r.get("cleaned") or []) - hit)
+    r["cleaned"] = list(r.get("cleaned") or []) + sorted(hit)
     return pieces, r
+
+
+# (판단 주인 — 이미 지운 조각을 다시 쓰나) 같은 원본으로 편을 새로 시작하면 지운 구간 기록(서버 tf.done)·이어받기 장부(작업 폴더 옆 24시간)가
+#   없어 같은 구간을 다시 보내 회원 크레딧이 또 빠졌다(11-04 이성택 문의 점검). 보관함 = 회원 PC 공용 폴더, 열쇠 = 원본 이름·크기·구간·길·등급.
+#   쓰기 전에 새로 자른 조각과 프레임 수가 같은지 본다(다르면 버리고 보낸다). 30일 지난 것은 지운다.
+CACHE_DAYS = 30
+
+
+def cache_dir() -> Path:
+    return Path(os.environ.get("SHORTEM_VMAKE_CACHE") or (Path(os.environ.get("SHORTEM_HOME") or (Path.home() / ".shortem")) / "vmake_cache"))
+
+
+def _cache_src(f: Path) -> str:
+    try:
+        return f"{f.name}:{f.stat().st_size}"
+    except OSError:
+        return ""
+
+
+def _cache_file(src_key: str, a: float, b: float, via: str) -> Path:
+    import hashlib
+    k = hashlib.sha1(f"{src_key}|{a:.3f}|{b:.3f}|{via}|{TIER}".encode("utf-8")).hexdigest()[:20]
+    return cache_dir() / f"{k}.mp4"
+
+
+def _cache_take(pieces: dict, keys: dict, via: str, log=print) -> set:
+    hit = set()
+    for n, ps in pieces.items():
+        for p, a, b in ps:
+            c = _cache_file(keys.get(n) or "", a, b, via)
+            try:
+                if keys.get(n) and c.exists() and _frames(c) == _frames(p):
+                    shutil.copyfile(c, p)
+                    hit.add(p.name)
+                    log_entry(p.parent, {"file": p.name, "mode": via, "ok": True, "calls": 0, "cache": True, "sent_sec": 0})
+            except Exception as e:  # noqa: BLE001 — 보관함을 못 쓰면 보낸다(돈은 들지만 결과는 같다)
+                log(f"[vmake] 보관함 읽기 실패 {p.name}: {type(e).__name__}")
+    if hit:
+        log(f"[vmake] 앞 편에서 지운 조각 {len(hit)}개 다시 씀 — 보내지 않음")
+    return hit
+
+
+def _cache_put(pieces: dict, keys: dict, via: str, cleaned: set) -> None:
+    d = cache_dir()
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        old = time.time() - CACHE_DAYS * 86400
+        for x in d.glob("*.mp4"):
+            if x.stat().st_mtime < old:
+                x.unlink()
+        for n, ps in pieces.items():
+            for p, a, b in ps:
+                if p.name in cleaned and keys.get(n) and p.exists():
+                    shutil.copyfile(p, _cache_file(keys[n], a, b, via))
+    except OSError:
+        pass                                   # 보관 실패는 다음에 다시 보낼 뿐
 
 
 def _put_back(src_dir: Path, spans: dict, pieces: dict, r: dict, rd: dict) -> dict:

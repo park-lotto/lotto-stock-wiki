@@ -413,6 +413,10 @@ def name_breaks(S: dict, align: dict | None) -> list[str]:
 
 def gate_sent(S: dict, sent: list[dict], R: Path, log=print) -> list[str]:
     """(판단 주인 — 렌더 전 관문 ②) make_sentences 결과(sent: id·wav)로 줄별 대조. 문제 목록(빈 목록 = 통과). 결과 = R/narr_verify.json."""
+    from tools.calcopy.hybrid.common import script_lang
+    if script_lang(S) == "ja":      # 임시(뿌리 수리 아님): 대조에 일본어 갈래가 없어 'TTS 빠뜨림'으로 거짓 멈춤(#4239 윤상길) — 일본어 대조를 만들 때까지 건너뛴다
+        log("[줄별 받아쓰기] 경보: 일본어 대본 — 대조를 건너뜀(일본어 대조 미구현)")
+        return []
     txt = {l["id"]: l["tts"] for l in S["lines"] if l.get("kind") == "tts"}
     lines = [{"id": s["id"], "text": txt[s["id"]]} for s in sent if s["id"] in txt]
     rep = verify(lines, {s["id"]: s.get("wav") for s in sent}, Path(R) / "narr_full.mp3", Path(R) / "narr_verify.json")

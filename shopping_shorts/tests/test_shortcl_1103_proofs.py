@@ -186,3 +186,22 @@ def test_318_jamo_line_cache_survives_edit(tmp_path, monkeypatch):
     S["lines"][0]["tts"] = "이거 진짜 대박이네."
     _, align = RB.tts_by_line(S, R, log=lambda m: None)                                  # 수리 전: L2 줄 캐시 StageError
     assert "".join(align["characters"]) == " ".join(l["tts"] for l in S["lines"])
+
+
+def test_318_foreign_origin_low_res_refinds_once_then_stops(monkeypatch):
+    """관제 318 #3360(김효준 해외원본형): 480x360 옛 리뷰가 원본으로 정해져 제품 확인까지 감 — 하한이 자막노래형 길에만 있었다.
+    받은 원본 높이 < 하한(판 min_h, 없으면 720)이면 빼고, 다 빠지면 원본 확인 탈락과 같은 길로 한 번 더 찾고, 그래도면 멈춘다."""
+    from tools.calcopy.hybrid import flow as F
+    monkeypatch.setattr(F, "_style", lambda v: {})
+    st = {"fmt": "해외원본형", "version": "x", "log": [], "tries": {}, "origins": [{"id": "gPyUKlicXXY", "how": "찾기 같은 촬영분"}]}
+    r = F.f_of_fetched(st, {"og_0": {"files": [{"name": "gPyUKlicXXY.mp4", "w": 480, "h": 360, "dur": 60}]}}, {}, {})
+    assert r == {"goto": "of_find"} and st["skip_ids"] == ["gPyUKlicXXY"] and "720" in st["of_find_why"] and st["origins"] == []
+    st["origins"] = [{"id": "B", "how": "찾기 같은 촬영분"}]
+    with pytest.raises(F._Stop):
+        F.f_of_fetched(st, {"og_0": {"files": [{"name": "B.mp4", "h": 480, "dur": 60}]}}, {}, {})
+    st2 = {"fmt": "해외원본형", "version": "x", "log": [], "tries": {}, "origins": [{"id": "lo", "how": "같은 제품 다른 해외 반응"}, {"id": "hi", "how": "같은 제품 다른 해외 반응"}]}
+    F.f_of_fetched(st2, {"og_0": {"files": [{"name": "lo.mp4", "h": 360, "dur": 30}]}, "og_1": {"files": [{"name": "hi.mp4", "h": 1080, "dur": 30}]}}, {}, {})
+    assert [o["id"] for o in st2["origins"]] == ["hi"]          # 높은 화질만 남긴다
+    st3 = {"fmt": "연예인형", "version": "x", "log": [], "tries": {}, "origins": [{"id": "z", "how": "같은 제품 다른 해외 반응"}]}
+    F.f_of_fetched(st3, {"og_0": {"files": [{"name": "z.mp4", "h": 360, "dur": 30}]}}, {}, {})
+    assert [o["id"] for o in st3["origins"]] == ["z"]            # 하한 없는 형식은 그대로
