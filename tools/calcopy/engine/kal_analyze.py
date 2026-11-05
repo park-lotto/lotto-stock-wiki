@@ -1087,6 +1087,63 @@ def ours_from_remake(out_dir, frame: dict | None = None, eye: dict | None = None
             "frame0_kind": frame0_kind({"frame0": f0}) if f0 else None}
 
 
+def ours_from_preset_make(out_dir, wdir=None) -> dict:
+    """(어댑터 · 판정 없음) preset_make.make_one 결과 폴더 → _ours_lines 의 lines 꼴(kal.step_make 가 우리줄.json 으로 쓴다, 11-06 make-00).
+    시각 = timeline.json pieces[{text,line,t0,t1}](make_one 이 씀). 화자 = 작업 폴더 대본.json lines[line].kind == 'orig' → 원음, 그 밖 → 나레(대본이 없으면 None).
+    등장·꾸밈·효과음은 이 기록에 없어 비운다(→ match_table 미측정)."""
+    out = Path(out_dir)
+    T = json.loads((out / "timeline.json").read_text(encoding="utf-8"))
+    pcs = [p for p in (T.get("pieces") or []) if "t0" in p and "t1" in p]
+    if not pcs:
+        raise ValueError(f"{out}/timeline.json 에 pieces 시각이 없다")
+    raw = []
+    if wdir and (Path(wdir) / "대본.json").is_file():
+        S = json.loads((Path(wdir) / "대본.json").read_text(encoding="utf-8"))
+        raw = S.get("lines") or S.get("spine55") or []
+
+    def spk(i):
+        if not raw or i is None or not (0 <= int(i) < len(raw)):
+            return None
+        return "원음" if raw[int(i)].get("kind") == "orig" else "나레"
+    lines = [{"t0": float(p["t0"]), "t1": float(p["t1"]), "text": str(p.get("text") or "").replace("\n", " / "), "speaker": spk(p.get("line")),
+              "enter": None, "layer": "채널", "sfx": None} for p in pcs]
+    return {"lines": lines, "dur": round(max(l["t1"] for l in lines), 3), "from": "preset_make timeline.json"}
+
+
+WATCH_AT = (0.0, 1.0, 2.0)     # 시청 묶음 첫 화면 시각(verify-07 회원 근거: 0·1·2초 프레임)
+WATCH_TAIL_S = 0.5             # 끝 0.5초 클립(끝 끊김 확인)
+
+
+def watch_pack(bench_mp4: str, ours_mp4: str, out_dir) -> dict:
+    """(프로그램 — 판단 없음) 사람 시청 판정 묶음(verify-07): 벤치·우리 0·1·2초 프레임 나란히 한 장 + 우리 끝 0.5초 클립 + 두 원본 경로.
+    판정은 사람이 _kal/시청판정.json 에 적는다(kal.step_verify 가 sha256 짝으로 읽는다)."""
+    import shutil
+    from shopping_shorts.channelkit.bench import probe
+    out = Path(out_dir)
+    if out.exists():
+        shutil.rmtree(out)          # 지난 시험 편 그림이 섞이지 않게
+    out.mkdir(parents=True)
+    imgs = []
+    for tag, mp4 in (("bench", bench_mp4), ("ours", ours_mp4)):
+        for t in WATCH_AT:
+            p = out / f"{tag}_{t:.0f}s.jpg"
+            _ff(["-ss", f"{t:.2f}", "-i", mp4, "-frames:v", "1", "-vf", "scale=-2:640", "-q:v", "3", str(p)])
+            imgs.append(p)
+    side = out / "나란히_0_1_2초.jpg"
+    args = []
+    for p in imgs:
+        args += ["-i", str(p)]
+    _ff(args + ["-filter_complex", "".join(f"[{i}]" for i in range(len(imgs))) + f"xstack=inputs={len(imgs)}:layout="
+                + "|".join(f"{'+'.join(['w0'] * (i % 3)) or '0'}_{'h0' if i >= 3 else '0'}" for i in range(len(imgs))), str(side)])
+    dur = float(probe.info(ours_mp4).get("duration") or 0)
+    tail = out / "우리_끝0.5초.mp4"
+    from tools.calcopy.engine import encoder   # 인코딩 주인 = encoder.venc(GPU 우선·CPU 대체)
+    r = encoder.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{max(0.0, dur - WATCH_TAIL_S):.3f}", "-i", ours_mp4, *encoder.venc(20), "-c:a", "aac", str(tail)], capture_output=True)
+    if r.returncode != 0:
+        raise RuntimeError("끝 클립 만들기 실패: " + (r.stderr or b"").decode("utf-8", "replace")[-300:])
+    return {"dir": str(out), "side": str(side), "tail": str(tail), "bench": bench_mp4, "ours": ours_mp4, "frames": [str(p) for p in imgs]}
+
+
 def fix_cands(T: dict, frame: dict) -> list[dict]:
     """(판단 주인) match_table 의 어긋난 칸 중 MATCH_FIX 에 자리가 있는 것만 → 잡도리 후보 {path, value, why}(bm_fix 가 못 박는 꼴)."""
     from tools.calcopy.engine import preset_save as P

@@ -6,8 +6,8 @@
 사람(Claude 눈) 단계에서는 멈추지 않고 **할 일 묶음**(판독 프레임 목록·줄판독 뼈대·워커 브리프)을 만들어 두고 state=waiting_human 으로 끝낸다.
 세션은 지침서 `tools/calcopy/칼카피_분석지침서.md` §실행 대본 순서로 묶음을 워커에 나눠 주고, 결과가 들어오면 같은 명령을 다시 돌린다.
 판단 주인: 단계 순서·건너뛰기·멈춤 = 이 파일 STEPS/run 한 곳. 각 단계의 판단은 기존 주인 함수(analyze.analyze·kal_analyze.*·to_frame.build·calcopy_board.set_step)를 부른다.
-제미나이 금지(사장님 10-18): 뜯기의 LLM 창구 = analyze 기본값 claude_cli.analyze_llm(주인 한 곳 · 소리 받아쓰기는 못 하므로 실패로 기록된다 — 받아쓰기는 vtt·스피치매틱스).
-경계(관제 235 합의 10-20): kal.py = 분석 입구(~판 설정 초안 `_kal/판설정_초안.json`). 제작은 렌더러를 만들지 않고 preset_make / hybrid/run.py 를 부른다. 소리 도구 = tools/calcopy/engine/sound/.
+뜯기 판독 창구 = engine/tear_llm.ask 한 곳(11-06): 그림 claude_cli(사장님 10-18 그림 판독 제미나이 금지) · 받아쓰기 스피치매틱스 · 소리 판독 제미나이(메모리 10-25 허용).
+경계(관제 235 합의 10-20): kal.py = 분석 입구(~판 설정 초안 `_kal/판설정_초안.json`). 제작은 렌더러를 만들지 않고 preset_make.make_one 을 부른다(--work, 11-06 make-00). 소리 도구 = tools/calcopy/engine/sound/.
 """
 from __future__ import annotations
 
@@ -49,7 +49,8 @@ STEPS = ["select", "collect", "tteutgi", "frames", "skeleton", "readlines", "rul
 HUMAN = {"readlines": "줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행",
          "rules": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행",
          "copy": "프리셋 손질 — frames/frame_<id>.json 을 _hand/ 로 손질(실측 근거 notes) → preset_save → 다시 실행",
-         "make": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"}
+         "make": "제작 — 소재·대본·재료(작업 폴더: 대본.json·재료.json) 준비 뒤 --work <작업 폴더> 로 다시 실행 → make 가 preset_make.make_one 으로 렌더(TTS 과금은 허락됨)",
+         "verify": "시청 판정 — _kal/시청묶음 을 보고 _kal/시청판정.json(sha256·verdict) 을 적은 뒤 다시 실행"}
 
 
 from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES  # noqa: E402,F401 — 명단 주인 = engine/voices.py
@@ -323,24 +324,43 @@ def step_collect(S: State):
     return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)" + (f" 실패 {errs}" if errs else "")
 
 
+def _stale_tear(p: Path) -> str | None:
+    """옛 뜯기.json 을 다시 뜯어야 하나 — 꾸밈 판독을 건너뛴 것(materials=False 시절)·받아쓰기를 claude_cli 로 물어 '미지원' 실패한 것은 다시(11-06 감시 빈 곳 2·3)."""
+    try:
+        J = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "읽기 실패"
+    if "건너뜀" in str((J.get("overlay_rules") or {}).get("failed") or ""):
+        return "꾸밈 판독 건너뜀"
+    if "미지원" in str(((J.get("audio") or {}).get("transcript") or {}).get("failed") or ""):
+        return "받아쓰기 창구 미지원"
+    return None
+
+
 def step_tteutgi(S: State):
-    from tools.calcopy.engine import analyze
+    """뜯기 — analyze.analyze 를 materials=True(꾸밈·제작법 판독, tteutgi-29 · Jev 해결 0.77)·llm=tear_llm.ask(그림 claude_cli / 받아쓰기 스피치매틱스 + 소리 판독 제미나이,
+    Jev 해결 0.82)로 부른다. 옛 결과가 _stale_tear 에 걸리면 다시 뜯는다(옛 결과 재사용 금지)."""
+    from tools.calcopy.engine import analyze, tear_llm
     base = DATA / S.d["slug"] / "src"
     out_root = S.dir / "뜯기"
-    done, errs = [], []
+    done, errs, redo = [], [], []
     for vid in S.step("collect")["outputs"]["ids"]:
         out = out_root / vid
         if (out / "뜯기.json").exists():
-            done.append(vid)
-            continue
+            why = _stale_tear(out / "뜯기.json")
+            if not why:
+                done.append(vid)
+                continue
+            redo.append(f"{vid}({why})")
         try:
-            analyze.analyze(str(base / f"{vid}.mp4"), str(out), materials=False)  # 기본 창구 = claude_cli.analyze_llm
+            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=tear_llm.ask, materials=True)
             done.append(vid)
         except Exception as e:  # 조용한 실패 금지 — 편별로 기록
             errs.append(f"{vid}: {type(e).__name__} {str(e)[:120]}")
     if not done:
         return "failed", {}, "뜯기 0편: " + " | ".join(errs)
-    return "done", {"ids": done, "dir": str(out_root)}, f"뜯기 {len(done)}편" + (f" 실패 {errs}" if errs else "") + " (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+    return "done", {"ids": done, "dir": str(out_root)}, (f"뜯기 {len(done)}편" + (f" 다시 뜯음 {redo}" if redo else "") + (f" 실패 {errs}" if errs else "")
+                                                         + " (판독=tear_llm: 그림 claude_cli · 받아쓰기 스피치매틱스 · 소리 판독 제미나이)")
 
 
 def _win(tt: dict):
@@ -516,17 +536,65 @@ def step_copy(S: State):
     return "done", {"frames": made, "preset": str(presets[0].parent)}, f"자동 설명서 {len(made)}편 · 프리셋 {presets[0].parent.name}"
 
 
+def _rendered(mp4: str) -> bool:
+    """렌더 기록이 있는 완성본인가 — 옆 run_log.json(preset_make 가 씀) final.md5 == 파일 md5. 파일만 있는 것은 인정 안 함(감시 적발 kal.py:524)."""
+    import hashlib
+    p = Path(mp4)
+    lp = p.parent / "run_log.json"
+    if not (p.is_file() and lp.is_file()):
+        return False
+    try:
+        want = (json.loads(lp.read_text(encoding="utf-8")).get("final") or {}).get("md5")
+    except ValueError:
+        return False
+    return bool(want) and hashlib.md5(p.read_bytes()).hexdigest() == want
+
+
 def step_make(S: State):
+    """제작 — 판단 주인 preset_make.make_one 을 부른다(make-00 Jev 해결 0.88 · 구현 방식 해결 0.74). 입력 = copy 단계 프리셋 폴더 + --work 작업 폴더(대본.json·재료.json).
+    출력 = final.mp4 + 우리줄.json(kal_analyze.ours_from_preset_make). make_one 미달·멈춤 = failed. --ours-mp4 직접 넣기는 렌더 기록(_rendered)이 있을 때만."""
     why = disk_gate("렌더")
     if why:
         return "failed", {}, why
     om, ol = S.d.get("ours_mp4"), S.d.get("ours_lines")
-    if om and ol and Path(om).exists() and Path(ol).exists():
-        return "done", {"ours_mp4": om, "ours_lines": ol}, "시험편 있음"
-    return "waiting_human", {}, HUMAN["make"]
+    wd = S.d.get("work")
+    if om and ol and not wd:
+        if not (Path(om).exists() and Path(ol).exists()):
+            return "failed", {}, f"--ours-mp4/--ours-lines 파일 없음: {om} · {ol}"
+        if not _rendered(om):
+            return "failed", {}, f"렌더 기록 없는 완성본({om} 옆 run_log.json final.md5 짝 없음) — 파일만으로는 done 안 함. --work <작업 폴더> 로 preset_make 를 돌려라"
+        return "done", {"ours_mp4": om, "ours_lines": ol}, "시험편 있음(렌더 기록 md5 일치)"
+    if not wd:
+        return "waiting_human", {}, HUMAN["make"]
+    pdir = (S.step("copy").get("outputs") or {}).get("preset")
+    if not pdir or not (Path(pdir) / "manifest.json").exists():
+        return "failed", {}, f"copy 단계 프리셋 폴더 없음({pdir}) — copy 부터"
+    from types import SimpleNamespace
+    from tools.calcopy.engine import preset_make
+    a = SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=None, tag=None, cache=None,
+                        desktop_dir=str(Path.home() / "Desktop"), results=str(preset_make.RESULTS))   # test=True: 바탕화면·결과물 등록은 사람 판정(verify) 뒤
+    try:
+        r = preset_make.make_one(Path(pdir), Path(wd), a)
+    except (Exception, SystemExit) as e:   # make_one 은 칸 없음을 SystemExit 로 멈춘다 — 조용히 넘기지 않고 이유를 적는다
+        return "failed", {}, f"preset_make 멈춤: {type(e).__name__} {str(e)[:300]}"
+    out = Path(r.get("out") or "")
+    if not r.get("ok"):
+        return "failed", {"out": str(out)}, f"preset_make 자동 검사 미달: {r.get('note')}"
+    lines = K.ours_from_preset_make(out, Path(wd))
+    lp = out / "우리줄.json"
+    lp.write_text(json.dumps(lines, ensure_ascii=False, indent=1), encoding="utf-8")
+    S.d["ours_mp4"], S.d["ours_lines"] = str(out / "final.mp4"), str(lp)
+    return "done", {"ours_mp4": str(out / "final.mp4"), "ours_lines": str(lp), "out": str(out)}, f"preset_make 통과 {r.get('seconds')}초 · {r.get('note')}"
+
+
+def _sha256(p: str) -> str:
+    import hashlib
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
 def step_verify(S: State):
+    """검증 — 줄 단위 자 + 픽셀·소리 자(with_pixel) 하나의 판정. 벤치 mp4 가 없으면 픽셀 층을 건너뛰지 않고 미달·failed(감시 A2, Jev 해결 0.74).
+    자동 통과 뒤에도 사람 시청 판정(_kal/시청판정.json, 지금 ours_mp4 sha256 짝)이 있어야 done(verify-07, Jev 해결 0.78) — 없으면 시청 묶음을 만들고 waiting_human."""
     o = S.step("make")["outputs"]
     bench = K._load_docs([str(S.dir / "줄판독")])
     ours = json.loads(Path(o["ours_lines"]).read_text(encoding="utf-8"))
@@ -535,13 +603,38 @@ def step_verify(S: State):
     bm = K.bench_media_src(str(DATA / S.d["slug"] / "src"), [d.get("id") for d in bench], win)
     T = K.match_table(bench, ours, om, bm)
     T["ours_media"], T["bench_media"] = om, bm
-    out = S.dir / "_kal" / "재현일치도.md"
+    kd = S.dir / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)
+    out = kd / "재현일치도.md"
     bmp4 = next((p for p in (DATA / S.d["slug"] / "src" / f"{d.get('id')}.mp4" for d in bench) if p.exists()), None)
     if bmp4:   # 1차 프리셋 관문 하나 = 줄 단위 자 + 픽셀·소리 자(compare) — 둘 다 통과여야 통과(지침서 맨 위 엔진 순서)
-        K.with_pixel(T, str(bmp4), o["ours_mp4"], str(S.dir / "_kal" / "재현일치도_픽셀"))
+        K.with_pixel(T, str(bmp4), o["ours_mp4"], str(kd / "재현일치도_픽셀"))
+    else:
+        T["pixel"] = {"verdict": "미측정", "n_in": 0, "n_criteria": 0, "out": [], "failed": ["벤치 mp4 없음 — 픽셀·소리 자 못 잼"], "table": ""}
+        T["line_verdict"], T["verdict"] = T["verdict"], "미달"
+        print(f"[경보] 벤치 mp4 없음({DATA / S.d['slug'] / 'src'}) — 픽셀·소리 자를 건너뛰지 않고 미달로 둔다")
     out.write_text(K.match_md(T, S.d["slug"]), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(T, ensure_ascii=False, indent=1), encoding="utf-8")
-    return ("done" if T["verdict"] == "통과" else "waiting_human"), {"table": str(out), "verdict": T["verdict"]}, f"재현일치도 {T['verdict']} — 미달이면 어긋난 항목을 고쳐 make 부터"
+    res = {"table": str(out), "verdict": T["verdict"]}
+    if not bmp4:
+        return "failed", res, "벤치 mp4 없음 — collect 를 다시 돌려 벤치 원본을 받은 뒤 verify"
+    if T["verdict"] != "통과":
+        return "waiting_human", res, f"재현일치도 {T['verdict']} — 미달이면 어긋난 항목을 고쳐 make 부터"
+    wp = kd / "시청판정.json"
+    sha = _sha256(o["ours_mp4"])
+    W = {}
+    if wp.exists():
+        try:
+            W = json.loads(wp.read_text(encoding="utf-8"))
+        except ValueError:
+            W = {}
+    if W.get("sha256") == sha and W.get("verdict") == "통과":
+        return "done", {**res, "watch": str(wp)}, f"재현일치도 통과 + 사람 시청 판정 통과({W.get('who') or '?'})"
+    if W.get("sha256") == sha and W.get("verdict") == "미달":
+        return "failed", {**res, "watch": str(wp)}, f"사람 시청 판정 미달: {W.get('why')}"
+    pack = K.watch_pack(str(bmp4), o["ours_mp4"], kd / "시청묶음")
+    tmpl = json.dumps({"sha256": sha, "verdict": "통과|미달", "who": "", "why": ""}, ensure_ascii=False)
+    return "waiting_human", {**res, "watch_pack": pack}, f"재현일치도 통과 — 사람 시청 판정 없음(또는 다른 편 판정). 시청 묶음 {kd / '시청묶음'} 를 보고 {wp} 에 {tmpl} 를 적은 뒤 다시 실행"
 
 
 def step_apply(S: State):
@@ -588,6 +681,7 @@ def main(argv=None) -> int:
     ap.add_argument("--slug"); ap.add_argument("--brand"); ap.add_argument("--n", type=int, default=6); ap.add_argument("--from", dest="start", choices=STEPS)
     ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--voice", help="TTS voice_id(사장님이 고른 것 — 판 파일 voice 한 곳에 적힌다)")
     ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
+    ap.add_argument("--work", help="제작 작업 폴더(대본.json·재료.json) — make 단계가 preset_make.make_one 으로 렌더한다")
     ap.add_argument("--menu", help="장점 카탈로그만 보기: 축 이름 또는 all (채널 분석 없이)")
     ap.add_argument("--lite", action="store_true", help="시운전·디스크 부족: 720p 까지만 받기")
     ap.add_argument("--stage", choices=["upgrade"], help="upgrade = 업그레이드 단계 자리(1차 판 초안 복사 + 메뉴 + 기록 파일)")
@@ -605,6 +699,8 @@ def main(argv=None) -> int:
         S.d["ours_mp4"] = A.ours_mp4
     if A.ours_lines:
         S.d["ours_lines"] = A.ours_lines
+    if A.work:
+        S.d["work"] = str(Path(A.work).resolve())
     ask = [q for q, v in (("우리 브랜드 이름(--brand)", S.d.get("brand")), ("하이브리드 여부(--hybrid)", S.d.get("hybrid")), ("TTS 누구로(--voice <voice_id>)", S.d.get("voice"))) if not v]
     if ask:
         print("사장님께 시작할 때 한 번에 물을 것(답을 받으면 같은 명령에 옵션으로): " + " · ".join(ask) + " · 과금 단계(TTS)는 허락됨")
