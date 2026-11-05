@@ -19597,7 +19597,10 @@ def api_claude_me_start_line(request: Request):
     if denied:
         return denied
     from shopping_shorts import claude_portal as _cp
-    return JSONResponse({"ok": True, "line": _cp.start_line(cid, _public_base(request))}, headers={"Cache-Control": "no-store"})
+    os_id = request.query_params.get("os") or "win"
+    if os_id not in _cp.START_OS:
+        return JSONResponse({"ok": False, "error": "bad_request"}, status_code=400)
+    return JSONResponse({"ok": True, "os": os_id, "line": _cp.start_line(cid, _public_base(request), os_id)}, headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/claude/start/redeem")
@@ -19628,6 +19631,13 @@ def api_claude_me_start_cmd(request: Request):
 def api_claude_start_ps1(request: Request):
     """설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다). 주인 파일 = installer/install.ps1."""
     body = (Path(__file__).resolve().parents[1] / "installer" / "install.ps1").read_text(encoding="utf-8")
+    return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/claude/start.sh")
+def api_claude_start_sh(request: Request):
+    """맥 설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다, 관제 328). 주인 파일 = installer/install.sh."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
     return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
 
 

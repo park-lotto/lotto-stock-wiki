@@ -464,8 +464,14 @@ def start_redeem(token, store=None) -> dict:
     return {"ok": True, "key": member_key(cid, store)}
 
 
-def start_line(cid, base) -> str:
-    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용)."""
+START_OS = ("win", "mac")
+
+
+def start_line(cid, base, os_id: str = "win") -> str:
+    """회원별 설치 한 줄 — 윈도는 PowerShell, 맥은 터미널에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용).
+    맥(관제 328): 스크립트 = installer/install.sh(/api/claude/start.sh). bash -c "$(curl …)" 꼴이라 키보드 입력(로그인·Claude 화면)이 살아 있다."""
+    if os_id == "mac":
+        return f"SHORTEM_START='{start_token(cid)}' bash -c \"$(curl -fsSL {base}/api/claude/start.sh)\""
     return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
 
 
