@@ -6,7 +6,7 @@
 방식(seed_analyzer/match_compare.py 실측 그대로): 프롬프트는 표준입력(인자로 넘기면 잘려 빈 답), 빈 임시 폴더에서 부른다
 (프로젝트 폴더면 CLAUDE.md·훅이 붙어 요약만 돌아온다). 그림은 그 임시 폴더에 파일로 두고 Read 로 열게 한다.
 
-    ask(parts, prompt, tag="", model="haiku") -> (dict|None, err)    parts = 그림 bytes 목록(jpg)
+    ask(parts, prompt, tag="") -> (dict|None, err)    parts = 그림 bytes 목록(jpg) · 모델 = MODEL_TABLE(창구 tag) 한 곳
 material_auto.LLM 의 기본 창구다(fn(parts, prompt, tag)).
 """
 from __future__ import annotations
@@ -20,11 +20,16 @@ import time
 from pathlib import Path
 
 TIMEOUT = 420
-SONNET_TAGS = ("ma_fit", "ma_ref")      # 대사↔장면 판정·참고 쇼츠 판독 = 판단이라 소넷, 나머지(칸 설명·짝짓기·검색어) = 하이쿠
+# 창구별 모델 표 한 곳(관제 319 · Jev 해결 0.85·위험 0.28 · 사장님 10-22 '하이쿠 금지·최소 소넷' · 10-25 '눈 판정은 오푸스').
+#   tag 머리 → 모델. 판정 창구(대사↔장면·원본 같은지·참고 쇼츠 판독·화면 속 대상 자리) = opus, 나머지(칸 설명·짝짓기·검색어·분류·글자 읽기) = sonnet.
+#   부르는 쪽은 모델을 넘기지 않는다 — 넘겨도 이 표가 이긴다(다르면 경보 한 줄).
+MODEL_DEFAULT = "sonnet"
+MODEL_TABLE = (("ma_fit", "opus"), ("ma_ref", "opus"), ("fx_target", "opus"))
 
 
 def model_for(tag: str) -> str:
-    return "sonnet" if str(tag).startswith(SONNET_TAGS) else "haiku"
+    t = str(tag or "")
+    return next((m for head, m in MODEL_TABLE if t.startswith(head)), MODEL_DEFAULT)
 
 
 def _json_of(txt: str):
@@ -53,7 +58,11 @@ def claude_exe() -> str | None:
 
 
 def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tuple[dict | None, str | None]:
-    model = model or model_for(tag)
+    want = model_for(tag)
+    if model and model != want:
+        import sys
+        print(f"[경보] claude_cli 모델 표와 다름: tag={tag} 넘긴={model} 표={want} — 표 값으로 부른다", file=sys.stderr)
+    model = want
     d = Path(tempfile.mkdtemp(prefix="claude_ma_"))
     try:
         names = []

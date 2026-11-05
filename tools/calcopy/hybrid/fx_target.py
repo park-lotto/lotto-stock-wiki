@@ -118,7 +118,7 @@ def object_claude(rgb: np.ndarray, what: str, win=None, model: str = "sonnet") -
               f"그림에서 정확히 이것을 찾아라: \"{what}\". 물건 전체를 빈틈없이 감싸는 상자를 격자 눈금으로 읽어 픽셀 좌표로 답한다. "
               "사람 얼굴은 묻지 않았으면 상자에 넣지 않는다. 확실히 보이지 않으면 found=false. "
               '답 꼴: {"found": true|false, "box": [x0, y0, x1, y1], "label": "상자에 넣은 것 짧게", "confidence": 0~1}')
-    d, err = CC.ask([jpg], prompt, tag="fx_target_object", model=model)
+    d, err = CC.ask([jpg], prompt, tag="fx_target_object")
     if d is None:
         return None, 0.0, f"Claude 실패 {err}"
     conf = float(d.get("confidence") or 0)
@@ -402,7 +402,7 @@ def aim(video, row: dict, cuts: list | None, win=None, caption_band=None, line_t
             cands = [{"얼굴": [round(f["face"][0] - x), round(f["face"][1] - y), round(f["face"][2] - x), round(f["face"][3] - y)]} for f in faces(rgb, win)][:3]
     if ask is None:
         from tools.calcopy.engine import claude_cli as CC
-        ask = lambda parts, pr: CC.ask(parts, pr, tag="fx_target_aim", model=model)   # noqa: E731
+        ask = lambda parts, pr: CC.ask(parts, pr, tag="fx_target_aim")   # noqa: E731
     d, err = ask(jpgs, aim_prompt(W, len(ts), w, h, cands))
     if d is None:
         fail.append(f"눈 판정 실패 {err}"); return None
@@ -490,7 +490,7 @@ def bench_aim(workers: int = 6) -> list[dict]:
               "3) whole = 그 대상이 속한 전체 물건·사람(대상이 전체면 같은 것), whole_box. 4) part = 대상이 전체의 한 부위(특징 부분)이면 true. "
               "표시가 안 보이면 found=false.\n"
               '답 꼴: {"found": true, "mark": "circle", "mark_box": [x0,y0,x1,y1], "target": "", "target_box": [..], "whole": "", "whole_box": [..], "part": false, "confidence": 0~1}')
-        d, err = CC.ask([jpg], pr, tag="fx_target_bench_aim", model=AIM_MODEL)
+        d, err = CC.ask([jpg], pr, tag="fx_target_bench_aim")
         if d is None or not d.get("found"):
             return {**j, "skip": f"판독 실패 {err or d}"}
         out = {**j, **{k: d.get(k) for k in ("mark", "mark_box", "target", "target_box", "whole", "whole_box", "part", "confidence")}, "frame": [w0, h0]}

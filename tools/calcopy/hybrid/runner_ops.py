@@ -2408,7 +2408,28 @@ def _inside(W: Path, rel: str) -> Path:
 
 def c_bm_env(W, d):
     from tools.calcopy.engine import agy
-    return {"agy": bool(agy.find()), "agy_login": bool(agy.logged_in()), "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1)}
+    return {"agy": bool(agy.find()), "agy_login": bool(agy.logged_in()), "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1), "mem_free_gb": mem_free_gb()}
+
+
+def mem_free_gb() -> float | None:
+    """메모리 여유(GB) — 윈도는 커밋 여유(ullAvailPageFile: 새로 잡을 수 있는 메모리, 11-05 MemoryError 는 이것이 2.8GB 일 때), 그 밖은 psutil available. 못 재면 None."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class _MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong), ("ullTotalPhys", ctypes.c_ulonglong),
+                            ("ullAvailPhys", ctypes.c_ulonglong), ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong), ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            m = _MS()
+            m.dwLength = ctypes.sizeof(_MS)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
+                return round(m.ullAvailPageFile / 1e9, 1)
+            return None
+        import psutil
+        return round(psutil.virtual_memory().available / 1e9, 1)
+    except Exception:  # noqa: BLE001 — 못 재면 None(기록에 '못 잼'), 준비 확인을 막지 않는다
+        return None
 
 
 def c_bm_fetch(W, d):
@@ -2445,6 +2466,7 @@ def c_bm_tear(W, d):
         try:        # R7 편집 칸(짝 찾기 + 쇼츠 자체 실측) — 재기만, 갈래 판정은 서버(flow_bench.bm_tear_got → r7.branch_of)
             r = _r7_of(W, v, J, longs)
             P.save_r7(ch / "preset" / style, v["id"], r)
+            P.keep_production_voice(ch / "preset" / style)
             r7[v["id"]] = {"pair": r["pair"], "style": style}
         except Exception as e:  # noqa: BLE001 — 못 잰 편은 r7_failed 에 남긴다(통과로 치지 않음 — 서버가 missing 으로 센다)
             r7_failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})

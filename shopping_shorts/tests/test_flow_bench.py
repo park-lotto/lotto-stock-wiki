@@ -211,8 +211,11 @@ def test_skel_then_reads_carry_lines():
 
 def test_skel_none_stops():
     st = _st("bm_skel_got", videos=[_vid("a")], keep=["a"])
-    r = _go(st, {"skel": {"docs": {}, "failed": [{"video": "a", "why": "뜯기 없음"}]}})
-    assert r["status"] == "stop" and r["why"] and r["fix"]
+    f = {"skel": {"docs": {}, "failed": [{"video": "a", "why": "뜯기 없음"}]}}
+    r = _go(st, f)                       # 스스로 한 번 다시 — 뼈대만(옛 retry=bm_tear_got 은 빈 뜯기 결과로 '프리셋 없음' 오판)
+    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_skel"]
+    r = _go(st, f)                       # 또 실패 = 넘어가지 않는다
+    assert r["status"] in ("stop", "review") and any("자막 줄을 나누지" in x for x in st["log"])
 
 
 def test_read_then_fill_takes_only_eye_slots():

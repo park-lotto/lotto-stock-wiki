@@ -447,7 +447,7 @@ def judge_same(seed_imgs: list[Path], cands: list[dict], d: Path, log=print) -> 
             im = im.copy(); im.thumbnail((cw, chh)); sheet.paste(im, (x, y + 34)); dr.text((x + 4, y + 2), str(j + 1), fill="blue", font=font)
         buf = io.BytesIO(); sheet.save(buf, "JPEG", quality=82)
         sheet.save(d / f"judge_{s0 // 24}.jpg", quality=82)
-        res, err = CC.ask([buf.getvalue()], JUDGE_PROMPT, tag="ma_fit_origin", model="sonnet")
+        res, err = CC.ask([buf.getvalue()], JUDGE_PROMPT, tag="ma_fit_origin")
         if res is None:
             log(f"  눈 판정 실패: {err}"); continue
         same = {int(n) for n in res.get("same", []) if str(n).isdigit()}
@@ -556,7 +556,7 @@ def classify(titles: list[str], batch: int = 150, log=print) -> list[dict]:
     def one(ix):
         body = "\n".join(f"{i}. {titles[i]}" for i in ix)
         for k in range(5):
-            out, err = CC.ask([], CAT_PROMPT + body, tag="of_cat", model="haiku")
+            out, err = CC.ask([], CAT_PROMPT + body, tag="of_cat")
             got = {r.get("i"): r for r in (out or {}).get("r", []) if isinstance(r, dict)}
             if all(i in got for i in ix):
                 return got

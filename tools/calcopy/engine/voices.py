@@ -24,6 +24,19 @@ TC_EMOTIONS = ("angry", "happy", "normal", "sad", "tonedown", "toneup", "whisper
 _ID_RE = {"typecast": _re.compile(r"tc_[0-9a-f]{24}"),
           "elevenlabs": _re.compile(r"kr-[a-z0-9]+-[a-z]+|[A-Za-z0-9]{20}"),     # 숏템 추천 프리셋 id | 일레븐 검색 성우 id
           "fish": _re.compile(r"fs-[a-z0-9]+-[a-z]+|[0-9a-f]{32}")}              # 숏템 추천 프리셋 id | 피쉬 검색 성우(reference_id)
+
+# 칼카피(벤치마킹 프리셋 만들기) 흐름의 TTS = 피쉬 공개 성우 '차분한 해설가'(사장님 11-05 "피쉬오디오에 차분한해설가 성우로 해",
+#   11-05 GET /model?language=ko&title=차분한 해설가 1위·사용 3604) · 모델 = shopping_shorts/fish_tts.DEFAULT_MODEL_ID.
+#   완성본·회원 제작 흐름은 타입캐스트 그대로 — 두 흐름은 같은 합성 함수(voice_synth.make_synth)를 부르고 provider·성우만 여기 tts_for 한 곳에서 갈린다(0순위-B).
+CALCOPY_TTS = {"provider": "fish", "voice_id": "9a50287ddd26414690b538539ad52d61", "name": "차분한 해설가"}
+TTS_PURPOSES = ("calcopy", "production")
+
+
+def tts_for(purpose: str) -> dict | None:
+    """(판단 주인 · 흐름별 TTS) purpose = calcopy(칼카피 시험 편) → 피쉬 '차분한 해설가' · production(완성본·회원 제작) → None(덮지 않음 = 프리셋·팩 성우, 타입캐스트)."""
+    if purpose not in TTS_PURPOSES:
+        raise ValueError(f"모르는 TTS 흐름: {purpose} — {TTS_PURPOSES}")
+    return None if purpose == "production" else {"provider": CALCOPY_TTS["provider"], "voice_id": CALCOPY_TTS["voice_id"]}
 _PRESETS = _pathlib.Path(__file__).resolve().parents[3] / "shopping_shorts" / "assets" / "voice_presets.json"
 
 

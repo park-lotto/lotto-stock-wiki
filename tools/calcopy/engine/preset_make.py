@@ -194,11 +194,20 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
                      **({"no_snap": True} if r.get("no_snap") else {})})   # 원음 깔기·원음 줄 컷(engine/orig_audio) · no_snap = 입 맞춤 컷(ss 고정)
     title = S.get("title_slots") or M.get("sample_title") or {}
     voice = (S.get("voice") or {}).get("voice_id") or cfg["voice_id"]
-    prov, emo = voice_spec(S.get("voice") or {}, cfg, voice)
+    over = voice_purpose(S)
+    if over:                      # 칼카피 시험 편 — 흐름별 TTS 한 곳(voices.tts_for)이 provider·성우를 정한다
+        voice = over["voice_id"]
+    prov, emo = voice_spec({**over, "emotion": None} if over else (S.get("voice") or {}), cfg, voice)
     name = S.get("desktop_title") or re.sub(r"^작품\d+_", "", wdir.name)
     return {"dir": wdir, "name": wdir.name, "title_short": name, "data": data, "lines": lines, "pieces": pieces, "cuts": cuts,
             "title": {k: title.get(k, "") for k in ("hook1", "hook2", "bodyTitle")}, "voice": voice, "S": S,
             "tts_provider": prov, "tts_emotion": emo}
+
+
+def voice_purpose(S: dict) -> dict | None:
+    """대본 purpose 칸(calcopy | production, 없으면 production) → voices.tts_for. 칼카피 시험 편만 피쉬 차분한 해설가로 덮는다."""
+    from tools.calcopy.engine import voices as VO
+    return VO.tts_for(str(S.get("purpose") or "production"))
 
 
 def voice_spec(v: dict, cfg: dict, voice: str) -> tuple:

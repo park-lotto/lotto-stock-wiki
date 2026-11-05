@@ -229,3 +229,80 @@ def test_jev_retry_does_not_count_same_table(monkeypatch):
         r = _go(st)
         assert r["why"] == "잠시 판단 서버가 쉬고 있어요"
     assert len(st["bm"]["pan_hist"]) == 1
+
+
+# ---------------------------------------------------------------- 멈춤 종류(환경 → 자동 재시도 / 내용 → 회원 질문)
+def test_stop_kind():
+    assert FB.stop_kind([{"video": "a", "why": "MemoryError: Unable to allocate 211. KiB"}]) == "env"
+    assert FB.stop_kind(["HTTP 429 Too Many Requests"]) == "env"
+    assert FB.stop_kind([{"why": "MemoryError: x"}, {"why": "세로 쇼츠가 아님"}]) == "content"
+    assert FB.stop_kind([]) == "content"
+
+
+def test_tear_memory_error_retries_tear_not_asks_member():
+    st = _st("bm_tear_got", videos=[{"id": "a", "mp4": "src/a.mp4"}])
+    f = [{"video": v, "why": "MemoryError: Unable to allocate 11.9 MiB for an array"} for v in ("a", "b", "c")]
+    r = _go(st, {"bm_tear": {"presets": [], "failed": f}})
+    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_tear"]          # 사람 질문 없이 뜯기만 다시(받기부터 아님)
+    assert "세로 쇼츠" not in json.dumps(r, ensure_ascii=False)
+
+
+def test_tear_content_failure_asks_member():
+    st = _st("bm_tear_got", videos=[{"id": "a", "mp4": "src/a.mp4"}])
+    r = _go(st, {"bm_tear": {"presets": [], "failed": [{"video": "a", "why": "가로 영상이라 틀을 못 만듦"}]}})
+    assert "세로 쇼츠" in json.dumps(r, ensure_ascii=False)
+
+
+def test_fetch_retry_reissues_fetch_not_env():
+    st = _st("bm_fetch", url="https://www.youtube.com/@x", n=3)
+    r = _go(st)
+    assert [d["cmd"] for d in r["do"]] == ["bm_fetch"]
+
+
+def test_env_records_memory():
+    st = _st("bm_env_got", url="https://www.youtube.com/@x", n=3)
+    r = _go(st, {"bm_env": {"agy": True, "agy_login": True, "disk_gb": 50.0, "mem_free_gb": 3.1}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_fetch"] and any("메모리(커밋) 여유 3.1GB" in x for x in st["log"])
+    assert isinstance(R.mem_free_gb(), (float, type(None)))
+
+
+# ---------------------------------------------------------------- 모델 표 한 곳(하이쿠 0)
+def test_claude_cli_model_table_no_haiku():
+    import pathlib
+    import re
+    from tools.calcopy.engine import claude_cli as CC
+    assert CC.MODEL_DEFAULT == "sonnet" and all(m in ("sonnet", "opus") for _, m in CC.MODEL_TABLE)
+    assert CC.model_for("of_cat") == "sonnet" and CC.model_for("ma_fit_origin") == "opus" and CC.model_for("fx_target_aim") == "opus"
+    root = pathlib.Path(__file__).resolve().parents[2] / "tools" / "calcopy"
+    bad = [str(p) for p in root.rglob("*.py") if re.search(r"""model\s*=\s*["']haiku["']""", p.read_text(encoding="utf-8", errors="replace"))]
+    assert bad == []
+
+
+# ---------------------------------------------------------------- 칼카피 흐름 TTS = 피쉬 '차분한 해설가'(완성본·회원 제작 = 타입캐스트)
+FISH_ID = "9a50287ddd26414690b538539ad52d61"
+
+
+def test_calcopy_tts_is_fish_production_untouched():
+    from tools.calcopy.engine import voices as VO, preset_make as PM
+    assert VO.tts_for("calcopy") == {"provider": "fish", "voice_id": FISH_ID} and VO.tts_for("production") is None
+    over = PM.voice_purpose({"purpose": "calcopy"})
+    prov, emo = PM.voice_spec({**over, "emotion": None}, {"tts_provider": "typecast", "tts_emotion": "happy"}, over["voice_id"])
+    assert prov == "fish" and emo is None
+    assert PM.voice_purpose({}) is None
+    prov, _ = PM.voice_spec({}, {"tts_provider": "typecast"}, "tc_6059dad0b83880769a50502f")
+    assert prov == "typecast"
+
+
+def test_bm_trial_task_carries_fish_tts():
+    st = _st("bm_trial", url="https://www.youtube.com/@x")
+    r = _go(st)
+    q = r["review"][0]
+    assert q["meta"]["purpose"] == "calcopy" and q["meta"]["tts"] == {"provider": "fish", "voice_id": FISH_ID} and "typecast" not in q["ask"]
+
+
+def test_keep_production_voice_slot(tmp_path):
+    from tools.calcopy.engine import preset_save as P
+    D = P.keep_production_voice(tmp_path)
+    assert D["production_voice"]["provider"] == "typecast" and D["production_voice"]["voice_id"] is None
+    (tmp_path / "defaults.json").write_text(json.dumps({"production_voice": {"provider": "typecast", "voice_id": "tc_x"}}), encoding="utf-8")
+    assert P.keep_production_voice(tmp_path)["production_voice"]["voice_id"] == "tc_x"

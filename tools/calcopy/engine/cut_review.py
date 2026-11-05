@@ -194,7 +194,7 @@ def review(video: Path, folder: Path, out: Path, tl: str | None = None, workers:
         r, err = None, None
         for _ in range(2):
             calls[0] += 1
-            r, err = claude_cli.ask([sp.read_bytes()], pr, tag="ma_fit:cut_review", model="sonnet")
+            r, err = claude_cli.ask([sp.read_bytes()], pr, tag="ma_fit:cut_review")
             if r and all(k in r for k in KEYS):
                 break
         c["sec"] = round(time.time() - t0, 1)

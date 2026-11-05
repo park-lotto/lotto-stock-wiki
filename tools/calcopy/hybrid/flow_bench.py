@@ -48,7 +48,8 @@ REREAD_MAX = 1       # check_doc 를 못 넘은 줄판독을 다시 읽는 횟�
 
 STAGES = [("setup", "준비 확인"), ("bm_fetch", "벤치 영상 받기"), ("bm_tear", "영상 뜯기"), ("bm_read", "영상 보기"), ("bm_trial", "시험 영상 만들기"),
           ("bm_pan", "잡도리"), ("bm_confirm", "판 확정"), ("bm_make", "프리셋 묶음 만들기"), ("done", "완성")]
-PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch_got": "bm_fetch", "bm_tear_got": "bm_tear", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_reread": "bm_read", "bm_trial": "bm_read",
+PHASE_STAGE = {"bm_setup": "setup", "bm_env_got": "setup", "bm_fetch": "bm_fetch", "bm_fetch_got": "bm_fetch", "bm_tear": "bm_tear", "bm_tear_got": "bm_tear",
+               "bm_skel": "bm_read", "bm_skel_got": "bm_read", "bm_read_got": "bm_read", "bm_measure": "bm_read", "bm_measure_got": "bm_read", "bm_reread": "bm_read", "bm_trial": "bm_read",
                "bm_eye_ask": "bm_read", "bm_trial_frames": "bm_pan", "bm_trial_eye": "bm_pan", "bm_trial_eye_got": "bm_pan",
                "bm_trial_got": "bm_trial", "bm_compare": "bm_pan", "bm_panbokki": "bm_pan", "bm_confirm": "bm_confirm", "bm_confirm_got": "bm_confirm",
                "bm_verdict": "bm_confirm", "bm_verdict_got": "bm_confirm", "bm_brief": "bm_make", "bm_done": "done"}
@@ -59,6 +60,32 @@ def _F():
     return flow
 
 
+# 멈춤 종류(관제 319 · Jev 해결 0.85·위험 0.25): 실패 이유가 전부 PC·네트워크 사정(메모리·파일·디스크·429·시간 초과)이면 '환경' —
+#   사람에게 묻지 않고 같은 단계를 자동 재시도(auto). 하나라도 내용 실패가 섞이면 '내용' — 그때만 회원에게 묻는다.
+#   판정 = stop_kind 한 곳. 실패 목록(failed·error)이 있는 멈춤 자리는 전부 _fail_stop 을 부른다.
+ENV_MARKS = ("MemoryError", "Unable to allocate", "WinError 1455", "페이징 파일", "OSError", "PermissionError", "FileNotFoundError", "BrokenPipe",
+             "No space", "디스크", "429", "Too Many Requests", "rate limit", "timeout", "Timeout", "TimeoutExpired", "시간 초과", "ConnectionError",
+             "Connection reset", "실행기 출력 없음")
+
+
+def stop_kind(errs) -> str:
+    """(판단 주인 · 멈춤 종류) errs = 실패 목록([{why}] · 글 · dict) → 'env' | 'content'. 비어 있으면 content(이유 없는 실패를 환경으로 치지 않는다)."""
+    if isinstance(errs, (str, dict)):
+        errs = [errs]
+    texts = [str(x.get("why") or x.get("error") or x) if isinstance(x, dict) else str(x) for x in errs or []]
+    texts = [t for t in texts if t.strip()]
+    return "env" if texts and all(any(k in t for k in ENV_MARKS) for t in texts) else "content"
+
+
+def _fail_stop(errs, why: str, fix: str, retry: str | None, retry_content: bool = True, **kw):
+    """실패 목록이 있는 멈춤 한 곳 — 환경이면 같은 단계 자동 재시도(회원 질문 없음), 내용이면 주어진 두 줄로."""
+    F = _F()
+    detail = json.dumps(errs, ensure_ascii=False, default=str)[:400]
+    if stop_kind(errs) == "env":
+        return F._Stop("PC가 잠깐 바빠서 이어 가지 못했어요", "잠시 뒤 다시 해 주세요", retry=retry, auto=True, ask_member=True, detail="환경 실패: " + detail)
+    return F._Stop(why, fix, retry=retry if retry_content else None, detail=detail, **kw)
+
+
 def bm_setup(st, m, rp, u):
     return {"do": [{"id": "bm_env", "cmd": "bm_env"}], "then": "bm_env_got"}
 
@@ -67,30 +94,42 @@ def bm_env_got(st, m, rp, u):
     F = _F()
     e = m.get("bm_env") or {}
     if e.get("error"):       # 실행기가 준비 확인을 못 돌렸다(띄우기 실패·시간 초과) — agy 가 없다는 뜻이 아니다. 잠깐의 문제로 다시
-        raise F._Stop("준비 확인을 마치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_setup", auto=True, ask_member=True, detail=str(e["error"])[:300])
+        raise _fail_stop([e["error"]], "준비 확인을 마치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_setup", auto=True, ask_member=True)
+    if e.get("mem_free_gb") is not None:      # 메모리 여유는 기록만 — 시작 전 문턱은 Jev 미달(해결 0.79·뿌리 0.48)이라 보류, MemoryError 는 멈춤 분류가 자동 재시도
+        st["log"].append(f"준비: 메모리(커밋) 여유 {e['mem_free_gb']}GB · 디스크 {e.get('disk_gb')}GB")
     if not e.get("agy"):
         raise F._Stop("영상을 볼 agy 가 이 PC에 없어요", "숏클 설치 안내의 agy 설치를 마친 뒤 다시 해 주세요", final=True)
     if not e.get("agy_login"):      # 오푸스로 조용히 넘어가지 않는다(영상을 볼 수 있는 건 구독 제미나이뿐)
         raise F._Stop("agy 로그인이 끊겼어요", "제미나이로 다시 로그인해 주세요", retry="bm_setup", ask_member=True)
+    return bm_fetch(st, m, rp, u)
+
+
+def bm_fetch(st, m, rp, u):
+    """벤치 영상 받기 — 준비 확인 뒤, 또는 받기 실패 뒤 다시 시도(옛 retry=bm_env_got 은 빈 준비 결과로 'agy 없음' 오판)."""
     b = st["bm"]
     return {"do": [{"id": "bm_fetch", "cmd": "bm_fetch", **({"videos": b["videos_in"]} if b.get("videos_in") else {"url": b["url"]}), "n": b["n"]}], "then": "bm_fetch_got"}
 
 
 def bm_fetch_got(st, m, rp, u):
-    F = _F()
-    vs = (m.get("bm_fetch") or {}).get("videos") or []
+    r = m.get("bm_fetch") or {}
+    vs = r.get("videos") or []
     if not vs:
-        raise F._Stop("벤치 영상을 받지 못했어요", "채널 주소를 확인하거나 영상 주소 3개를 주세요", auto=True, retry="bm_env_got")
+        raise _fail_stop([r["error"]] if r.get("error") else [], "벤치 영상을 받지 못했어요", "채널 주소를 확인하거나 영상 주소 3개를 주세요", "bm_fetch", auto=True)
     st["bm"]["videos"] = vs
-    return {"do": [{"id": "bm_tear", "cmd": "bm_tear", "slug": st["bm"]["slug"], "videos": vs}], "then": "bm_tear_got"}
+    return bm_tear(st, m, rp, u)
+
+
+def bm_tear(st, m, rp, u):
+    """뜯기 — 받은 영상 그대로(다시 시도도 받기부터가 아니라 뜯기만)."""
+    return {"do": [{"id": "bm_tear", "cmd": "bm_tear", "slug": st["bm"]["slug"], "videos": st["bm"]["videos"]}], "then": "bm_tear_got"}
 
 
 def bm_tear_got(st, m, rp, u):
-    F = _F()
     t = m.get("bm_tear") or {}
     ps = t.get("presets") or []
     if not ps:
-        raise F._Stop("프리셋을 만들 수 있는 영상이 없어요", "세로 쇼츠 영상 주소를 직접 골라 주세요", detail=json.dumps(t.get("failed"), ensure_ascii=False)[:400])
+        raise _fail_stop(t.get("failed") or ([t["error"]] if t.get("error") else []),
+                         "프리셋을 만들 수 있는 영상이 없어요", "세로 쇼츠 영상 주소를 직접 골라 주세요", "bm_tear", retry_content=False)
     b = st["bm"]
     b["style"], b["other_styles"] = ps[0]["style"], [p["style"] for p in ps[1:]]      # 편 수가 많은 틀 하나로 간다 — 나머지는 결과에 적는다
     b["keep"] = [v["id"] for v in b["videos"] if v["id"] in set(ps[0]["sources"])]
@@ -109,6 +148,12 @@ def _branch(st, t: dict) -> None:
     st["log"].append(f"갈래: {g['branch']} — {g['why']}")
     if g["missing"]:
         st["log"].append(f"경보: R7 칸을 못 잰 편 {g['missing']} — " + json.dumps(t.get("r7_failed") or [], ensure_ascii=False)[:300])
+
+
+def bm_skel(st, m, rp, u):
+    """줄판독 뼈대만 다시(뜯기 결과 그대로) — 옛 retry=bm_tear_got 은 빈 뜯기 결과로 '프리셋 없음' 오판."""
+    b = st["bm"]
+    return {"do": [{"id": "skel", "cmd": "bm_skel", "slug": b["slug"], "ids": b["keep"]}], "then": "bm_skel_got"}
 
 
 def _read_do(b: dict, ids: list, errs: dict | None = None) -> list:
@@ -133,8 +178,8 @@ def bm_skel_got(st, m, rp, u):
     docs = k.get("docs") or {}
     b = st["bm"]
     if not docs:
-        raise F._Stop("벤치 영상의 자막 줄을 나누지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_tear_got", auto=True,
-                      detail=json.dumps(k.get("failed"), ensure_ascii=False, default=str)[:400])
+        raise _fail_stop(k.get("failed") or ([k["error"]] if k.get("error") else []), "벤치 영상의 자막 줄을 나누지 못했어요", "잠시 뒤 다시 해 주세요",
+                         "bm_skel", auto=True)
     b["skel"] = {vid: len(d.get("lines") or []) for vid, d in docs.items()}
     b["skel_lines"] = {vid: d.get("lines") or [] for vid, d in docs.items()}
     if k.get("failed"):
@@ -179,16 +224,16 @@ def _eye_frames_got(r, ids: list):
 
 
 def _eye_stop(detail: str, retry: str):
-    F = _F()
-    return F._Stop("화면 전환을 확인하지 못했어요", "잠시 뒤 다시 해 주세요", retry=retry, ask_member=True, detail=detail[:400])
+    return _fail_stop([detail[:400]], "화면 전환을 확인하지 못했어요", "잠시 뒤 다시 해 주세요", retry, ask_member=True)
 
 
 def bm_read_got(st, m, rp, u):
     F = _F()
     rows = {k: v.get("answer") for k, v in m.items() if k.startswith("read_") and isinstance(v, dict) and v.get("answer")}
     if not rows:
-        raise F._Stop("영상 보기가 모두 실패했어요", "agy 로그인을 확인한 뒤 다시 해 주세요", retry="bm_setup", ask_member=True,
-                      detail=json.dumps({k: v for k, v in m.items() if k.startswith("read_")}, ensure_ascii=False, default=str)[:400])
+        errs = [v.get("error") or v for k, v in m.items() if k.startswith("read_") and isinstance(v, dict)]
+        raise _fail_stop(errs, "영상 보기가 모두 실패했어요", "agy 로그인을 확인한 뒤 다시 해 주세요", "bm_reread" if st["bm"].get("skel_lines") else "bm_setup",
+                         ask_member=True)
     st["bm"]["reads"] = rows
     ask = ("벤치 편마다 agy 가 적은 표다. 모든 편에 같은 칸(=채널 규칙)과 편마다 다른 칸(=소재)을 갈라라. "
            "agy 가 적은 값이 서로 다른데 프로그램 숫자(뜯기.json)로 확인할 수 있는 칸은 숫자를 믿어라.\n" + json.dumps(rows, ensure_ascii=False)[:12000])
@@ -295,6 +340,7 @@ TRIAL_ASK = """## 회원 과제 — 시험 영상 1편 만들기(벤치마킹 �
 - 만들기: shortem_make(step="start", preset="{{preset_id}}") 로 시작해 그 응답의 next 대로 완성(need="done")까지 간다.
 - 소재: 1판 규칙 그대로 — {source}
 - 벤치 영상 파일은 재료로 쓰지 않는다(벤치를 베끼는 게 아니라 같은 꼴로 새 편을 만든다).
+- 목소리: 이 시험 편은 피쉬 '차분한 해설가' — 대본 purpose="calcopy"(목소리 {tts}). 타입캐스트를 부르지 않는다.
 - 끝나면 그 편의 sid(shortem_make 응답의 sid)를 work_dir 칸에 그대로 넣는다 — 회원 PC 가 그 편 작업 폴더를 이 작업 폴더 안으로 옮겨 상대 경로로 바꾼다.
 {again}
 답: {{"work_dir": "<shortem_make 응답의 sid>", "ok": true|false, "why": "<못 만들었으면 이유>"}}"""
@@ -312,14 +358,17 @@ def bm_trial(st, m, rp, u):
     b = st["bm"]
     fx = m.get("fix") or {}
     if fx.get("error"):
-        raise F._Stop("프리셋 칸을 고치지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_panbokki", ask_member=True, detail=str(fx["error"])[:300])
+        raise _fail_stop([fx["error"]], "프리셋 칸을 고치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_panbokki", ask_member=True)
     src = _trial_source(b)
     pdir = f"channel/{b['slug']}/preset/{b['style']}"
     n = int(st.get("pan_n") or 0)
-    ask = TRIAL_ASK.format(dir=pdir, slug=b["slug"], style=b["style"],
+    from tools.calcopy.engine import voices as VO
+    tts = VO.tts_for("calcopy")             # 흐름별 TTS 한 곳 — 칼카피 = 피쉬 차분한 해설가(완성본·회원 제작은 production = 타입캐스트)
+    ask = TRIAL_ASK.format(dir=pdir, slug=b["slug"], style=b["style"], tts=json.dumps(tts, ensure_ascii=False),
                            source=(f"벤치 채널 {src['channel']} 에서 고른다(영상 주소 없이 만들기)" if src["channel"] else "회원이 준 영상이 있으면 그 영상, 없으면 shortem_make 가 내는 안내 그대로"),
                            again=(f"- 잡도리 {n}번째 고침 뒤 다시 만드는 편이다(고친 칸: {b.get('fixed_last')})." if n else ""))
-    meta = {"kind": "member_task", "tool": "shortem_make", "preset": {"slug": b["slug"], "style": b["style"], "dir": pdir}, "source": src, "try": n}
+    meta = {"kind": "member_task", "tool": "shortem_make", "preset": {"slug": b["slug"], "style": b["style"], "dir": pdir}, "source": src, "try": n,
+            "purpose": "calcopy", "tts": tts}
     return {"review": [F._rv("bm_trial", ask, model=ASKS["bm_trial"]["model"], need=("work_dir", "ok"), meta=meta)], "then": "bm_trial_got"}
 
 
@@ -394,7 +443,7 @@ def bm_panbokki(st, m, rp, u):
     if (m.get("side") or {}).get("side"):
         b["side"] = m["side"]["side"]       # 확정 검사·최종 판정이 좌우 영상을 본다
     if (m.get("pan") or {}).get("error"):      # 대조를 못 했다 — 빈 대조표로 '맞춤'·'다시 재기'로 새지 않게 멈춘다
-        raise F._Stop("벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_compare", ask_member=True, detail=str(m["pan"]["error"])[:300])   # 도구 문제 — 같은 시험 편으로 대조만 다시(30~50분 재제작 금지)
+        raise _fail_stop([m["pan"]["error"]], "벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", "bm_compare", ask_member=True)   # 도구 문제 — 같은 시험 편으로 대조만 다시(30~50분 재제작 금지)
     if m.get("pan"):
         b["pan_last"] = m["pan"]
     p = b.get("pan_last") or {}             # Jev 가 쉬어서 멈춘 뒤 다시 시도하면 직전 대조표로 이어 간다
@@ -513,11 +562,12 @@ def bm_done(st, m, rp, u):
     F = _F()
     b, br = st["bm"], m.get("brief") or {}
     if not br.get("zip"):
-        raise F._Stop("프리셋 묶음을 만들지 못했어요", "잠시 뒤 다시 해 주세요", retry="bm_brief", auto=True, detail=json.dumps(br, ensure_ascii=False, default=str)[:300])
+        raise _fail_stop([br.get("error") or br], "프리셋 묶음을 만들지 못했어요", "잠시 뒤 다시 해 주세요", "bm_brief", auto=True)
     return {"done": {"preset": {"slug": b["slug"], "style": b["style"], "name": b["name"], "zip": br["zip"], "other_styles": b.get("other_styles") or []}}}
 
 
-PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch_got": bm_fetch_got, "bm_tear_got": bm_tear_got, "bm_skel_got": bm_skel_got, "bm_read_got": bm_read_got,
+PHASES = {"bm_setup": bm_setup, "bm_env_got": bm_env_got, "bm_fetch": bm_fetch, "bm_fetch_got": bm_fetch_got, "bm_tear": bm_tear, "bm_tear_got": bm_tear_got,
+          "bm_skel": bm_skel, "bm_skel_got": bm_skel_got, "bm_read_got": bm_read_got,
           "bm_measure": bm_measure, "bm_measure_got": bm_measure_got, "bm_reread": bm_reread, "bm_trial": bm_trial, "bm_trial_got": bm_trial_got,
           "bm_eye_ask": bm_eye_ask, "bm_trial_frames": bm_trial_frames, "bm_trial_eye": bm_trial_eye, "bm_trial_eye_got": bm_trial_eye_got,
           "bm_compare": bm_compare, "bm_panbokki": bm_panbokki, "bm_confirm": bm_confirm, "bm_confirm_got": bm_confirm_got,

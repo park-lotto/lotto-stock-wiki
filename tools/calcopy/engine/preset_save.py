@@ -394,6 +394,20 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
 
 
 R7_FILE = "r7.json"
+DEFAULTS_FILE = "defaults.json"
+
+
+def keep_production_voice(preset_dir: Path) -> dict:
+    """프리셋 defaults.json 에 '실제 제작용 타입캐스트 성우' 칸을 빈 채로 둔다(사장님 11-05 — 칼카피 시험은 피쉬 차분한 해설가, 실제 제작 성우는 나중에 고름).
+    이미 값이 있으면 건드리지 않는다."""
+    p = preset_dir / DEFAULTS_FILE
+    D = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    if "production_voice" not in D:
+        D["production_voice"] = {"provider": "typecast", "voice_id": None,
+                                 "why": "칼카피 시험 편은 피쉬 '차분한 해설가'(voices.tts_for('calcopy')) — 실제 제작용 타입캐스트 성우는 비워 두고 확정 때 고른다"}
+        preset_dir.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(D, ensure_ascii=False, indent=1), encoding="utf-8")
+    return D
 
 
 def save_r7(preset_dir: Path, source_id: str, measured: dict) -> dict:
