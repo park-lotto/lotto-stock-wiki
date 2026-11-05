@@ -145,9 +145,11 @@ def erase_engine() -> str:
 
 
 # VMake 확정 실패(다시 보내도 같다) — 판단 주인 hard_fail. 시간 초과·일시 실패는 여기 없다(다시 보내면 지워질 수 있다)
-HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"))
+#   free_left = 무료 엔진이 지웠는데 글자가 남음(text_left) — 같은 엔진·같은 조각은 다시 지워도 같다(11-05 꿀템샷 94a65c1f2077)
+HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"),
+              ("free_left", r"지운 뒤에도 글자가 남음|지운 결과를 못 잼"))
 HARD_FIX = {"new_api": "VMake 새 API 키를 넣으면 다음 편부터 지워요", "not_pro": "VMake Pro 요금제에서 지워져요",
-            "sign": "VMake 키를 다시 확인해 주세요"}
+            "sign": "VMake 키를 다시 확인해 주세요", "free_left": "무료 지우기로 다 지워지지 않았어요 — VMake 키를 넣으면 깨끗하게 지워요"}
 
 
 def hard_fail(text: str) -> str:
@@ -167,7 +169,7 @@ def _key_fp(k: str) -> str:
 def note_hard(text: str) -> str:
     """(판단 주인 — 이 키로는 다시 보내도 같다) 회원 키 확정 실패를 기록한다. 편마다 다시 보내 같은 실패를 겪던 것(11-03 이정민·홍광수·김형관·임수정·한정수)."""
     k = hard_fail(text)
-    if not k or k in BASIC_OK or key_source() != "member" or not member_key():
+    if not k or k in BASIC_OK or k == "free_left" or key_source() != "member" or not member_key():     # free_left 는 키 탓이 아니다
         return ""
     BAD_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
     BAD_KEY_FILE.write_text(json.dumps({"fp": _key_fp(member_key()), "kind": k}), encoding="utf-8")
@@ -821,6 +823,42 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
     return out
 
 
+# (판단 주인 — 무료 엔진이 지운 조각에 글자가 남았나) 11-05 꿀템샷 회원 편 94a65c1f2077: 무료 엔진이 끝나기만 하면 '지움'으로 세어
+#   영어 박힌 자막이 일그러진 채 완성본 3~6초에 남았다(자동 검사 전부 ○). 관문④와 같은 검출기(vision.text_boxes_scored)로 지운 결과를 다시 잰다.
+#   실측(같은 편): 덜 지운 프레임 = 띠 안 폭 196~344px 상자 점수 0.92~0.98 · 글자 없는 장면 6장 = 상자 없음 또는 폭 12px 0.71 하나.
+LEFT_SCORE, LEFT_W, LEFT_FILL, LEFT_AT = 0.85, 0.06, 0.5, (0.2, 0.5, 0.8)
+
+
+def text_left(video: Path, spot: dict) -> str:
+    """지운 조각에 글자가 남았으면 이유 한 줄, 깨끗하면 ''. 띠(bands) 안만 잰다. 프레임 셋 중 둘 이상에서 남으면 남은 것. 잴 수 없으면 남은 것으로(조용히 통과 금지)."""
+    bands = (spot or {}).get("bands") or []
+    if not bands:
+        return ""
+    try:
+        import cv2
+        from shopping_shorts.channelkit import vision as V
+        cap = cv2.VideoCapture(str(video))
+        n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        hit = []
+        for q in LEFT_AT:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, int(n * q)))
+            ok, im = cap.read()
+            if not ok:
+                continue
+            H, W = im.shape[:2]
+            for b in V.text_boxes_scored(im):
+                x0, y0, x1, y1 = b["box"]
+                cy = (y0 + y1) / 2 / H
+                if (any(z["y0"] <= cy <= z["y1"] for z in bands) and b["score"] >= LEFT_SCORE
+                        and (x1 - x0) >= LEFT_W * W and b["fill"] >= LEFT_FILL):
+                    hit.append(f"{q:.0%} 점수 {b['score']} 폭 {x1 - x0}px")
+                    break
+        cap.release()
+    except Exception as e:  # noqa: BLE001 — 못 재면 지운 것으로 치지 않는다
+        return f"지운 결과를 못 잼({type(e).__name__}) — 흐림으로"
+    return f"지운 뒤에도 글자가 남음({' · '.join(hit)}) — 흐림으로" if len(hit) >= 2 else ""
+
+
 def free_clean(files: list, spots: dict, log=print) -> dict:
     """회원 GPU 로 지운다(돈 0) — spots = {원본 이름: 자리}(회원 Claude 지정, flow f_spots). 자리 없는 조각은 안 지우고 실패로(흐림이 덮는다)."""
     from tools.free_subclean import engine as FE
@@ -835,6 +873,10 @@ def free_clean(files: list, spots: dict, log=print) -> dict:
         tmp = f.with_name(f.stem + "_fclean" + f.suffix)
         try:
             res = FE.clean_file(f, tmp, spot)
+            left = text_left(tmp, spot)
+            if left:            # 덜 지움 — 원본에 끼우지 않고 실패로(흐림이 덮는다)
+                tmp.unlink(missing_ok=True)
+                raise RuntimeError(left)
             swap_in(f, tmp)
             out["cleaned"].append(f.name)
             log_entry(f.parent, {"file": f.name, "mode": "free", "ok": True, "sec": round(time.time() - t0, 1), "calls": 0, **_sent(f), **res})
