@@ -12,4 +12,4 @@ def test_full_and_section_downloads_carry_sort(monkeypatch, tmp_path):
     assert YF.SORT_1080 == ["-S", "res:1080,vcodec:h264"]
     assert src.count("*SORT_1080") >= 2                     # 통째 받기·구간 받기 둘 다
     ro = (Path(YF.__file__).parents[1] / "hybrid" / "runner_ops.py").read_text(encoding="utf-8")
-    assert ro.count("*SORT_1080") >= 2                      # 벤치·틱톡/인스타 원본 받기
+    assert ro.count("SORT_1080") >= 2 and "cap_args" in ro  # 벤치·틱톡/인스타 원본 받기 · 받기 입구의 강제 상한

@@ -1,0 +1,2444 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/yummyknow/mp4/rGFXQlS9Cp4.mp4",
+ "measured_at": "2026-10-16 01:23",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 33.633,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 1009,
+   "duration": 33.633,
+   "duration_container": 33.715,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   667,
+   1080,
+   1253
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   244,
+   244,
+   244
+  ],
+  "ink_polarity": "dark",
+  "caption_pos": "above",
+  "caption_band": [
+   570,
+   624
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    0,
+    10
+   ],
+   [
+    64,
+    177
+   ],
+   [
+    180,
+    192
+   ],
+   [
+    216,
+    231
+   ],
+   [
+    272,
+    387
+   ],
+   [
+    422,
+    486
+   ],
+   [
+    572,
+    624
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    667,
+    1080,
+    1253
+   ],
+   "bg_rgb": [
+    244,
+    244,
+    244
+   ],
+   "bg_lum": 244.1,
+   "caption": {
+    "pos": "above",
+    "band": [
+     570,
+     624
+    ],
+    "ink": "dark"
+   },
+   "above_bands": [
+    [
+     0,
+     10
+    ],
+    [
+     64,
+     177
+    ],
+    [
+     180,
+     192
+    ],
+    [
+     216,
+     231
+    ],
+    [
+     272,
+     387
+    ],
+    [
+     422,
+     486
+    ],
+    [
+     572,
+     624
+    ]
+   ],
+   "n_samples": 67,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "above",
+    "band": [
+     570,
+     624
+    ],
+    "ink": "dark",
+    "score": 18.0,
+    "spans": 18,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     67,
+     175
+    ],
+    "ink": "dark",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     286,
+     360
+    ],
+    "ink": "dark",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     422,
+     485
+    ],
+    "ink": "dark",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     63,
+     177
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 0.955
+   },
+   {
+    "pos": "above",
+    "band": [
+     284,
+     370
+    ],
+    "ink": "bright",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     420,
+     487
+    ],
+    "ink": "bright",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     568,
+     626
+    ],
+    "ink": "bright",
+    "score": 18.0,
+    "spans": 18,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     667,
+     717
+    ],
+    "ink": "dark",
+    "score": 13.36,
+    "spans": 29,
+    "persist": 0.999,
+    "coverage": 0.836
+   },
+   {
+    "pos": "inside",
+    "band": [
+     667,
+     719
+    ],
+    "ink": "bright",
+    "score": 9.09,
+    "spans": 26,
+    "persist": 0.99,
+    "coverage": 0.765
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   530,
+   661
+  ],
+  "changes": [
+   1.5,
+   3.4,
+   4.9,
+   6.9,
+   8.8,
+   10.0,
+   12.1,
+   13.5,
+   16.7,
+   19.4,
+   20.7,
+   22.1,
+   23.8,
+   25.5,
+   28.0,
+   29.8,
+   31.7
+  ],
+  "spans": [
+   [
+    0.0,
+    1.5
+   ],
+   [
+    1.5,
+    3.4
+   ],
+   [
+    3.4,
+    4.9
+   ],
+   [
+    4.9,
+    6.9
+   ],
+   [
+    6.9,
+    8.8
+   ],
+   [
+    8.8,
+    10.0
+   ],
+   [
+    10.0,
+    12.1
+   ],
+   [
+    12.1,
+    13.5
+   ],
+   [
+    13.5,
+    16.7
+   ],
+   [
+    16.7,
+    19.4
+   ],
+   [
+    19.4,
+    20.7
+   ],
+   [
+    20.7,
+    22.1
+   ],
+   [
+    22.1,
+    23.8
+   ],
+   [
+    23.8,
+    25.5
+   ],
+   [
+    25.5,
+    28.0
+   ],
+   [
+    28.0,
+    29.8
+   ],
+   [
+    29.8,
+    31.7
+   ],
+   [
+    31.7,
+    33.63
+   ]
+  ],
+  "n_spans": 18,
+  "items": [
+   {
+    "i": 0,
+    "t0": 0.0,
+    "t1": 1.5,
+    "lines": 2,
+    "widths": [
+     1079,
+     921
+    ],
+    "top_y": 530,
+    "leading": 60,
+    "mark": false,
+    "text": [
+     "한국 코스트코가 억울했던 이유"
+    ]
+   },
+   {
+    "i": 1,
+    "t0": 1.5,
+    "t1": 3.4,
+    "lines": 1,
+    "widths": [
+     383
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "최근 코스트코는"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 3.4,
+    "t1": 4.9,
+    "lines": 1,
+    "widths": [
+     719
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "두바이 스프레드를 출시했는데"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 4.9,
+    "t1": 6.9,
+    "lines": 1,
+    "widths": [
+     558
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "바삭한 카다이프를 넣어"
+    ]
+   },
+   {
+    "i": 4,
+    "t0": 6.9,
+    "t1": 8.8,
+    "lines": 1,
+    "widths": [
+     380
+    ],
+    "top_y": 571,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "맛부터 가격까지"
+    ]
+   },
+   {
+    "i": 5,
+    "t0": 8.8,
+    "t1": 10.0,
+    "lines": 1,
+    "widths": [
+     563
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "해외에선 인기가 많지만"
+    ]
+   },
+   {
+    "i": 6,
+    "t0": 10.0,
+    "t1": 12.1,
+    "lines": 1,
+    "widths": [
+     329
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "유독 한국에선"
+    ]
+   },
+   {
+    "i": 7,
+    "t0": 12.1,
+    "t1": 13.5,
+    "lines": 1,
+    "widths": [
+     653
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "라며 반응이 안 좋았다고 함"
+    ]
+   },
+   {
+    "i": 8,
+    "t0": 13.5,
+    "t1": 16.7,
+    "lines": 1,
+    "widths": [
+     225
+    ],
+    "top_y": 572,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "사실 이는"
+    ]
+   },
+   {
+    "i": 9,
+    "t0": 16.7,
+    "t1": 19.4,
+    "lines": 1,
+    "widths": [
+     491
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "원래는 피스타치오와"
+    ]
+   },
+   {
+    "i": 10,
+    "t0": 19.4,
+    "t1": 20.7,
+    "lines": 1,
+    "widths": [
+     669
+    ],
+    "top_y": 568,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "크림을 분리해서 출시했지만"
+    ]
+   },
+   {
+    "i": 11,
+    "t0": 20.7,
+    "t1": 22.1,
+    "lines": 1,
+    "widths": [
+     611
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "비빔밥의 나라 한국인들은"
+    ]
+   },
+   {
+    "i": 12,
+    "t0": 22.1,
+    "t1": 23.8,
+    "lines": 1,
+    "widths": [
+     551
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "\"뭐야 크림이 두 개네?\""
+    ]
+   },
+   {
+    "i": 13,
+    "t0": 23.8,
+    "t1": 25.5,
+    "lines": 1,
+    "widths": [
+     421
+    ],
+    "top_y": 572,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "라며 두 개의 맛을"
+    ]
+   },
+   {
+    "i": 14,
+    "t0": 25.5,
+    "t1": 28.0,
+    "lines": 1,
+    "widths": [
+     452
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "대부분이 초코 범벅"
+    ]
+   },
+   {
+    "i": 15,
+    "t0": 28.0,
+    "t1": 29.8,
+    "lines": 1,
+    "widths": [
+     276
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "하지만 이후"
+    ]
+   },
+   {
+    "i": 16,
+    "t0": 29.8,
+    "t1": 31.7,
+    "lines": 1,
+    "widths": [
+     384
+    ],
+    "top_y": 571,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "맛있다는 평가가"
+    ]
+   },
+   {
+    "i": 17,
+    "t0": 31.7,
+    "t1": 33.63,
+    "lines": 1,
+    "widths": [
+     452
+    ],
+    "top_y": 570,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "현재는 대량 생산이"
+    ]
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 37,
+    "stroke": null,
+    "outline": false,
+    "shadow": [
+     -4,
+     2
+    ],
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 3,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 6,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 52,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 13,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 8.0,
+    "outline": false,
+    "shadow": null,
+    "i": 17,
+    "anim": "없음"
+   }
+  ],
+  "unstable": [],
+  "ocr": {
+   "asked": 18,
+   "read": 18,
+   "errors": []
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 61,
+  "usable": 17,
+  "per_crop": [
+   {
+    "caption": 1,
+    "text": "최근 코스트코는",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.9355
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.5954
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.5367
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5217
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.481
+     }
+    ],
+    "grid": "fonts/c01.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 근는스최코"
+     }
+    ]
+   },
+   {
+    "caption": 4,
+    "text": "맛부터 가격까지",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.9281
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5431
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.5363
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5308
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.5191
+     }
+    ],
+    "grid": "fonts/c04.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가격까맛부"
+     }
+    ]
+   },
+   {
+    "caption": 7,
+    "text": "라며 반응이 안 좋았다고 함",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.8568
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.6461
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6072
+     },
+     {
+      "font": "S-CoreDream-6Bold.ttf",
+      "score": 0.5928
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5803
+     }
+    ],
+    "grid": "fonts/c07.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 고다라며반"
+     }
+    ]
+   },
+   {
+    "caption": 11,
+    "text": "비빔밥의 나라 한국인들은",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.8547
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.6091
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.5802
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5603
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5546
+     }
+    ],
+    "grid": "fonts/c11.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 국나들라밥"
+     }
+    ]
+   },
+   {
+    "caption": 14,
+    "text": "대부분이 초코 범벅",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.9144
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5717
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5516
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.5429
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.536
+     }
+    ],
+    "grid": "fonts/c14.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 대벅범부분"
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "text": "현재는 대량 생산이",
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.9364
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.6435
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.6356
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.597
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.5686
+     }
+    ],
+    "grid": "fonts/c17.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 는대량산생"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "BMDOHYEON.ttf",
+    "score": 0.9043
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "score": 0.5638
+   },
+   {
+    "font": "S-CoreDream-7ExtraBold.ttf",
+    "score": 0.5555
+   }
+  ]
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 1,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 4,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 7,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 11,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 14,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 17,
+    "fill_rgb": [
+     0,
+     0,
+     0
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 37,
+    "stroke": null,
+    "outline": false,
+    "shadow": [
+     -4,
+     2
+    ],
+    "i": 0,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 3,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 6,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 10,
+    "anim": "없음"
+   },
+   {
+    "line_h": 52,
+    "stroke": 7.0,
+    "outline": false,
+    "shadow": null,
+    "i": 13,
+    "anim": "없음"
+   },
+   {
+    "line_h": 54,
+    "stroke": 8.0,
+    "outline": false,
+    "shadow": null,
+    "i": 17,
+    "anim": "없음"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   3,
+   6,
+   10,
+   13,
+   17
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    0,
+    0,
+    0
+   ],
+   "outline_px": 0,
+   "outline_rgb": null,
+   "box": null,
+   "shadow": [
+    [
+     -4,
+     2
+    ]
+   ],
+   "stroke_px": 7.0,
+   "line_h_px": 54.0
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 1,
+    "t0": 1.5,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 1.2,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.233,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.267,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.3,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.333,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.367,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.4,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.433,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.467,
+      "bbox": [
+       0,
+       530,
+       1080,
+       128
+      ],
+      "ink": 65696
+     },
+     {
+      "t": 1.5,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8695
+     },
+     {
+      "t": 1.533,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8693
+     },
+     {
+      "t": 1.567,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8693
+     },
+     {
+      "t": 1.6,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.633,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.667,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.7,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.733,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.767,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     },
+     {
+      "t": 1.8,
+      "bbox": [
+       348,
+       570,
+       384,
+       54
+      ],
+      "ink": 8692
+     }
+    ]
+   },
+   {
+    "caption": 9,
+    "t0": 16.7,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 16.4,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.433,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.467,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.5,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.533,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.567,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.6,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.633,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.667,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.7,
+      "bbox": [
+       427,
+       572,
+       226,
+       52
+      ],
+      "ink": 5077
+     },
+     {
+      "t": 16.733,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11746
+     },
+     {
+      "t": 16.767,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11746
+     },
+     {
+      "t": 16.8,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     },
+     {
+      "t": 16.833,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11746
+     },
+     {
+      "t": 16.867,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     },
+     {
+      "t": 16.9,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     },
+     {
+      "t": 16.933,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     },
+     {
+      "t": 16.967,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     },
+     {
+      "t": 17.0,
+      "bbox": [
+       295,
+       570,
+       492,
+       54
+      ],
+      "ink": 11745
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "t0": 31.7,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 31.4,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.433,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.467,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.5,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.533,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.567,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.6,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.633,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.667,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.7,
+      "bbox": [
+       349,
+       571,
+       385,
+       52
+      ],
+      "ink": 8447
+     },
+     {
+      "t": 31.733,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10791
+     },
+     {
+      "t": 31.767,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10791
+     },
+     {
+      "t": 31.8,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10791
+     },
+     {
+      "t": 31.833,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10791
+     },
+     {
+      "t": 31.867,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10790
+     },
+     {
+      "t": 31.9,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10790
+     },
+     {
+      "t": 31.933,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10790
+     },
+     {
+      "t": 31.967,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10790
+     },
+     {
+      "t": 32.0,
+      "bbox": [
+       313,
+       570,
+       453,
+       54
+      ],
+      "ink": 10790
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -16.2,
+   "LRA": 0.9,
+   "TP": -3.7,
+   "S_spread": 0.7,
+   "S_n": 308,
+   "open3s_M": -16.0,
+   "rest_M": -16.3,
+   "hf_8k16k_dbfs": -47.09,
+   "openvoice": {
+    "floor_db": -30.99,
+    "open": 15.12,
+    "body": 14.86
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "발랄한",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 들뜬 20대 여성 수다체",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "female",
+     "voice": "tts"
+    }
+   ]
+  },
+  "transcript": {
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 5.25,
+     "text": "한국 코스트코가 억울했던 이유? 최근 코스트코는 비싼 두바이를 저격한 두바이 스프레드를 출시했는데.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 5.25,
+     "end": 13.09,
+     "text": "바삭한 카다이프를 넣어 차별화를 줬고, 맛부터 가격까지 깔 게 없는 제품이라 해외에선 인기가 많지만, 유독 한국에선",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 13.09,
+     "end": 16.73,
+     "text": "이거 그냥 초코맛 카다이프 아니야? 라며 반응이 안 좋았다고 함.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 16.73,
+     "end": 22.75,
+     "text": "사실 이는 한국인들의 스프레드 먹는 방식이 잘못됐기 때문인데, 원래는 피스타치오와 초코의 맛을 따로 느낄 수 있게 크림을 분리해서 출시했지만,",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 22.75,
+     "end": 28.01,
+     "text": "비빔밥의 나라 한국인들은 뭐야 크림이 두 개네? 그냥 비벼 버려야지! 라며 두 개의 맛을 혼합해 버렸고,",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 28.01,
+     "end": 33.61,
+     "text": "대부분이 초코범벅 피스타치오 맛을 영접했던 것. 하지만 이후 찍어 먹는 맛을 알라 유튜버들의 맛있다는 평가가 줄을 이루기 시작해서 현재는 대량 생산이 이어지고 있다고.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 6,
+   "langs": [
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 33.61,
+   "ko_speech_sec": 33.61,
+   "speech_share_ko": 0.999,
+   "chars_nospace_ko": 295,
+   "cps": 8.78,
+   "pause_median": null,
+   "pauses": 0,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "female",
+     "voice_guess": "tts",
+     "share": 1.0,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    }
+   ],
+   "narration": "tts",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 1163,
+     "f0_median_hz": 186.0,
+     "semitone_std": 4.34
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": false,
+   "source_evidence": {
+    "foreign_or_source_segments": 0,
+    "ambient": ""
+   },
+   "duck_db": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "caption_eq_narration": 1.0,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.059,
+   "sfx": {
+    "count": 2,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [
+     [
+      0.06,
+      0.16
+     ],
+     [
+      33.44,
+      0.08
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "나레 1명"
+  }
+ },
+ "script_tone": {
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 6,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 0.0,
+  "hearsay": 5,
+  "person_1st": 0,
+  "person_2nd": 0
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   1.5,
+   3.433,
+   4.867,
+   6.9,
+   9.967,
+   13.467,
+   16.733,
+   19.367,
+   20.667,
+   23.767,
+   25.467,
+   29.767,
+   31.733
+  ],
+  "shots": 14,
+  "shot_len": {
+   "median": 2.0,
+   "p10": 1.45,
+   "p90": 3.43
+  },
+  "first_cut": 1.5,
+  "cut_per_min": 23.2,
+  "cut_eq_sub": [
+   13,
+   13
+  ],
+  "cut_eq_sub_rate": 1.0,
+  "zoom": {
+   "n": 147,
+   "median_rate_pct_s": 0.0,
+   "p90_abs_rate_pct_s": 6.05,
+   "zoomin_frac": 0.238,
+   "zoomout_frac": 0.068
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    1.5,
+    3.433,
+    4.867,
+    6.9,
+    9.967,
+    13.467,
+    16.733,
+    19.367,
+    20.667,
+    23.767,
+    25.467,
+    29.767,
+    31.733
+   ],
+   "raw_stats": {
+    "shots": 14,
+    "first_cut": 1.5,
+    "cut_std": 0.88,
+    "cut_eq_sub": [
+     13,
+     13
+    ]
+   },
+   "candidates": [
+    1.5,
+    3.433,
+    4.867,
+    6.9,
+    9.967,
+    13.467,
+    16.733,
+    19.367,
+    20.667,
+    23.767,
+    25.467,
+    29.767,
+    31.733
+   ],
+   "corr": [
+    -0.325,
+    0.512,
+    0.406,
+    0.43,
+    0.118,
+    0.207,
+    0.304,
+    0.437,
+    0.166,
+    0.414,
+    0.447,
+    -0.129,
+    0.032
+   ],
+   "cuts": [
+    1.5,
+    3.433,
+    4.867,
+    6.9,
+    9.967,
+    13.467,
+    16.733,
+    19.367,
+    20.667,
+    23.767,
+    25.467,
+    29.767,
+    31.733
+   ],
+   "merged_out": [],
+   "rejected": [],
+   "shots": 14,
+   "shot_median": 2.0,
+   "shot_min": 1.3,
+   "shot_max": 4.3,
+   "first_cut": 1.5,
+   "cut_std": 0.88,
+   "cut_per_min": 23.2,
+   "cut_eq_sub": [
+    13,
+    13
+   ],
+   "longest_still": 3.2,
+   "event_gap_med": 1.85,
+   "zoom": {
+    "n": 147,
+    "median_rate_pct_s": 0.0,
+    "p90_abs_rate_pct_s": 6.05,
+    "zoomin_frac": 0.238,
+    "zoomout_frac": 0.068
+   }
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     1.5
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부 SNS에서 수집한 제품 리뷰 영상 클립을 재편집하여 사용했습니다."
+   },
+   {
+    "shot": 1,
+    "t": [
+     1.5,
+     3.43
+    ],
+    "kind": "남의영상재편집",
+    "why": "해외 틱톡 크리에이터의 두바이 초콜릿 먹방 영상 클립을 재편집했습니다."
+   },
+   {
+    "shot": 2,
+    "t": [
+     3.43,
+     4.87
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 스프레드 제품 언박싱 및 시식 영상 클립을 가져와 활용했습니다."
+   },
+   {
+    "shot": 3,
+    "t": [
+     4.87,
+     6.9
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 카다이프 조리 과정 영상 클립을 재편집해 구성했습니다."
+   },
+   {
+    "shot": 4,
+    "t": [
+     6.9,
+     9.97
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부 영상에서 가져온 제품 및 피스타치오 연출 클립을 편집했습니다."
+   },
+   {
+    "shot": 5,
+    "t": [
+     9.97,
+     13.47
+    ],
+    "kind": "짤·밈",
+    "why": "예능 흑백요리사의 백종원 블라인드 심사 짤·밈 장면을 활용했습니다."
+   },
+   {
+    "shot": 6,
+    "t": [
+     13.47,
+     16.73
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 빵 스프레드 시식 연출 영상 클립을 사용했습니다."
+   },
+   {
+    "shot": 7,
+    "t": [
+     16.73,
+     19.37
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 식빵에 크림을 바른 리뷰 영상을 재편집했습니다."
+   },
+   {
+    "shot": 8,
+    "t": [
+     19.37,
+     20.67
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 제품 용기 촬영 영상 클립을 재편집했습니다."
+   },
+   {
+    "shot": 9,
+    "t": [
+     20.67,
+     23.77
+    ],
+    "kind": "짤·밈",
+    "why": "예능 흑백요리사 비빔대왕의 방송 짤·밈 장면을 활용했습니다."
+   },
+   {
+    "shot": 10,
+    "t": [
+     23.77,
+     25.47
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 스프레드 제품 오픈 및 스푼으로 뜨는 쇼츠 숏폼 영상을 가져와 채널 틀 안에 넣었음."
+   },
+   {
+    "shot": 11,
+    "t": [
+     25.47,
+     29.77
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 제품을 떠올리는 숏폼 영상을 가져와 채널 틀 안에 넣었음."
+   },
+   {
+    "shot": 12,
+    "t": [
+     29.77,
+     31.73
+    ],
+    "kind": "남의영상재편집",
+    "why": "외부의 스프레드를 빵에 바르는 요리/먹방 영상을 가져와 채널 틀 안에 넣었음."
+   },
+   {
+    "shot": 13,
+    "t": [
+     31.73,
+     33.63
+    ],
+    "kind": "남의영상재편집",
+    "why": "매장 진열대에 진열된 제품을 촬영한 외부 영상을 가져와 채널 틀 안에 넣었음."
+   }
+  ],
+  "share_by_time": {
+   "남의영상재편집": 0.804,
+   "짤·밈": 0.196
+  },
+  "share_by_count": {
+   "남의영상재편집": 12,
+   "짤·밈": 2
+  },
+  "ok": true
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.059,
+  "count": 2,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.0,
+   "둘다_아님": 1.0
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "발랄한",
+   "신나는"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": {
+   "failed": "말 없는 구간 0.5초 미만"
+  },
+  "end": {
+   "fade": false,
+   "last0.5s_db": -22.5,
+   "prev_db": -18.3,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [
+   "female"
+  ],
+  "roles": 1,
+  "speakers_all": 1,
+  "cps": 8.78,
+  "narration": "tts",
+  "tone": "빠르고 들뜬 20대 여성 수다체",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 0,
+  "per_min": 0.0,
+  "kind_share": {},
+  "slot_share": {},
+  "appearances": [],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 상자 프레임 차분으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 0,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 9.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-flash-latest",
+   "key": 0,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 3.4
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-2.5-flash",
+   "key": 0,
+   "failed": "429",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 4.6
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-flash-latest",
+   "key": 1,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 5.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-2.5-flash",
+   "key": 1,
+   "failed": "404 모델 없음",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-flash-lite-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 2.6
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 5.9
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-flash-latest",
+   "key": 1,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 2.9
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-flash-lite-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 2.9
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 9.6
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-latest",
+   "key": 2,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 2.0
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-2.5-flash",
+   "key": 2,
+   "failed": "429",
+   "sec": 1.5
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 3,
+   "failed": "429",
+   "sec": 1.3
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 4,
+   "failed": "429",
+   "sec": 2.7
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 8.2
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-latest",
+   "key": 5,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 4.0
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-2.5-flash",
+   "key": 5,
+   "failed": "404 모델 없음",
+   "sec": 1.1
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 3.5
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-latest",
+   "key": 3,
+   "failed": "429",
+   "sec": 1.4
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-latest",
+   "key": 4,
+   "failed": "429",
+   "sec": 2.4
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "429",
+   "sec": 1.8
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "ok": true,
+   "sec": 16.0
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-2.5-flash",
+   "key": 4,
+   "failed": "404 모델 없음",
+   "sec": 1.8
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-lite-latest",
+   "key": 4,
+   "failed": "429",
+   "sec": 3.1
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-latest",
+   "key": 5,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 3.8
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 5.4
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-flash-latest",
+   "key": 5,
+   "failed": "429",
+   "sec": 3.0
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "ok": true,
+   "sec": 13.1
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "ok": true,
+   "sec": 12.6
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-3.5-flash",
+   "key": 7,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 8.2
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-flash-latest",
+   "key": 7,
+   "failed": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand ",
+   "sec": 5.2
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-2.5-flash",
+   "key": 7,
+   "failed": "404 모델 없음",
+   "sec": 2.1
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-flash-lite-latest",
+   "key": 7,
+   "ok": true,
+   "sec": 3.8
+  },
+  {
+   "tag": "ov3",
+   "model": "gemini-3.5-flash",
+   "key": 8,
+   "ok": true,
+   "sec": 6.6
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.0,
+  "layout": 123.2,
+  "captions": 50.5,
+  "fonts_fx": 1.8,
+  "caption_motion": 1.5,
+  "audio_tone": 34.7,
+  "cuts_materials": 44.3,
+  "rules": 85.0,
+  "total": 341.0
+ }
+}

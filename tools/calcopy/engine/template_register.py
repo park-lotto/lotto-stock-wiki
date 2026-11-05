@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""통과한 칼카피 프리셋을 장면꾸미기 고정형 목록(out/continuous20-data.js)에 **관리자 전용**으로 등록.
+"""통과한 프리셋 프리셋을 장면꾸미기 고정형 목록(out/continuous20-data.js)에 **관리자 전용**으로 등록.
 
-    PYTHONUTF8=1 py tools/calcopy/engine/template_register.py channel/sseolpulda/preset/A_흰바탕창/창아래_검정 --name "칼카피 썰풀다 A"
+    PYTHONUTF8=1 py tools/calcopy/engine/template_register.py channel/sseolpulda/preset/A_흰바탕창/창아래_검정 --name "프리셋 썰풀다 A"
 
 행 모양의 주인 = calcopy_frame.to_snapshot.build_row(customFrame 과 같은 함수 — 같은 설명서면 같은 번호 custom_<sha1>).
 프리셋의 변수 자리는 첫 출처 편 값으로 채운다(목록 카드의 보기용 — 고객 작업에서는 그 편 제목·자막이 들어간다).

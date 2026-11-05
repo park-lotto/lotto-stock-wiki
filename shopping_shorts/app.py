@@ -7302,7 +7302,7 @@ def _pvproxy_prewarm(job_id: str) -> None:
                                                "fit": c.get("fit")}))
         if not cuts or sum(blens) != len(cuts):
             return
-        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats, _pvproxy_cutaways(job)))
+        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats, _pvproxy_cutaways(job), deco=job.get("deco")))
         if (d / ("%s.mp4" % sig)).exists():
             return                          # 이미 있다
         with _PVPROXY_LOCK:
@@ -7668,6 +7668,23 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             # 나레이션 한 줄 = 완성본(_render_mix)과 **같은 함수**(표본 수 = 총 프레임 × 1600, head_trim 부터 읽기) → AAC 한 번
             _plan = {"beats": [{"beat_idx": bi, "head_trim": _trims(bi)[0]} for bi, _ in nar_frames]}
             narr = video_assemble.narration_track(_plan, dict(tts), nar_frames, tmp / "narr.wav")
+            # 🔊 원음 깔기(관제 097) — 판단은 video_assemble.source_audio_bed 한 곳. 여기선 이 합본의 컷(읽는 자리·배속·
+            #   프레임 수 = 위 굽기와 같은 _cut_motion·_nf)을 그 함수가 읽는 모양으로 넘기기만 한다.
+            try:
+                _sa = video_assemble.source_audio_settings((_job or {}).get("deco"))
+            except NameError:       # 작업을 못 읽었다(위 구도 계산 실패) — 원음 없이 종전대로
+                _sa = None
+            if _sa:
+                _scp, _k2 = [], 0
+                for bi, n in enumerate(beat_lens):
+                    _clips = []
+                    for c in cuts[_k2:_k2 + n]:
+                        _take, _slow, _ = _cut_motion(c)
+                        _clips.append({"video_id": c.get("video_id"), "start": float(c.get("start") or 0.0),
+                                       "c_src": _take, "play_out": _take * _slow, "cfr": int(c.get("_nf") or 0)})
+                    _k2 += n
+                    _scp.append({"idx": bi, "clips": _clips})
+                narr = video_assemble.source_audio_bed(_scp, srcs, nar_frames, narr, _sa, tmp)
             cmd2 = ["ffmpeg", "-y", "-v", "error",
                     "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(narr),
                     "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "96k",
@@ -7778,7 +7795,7 @@ def _job_sources_with_memes(job, work) -> dict:
     return srcs
 
 
-def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
+def _pvproxy_beat_meta(beats: list, cutaways: dict = None, deco: dict = None) -> list:
     """칸마다 [음성 경로, 음성 지문, tts_ver, voice_override, 구도(, 끼움 장면 파일·지문)] — 칸 순서(edit_plan beats 순서) 그대로.
     끼움 장면은 **붙은 칸에만** 싣는다 — 안 붙은 작업의 서명은 종전과 같다(합본을 다시 굽지 않는다)."""
     out = []
@@ -7797,6 +7814,10 @@ def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
         if cw:
             row += ["cw", str(cw), _pvproxy_tts_stamp(cw)]
         out.append(row)
+    # 🔊 원음 깔기(관제 097)가 켜진 작업만 서명에 싣는다 — 꺼진 작업의 서명은 종전과 같다(합본을 다시 굽지 않는다)
+    _sa = video_assemble.source_audio_settings(deco)
+    if _sa:
+        out.append(["source_audio", round(_sa["volume"], 4), round(_sa["duck_db"], 3)])
     return out
 
 
@@ -7834,7 +7855,7 @@ def api_mix_preview_proxy(job_id: str, body: dict):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     sig = _pvproxy_sig(norm, blens, _pvproxy_beat_meta((job.get("edit_plan") or {}).get("beats") or [],
-                                                      _pvproxy_cutaways(job)))
+                                                      _pvproxy_cutaways(job), deco=job.get("deco")))
     if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
         res = {"ok": True, "sig": sig, "state": "ready",
                "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
@@ -17501,7 +17522,7 @@ def _api_me(request: Request):
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             "shortcl_open": _shortcl_portal().portal_open(st, cid),
-            "shortcl_trial": _shortcl_portal().trial_state(st, cid, access_level(cid, now) == "full"),
+            "shortcl_trial": _shortcl_portal().trial_state(st, cid, _shortcl_can_move(st, cid)),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17536,6 +17557,11 @@ def _code_admin(customer_id):
         return False
     email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
     return email.lower() in _ADMIN_EMAILS
+
+
+def _shortcl_can_move(st, cid) -> bool:
+    """숏클 전환 버튼 자격 한 곳 — Pro 회원(관제 306, 사장님 11-02)."""
+    return (st.get_customer(cid) or {}).get("plan") == "pro"
 
 
 def _shortcl_portal():
@@ -17682,6 +17708,7 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "license_kv",
                        # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
                        "claude_presets_off",
+                       "claude_pro_open_until",
                        # 클로드형 프리셋 고객용 이름(JSON {프리셋 id 또는 slug/틀: {name, desc}}) — PC 로컬 설정 화면 목록(관제 234)
                        "claude_preset_names",
                        # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
@@ -19292,6 +19319,15 @@ async def api_claude_rent(request: Request):
                                                 body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
+@app.post("/api/claude/benchmark_rent")
+async def api_claude_benchmark_rent(request: Request):
+    """고급반 벤치마킹 엔진 빌려주기(관제 304) — 판단은 claude_portal.benchmark_rent."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.benchmark_rent, ctx, str(body.get("job") or ""), body.get("lease") or None, Store(DB_PATH)))
+
+
 @app.post("/api/claude/step")
 async def api_claude_step(request: Request):
     """볼케이노형 제작 지시(관제 234, 2026-10-21) — 판단은 엔진 hybrid/flow.py, 관문·서명·기록은 claude_flow.step."""
@@ -19308,12 +19344,38 @@ def api_claude_pack(request: Request, asset_id: str, job: str = ""):
     return _claude_json(_cp.call(_cp.pack_route, ctx, asset_id, job, Store(DB_PATH)))
 
 
+@app.post("/api/claude/knowhow")
+async def api_claude_knowhow(request: Request):
+    from shopping_shorts import claude_flow as _cf, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cf.knowhow, ctx, body, Store(DB_PATH)))
+
+
 @app.post("/api/claude/feedback")
 async def api_claude_feedback(request: Request):
     from shopping_shorts import claude_portal as _cp
     body = await _claude_body(request)
     ctx = _cp.ctx_from_request(request, _client_ip(request))
     return _claude_json(await run_in_threadpool(_cp.call, _cp.feedback, ctx, body, Store(DB_PATH)))
+
+
+@app.post("/api/claude/live/report")
+async def api_claude_live_report(request: Request):
+    """숏클 실시간 회원 → 서버(관제 304) — 판단은 claude_live.report."""
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.report, ctx, body, Store(DB_PATH)))
+
+
+@app.post("/api/claude/live/pull")
+async def api_claude_live_pull(request: Request):
+    """숏클 실시간 서버 → 회원(관제 304) — 판단은 claude_live.pull."""
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.pull, ctx, body, Store(DB_PATH)))
 
 
 @app.get("/api/claude/blob/{token}")
@@ -19499,7 +19561,7 @@ def _public_base(request: Request) -> str:
 
 @app.get("/api/claude/me/start.md")
 def api_claude_me_start_md(request: Request):
-    """회원별 시작.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
+    """회원별 START.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
     cid, st, denied = _claude_me(request)
     if denied:
         return denied
@@ -19520,12 +19582,13 @@ def api_claude_me_start_zip(request: Request):
 
 @app.post("/api/claude/me/trial")
 def api_claude_trial(request: Request):
-    """숏클 무료 업그레이드 1주(관제 300) — 판단은 claude_portal.claim_trial."""
+    """숏클 Pro 회원 전환(관제 306) — 판단은 claude_portal.claim_trial."""
     cid = getattr(request.state, "customer_id", None)
     if cid is None:
         return JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
     _cp = _shortcl_portal()
-    return _claude_json(_cp.call(_cp.claim_trial, cid, access_level(cid) == "full", Store(DB_PATH)))
+    st = Store(DB_PATH)
+    return _claude_json(_cp.call(_cp.claim_trial, cid, _shortcl_can_move(st, cid), st))
 
 
 @app.get("/api/claude/me/start_line")
@@ -19578,6 +19641,46 @@ def api_claude_me_installer(request: Request, os_id: str):
     if st_ != 200:
         return JSONResponse(got, status_code=st_)
     return FileResponse(str(got["file"]), media_type="application/octet-stream", filename=got["name"])
+
+
+@app.get("/api/admin/claude/live/events")
+def api_admin_claude_live_events(request: Request, since_id: int = 0, limit: int = 200, urgent: int = 0, cid: int = None):
+    """숏클 실시간(관제 304) — 판단은 전부 claude_live. 여기는 관리자 확인·부르기만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl
+    return JSONResponse(_cl.events(Store(DB_PATH), since_id, limit, cid, bool(urgent), with_members=not urgent), headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/admin/claude/live/send")
+async def api_admin_claude_live_send(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.send, Store(DB_PATH), body.get("cid"), body.get("text"), body.get("sid") or ""))
+
+
+@app.post("/api/admin/claude/live/ping")
+async def api_admin_claude_live_ping(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.ping, Store(DB_PATH), bool(body.get("stop"))))
+
+
+@app.get("/api/admin/claude/live/feedback")
+def api_admin_claude_live_feedback(request: Request, id: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl
+    row = _cl.feedback_detail(Store(DB_PATH), id)
+    return {"ok": True, "feedback": row} if row else JSONResponse({"ok": False, "msg": "그 기록이 없습니다"}, status_code=404)
 
 
 @app.get("/api/admin/claude/alerts")
@@ -20613,30 +20716,7 @@ def _serve_grab_extension():
 # (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
 # 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
 # 한 번 눌러 URL·썸네일·제목을 우리 서버로 보내 담는다. 다운로드는 제작소에서 yt-dlp(무료).
-_GRAB_DOMAINS = [
-    ("youtube", ("youtube.com", "youtu.be")),
-    ("tiktok", ("tiktok.com",)),
-    ("instagram", ("instagram.com",)),
-    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote.com")),
-    ("douyin", ("douyin.com", "iesdouyin.com")),
-    ("threads", ("threads.com", "threads.net")),
-    # 핀터레스트(2026-09-11 고객 "담기 버튼이 없다") — 다운로드는 media_download._download_pinterest
-    # ★2026-09-24 고객 "담기가 안 된다": `pinterest.com`만 알아봐서 **앱 공유 링크(pin.it)**와
-    #   나라별 주소(pinterest.co.kr·.jp 등)가 통째로 막혔다. 휴대폰 공유 버튼이 주는 기본 주소가 pin.it이다.
-    ("pinterest", ("pinterest.com", "pin.it", "pinterest.co.kr", "pinterest.co.uk",
-                   "pinterest.jp", "pinterest.ca", "pinterest.de", "pinterest.fr",
-                   "pinterest.es", "pinterest.it", "pinterest.ph", "pinterest.at",
-                   "pinterest.ch", "pinterest.cl", "pinterest.dk", "pinterest.ie",
-                   "pinterest.nz", "pinterest.pt", "pinterest.se", "pinterest.ru")),
-]
-
-
-def _grab_platform(url):
-    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
-    for name, doms in _GRAB_DOMAINS:
-        if any(host == d or host.endswith("." + d) for d in doms):
-            return name
-    return ""
+from shopping_shorts.grab_domains import _GRAB_DOMAINS, _grab_platform  # noqa: E402  ★목록 주인은 grab_domains 한 곳(관제 234)
 
 
 def _grab_platform_of(url):
@@ -24195,6 +24275,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
+    # 관리자 전용 틀(칼카피 등록 틀 admin_only) 노출 — 편집기 목록 필터(precision20-ui.js rowVisible)가 이 값만 본다. 고객 화면 불변
+    context["adminView"] = bool(_is_admin(_cid(request)))
     # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
     # 자동 배치는 새 영상에만(2026-10-06 사장님 "기존영상은 하지말고") — 장면 효과 자동 배치·등장 효과팩 자동 번호가 같은 기준(scene_style.auto_new_job)
     from .scene_style import auto_new_job, caption_motion_pack_for
@@ -29951,6 +30033,19 @@ def api_admin_calcopy_worker_heartbeat(request: Request, body: dict = None):
         doing=b.get("doing"), idle_reason=b.get("idle_reason"), last_error=b.get("last_error"))})
 
 
+@app.get("/api/admin/calcopy/workers/kpi")
+def api_admin_calcopy_worker_kpi(request: Request, hours: float = 1):
+    """워커 장부 KPI(시간당 새 후보·단계별 통과율·제미나이·429) — 판정은 worker_ledger.kpi/summary 한 곳."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from tools.calcopy.engine import worker_ledger as _wl
+    from shopping_shorts import calcopy_topics as _ct
+    out = _wl.summary(max(0.25, min(float(hours), 168)), data_dir=_ct.base_dir().parent)
+    out["recent"] = _wl.tail(80, data_dir=_ct.base_dir().parent)
+    return out
+
+
 @app.post("/api/admin/calcopy/topics/caps")
 def api_admin_calcopy_topics_caps(request: Request, body: dict = None):
     return _calcopy_topics_call(request, lambda ct: {"ok": True, "caps": ct.set_caps(body or {})})
@@ -29985,7 +30080,7 @@ def api_admin_calcopy_topic_advance(request: Request, tid: int, body: dict = Non
 def api_admin_calcopy_topic_release(request: Request, tid: int, body: dict = None):
     b = body or {}
     return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.release(
-        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"))})
+        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"), count=b.get("count", True))})
 
 
 @app.post("/api/admin/calcopy/topics/{tid:int}/unstall")
@@ -30038,6 +30133,65 @@ def _admin_calcopy_topics_page(request: Request):   # 소재창고 보드(관리
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin_calcopy_topics.html",
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+# ── 칼카피 만들기 입구(관제 097) — 판단은 calcopy_make 하나. 여기는 관리자 확인 + 오류 모양만.
+def _calcopy_make_call(request, fn):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_make as _mk, calcopy_topics as _ct
+    try:
+        return fn(_mk)
+    except (_mk.MakeError, _ct.TopicError) as e:
+        return JSONResponse({"error": e.msg}, status_code=e.code)
+
+
+@app.get("/api/calcopy/make/presets")
+def api_calcopy_make_presets(request: Request):
+    return _calcopy_make_call(request, lambda mk: {"presets": mk.list_presets(), "packs": mk.load_packs(), "sessions": mk.sessions(),
+                                                   "pack_check": {k: mk.check_pack(v) for k, v in mk.load_packs().items()},
+                                                   "reusable": mk.reusable()})
+
+
+@app.get("/api/admin/calcopy/results")
+def api_admin_calcopy_results(request: Request):
+    return _calcopy_make_call(request, lambda mk: mk.results())
+
+
+@app.post("/api/calcopy/make/pack/{n}")
+def api_calcopy_make_pack(request: Request, n: str, body: dict = None):
+    return _calcopy_make_call(request, lambda mk: {"ok": True, "pack": mk.save_pack(n, body or {})})
+
+
+@app.post("/api/calcopy/make/start")
+def api_calcopy_make_start(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.start(b.get("preset", ""), b.get("pack", "1"), topic=b.get("topic") or None,
+                                                           ref_url=b.get("ref_url") or None, facts=b.get("facts") or None,
+                                                           reuse_of=b.get("reuse_of") or None, pack_patch=b.get("pack_patch") or None))
+
+
+@app.post("/api/calcopy/make/choose")
+def api_calcopy_make_choose(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.choose(b.get("sid", ""), int(b.get("n") or 0)))
+
+
+@app.post("/api/calcopy/make/approve")
+def api_calcopy_make_approve(request: Request, body: dict = None):
+    return _calcopy_make_call(request, lambda mk: mk.approve((body or {}).get("sid", ""), by="관리자"))   # 관리자 세션만 여기까지 온다
+
+
+@app.post("/api/calcopy/make/reject")
+def api_calcopy_make_reject(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.reject(b.get("sid", ""), b.get("reason", "")))
+
+
+@app.get("/api/calcopy/make/status")
+def api_calcopy_make_status(request: Request, sid: str = ""):
+    return _calcopy_make_call(request, lambda mk: mk.status(sid))
 
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
@@ -30409,6 +30563,25 @@ def _start_cardnews_rule_loop():
             except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
                 logging.warning("[cardnews] 자동 규칙 루프 오류: %r", e)
     threading.Thread(target=_loop, daemon=True, name="cardnews-rules").start()
+
+
+@app.on_event("startup")
+def _start_claude_live_watch_loop():
+    """숏클 대기실 생존 감시(관제 304) — 1분마다 신호가 끊겼나 본다. 판단·중복 방지는 claude_live.check_watch(웹 프로세스가 여럿이어도 한 번만)."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    import threading
+    import time as _t
+
+    def _loop():
+        while True:
+            _t.sleep(60)
+            try:
+                from shopping_shorts import claude_live as _cl
+                _cl.check_watch(Store(DB_PATH))
+            except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
+                logging.warning("[claude_live] 대기실 감시 오류: %r", e)
+    threading.Thread(target=_loop, daemon=True, name="claude-live-watch").start()
 
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")

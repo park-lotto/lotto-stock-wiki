@@ -1,5 +1,5 @@
-# 숏클 설치 - 회원이 받은 시작.md 의 한 줄이 부른다(관제 294, 사장님 11-01 "시작md 만 넣으면 바로").
-# 회원 입력 0: 인증값(SHORTEM_START)은 시작.md 에 들어 있고, 키는 이 스크립트가 받아 파일로만 저장한다(화면·대화에 내지 않는다).
+# 숏클 설치 - 회원이 받은 START.md 의 한 줄이 부른다(관제 294, 사장님 11-01 "시작md 만 넣으면 바로").
+# 회원 입력 0: 인증값(SHORTEM_START)은 START.md 에 들어 있고, 키는 이 스크립트가 받아 파일로만 저장한다(화면·대화에 내지 않는다).
 # 판단 주인: 키·인증 = shopping_shorts/claude_portal.py start_redeem · 묶음 = install_info · 풀기 후 검사 = postinstall.js.
 # 시험 환경변수: SHORTEM_BASE · SHORTEM_INSTALL_DIR · SHORTEM_NO_PERSIST(사용자 환경변수 안 씀) · SHORTEM_NO_LAUNCH(새 창 안 띄움)
 $ErrorActionPreference = 'Stop'
@@ -12,13 +12,13 @@ function Die($m) { Write-Host "[숏클] 설치를 마치지 못했습니다: $m"
 
 $base = if ($env:SHORTEM_BASE) { $env:SHORTEM_BASE.TrimEnd('/') } else { '__BASE__' }
 $token = $env:SHORTEM_START
-if (-not $token) { Die '시작.md 를 숏템메이커 페이지에서 새로 받아 주세요' }
+if (-not $token) { Die 'START.md 를 숏템메이커 페이지에서 새로 받아 주세요' }
 
 Say '회원 확인 중'
 try {
     $auth = Invoke-RestMethod -Method Post -Uri "$base/api/claude/start/redeem" -Headers @{ 'X-Shortem-Start' = $token }
 } catch {
-    Die '회원 확인이 안 됐습니다. 페이지에서 시작.md 를 새로 받아 주세요'
+    Die '회원 확인이 안 됐습니다. 페이지에서 START.md 를 새로 받아 주세요'
 }
 $key = [string]$auth.key
 if (-not $key) { Die '회원 확인 응답이 비었습니다' }
@@ -43,6 +43,15 @@ try { $current = (Get-Content (Join-Path $homeDir 'install.json') -Raw -Encoding
 if ($current -eq $info.version -and (Test-Path $node)) {
     Say "이미 최신입니다($current)"
 } else {
+    # 막 푼 파일은 백신이 검사하느라 잠깐 잡고 있다 — 기다렸다 다시, 끝내 막히면 파일을 옮긴다(11-02 새 PC 실사고)
+    function Move-Folder($from, $to) {
+        for ($i = 1; $i -le 40; $i++) {
+            try { [IO.Directory]::Move($from, $to); return }
+            catch { if ($i -eq 1) { Say '보안 프로그램 검사가 끝나길 기다리는 중(최대 2분)' }; Start-Sleep -Seconds 3 }
+        }
+        & robocopy.exe $from $to /E /MOVE /R:5 /W:3 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { Die "설치 폴더를 옮기지 못했습니다(robocopy $LASTEXITCODE). 컴퓨터를 다시 켠 뒤 다시 실행해 주세요" }
+    }
     $drive = (Get-Item $parent).PSDrive
     $needGb = [math]::Ceiling(([double]$info.size) * 4 / 1GB)
     if ($drive.Free -lt ([double]$info.size) * 4) { Die "디스크 여유가 부족합니다. ${needGb}GB 이상 비워 주세요" }
@@ -50,10 +59,13 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     Say "내려받는 중(약 ${gb}GB, 끊겨도 이어 받습니다)"
     $zip = Join-Path $parent 'Shortem.download.part'
     $url = if ($info.url -like "http*") { $info.url } else { "$base/" + ([string]$info.url).TrimStart("/") }
-    & curl.exe -# -fL --retry 5 --retry-delay 5 -C - -o $zip $url
-    if ($LASTEXITCODE -ne 0) {
-        Remove-Item $zip -Force -ErrorAction SilentlyContinue
-        Die "내려받기 실패(curl $LASTEXITCODE). 다시 시도해 주세요"
+    $have = (Test-Path $zip) -and ((Get-Item $zip).Length -eq [int64]$info.size) -and ((Get-FileHash $zip -Algorithm SHA256).Hash.ToLower() -eq $info.sha256)
+    if (-not $have) {     # 다시 실행하면 이미 받은 파일을 그대로 쓴다
+        & curl.exe -# -fL --retry 5 --retry-delay 5 -C - -o $zip $url
+        if ($LASTEXITCODE -ne 0) {
+            Remove-Item $zip -Force -ErrorAction SilentlyContinue
+            Die "내려받기 실패(curl $LASTEXITCODE). 다시 시도해 주세요"
+        }
     }
     Say '받은 파일 확인 중'
     if ((Get-FileHash $zip -Algorithm SHA256).Hash.ToLower() -ne $info.sha256) {
@@ -64,13 +76,19 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     $fresh = "$homeDir.new"
     if (Test-Path $fresh) { Remove-Item $fresh -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $fresh | Out-Null
-    & "$env:SystemRoot\System32\tar.exe" -xf $zip -C $fresh
-    if ($LASTEXITCODE -ne 0) { Die "풀기 실패(tar $LASTEXITCODE)" }
+    # 윈도 내장 tar.exe 는 시스템 문자표(일본 CP932 등)로 못 바꾸는 한글 파일명을 건너뛰고 실패한다(관제 311, 일본 회원 11-03).
+    # .NET 압축 풀기는 묶음의 UTF-8 이름 표시를 그대로 따른다 — 회원 PC 언어와 무관. launcher.js unpack 과 같은 방법.
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [IO.Compression.ZipFile]::ExtractToDirectory($zip, $fresh)
+    } catch {
+        Die "풀기 실패($($_.Exception.Message))"
+    }
     if (-not (Test-Path (Join-Path $fresh 'tools\tools.manifest.json')) -or -not (Test-Path (Join-Path $fresh 'server\index.js'))) { Die '풀린 묶음이 덜 찼습니다' }
     $old = $null
-    if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Rename-Item $homeDir $old }
-    Rename-Item $fresh $homeDir
-    & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version --desktop $desktop
+    if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Move-Folder $homeDir $old }
+    Move-Folder $fresh $homeDir
+    & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version
     if ($LASTEXITCODE -ne 0) {
         Remove-Item $homeDir -Recurse -Force
         if ($old) { Rename-Item $old $homeDir }
@@ -124,8 +142,16 @@ $listed = (& claude plugin list 2>&1 | Out-String)
 $ErrorActionPreference = $eap
 if ($listed -notmatch 'shortem') { Die '숏클 플러그인 등록을 확인하지 못했습니다' }
 
-$work = Join-Path $desktop '숏템작업'
+# 작업 폴더 = 바탕화면이 아니라 ~/.shortem/work(재설치로 지워지지 않게 설치 폴더 밖). 이미 바탕화면 폴더를 쓰던 회원은 그대로 쓴다
+$oldWork = Join-Path $desktop '숏템작업'
+$shortemHome = if ($env:SHORTEM_HOME) { $env:SHORTEM_HOME } else { Join-Path $env:USERPROFILE '.shortem' }
+$work = if (Test-Path $oldWork) { $oldWork } else { Join-Path $shortemHome 'work' }
 New-Item -ItemType Directory -Force -Path $work | Out-Null
+# 회원 지침 = 작업 폴더 CLAUDE.md — Claude Code 가 이 폴더에서 시작할 때 자동으로 먼저 읽는다
+$guideSrc = Join-Path $homeDir 'server\guide\MEMBER_GUIDE.md'
+if (-not (Test-Path $guideSrc)) { Die '회원 지침 파일이 없습니다. 같은 줄을 다시 붙여 넣어 주세요' }
+$guideHead = "<!-- 숏클 회원 지침 — 숏클이 자동으로 관리합니다. 고치면 다음 업데이트에 덮입니다. -->`n"
+[IO.File]::WriteAllText((Join-Path $work 'CLAUDE.md'), $guideHead + [IO.File]::ReadAllText($guideSrc), (New-Object Text.UTF8Encoding($false)))
 
 # 첫 실행의 글자 스타일 선택·폴더 신뢰 확인을 미리 끝낸다(회원이 누를 것을 없앤다, 11-01 첫 화면 실측). 로그인은 회원 몫이다.
 $cfgDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { $null }
@@ -153,7 +179,7 @@ New-Item -ItemType Directory -Force -Path $local | Out-Null
 $allow = Join-Path $local 'settings.json'
 $allowJs = @'
 const fs = require('fs');
-const f = process.argv[2];
+const f = process.argv[1];
 let j = {};
 try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
 j.permissions = j.permissions || {};
@@ -189,8 +215,7 @@ if (-not $env:SHORTEM_NO_LAUNCH) {
     $ErrorActionPreference = 'Continue'
     $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     if (-not $logged) {
-        Say '브라우저가 열립니다. Claude 에 로그인하고 승인 버튼만 눌러 주세요'
-        & claude auth login
+        & $menu -LoginOnly      # 로그인은 메뉴의 Invoke-ShortclLogin 한 곳(관제 310)
         $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     }
     $ErrorActionPreference = $eap

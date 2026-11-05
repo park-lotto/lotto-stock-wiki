@@ -1,0 +1,242 @@
+# COPY Videos from Chinese app dub it and Reupload it on YouTube Shorts
+# MICO YT · 조회 28517 · 627초 · .en
+
+the YouTube algorithm today is favoring
+this type of content because many
+viewers prefer to watch film summaries
+before committing to the full
+movie this gives them a quick idea of
+what to expect which is why these videos
+have the potential to go viral if you
+take advantage of this opportunity now
+you can tap into this
+trend while there are already many
+channels doing this watching this video
+will teach you how to create these types
+of videos and they are 100% monetizable
+on YouTube Plus with a key strategy you
+can get your content accepted on
+Facebook as
+well before we dive into creating the
+video make sure to subscribe to my
+channel if you find this video helpful
+leave a comment to support the community
+and if you have any questions feel free
+to DM me privately on telegram or join
+our community chat so now let's start
+making our video don't miss the fourth
+step it's the key to standing out in
+this Niche compared to other channels
+first we're going to the quu site which
+is a platform similar to Tik Tok but
+mainly in Chinese here we'll only find
+Chinese videos you might be wondering
+what we're doing here but stay with me
+and it will all make sense next head
+over to Google Translate and translate
+the specific phrase which you'll find in
+the description into Chinese we'll use
+this phrase to search on
+quow copy the translated result paste it
+into the site search bar and hit enter
+as you can see many videos will show up
+and these are usually film explanations
+or summaries in Chinese now pick a video
+that you want to
+use to download it we'll need to use a
+specific tool which is linked in the
+description first copy the video link go
+to the downloader site paste the link
+and click
+submit after waiting a few seconds
+you'll see an interface where you can
+download the video and if you want the
+thumbnail as well for now let's just
+download the video by by clicking
+download another interface will pop up
+click on the three dots select download
+and your video will begin
+downloading after saving the video we
+move on to the second step we'll use a
+site called capwing start by clicking
+create new and when the interface
+appears click add media and then upload
+choose the video we just downloaded and
+wait a moment for it to
+upload next click on the 9 16 aspect
+ratio to make it suitable for shorts and
+change the background color to black as
+you can
+see once the video is uploaded the first
+thing we'll do is trim the beginning of
+the
+[Music]
+video after that we'll cut out the part
+that contains the Chinese captions
+[Music]
+now we'll use the dubbing tool first
+select the original language of the
+video which in this case is Chinese and
+then choose the language you want to dub
+it into I'll choose English you can also
+select the type of voice you prefer
+either male or female but I like to use
+the female voice after making these
+selections click dub video and wait for
+the translation to
+complete once the video is dubbed you'll
+see the English captions appear if you
+want to use captions you can customize
+their template size and position I'll
+choose this specific template and adjust
+its placement and size you can also
+change the colors and fonts if you like
+but for this example we'll stop
+here finally export the video by
+clicking export project choose the
+desired quality wait for the export
+process to finish and then click
+download
+video now moving on to the third step we
+need to isolate the voice from the
+background music first
+open cap cut and add the video we just
+edited here we take a screenshot from
+the video then we cut the dark par like
+this then after this we adjust it place
+to cover the
+watermark from there export only the
+audio by selecting the option to export
+as MP3 making sure to isolate the vocal
+track once the audio is exported head to
+the specified website Linked In the
+description and upload the audio file on
+this site you can adjust the the
+settings to reduce or remove the
+background music allowing you to isolate
+the voice test the audio to ensure the
+music is minimized and you're hearing
+just the vocals once you're satisfied
+click the button to save the isolated
+voice track making sure to choose the
+option to save only the vocals Now we
+move on to the fourth and most important
+step which will set you apart from other
+channels you might be thinking I don't
+have the best camera or my voice isn't
+strong enough that's where vid's AI
+comes in this platform is perfect for
+creating AI Avatar videos with realistic
+faces and voices after signing in with
+your Gmail you'll see its user-friendly
+interface with many templates and tools
+to choose from start by exploring the
+templates they offer options for
+explainer videos education business and
+how-to formats you can also choose
+between portrait and landscape video
+shapes now head over to the Clone voice
+section where you can either clone your
+own voice or select from over 1,000
+pre-recorded voices you can adjust
+everything from the language to the
+gender and even the emotion of the voice
+EG angry or
+[Music]
+happy next let's create our Avatar click
+on the avatars tab where you'll find a
+wide selection of avatars or you can
+create your
+own since I have a female voice track
+I'll choose a female
+Avatar after selecting the Avatar you
+can customize it by changing the voice
+or appearance
+[Music]
+once you're happy with your avatar click
+create video instead of typing text for
+the AI to generate speech we'll upload
+the voice file we created earlier upload
+it wait for it to process and then
+customize the
+background you can either upload an
+image or choose from stock
+images but for now we'll change the
+background to Green so we can edit it
+[Music]
+later we'll also adjust the video to a
+circular format with the green
+background after generating the
+[Music]
+video I want to briefly mention the
+different plans available on vid's AI
+there are three main plans starter
+business and Enterprise I recommend the
+business plan especially if you
+subscribe annually as you'll save 25%
+compared to monthly billing trust me
+once you try this AI tool you'll want to
+keep using it now our video is ready and
+as you can see we can download it now
+for the final step
+editing open cap cut and add the Avatar
+video we just created placing it over
+the main video then remove the green
+background and adjust the position of
+the Avatar to fit the scene
+[Music]
+next lower the volume of the original
+video so we're only using the AI
+Avatar's
+Voice once that's done go to the
+stickers option and search for a circle
+sticker add it underneath the AI avatar
+for visual effect after that search for
+an arrow sticker and add it to highlight
+important parts of the
+[Music]
+video to make the video more Dynamic
+we'll also add a wow sticker and a
+second arrow for each sticker be sure to
+apply animations to make them more
+engaging
+[Music]
+now I noticed the background looked a
+bit dull so I added another video as the
+background I cut the original one to fit
+and fill the screen
+[Music]
+then I used the mask option and applied
+rounded Corners to give the video a
+cleaner
+[Music]
+look afterward I added a blur effect
+reducing it to around 9 or 10% to keep
+it subtle and finished it off with a
+vignette effect for a polished
+appearance for the Final Touch go to the
+audio option in cap cut and search for a
+pop sound effect add it to the part
+where the arrow sticker appears to
+enhance the effect next search for a wow
+sound effect and place it where the wow
+sticker is as you can see for background
+music visit pixabay and search for a
+suitable track make sure to check the
+copyright details before downloading
+once you have the music go back to cap
+cut add it to your project and lower the
+volume slightly so it doesn't overpower
+The Voice trim the music to fit the
+length of the video and add fade in and
+Fade Out effects for a smooth transition
+and that's it let's watch what we've
+created today I'll see you in the next
+video bye love you all dark and windy
+night the young master was bored and
+prepared to take a hot bath unaware that
+danger was approaching step by step just
+as he was immersed in the joy of soaking
+in The Fragrant tea the phone rang
+urgently and Amy walked over to answer
+it without any preparation

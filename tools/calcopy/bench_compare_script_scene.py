@@ -2,7 +2,7 @@
 """상위 10편 대조 — 대본 점수·장면 매칭을 벤치 조회 상위 편과 **같은 자**로 잰다 (관제 097, 2026-10-26 사장님
 "두유노홈디노의 가장 잘된 편들과 대본 점수·장면 매칭 등 만들어진 퀄리티를 꼭 비교해야 한다. 대본과 장면 매칭이 핵심이다").
 
-    PYTHONUTF8=1 py tools/calcopy/bench_compare_script_scene.py prep  <slug> <작품 판 폴더(doc)> <work> [--top 10]
+    PYTHONUTF8=1 py tools/calcopy/bench_compare_script_scene.py prep  <slug> <작품 판 폴더(doc)> <work> [--top 10] [--root <벤치 폴더>]
     (Claude 가 <doc>/대조/judge.json 을 눈으로 채운다 — 시트 = <doc>/대조/sheets/Vxx.jpg, 누가 우리 편인지 모르게 V 번호를 섞었다)
     PYTHONUTF8=1 py tools/calcopy/bench_compare_script_scene.py table <slug> <doc>       → <doc>/대조표.md
 
@@ -11,7 +11,7 @@
   sentences   받아쓰기 → 줄(문장): 스피치매틱스 낱말+문장부호 / 제미나이 구절(evenshopping) — 문장부호 또는 0.6초 넘는 쉼에서 끊는다
   machine     기계 칸: 줄 수·글자 수·줄당 글자·연결어 줄 비율·끝맺음 종류·지어냄 후보 수 / 길이·컷 중앙(kal_analyze.media_of — 관문과 같은 자)·
               줄 시작↔컷 시작 어긋남(초, 중앙)·정지 비율(0.1초 간격 창 회색 차 < STILL_DIFF)·먼 재등장(사이 컷 ≥1, 그림 상관 ≥ SAME_CORR)
-  눈 칸(judge.json, 오푸스 — 칼카피_시작 13): 대본 = 첫 줄 틀·훅 세기(0~2)·블록 순서(0~2)·이야기 기술 수·어색함 수·지어냄 수 /
+  눈 칸(judge.json, 오푸스 — production_start 13): 대본 = 첫 줄 틀·훅 세기(0~2)·블록 순서(0~2)·이야기 기술 수·어색함 수·지어냄 수 /
               장면 = 줄마다 ○△×+이유 · 제품 보이는 비율
   table       칸마다 상위 N편 중앙·최저(또는 최고 — 낮을수록 좋은 칸)·우리 → 중앙보다 나쁜 칸 표시(원인·고칠 규칙은 사람이 표 아래에 적는다)
 """
@@ -41,12 +41,12 @@ LOWER_BETTER = {"줄↔컷 어긋남(초)", "정지 비율", "먼 재등장(개)
 
 
 # ── 벤치 편 고르기 ─────────────────────────────────────────────────────────
-def bench_ids(slug: str, n: int) -> list[str]:
-    top = json.loads((DATA / slug / "top.json").read_text(encoding="utf-8"))
+def bench_ids(slug: str, n: int, root: Path = DATA) -> list[str]:
+    top = json.loads((root / slug / "top.json").read_text(encoding="utf-8"))
     out = []
     for r in top:
         vid = r["id"]
-        if (DATA / slug / "mp4" / f"{vid}.mp4").exists() and (DATA / slug / "asr" / f"{vid}.json").exists():
+        if (root / slug / "mp4" / f"{vid}.mp4").exists() and (root / slug / "asr" / f"{vid}.json").exists():
             out.append(vid)
         if len(out) >= n:
             break
@@ -170,10 +170,10 @@ def sheet(mp4: Path, lines: list[dict], out: Path):
     im.save(out, quality=85)
 
 
-def prep(slug: str, doc: Path, work: Path, top: int = 10, seed: int = 26) -> Path:
+def prep(slug: str, doc: Path, work: Path, top: int = 10, seed: int = 26, root: Path = DATA) -> Path:
     D = doc / "대조"
-    ids = bench_ids(slug, top)
-    items = [{"name": vid, "mp4": str(DATA / slug / "mp4" / f"{vid}.mp4"), "lines": sentences(json.loads((DATA / slug / "asr" / f"{vid}.json").read_text(encoding="utf-8")))} for vid in ids]
+    ids = bench_ids(slug, top, root=root)
+    items = [{"name": vid, "mp4": str(root / slug / "mp4" / f"{vid}.mp4"), "lines": sentences(json.loads((root / slug / "asr" / f"{vid}.json").read_text(encoding="utf-8")))} for vid in ids]
     items.append({"name": "우리", "mp4": str(work / "render" / "final.mp4"), "lines": ours_lines(doc, work)})
     order = list(range(len(items)))
     random.Random(seed).shuffle(order)
@@ -199,7 +199,7 @@ def _num(x):
     return x if isinstance(x, (int, float)) and not isinstance(x, bool) else None
 
 
-def table(slug: str, doc: Path) -> Path:
+def table(slug: str, doc: Path, root: Path = DATA) -> Path:
     D = doc / "대조"
     key = json.loads((D / "key.json").read_text(encoding="utf-8"))
     M = json.loads((D / "machine.json").read_text(encoding="utf-8"))["machine"]
@@ -249,9 +249,11 @@ def main() -> int:
     a = sys.argv[1:]
     if len(a) >= 4 and a[0] == "prep":
         top = int(a[a.index("--top") + 1]) if "--top" in a else 10
-        print(prep(a[1], Path(a[2]), Path(a[3]), top))
+        root = Path(a[a.index("--root") + 1]) if "--root" in a else DATA
+        print(prep(a[1], Path(a[2]), Path(a[3]), top, root=root))
     elif len(a) >= 3 and a[0] == "table":
-        print(table(a[1], Path(a[2])))
+        root = Path(a[a.index("--root") + 1]) if "--root" in a else DATA
+        print(table(a[1], Path(a[2]), root=root))
     else:
         print(__doc__)
         return 2

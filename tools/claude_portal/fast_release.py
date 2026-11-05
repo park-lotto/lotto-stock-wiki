@@ -36,6 +36,10 @@ def target(path: str) -> str | None:
     """저장소 파일 → 설치본 자리. '' = 고객에게 안 가는 파일, None = 자동 업데이트로 못 가는 파일."""
     if path.startswith("shortem_client/server/"):
         return "server/" + path[len("shortem_client/server/"):]
+    if path.startswith("installer/plugin/"):      # 훅·스킬 = 켤 때 plugin_sync 가 갱신한다
+        return "server/plugin_update/" + path[len("installer/plugin/"):]
+    if path == "installer/common/MEMBER_GUIDE.md":
+        return "server/guide/MEMBER_GUIDE.md"
     if path.startswith(("shortem_client/test/", "handoff/", "wiki/", "관제/", "tools/claude_portal/")):
         return ""
     if path.startswith(("tools/calcopy/", "shopping_shorts/", "channel/")):
@@ -71,9 +75,9 @@ def live() -> str:
 
 def register(uz: Path, version: str, notes: str, sha: str) -> None:
     U.scp([uz], f"{U.UPLOAD}/")
-    reg = ("import json;from pathlib import Path;from shopping_shorts import claude_portal as cp;"
+    reg = ("from pathlib import Path;from shopping_shorts import claude_portal as cp;"      # 판 표 쓰기 주인 = update_register(단계 배포 중이면 거절)
            f"p=Path('{U.UPLOAD}/{uz.name}');sha,size=cp.put_blob(p);p.unlink();"
-           f"cp.update_path().write_text(json.dumps({{'version':'{version}','sha256':sha,'size':size,'notes':{notes!r}}},ensure_ascii=False),encoding='utf-8');print(sha)")
+           f"cp.update_register('{version}',sha,size,{notes!r});print(sha)")
     got = U.ssh(f"cd {U.REPO} && echo {base64.b64encode(reg.encode()).decode()} | base64 -d | /usr/bin/python3 -").strip().splitlines()[-1]
     if got != sha:
         raise SystemExit("[빠른배포] 서버 확인값이 다르다 — 등록 상태를 확인하라")

@@ -7,7 +7,7 @@
 '일시품절'→'시품절'(0:27)·줄과 무관한 손님 얼굴(0:02)이 전부 '통과'로 나갔다.
 컷 시각 = timeline.json groups(t0·dur) — 폴더 안, 폴더/make, 재료.json cand_dir/make 순으로 찾는다.
 1) 컷마다 앞·가운데·뒤 프레임(긴 변 768) 2) 숫자 힌트(가장자리 글자 잉크·선명도 무게중심) 3) claude_cli.ask(소넷)로 판정 → 코드가 묶어 ○/× 표.
-x 하나라도 있으면 rc 1. 회원 결과물(preset_make)에는 연결하지 않는다 — 칼카피 우리 PC 렌더 뒤 수동으로 돌린다.
+x 하나라도 있으면 rc 1. 회원 결과물(preset_make)에는 연결하지 않는다 — 프리셋 우리 PC 렌더 뒤 수동으로 돌린다.
 """
 from __future__ import annotations
 

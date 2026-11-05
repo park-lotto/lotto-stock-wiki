@@ -1,0 +1,121 @@
+{
+ "_note": "make_render.py — 페이지 1개 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/이영자_실내화/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "ss": 117.82,
+   "src_crop": [
+    700,
+    0,
+    820,
+    820
+   ],
+   "cuts": [
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 117.82,
+     "src_crop": [
+      700,
+      0,
+      820,
+      820
+     ],
+     "dur": 1.6,
+     "plan_i": 0
+    },
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 26.66,
+     "src_crop": [
+      60,
+      60,
+      960,
+      960
+     ],
+     "dur": 1.06,
+     "plan_i": 1
+    },
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 86.33,
+     "src_crop": [
+      450,
+      0,
+      820,
+      820
+     ],
+     "dur": 0.88,
+     "plan_i": 2
+    },
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 88.5,
+     "src_crop": [
+      640,
+      0,
+      760,
+      760
+     ],
+     "dur": 2.51,
+     "plan_i": 3
+    },
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 119.62,
+     "src_crop": [
+      450,
+      0,
+      820,
+      820
+     ],
+     "dur": 3.4,
+     "plan_i": 4
+    },
+    {
+     "src": "br_lJbKVjunSr8.mp4",
+     "ss": 40.8,
+     "src_crop": [
+      290,
+      120,
+      670,
+      670
+     ],
+     "dur": 1.65,
+     "plan_i": 5
+    },
+    {
+     "src": "br_T8Maxl8-uP0.mp4",
+     "ss": 24.0,
+     "src_crop": [
+      100,
+      290,
+      760,
+      760
+     ],
+     "dur": 1.65,
+     "plan_i": 6
+    },
+    {
+     "src": "yj_BHuue4ga-w0.mp4",
+     "ss": 128.42,
+     "src_crop": [
+      600,
+      85,
+      820,
+      820
+     ],
+     "dur": 2.095,
+     "plan_i": 7
+    }
+   ],
+   "t_final": [
+    0.0,
+    14.845
+   ]
+  }
+ ]
+}

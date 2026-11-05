@@ -7,7 +7,7 @@ const LIST = [
   { id: 'p_1111111111', name: '제품비하인드썰형' },
   { id: 'p_2222222222', name: '샤크탱크+리뷰형' },
   { id: 'p_3333333333', name: '해외핫영상+리뷰형' },
-  { id: 'p_4444444444', name: '연예인상품+후기형' },
+  { id: 'p_4444444444', name: '연예인상품+후기형', aliases: ['키치잇', '만템'] },
   { id: 'p_5555555555', name: '연예인꿀맛' },
 ];
 
@@ -22,4 +22,9 @@ test('여럿에 걸리거나 없으면 고르지 않는다(대신 고르지 않�
   assert.equal(presetByName(LIST, '연예인'), null);     // 연예인상품+후기형 · 연예인꿀맛
   assert.equal(presetByName(LIST, '없는프리셋'), null);
   assert.equal(presetByName(LIST, ''), null);
+});
+
+test('채널 이름 별칭(키치잇)도 그 프리셋 — 10-26 회원 "키치잇 스타일로" 가 시작 못 함', () => {
+  for (const s of ['키치잇', '키치잇 스타일', '키치잇스타일로', '만템']) assert.equal(presetByName(LIST, s)?.id, 'p_4444444444', s);
+  assert.equal(presetByName(LIST, '키'), null);
 });

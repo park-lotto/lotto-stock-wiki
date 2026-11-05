@@ -522,6 +522,516 @@
   ],
   "boxAt": 0.05,
   "pack": true
+ },
+ "overPop": {
+  "label": "톡 넘쳤다 안착",
+  "origin": true,
+  "ms": 433,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.22",
+    "offset": 0.077
+   },
+   {
+    "opacity": 1,
+    "scale": "0.42",
+    "offset": 0.154
+   },
+   {
+    "opacity": 1,
+    "scale": "0.59",
+    "offset": 0.231
+   },
+   {
+    "opacity": 1,
+    "scale": "0.75",
+    "offset": 0.308
+   },
+   {
+    "opacity": 1,
+    "scale": "0.88",
+    "offset": 0.385
+   },
+   {
+    "opacity": 1,
+    "scale": "0.97",
+    "offset": 0.462
+   },
+   {
+    "opacity": 1,
+    "scale": "1.05",
+    "offset": 0.538
+   },
+   {
+    "opacity": 1,
+    "scale": "1.09",
+    "offset": 0.615
+   },
+   {
+    "opacity": 1,
+    "scale": "1.09",
+    "offset": 0.692
+   },
+   {
+    "opacity": 1,
+    "scale": "1.05",
+    "offset": 0.769
+   },
+   {
+    "opacity": 1,
+    "scale": "1.02",
+    "offset": 0.846
+   },
+   {
+    "opacity": 1,
+    "scale": "1.007",
+    "offset": 0.923
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "키치잇 Cs-Ka_S8nDM 0~0.433초 '1년 내내' 잉크 폭 30fps 13프레임(22%→109%→100%) — 스타일분석 §1"
+ },
+ "itlHookPop": {
+  "label": "훅 팝+빨강 잔상(잇템로그)",
+  "pack": true,
+  "why": "잇템로그 ro1l 1.267~1.70초 실측(줄판독): 작게→110% 넘침 5프레임 → 가로 빨강 잔상 글리치, 총 370~433ms",
+  "origin": true,
+  "ms": 430,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "1.1",
+    "offset": 0.38
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 0.5
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "glitch": {
+   "colors": [
+    [
+     "#FF1A1A",
+     -1
+    ],
+    [
+     "#B00000",
+     1
+    ]
+   ],
+   "amp": 0.06,
+   "alpha": 0.7,
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.6,
+     0
+    ],
+    [
+     0.68,
+     1
+    ],
+    [
+     0.85,
+     0.5
+    ],
+    [
+     1,
+     0
+    ]
+   ]
+  }
+ },
+ "overPopBig": {
+  "label": "크게 넘쳤다 안착",
+  "origin": true,
+  "ms": 380,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.3",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.75",
+    "offset": 0.1
+   },
+   {
+    "opacity": 1,
+    "scale": "1.35",
+    "offset": 0.4
+   },
+   {
+    "opacity": 1,
+    "scale": "1.15",
+    "offset": 0.6
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "꿀템노트 BpU 5.83~6.20초 '앉아보면' 0.3→1.35→1.0"
+ },
+ "flashIn": {
+  "label": "반투명 툭",
+  "ms": 66,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 0.45
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "pack": true,
+  "bench": "꿀템노트 나레 BpU 1.70→1.73 · 2.60→2.63(30fps 1~2프레임)"
+ },
+ "typeFlash": {
+  "label": "말 맞춰 타이핑(분홍 번쩍)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 100,
+  "spread": 1600,
+  "ms": 1,
+  "easing": "steps(1,start)",
+  "frames": [
+   {
+    "opacity": 0
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "flash": {
+   "color": "#FD6B7B",
+   "ms": 33
+  },
+  "pack": true,
+  "bench": "키치잇 BRa 8.0~8.9초 0.1초마다 한 글자 · 새 글자 첫 프레임 분홍"
+ },
+ "typeGlow": {
+  "label": "말 맞춰 타이핑(초록 번짐)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 80,
+  "spread": 1400,
+  "ms": 33,
+  "easing": "steps(1,start)",
+  "frames": [
+   {
+    "opacity": 0
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "glow": {
+   "color": "#2B5C2B",
+   "blur": [
+    0.12,
+    0.28
+   ],
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.35,
+     1
+    ],
+    [
+     0.8,
+     1
+    ]
+   ]
+  },
+  "pack": true,
+  "bench": "스타픽룸 VbpdN 6.7~10.3초 12.5자/초 · 외곽선 밖 초록 번짐(끝 세기 0.35 = 팩 나레 글자 그림자)"
+ },
+ "typeCursor": {
+  "label": "말 맞춰 타이핑(_ 커서)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 85,
+  "spread": 1400,
+  "ms": 100,
+  "easing": "ease-out",
+  "frames": [
+   {
+    "opacity": 0.6,
+    "filter": "blur(0.08em)",
+    "scale": "1.15"
+   },
+   {
+    "opacity": 1,
+    "filter": "blur(0em)",
+    "scale": "1"
+   }
+  ],
+  "follow": {
+   "char": "_",
+   "color": "#FFFFFF",
+   "at": "after",
+   "gap": 0.15,
+   "size": 1,
+   "blink": 400,
+   "until": "scene"
+  },
+  "pack": true,
+  "bench": "스타픽룸 ASqF 3.6~6.0초 새 글자 흐림→또렷 · 끝에 '_' 400ms 깜빡"
+ },
+ "typeHeart": {
+  "label": "말 맞춰 타이핑(분홍 하트)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 100,
+  "spread": 1400,
+  "ms": 150,
+  "easing": "cubic-bezier(.2,.9,.3,1)",
+  "frames": [
+   {
+    "opacity": 0,
+    "scale": "0.55",
+    "color": "#F40059",
+    "offset": 0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "color": "#F40059",
+    "offset": 0.01
+   },
+   {
+    "opacity": 1,
+    "scale": "1"
+   }
+  ],
+  "follow": {
+   "char": "♥",
+   "color": "#F40059",
+   "outline": "#FFFFFF",
+   "at": "below",
+   "gap": 0.95,
+   "size": 0.55,
+   "until": "typed",
+   "hold": 200
+  },
+  "pack": true,
+  "bench": "스타픽룸 dKcz 5.9~6.6초 새 글자 분홍 작게→흰 원크기 · 그 글자 밑 분홍 하트"
+ },
+ "rgbGlitch": {
+  "label": "RGB 글리치",
+  "ms": 430,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "glitch": {
+   "colors": [
+    [
+     "#FF2D55",
+     -1
+    ],
+    [
+     "#FFE600",
+     -0.5
+    ],
+    [
+     "#00E676",
+     0.5
+    ],
+    [
+     "#00B0FF",
+     1
+    ]
+   ],
+   "amp": 0.2,
+   "alpha": 1,
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.23,
+     0
+    ],
+    [
+     0.35,
+     0.5
+    ],
+    [
+     0.53,
+     1
+    ],
+    [
+     0.65,
+     1
+    ],
+    [
+     0.77,
+     0.4
+    ],
+    [
+     0.93,
+     0.1
+    ],
+    [
+     1,
+     0
+    ]
+   ]
+  },
+  "pack": true,
+  "bench": "스타픽룸 VbpdN 1.37~1.80초 '땅콩버터에...' 30fps 프레임 실측 — 0.43초 · 빨강·하늘 번짐 ±7px(글자 62px의 0.11em) · 정지 그림엔 번짐 없음"
+ },
+ "wipeRTL": {
+  "label": "오른쪽에서 닦아 나오기",
+  "ms": 400,
+  "msPerChar": 47,
+  "msMin": 250,
+  "msMax": 700,
+  "easing": "linear",
+  "wipe": "rtl",
+  "frames": [
+   {
+    "opacity": 1
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "pack": true,
+  "bench": "스타픽룸 VbpdN 17.37~17.70 '가르쳐 드려요?'(8자 0.33초) · EZQl 3.37~4.00 '보쌈 식당인데요 완전'(12자 0.63초) = 글자(공백 뺀)당 약 47ms · 오른쪽 끝 고정, 왼쪽으로 드러남"
+ },
+ "rainbowCycle": {
+  "label": "글자마다 무지개 돌림",
+  "unit": "char",
+  "stagger": 0,
+  "ms": 1,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "cycle": {
+   "colors": [
+    "#0795FC",
+    "#FAED07",
+    "#FFFFFF",
+    "#FB5806"
+   ],
+   "ms": 250,
+   "phase0": 3
+  },
+  "pack": true,
+  "bench": "스타픽룸 j5D 0.2~1.0초 '최화정이 만들자마자' 30fps — 파랑 #0795FC→노랑 #FAED07→흰→주황 #FB5806, 250ms마다 한 칸, 글자마다 한 칸씩 어긋남",
+  "boxAt": 0
+ },
+ "shake": {
+  "label": "덜덜 흔들림",
+  "ms": 360,
+  "easing": "linear",
+  "frames": [
+   {"opacity": 1, "translate": "0em 0em", "offset": 0.0},
+   {"opacity": 1, "translate": "0.2em 0em", "offset": 0.1},
+   {"opacity": 1, "translate": "-0.2em 0em", "offset": 0.25},
+   {"opacity": 1, "translate": "0.14em 0em", "offset": 0.4},
+   {"opacity": 1, "translate": "-0.14em 0em", "offset": 0.55},
+   {"opacity": 1, "translate": "0.08em 0em", "offset": 0.7},
+   {"opacity": 1, "translate": "-0.04em 0em", "offset": 0.85},
+   {"opacity": 1, "translate": "0em 0em", "offset": 1.0}
+  ],
+  "pack": true,
+  "bench": "등장 흔들림(관제 235 요청서 5) — 좌우로 줄어드는 떨림, 끝은 제자리. 크기는 spec.amp(0.2em 기준 배수)로. 벤치 실측 수치는 요청서에 없음(스타픽룸 '다른 등장' 줄에 이름만)"
+ },
+ "glPop": {
+  "label": "굿레터 빠른 톡",
+  "origin": true,
+  "ms": 175,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.28",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "offset": 0.2
+   },
+   {
+    "opacity": 1,
+    "scale": "0.80",
+    "offset": 0.4
+   },
+   {
+    "opacity": 1,
+    "scale": "1.08",
+    "offset": 0.6
+   },
+   {
+    "opacity": 1,
+    "scale": "1.12",
+    "offset": 0.68
+   },
+   {
+    "opacity": 1,
+    "scale": "1.04",
+    "offset": 0.85
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "굿레터 60fps 실측: 753r 27→110%(0.117초)→100%(0.183초) · vcb 26%→110%@0.100→100%@0.167 · sMx9 2.98~3.13 — 가운데 기준, 불투명 시작, 모든 말 조각에 붙음"
  }
 }/*JSON*/;
   // 자막 스타일(관제 127 → 144) — 자막 모양 한 벌. 움직임은 아래 등장 효과팩(CAPTION_MOTION_PACKS)이 맡는다(10-06 사장님 '폰트나 설정 그대로 두고 효과만').
@@ -746,14 +1256,8 @@
    "emph": "overPop"
   },
   "variants": {
-   "cut": {
-    "enter": "",
-    "why": "줄 첫 덩어리인데 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"
-   },
-   "pop": {
-    "enter": "overPop",
-    "why": "같은 줄 안 덩어리인데 벤치가 팝으로 넣은 곳(배치 규칙)"
-   },
+   "cut": {"enter": "", "why": "줄 첫 덩어리인데 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"},
+   "pop": {"enter": "overPop", "why": "같은 줄 안 덩어리인데 벤치가 팝으로 넣은 곳(배치 규칙)"},
    "typing": {
     "enter": "typeFlash",
     "place": {
@@ -845,10 +1349,7 @@
    }
   },
   "variants": {
-   "cut": {
-    "enter": "",
-    "why": "나레 덩어리를 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"
-   },
+   "cut": {"enter": "", "why": "나레 덩어리를 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"},
    "orig_pop": {
     "size": 115,
     "text": {
@@ -936,14 +1437,8 @@
    }
   },
   "variants": {
-   "cut": {
-    "enter": "",
-    "why": "나레 덩어리를 벤치가 한 번에 넣은 곳(배치 규칙 placement.place, 관제 097)"
-   },
-   "pop": {
-    "enter": "pop",
-    "why": "원음 덩어리를 벤치가 작게→크게로 넣은 곳(배치 규칙)"
-   },
+   "cut": {"enter": "", "why": "나레 덩어리를 벤치가 한 번에 넣은 곳(배치 규칙 placement.place, 관제 097)"},
+   "pop": {"enter": "pop", "why": "원음 덩어리를 벤치가 작게→크게로 넣은 곳(배치 규칙)"},
    "cursor": {
     "enter": "typeCursor",
     "text": {
@@ -2110,6 +2605,116 @@
   }
  }
 }/*PACKS*/;
+  // 효과마다 붙는 조건(관제 235) — 벤치에서 언제·어느 줄에 붙었나. 판 등록 작업자가 편마다 배치를 계산하는 근거. 코드는 읽지 않는다.
+  root.CAPTION_EFFECT_RULES = /*RULES*/{
+ "_note": "효과마다 붙는 조건. 벤치에서 꾸밈 없는 자막은 꾸미지 않는다 — 조건에 안 맞는 줄은 팩 기본(맨 글자)로 둔다. 편·초는 벤치 원본(C:/숏템_칼카피/<채널>/src) 기준.",
+ "rgbGlitch": {
+  "채널": "스타픽룸",
+  "본 곳": "VbpdN 1.37초 '땅콩버터에...' (보강안 기록, 직접 못 본 것: dKcz 0.2 · 21Vo 7.2 · EZQl 2.5)",
+  "박자": "훅(앞 원음 구간) 안에서 제품 이름이 처음 나오는 줄 — 그 줄 앞 줄('요즘에 그거에 꽂혔어요 또!')은 맨 글자",
+  "조건": "편당 1~2회, 훅 구간(앞 3.5~8초)의 원음 줄에만. 나레·가운데·끝 줄엔 안 붙임"
+ },
+ "wipeRTL": {
+  "채널": "스타픽룸",
+  "본 곳": "VbpdN 17.37초 '가르쳐 드려요?' · EZQl 3.37초 '보쌈 식당인데요 완전'",
+  "박자": "화면이 바뀐 직후 첫 줄(앞 줄 컷 다음 프레임부터)",
+  "조건": "편당 1~2회, 8자 이상 원음 줄, 같은 줄을 둘로 나눈 둘째 조각엔 안 붙임"
+ },
+ "rainbowCycle": {
+  "채널": "스타픽룸",
+  "본 곳": "j5D 0.2~1.0초 나레 '최화정이 만들자마자'(편 첫 나레 줄)",
+  "박자": "편에서 처음 나오는 나레 줄",
+  "조건": "편당 1회 · 8~10자 나레 줄 · 한 줄 통째(낱말만 칠하지 않음) · 나머지 나레는 타이핑"
+ },
+ "place": {
+  "채널": "키치잇 · 꿀템노트 · 스타픽룸",
+  "본 곳": "키치잇 BRa 8.0~8.9초 원음 타이핑 줄 y1300(기본 1351)",
+  "조건": "팩 기본 자리가 같은 줄이면 쓰지 않는다. 줄 변형이 자리를 가질 때만(variants.*.place) — caption_marks.place{x,y}% 는 벤치에서 자리가 달라진 줄에만"
+ },
+ "hearts": {
+  "채널": "꿀템노트",
+  "본 곳": "KCx 0.0~1.5초 '너무 예쁘다!'(선물 상자를 연 출연자 얼굴)",
+  "박자": "편 첫 장면 · 감탄 한마디 줄 · 컷 직후부터 1.0초",
+  "조건": "편당 1회, 얼굴이 보이는 장면(x50% y41% 얼굴 자리 — 장면마다 얼굴 자리를 받는다)"
+ },
+ "sound_word": {
+  "채널": "꿀템노트",
+  "본 곳": "cLk 5.4~6.6초 '쿰'·'직'(상자 뚜껑을 여는 소리 장면, 자막 '대용량인데 가격도 저렴해요' 위)",
+  "박자": "제품에서 소리가 나는 동작 구간 한 장면",
+  "조건": "편당 0~1회, 글자 한 쌍(왼쪽·오른쪽). 소리 낱말은 하이브리드가 장면 보고 지음"
+ },
+ "small_text": {
+  "채널": "꿀템노트",
+  "본 곳": "m0E 4.3~4.7초 'WOW'('지갑 열게 한 이유가 있다는데?' 줄 위, 가방 속 공개 순간) · 11.5초 ✦(장점 설명 줄 아래)",
+  "박자": "제품 속·공개 순간 0.4~0.5초",
+  "조건": "편당 0~2회, 설명 줄 위 따로 얹음 — 줄 안 글자는 안 바꿈"
+ },
+ "comic_burst": {
+  "채널": "스타픽룸",
+  "본 곳": "j5D 6.9~7.3초(a) · 9.3~9.5초(b) 둘 다 나레 '알고 보니 요즘'",
+  "박자": "2초 넘게 머무는 나레 줄의 시작과 끝",
+  "조건": "편당 0~2회, 한 줄에서 처음(a: 초록·주황 느낌표+별)·끝(b: 빨강 느낌표+번개)에 하나씩"
+ },
+ "aside_line": {
+  "채널": "꿀템노트",
+  "본 곳": "_dz 9.0~10.5초 '(난리가 났음)' — 원음 '변신하는 식탁을 막 보여주면서' 위 · 653b 14.5~16.5",
+  "박자": "원음 줄이 길게(1.5초+) 머물 때 그 상황을 설명하는 한마디",
+  "조건": "편당 0~2회, 원음 줄에만, 괄호로 시작"
+ },
+ "append_text": {
+  "채널": "꿀템노트",
+  "본 곳": "BpU 0.10→0.60초 '되게 가벼워' 뒤에 '맞아!' · 12.1 '아아아아악~'",
+  "박자": "원음 앞 조각이 끝나기 전 같은 줄에 덧붙는 한마디(앞 조각은 제자리)",
+  "조건": "편당 0~2회, 원음 줄 안에서 앞 조각이 0.5초 이상 선 뒤"
+ }
+}/*RULES*/;
+  // ── 범용 등장 한 벌(관제 235, 칼카피 요청서 §4-2 1·2·4·5) ──────────────────────────────────────────────────────────
+  //   spec = {kind?, ms?, keyframes?:[{t(초), scale(%), alpha(%), dy(px)}], cps?, cursor?:{char, blink_ms}, glow?:{decay_ms, color?},
+  //           amp?(흔들림 배수), exit?:{kind:'cut'|'fade'|'slide', ms?, dx?(px, slide)}}
+  //   kind: 'keyframes'(keyframes 가 있으면 생략 가능) | 이 파일의 등장 키(pop·typeGlow …) | 설명서 이름(kinds 표).
+  //   줄 건 곳(위가 이긴다): 장면 자료 scene.enter > 팩 variants/speakers enter(객체) > 팩 enter(객체) > 스냅샷 captionEnter. 문자열 enter 는 종전대로 키.
+  //   ★한계값 표(limits)는 서버(scene_style.clean_caption_enter)와 이 파일의 captionEnterMotion 이 같이 읽는다 — 서버는 ENTERSPEC 표식 사이를 json 으로 읽는다.
+  root.CAPTION_ENTER_SPEC = /*ENTERSPEC*/{
+ "limits": {"ms": [1, 5000], "t": [0, 5], "scale": [0, 400], "alpha": [0, 100], "dy": [-600, 600], "max_keyframes": 40,
+            "cps": [1, 60], "blink_ms": [50, 2000], "decay_ms": [50, 2000], "exit_ms": [1, 2000], "exit_dx": [-1080, 1080], "amp": [0, 3]},
+ "kinds": {"pop": "pop", "fade": "fade", "rise": "rise", "typing": "typing", "typewriter": "typing", "none": "", "shake": "shake",
+           "glitch": "rgbGlitch", "wipe": "wipeRTL", "rainbow": "rainbowCycle", "slide": "slide"},
+ "exits": ["cut", "fade", "slide"],
+ "follow": {"char": "_", "color": "#FFFFFF", "at": "after", "gap": 0.15, "size": 1, "blink": 400, "until": "scene"},
+ "glow": {"color": "#2B5C2B", "blur": [0.12, 0.28], "keys": [[0, 0], [0.35, 1]]}
+}/*ENTERSPEC*/;
+  root.captionEnterMotion = function (spec, motions) {
+    if (!spec || typeof spec !== 'object') return null;
+    const S = root.CAPTION_ENTER_SPEC, num = (v, d) => Number.isFinite(+v) && v !== null && v !== '' ? +v : d;
+    const kind = spec.kind || (Array.isArray(spec.keyframes) && spec.keyframes.length ? 'keyframes' : '');
+    let m;
+    if (kind === 'keyframes') {
+      const kf = (spec.keyframes || []).map(k => ({ t: Math.max(0, num(k.t, 0)), s: num(k.scale, 100), a: num(k.alpha, 100), d: num(k.dy, 0) })).sort((a, b) => a.t - b.t);
+      if (!kf.length) return null;
+      const lastT = kf[kf.length - 1].t, ms = Math.max(1, num(spec.ms, Math.round(lastT * 1000))), rest = k => k.s === 100 && k.a === 100 && k.d === 0;
+      const vals = k => ({ opacity: k.a / 100, scale: String(k.s / 100), translate: `0px ${k.d}px` });
+      const frames = kf.map(k => ({ offset: Math.min(1, k.t * 1000 / ms), ...vals(k) }));
+      if (frames[0].offset > 0) frames.unshift({ ...frames[0], offset: 0 });                       // 첫 키프레임 앞은 그 값을 붙든다
+      const lastF = frames[frames.length - 1];
+      if (lastF.offset < 1 || !rest(kf[kf.length - 1])) frames.push({ offset: 1, ...vals({ s: 100, a: 100, d: 0 }) }); // 끝은 늘 '효과 없는 자막' 그림
+      m = { label: '키프레임', origin: true, ms, easing: 'linear', frames };
+    } else {
+      const key = Object.prototype.hasOwnProperty.call(S.kinds, kind) ? S.kinds[kind] : kind;
+      if (key === '') m = { label: '없음', ms: 1, easing: 'linear', frames: [{ opacity: 1 }, { opacity: 1 }] };
+      else if (motions && motions[key]) m = JSON.parse(JSON.stringify(motions[key]));
+      else return null;
+      if (Number.isFinite(+spec.ms) && spec.ms > 0) { m.ms = +spec.ms; delete m.msPerChar; }
+    }
+    if (kind === 'shake' || m.frames.some(f => /em 0em$/.test(f.translate || ''))) {
+      const amp = num(spec.amp, 1);
+      if (amp !== 1) m.frames = m.frames.map(f => f.translate ? { ...f, translate: f.translate.replace(/(-?[\d.]+)em (-?[\d.]+)em/, (_, x, y) => `${(x * amp).toFixed(3)}em ${(y * amp).toFixed(3)}em`) } : f);
+    }
+    if (num(spec.cps, 0) > 0) m.cps = +spec.cps;
+    if (spec.cursor && typeof spec.cursor === 'object' && m.unit === 'char') m.follow = { ...(m.follow || S.follow), char: spec.cursor.char || (m.follow || S.follow).char, blink: num(spec.cursor.blink_ms, (m.follow || S.follow).blink) };
+    if (spec.glow && typeof spec.glow === 'object' && m.unit === 'char') m.glow = { ...S.glow, ...(m.glow || {}), ...(spec.glow.color ? { color: spec.glow.color } : {}), decay_ms: num(spec.glow.decay_ms, 0) };
+    if (spec.exit && typeof spec.exit === 'object' && S.exits.includes(spec.exit.kind) && spec.exit.kind !== 'cut') m.exit = { kind: spec.exit.kind, ms: num(spec.exit.ms, 150), dx: num(spec.exit.dx, -400) };
+    return m;
+  };
   root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조"};
   // 단어 강조 방식(관제 102 → 127) — 지금 말하는 단어를 어떻게 짚나. 편집기 WORD_FX_STYLES·서버 검증(scene_style.caption_word_fx_keys)이 여기를 읽는다.
   //   draw: 그 단어가 켜진 뒤 이 초 동안 그려진다(밑줄·형광펜·동그라미). 모양은 precision20-ui.css .wfx-<키>.
@@ -2139,6 +2744,12 @@
  "glow": {
   "label": "번쩍 글로우",
   "pack": true
+ },
+ "mark": {
+  "label": "핵심 단어 색칠",
+  "fixed": true,
+  "pack": true,
+  "hide": true
  }
 }/*WORDFX*/;
   root.CAPTION_EMPH_DEFAULT = {"size": 150, "color": "#FFFFFF", "style": {"textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"}, "motion": "pop"};

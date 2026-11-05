@@ -1,0 +1,137 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    251,
+    248,
+    252
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 426,
+   "w": 1080,
+   "h": 1006,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 224,
+   "lines": 2,
+   "font": "SBAggroB",
+   "size": 93.2,
+   "line_h": 96,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.3,
+   "enter": null,
+   "text": "닿으면 스피커\n소름 돋는 음질 수준"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1462,
+   "lines": 1,
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 66.0,
+   "line_h": 76,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.4,
+   "word_spacing": 6.8,
+   "enter": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "[광고]",
+   "x": 1053,
+   "y": 14,
+   "w": 181,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 49.0,
+   "line_h": 56,
+   "rgb": [
+    185,
+    184,
+    188
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     95,
+     94,
+     97
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.7,
+   "enter": null
+  }
+ ],
+ "template_off": {
+  "tail_sec": 2.18
+ },
+ "made_by": "calcopy_frame v1",
+ "source": "ZdeZRtCeAC4",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "SpoqaHanSansNeo-Bold.otf",
+   "top1_score": 0.4235,
+   "picked_from": {
+    "file": "SpoqaHanSansNeo-Bold.otf",
+    "score": 0.4235
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [251, 248, 252] (뜯기 잰 값 [241, 235, 237])",
+   "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
+   "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "자막 낱말 간격 6.8px — 원본 낱말 틈 13.0px 에 맞춤(자간 -7.4px 은 글자 사이만)",
+   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+   "고정 문구 글꼴 TmonMonsori·외곽선 3px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462)"
+  ],
+  "ocr_model": "gemini-3.5-flash"
+ }
+}

@@ -145,7 +145,7 @@ def audit_preset(pw, base, pid, name, out: Path, style_card: str = ""):
         pg.wait_for_timeout(2500)
         fl = pg.frame_locator('iframe[src*="scene-style-ui-showcase"]')
         prev = fl.locator("#a-live-preview")
-        if style_card:   # 대조군: 편집기 왼쪽 '장면' 탭의 기본 틀 카드를 직접 고른다(칼카피 틀이 아닌 고정형)
+        if style_card:   # 대조군: 편집기 왼쪽 '장면' 탭의 기본 틀 카드를 직접 고른다(프리셋 틀이 아닌 고정형)
             fl.get_by_text(style_card, exact=True).first.click()
             pg.wait_for_timeout(1500)
         m = lambda: fr.evaluate(MEASURE_JS)   # noqa: E731
@@ -304,7 +304,7 @@ def main() -> int:
     for r in results:
         cells = [cell(r["controls"].get(n, "-")) for n in names]
         bad += sum(1 for c in cells if not c.startswith("바뀜"))
-        print(f"| {r['name']} | {r.get('frame')}/{r.get('mode')}{'/칼카피틀' if r.get('spec') else ''} | "
+        print(f"| {r['name']} | {r.get('frame')}/{r.get('mode')}{'/프리셋틀' if r.get('spec') else ''} | "
               f"{'숨김' if r.get('fieldHidden') else '보임'} | " + " | ".join(cells) + " |")
     return 1 if bad else 0
 

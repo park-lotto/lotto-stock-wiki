@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": false,
  "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
- "_note": "신박발견(@신박발견) 칼카피 1차 판 — 자막썰(연회색 틀·둥근 창·창 아래 본문 자막, frame.kind window). 근거 channel/sinbak/{스타일분석.md, 줄판독/ 6편, _kal/규칙빈도.json·sinbak판_초안.json}. 손 스크립트 preset/sinbak_preset.py·sinbak_measure.py(설명서 프리셋 생성기 — 회원 옛 길이 읽음)·시험편1/make.py = 참고물",
+ "_note": "신박발견(@신박발견) 프리셋 1차 판 — 자막썰(연회색 틀·둥근 창·창 아래 본문 자막, frame.kind window). 근거 channel/sinbak/{스타일분석.md, 줄판독/ 6편, _kal/규칙빈도.json·sinbak판_초안.json}. 손 스크립트 preset/sinbak_preset.py·sinbak_measure.py(설명서 프리셋 생성기 — 회원 옛 길이 읽음)·시험편1/make.py = 참고물",
  "bench": {
   "ko": "신박발견",
   "channel": "sinbak",
@@ -644,7 +644,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
   }
  }
 }

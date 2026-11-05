@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""회원별 시작 한 줄·시작.md(관제 294) — 파일에는 키 원문이 없고, 인증값으로 지금 키를 받되 옛 키를 끊지 않는다."""
+"""회원별 시작 한 줄·START.md(관제 294) — 파일에는 키 원문이 없고, 인증값으로 지금 키를 받되 옛 키를 끊지 않는다."""
 import io
 import zipfile
 
@@ -41,7 +41,7 @@ def test_파일에_키_원문이_없다(st):
     md = cp.start_md(7, "https://x.test")
     assert key not in md and "SHORTEM_START" in md
     with zipfile.ZipFile(io.BytesIO(cp.start_zip(7, "https://x.test"))) as z:
-        body = z.read("시작.md").decode("utf-8")
+        body = z.read("START.md").decode("utf-8")
     assert key not in body and "SHORTEM_START" in body
 
 

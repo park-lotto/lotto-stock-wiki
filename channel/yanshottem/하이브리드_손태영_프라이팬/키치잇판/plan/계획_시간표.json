@@ -1,0 +1,1155 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.333
+   ],
+   "O1": [
+    3.433,
+    5.873
+   ],
+   "N2": [
+    5.973,
+    7.567
+   ],
+   "O2": [
+    7.667,
+    10.847
+   ],
+   "O3": [
+    10.947,
+    13.547
+   ],
+   "N3": [
+    13.647,
+    16.111
+   ],
+   "N4": [
+    16.211,
+    19.399
+   ],
+   "N5": [
+    19.499,
+    23.122
+   ],
+   "N6": [
+    23.222,
+    26.265
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "손태영이",
+    "t0": 0.0,
+    "t1": 0.571,
+    "key": "손태영이",
+    "show": [
+     0.0,
+     0.571
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "계란말이 사각팬 대신",
+    "t0": 0.571,
+    "t1": 1.857,
+    "key": "사각팬",
+    "show": [
+     0.571,
+     1.857
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "요즘 쓰는 팬이 있다네요?",
+    "t0": 1.857,
+    "t1": 3.333,
+    "key": "팬이",
+    "show": [
+     1.857,
+     3.433
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이거 은근히 괜찮다?",
+    "t0": 3.433,
+    "t1": 4.623,
+    "key": "괜찮다?",
+    "show": [
+     3.433,
+     4.623
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "나 요즘 바꿨잖아",
+    "t0": 4.623,
+    "t1": 5.873,
+    "key": "바꿨잖아",
+    "show": [
+     4.623,
+     5.973
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 팬으로",
+    "t0": 5.973,
+    "t1": 6.973,
+    "key": "어떤",
+    "show": [
+     5.973,
+     6.973
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바꿨길래?",
+    "t0": 6.973,
+    "t1": 7.567,
+    "key": "바꿨길래?",
+    "show": [
+     6.973,
+     7.667
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "계란을 풀어 소금 넣지",
+    "t0": 7.667,
+    "t1": 9.787,
+    "key": "소금",
+    "show": [
+     7.667,
+     9.787
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "그리고 얘를 탁 올려",
+    "t0": 9.787,
+    "t1": 10.847,
+    "key": "올려",
+    "show": [
+     9.787,
+     10.947
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이제 탁 뒤집어서",
+    "t0": 10.947,
+    "t1": 12.187,
+    "show": [
+     10.947,
+     12.187
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "얘가 또 부풀어 오르더라",
+    "t0": 12.187,
+    "t1": 13.547,
+    "key": "부풀어",
+    "show": [
+     12.187,
+     13.647
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 영상 보자마자",
+    "t0": 13.647,
+    "t1": 14.79,
+    "key": "보자마자",
+    "show": [
+     13.647,
+     14.79
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 14.79,
+    "t1": 16.111,
+    "key": "따라",
+    "show": [
+     14.79,
+     16.211
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "손바닥만 한 5인치라",
+    "t0": 16.211,
+    "t1": 17.497,
+    "key": "손바닥만",
+    "show": [
+     16.211,
+     17.497
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "계란 하나 깨면",
+    "t0": 17.497,
+    "t1": 18.354,
+    "key": "하나",
+    "show": [
+     17.497,
+     18.354
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "딱 꽉 차더라고요",
+    "t0": 18.354,
+    "t1": 19.399,
+    "key": "꽉",
+    "show": [
+     18.354,
+     19.499
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "벨기에 학교 친구 둘이",
+    "t0": 19.499,
+    "t1": 20.785,
+    "key": "벨기에",
+    "show": [
+     19.499,
+     20.785
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "만든 그린팬이란",
+    "t0": 20.785,
+    "t1": 21.785,
+    "key": "그린팬이란",
+    "show": [
+     20.785,
+     21.785
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세라믹 팬 브랜드래요",
+    "t0": 21.785,
+    "t1": 23.122,
+    "key": "세라믹",
+    "show": [
+     21.785,
+     23.222
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 손태영 미니팬으로",
+    "t0": 23.222,
+    "t1": 24.793,
+    "key": "미니팬으로",
+    "show": [
+     23.222,
+     24.793
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "요즘 쇼츠에서",
+    "t0": 24.793,
+    "t1": 25.651,
+    "key": "쇼츠에서",
+    "show": [
+     24.793,
+     25.651
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "난리래요",
+    "t0": 25.651,
+    "t1": 26.265,
+    "key": "난리래요",
+    "show": [
+     25.651,
+     26.6
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 127.7,
+    "crop": [
+     760,
+     60,
+     480,
+     480
+    ],
+    "w": 1.2,
+    "see": "손태영 정면 얼굴(식탁 앞에 앉아 말함, 박힌 자막 크롭 밖)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 2.06,
+    "dur": 2.06,
+    "over": 0.0
+   },
+   {
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 91.05,
+    "crop": [
+     960,
+     0,
+     720,
+     720
+    ],
+    "w": 0.8,
+    "see": "손태영 부엌에서 손가락으로 가리키며 말함",
+    "line": "N1",
+    "t0": 2.06,
+    "kind": "tts",
+    "t1": 3.433,
+    "dur": 1.373,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 53.0,
+    "crop": [
+     500,
+     0,
+     640,
+     640
+    ],
+    "see": "손태영 말하는 얼굴(같은 대화 장면, 남자는 크롭 밖)",
+    "line": "O1",
+    "t0": 3.433,
+    "kind": "orig",
+    "t1": 5.973,
+    "dur": 2.54,
+    "over": 0.0
+   },
+   {
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 56.68,
+    "crop": [
+     300,
+     0,
+     680,
+     680
+    ],
+    "see": "손태영 설명하며 손짓",
+    "line": "N2",
+    "t0": 5.973,
+    "kind": "tts",
+    "t1": 7.667,
+    "dur": 1.694,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     440,
+     40,
+     740,
+     740
+    ],
+    "see": "손태영 '계란을 풀어 소금 넣지'(입 맞음, 계란·소금 스티커 크롭 밖)",
+    "line": "O2",
+    "ss": 59.22,
+    "src": "FD6ZNjj_8F8.mp4",
+    "t0": 7.667,
+    "kind": "orig",
+    "t1": 10.947,
+    "dur": 3.28,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 63.12,
+    "crop": [
+     420,
+     0,
+     680,
+     680
+    ],
+    "see": "손태영 '탁 뒤집어서'(입 맞음)",
+    "line": "O3",
+    "t0": 10.947,
+    "kind": "orig",
+    "t1": 12.307,
+    "dur": 1.36,
+    "over": 0.0
+   },
+   {
+    "at": 1.36,
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 64.55,
+    "crop": [
+     600,
+     0,
+     820,
+     820
+    ],
+    "see": "원본이 붙인 부풀어 오른 계란 미니팬(박힌 자막 크롭 밖)",
+    "line": "O3",
+    "t0": 12.307,
+    "kind": "orig",
+    "t1": 13.647,
+    "dur": 1.34,
+    "over": 0.0
+   },
+   {
+    "src": "BfIDxHBlnPM.mp4",
+    "ss": 1.0,
+    "crop": [
+     180,
+     0,
+     1080,
+     1080
+    ],
+    "see": "그린팬 'Small Wonder EGG PAN' 상자와 미니팬",
+    "line": "N3",
+    "t0": 13.647,
+    "kind": "tts",
+    "t1": 16.211,
+    "dur": 2.564,
+    "over": 0.0
+   },
+   {
+    "src": "BET2PMtfZyw.mp4",
+    "ss": 0.0,
+    "crop": [
+     480,
+     60,
+     1000,
+     1000
+    ],
+    "see": "펼친 손바닥 옆 미니팬(크기 비교)",
+    "line": "N4",
+    "t0": 16.211,
+    "kind": "tts",
+    "t1": 17.855,
+    "dur": 1.644,
+    "over": 0.0
+   },
+   {
+    "src": "BfIDxHBlnPM_egg.mp4",
+    "ss": 2.0,
+    "crop": [
+     640,
+     0,
+     1080,
+     1080
+    ],
+    "see": "계란 하나가 꽉 찬 미니팬",
+    "line": "N4",
+    "t0": 17.855,
+    "kind": "tts",
+    "t1": 19.499,
+    "dur": 1.644,
+    "over": 0.0
+   },
+   {
+    "src": "BET2PMtfZyw.mp4",
+    "ss": 38.0,
+    "crop": [
+     100,
+     0,
+     1080,
+     1080
+    ],
+    "see": "미니팬 바닥 GREENPAN 각인",
+    "line": "N5",
+    "t0": 19.499,
+    "kind": "tts",
+    "t1": 21.361,
+    "dur": 1.862,
+    "over": 0.0
+   },
+   {
+    "src": "PHIK5uUPvKE.mp4",
+    "ss": 25.3,
+    "crop": [
+     480,
+     0,
+     960,
+     960
+    ],
+    "move": "in",
+    "see": "그린팬 미니 세 색과 팬케이크(공식 사진, 아래 글자 띠 크롭 밖)",
+    "line": "N5",
+    "t0": 21.361,
+    "kind": "tts",
+    "t1": 23.222,
+    "dur": 1.861,
+    "over": 0.0
+   },
+   {
+    "src": "BfIDxHBlnPM_egg.mp4",
+    "ss": 37.0,
+    "crop": [
+     840,
+     0,
+     1080,
+     1080
+    ],
+    "see": "미니팬 계란 프라이 근접",
+    "line": "N6",
+    "t0": 23.222,
+    "kind": "tts",
+    "t1": 24.911,
+    "dur": 1.689,
+    "over": 0.0
+   },
+   {
+    "src": "FD6ZNjj_8F8.mp4",
+    "ss": 108.0,
+    "crop": [
+     900,
+     0,
+     640,
+     640
+    ],
+    "see": "손태영 부엌에서 웃으며 말함(끝)",
+    "line": "N6",
+    "t0": 24.911,
+    "kind": "tts",
+    "t1": 26.6,
+    "dur": 1.689,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "FD6ZNjj_8F8.mp4",
+    "span": [
+     48.98,
+     51.42
+    ],
+    "t0": 3.433,
+    "t1": 5.873
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "FD6ZNjj_8F8.mp4",
+    "span": [
+     59.22,
+     62.4
+    ],
+    "t0": 7.667,
+    "t1": 10.847
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "FD6ZNjj_8F8.mp4",
+    "span": [
+     63.0,
+     65.6
+    ],
+    "t0": 10.947,
+    "t1": 13.547
+   }
+  ],
+  "end": 26.6
+ },
+ "placement": {
+  "reference": "Cs-Ka_S8nDM",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "손태영이",
+    "t0": 0.0,
+    "t1": 0.571,
+    "key": "손태영이",
+    "show": [
+     0.0,
+     0.571
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "손태영이"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "계란말이 사각팬 대신",
+    "t0": 0.571,
+    "t1": 1.857,
+    "key": "사각팬",
+    "show": [
+     0.571,
+     1.857
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "사각팬"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "요즘 쓰는 팬이 있다네요?",
+    "t0": 1.857,
+    "t1": 3.333,
+    "key": "팬이",
+    "show": [
+     1.857,
+     3.433
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "팬이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이거 은근히 괜찮다?",
+    "t0": 3.433,
+    "t1": 4.623,
+    "key": "괜찮다?",
+    "show": [
+     3.433,
+     4.623
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "괜찮다?"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "나 요즘 바꿨잖아",
+    "t0": 4.623,
+    "t1": 5.873,
+    "key": "바꿨잖아",
+    "show": [
+     4.623,
+     5.973
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "바꿨잖아"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 팬으로",
+    "t0": 5.973,
+    "t1": 6.973,
+    "key": "어떤",
+    "show": [
+     5.973,
+     6.973
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "어떤"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바꿨길래?",
+    "t0": 6.973,
+    "t1": 7.567,
+    "key": "바꿨길래?",
+    "show": [
+     6.973,
+     7.667
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "바꿨길래?"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "계란을 풀어 소금 넣지",
+    "t0": 7.667,
+    "t1": 9.787,
+    "key": "소금",
+    "show": [
+     7.667,
+     9.787
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "소금"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "그리고 얘를 탁 올려",
+    "t0": 9.787,
+    "t1": 10.847,
+    "key": "올려",
+    "show": [
+     9.787,
+     10.947
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이제 탁 뒤집어서",
+    "t0": 10.947,
+    "t1": 12.187,
+    "show": [
+     10.947,
+     12.187
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "얘가 또 부풀어 오르더라",
+    "t0": 12.187,
+    "t1": 13.547,
+    "key": "부풀어",
+    "show": [
+     12.187,
+     13.647
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "부풀어"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 영상 보자마자",
+    "t0": 13.647,
+    "t1": 14.79,
+    "key": "보자마자",
+    "show": [
+     13.647,
+     14.79
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "보자마자"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 14.79,
+    "t1": 16.111,
+    "key": "따라",
+    "show": [
+     14.79,
+     16.211
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "손바닥만 한 5인치라",
+    "t0": 16.211,
+    "t1": 17.497,
+    "key": "손바닥만",
+    "show": [
+     16.211,
+     17.497
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "손바닥만"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "계란 하나 깨면",
+    "t0": 17.497,
+    "t1": 18.354,
+    "key": "하나",
+    "show": [
+     17.497,
+     18.354
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "하나"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "딱 꽉 차더라고요",
+    "t0": 18.354,
+    "t1": 19.399,
+    "key": "꽉",
+    "show": [
+     18.354,
+     19.499
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "꽉"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "벨기에 학교 친구 둘이",
+    "t0": 19.499,
+    "t1": 20.785,
+    "key": "벨기에",
+    "show": [
+     19.499,
+     20.785
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "벨기에"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "만든 그린팬이란",
+    "t0": 20.785,
+    "t1": 21.785,
+    "key": "그린팬이란",
+    "show": [
+     20.785,
+     21.785
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "그린팬이란"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세라믹 팬 브랜드래요",
+    "t0": 21.785,
+    "t1": 23.122,
+    "key": "세라믹",
+    "show": [
+     21.785,
+     23.222
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "세라믹"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 손태영 미니팬으로",
+    "t0": 23.222,
+    "t1": 24.793,
+    "key": "미니팬으로",
+    "show": [
+     23.222,
+     24.793
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "미니팬으로"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "요즘 쇼츠에서",
+    "t0": 24.793,
+    "t1": 25.651,
+    "key": "쇼츠에서",
+    "show": [
+     24.793,
+     25.651
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "쇼츠에서"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "난리래요",
+    "t0": 25.651,
+    "t1": 26.265,
+    "key": "난리래요",
+    "show": [
+     25.651,
+     26.6
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [
+     {
+      "kind": "spark_lines",
+      "word": "난리래요"
+     }
+    ],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "난리래요"
+     }
+    ],
+    "variant": "pop"
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = Cs-Ka_S8nDM",
+   "스티커 spark_lines → N6「난리래요」",
+   "효과음 0발(본보기 0) []",
+   "등장 {'pop': 17, 'cut': 5} · 강조 20/22"
+  ]
+ }
+}

@@ -162,8 +162,12 @@ function desktopDir() {
 async function unpack(zip, dst) {
   fs.mkdirSync(dst, { recursive: true });
   if (process.platform === 'win32') {
-    const tar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');   // 윈도 10 1803+ 내장(bsdtar, zip 읽음)
-    await run(tar, ['-xf', zip, '-C', dst], { timeout: 30 * 60 * 1000 });
+    // 내장 tar.exe 는 시스템 문자표(일본 CP932 등)로 못 바꾸는 한글 파일명을 건너뛰고 실패한다(관제 311, 일본 회원 11-03)
+    //   → .NET 압축 풀기(묶음의 UTF-8 이름 표시를 따름). install.ps1 풀기와 같은 방법. 경로는 환경변수로 넘겨 따옴표 문제를 없앤다
+    const ps = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    await run(ps, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command',
+      'Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::ExtractToDirectory($env:SHORTEM_UNZIP_SRC, $env:SHORTEM_UNZIP_DST)'],
+    { timeout: 30 * 60 * 1000, env: Object.assign({}, process.env, { SHORTEM_UNZIP_SRC: zip, SHORTEM_UNZIP_DST: dst }) });
   } else {
     await run('/usr/bin/ditto', ['-x', '-k', zip, dst], { timeout: 30 * 60 * 1000 });
   }
@@ -203,7 +207,7 @@ async function installPack(home, key, saveKey) {
   const args = [path.join(home, 'postinstall.js'), '--home', home, '--version', info.version];
   const desk = desktopDir();
   if (desk) args.push('--desktop', desk);
-  await run(nodeExe(home), args, { timeout: 10 * 60 * 1000 });   // 실행 도구 sha256 대조·시작.md
+  await run(nodeExe(home), args, { timeout: 10 * 60 * 1000 });   // 실행 도구 sha256 대조·START.md
   if (saveKey) {   // 키를 도구 인자로만 받았으면 설치본의 주인 함수(server/license.js saveLicense)로 저장
     const lic = require('url').pathToFileURL(path.join(home, 'server', 'license.js')).href;
     await run(nodeExe(home), ['--input-type=module', '-e', `const m=await import(${JSON.stringify(lic)});m.saveLicense(process.env.SHORTEM_K)`],

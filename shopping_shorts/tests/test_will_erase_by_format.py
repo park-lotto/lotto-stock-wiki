@@ -6,6 +6,7 @@ from tools.calcopy.hybrid import flow as F
 
 
 def _no_key(monkeypatch, tmp_path):
+    monkeypatch.setattr(V, "free_ok", lambda: False)      # 이 PC 에 무료 엔진이 깔려 있어도 시험은 키만 본다
     monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
     monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     monkeypatch.delenv("SHORTEM_TEXT_MODE", raising=False)

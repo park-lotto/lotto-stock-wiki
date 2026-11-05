@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 엔진의 무료 제미나이 키 목록 — **여기 한 곳**에서만 고른다(analyze·compare·다른 도구 공용).
+"""프리셋 엔진의 무료 제미나이 키 목록 — **여기 한 곳**에서만 고른다(analyze·compare·다른 도구 공용).
 
 이름 패턴으로 읽는다(값 하드코딩·출력 금지): GEMINI_API_KEY, GEMINI_API_KEY_<n>, GEMINI_BRIEFING_KEY*,
 SHORTS_GEMINI_KEY, SHORTS_GEMINI_KEY_<n>(숏템 공용 14개, 2026-10-16 사장님). 환경변수가 .env 보다 먼저.

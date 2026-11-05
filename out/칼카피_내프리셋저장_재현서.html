@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피 프리셋 재현서</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1f;--sub:#6b6b70;--line:#e3e1da;--acc:#d9480f;--ok:#2b8a3e;--warn:#c92a2a;--code:#f1efe8}
+@media (prefers-color-scheme:dark){:root{--bg:#18181a;--card:#222225;--ink:#ececec;--sub:#a0a0a6;--line:#36363a;--acc:#ff8a4c;--ok:#69db7c;--warn:#ff8787;--code:#2c2c30}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:27px;margin:0 0 6px}
+.lead{color:var(--sub);margin:0 0 20px}
+nav{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin-bottom:24px;font-size:15px}
+nav a{color:var(--acc);text-decoration:none}
+h2{font-size:21px;margin:36px 0 10px;padding-top:8px;border-top:2px solid var(--line)}
+h3{font-size:17px;margin:22px 0 6px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.step h3{margin-top:0}
+.step h3 .no{color:var(--acc);margin-right:6px}
+.src{font-size:12px;color:var(--sub)}
+pre{background:var(--code);border-radius:8px;padding:30px 14px 12px;white-space:pre-wrap;word-break:break-word;font:14px/1.6 "D2Coding",Consolas,monospace;margin:8px 0;position:relative}
+button.cp{position:absolute;top:6px;right:6px;font-size:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:2px 8px;cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+.box{border-left:4px solid var(--acc);background:var(--card);border-radius:8px;padding:12px 16px;margin:16px 0}
+.box.no{border-color:var(--warn)}
+.box.ok{border-color:var(--ok)}
+.tree{font:14px/1.5 Consolas,monospace;background:var(--code);border-radius:8px;padding:10px 14px;white-space:pre;overflow-x:auto;max-width:100%}
+code{word-break:break-all}
+.wide{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>칼카피 → 내 프리셋 저장 — 프리미엄반 1~4강 그대로 재현서</h1>
+<p class="lead">남의 잘 되는 영상을 Claude Code로 칼카피하고, 잡도리한 결과를 '내 프리셋'(레시피 폴더 + .md)으로 굳혀 다음부터 소재만 넣어 뽑는 과정입니다. 강의의 순서와 프롬프트 원문을 그대로 옮겼습니다. 출처 시각은 강의 영상 재생 시각이고, 「쪽」은 2강 PDF 쪽수입니다.</p>
+
+<nav><b>목차</b> · <a href="#big">0. 한 장 요약</a> · <a href="#prep">1. 시작 전 준비</a> · <a href="#copy">2. 칼카피</a> · <a href="#fix">3. 잡도리</a> · <a href="#save">4. 굳히기(내 프리셋 저장)</a> · <a href="#make">5. 생산</a> · <a href="#share">6. 옮기기·공유</a> · <a href="#stuck">7. 막힐 때</a> · <a href="#gap">8. 강의에 없는 칸·어긋난 값</a> · <a href="#ours">9. 우리 숏클로 옮길 때 정할 칸</a></nav>
+
+<h2 id="big">0. 한 장 요약 <span class="src">(2강 PDF 3~8쪽, 32~40쪽)</span></h2>
+<div class="box ok">
+<b>1강 = 재는 법, 2강 = 쓰는 법.</b> 흐름은 세 칸입니다: <b>① 따라 만들기</b>(칼카피) → <b>② 보고 고치기</b>(원본과 나란히 놓고 잡도리) → <b>③ 굳히기</b>(「이 값으로 고정」 = 내 프리셋). 그다음부터는 「○○ 폴더 레시피로 이 소재」 한 줄로 뽑습니다.<br>
+<b>순서 원칙</b>: 한 번 만들고 → 잡도리 → 그다음 굳힌다(다듬기 전에 굳히지 않음). 채널도 하나씩(4채널 한꺼번에 하다 다 꼬인 수강생 사례).<br>
+<b>프리셋 = 잘 되는 채널의 레시피 카드</b>(2강 슬라이드 6쪽). 볼케이노 MCP 안 프리셋이 아니라 <b>내가 잡도리해서 굳혀 둔 폴더</b>를 말합니다 <span class="src">(3강 0:06:52)</span>.
+</div>
+<div class="tree">채널A_레시피/        ← 위 폴더 A: 굳힌 규칙이 쌓이는 곳 (= 내 프리셋)
+  CLAUDE.md           ← 최상위 규칙(냉장고 메모)
+  레시피.md           ← 굳힌 틀
+  (훅)                ← 규칙 어기면 다음 단계로 못 넘어가는 잠금
+채널A_연습장/         ← 아래 새 폴더 B: 칼카피·잡도리는 여기서
+채널A_기획/           ← 3강: CLAUDE.md · 소재목록.md · 기획안_날짜.md</div>
+<p class="src">폴더 A·B는 2강 PDF 35~36쪽, 기획 폴더는 3강 슬라이드 4. "한 폴더에서 오래 고치면 규칙끼리 부딪혀 말을 안 듣는다"(2강 PDF 36쪽).</p>
+
+<h2 id="prep">1. 시작 전 준비 <span class="src">(2강 PDF 8·19·26쪽, 0:31:45)</span></h2>
+<div class="step"><h3><span class="no">1-1</span>모델</h3>
+<p>칼카피·잡도리는 오퍼스 5.5 + 울트라코드(또는 <code>/model</code> → 오퍼스 5.5 → 방향키 오른쪽으로 Max). 굳힌 다음 <b>생산</b>은 울트라코드를 끄고 xhigh(2강) / Medium(3강 1:20:00 "생산은 정해진 걸 따르기만 하니 Medium으로 충분").</p>
+<pre>claude --effort ultracode
+/effort ultracode off</pre>
+<pre>기본값을 오퍼스 5.5 로 설정해 줘. 모든 단계에 하이쿠나 소넷이 끼어 있지 않은지 확인하고, 끼어 있으면 전부 오퍼스 5.5 로 바꿔 줘.</pre><p class="src">PDF 43쪽</p></div>
+<div class="step"><h3><span class="no">1-2</span>새 폴더 · 연결 확인</h3>
+<p>새 작업은 새 폴더(윈도우 <code>md 폴더</code> → <code>cd 폴더</code>). <code>/mcp</code>로 볼케이노 연결 확인.</p>
+<pre>볼케이노 MCP 와 agy 가 지금 연결돼 있는지 확인해 줘. agy 가 안 돼 있으면 연결해 줘.</pre><p class="src">PDF 8쪽</p></div>
+<div class="step"><h3><span class="no">1-3</span>규칙 고정 (채팅창에 한 번만)</h3>
+<p>agy = 영상을 보고 듣는 AI(구독 제미나이로 로그인, API 키 아님). 손 = Claude Code, 도구상자 = 볼케이노 MCP, 눈과 귀 = agy.</p>
+<pre>영상 분석과 검수는 agy 를 기본값으로 설정한다. 에보링크와 제미나이 API 는 사용하지 않는다. agy 에게 영상을 줄 때는 폴더와 파일 이름을 정확히 알려 주고, 영상은 작게 줄여서 사진으로 자르지 말고 통째로 보게 한다. 이 규칙을 최상위 기본 규칙으로 고정해 줘.</pre><p class="src">PDF 19쪽</p>
+<pre>영상 분석은 agy 로 해 줘. 유튜브 영상은 내려받아 360p 로 줄인 파일로 주고, 사진으로 자르지 말고 통째로 보게 해 줘. 여러 개면 16개까지 한꺼번에 보내 줘. 두 영상을 비교할 때는 한 화면에 나란히 붙여서 보여 주고, 작은 글자는 그 부분만 잘라 크게 보여 줘. agy 가 지적한 것은 근거와 대조한 뒤에만 고쳐 줘.</pre><p class="src">PDF 16쪽 (실측: agy 통째 22초 vs 사진으로 잘라 538초, 16편 동시 21초)</p></div>
+
+<h2 id="copy">2. 칼카피 <span class="src">(2강 0:30~0:50 라이브 시연, PDF 20·27쪽)</span></h2>
+<div class="step"><h3><span class="no">2-1</span>대상 고르기</h3>
+<p>"채널을 다 하면 좋겠지만, <b>영상 하나를 딱 찍어서 하는 게 더 정확할 수 있다</b>"(0:30:03). 최신 3~5편이면 충분(PDF 24쪽). 영상 파일을 받을 수 있으면 파일을 넣는 게 가장 좋다(0:34:42).</p></div>
+<div class="step"><h3><span class="no">2-2</span>칼카피 프롬프트 — 영상 1편 (라이브 화면 원문)</h3>
+<pre>https://www.youtube.com/shorts/(영상 주소)
+
+위 링크의 영상을 100% 클론 복제하고 싶어.
+1. 레이아웃, 템플릿, 색상, 폰트 등 외적인 부분
+2. 나레이션, TTS, 편집속도, 비율 등 편집적인 부분
+3. 네러티브 구조 자체를 파악
+하나도 빼놓지 말고 100% 완벽하게 카피해서 나중에 내가 다른 영상을 넣었을 때도 이렇게 나올 수 있는 프리셋으로 만들자
+
+4. 가장 중요한 건 위 작업을 하는데 필요한 분석 과정을 AGY 멀티모달 16병렬로 처리해!!!!!</pre>
+<p class="src">0:32:41~0:36:35. 원문엔 「일단 네가 유튜브에서 프리 무비 검색해서 나오는 거 하나를 가지고 위 요청사항으로 작업 진행해」 줄이 더 있음(시연용 소재). 4번 줄은 입력 중 ESC로 입력창에 돌아와 추가(0:36:00). 구두로 「자막 타이밍 매칭=스피치매틱스, 나레이션=타입캐스트」 추가(0:35:36).</p></div>
+<div class="step"><h3><span class="no">2-3</span>칼카피 프롬프트 — 채널 최신 5편</h3>
+<pre>이 채널의 최신 영상 5개를 분석해서 100% 똑같이 복제해 줘. 이야기 흐름(내러티브), 편집, 효과음, 그래픽 요소, 폰트까지 하나도 빠뜨리지 말고 영상을 통째로 클로닝해 줘. 나중에 내가 어떤 소재나 주제, 영상을 넣어도 이렇게 나오게 해 줘. 구현은 첨부한 PDF 를 참고해서 진행해 줘.</pre><p class="src">PDF 27쪽 시작 문장 (채널 링크 + 1강 PDF 첨부 + 이 문장)</p>
+<pre>이 채널의 최신 영상 5편을 내려받아서 agy 에게 한 편씩 보여 줘. 편마다 자막 자리 · 글자 색 · 컷이 바뀌는 빠르기 · 목소리 · 효과음 · 말투를 같은 칸의 표로 받아 적게 하고, 다섯 편에 공통으로 나오는 것만 모아 이 채널의 규칙표로 만들어 줘. 컷 길이와 소리 크기처럼 숫자로 재야 하는 것은 네가 따로 재 줘.</pre><p class="src">PDF 20쪽 — "한 편에만 나온 것은 소재, 다섯 편에 다 나온 것이 채널의 규칙"</p>
+<pre>볼케이노 MCP 가 연결돼 있으니 기존 프리셋의 제작 도구는 빌려 쓰고, 이 채널의 값은 새로 재 줘. 바꾼 값은 이 폴더의 .md 파일과 최상위 규칙으로 저장해 줘.</pre><p class="src">PDF 39쪽 · 같은 쪽 역할 나누기: 「이미지·영상 생성은 플로우, 대본은 클로드, 영상 분석과 검수는 agy 로 해 줘.」</p></div>
+<div class="step"><h3><span class="no">2-4</span>3강판 — 여섯 칸을 숫자로 재기</h3>
+<p>「최신 영상 5개 분석해 100% 복제(내러티브·편집·효과음·그래픽·폰트)」 뒤에 붙이는 문장. 여섯 칸: ①화면(영상 칸 위치·크기 px, 여백, 제목·자막 높이, 얼굴 자리) ②글자(크기 px, 굵기, 외곽선, 줄 수, 글꼴 후보 3개, 긴 제목 규칙) ③편집(1분당 컷 수, 확대 시점·배율, 전환, 원음·나레이션 순서) ④이야기(도입, 정보 순서, 끝맺음별 횟수, 마무리) ⑤소리(초당 글자, 쉼 초, LUFS, 덕킹 dB, 효과음, 원음 크기) ⑥검증 자료(편마다 다른 값 따로, 못 잰 칸은 «못 잼»).</p>
+<pre>최신 3~5편 기준 여섯 칸을 표로 재 줘. 칸마다 값·단위·몇 편·최소~최대.
+내 영상도 같은 자로 재서 ✓·✗ 표부터 보여 주고, ✗ 칸만 하나씩 맞춰 «검증» 폴더에 남겨 줘.</pre><p class="src">3강 슬라이드 2 「복붙 1」(html 원문 기준 — 영상 판독본은 글자가 깨져 있음). 3강에 실행 시연은 없음.</p></div>
+<div class="step"><h3><span class="no">2-4b</span>1강판 — 아스트라(코덱스 앱)로 칼카피 <span class="src">(1강 2:10~2:22)</span></h3>
+<p>아스트라 = OpenAI 코덱스 앱의 Astra 모델(강사 "클로드 코드도 아니고 코덱스입니다. 그것도 아스트라"). 추론 수준 <b>Medium 필수</b>, 권한은 「전체 액세스」. 1강 시점 방식이고, 2강부터는 칼카피·잡도리를 오퍼스 5.5 울트라코드로 옮겼다(아스트라는 검색·초벌만).</p>
+<pre>햄숏 채널영상이랑 똑같이 만들고 싶어 커클랜드 제품 하나 네가 선정해서 똑같이 칼카피해줘</pre>
+<pre>볼케이노 쓰지 말고 네가 단독으로 아스트라로만 영상 만들어</pre>
+<p class="src">2:10:29 · 2:12:27 화면 원문. 링크 없이 채널명 + 제품만. 결과 mp4까지 9분 37초, 한 편 주간 한도 약 7%p. 아스트라 안에서 잡도리하면 15만 원 증발(2:47:21) → 두세 턴만 다듬고 바로 6-2 저장.</p></div>
+<div class="step"><h3><span class="no">2-4c</span>1강의 '재는 법' 뼈대 <span class="src">(1강 0:05~1:20)</span></h3>
+<p><b>수집</b>: yt-dlp로 채널 전수 목록(id·길이·조회수·좋아요·댓글·업로드일·제목·설명) → 길이 분포 → 표본 50편(상위 조회 25 + 최신 25), 720p 이상만, 받은 뒤 열림·길이 ±1.5초·소리 검사. <b>뜯기</b>: 소리(받아쓰기 = 스피치매틱스) · 글자(화면 자막이 대본 정본, OCR) · 그림(프레임 비교로 고정 틀/가변 영역) · 리듬(0.1초 격자) · 글꼴(글자 모양 IoU) → 규격 초안 .md. <b>대조</b>: 내 영상과 실물을 같은 자로(8축 → 152축, 군림보 1편 vs 실물 30편 통과 140·못 잼 11·실패 1), 마지막은 사람 눈. 치트키 「너 지금 네 답변 책임질 수 있어?」(0:17:03).</p>
+<p class="src">구체 프롬프트·코드·152축 목록은 자료에 없음(강사 구두 「수업 자료 던져 놓고 이 기준으로 실측해」). 맥 전제(Apple Vision OCR).</p></div>
+<div class="step"><h3><span class="no">2-5</span>이때 화면에서 벌어지는 일 <span class="src">(2강 0:37~1:42)</span></h3>
+<p>yt-dlp로 받음(제목·1080×1920·60fps·51초) → agy 16개 동시 분석(초 단위 컷·샷·자막 로그, 서사 구조, 목소리 판정 → 타입캐스트 목록에서 가장 비슷한 목소리 고름) → 첫 렌더(버전 1) → <b>AI가 스스로 agy로 검수하며 버전 2~4로 다시 렌더</b>("따로 요청한 게 없어요", 1:40:03) → "기록을 정리하고 이제 클론 규격서를 씁니다"(1:41:39). 상표 로고는 복제하지 않고 "채널 로고용 칸"으로 비움.</p></div>
+
+<h2 id="fix">3. 잡도리 — 원본과 나란히 보고 고치기 <span class="src">(PDF 21·30쪽, 1:42~2:12)</span></h2>
+<div class="step"><h3><span class="no">3-1</span>나란히 비교</h3>
+<pre>원본 영상과 내가 만든 영상을 왼쪽 · 오른쪽으로 한 화면에 붙여서 agy 에게 보여 줘. 같은 순간에 무엇이 다른지(자막 자리 · 크기 · 색, 주인공 크기, 화면 전환) 표로 받아 적게 해 줘. 소리가 같은지는 네가 따로 재 줘. agy 가 다르다고 한 곳은 네가 직접 재서 맞을 때만 고쳐 줘.</pre><p class="src">PDF 21쪽</p></div>
+<div class="step"><h3><span class="no">3-2</span>콕 집어서 한 가지씩 (3번 안에 끝내기)</h3>
+<pre>35초쯤 다른 장면이 한 프레임 번쩍 끼어들어. 그 한 프레임을 빼고, 앞뒤 장면이 자연스럽게 이어지게 해 줘.</pre>
+<pre>인물과 피사체를 화면 정중앙에 두고, 머리 위 여백(헤드룸)도 맞춰 줘. 이걸 최상위 규칙으로 넣어 줘.</pre>
+<p class="src">PDF 30쪽 (린박스 실제 수정). 나쁜 예: 「화면이 좀 튀어, 다시 해 줘」 「화면 좀 보기 좋게 맞춰 줘」.</p></div>
+<div class="step"><h3><span class="no">3-3</span>시연 잡도리 묶음 (화면 원문, 1:47:36)</h3>
+<pre>1. 무음 제거가 제대로 안 돼서 컷이 너무 루즈함. 타이트하게 무음 제거하고 컷은 4ms 크로스페이드 처리해줘
+2. 좌우반전, 135~170% 범위에서 랜덤하게 스케일 업을 해 주되 피사체 인물은 정중앙으로 위치시켜줘
+3. 채도는 1.9배 높여주고
+4. 픽셀은 github에서 Real-ESRGAN 적용해줘
+6. 영상 속도는 1.12배로 올리되 피치는 유지시켜줘</pre>
+<p class="src">번호 5 빠짐은 원문 그대로. 결과 확인 6가지(2:10:42): 얼굴 피사체 · 속도감 · 화자 중심 구도 · 좌우반전 뒤 인물이 안으로 들어왔나 · 얼굴이 더 꽉 찼나 · 엣지 선명·깨짐 해결. 원본 엔딩 카드 제거: 「뒤에 이거 잘라, 넣지 마. 앞으로도 계속 넣지 마.」(2:11:46)</p></div>
+<div class="step"><h3><span class="no">3-4</span>4강판 — 결과가 원본과 다를 때 <span class="src">(4강 1:15~2:12)</span></h3>
+<pre>너 카피 안 했지? 단 한두 장면만이라도 100% 클로닝해서 모션까지 100% 클로닝해</pre>
+<p>"샘플 나오면 너 혼자 보지 말고 나한테 먼저 보여주고 허락을 받아라"(1:15). 원본(왼쪽)·클론(오른쪽)을 나란히 놓고 눈으로 비교(2:12). 3~4턴 안에 안 끝나면 새 폴더·새 세션(1:31).</p></div>
+
+<h2 id="save">4. 굳히기 — 내 프리셋으로 저장 <span class="src">(2강 PDF 35~38쪽, 1:36:49)</span></h2>
+<div class="box">★ <b>잡도리 끝나기 전에는 아무것도 지우지 않습니다.</b> 작업 폴더에 CLAUDE.md, 분석, 받아쓰기, agy 실행 로그가 다 남아 있어야 합니다. "몇 번 수정을 요청하고, 그다음에 나만의 프리셋으로 확정을 지어야 해요. 그 전까지는 지우지 마시고"(1:36:49).</div>
+<div class="step"><h3><span class="no">4-1</span>고정값으로 저장</h3>
+<pre>지금 나온 결과를 고정값으로 저장해 줘. 다음 영상에 적용해도 이렇게 나오게 해 줘.</pre><p class="src">PDF 35쪽 (9/16 안내 · 마음에 드는 한 편)</p></div>
+<div class="step"><h3><span class="no">4-2</span>과정 전체를 .md로</h3>
+<pre>지금 칼카피한 과정을 하나도 빠짐없이 .md 파일로 저장해 줘. 다음에 클로드 코드가 이 파일을 보고 똑같이 만들 수 있게 해 줘.</pre><p class="src">PDF 35쪽 (칼카피 마쳤을 때)</p></div>
+<div class="step"><h3><span class="no">4-3</span>무엇을 고정하고 무엇을 비워 둘지</h3>
+<pre>이 채널 영상 세 편 이상을 원본과 같은 장면끼리 겹쳐서, 원본에 무엇을 했는지 재 줘. 모든 편에 늘 같은 것만 레시피에 고정하고, 편마다 · 장면마다 달라지는 확대 · 자리 · 밝기는 새 소재마다 새로 정해 줘.</pre>
+<p class="src">PDF 37쪽. 드라마리오 사례: 두 편 다 같은 것(1.1배속, 채도 약 1.9배, 검은 세로 화면·가운데 영상 창, 반전·회전 없음) = 레시피에 고정 / 편마다 다른 것(확대 1.22·1.26배, 가로 위치, 대비·밝기) = 새 소재마다.</p></div>
+<div class="step"><h3><span class="no">4-4</span>규칙을 훅으로 잠그기</h3>
+<pre>기존 .md 지침과 레퍼런스 분석 자료를 실제로 읽고 제작에 반영하지 않거나 지시한 내용을 빠뜨리면 다음 작업으로 넘어갈 수 없다. 이건 최상위 규칙이다. 훅으로도 걸어 줘.</pre><p class="src">PDF 35쪽 (9/28 안내 · 지침을 읽고도 안 지킬 때)</p></div>
+<div class="step"><h3><span class="no">4-5</span>연습장(B)에서 잘 된 것을 레시피(A)로 올리기</h3>
+<pre>B 폴더에서 잡도리한 것 중 잘 된 규칙을 A 폴더의 최상위 규칙으로 업데이트해 줘.</pre><p class="src">PDF 36쪽</p></div>
+<div class="step"><h3><span class="no">4-6</span>확정 뒤 정리</h3>
+<pre>프리셋과 상관없는 불필요한 것들은 지워서 정리해줘</pre><p class="src">2강 1:36:49 — 프리셋이 확정된 <b>다음에만</b></p></div>
+<div class="step"><h3><span class="no">4-7</span>2강 배포 예시 — 강사가 굳힌 프리셋 zip 안</h3>
+<p><code>드라마리오_프리셋_배포.zip</code>: README · install.py · spec.json · 규칙_정본.md · 프리셋_v1.md · commands/드라마리오.md · _tools(12개) · assets(esrgan·fonts·logos·models) · docs(메모리 3개) · job_naeil01. 렌더러는 spec.json만 읽고, 쓰는 법은 <code>/드라마리오 &lt;원본 경로&gt;</code>(슬래시 명령). 통과 관문 7가지(프리셋 v1 9단계): 틀 일치 · 음량 -14±1 LUFS · 싱크 ≤0.02초 · 자투리 0개 · 자막 겹침 0 + 눈 확인 · 질감 15% 이내 · 틱 소리.</p>
+<p class="src">2강 자료정리 962~1966행</p></div>
+
+<h2 id="make">5. 생산 — 굳힌 프리셋으로 새 소재 <span class="src">(2강 PDF 38·40쪽, 3강)</span></h2>
+<div class="step"><h3><span class="no">5-1</span>한 편 만들기 (울트라코드 끄고)</h3>
+<pre>[○○ 폴더 경로]의 최상위 규칙과 .md 레시피를 먼저 읽고, 이 소재로 한 편 만들어 줘. 레시피에 적힌 모양은 그대로 두고, 원본을 놓는 크기와 자리, 확대는 이 소재에 맞게 새로 정해 줘.</pre><p class="src">PDF 40쪽. 3강판: 「../채널A_레시피 의 레시피.md 를 먼저 읽고 그 틀로」</p>
+<pre>레시피에 적은 규칙을 그대로 옮겨 줘. 레시피에 없는 규칙은 지어내지 말고, 모르는 값은 원본을 다시 재서 채워 줘. 다 만들면 레시피 값과 결과 값을 나란히 표로 보여 줘.</pre><p class="src">PDF 38쪽</p></div>
+<div class="step"><h3><span class="no">5-2</span>새 편 검수 → 어긋난 것만 레시피에 다시 적기</h3>
+<pre>원본과 새 편을 왼쪽 · 오른쪽으로 한 화면에 붙여서 agy 에게 보여 줘. 레시피에 적은 모양(제목 띠 · 자막 자리 · 색 · 목소리)이 원본과 똑같이 나왔는지 항목마다 표로 받아 적게 하고, 다른 곳은 네가 직접 재서 맞을 때만 고친 뒤 레시피에 다시 적어 줘.</pre><p class="src">PDF 40쪽 — "그래야 나중에 어디서든 그 폴더를 참조하게만 하면 규칙을 지켜서 뽑을 수 있게 됩니다!"</p>
+<pre>같은 소재로 길이와 속도를 다르게 한 안을 네 가지 만들어 줘. 나란히 비교해서 내가 고른 안의 값을 레시피에 적어 줘.</pre><p class="src">PDF 38쪽 («너무 타이트하다» 같은 느낌 지적 시)</p></div>
+<div class="step"><h3><span class="no">5-3</span>3강판 — 변주와 병렬 생산</h3>
+<pre>레시피는 그대로 두고 여섯 칸 중 한 칸만 바꾼 +알파 기획 3개 … 나머지 다섯 칸은 원본 값 그대로인지 ✓</pre>
+<pre>링크 4개를 일꾼 4명에게 … 일꾼마다 레시피.md 먼저 읽고 … 레시피 값과 다르게 나온 칸만 편별 표로</pre>
+<p class="src">3강 복붙 9 · 15 (「…」는 추출본에서 줄인 부분 — 전문은 3강 자료 html). 일꾼 정의는 <code>.claude/agents/장면일꾼.md</code>(medium 고정, 복붙 16).</p></div>
+
+<h2 id="share">6. 다른 곳으로 옮기기 · 수강생끼리 공유 <span class="src">(1강 2:27~3:00, 2강 PDF 35쪽)</span></h2>
+<div class="step"><h3><span class="no">6-1</span>전부 zip으로</h3>
+<pre>지금 칼카피한 것을 다른 곳에서도 쓸 수 있게 .md 파일부터 필요한 파일까지 전부 .zip 파일로 모아 줘.</pre><p class="src">2강 PDF 35쪽 (9/27 안내 · 다른 폴더/클로드 코드로 옮길 때)</p></div>
+<div class="step"><h3><span class="no">6-2</span>1강판 — 재현 매뉴얼 + 재현 패키지</h3>
+<pre>지금 내가 카피한 이 과정을 하나도 빠짐없이 누락없이 생략없이 다 저장을 해서 내가 이 파이프라인을 클로드 코드로 재현할 수 있게 만들어줘</pre>
+<p class="src">1강 2:50:00 화면 원문 (2:46:41 판: 「….md 파일로 저장해서 내가 이 파이프라인을 클로드 코드를 이용해서 생산할 수 있게 해줘」). 결과: <code>PIPELINE_CLAUDE_CODE.md</code> + 재현 패키지 zip(<code>DOCUMENT_STATISTICS.json</code> · <code>FILE_MANIFEST.json</code>)(2:58:13~3:00:00). 이 md를 Claude Code에 첨부하면 끝(「파일 첨부만 하면 된다」). 실제 파일 이름은 <code>PIPELINE_CLAUDE_CODE_KO.md</code>(644KB), zip 108MB.</p>
+<p><b>받은 쪽(Claude Code)에서 생산</b> — 빈 새 폴더에서, 파일 2개를 Shift 누른 채 끌어 첨부:</p>
+<pre>첨부한 2개의 파일을 네가 확인해서 햄쇼츠 채널처럼 조회수 잘 나오는 제품 하나 선정해서 만들어줘</pre>
+<p class="src">1강 3:35:32 화면 원문(폴더 volcano02, 오퍼스 + Extra High 확인 뒤)</p></div>
+<div class="step"><h3><span class="no">6-3</span>받은 사람이 쓰는 법</h3>
+<p>카페 「수강생 프리셋 공유」 게시판에 md를 올리면 → 받은 사람이 Claude Code에서 잡도리를 조금 하고 그 규격으로 세팅 → <b>「네가 알아서 소재 찾아와, 만들어」</b> 하면 끝 <span class="src">(1강 2:27:43)</span>.</p>
+<pre>새 폴더에서 시작할게. 잘 잡힌 부분은 [예전 폴더 경로]를 참고해서 완성해 줘.</pre><p class="src">2강 PDF 36쪽 (한 폴더에서 오래 고쳐 말을 안 들을 때)</p></div>
+
+<h2 id="stuck">7. 막힐 때 <span class="src">(2강 PDF 44쪽)</span></h2>
+<pre>이 프리셋이 원래 이 일을 할 수 있게 만들어져 있는지, 지금 정말 막힌 건지 확인해 줘. 막힌 거라면 어디서 막혔는지, 네가 받은 메시지를 그대로 보여 줘.</pre>
+<pre>API 키는 넣지 않을게. agy 는 구독한 제미나이로 로그인해서 쓰고 있어. 어느 단계가 왜 API 키를 달라고 하는지, 네가 받은 메시지를 그대로 보여 줘.</pre>
+
+<h2 id="gap">8. 강의에 없는 칸 · 판본끼리 어긋난 값</h2>
+<div class="wide"><table>
+<tr><th>항목</th><th>상태</th></tr>
+<tr><td>부록 <code>프리미엄_2강_AI지시서.md</code></td><td>2강 PDF 46·53쪽에 이름만 있고 드라이브 자료 폴더에 없음</td></tr>
+<tr><td>1강 자료(잡도리 기준: 음량·자막 규칙)</td><td>2강에서 「1강 자료에 다 들어가 있다」고만 함</td></tr>
+<tr><td>중복 회피 지침 원문</td><td>「수업 끝나고 드림」 — 기록 없음</td></tr>
+<tr><td>3강 분석지침서 「…채널 ○○법 v32」 · 4강 「클론 MD 파일」</td><td>이름만 언급, 본문 없음</td></tr>
+<tr><td>크로스페이드</td><td>4ms(화면·카드·프리셋 v1) vs 40ms(타임라인 정제본, 「확인 필요」)</td></tr>
+<tr><td>속도</td><td>1.12배(화면) vs 1.1배(타임라인·드라마리오 실측)</td></tr>
+<tr><td>확대 범위</td><td>135~170%(화면·PDF) / 135~155%(카드 예시) / 135~190%(4:19:15)</td></tr>
+<tr><td>모델 표기</td><td>화면 「Opus 3.5 / max effort」, 카드는 오퍼스 5.5</td></tr>
+</table></div>
+
+<h2 id="ours">9. 우리 숏클로 옮길 때 정할 칸 <span class="src">(사장님 결정 — 아직 정하지 않음)</span></h2>
+<div class="box no">아래는 강의 방식을 그대로 옮기면 우리 쪽과 부딪히는 칸입니다. 어떻게 바꿀지는 정하지 않았습니다.
+<ul>
+<li><b>agy(구독 제미나이 눈)</b>: 강의는 분석·검수를 전부 agy에 맡깁니다. 우리 회원 경로에서 무엇을 눈으로 쓸지.</li>
+<li><b>볼케이노 MCP</b>: 강의는 「도구는 빌리고 값은 새로 잼」. 우리는 숏클 서버 지시서·프리셋 꾸러미가 그 자리.</li>
+<li><b>목소리</b>: 강의 화면에 「타입캐스트 필제」 — 우리는 필재 금지(박창수·지훈 / 문정·유라).</li>
+<li><b>권한</b>: 강의는 <code>claude --dangerously-skip-permissions</code>(권한 확인 전부 생략)로 시작.</li>
+<li><b>원본 소재</b>: 강의는 남의 영상을 내려받아 반전·확대·속도로 재편집(「네, 맞습니다」), 4강은 그림체를 가져오면 저작권이 없다는 강사 의견. 우리 연예인 원본 규칙과 다름.</li>
+<li><b>반 구분</b>: 우리 기본반은 프리셋 고르기만, 벤치마킹 엔진은 고급반 이상(<code>claude_portal.benchmark_rent</code>).</li>
+</ul></div>
+
+<p class="src" style="margin-top:28px">근거 파일: G:\내 드라이브\강의정리\프리미엄반_특강_1~4주차 (원본기록 · 노하우카드 · 자료정리). 강의별 상세 추출본: 작업 폴더 kalcopy_w1.md · kalcopy_w2.md · kalcopy_w3.md · kalcopy_w4.md. 2026-11-04 작성.</p>
+</div>
+<script>
+document.querySelectorAll('pre').forEach(p=>{const b=document.createElement('button');b.className='cp';b.textContent='복사';b.onclick=()=>{const t=p.innerText.replace(/복사(됨)?$/,'').trim();try{navigator.clipboard.writeText(t).then(()=>{b.textContent='복사됨';setTimeout(()=>b.textContent='복사',1200)})}catch(e){}};p.appendChild(b)});
+</script>
+</body>
+</html>

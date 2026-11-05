@@ -112,8 +112,41 @@ def _flow_erases(version: str | None) -> bool:
         return True
 
 
+def free_ok() -> bool:
+    """무료 엔진(회원 GPU, tools/free_subclean)이 이 PC 에 깔렸나."""
+    try:
+        from tools.free_subclean import engine as FE
+    except ImportError:          # 옛 묶음 회원 PC — 엔진 파일이 없으면 기존 길 그대로
+        return False
+    return FE.installed()
+
+
+def erase_engine() -> str:
+    """지우는 엔진 고르기(판단 주인) — 회원 설정 SHORTEM_ERASE_ENGINE(free|vmake) > 키 있으면 VMake(기존 그대로) > 무료 엔진이 깔렸으면 무료 > ''."""
+    e = (os.environ.get("SHORTEM_ERASE_ENGINE") or "").strip().lower()
+    if e == "free":
+        return "free" if free_ok() else ""
+    if e == "vmake" or key_source() == "server" or member_key():
+        return "vmake"
+    return "free" if free_ok() else ""
+
+
+# VMake 확정 실패(다시 보내도 같다) — 판단 주인 hard_fail. 시간 초과·일시 실패는 여기 없다(다시 보내면 지워질 수 있다)
+HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"))
+HARD_FIX = {"new_api": "VMake 새 API 키를 넣으면 다음 편부터 지워요", "not_pro": "VMake Pro 요금제에서 지워져요",
+            "sign": "VMake 키를 다시 확인해 주세요"}
+
+
+def hard_fail(text: str) -> str:
+    """실패 글 → 확정 실패 종류('new_api'·'not_pro'·'sign') 또는 ''."""
+    import re
+    return next((k for k, rx in HARD_FAILS if re.search(rx, str(text or ""), re.I)), "")
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
+    if mode != "blur" and erase_engine() == "free":   # 돈이 안 드니 SHORTEM_NO_PAID 도 막지 않는다
+        return {"mode": "vmake", "via": "free", "why": ""}
     if mode == "blur" or paid_off():
         return {"mode": "blur", "why": "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"}
     if key_source() == "server":
@@ -283,12 +316,20 @@ def of_piece(name: str) -> tuple:
     return (m.group(1) + m.group(4), [float(m.group(2)), float(m.group(3))]) if m else (name, None)
 
 
-def cut_piece(f: Path, a: float, b: float) -> Path:
-    """원본 [a,b] 를 소리 없이 다시 굽는다(정확한 시작 프레임 — 덮을 때 같은 시각에 맞추려고)."""
+def cut_piece(f: Path, a: float, b: float, where: Path | None = None) -> Path:
+    """원본 [a,b] 를 소리 없이 다시 굽는다(정확한 시작 프레임 — 덮을 때 같은 시각에 맞추려고). where = 조각을 둘 폴더(뒤에서 지울 때)."""
     out = _piece_name(f, a, b)
+    if where:
+        out = Path(where) / out.name
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", str(f), "-t", f"{b - a:.3f}", "-an",
                     "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)], check=True, stdin=subprocess.DEVNULL)
     return out
+
+
+def splice_tag(f: Path) -> Path:
+    """덮은 구간 표식 — 파일 전체 정체는 바뀌어도 그 구간 밖 그림은 같다는 기록(render_bench.cut_src_id 가 읽는다: 구간 밖 컷을 다시 굽지 않게)."""
+    f = Path(f)
+    return f.with_name(f.stem + "_spliced.json")
 
 
 def splice(f: Path, pieces: list) -> Path:
@@ -307,9 +348,17 @@ def splice(f: Path, pieces: list) -> Path:
     subprocess.run(args + ["-filter_complex", ";".join(chain), "-map", f"[{last}]", "-map", "0:a?", "-c:a", "copy",
                            "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(tmp)], check=True, stdin=subprocess.DEVNULL)
     caches = list(f.parent.glob(f"_cutbounds_{f.stem}_*.json"))
+    tag = splice_tag(f)
+    rec = json.loads(tag.read_text(encoding="utf-8")) if tag.exists() else None
+    was = [f.stat().st_size, f.stat().st_mtime_ns]
+    if rec is None or rec.get("file") != was:      # 첫 덮기 — 이 파일 정체가 기준
+        rec = {"base": was, "spans": []}
     if not keep.exists():
         f.replace(keep)
     tmp.replace(f)
+    rec["spans"] += [[a, b, Path(p).stat().st_size] for p, a, b in pieces]
+    rec["file"] = [f.stat().st_size, f.stat().st_mtime_ns]
+    tag.write_text(json.dumps(rec), encoding="utf-8")
     for c in caches:
         try:
             os.utime(c, None)
@@ -406,7 +455,7 @@ def send_joined(files: list, send, log=print) -> dict:
     return out
 
 
-def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> dict:
+def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print, spots: dict | None = None) -> dict:
     """쓰는 구간만 지우기(주인) — 구간마다 잘라 VMake(서버 키/회원 키 = ready 판정) → 지운 조각을 원본에 덮어 끼움.
     반환 {mode, via, done:{이름:[[a,b]…]}(지운 구간), cleaned:[이름], calls, sec(보낸 초), why, (fix)}. 구간이 없으면 호출 0."""
     src_dir = Path(src_dir)
@@ -418,10 +467,22 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
         for n, iv in spans.items():
             log_entry(src_dir, {"file": n, "mode": rd["mode"], "ok": rd["mode"] == "blur", "calls": 0, "spans": iv, "why": rd["why"]})
         return {**rd, "done": {}, "cleaned": [], "calls": 0, "sec": 0.0}
-    pieces = {n: [(cut_piece(src_dir / n, a, b), a, b) for a, b in iv] for n, iv in spans.items()}
+    pieces, r = _cut_send(src_dir, spans, rd, spots, log)
+    return _put_back(src_dir, spans, pieces, r, rd)
+
+
+def _cut_send(src_dir: Path, spans: dict, rd: dict, spots: dict | None, log=print, where: Path | None = None) -> tuple:
+    """구간마다 잘라 보낸다 — ({이름: [(조각,a,b)…]}, {cleaned, fail, calls}). 돈이 드는 곳은 여기 한 곳(앞에서 기다리는 길·뒤에서 도는 길이 같이 부른다). 원본은 건드리지 않는다."""
+    pieces = {n: [(cut_piece(src_dir / n, a, b, where), a, b) for a, b in iv] for n, iv in spans.items()}
     files = [p for ps in pieces.values() for p, _, _ in ps]
+    if rd["via"] == "free":
+        return pieces, free_clean(files, spots or {}, log=log)
     send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
-    r = send_joined(files, send, log=log)
+    return pieces, send_joined(files, send, log=log)
+
+
+def _put_back(src_dir: Path, spans: dict, pieces: dict, r: dict, rd: dict) -> dict:
+    """지운 조각을 원본에 덮는다(같은 이름·같은 길이) — 렌더가 원본을 읽지 않는 때에만 부른다."""
     done, cleaned = {}, []
     for n, ps in pieces.items():
         ok = [(p, a, b) for p, a, b in ps if p.name in r["cleaned"]]
@@ -439,6 +500,90 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
     log_entry(src_dir, {"file": ",".join(spans), "mode": "spans", "ok": not r["fail"], "calls": 0, "spans": spans, "sent_sec": sec, "done": done})
     return {"mode": "vmake", "via": rd["via"], "done": done, "cleaned": cleaned, "calls": r["calls"], "sec": sec,
             "why": "; ".join(f"{k}: {v}" for k, v in r["fail"].items())[:300]}
+
+
+# ── 뒤에서 지우기(관제 304, 사장님 11-02 '렌더 두 번 금지') ──────────────────────────────────────────
+# 장면이 정해지면 지울 구간을 보내고 기다리지 않는다 — 렌더는 임시 흐림으로 끝내고, 결과가 오면 render() 의 구간 교체로 그 구간만 바꾼다. 늦거나 실패하면 흐림 판으로 완성.
+# 호출은 앞 길과 같은 함수·같은 구간 한 번(_cut_send) — 다시 보내지 않는다. 뒤 프로세스는 원본을 건드리지 않고 조각만 만든다(렌더가 원본을 읽는 중일 수 있다) — 덮기는 bg_take 가 렌더 사이에.
+# 판단 주인: 뒤로 보내도 되나 = bg_start · 끝났나·받기 = bg_take. 회원 PC 는 runner_ops.c_clean_text·c_clean_take 를 지나간다.
+BG_DIR = "_vm_bg"          # 원본 폴더 안 — 조각·job.json·result.json
+BG_MAX = 1800              # 이보다 오래 답이 없으면 끝난 것으로 치지 않는다(앞 길의 실행기 예산과 같다)
+
+
+def _spawn_bg(d: Path) -> int:
+    """실행기가 끝나도 살아 있는 프로세스로(실행기는 일감마다 뜨고 끝난다)."""
+    flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "bg_run", str(d)], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            creationflags=flags).pid
+
+
+def bg_start(src_dir: Path, spans: dict, mode: str = "vmake", spots: dict | None = None) -> dict | None:
+    """(판단 주인 — 뒤로 보내도 되나) 돈 드는 길(VMake)이고 지울 구간이 있으면 뒤 프로세스를 띄운다. None = 앞에서 기다리는 옛 길로(무료 엔진은 이 PC 그래픽카드를 렌더와 나눠 쓰니 뒤로 안 보낸다)."""
+    src_dir = Path(src_dir)
+    spans = {n: iv for n, iv in (spans or {}).items() if iv and (src_dir / n).exists()}
+    rd = ready(mode)
+    if not spans or rd["mode"] != "vmake" or rd.get("via") == "free":
+        return None
+    d = src_dir / BG_DIR
+    if bg_busy(src_dir):
+        raise RuntimeError("뒤에서 지우는 일이 이미 돈다")
+    shutil.rmtree(d, ignore_errors=True)
+    d.mkdir()
+    (d / "job.json").write_text(json.dumps({"src": str(src_dir), "spans": spans, "rd": rd, "spots": spots or {}, "at": time.time()}, ensure_ascii=False), encoding="utf-8")
+    _spawn_bg(d)
+    return {"mode": "bg", "via": rd.get("via"), "sec": span_sec(spans)}
+
+
+def bg_run(d: Path) -> None:
+    """뒤 프로세스 본체 — 조각을 보내고 결과를 result.json 에(원자적으로). 실패도 결과다."""
+    d = Path(d)
+    job = json.loads((d / "job.json").read_text(encoding="utf-8"))
+    src = Path(job["src"])
+    try:
+        pieces, r = _cut_send(src, job["spans"], job["rd"], job.get("spots"), log=lambda s: None, where=d)
+        out = {"pieces": {n: [[str(p), a, b] for p, a, b in ps] for n, ps in pieces.items()}, **r}
+    except Exception as e:  # noqa: BLE001 — 뒤 프로세스 실패는 result 로 알린다(조용히 죽지 않는다)
+        out = {"error": f"{type(e).__name__}: {str(e)[:300]}", "calls": 0, "cleaned": [], "fail": {}}
+    led = d / LEDGER
+    if led.exists():                  # 장부는 원본 폴더 한 곳 — 늦어서 안 쓴 호출도 센다
+        rows = json.loads((src / LEDGER).read_text(encoding="utf-8")) if (src / LEDGER).exists() else []
+        (src / LEDGER).write_text(json.dumps(rows + json.loads(led.read_text(encoding="utf-8")), ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp = d / "result.tmp"
+    tmp.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(d / "result.json")
+
+
+def bg_busy(src_dir: Path) -> bool:
+    d = Path(src_dir) / BG_DIR
+    if not (d / "job.json").exists() or (d / "result.json").exists():
+        return False
+    return time.time() - json.loads((d / "job.json").read_text(encoding="utf-8")).get("at", 0) < BG_MAX
+
+
+def bg_take(src_dir: Path, wait: float = 0, tick=None) -> dict:
+    """(판단 주인 — 뒤 결과 받기) 최대 wait 초 기다려 끝났으면 지운 조각을 원본에 덮고(같은 이름·같은 길이) clean_used 와 같은 꼴로. state = none|running|late|done."""
+    src_dir = Path(src_dir)
+    d = src_dir / BG_DIR
+    if not (d / "job.json").exists():
+        return {"state": "none", "done": {}, "cleaned": [], "calls": 0}
+    t0 = time.time()
+    while not (d / "result.json").exists():
+        if not bg_busy(src_dir):
+            return {"state": "late", "done": {}, "cleaned": [], "calls": 0, "why": "답이 오지 않음"}
+        if time.time() - t0 >= wait:
+            return {"state": "running", "done": {}, "cleaned": [], "calls": 0}
+        if tick:
+            tick()
+        time.sleep(min(2.0, max(0.05, wait / 50)))
+    job = json.loads((d / "job.json").read_text(encoding="utf-8"))
+    r = json.loads((d / "result.json").read_text(encoding="utf-8"))
+    if r.get("error"):
+        res = {"mode": "error", "done": {}, "cleaned": [], "calls": r.get("calls", 0), "why": r["error"], "error": r["error"]}
+    else:
+        pieces = {n: [(Path(p), a, b) for p, a, b in ps] for n, ps in r["pieces"].items()}
+        res = _put_back(src_dir, job["spans"], pieces, r, job["rd"])
+    shutil.rmtree(d, ignore_errors=True)
+    return {**res, "state": "done"}
 
 
 def plan_spans(doc: Path, shots: dict | None = None, done: dict | None = None, style_name: str | None = None) -> tuple:
@@ -523,6 +668,30 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
 
     with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎 — 서버 길과 같게 동시에(10-26)
         list(ex.map(one, files))
+    return out
+
+
+def free_clean(files: list, spots: dict, log=print) -> dict:
+    """회원 GPU 로 지운다(돈 0) — spots = {원본 이름: 자리}(회원 Claude 지정, flow f_spots). 자리 없는 조각은 안 지우고 실패로(흐림이 덮는다)."""
+    from tools.free_subclean import engine as FE
+    out = {"cleaned": [], "calls": 0, "fail": {}}
+    for f in files:                                  # GPU 하나라 차례로
+        f = Path(f)
+        spot = spots.get(of_piece(f.name)[0])
+        if not spot or not (spot.get("bands") or spot.get("emoji")):
+            out["fail"][f.name] = "자막 자리 지정 없음"
+            continue
+        t0 = time.time()
+        tmp = f.with_name(f.stem + "_fclean" + f.suffix)
+        try:
+            res = FE.clean_file(f, tmp, spot)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": True, "sec": round(time.time() - t0, 1), "calls": 0, **_sent(f), **res})
+        except Exception as e:  # noqa: BLE001 — 실패는 이유를 남기고 다음 조각
+            out["fail"][f.name] = f"{type(e).__name__}: {str(e)[:200]}"
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": False, "calls": 0, "why": out["fail"][f.name]})
+            log(f"[free] {f.name} 실패: {out['fail'][f.name]}")
     return out
 
 
@@ -656,6 +825,9 @@ def main(argv=None) -> int:
         if not dry:
             r = clean_used(src, send, style_mode(a[0]))
             print(json.dumps({**r, "check": sent_check(sent_from_ledger(src, r.get("at", "")), used)}, ensure_ascii=False))
+        return 0
+    if cmd == "bg_run":          # 뒤 프로세스 — bg_start 가 띄운다
+        bg_run(Path(a[0]))
         return 0
     if cmd == "fetch":
         print(fetch(Path(a[0]), a[1:]))

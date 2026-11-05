@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""볼케이노형 회원 라인 **개발 완주 도구**(관제 234·097 2026-10-21) — 서버 지시서(flow)를 같은 프로세스에서, 실행기(runner_ops)는 따로 띄우고,
+"""단계형 회원 라인 **개발 완주 도구**(관제 234·097 2026-10-21) — 서버 지시서(flow)를 같은 프로세스에서, 실행기(runner_ops)는 따로 띄우고,
 판정(review)은 Claude CLI 가 회원 Claude 처럼 답한다. MCP·서버 HTTP 를 빼고 지시서·실행기·판정 고리만 끝까지 본다(진짜 회원 경로 = shortem_client live_episode).
 
     PYTHONUTF8=1 py tools/calcopy/hybrid/flow_dev.py --ref <벤치 URL> --version 키치잇판 --work <작업 폴더> [--cache <소스 캐시>] [--approve]

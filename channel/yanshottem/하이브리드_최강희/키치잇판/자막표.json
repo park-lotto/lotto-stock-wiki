@@ -1,0 +1,432 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.973,
+   "text": "배우 최강희가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "최강희가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.973,
+   "t1": 2.605,
+   "text": "1년 내내 주구장창",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "주구장창"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.605,
+   "t1": 3.327,
+   "text": "들고 다녔다는",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "들고"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 3.327,
+   "t1": 4.266,
+   "text": "가방이 있다네요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "가방이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.266,
+   "t1": 6.566,
+   "text": "각은 찌그러질 생각도 안 하고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "찌그러질"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 6.566,
+   "t1": 7.816,
+   "text": "낡을 생각도 안 하고",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "낡을"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 7.816,
+   "t1": 9.316,
+   "text": "주름도 안 잡히고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 9.316,
+   "t1": 10.383,
+   "text": "도대체 관리는",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "관리는"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 10.383,
+   "t1": 11.302,
+   "text": "어떻게 하길래?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "어떻게"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 11.302,
+   "t1": 12.602,
+   "text": "그러니까 툭툭 털면",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "툭툭"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 12.602,
+   "t1": 13.752,
+   "text": "그냥 다시 깨끗해",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "깨끗해"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 13.752,
+   "t1": 15.276,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 15.276,
+   "t1": 16.256,
+   "text": "똑같은 걸로 하나 사서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "똑같은"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 16.256,
+   "t1": 17.104,
+   "text": "따라 해 봤어요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.104,
+   "t1": 18.963,
+   "text": "근데 진짜 놀라운 건",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "놀라운"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "kk_doodle",
+     "word": "놀라운"
+    }
+   ]
+  },
+  {
+   "line": "N4",
+   "t0": 18.963,
+   "t1": 20.593,
+   "text": "무게가 120g이라",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "120g이라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 20.593,
+   "t1": 22.047,
+   "text": "사과 한 개보다 가볍대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "가볍대요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 22.047,
+   "t1": 23.956,
+   "text": "장인들이 하나하나 손으로",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "손으로"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 23.956,
+   "t1": 25.121,
+   "text": "하루 30개 정도만",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "30개"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 25.121,
+   "t1": 25.717,
+   "text": "만든대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "만든대요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.717,
+   "t1": 27.043,
+   "text": "쇼핑몰엔 아예",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "아예"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 27.043,
+   "t1": 28.317,
+   "text": "최강희가 든 가방이라고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "최강희가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 28.317,
+   "t1": 29.867,
+   "text": "붙여 팔 만큼 인기래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "인기래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = _Wa4IehA6yE",
+  "스티커 kk_doodle → N4「근데 진짜 놀라운 건」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 12, 'cut': 11} · 강조 22/23"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "_Wa4IehA6yE",
+  "worst_slot_diff": 0.121,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "ours": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 12
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "pop": 0.55,
+     "cut": 0.45
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 0.82,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "kk_doodle": 1
+    },
+    "ours": {
+     "kk_doodle": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

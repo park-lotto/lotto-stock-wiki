@@ -1,0 +1,1276 @@
+{
+ "made": "2026-10-18",
+ "note": "워터마크 확정은 삶은토마도 표본 3편에서 판독한 틱톡·인스타 계정. 제품 일치 후보는 엔진 1차(결과_엔진_1차.json originals)에서 같은 제품 해외 영상·조회 10만 이상만 — 같은 원본인지는 미확인. 핫템리포트·잇템로그·디데이쇼츠 표본 17편은 워터마크가 안 보여(원본을 크롭) 출처 계정 못 찾음.",
+ "channels": [
+  {
+   "platform": "tiktok",
+   "handle": "@christinakirkman",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "BJP9NsF8FE8",
+   "url": "https://www.tiktok.com/@christinakirkman"
+  },
+  {
+   "platform": "instagram",
+   "handle": "@bysaransteelo",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "BJP9NsF8FE8",
+   "url": "https://www.instagram.com/bysaransteelo/"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@hellcat.png",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "BJP9NsF8FE8",
+   "url": "https://www.tiktok.com/@hellcat.png"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@viperavuinera",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "BJP9NsF8FE8",
+   "url": "https://www.tiktok.com/@viperavuinera"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@nicoleisgod",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@nicoleisgod"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@marneyhenze",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@marneyhenze"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@ashleighlauren",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@ashleighlauren"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@artistcolette",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@artistcolette"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@olcia1105",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@olcia1105"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@okent",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "tKMbcTrO5c8",
+   "url": "https://www.tiktok.com/@okent"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@bus.queen",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "scMWG6J6NNw",
+   "url": "https://www.tiktok.com/@bus.queen"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@izzy.darnell",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "scMWG6J6NNw",
+   "url": "https://www.tiktok.com/@izzy.darnell"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@victoriaarenas98",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "scMWG6J6NNw",
+   "url": "https://www.tiktok.com/@victoriaarenas98"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "@gntlmus",
+   "confidence": "워터마크 글자 판독(제미나이)",
+   "via_channel": "@lifeistomado",
+   "via_video": "04PZkC2BllQ",
+   "url": "https://www.tiktok.com/@gntlmus"
+  },
+  {
+   "platform": "youtube",
+   "channel": "쉐이크본",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "골전도 스피커"
+   ],
+   "max_views": 271534,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/bSm24rUopeo",
+     "title": "JTBC performance test of the ShakeBone floor noise retaliation speaker"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Anything Speaker - Turn Anything Into A Speaker",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "골전도 스피커"
+   ],
+   "max_views": 246164,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/7Y0YvS5ZrV4",
+     "title": "This Device Turns Anything Into A Speaker - AnythingSpeaker.com"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "THDS",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "골전도 스피커"
+   ],
+   "max_views": 163413,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/KHi2GSjZi1w",
+     "title": "DIY portable bluetooth speaker with heavy bass passive radiators"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Adafruit Industries",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "골전도 스피커"
+   ],
+   "max_views": 125629,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/IS2uS_aWTHw",
+     "title": "Turn Anything into a Speaker - Bone Conductor Amp"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Transformer Table",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 2666078,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/w6dJOGcSEjQ",
+     "title": "The NEW Round Dining Table Collection Is Here! | Transformer Table Lau"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/1kjZuNQpf4E",
+     "title": "Ready to Upgrade? Meet The Transformer Table to Desk | The Ultimate Wo"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Expand Furniture",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 1435114,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/PlzH1ikw8lk",
+     "title": "Box Coffee Table Transformer - Height adjustable extending table - Exp"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "eXpressWardrobe",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 617197,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/_tOZ5NDAIJ0",
+     "title": "Folding Table - IKEA NORDEN Dining Table"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Agastya Intelligence",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 438705,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/V3f6t2Uh31Q",
+     "title": "Beautiful Extendable Dining table demo at IKEA"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "IKEA USA",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 255051,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/XQExLhpmI9s",
+     "title": "BJURSTA Table - IKEA Home Tour"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "COMFOLD",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 243178,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/4Lk_p4L3I7s",
+     "title": "COMFOLD Vinge - Folding Table 4 Seater Dining Set Space Saving Furnitu"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Eko-Top",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 233775,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/bnszvTJ9Pfw",
+     "title": "Kitchen pull out table"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Studio Kook",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "접이식 확장 식탁"
+   ],
+   "max_views": 185311,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/aPOHAYvlQao",
+     "title": "Abba Dining Table | Unfold Convenience, Fold Away Hassle | Studio Kook"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Insider",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "씨앗 연필"
+   ],
+   "max_views": 102961,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/EwAxzeuUfjU",
+     "title": "You Can Plant Veggies And Herbs With This Pencil"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "LiberNovo",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "하이엔드 오피스체어"
+   ],
+   "max_views": 9123432,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/nlJIhWIrdCk",
+     "title": "Welcome to LiberNovo | The World's First Dynamic Ergonomic Chair"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Bob Diff",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "빵 슬라이서"
+   ],
+   "max_views": 2200000,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/8KxhQEc_Z6A",
+     "title": "Mildly impressed with this bread slicer I picked up for my wife’s sour"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Adventure Is Out There",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "빵 슬라이서"
+   ],
+   "max_views": 431833,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/HAzU8QhIZ9M",
+     "title": "WATCH this before you buy a Bread Slicing Guide"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Jamie Oliver",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "빵 슬라이서"
+   ],
+   "max_views": 127393,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/flZbgKUAC80",
+     "title": "How to slice a loaf of bread - Jamie Oliver's Home Cooking Skills"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Frieling USA, Inc.",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "빵 슬라이서"
+   ],
+   "max_views": 105429,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/BvfhfZxHPGs",
+     "title": "Zassenhaus Bread Slicer"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Homevillagestore",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "전자레인지 파스타 쿠커"
+   ],
+   "max_views": 138272,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/kw2OljPQ7Ss",
+     "title": "Fasta Pasta Microwave Pasta Cooker"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Anyday",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "전자레인지 파스타 쿠커"
+   ],
+   "max_views": 102957,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/wXg5z7X4l-E",
+     "title": "How to Cook Pasta in the Microwave!"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Lakmē India",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "압축 파우더 프라이머"
+   ],
+   "max_views": 142526,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/Pm-8SlyNkhY",
+     "title": "Lakmé 9to5 Primer+Matte Powder Foundation"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "REDCELL",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "음성인식 아이언맨 피규어"
+   ],
+   "max_views": 66701347,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/80jo6XZRspU",
+     "title": "Iron Man Science Project - Extended Version (Verizion FiOS Commercial)"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Jake Myers ",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "음성인식 아이언맨 피규어"
+   ],
+   "max_views": 9000000,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/NyD2S323XfE",
+     "title": "The Iron Man MKV Suitcase! #ironman #mcu #unboxing #shorts"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Joetoys Zhu",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "",
+    "음성인식 아이언맨 피규어"
+   ],
+   "max_views": 460181,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/QozMl3-DgXU",
+     "title": "Iron Man MK50 helmet is now open for pre-order"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/w7zjxxB1VW0",
+     "title": "What's the difference between the 2 iron man mk5 helmets"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "스나이퍼TV",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "미니 산소탱크"
+   ],
+   "max_views": 116984,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/d4T61HZleO4",
+     "title": "Ultra-Compact Scuba Tank 'Scorkl'-[Sniper Newsroom]"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Beanhut",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "베트남 스틱커피"
+   ],
+   "max_views": 1529665,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/Jmaau7E4Jf4",
+     "title": "Beanhut's 3-in-1 Instant Coffee Mix—So Delicious, Even Mermaids Love I"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "King Coffee",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "베트남 스틱커피"
+   ],
+   "max_views": 185475,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/wbElhCeCfLA",
+     "title": "KING COFFEE ĐÃ CÓ MẶT TẠI VIỆT NAM"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "NescafePH",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "베트남 스틱커피"
+   ],
+   "max_views": 181501,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/KrGEygk3Mt4",
+     "title": "How to Make Vietnamese Coffee at Home with NESCAFÉ GOLD | NESCAFÉ Phil"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "isang's kitchen",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "베트남 스틱커피"
+   ],
+   "max_views": 128480,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/tAFK5_KkUQE",
+     "title": "EASY ICED COFFEE USING INSTANT COFFEE| INSTANT ICED COFFEE| DIY ICED C"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "The Soft Landing (The Soft Landing)",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "단열 실리콘 얼음틀"
+   ],
+   "max_views": 123888,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/15M9BgU9d-w",
+     "title": "Onyx Stainless Steel Ice Cube Tray Review"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Meta VR",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "VR 장비 세트(메타 퀘스트3·트래커·햅틱 조끼·VR 트레드밀)"
+   ],
+   "max_views": 1195963,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/oAf5M4Q0Pu8",
+     "title": "Introducing Meta Quest 3S"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "MIXED - VR, AR & Mixed Reality",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "VR 장비 세트(메타 퀘스트3·트래커·햅틱 조끼·VR 트레드밀)"
+   ],
+   "max_views": 161779,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/NK41x5kenO4",
+     "title": "StriderVR Virtual-Reality-Treadmill Locomotion"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "JLaservideo",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "압축랩(신발 보관)"
+   ],
+   "max_views": 48000000,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/9tKUVV7j1-0",
+     "title": "Real Liquid Venom Shoes!"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "reMarkable",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "흑백 전자종이 태블릿"
+   ],
+   "max_views": 1572870,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/VFDhAGUFdZs",
+     "title": "Our most portable paper tablet yet | reMarkable Paper Pro Move"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/agsO2jezIOg",
+     "title": "reMarkable Paper Pro — bigger, brighter, and in color"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Best Buy",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "흑백 전자종이 태블릿"
+   ],
+   "max_views": 1177671,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/xdRmOMkLLrk",
+     "title": "Start Writing with Marker Plus on the reMarkable 2 Paper Tablet– Tech "
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Ryo Slime 2nd Channel",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "쿨링 젤"
+   ],
+   "max_views": 821085,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/rHrkFFntKfY",
+     "title": "Slime Coloring with Japanese Makeup! Mixing Candy Lip Gloss & Ice Pops"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/LMmElMEWV1k",
+     "title": "Slime Coloring with Japanese Makeup! Mixing Ice Cream Bar Shaped Lip &"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Dave's Everything Channel",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "비누 샴푸통"
+   ],
+   "max_views": 500335,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/d_9EBT1DHi8",
+     "title": "life hack- convert child resistant bottle caps into regular caps in on"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Newest Crowdfunding Inventions",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "비누 샴푸통"
+   ],
+   "max_views": 397472,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/4VJB5tSjhAA",
+     "title": "SOAPBOTTLE – Sustainable care products in a packaging made from soap"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "LuckyVitamin",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "비누 샴푸통"
+   ],
+   "max_views": 280212,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/zyGOKuAymdQ",
+     "title": "How To Use Dr  Bronner's Castile Soap"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Jack Picks",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "귀이개"
+   ],
+   "max_views": 178001,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/copSlyHczT4",
+     "title": "Ear Wax Removal Tool with Camera - User Review"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Watch Before You Buy! - TopFindsReviews",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "귀이개"
+   ],
+   "max_views": 127942,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/JQxeLkjKtGw",
+     "title": "Is it WORTH it? - Ear Wax Removal Camera FULL TEST! #otoscope Review"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "ZAIQA LAJAWAAB",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "샌드위치 메이커"
+   ],
+   "max_views": 991955,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/drle7nEMccQ",
+     "title": "MAKE YOUR EGGS IN A SANDWICH MAKER (EASY HACK)"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Hamilton Beach",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "샌드위치 메이커"
+   ],
+   "max_views": 278612,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/7qrGfxBRlVc",
+     "title": "Dual Breakfast Sandwich Maker - French Toast Sausage, Egg, & Cheese"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/nkFiAAg3IKk",
+     "title": "Hamilton Beach Dual Breakfast Sandwich Maker - Feta, Egg, & Pesto"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Urban Clotheslines",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "벽걸이 빨래건조대"
+   ],
+   "max_views": 316799,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/Apa_Jna3brk",
+     "title": "Leifheit Rollfix Retractable Drying Rack"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Archi Studio",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "벽걸이 빨래건조대"
+   ],
+   "max_views": 191898,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/ASudRLrQhLk",
+     "title": "DIY-Clothes drying rack indoor pull-push | Cloth drying Rack making id"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "DRY LINE",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "벽걸이 빨래건조대"
+   ],
+   "max_views": 164059,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/Dx-RW69piSQ",
+     "title": "DRY LINE Wall Mounting Cloth Drying Stand Foldable all Metal Laundry R"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Foxydry",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "벽걸이 빨래건조대"
+   ],
+   "max_views": 131876,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/5aTPVZ4yolc",
+     "title": "Foxydry Air, ceiling drying rack"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Abby Sparks Jewelry",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "인터로킹 커플링"
+   ],
+   "max_views": 203495,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/rFAx5BHfGGQ",
+     "title": "Engagement Ring vs. Wedding Ring: What's the Difference?"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Granite•Ware",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "중소기업 케첩"
+   ],
+   "max_views": 157268,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/JQpnDSFisBs",
+     "title": "How to make tomato sauce with a Food Mill"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Closeup India",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "보라색 치아 패치"
+   ],
+   "max_views": 11650266,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/nMCq_dEBids",
+     "title": "Try New Closeup White Now Purple Color Corrector Toothpaste for Teeth "
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "The Tooth Files",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "보라색 치아 패치"
+   ],
+   "max_views": 1668953,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/nrHPxRSndqA",
+     "title": "How To Use Whitening Strips!"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Insider Beauty",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "보라색 치아 패치"
+   ],
+   "max_views": 334564,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/o3F0C4H02KY",
+     "title": "Purple Teeth Stains Can Temporarily Brighten Yellow Stains | Beauty In"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "The Friendly Reviewer",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "스퀴시 후드티"
+   ],
+   "max_views": 156761,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/jR17PiVafRk",
+     "title": "Tangle Jr Fidget Toy Review"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Spigen",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 1077165,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/ePyHRVs7nio",
+     "title": "Installing The Easiest Screen Protector — Spigen"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "JETech Official",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 701130,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/PgFO9Fs1ooA",
+     "title": "JETech Phone Screen Protector Installing with Easy Installation Tool"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/nIEDErL6wgc",
+     "title": "Installation Guideline - JETech Tempered Glass Film for Samsung Smartp"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Pedja Bunjevac",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 698728,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/3emiyKojjNk",
+     "title": "Install a Screen Protector Perfectly in 2 Minutes"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Betty Lynch",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 247077,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/8JWMp-XwITk",
+     "title": "MRGLAS iPhone 15 Series Screen Protector Installation Tutorial"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "UNBREAKcable",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 148716,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/gb3Us2G1LsM",
+     "title": "UNBREAKcable Screen Protector Installation Guide"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "esr",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 142516,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/XhdgkMxaB9A",
+     "title": "ESR Installation Guide – Easiest & Strongest Screen Protector for iPho"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "WSKEN",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 127783,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/_JFJtgjUBi8",
+     "title": "WSKEN  Samsung Galaxy S24 Ultra Screen Protector Tempered Glass Instal"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "TechMatte",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 113881,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/EHk_g_uJwtE",
+     "title": "amFilm OneTouch Screen Protector Installation"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Ringke",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "강화 보호필름"
+   ],
+   "max_views": 109476,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/GofLT-oXTjI",
+     "title": "NEW! Ringke DUAL EASY SCREEN PROTECTOR Installation Guide"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Kérastase India",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "단백질 헤어팩"
+   ],
+   "max_views": 13087283,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/UG__klaOy7g",
+     "title": "New Fusio-Dose In-Salon Treatment - Get the hair of your dreams"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Vivo Hair Salon and Skin Clinic",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "단백질 헤어팩"
+   ],
+   "max_views": 295786,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/XoE2UP4PelM",
+     "title": "KERASILK Keratin Smoothing Treatment | Hair Service | Vivo Hair Salons"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "MAXIMUS UAE",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "단백질 헤어팩"
+   ],
+   "max_views": 233431,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/nv_eqyPHTpA",
+     "title": "MAXIMUS X.612  HAIR PROTEIN  TREATMENT STEP-BY-STEP AURURA SALON DUBAI"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "P SQUARE SALON",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "단백질 헤어팩"
+   ],
+   "max_views": 115085,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/ydvz3GKAVfE",
+     "title": "HAIR PROTEIN TREATMENT | P SQUARE SALON | GAURAV SIR"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "M•A•C Cosmetics Korea / 맥 코리아",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "맥 립스틱"
+   ],
+   "max_views": 648526,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/vh-Al5OYKaU",
+     "title": "NEW LUSTREGLASS STAINGLASS LIP TINT"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "M.A.C Việt Nam ",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "맥 립스틱"
+   ],
+   "max_views": 265962,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/xER5QUJe5o8",
+     "title": "M•A•C LUSTREGLASS: NÂNG NIU SẮC MÔI - NÂNG TẦM KHÍ CHẤT 💋"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "NBC News",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    ""
+   ],
+   "max_views": 898432,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/nE_-wilGupQ",
+     "title": "China's leading electric vehicle maker selling cars for $10,000"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/ao6PRx_rnj0",
+     "title": "'This Sucker's Quick!': Biden Test Drives New Ford Electric Truck"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "CNBC Television",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    ""
+   ],
+   "max_views": 133206,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/HBXEJzB7RCM",
+     "title": "President Joe Biden drives Ford's new electric pickup truck at the Mic"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "KNN NEWS",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    ""
+   ],
+   "max_views": 101767,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/9nFeJY8DMSY",
+     "title": "\"A Genius Surpassing Elon Musk?\" Solar Panels on Cybertruck Go Viral /"
+    },
+    {
+     "url": "https://www.youtube.com/shorts/9nFeJY8DMSY",
+     "title": "\"A Genius Surpassing Elon Musk?\" Solar Panels on Cybertruck Go Viral /"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Tru Entertainments",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    ""
+   ],
+   "max_views": 1043273,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/5gg6yblQbE8",
+     "title": "AutoKing MK5 Ironman Helmet demo."
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Deerstalker Pictures",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "(사장님 기준 예시)"
+   ],
+   "max_views": 5108930,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/NnXEF3lZV5s",
+     "title": "The Titan Restaurant [Attack on Titan Live Action Parody]"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "Theblast",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "(사장님 기준 예시)"
+   ],
+   "max_views": 1582205,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/_igNLybXhYQ",
+     "title": "What if titan tv man appeared in skibidi toilet 57"
+    }
+   ]
+  },
+  {
+   "platform": "youtube",
+   "channel": "MrFuzzy",
+   "confidence": "제품 일치 후보(영상 미확인)",
+   "products": [
+    "(사장님 기준 예시)"
+   ],
+   "max_views": 631105,
+   "examples": [
+    {
+     "url": "https://www.youtube.com/shorts/2jgEDrH1e90",
+     "title": "ASTRO TITAN TV MAN SONG (Official Video) (Skibidi Toilet) Prod. 29theg"
+    }
+   ]
+  }
+ ]
+}

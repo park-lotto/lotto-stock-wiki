@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""회원 PC **실행기**(볼케이노형 손, 관제 234·097 2026-10-21). 서버 지시서(hybrid/flow.py)가 내려 준 do 목록을 그대로 돌리고 measure 를 낸다.
+"""회원 PC **실행기**(단계형 손, 관제 234·097 2026-10-21). 서버 지시서(hybrid/flow.py)가 내려 준 do 목록을 그대로 돌리고 measure 를 낸다.
 허용된 cmd 만 돈다(서버가 코드·명령줄을 보내지 않는다). 판단은 하지 않는다 — 판정 함수는 rules(서버와 같은 것)를 부른다.
 
     python -m tools.calcopy.hybrid.runner_ops <작업 폴더> <do.json>      → 표준출력 마지막 줄 = measure JSON {do id: 결과}
 
 유튜브 받기는 yt() 한 곳(요청 사이 쉼 — 10-21 'not a bot' 차단 교훈 · 한국어 제목). SHORTEM_SOURCE_CACHE=<폴더> 면 받아 둔 파일만 쓰고
 유튜브는 한 번도 두드리지 않는다(없으면 cache_miss — 시험용, 사장님 10-21 "유튜브는 두드리지 말고 기다려").
-옛 자리: hybrid/customer.py(10-21 TheRose PC) 의 기계 함수들 — 볼케이노형 분해 때 이리로 옮겼다.
+옛 자리: hybrid/customer.py(10-21 TheRose PC) 의 기계 함수들 — 단계형 분해 때 이리로 옮겼다.
 """
 from __future__ import annotations
 
@@ -69,6 +69,8 @@ def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     """yt-dlp 한 번 — 한국어 제목(lang=ko, 10-21 영어 번역 제목 #6) · 요청 사이 쉼(not a bot 차단) · 캐시 모드면 부르지 않는다."""
     if CACHE:
         raise CacheMiss("캐시 모드 — 유튜브를 부르지 않는다: " + " ".join(str(a) for a in args[-1:]))
+    from tools.calcopy.engine.yt_fetch import cap_args
+    args = cap_args(args)                        # 강제 상한(주인 yt_fetch.cap_fmt) — 받기가 지나는 입구
     wait = YT_GAP - (time.time() - _last_yt[0])
     if wait > 0:
         time.sleep(wait)
@@ -107,7 +109,7 @@ def yt_probe(url: str) -> str:
     """준비 확인용 실제 받기 시험 — 받기와 **같은 함수(yt)** 로 그 영상 정보만 한 번 읽는다(내려받지 않음). 성공 = "", 실패 = 이유 한 줄.
     뿌리(98 #157·#158·#159·10-27): 파일·쿠키 이름 검사는 '있는데 못 쓰는' 경우(인코딩·계정 막힘·프로필 다름)를 매번 놓쳤다."""
     try:
-        r = yt(["--simulate", "--skip-download", "--no-playlist", "--print", "id", url], timeout=90)
+        r = yt(["--simulate", "--skip-download", "--ignore-no-formats-error", "--no-playlist", "--print", "id", url], timeout=90)
     except CacheMiss as e:
         return str(e)
     except subprocess.TimeoutExpired:
@@ -256,8 +258,6 @@ LOGIN_OK = {"youtube": ("youtube.com", ("__Secure-3PSID", "SAPISID")), "instagra
 def _cookie_ok(platform: str) -> bool:
     """회원 PC 로그인 연결 — 숏템 MCP 가 만든 cookies.txt(엔진 환경 YTDLP_COOKIES_YOUTUBE)에 그 사이트 로그인 쿠키가 살아 있나. 이름·만료만 보고 값은 읽지 않는다."""
     f = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
-    if platform == "instagram" and os.path.isfile(os.environ.get("INSTAGRAM_SESSION_PATH") or ""):
-        return True
     if not f or not os.path.isfile(f):
         return False
     dom, names = LOGIN_OK[platform]
@@ -269,6 +269,33 @@ def _cookie_ok(platform: str) -> bool:
         if len(r) >= 7 and r[0].lstrip(".").endswith(dom) and r[5] in names and r[6] and (r[4] == "0" or float(r[4] or 0) > now):
             return True
     return False
+
+
+_cp_last: dict = {}     # 이번 실행의 쿠팡 키 확인 결과 {state, reason, http} — c_env 가 measure 에 실어 서버 기록(st['env']['keys'])으로 보낸다
+
+
+def coupang_key_state() -> str:
+    """쿠팡 파트너스 키 상태 — 'ok' · 'none'(없음) · 'bad'(쿠팡이 키를 거부) · 'unknown'(일시 실패 — 키는 그대로 먼저 쓴다). 판단 주인 = coupang_customer.key_check."""
+    from tools.calcopy import coupang_customer as C
+    _cp_last.clear()
+    _cp_last.update(C.key_check())
+    return _cp_last["state"]
+
+
+def browser_ok(chrome_only: bool = False) -> bool:
+    """로그인 창을 띄울 크롬·엣지가 있나(logins.js browserExe 와 같은 자리). 쿠팡 크롬 검색은 채널이 크롬이라 엣지로 안 된다(chrome_only)."""
+    roots = [os.environ.get(k) for k in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
+    subs = (("Google", "Chrome", "Application", "chrome.exe"), ("Microsoft", "Edge", "Application", "msedge.exe"))
+    return not sys.platform.startswith("win") or any(Path(r, *x).is_file() for r in roots if r for x in subs[:1 if chrome_only else 2])
+
+
+def advice_list(fmt: str = "") -> list[str]:
+    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내").
+    'unknown'(일시 실패)은 안내하지 않는다 — 키는 멀쩡할 수 있고 제작 때 c_coupang 이 키를 먼저 쓰며, 안 되면 크롬으로 알아서 넘어간다."""
+    if os.environ.get("CALCOPY_CUSTOMER_MODE") != "1" or fmt == "자막노래형":
+        return []
+    return {"none": ["쿠팡 파트너스 키를 넣어 두시면 제품 찾기가 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"],
+            "bad": ["쿠팡 파트너스 키가 확인되지 않아요. 다시 넣어 두시면 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"]}.get(coupang_key_state(), [])
 
 
 def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
@@ -302,7 +329,10 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
             out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})
-    if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브(모든 형식) + 소재가 인스타·틱톡이면 그 계정
+    cp_key = bool(os.environ.get("COUPANG_ACCESS_KEY") and os.environ.get("COUPANG_SECRET_KEY"))
+    if customer and not browser_ok(chrome_only=not cp_key and fmt != "자막노래형"):
+        out.append({"id": "browser", "label": "크롬 브라우저", "how": "browser"})
+    if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브 + 틱톡·인스타(사장님 11-02 "무조건 3개 다 로그인 처음에" — 소재와 상관없이)
         # 판정 = 받기(yt)가 실제로 부르는 origin_find.yt_auth 그대로(10-27 실사고: 회원 모드만 쿠키 파일을 보고 통과 → 받기는 mcp* 프로필 없음으로 멈춤).
         # 브라우저 프로필로 받으면 그걸로 끝, 아니면 회원 PC 처럼 쿠키 파일(설정 파일·YTDLP_COOKIES_YOUTUBE)로 받으니 그 파일을 본다.
         from tools.calcopy.origin_find import yt_auth
@@ -316,9 +346,8 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             why = yt_probe(str(url))
             if why:
                 out.append({"id": "probe:youtube", "label": f"유튜브 받기 시험 실패 — {why}", "how": "login"})
-        u = str(url or "").lower()
         for pf, name in (("instagram", "인스타그램"), ("tiktok", "틱톡")):
-            if LOGIN_OK[pf][0] in u and customer and not _cookie_ok(pf):
+            if customer and not _cookie_ok(pf) and (pf != "tiktok" or "tiktok.com" in str(url or "").lower()):     # 틱톡은 소재가 틱톡일 때만 막고, 아니면 안내만(사장님 11-02)
                 out.append({"id": "login:" + pf, "label": name + " 계정 연결", "how": "login"})
     return out
 
@@ -331,6 +360,11 @@ def c_env(W, d):
             "coupang": bool(os.environ.get("COUPANG_ACCESS_KEY") and os.environ.get("COUPANG_SECRET_KEY")), "speechmatics": have_speechmatics()}
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
+    advice = advice_list(d.get("fmt") or "")
+    if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1" and not _cookie_ok("tiktok") and not any(x.get("id") == "login:tiktok" for x in missing):
+        advice.append("틱톡 로그인이 안 됐어요. 제작은 그대로 진행하고, 틱톡 소재는 받기가 안 될 수 있고 틱톡 재료 찾기 결과가 적을 수 있어요")
+    if _cp_last:
+        keys["coupang_check"] = dict(_cp_last)      # 키 값 없음(사유 코드·http 만)
     if du.free / 1e9 < 1.5:
         missing.append({"id": "disk", "label": "C 드라이브 빈 공간 1.5GB", "how": "disk"})
     try:
@@ -338,7 +372,7 @@ def c_env(W, d):
         enc = encoder.kind()
     except Exception:  # noqa: BLE001 — 도구 없음은 missing 이 이미 알린다
         enc = "cpu"
-    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing,
+    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing, "advice": advice,
             "encoder": enc, "done_refs": done_refs(), **({"single_source": True} if os.environ.get("SHORTEM_SINGLE_SOURCE") == "1" else {})}   # 원본 찾기 워커(of_worker) — 둘째 소재 없이 소재 하나만
 
 
@@ -363,6 +397,28 @@ def done_refs() -> list[str]:
     return sorted(out)       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
 
 
+def bench_fmt_args(material: bool) -> list:
+    """(판단 주인 — 벤치 받는 화질) 벤치는 분석만 하니 긴 변 1280(720p급). 재료가 될 수 있는 벤치(해외 원본형 — 소재가 곧 원본, d.material)만 1080 상한 그대로."""
+    from tools.calcopy.engine import yt_fetch as YF
+    if material:
+        return ["-f", YF.cap_fmt("bv*[height>=720]+ba/b"), *YF.SORT_1080]
+    return ["-f", YF.cap_fmt("bv*+ba/b", YF.BENCH_CAP), *YF.SORT_720]
+
+
+def bench_as_source(W: Path, vid: str, dst: Path) -> bool:
+    """소재가 곧 원본인 편 — 1080 으로 받아 둔 벤치를 원본 자리에 놓는다(같은 영상을 두 번 받지 않는다). 720 벤치는 재료로 안 쓴다."""
+    bd = W / "bench"
+    if dst.exists() or not (bd / "bench.mp4").exists() or not (bd / "bench.cap.json").exists():
+        return False
+    if not jload(bd / "bench.cap.json").get("material") or jload(bd / "bench.info.json").get("id") != vid:
+        return False
+    try:
+        os.link(bd / "bench.mp4", dst)
+    except OSError:
+        shutil.copyfile(bd / "bench.mp4", dst)
+    return True
+
+
 def c_bench(W, d):
     bd = W / "bench"; bd.mkdir(exist_ok=True)
     url, vid = d["url"], vid_of(d["url"])
@@ -379,11 +435,15 @@ def c_bench(W, d):
         if not mp4.exists() and not (bd / "bench.ko.vtt").exists():
             return {"error": f"cache_miss: 벤치 {vid}"}
     else:
-        from tools.calcopy.engine.yt_fetch import SORT_1080
-        yt(["-f", "bv*[height>=720]+ba/b", *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
-            "-o", str(bd / "bench.%(ext)s"), url])
+        from tools.calcopy.engine import yt_fetch as YF
+        t0 = time.time()
+        head = ["--download-sections", f"*0-{YF.FULL_MAX_SEC}"] if YF.video_seconds(url) > YF.FULL_MAX_SEC else []      # 회원이 준 긴 영상 = 앞부분만
+        yt(head + bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+                                                      "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
+        YF.fetch_note(mp4, "벤치 1080(재료 될 수 있음)" if d.get("material") else "벤치 720", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
+        jsave(bd / "bench.cap.json", {"material": bool(d.get("material"))})
     if (bd / "bench.info.json").exists():
         info = jload(bd / "bench.info.json")
     vtt = bd / "bench.ko.vtt" if (bd / "bench.ko.vtt").exists() else None
@@ -725,7 +785,7 @@ def _origin_words(W: Path, vid: str) -> tuple[list, str]:
         return [], ""
     vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
     if not vtt:
-        r = yt(["--skip-download", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
+        r = yt(["--skip-download", "--ignore-no-formats-error", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
         if _blocked(r):
             return [], "blocked"
         vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
@@ -791,13 +851,15 @@ def c_origin_get(W, d):
         #   media_download.download_any 는 `python -m yt_dlp` 라 틱톡 흉내(impersonate, curl_cffi)가 없으면 'Unexpected response' —
         #   10-26 실측: 같은 @hismile 영상이 python 모듈 3회 실패 · yt-dlp.exe 1회 성공(13.8MB 1080p). 화질 상한은 media_download 와 같은 _Q_CAP.
         if not dst.exists():
-            from shopping_shorts.media_download import _Q_CAP
+            from tools.calcopy.engine import yt_fetch as YF
             why = ""
             for n in range(2):
-                r = subprocess.run(["yt-dlp", "--no-warnings", "--no-playlist", "-f", f"bv*{_Q_CAP}+ba/b{_Q_CAP}/b", "-S", "res,ext:mp4:m4a",
+                t0 = time.time()
+                r = subprocess.run(["yt-dlp", "--no-warnings", "--no-playlist", "-f", YF.cap_fmt("bv*+ba/b"), "-S", "res,ext:mp4:m4a",
                                     "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), url],
                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
                 if dst.exists():
+                    YF.fetch_note(dst, "틱톡·인스타 원본", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
                     break
                 from tools.calcopy.origin_find import yt_error
                 why = yt_error(r.stderr)
@@ -821,6 +883,8 @@ def c_origin_get(W, d):
         return {"files": [dims(dst)], "offset": 0.0, "measured": True}
     from tools.calcopy.engine import yt_fetch as YF
     from tools.calcopy.hybrid import screen
+    if d.get("full") and bench_as_source(W, vid, dst):
+        print(f"[origin_get] 소재 = 원본 — 1080 벤치를 그대로 씀(다시 안 받음) {vid}", file=sys.stderr, flush=True)
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
@@ -1512,10 +1576,24 @@ def _conflict_of(res) -> dict | None:
     return None
 
 
-def _log_beat(W, what: str):
+PHASE_LABEL = re.compile(r"[\[(]?([0-9A-Za-z가-힣_]{2,14}(?: [가-힣]{1,8})?)")
+
+
+def _phases(rows: list, top: int = 8) -> list:
+    """(이 로그가 찍히기까지 걸린 초) 큰 순서 — 이름은 로그 앞머리 단어만(대본 글이 안 나가게)."""
+    gaps = []
+    for (t0, _), (t1, msg) in zip(rows, rows[1:]):
+        m = PHASE_LABEL.match(str(msg))
+        gaps.append([m.group(1) if m else "기타", round(t1 - t0, 1)])
+    return sorted(gaps, key=lambda x: -x[1])[:top]
+
+
+def _log_beat(W, what: str, rows: list | None = None):
     """render_bench 로그 한 줄 = 진행 신호(감시의 '멈춤 아님') + stderr 에 시각과 함께 — 어느 칸에서 오래 걸렸는지 남긴다(10-26 계획 무음 180초 끔)."""
     def f(msg=""):
         progress(W, what)
+        if rows is not None:
+            rows.append((time.time(), msg))
         sys.stderr.write(f"[{time.strftime('%H:%M:%S')}] {str(msg)[:300]}\n")
     return f
 
@@ -1538,8 +1616,21 @@ class _erase_env:
                 os.environ["CALCOPY_ERASE"] = self.old
 
 
+@contextlib.contextmanager
+def _waive_env(d):
+    """지시서가 실어 보낸 권고 넘기기(do.waive)를 그 일 동안만 SHORTEM_WAIVE_GATE 로(render_bench.gate_stop 이 읽는다)."""
+    if not d.get("waive"):
+        yield
+        return
+    os.environ["SHORTEM_WAIVE_GATE"] = "1"
+    try:
+        yield
+    finally:
+        os.environ.pop("SHORTEM_WAIVE_GATE", None)
+
+
 def c_plan(W, d):
-    with _erase_env(d):
+    with _erase_env(d), _waive_env(d):
         return _c_plan(W, d)
 
 
@@ -1555,32 +1646,46 @@ def _plan_reuse(W, v, T) -> list:
     return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
 
 
+class _Alive:
+    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 살아 있는 동안 30초마다 progress. 계획·렌더가 같이 쓴다.
+    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측)."""
+    def __init__(self, W, what):
+        import threading
+        self.W, self.what, self.stop = W, what, threading.Event()
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        while not self.stop.wait(30):
+            progress(self.W, self.what)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.stop.set()
+
+
 def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     miss = tts_cache_miss(W, v)
     if miss:
         return {"error": miss}
+    phase_rows = [(time.time(), "시작")]
     try:
         # 계획 안 관문(장면 경계·컷 내용 — 긴 원본 프레임 읽기)은 로그 없이 수 분 걸린다(10-26 524초 원본: 로그 끝 뒤 180초+ 무음으로 꺼짐).
         #   같은 프로세스 안 계산이라 무음 = 멈춤이 아니다 → 계산이 살아 있는 동안 30초마다 진행 신호. 끝없는 계산은 예산(plan 600초)이 끊는다.
-        import threading
-        alive = threading.Event()
-
-        def _beat():
-            while not alive.wait(30):
-                progress(W, "장면 맞추기")
-        threading.Thread(target=_beat, daemon=True).start()
-        try:
-            res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기"))
-        finally:
-            alive.set()      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
+        with _Alive(W, "장면 맞추기"):
+            res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기", phase_rows))
+        pass      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
-    out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length"),
+    out = {"over": over, "cuts": len(T.get("cuts") or []), "phases": _phases(phase_rows), "gate": render_bench.GATE_STATS, "cores": os.cpu_count(), "length": res.get("length"),
            "sig": hashlib.md5(json.dumps([[c.get("src"), round(float(c.get("ss") or 0), 2), round(float(c.get("t0") or 0), 2)] for c in T.get("cuts") or []]).encode()).hexdigest()}   # 계획 지문 — 고친 뒤 그대로인지(flow ph_plan_got)
+    if res.get("thumb_move"):      # 썸네일 장면을 새 컷으로 옮긴 결과(thumb.relocate) — 없어졌을 때만 flow 가 다시 묻는다
+        out["thumb_move"] = res["thumb_move"]
     if res.get("gates"):           # 관문별 걸린 수(기록용 — 질문 글은 over 하나에 전부, render_bench.timeline_gates)
         out["gates"] = {g: len(b) for g, b in res["gates"] if b}
     cf = _conflict_of(res)
@@ -1598,7 +1703,7 @@ def _c_plan(W, d):
 
 
 def c_render(W, d):
-    with _erase_env(d):
+    with _erase_env(d), _waive_env(d):
         return _c_render(W, d)
 
 
@@ -1609,7 +1714,10 @@ def _c_render(W, d):
     if miss:
         return {"ok": False, "error": miss}
     try:
-        info = render_bench.render(v, W / "doc" / v, W / v)
+        with _Alive(W, "영상 만들기"):
+            info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
+    except render_bench.ThumbGone as e:      # 고른 썸네일 장면이 없어졌다 — 다시 묻는 길로(flow ph_render_got)
+        return {"ok": False, "thumb_gone": True, "error": str(e)[:300]}
     except StageError as e:
         if getattr(e, "problems", None):      # 렌더 전 관문 멈춤(render_bench.GateError) — 걸린 것 전부를 자르지 않고(한 번에 고치게, 10-26)
             return {"ok": False, "error": str(e), "gate": [[g, m] for g, m in e.problems]}
@@ -1645,10 +1753,14 @@ def c_check(W, d):
     if not any("벤치" in x for x in eye_files) and (W / "bench" / "sheet.jpg").exists():
         eye_files.insert(1, rel(W, W / "bench" / "sheet.jpg"))     # 회원 PC 는 벤치 대조 시트를 못 만든다 — 받아 둔 벤치 시트로 비교한다
     eye_texts = {n: (E / n).read_text(encoding="utf-8")[:6000] for n in EYE_TEXTS if (E / n).exists()}
+    chg = r.get("changed")
+    if chg and chg.get("spans"):       # 눈 재검사 = 바뀐 구간 시트만(flow._eye_scope)
+        sh = QG.changed_sheet(final, chg["spans"], E / "바뀐구간_시트.jpg")
+        chg = {**chg, "sheet": rel(W, sh) if sh else None}
     return {"auto": {"ok": ok, "rows": rows, "report": str(r.get("report")), "n_bad": sum(1 for x in rows if x.get("ok") is False),
                      "n_unmeasured": sum(1 for x in rows if x.get("ok") is None and not x.get("ref"))},
             "eye_files": eye_files, "eye_texts": eye_texts, "upgrade": bool(STY.load(v).get("base")),
-            "sheet": eye_files[0] if eye_files else None}
+            "sheet": eye_files[0] if eye_files else None, "changed": chg}
 
 
 # ── 해외원본형(관제 263 08) ────────────────────────────────────────────────
@@ -2083,6 +2195,21 @@ def c_origin_foreign(W, d):
             **({"lens_ai": lens_ai} if lens_ai.get("names") or lens_ai.get("overviews") else {})}
 
 
+def _free_install_bg() -> bool:
+    """키 없는 회원 + NVIDIA GPU = 무료 엔진을 뒤에서 깐다(약 3GB, 렌더를 막지 않는다) — 이번 편은 흐림, 다음 편부터 무료로 지운다(관제 301)."""
+    from tools.free_subclean import engine as FE
+    if FE.installed() or shutil.which("nvidia-smi") is None:
+        return False
+    lock = FE.HOME / "installing"
+    FE.HOME.mkdir(parents=True, exist_ok=True)
+    if lock.exists() and time.time() - lock.stat().st_mtime < 3600:
+        return False
+    lock.touch()
+    subprocess.Popen([sys.executable, str(Path(FE.__file__)), "install"], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return True
+
+
 def c_clean_text(W, d):
     """박힌 글자 지우기 — 판단은 vmake_clean 한 곳(사장님 10-26: 장면 편집 뒤 자막 있는 컷 구간만 VMake). 여기는 부르기만.
     d.check = 돈 없이 준비만(ready — 키 없으면 need_key) · 아니면 d.version 판의 확정 계획(doc/<판>/plan/계획_시간표.json, d.replan 이면 계획을 다시 써서)에서
@@ -2090,7 +2217,10 @@ def c_clean_text(W, d):
     from tools.calcopy import vmake_clean as VC
     mode = "blur" if PAID_OFF else VC.style_mode(d.get("version"))
     if d.get("check"):
-        return VC.ready(mode)
+        r = VC.ready(mode)
+        if r["mode"] == "blur" and mode != "blur":
+            r["free_install"] = _free_install_bg()
+        return r
     v = d["version"]
     if d.get("replan"):                     # 재료가 계획 뒤에 바뀌었다(렌더 고치기) — 같은 계획 함수로 시간표만 새로(합성은 캐시)
         from tools.calcopy.hybrid import render_bench
@@ -2100,6 +2230,11 @@ def c_clean_text(W, d):
             pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
+    if d.get("bg"):         # 기다리지 않고 뒤로 — 렌더는 임시 흐림으로 간다(관제 304). None = 뒤로 못 보내는 경우(구간 없음·흐림·무료 엔진) → 아래 옛 길
+        j = VC.bg_start(src, send, mode, d.get("spots"))
+        if j:
+            sys.stderr.write(f"[clean_text] 뒤에서 지우기 시작 — 자막 컷 {VC.span_sec(send)}초\n")
+            return {**j, "send": send, "send_sec": VC.span_sec(send), "used_sec": VC.span_sec(used)}
     import threading
     alive = threading.Event()
 
@@ -2108,13 +2243,53 @@ def c_clean_text(W, d):
             progress(W, "자막 지우기")
     threading.Thread(target=_beat, daemon=True).start()
     try:
-        r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr))
+        r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr), spots=d.get("spots"))
     finally:
         alive.set()
     sent = VC.sent_from_ledger(src, t0)
     r.update({"send": send, "used_sec": VC.span_sec(used), "send_sec": VC.span_sec(send), "sent": sent, "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_text] 쓰는 구간 {r['used_sec']}초 중 자막 컷 {r['send_sec']}초 → VMake {r['calls']}회 · 보낸 초 {sent} · {r['mode']}: {r.get('why')}\n")
     return r
+
+
+def c_clean_take(W, d):
+    """뒤에서 지운 결과 받기 — 판단은 vmake_clean.bg_take. d.wait = 최대 기다릴 초(0 = 지금 끝났나만). 끝났으면 원본에 덮고 c_clean_text 와 같은 꼴로 돌려준다."""
+    from tools.calcopy import vmake_clean as VC
+    doc = W / "doc" / d["version"]
+    src = Path(jload(doc / "재료.json").get("cand_dir") or (W / "src"))
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - VC.BG_MAX))
+    r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
+    if r.get("state") == "done" and not r.get("error"):
+        _, _, used = VC.plan_spans(doc, {}, {})
+        sent = VC.sent_from_ledger(src, t0)
+        r.update({"sent": sent, "used_sec": VC.span_sec(used), "send_sec": r.get("sec"), "sent_bad": VC.sent_check(sent, used)})
+    sys.stderr.write(f"[clean_take] {r.get('state')} · 호출 {r.get('calls')}회: {r.get('why')}\n")
+    return r
+
+
+def c_spot_sheets(W, d):
+    """무료 지우기 전 — 지울 구간의 화면을 격자(10%)와 함께 원본마다 한 장으로. 자리 판독은 회원 Claude(flow f_spots)."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy import vmake_clean as VC
+    src, send, _ = VC.plan_spans(W / "doc" / d["version"], d.get("shots") or {}, d.get("done") or {})
+    sd = W / "_spots"; sd.mkdir(exist_ok=True)
+    sheets = {}
+    for name, iv in send.items():
+        ats = [a + (b - a) * q for a, b in iv for q in (0.2, 0.8)][:12]
+        sh = Image.new("RGB", (6 * 240, ((len(ats) + 5) // 6) * 426), (0, 0, 0))
+        for j, t in enumerate(ats):
+            fp = sd / f"{Path(name).stem}_{j}.jpg"
+            frame(src / name, t, fp)
+            im = Image.open(fp).convert("RGB").resize((240, 426))
+            dr = ImageDraw.Draw(im)
+            for k in range(1, 10):
+                dr.line((0, 42.6 * k, 240, 42.6 * k), fill=(255, 255, 0), width=1)
+                dr.line((24 * k, 0, 24 * k, 426), fill=(255, 255, 0), width=1)
+                dr.text((2, 42.6 * k + 1), str(k * 10), fill=(255, 255, 0))
+            sh.paste(im, ((j % 6) * 240, (j // 6) * 426))
+        p = sd / f"{Path(name).stem}_sheet.jpg"; sh.save(p, quality=85)
+        sheets[name] = rel(W, p)
+    return {"sheets": sheets}
 
 
 def c_materials_draft(W, d):
@@ -2156,7 +2331,7 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
-        "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
+        "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "spot_sheets": c_spot_sheets, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
 
 
 DUP_TOL, DUP_SHARE, DUP_DUR = 0.15, 0.8, 2.0   # 재업로드 판정: 길이 차 ≤2초 · 짧은 쪽 장면 경계의 80% 이상이 ±0.15초로 겹침(한 번 맞춘 어긋남 안에서)
@@ -2220,6 +2395,187 @@ def c_origin_dups(W, d):
 
 
 CMDS["origin_dups"] = c_origin_dups      # 표(CMDS) 정의 뒤라 여기서 등록(진행 이름표는 없으면 '만드는 중')
+CMDS["clean_take"] = c_clean_take
+
+
+# ── 채널 벤치마킹 2판 명령(관제 319) — 판단 없음. 재는 일은 bench_member·preset_save·agy·preset_brief 가 한다 ──
+def _inside(W: Path, rel: str) -> Path:
+    p = (W / rel).resolve()
+    if W.resolve() not in p.parents and p != W.resolve():
+        raise ValueError("작업 폴더 밖 경로")
+    return p
+
+
+def c_bm_env(W, d):
+    from tools.calcopy.engine import agy
+    return {"agy": bool(agy.find()), "agy_login": bool(agy.logged_in()), "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1)}
+
+
+def c_bm_fetch(W, d):
+    from tools.calcopy.engine import bench_member as BM
+    from tools.calcopy.engine.agy_check import to360
+    picked = BM.given_videos(d.get("videos") or [])[:BM.MAX_VIDEOS] if d.get("videos") else BM.pick_videos(d["url"], int(d.get("n") or 3))
+    (W / "src").mkdir(parents=True, exist_ok=True)
+    out = []
+    for v in picked:
+        mp4 = Path(BM.fetch(v, W / "src")).resolve()
+        if W.resolve() not in mp4.parents:      # 내 PC 파일을 그대로 준 경우 — 작업 폴더로 복사(이후 명령은 W 안 경로만 받는다)
+            shutil.copy2(mp4, W / "src" / f"{v['id']}.mp4")
+            mp4 = (W / "src" / f"{v['id']}.mp4").resolve()
+        v360 = to360(mp4, W / "src" / f"{v['id']}_360.mp4")
+        out.append({**v, "mp4": mp4.relative_to(W.resolve()).as_posix(), "v360": Path(v360).resolve().relative_to(W.resolve()).as_posix()})
+    return {"videos": out}
+
+
+def c_bm_tear(W, d):
+    from tools.calcopy.engine import bench_member as BM, preset_save as P
+    ch = _inside(W, f"channel/{d['slug']}")
+    groups, failed = {}, []
+    llm = BM.member_llm()
+    for v in d["videos"]:
+        try:
+            J, frame, _ = BM.tear(_inside(W, v["mp4"]), ch / "뜯기" / v["id"], llm)
+            key = BM.shape_key(frame)
+            style = groups[key]["style"] if key in groups else ("틀" if not groups else f"틀{len(groups) + 1}")   # 이름만 미리 계산 — 저장이 성공한 뒤에만 틀을 확정(유령 틀·번호 소비 방지)
+            P.save(J, frame, ch / "preset" / style, v["id"], f"channel/{d['slug']}/뜯기/{v['id']}/뜯기.json")
+            groups.setdefault(key, {"style": style, "sources": []})["sources"].append(v["id"])
+        except Exception as e:  # noqa: BLE001 — 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
+            failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed}
+
+
+def c_agy_read(W, d):
+    from tools.calcopy.engine import agy
+    return agy.ask_video(_inside(W, d["video"]), str(d.get("ask") or ""), d.get("schema") or {"type": "object"})
+
+
+def c_bm_side(W, d):
+    from tools.calcopy.engine.encoder import venc
+    a, b = _inside(W, d["bench"]), _inside(W, d["ours"])
+    out = W / "side" / f"{a.stem}__{b.stem}.mp4"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(a), "-i", str(b), "-filter_complex",
+                        "[0:v]scale=-2:360[l];[1:v]scale=-2:360[r];[l][r]hstack=inputs=2[v]", "-map", "[v]", "-map", "1:a?", "-shortest",
+                        *venc(crf=28), str(out)], capture_output=True)
+    if r.returncode != 0 or not out.is_file():
+        raise StageError("나란히 놓기 실패: " + (r.stderr or b"").decode("utf-8", "replace")[-300:])
+    return {"side": out.resolve().relative_to(W.resolve()).as_posix()}
+
+
+def c_bm_brief(W, d):
+    import zipfile
+    from tools.calcopy.engine import preset_brief as B
+    p = _inside(W, f"channel/{d['slug']}/preset/{d['style']}")
+    r = B.render(p, p, str(d.get("name") or d["slug"]))
+    for k in ("md", "claude_md"):        # 서버로는 작업 폴더 기준 상대 경로만(회원 홈 경로를 서버 기록에 남기지 않는다)
+        if r.get(k):
+            r[k] = Path(r[k]).resolve().relative_to(W.resolve()).as_posix() if Path(r[k]).is_absolute() else Path(r[k]).as_posix()
+    z = W / "out" / f"{d['slug']}_{d['style']}.zip"
+    z.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in ("frame.json", "manifest.json", "프리셋.md", "CLAUDE.md"):
+            if (p / f).exists():
+                zf.write(p / f, f)
+    return {**r, "zip": z.resolve().relative_to(W.resolve()).as_posix()}
+
+
+def c_bm_fix(W, d):
+    """잡도리가 고른 칸 하나를 프리셋 고정값으로 못 박는다(판단 주인 = preset_save.fix_value). fix = {path, value, why}."""
+    from tools.calcopy.engine import preset_save as P
+    fx = d["fix"]
+    P.fix_value(_inside(W, f"channel/{d['slug']}/preset/{d['style']}"), fx["path"], fx["value"], str(fx.get("why") or "잡도리"))
+    return {"fixed": fx["path"]}
+
+
+def _skel_path(W: Path, slug: str, vid: str) -> Path:
+    return _inside(W, f"channel/{slug}/줄판독_뼈대/{vid}.json")
+
+
+def c_bm_skel(W, d):
+    """벤치 편마다 줄판독 뼈대(주인 = kal_analyze.skeleton — 기계값만, 눈 칸 null). 뜯기.json 옆 .vtt 가 있으면 받아쓰기로 붙인다."""
+    from tools.calcopy.engine import kal_analyze as K
+    docs, failed = {}, []
+    for vid in d.get("ids") or []:
+        try:
+            tj = _inside(W, f"channel/{d['slug']}/뜯기/{vid}/뜯기.json")
+            vtt = next(iter(sorted((W / "src").glob(f"{vid}*.vtt"))), None) if (W / "src").is_dir() else None
+            doc = K.skeleton(str(vid), jload(tj), str(vtt) if vtt else None)
+            jsave(_skel_path(W, d["slug"], vid), doc)
+            docs[vid] = {"dur": doc.get("dur"), "lines": [{"i": i, "t0": l["t0"], "t1": l["t1"], "text": l["text"]} for i, l in enumerate(doc["lines"])]}
+        except (OSError, ValueError, KeyError) as e:      # 한 편 실패는 결과에 남기고 나머지로(판정은 서버)
+            failed.append({"video": vid, "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"docs": docs, "failed": failed}
+
+
+def c_bm_fill(W, d):
+    """뼈대 + 서버가 고른 눈 칸 → 줄판독. 검사 = kal_analyze.check_doc. 통과한 편만 channel/<slug>/줄판독/<id>.json 에 둔다(대조가 읽는 곳)."""
+    from tools.calcopy.engine import kal_analyze as K
+    out_dir = _inside(W, f"channel/{d['slug']}/줄판독")
+    ok, bad = [], {}
+    for vid, fx in (d.get("fills") or {}).items():
+        dst = out_dir / f"{vid}.json"
+        try:
+            doc = jload(_skel_path(W, d["slug"], vid))
+        except (OSError, ValueError) as e:
+            bad[vid] = [f"뼈대 없음: {type(e).__name__}: {str(e)[:120]}"]
+            continue
+        lines = doc.get("lines") or []
+        for row in fx.get("lines") or []:
+            i = row.get("i")
+            if isinstance(i, int) and 0 <= i < len(lines):
+                lines[i].update({k: v for k, v in row.items() if k != "i"})
+        doc.update({k: v for k, v in (fx.get("doc") or {}).items() if k in ("beats", "narr_share", "title_lines", "source_label", "notes", "name_evidence")})
+        if fx.get("eye") is not None:          # 전환·0초 화면 눈 판정(Ruling 17) — 넣기 규칙 = kal_analyze.apply_eye 한 곳(우리 편도 같은 함수)
+            try:
+                doc["frame0"] = K.apply_eye(lines, fx["eye"])
+            except ValueError as e:
+                bad[vid] = [str(e)[:200]]
+                if dst.exists():
+                    dst.unlink()
+                continue
+        need_line = ("speaker", "layer", "enter")      # check_doc 이 null 을 거절하는 눈 칸 — 남으면 _todo 에 남는다
+        doc["_todo"] = sorted({k for l in lines for k in need_line if l.get(k) is None} | {k for k in ("beats", "narr_share") if doc.get(k) is None})
+        doc["_unread"] = sorted({k for l in lines for k in ("sfx", "scene", "role", "fit", "fill_hex") if l.get(k) is None})   # 비어도 검사는 넘지만 판독 안 된 칸(정직하게 남긴다)
+        doc["_made_by"] = "kal_analyze.skeleton + 벤치마킹 판독(agy 판독표·오푸스 확정, flow_bench.EYE_SLOTS)"
+        errs = K.check_doc(doc)["errors"]
+        if errs:
+            bad[vid] = errs[:8]
+            if dst.exists():
+                dst.unlink()           # 지난 통과본이 남아 대조에 섞이지 않게
+            continue
+        jsave(dst, doc)
+        ok.append(vid)
+    return {"ok": ok, "bad": bad, "dir": out_dir.resolve().relative_to(W.resolve()).as_posix()}
+
+
+def c_bm_match(W, d):
+    """시험 편(회원이 만든 작업 폴더) ↔ 벤치 줄판독 대조. 판단 주인 = kal_analyze.bench_match(줄 자 match_table + 관문 remake.gate_of) — 여기선 부르기만."""
+    from tools.calcopy.engine import kal_analyze as K
+    src = W / "src"
+    return K.bench_match([str(_inside(W, p)) for p in d.get("line_reads") or []], _inside(W, d["work"]),
+                         _inside(W, f"channel/{d['slug']}/preset/{d['style']}"), src if src.is_dir() else None, d.get("eye"))
+
+
+def c_bm_eye_frames(W, d):
+    """눈 판정 그림 뽑기(Ruling 17 — 판단 없음, 주인 = kal_analyze.eye_frames). videos = [{id, mp4, win_doc}] — win_doc = 창(layout.window)이 든 줄판독(뼈대).
+    그림은 작업 폴더 eye/<id>/ 에(영문 경로), 결과 경로는 작업 폴더 기준 상대. 한 편 실패는 failed 에(판정은 서버)."""
+    from tools.calcopy.engine import kal_analyze as K
+    out, failed = {}, []
+    rel = lambda p: Path(p).resolve().relative_to(W.resolve()).as_posix()
+    for v in d.get("videos") or []:
+        try:
+            vid = re.sub(r"[^A-Za-z0-9_-]", "_", str(v["id"]))[:40]
+            win = K._win_arg(None, [jload(_inside(W, v["win_doc"]))]) if v.get("win_doc") else None
+            r = K.eye_frames(str(_inside(W, v["mp4"])), _inside(W, f"eye/{vid}"), win)
+            out[str(v["id"])] = {**r, "frame0": rel(r["frame0"]), "cuts": [{"t": c["t"], "img": rel(c["img"])} for c in r["cuts"]]}
+        except (OSError, ValueError, KeyError, RuntimeError) as e:
+            failed.append({"video": v.get("id"), "why": f"{type(e).__name__}: {str(e)[:160]}"})
+    return {"frames": out, "failed": failed}
+
+
+CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames})
+CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
+
 
 
 HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
@@ -2250,14 +2606,19 @@ def hollow(r: dict) -> str:
 #   ★plan 120→600(기미크림 10-26): 위 plan 실측 17개는 --plan 이 TTS·줄별 받아쓰기(관문 7a95600f8)를 하기 전 — 지금 계획은 바뀐 줄 합성+스피치매틱스+긴 원본 장면 경계(524초 원본)까지 해 120초에 두 번 잘렸다(회원 마스크편). 진짜 멈춤은 STALL_SEC 180초가 잡는다.
 BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
-          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "thumb_auto": 300}
+          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "clean_take": 1800, "thumb_auto": 300,
+          "bm_fetch": 900, "bm_tear": 1800, "agy_read": 700}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
-             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
+             "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
+HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
+_HANG: dict = {"on": False, "t": 0.0}
 _PROG: dict = {"t": 0.0}
 _CHILDREN: set = set()
 
@@ -2341,6 +2702,22 @@ def _kill_children() -> int:
     return n
 
 
+def _hang_arm() -> None:
+    """(판단 주인 — 감시가 멈춘 프로세스 끝내기) faulthandler 는 GIL 없이 도는 C 스레드라 파이썬이 통째로 멈춰도 울린다. 전 스레드 위치를 stderr 에 남기고 끝낸다.
+    main 에서만 켠다(run_do 를 부르는 다른 프로세스를 끄지 않게). 감시 고리가 돌 때마다 뒤로 민다."""
+    if not _HANG["on"] or time.time() - _HANG["t"] < 15:
+        return
+    import faulthandler
+    _HANG["t"] = time.time()
+    faulthandler.dump_traceback_later(HANG_SEC, exit=True, file=sys.__stderr__)
+
+
+def _member_waiting() -> bool:
+    """이 프로세스 안에서 client_llm.ask 가 회원 Claude 답을 기다리는 중인가(줄 폴더 찌꺼기는 안 본다 — 같은 프로세스 상태만, Jev 0.77)."""
+    cl = sys.modules.get("tools.calcopy.engine.client_llm")
+    return bool(cl is not None and getattr(cl, "WAITING", None))
+
+
 def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: float) -> None:
     """items 를 각자 스레드로 돌리고 감시 — 예산 초과·진행 신호 stall 초 없음이면 그 일을 '시간 초과' 오류로 끝내고 하위 프로그램을 끈다.
     (판정은 서버 flow — 오류를 받으면 스스로 한 번 다시·다음 방법·회원 선택지로. 실행기는 절대 한없이 기다리지 않는다.)"""
@@ -2355,10 +2732,13 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
     while any(t.is_alive() for _, t, _ in th):
         next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
         now = time.time()
+        _hang_arm()
         s2, c2 = _dir_sig(W), _child_cpu()
         if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
             sig, last, cpu = s2, now, c2
         cpu = min(cpu, c2)                        # 하위 프로그램이 끝나 합이 줄면 기준도 내린다
+        if _member_waiting():                     # 회원 Claude 답을 기다리는 중 = 멈춤 아님(키 없는 bm_tear 판독, Ruling 16). 예산 3배 상한·client_llm 시간 초과는 그대로
+            last = now
         last = max(last, float(_PROG.get("t") or 0))
         for d, t, t0 in th:
             rid = str(d.get("id") or d.get("cmd"))
@@ -2401,7 +2781,10 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         if sub:
             (W / sub).mkdir(parents=True, exist_ok=True)   # 10-26 run4: 없던 alt1 아래 bench mkdir 이 FileNotFoundError → 2편이 1분 만에 마침
         try:
+            t_run = time.time()
             res = fn(W / sub if sub else W, d)      # sub = 함께 찾는 둘째 소재의 작업 폴더(flow 해외원본형 소재 2편, 10-26) — 진행 신호는 그대로 W
+            if isinstance(res, dict):              # 숫자만 숏클 팀에게(claude_live.metrics) — 영상·대본·키는 안 싣는다
+                res["_sec"] = round(time.time() - t_run, 1)
             if rid not in out:                     # 감시가 이미 '시간 초과'로 끝낸 일은 늦게 온 결과로 덮지 않는다
                 out[rid] = res
             return
@@ -2442,8 +2825,13 @@ PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "produc
 
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
+    _HANG["on"] = True
+    _hang_arm()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
-    print(json.dumps(res, ensure_ascii=False))
+    print(json.dumps(res, ensure_ascii=False), flush=True)
+    sys.stderr.flush()
+    # 결과를 냈으면 바로 끝낸다 — 끊긴 일의 풀 스레드를 파이썬 종료가 기다리면 프로세스가 안 닫혀 회원 앱은 결과를 영영 못 받는다(11-02 check 멈춤)
+    os._exit(0)
 
 
 if __name__ == "__main__":

@@ -10,12 +10,16 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
+import { readSettings, addRequest, saveLogo, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
+import { withMine } from './my_presets.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
-import { keyStatuses, saveKey } from './engine/voice.js';
+import { keyStatuses, saveKey, readKey } from './engine/voice.js';
+import { flowList, flowView, viewFile } from './work_view.js';
+import { importMakerKeys } from './web_bridge.js';
+import { approveFlow, retryFlow } from './flow_driver.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -25,7 +29,9 @@ const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=
 let ui = null;   // {server, port, token, url}
 
 function presets() {
-  try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')).presets || []; } catch { return []; }
+  let c = {};
+  try { c = JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')); } catch { /* 아직 없음 */ }
+  return withMine(c).presets || [];
 }
 
 // 완성본 목록 — make_flow 가 완성본 옆에 남긴 표식(<영상>.json: sid·소재 폴더·프리셋)
@@ -48,10 +54,10 @@ export function send(res, code, body, type = 'application/json; charset=utf-8', 
   res.end(b);
 }
 
-export async function readBody(req) {
+export async function readBody(req, max = 200000) {
   const ch = [];
   let n = 0;
-  for await (const d of req) { n += d.length; if (n > 200000) return null; ch.push(d); }
+  for await (const d of req) { n += d.length; if (n > max) return null; ch.push(d); }
   try { return JSON.parse(Buffer.concat(ch).toString('utf8') || '{}'); } catch { return null; }
 }
 
@@ -74,8 +80,13 @@ export function serveFile(req, res, file, type) {
   fs.createReadStream(file).pipe(res);
 }
 
+let previewGen = 0;
 async function preview({ preset, patch, video }) {
   if (!PID_RE.test(String(preset || ''))) return { error: '프리셋을 고르세요' };
+  // 프리셋을 연달아 눌러도 마지막 것만 서버에서 받는다(누를 때마다 임대·받기 = 서버 속도 제한) — 화면은 마지막 요청만 쓴다
+  const gen = ++previewGen;
+  await new Promise(r => setTimeout(r, 350));
+  if (gen !== previewGen) return { error: '다른 프리셋을 그리는 중입니다' };
   let presetPath = process.env.SHORTEM_DEV_PRESET || null;
   if (!presetPath) {
     try { presetPath = (await rentPreset({ engineRoot: engineRoot(), presetId: preset, kind: 'ui' })).presetPath; }
@@ -91,7 +102,8 @@ async function preview({ preset, patch, video }) {
     try { topicDir = JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', v.name + '.json'), 'utf8')).topic_dir || null; } catch { topicDir = null; }
   }
   const r = await engineTool('preview', { preset: presetPath, pack, ...(topicDir ? { topic_dir: topicDir } : {}) });
-  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title };
+  if (r.tail) console.error(r.tail);   // 엔진 멈춤 사유는 로그로만
+  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail };
 }
 
 async function route(req, res, token, port) {
@@ -119,8 +131,27 @@ async function route(req, res, token, port) {
     if (!videos().some(v => v.name === name)) return send(res, 404, { error: '없음' });
     return serveFile(req, res, path.join(workDir(), '완성본', name), TYPES.mp4);
   }
+  if (/^\/logo\/p_[0-9a-z]+\.png$/.test(u.pathname) && req.method === 'GET') {     // 회원 로고(saveLogo)
+    const f = path.join(homeDir(), 'logos', path.basename(u.pathname));
+    if (!fs.existsSync(f)) return send(res, 404, { error: 'not found' });
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+    return fs.createReadStream(f).pipe(res);
+  }
+  if (u.pathname.startsWith('/tl/') && req.method === 'GET') {     // 타임라인 컷 그림(엔진 preview_request._cut_thumbs) — 완성본 표식의 폴더만
+    const [, , name, file] = u.pathname.split('/').map(decodeURIComponent);
+    if (!videos().some(v => v.name === name) || !/^cut_\d+\.jpg$/.test(file || '')) return send(res, 404, { error: '없음' });
+    try { return serveFile(req, res, path.join(JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', name + '.json'), 'utf8')).topic_dir, '_tl', file), TYPES.jpg); }
+    catch { return send(res, 404, { error: '없음' }); }
+  }
   // 렌더러 편집기 쪽 '내 로고' 목록(미리보기에는 안 쓰인다) — 서버를 부르지 않게 빈 목록
   if (u.pathname === '/api/produce/scene-style/logo' && req.method === 'GET') return send(res, 200, { items: [] });
+  if (u.pathname === '/work.js' && req.method === 'GET') return serveFile(req, res, path.join(HERE, 'ui', 'work.js'), 'text/javascript; charset=utf-8');   // 작업실 탭(관제 291) — 이 PC 에서만(서버판엔 없다)
+  if (/^\/f[la]\//.test(u.pathname) && req.method === 'GET') {     // 작업실 그림(제작 job · AI 요청 폴더) — work_view.viewFile 이 감옥 검사
+    const [, kind, sid, ...rest] = u.pathname.split('/');
+    const file = viewFile(kind, sid, rest.map(decodeURIComponent).join('/'));
+    return file ? serveFile(req, res, file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg') : send(res, 404, { error: '없음' });
+  }
+  if (req.method === 'GET' && /^\/api\/(typecast\/voices|typecast\/voices\/mine|fish\/voices|voice-library\/search|voice-presets)$/.test(u.pathname)) return send(res, 200, await voiceList(u));
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
@@ -131,14 +162,24 @@ async function route(req, res, token, port) {
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, requests: s.requests || [], logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
-  const body = await readBody(req);
+  if (u.pathname === '/api/flows' && req.method === 'GET') return send(res, 200, { flows: flowList() });
+  if (u.pathname === '/api/flow' && req.method === 'GET') { const v = flowView(u.searchParams.get('sid')); return v ? send(res, 200, v) : send(res, 404, { error: '없는 작업' }); }
+  const body = await readBody(req, 1000000);
   if (!body) return send(res, 400, { error: '요청 모양이 다릅니다' });
+  if (u.pathname === '/api/import-keys') return send(res, 200, await importMakerKeys());   // 숏템메이커 키 가져오기 — 서버 화면 다리와 같은 함수(web_bridge.importMakerKeys)
+  if (u.pathname === '/api/flow/approve' || u.pathname === '/api/flow/retry') {   // 버튼은 MCP 와 같은 함수(flow_driver)를 부르기만
+    const f = (u.pathname.endsWith('approve') ? approveFlow : retryFlow)(body.sid);
+    return f ? send(res, 200, { ok: true, flow: flowView(body.sid) }) : send(res, 404, { error: '없는 작업' });
+  }
   if (u.pathname === '/api/select') return send(res, 200, { ok: select(body.preset) });
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
+  if (u.pathname === '/api/ask') return send(res, 200, addRequest(body.target, body.text));
+  if (u.pathname === '/api/logo') return send(res, 200, saveLogo(body.preset, body.data));
+  if (u.pathname === '/api/look') return send(res, 200, await saveLook(body.preset, body.snapshot));
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });
   // 완성본 받기(텔레그램·구글 드라이브) — 판단은 deliver.js. 봇 토큰은 이 화면에만 넣는다(채팅에 붙여 넣지 않게)
@@ -160,6 +201,31 @@ async function route(req, res, token, port) {
       : { error: (o.fail && o.fail.why) || (o.hints || []).join(' ') || '다시 만들지 못했습니다' });
   }
   return send(res, 404, { error: '없음' });
+}
+
+// 성우 찾기 — 회원 키로 각 회사 목록을 직접 받는다(키는 이 PC 밖 숏템 서버로 안 나간다). 답 모양 = 서버 화면과 같은 {ok,voices,total,error}
+async function voiceList(u) {
+  const q = (u.searchParams.get('q') || '').toLowerCase(), p = u.pathname;
+  const go = async (url, headers) => { const r = await fetch(url, { headers, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error(`목록을 못 받았습니다(${r.status})`); return r.json(); };
+  const need = svc => readKey(svc) || null;
+  try {
+    if (p === '/api/voice-presets') { const b = process.env.SHORTEM_BASE || 'https://shoppingshorts.duckdns.org'; return await go(`${b}/api/voice-presets?lang=KR`, {}); }
+    if (p.startsWith('/api/typecast')) {
+      const key = need('typecast'); if (!key) return { ok: false, voices: [], error: '타입캐스트 키를 설정에서 넣어 주세요' };
+      const d = await go('https://api.typecast.ai/v2/voices', { 'X-API-KEY': key });
+      const all = (Array.isArray(d) ? d : d.voices || d.result || []).map(v => ({ voice_id: v.voice_id, name: v.voice_name || v.name, gender: v.gender, age: v.age, model: (v.models && v.models[0] && (v.models[0].version || v.models[0])) || v.model, emotions: (v.models && v.models[0] && v.models[0].emotions) || v.emotions || [], tags: v.use_cases || [] }));
+      const hit = all.filter(v => (p.endsWith('/mine') ? String(v.voice_id).startsWith('uc_') : true) && String(v.name).toLowerCase().includes(q));
+      return { ok: true, voices: hit.slice(0, 60), total: all.length, error: null };
+    }
+    if (p === '/api/fish/voices') {
+      const key = need('fish'); if (!key) return { ok: false, voices: [], error: '피쉬오디오 키를 설정에서 넣어 주세요' };
+      const d = await go(`https://api.fish.audio/model?page_size=30&language=ko&title=${encodeURIComponent(q)}`, { Authorization: `Bearer ${key}` });
+      return { ok: true, voices: (d.items || []).map(v => ({ voice_id: v._id, name: v.title, tags: v.tags || [], sample_url: (v.samples && v.samples[0] && v.samples[0].audio) || '' })), total: d.total || 0, error: null };
+    }
+    const key = need('elevenlabs'); if (!key) return { ok: false, voices: [], error: '일레븐랩스 키를 설정에서 넣어 주세요' };
+    const d = await go(`https://api.elevenlabs.io/v1/shared-voices?page_size=30&language=ko&search=${encodeURIComponent(q)}`, { 'xi-api-key': key });
+    return { ok: true, voices: (d.voices || []).map(v => ({ voice_id: v.voice_id, name: v.name, gender: v.gender, age: v.age, tags: [v.use_case].filter(Boolean), sample_url: v.preview_url })), total: (d.voices || []).length, error: null };
+  } catch (e) { return { ok: false, voices: [], error: String(e.message || e) }; }
 }
 
 export async function startUi() {

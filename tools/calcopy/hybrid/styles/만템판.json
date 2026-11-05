@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": true,
  "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
- "_note": "만템 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 바탕·2줄 제목·1080 정사각 창, window). 근거 = 설명서 프리셋 channel/mantem/preset/얜샷템(8편 실측)·뜯기 8편. 손 스크립트 preset/mt_preset.py(설명서 생성기 — 회원 옛 길이 읽음)",
+ "_note": "만템 프리셋 1차 판 — 연예인쇼핑형 나레+원음(검정 바탕·2줄 제목·1080 정사각 창, window). 근거 = 설명서 프리셋 channel/mantem/preset/얜샷템(8편 실측)·뜯기 8편. 손 스크립트 preset/mt_preset.py(설명서 생성기 — 회원 옛 길이 읽음)",
  "bench": {
   "ko": "만템",
   "channel": "mantem",
@@ -635,7 +635,7 @@
  },
  "_pending": {
   "line_reads": "줄판독 0편 → 06-mantem(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
-  "member_line": "회원 라인 line.json = 키치잇판(얜샷템, 00_공통 채널↔판) — 이 판(만템판)은 벤치 1차 판, 회원 라인은 그대로 둔다",
+  "member_line": "회원 라인 line.json = 키치잇판(얜샷템, 00_common 채널↔판) — 이 판(만템판)은 벤치 1차 판, 회원 라인은 그대로 둔다",
   "label": "창 아래 라벨 GmarketSansBold 32 y1524($per_video 글) → credit 칸(출처 줄)로 옮김 — 뜻 확인 필요"
  },
  "script": {
@@ -748,7 +748,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
   }
  }
 }

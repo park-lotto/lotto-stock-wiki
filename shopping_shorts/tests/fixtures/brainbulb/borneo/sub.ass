@@ -1,0 +1,64 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:02.66,CARD,,0,0,0,,{\p1\pos(0,469)\c&H3B3B3B&\bord0\shad0}m 0 0 l 1080 0 l 1080 273 l 0 273{\p0}
+Dialogue: 1,0:00:00.00,0:00:02.66,CARD,,0,0,0,,{\p1\pos(0,565)\c&HFDFDFD&\bord0\shad0}m 0 0 l 1080 0 l 1080 137 l 0 137{\p0}
+Dialogue: 2,0:00:00.00,0:00:02.66,CARD,,0,0,0,,{\an5\pos(546,633)\fs46\c&H000000&\bord0\shad0}서울 3배 땅을 태우고 동남아 하늘을 삼킨 산불
+Dialogue: 3,0:00:00.00,0:00:39.76,HL1,,0,0,0,,{\an8\pos(530,215)\fs123}보르네오 땅속 불이
+Dialogue: 3,0:00:00.00,0:00:39.76,HL2,,0,0,0,,{\an8\pos(530,330)\fs127}서울 3배 땅을 태웠다
+Dialogue: 4,0:00:02.66,0:00:03.76,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}인도네시아 보르네오
+Dialogue: 4,0:00:03.76,0:00:05.00,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}하늘이 잿빛으로
+Dialogue: 4,0:00:03.76,0:00:05.00,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}막혔다
+Dialogue: 4,0:00:05.00,0:00:06.24,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}구름이 아니라 연기다
+Dialogue: 4,0:00:06.24,0:00:07.25,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}서울 3배 땅이 탔다
+Dialogue: 4,0:00:07.25,0:00:08.37,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}7월부터 두 달째다
+Dialogue: 4,0:00:08.37,0:00:09.62,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}슈퍼 엘니뇨 가뭄 탓에
+Dialogue: 4,0:00:09.62,0:00:10.93,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}불씨 수천개가 동시에
+Dialogue: 4,0:00:10.93,0:00:12.03,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이건 못 끄지
+Dialogue: 4,0:00:12.03,0:00:13.00,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}문제는 땅속이다
+Dialogue: 4,0:00:13.00,0:00:13.93,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이탄지라는 습지다
+Dialogue: 4,0:00:13.93,0:00:15.23,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}수천년 쌓인 식물 잔해
+Dialogue: 4,0:00:15.23,0:00:16.73,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}깊이 20미터
+Dialogue: 4,0:00:15.23,0:00:16.73,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}탄소 창고
+Dialogue: 4,0:00:16.73,0:00:17.51,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}겉불을 꺼도
+Dialogue: 4,0:00:17.51,0:00:18.70,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}땅속에서 몇주를 탄다
+Dialogue: 4,0:00:18.70,0:00:19.61,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}1헥타르가 타면
+Dialogue: 4,0:00:19.61,0:00:21.14,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}승용차 4800대
+Dialogue: 4,0:00:19.61,0:00:21.14,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}배출량
+Dialogue: 4,0:00:21.14,0:00:22.27,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}탄소 폭탄임
+Dialogue: 4,0:00:22.27,0:00:23.50,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}연무는 국경을 넘었다
+Dialogue: 4,0:00:23.50,0:00:24.52,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}말레이시아 싱가포르
+Dialogue: 4,0:00:24.52,0:00:26.05,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}WHO 기준 75배
+Dialogue: 4,0:00:26.05,0:00:27.23,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}호흡기 환자 5만명
+Dialogue: 4,0:00:27.23,0:00:28.46,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그중 1만2천은
+Dialogue: 4,0:00:27.23,0:00:28.46,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}영유아
+Dialogue: 4,0:00:28.46,0:00:29.38,PINK,,0,0,0,,{\an8\pos(636,1269)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}독가스실이네
+Dialogue: 4,0:00:29.38,0:00:30.38,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}최루탄 맞은 것 같다
+Dialogue: 4,0:00:30.38,0:00:31.51,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}대원 2명이 숨졌다
+Dialogue: 4,0:00:31.51,0:00:33.10,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}원인은 수십년
+Dialogue: 4,0:00:31.51,0:00:33.10,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}개간이다
+Dialogue: 4,0:00:33.10,0:00:34.24,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}팜유 농장 만들려고
+Dialogue: 4,0:00:34.24,0:00:35.36,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}습지 물을 다 빼냈다
+Dialogue: 4,0:00:35.36,0:00:36.43,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}땅이 바싹 말랐다
+Dialogue: 4,0:00:36.43,0:00:37.57,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근데 원주민 탓
+Dialogue: 4,0:00:37.57,0:00:38.84,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}대원들은 비만
+Dialogue: 4,0:00:37.57,0:00:38.84,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}기다린다
+Dialogue: 4,0:00:38.84,0:00:39.76,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}사람이 낸 불이다

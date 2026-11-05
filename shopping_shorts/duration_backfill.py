@@ -154,6 +154,23 @@ def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC, codes=
     ok = ng = 0
     ig = [sc for p, sc in todo if p == "instagram"]
     rest = [(p, sc) for p, sc in todo if p != "instagram"]
+    done = set()
+
+    def _yield_if_customer_waits():
+        """고객 인스타 작업이 줄 서 있으면 칸을 비켜 준다(관제 321). 남은 몫은 다시 줄에 세운다.
+        durfill 은 우선순위가 30(가장 뒤)이라 다시 세워도 고객 작업이 먼저 집힌다."""
+        if store.exclusive_waiting() <= 0:
+            return False
+        left_ig = [sc for sc in ig if sc not in done]
+        if codes:
+            if left_ig:
+                store.enqueue("durfill", {"codes": left_ig})
+        elif not store.queue_has_pending("durfill", "k", "1"):
+            store.enqueue("durfill", {"k": "1"})
+        print(f"[durfill] 고객 인스타 작업이 기다려 양보함 — 처리 {len(done)}건, 남은 인스타 {len(left_ig)}건은 다시 줄에")
+        return True
+
+    yielded = False
     if ig:
         # 인스타는 브라우저(세션 컨텍스트)를 배치당 1번만 띄워 릴마다 상세 노드를 받는다.
         from shopping_shorts.instagram_parse import shortcode_to_pk
@@ -161,6 +178,10 @@ def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC, codes=
         try:
             with _detail_context() as ctx:
                 for sc in ig:
+                    if _yield_if_customer_waits():
+                        yielded = True
+                        break
+                    done.add(sc)
                     dur = None
                     pk = shortcode_to_pk(sc)
                     if pk:
@@ -177,7 +198,12 @@ def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC, codes=
                     time.sleep(sleep_s)
         except Exception:                      # noqa: BLE001 — 브라우저 기동 실패(미설치 등)
             pass
+    if yielded:
+        return f"durfill: 양보(고객 대기) — 성공 {ok}·실패 {ng}·캐시적중 {len(cached)}"
     for platform, sc in rest:
+        if store.exclusive_waiting() > 0:
+            # 인스타가 아닌 몫은 다음 정기 실행이 다시 대상에 넣는다(_targets) — 따로 세우지 않는다.
+            return f"durfill: 양보(고객 대기) — 성공 {ok}·실패 {ng}·캐시적중 {len(cached)}"
         dur = probe_duration(platform, sc)
         if dur is not None:
             store.set_reel_duration(sc, dur)

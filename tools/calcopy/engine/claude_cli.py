@@ -2,7 +2,7 @@
 """Claude 창구 — `claude -p`(Claude Code 헤드리스)로 글·그림 판독 → JSON (관제 097, 2026-10-18 밤).
 
 왜: 사장님 10-18 밤 "제미나이 쓰지 말고" — 로컬·서버 제미나이 = 같은 키 묶음, 고객 서비스와 분당 천장 17~19건을 같이 쓴다
-(handoff/제미니죽은키.md). 판독 = Claude 눈, 단순 작업 = 하이쿠(channel/칼카피_시작.md §11).
+(handoff/제미니죽은키.md). 판독 = Claude 눈, 단순 작업 = 하이쿠(channel/production_start.md §11).
 방식(seed_analyzer/match_compare.py 실측 그대로): 프롬프트는 표준입력(인자로 넘기면 잘려 빈 답), 빈 임시 폴더에서 부른다
 (프로젝트 폴더면 CLAUDE.md·훅이 붙어 요약만 돌아온다). 그림은 그 임시 폴더에 파일로 두고 Read 로 열게 한다.
 
@@ -42,6 +42,16 @@ def _json_of(txt: str):
     return None
 
 
+def claude_exe() -> str | None:
+    """엔진 PATH 에는 claude 폴더가 없다(회원 PC engineEnv) — 자주 쓰는 설치 자리까지 본다(11-02 회원 렌더 FileNotFoundError)."""
+    home = Path.home()
+    for p in (shutil.which("claude"), home / ".local/bin/claude.exe", home / ".local/bin/claude",
+              home / "AppData/Roaming/npm/claude.cmd"):
+        if p and Path(p).is_file():
+            return str(p)
+    return None
+
+
 def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tuple[dict | None, str | None]:
     model = model or model_for(tag)
     d = Path(tempfile.mkdtemp(prefix="claude_ma_"))
@@ -58,11 +68,16 @@ def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tu
         full = head + prompt + "\n\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지."
         t0 = time.time()
         try:
-            p = subprocess.run(["claude", "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
+            exe = claude_exe()
+            if not exe:
+                return None, "claude 실행 파일 없음"       # 렌더를 멈추지 않는다 — 부르는 쪽이 눈 판정 없이 간다
+            p = subprocess.run([exe, "-p", "--settings", '{"disableAllHooks":true}', "--model", model, "--output-format", "text", "--allowedTools", "Read"],   # 회원 훅이 헤드리스를 붙잡아 420초까지 무응답(11-02 회원 실측, 끄면 5~6초)
                                input=full, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                timeout=TIMEOUT, cwd=str(d), stdin=None)
         except subprocess.TimeoutExpired:
             return None, f"timeout {TIMEOUT}s"
+        except OSError as e:
+            return None, f"claude 실행 실패 {type(e).__name__}"
         out = _json_of(p.stdout)
         if out is None:
             return None, f"rc={p.returncode} 빈/깨진 답 {round(time.time() - t0)}s: {(p.stdout or p.stderr or '')[:160]}"

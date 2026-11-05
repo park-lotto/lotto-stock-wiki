@@ -76,11 +76,11 @@
       "WebSearch",
       "PowerShell(*)",
       "Bash(*)",
-      "Write(*)",
-      "Edit(*)",
-      "Read(*)",
-      "Glob(*)",
-      "Grep(*)"
+      "Write",
+      "Edit",
+      "Read",
+      "Glob",
+      "Grep"
     ]
   },
   "hooks": {

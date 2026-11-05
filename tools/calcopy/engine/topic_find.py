@@ -257,7 +257,7 @@ def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
 def yt_upload_date(vid: str) -> str | None:
     """올린 날짜 YYYYMMDD — flat 목록엔 없다. android 클라이언트(기본은 로봇 확인에 막힘, 10-16 실측)."""
     try:
-        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--extractor-args", "youtube:player_client=android",
                             "--print", "%(upload_date)s", f"https://www.youtube.com/watch?v={vid}"],
                            capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
     except subprocess.TimeoutExpired:
@@ -270,7 +270,7 @@ def yt_detail(vid: str, n_comments: int = 50, url: str | None = None) -> dict:
     """제목·설명·조회·날짜 + 댓글(좋아요 순 n). 10-16 실측: 기본 클라이언트는 '로봇 확인'으로 막혀 android 로 받는다.
     url 을 주면 그 주소(틱톡·인스타 참고 영상, 관제 234)로 — 유튜브 전용 인자는 다른 곳에선 무시된다."""
     try:
-        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--write-comments", "--extractor-args",
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--write-comments", "--extractor-args",
                             f"youtube:player_client=android;comment_sort=top;max_comments={n_comments},{n_comments},0,0", "-J",
                             url or f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", errors="replace",
                            stdin=subprocess.DEVNULL, timeout=150)
@@ -329,7 +329,7 @@ def db_top(n: int = 20) -> list[dict]:
 def yt_meta(vid: str) -> dict:
     """영상 1편 제목·올린 날짜(android 클라이언트, 상세 댓글 없이 가볍게)."""
     try:
-        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--extractor-args", "youtube:player_client=android",
                             "--print", "%(upload_date)s\t%(duration)s\t%(title)s", f"https://www.youtube.com/watch?v={vid}"],
                            capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
     except subprocess.TimeoutExpired:
@@ -651,7 +651,7 @@ def channel_of_video(url: str | None) -> str | None:
     if not url:
         return None
     try:
-        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--print", "%(channel_id)s", url],
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--ignore-no-formats-error", "--print", "%(channel_id)s", url],
                            capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=60)
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -665,7 +665,7 @@ CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 �
 
 def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=print, per_channel: int = 30,
                        stats=None) -> tuple[list[dict], list[dict]]:
-    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 칼카피한 채널 목록을 넘기고 어떻게 찾아나가는지").
+    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 프리셋한 채널 목록을 넘기고 어떻게 찾아나가는지").
     같은 결 채널(channel_find 가 판정한 목록 — 확정만)의 최근 쇼츠에서 **그 채널 조회 중앙값의 1.5배 이상** 터진 편을
     조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
     stats = channel_find.channel_stats(시험에서 가짜). 반환 (후보, 실패)."""
@@ -884,7 +884,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     return res
 
 
-# 채널 소재 유형 설명 — manifest.channel_desc 가 주인. 없을 때 기본(근거: 각 채널 손 칼카피 편·top50 제목 결, 10-16)
+# 채널 소재 유형 설명 — manifest.channel_desc 가 주인. 없을 때 기본(근거: 각 채널 손 프리셋 편·top50 제목 결, 10-16)
 CHANNEL_DESC = {
     "sseolpulda": "해외에서 조회수가 터진 신기한 생활 제품·가젯을 한국어 자막으로 소개하는 제품 이야기썰 — 실제 사용·시연 영상이 있는 소비자 제품(사람·요리·코미디·브이로그 아님)",
     "yummyknow": "한국 식품·유통 브랜드(코스트코·맘스터치·다이소 등)의 억울한 사연·영업비밀·실수·숨은 이유를 전언체로 푸는 비하인드 썰 — 공식 홍보·신상 소개가 아니라 사건과 사람들 반응",

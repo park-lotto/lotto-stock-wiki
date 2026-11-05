@@ -347,6 +347,8 @@ def export(work_dir, out_root=None, doc=None, project_name: str | None = None, l
 
     # 4) 자막(장면꾸미기 층) · 스티커 · 자막 글자(편집용)
     rows, scenes, layers = tab["rows"], D["scenes"], D["layers"]
+    if any(x is None for x in layers):      # 부분 렌더(관제 304) — 안 바뀐 자막 칸은 레이어를 다시 안 만든다
+        raise SystemExit("이 편은 부분 렌더라 자막 레이어가 일부만 있다 — SHORTEM_FULL_RENDER=1 로 한 번 전체 렌더한 뒤 내보낸다")
     same = len(rows) == len(scenes) == len(layers) and all(" ".join(r["text"].split()) == " ".join((s.get("caption") or "").split()) for r, s in zip(rows, scenes))
     if not same:
         warnings.append(f"자막표 줄({len(rows)})과 장면꾸미기 장면({len(scenes)})이 안 맞아 스티커를 안 뗌")

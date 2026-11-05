@@ -27,7 +27,7 @@ DIR = Path(__file__).with_name("styles")
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:          # CLI 로 직접 돌릴 때도 tools.calcopy… 가 잡히게(pack_map import)
     sys.path.insert(0, str(_ROOT))
-REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 칼카피 모두", 관문 ⑥)
+REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 프리셋 모두", 관문 ⑥)
 
 
 # ── 판 리듬 실측 4칸(관제263 10-25 페이블 눈검수 E1·E2·E4 — 모든 판 필수, 값은 그 채널 벤치 실측 + why) ──────────────
@@ -96,6 +96,10 @@ def names() -> list[str]:
 
 def path_of(name: str) -> Path:
     p = DIR / f"{name}.json"
+    if not p.exists():      # 영문 파일로 옮기는 첫 단계 — 이 판부터 두 이름을 다 읽는다(회원 업데이트 뒤 파일을 옮긴다, 관제 304)
+        af = DIR / "_names.json"
+        alias = json.loads(af.read_text(encoding="utf-8")).get(name) if af.exists() else None
+        p = DIR / f"{alias}.json" if alias else p
     if not p.exists():
         raise SystemExit(f"판 '{name}' 이 없다 — 있는 판: {', '.join(names())}")
     return p
@@ -213,19 +217,31 @@ def member_frame(st: dict) -> dict:
     if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
         st["voice"] = {**st.get("voice", {}), **tts}
         st["member_voice"] = tts
+    cap = {k: text[f"caption_{k}"] for k in ("font", "color", "dy") if text.get(f"caption_{k}")}
+    if cap:        # 자막 글꼴(꾸미기)·색·세로 위치(Claude 고치기) — 자막팩 위에 덮는다(render_bench.snapshot)
+        st["member_caption"] = cap
     F = st.get("frame")
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st
     name = brand.get("channel_name")
+    bar = (F.get("post") or {}).get("head_bar") or {}
+    bar_text = [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"]
+    if bar_text:       # 머리띠 글자 = 회원 채널명 한 칸(고정 글자 포함), 안 넣었으면 비운다 — 프리셋 원래 채널 글자를 내보내지 않는다(사장님 11-02)
+        rest = [ic for ic in bar["icons"] if ic.get("kind") != "text"]
+        if name:
+            cx = sum(float(ic.get("cx") or 0) for ic in bar_text) / len(bar_text)
+            rest.append({**bar_text[0], "text": name, "from": "_fixed", "cx": cx, "max_w": max(float(ic.get("max_w") or 0) for ic in bar_text) * len(bar_text)})
+        bar["icons"] = rest
+    if not name:       # 채널명을 안 넣은 회원 = 로고·워터마크 글자 없음
+        F["logo"], F["watermark"] = None, None
     if name:
         if F.get("logo"):
             F["logo"]["text"] = name
         if F.get("watermark"):
             head = F["watermark"]["text"].split(" ", 1)
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
-        for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or []:
-            if ic.get("kind") == "text" and ic.get("from", "brand") == "brand":
-                ic.update({"text": name, "from": "_fixed"})     # 대본 post.brand 보다 회원 채널명
+        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02)
+            F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)
@@ -237,6 +253,11 @@ def member_frame(st: dict) -> dict:
             T["color"] = colors[i]
         if text.get("title_scale"):
             T["px"] = round(T["px"] * float(text["title_scale"]))
+        if text.get("title_dy") and "center" in T:   # 미리보기에서 끌어 옮긴 세로 거리(px, 1080×1920 기준)
+            T["center"] += int(text["title_dy"])
+    L = brand.get("logo")
+    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
+        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
     return st
 
 

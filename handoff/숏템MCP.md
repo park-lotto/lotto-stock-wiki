@@ -218,3 +218,27 @@
 - ✅ 회원 경로 완주(10-21): 로컬 시험 서버 + 개발 MCP + claude -p(opus), 성시경 신라면 캐시(유튜브 0회) → 1080×1920 28.8초, 자동 검사 6/6, 눈 검수 ok, 정답지 합격(원본·제품 일치). 진행 안내 = 서버 message 한 줄("장면 맞추기 완료 → 목소리·영상 만들기 중").
   잡은 결함: 두 번째 사인 안 물음(고침+시험) · 자동 검사 경로만 감 · 우리 로고 오탐 · 길이는 대본으로 · 출처 줄 서버가(엔진 98 #20~24).
 - ⏭ ①설치본 1.0.11 빌드(engine_bundle HAND 포함)·noexe_install_check·test_engine_installed ②유튜브 풀리면 캐시 없이 실전 2편 ③**라이브 배포는 사장님 승인 후**: 두 트랙 finish — 서버에 엔진 hybrid(flow·rules·script_audit·styles·render_bench 의 docstring) 필요 ④upload_release 로 설치본·프리셋 꾸러미(판 설정만) 다시 올리기 ⑤로컬 시험 서버 끝낼 것.
+
+## 2026-10-29 오후 (회사 PC TheRose) — 11/1 오픈 준비: 회원 경로 실측·묶음 수리 (계정 바꿔 이어갈 때 여기부터)
+
+**사장님 방향**: 11/1 숏템 MCP 오픈. "똑같을 필요 없고 퀄리티만 나오면 된다" / 드라이브에 올리는 6채널 프리셋 먼저.
+
+**한 것(트랙 커밋·푸시, 라이브·회원 발행은 안 함)**
+- 숏템MCP 트랙에 main 499커밋 합침(충돌 2: claude_portal 프리셋 목록 group+aliases 둘 다, voice.js main 판) — 고객 시험 52/52(시험 실패 2는 ~/.cache/puppeteer 가 02:35 통째 지워진 것 → chrome·chrome-headless-shell 재설치로 풀림)
+- tools/claude_portal/engine_bundle.py: HAND 에 render 경로 파일(material_fit·quality_gate·checks·script_audit·deco·tts_pause·ocrdet·script_translate)·HAND 자신 포함·글꼴 폴더 통째·의존 끝까지 따라가기(readline_tools.capseg 등) · 깊은 서버 전용 12개 HAND_SERVER_ONLY 명시(app·store·인스타·아피파이·gemini 키·to_frame·transcribe_free·coupang_api_search·mina_tts·vertex_route) → 묶음 .py 132→212, check 금지 0
+- 엔진 트랙 script_translate: script_generate 늦게 불러오기(1ac537640)
+- tools/claude_portal/parity_render.py(사장님 엔진 vs 회원 묶음 렌더 대조): 잇템로그 2편(C:/숏템_칼카피/ititemlog/ep_1029_F3gPtXk8Dgo) = 화면·소리 md5 일치 869프레임
+- shortem_client/test/flow_episode.js --keys <폴더>(회원 키 넣기)
+
+**회원 방식 실제작 결과(로컬 서버 C:/t/srv :18860, C:/t/srv2 :18861 — local_server.py, 꾸러미 C:/t/srv*/store/preset_packs 5개 preset_pack.py 로 만듦, 묶음 C:/t/eb5 + node_modules 정션 + 시험용 mina_tts 복사)**
+- 썰템홈샷·숏템리폿·샥템 = line.json 없음 → 옛 길(script_engine/worker_steps) → 대본 channel_lint·'뜯기/틀 없음'으로 2~3분 내 멈춤 → 11/1 불가(하이브리드로 옮겨야)
+- 썰템쇼 = 회원 이름·뜯기·라인 없음 → 불가
+- 얜샷템 = channel/mantem/preset/얜샷템/line.json(키치잇판) 쪽이면 볼케이노 — 아직 회원 실측 안 함
+- 잇템로그(ep 폴더 C:/t/ep_ititemlog, flow sid ad37d7eb33f2) = 틱톡 주소는 창구 claude_flow.py:103 유튜브만 받아 거절 → 유튜브 iqnZwCFHKKg 로 시작 → 원본·제품·대본까지 감, **11/13 render 에서 '같은 원인 3번 연속 render' 멈춤**. runner.log 에 render 실행 줄이 없고 write_doc 만 반복 — 회원 실행기가 render 를 실제로 안 돌리는 것으로 보임(원인 미확인 ⏭ 1순위)
+
+**⏭ 다음**
+1. 잇템로그 회원 render 미실행 원인(runner_ops c_render 가 불렸나·flow render_got 판정) → 완주 → 완성본 눈 확인
+2. 얜샷템(mantem 라인) 회원 1편
+3. claude_flow.py:103 소재 주소 틱톡·인스타 허용(판단 주인 flow 쪽으로)
+4. 사장님 승인 뒤: 엔진·숏템MCP finish(라이브 flow.py 가 엔진보다 20커밋 뒤) → build_win 1.0.11 → publish_update · 꾸러미 서버 업로드
+5. 나머지 4채널 하이브리드 이전(손 스크립트 판단 → 코드, line.json)

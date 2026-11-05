@@ -21,11 +21,12 @@ import uuid
 import zlib
 from pathlib import Path
 
+from shopping_shorts import claude_live as LIVE
 from shopping_shorts import claude_portal as CP
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
-    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT)"""
+    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -47,6 +48,28 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
+        if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
+            c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
+
+
+def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
+    """앱 판별 막힘 수 — 새 판 = version 으로 since_new 뒤 시작한 편, 옛 판 = 그 밖의 판(칸 없던 옛 행 포함) since_old 뒤.
+    끝난 편(stop·done)만 센다. 진행 중이거나 버려진 편은 분모에 안 넣는다. 판정은 claude_portal.rollout_bad."""
+    _ensure(store)
+    with CP._tx(store) as c:
+        rows = CP._rows(c, "SELECT COALESCE(engine,'') engine, status, created FROM claude_flow_runs "
+                           "WHERE status IN ('stop','done') AND created>=?", (min(since_new, since_old),))
+    out = {"new_stop": 0, "new_n": 0, "old_stop": 0, "old_n": 0}
+    for r in rows:
+        if r["engine"] == version:
+            side = "new" if r["created"] >= since_new else None
+        else:
+            side = "old" if r["created"] >= since_old else None
+        if side:
+            out[side + "_n"] += 1
+            out[side + "_stop"] += r["status"] == "stop"
+    return out
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -117,6 +140,42 @@ def _pool_kw(fn, **kw) -> dict:
     return {k: v for k, v in kw.items() if k in names}
 
 
+def knowhow(ctx: dict, body: dict, store=None) -> dict:
+    """막혔을 때 노하우 — 상황 글·단계에 맞는 막힘표·가이드·경험. 판단 주인 = flow.knowhow."""
+    store = CP._store(store)
+    _ensure(store)
+    cid, _, _ = CP._front(store, ctx, "knowhow")
+    body = body if isinstance(body, dict) else {}
+    tier = CP.member_tier(store, cid)
+    if str(body.get("topic") or "") == "benchmark":      # 채널 벤치마킹 노하우 = 고급 이상(사장님 11-02) — 나머지 노하우는 전 반 같다
+        if tier == "basic":
+            return {"ok": True, "locked": True, "say": "채널 벤치마킹은 고급반에서 제공돼요", "tier": tier}
+        return {"ok": True, "tier": tier, "guide": _flow().benchmark_guide()}
+    return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
+
+
+ALARM_RULE = "jev_down"      # 지시서가 state["alarm"]["kind"] 로 남기는 이름 = 경보 규칙 이름(제목은 claude_portal.RULE_TITLE)
+
+
+def _raise_flow_alarm(store, cid, sid, st2: dict) -> None:
+    """지시서가 state["alarm"] 을 남겼으면 관리자 경보로 올리고 state 에서 지운다(같은 경보를 다음 걸음에 또 올리지 않는다).
+    alarm 이 없으면 아무 일도 하지 않는다. 경보 실패가 요청을 깨면 안 되므로 로그만 남긴다."""
+    alarm = st2.pop("alarm", None)
+    if not alarm:
+        return
+    if not isinstance(alarm, dict):      # 꼴이 틀린 경보도 버리지 않는다(조용한 실패 금지) — 글로 감싸 올리고 꼴 어긋남은 로그로
+        CP.log.warning("claude_flow: 흐름 경보 꼴이 dict 가 아님 sid=%s type=%s", sid, type(alarm).__name__)
+        alarm = {"why": str(alarm)}
+    rule = str((alarm or {}).get("kind") or ALARM_RULE)[:40]
+    detail = f"sid {sid} · {str(alarm.get('at') or '')[:40]} · {str(alarm.get('why') or '')[:300]}"
+    try:
+        with CP._tx(store, write=True) as c:
+            row = CP._raise_alert(c, cid, rule, "alert", 1, detail)
+        CP._notify([row])
+    except Exception:      # noqa: BLE001 — 경보 실패가 제작 요청을 깨면 안 된다. 대신 로그
+        CP.log.exception("claude_flow: 흐름 경보 기록 실패 sid=%s", sid)
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -126,7 +185,23 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     blob = json.dumps({"m": body.get("measure"), "r": body.get("replies")}, ensure_ascii=False)
     if len(blob) > MEASURE_MAX:
         raise CP.PortalError("bad_request", "보낸 결과가 너무 큽니다")
-    if kind in ("start", "sources"):
+    if kind == "bench_start":                    # 채널 벤치마킹 2판(관제 319) — 반 판단 주인 = member_tier
+        if CP.member_tier(store, cid) == "basic":
+            raise CP.PortalError("tier_locked", "채널 벤치마킹은 고급반에서 제공돼요")
+        src = body.get("source") or {}
+        url, vids = str(src.get("url") or "")[:300], [str(v)[:300] for v in (src.get("videos") or [])][:5]
+        if not url and not vids:
+            raise CP.PortalError("bad_request", "채널 주소나 영상 주소를 주세요")
+        try:
+            n = int(body.get("n") or 3)
+        except (TypeError, ValueError):
+            raise CP.PortalError("bad_request", "n 은 숫자여야 합니다")
+        sid = uuid.uuid4().hex[:12]
+        st, seq = flow.start_bench(url, vids, str(body.get("name") or "내 프리셋"), sid, n), 0
+        with CP._tx(store, write=True) as c:
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, "bench", "bench_v2", 0, "bm_setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
+    elif kind in ("start", "sources"):
         pid = str(body.get("preset") or "")
         with CP._tx(store) as c:
             lic = CP._row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
@@ -169,8 +244,8 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             st["auto_source"] = auto
             st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
-            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
-                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
     else:
         st, seq = _open(body.get("payload"))
         sid = str(st.get("sid") or "")
@@ -181,12 +256,21 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
     user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
-    res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    try:
+        res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    except CP.PortalError:
+        raise
+    except Exception as e:      # noqa: BLE001 — 그대로 터뜨린다. 회원은 서버 오류만 보니 사건으로 남긴다(판단 = claude_live)
+        LIVE.flow_crash(store, cid, sid, e)
+        raise
     st2 = res.pop("state")
+    _raise_flow_alarm(store, cid, sid, st2)
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",
                   (seq2, st2.get("phase"), res.get("status"), CP._now(), json.dumps(_summary(st2), ensure_ascii=False), sid))
+    LIVE.metrics(store, cid, sid, body.get("measure"), str((res.get("stage") or {}).get("text") or ""))
+    LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
     return res

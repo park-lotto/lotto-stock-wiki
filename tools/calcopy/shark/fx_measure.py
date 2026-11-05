@@ -29,7 +29,8 @@ CAP_BAND = (880, 1050)              # 자막 띠 — 원 픽셀에서 뺀다(빨
 RED = np.array([247, 42, 48])
 MODEL_CANDS = [os.environ.get("MOON_YUNET", ""), str(Path.home() / ".shortem/models/face_detection_yunet_2023mar.onnx"),
                str(Path.home() / ".brainbulb/models/face_detection_yunet_2023mar.onnx"),
-               str(ROOT / "shopping_shorts/channelkit/vision/models/face_detection_yunet_2023mar.onnx")]
+               str(ROOT / "shopping_shorts/channelkit/vision/models/face_detection_yunet_2023mar.onnx"),
+               str(ROOT / "models/face_detection_yunet_2023mar.onnx")]
 _det = {}
 
 
@@ -73,7 +74,7 @@ def faces(rgb: np.ndarray, score: float = 0.6) -> list[dict]:
 
 # ── 사람 상자 (NanoDet-Plus, opencv_zoo object_detection_nanodet_2022nov.onnx · COCO 'person' — 무료·로컬, onnxruntime) ──
 NANODET_CANDS = [os.environ.get("NANODET_ONNX", ""), str(Path.home() / ".shortem/models/dl/nanodet.onnx"),
-                 str(Path.home() / ".shortem/models/object_detection_nanodet_2022nov.onnx")]
+                 str(Path.home() / ".shortem/models/object_detection_nanodet_2022nov.onnx"), str(ROOT / "models/nanodet.onnx")]
 
 
 def _nanodet():

@@ -665,7 +665,7 @@ def audit(path: Path, version: str | None = None) -> dict:
         res["rules"].append({"kind": r["kind"], "ok": good, "why": why, **({"rule": r["why"]} if r.get("why") else {})})
         ok &= good
     for f in st["script"].get("forbid") or []:
-        if f.get("of") == "tts":      # of: tts = 나레 줄만(원음 번역 자막은 방송 내용) · 샥탬 앞 칼카피(final.lines, hybrid 칸 없음)는 벤치 내용이라 대상 아님
+        if f.get("of") == "tts":      # of: tts = 나레 줄만(원음 번역 자막은 방송 내용) · 샥탬 앞 프리셋(final.lines, hybrid 칸 없음)는 벤치 내용이라 대상 아님
             if (d.get("final") or {}).get("lines") and not d.get("hybrid"):
                 continue
             sel = lines
@@ -673,7 +673,7 @@ def audit(path: Path, version: str | None = None) -> dict:
             sel = d.get("lines") or []
         bad = [l.get("id", k) for k, l in enumerate(sel) if re.search(f["pattern"], (l.get("text") or l.get("tts") or "") + " " + " ".join(_caps(l)))]
         if bad:
-            res["rules"].append({"kind": "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False
+            res["rules"].append({"kind": "forbid_must" if f.get("must") else "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False     # must = 금지선(질병·금액), 나머지는 문구 권고(11-03)
     for x in text_defects(d, joined=bool(raw.get("lines"))):     # 관문 G-1 — 판 설정과 상관없이 모든 판
         res["rules"].append({"kind": "text:" + x["rule"], "ok": False, "why": f"{x['line']} {x['why']}"}); ok = False
     ad = alt_disclosed(d)     # 대체 제품 밝히기 — 판과 상관없이 모든 판

@@ -71,3 +71,48 @@ test('프로그램이 죽어 남은 빌린 channel 은 다음에 켤 때 지운�
   assert.equal(sweep(E), true);
   assert.equal(fs.existsSync(path.join(E, 'channel')), false);
 });
+
+test('죽은 프로그램의 임대가 남아도 재시작 직후 빌릴 수 있다(#811)', async () => {
+  fake.state.sameDeviceBusy = true;
+  const E = engine('dead');
+  const dead = execFileSync(process.execPath, ['-e', 'console.log(process.pid)']).toString().trim();
+  const job = 'mdead' + Date.now().toString(36);
+  const lease = await api.lease({ action: 'acquire', job_id: job, step_name: '소재' });
+  fs.mkdirSync(path.join(process.env.SHORTEM_HOME, 'leases'), { recursive: true });
+  fs.writeFileSync(path.join(process.env.SHORTEM_HOME, 'leases', lease.lease_id + '.json'), JSON.stringify({ pid: Number(dead), job, lease: lease.lease_id }));
+  fs.writeFileSync(path.join(process.env.SHORTEM_HOME, 'rent.lock'), JSON.stringify({ pid: Number(dead), job }));
+  const r = await rentPreset({ engineRoot: E, profileId: 'cp_sseol01' });
+  assert.equal(r.presetPath, PRESET);
+  await r.release();
+});
+
+test('살아 있는 다른 프로그램의 임대는 돌려주지 않는다', async () => {
+  const E = engine('live');
+  const job = 'mlive' + Date.now().toString(36);
+  const lease = await api.lease({ action: 'acquire', job_id: job, step_name: '소재' });
+  fs.writeFileSync(path.join(process.env.SHORTEM_HOME, 'rent.lock'), JSON.stringify({ pid: process.ppid, job, lease: lease.lease_id }));
+  await assert.rejects(rentPreset({ engineRoot: E, profileId: 'cp_sseol01' }), e => e.code === 'busy');
+  assert.equal(leaseOf().lease_id, lease.lease_id);
+  fs.rmSync(path.join(process.env.SHORTEM_HOME, 'rent.lock'), { force: true });
+  await api.lease({ action: 'release', job_id: job, lease_id: lease.lease_id });
+});
+
+test('제작(runner)·벤치마킹 임대도 죽은 프로그램의 임대를 돌려주고 받는다(#811 같은 길)', async () => {
+  fake.state.sameDeviceBusy = true;
+  const { Lease } = await import('../server/lease.js');
+  const dead = execFileSync(process.execPath, ['-e', 'console.log(process.pid)']).toString().trim();
+  const job = 'mold' + Date.now().toString(36);
+  const old = await api.lease({ action: 'acquire', job_id: job, step_name: '소재' });
+  fs.mkdirSync(path.join(process.env.SHORTEM_HOME, 'leases'), { recursive: true });
+  fs.writeFileSync(path.join(process.env.SHORTEM_HOME, 'leases', old.lease_id + '.json'), JSON.stringify({ pid: Number(dead), job, lease: old.lease_id }));
+  const L = new Lease('mnew' + Date.now().toString(36), { stepName: () => '분석' });
+  await L.acquire();
+  assert.ok(L.active);
+  assert.equal(fs.existsSync(path.join(process.env.SHORTEM_HOME, 'leases', old.lease_id + '.json')), false, '죽은 장부는 치운다');
+  assert.ok(fs.existsSync(path.join(process.env.SHORTEM_HOME, 'leases', L.id + '.json')), '새 임대는 장부에 남긴다');
+  const id = L.id;
+  await L.release();
+  assert.equal(fs.existsSync(path.join(process.env.SHORTEM_HOME, 'leases', id + '.json')), false, '반납하면 장부도 지운다');
+  fake.state.sameDeviceBusy = false;
+});
+

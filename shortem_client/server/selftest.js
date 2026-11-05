@@ -3,13 +3,15 @@
 //   실패 모양 {where, why, fix, retry_ok}.
 import fs from 'node:fs';
 import path from 'node:path';
-import { workDir, ensureDir } from './paths.js';
-import { run, runOk, resolveTools } from './tools_paths.js';
+import { workDir, ensureDir, homeDir } from './paths.js';
+import { run, runOk, resolveTools, toolsDir } from './tools_paths.js';
+import { browserExe, status as loginStatus, missingLogins } from './logins.js';
 import { normalizeFrame, BASIC_FRAME } from './engine/frame.js';
 import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
+import { readSettings } from './local_settings.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
 const DEFAULT_VOICE = 'tc_68257f68bc6e3c161ab5078d';
@@ -31,6 +33,42 @@ export async function encoderCheck() {
   } catch { return 'cpu'; }
 }
 
+// 설치 검수(사장님 11-02 "처음 설치는 깐깐하게 천천히") — 인터넷·받아쓰기 모델·브라우저·계정을 실제로 잰다
+const NET_SITES = [['유튜브', 'https://www.youtube.com/'], ['틱톡', 'https://www.tiktok.com/'], ['인스타그램', 'https://www.instagram.com/'], ['쿠팡', 'https://www.coupang.com/']];
+
+async function testNet() {
+  const bad = [];
+  for (const [name, url] of NET_SITES) {
+    try { await fetch(url, { method: 'HEAD', redirect: 'manual', signal: AbortSignal.timeout(10000) }); } catch { bad.push(name); }
+  }
+  if (bad.length) throw new Error('접속 안 됨: ' + bad.join(', '));
+  return { sites: NET_SITES.length };
+}
+
+async function testWhisper() {
+  const dir = path.join(toolsDir(), '..', 'models', 'whisper', 'small');
+  if (!fs.existsSync(dir)) return { skipped: true, why: '개발 PC — 설치본 모델 없음' };
+  const r = await run('python', ['-I', '-c', 'import sys\nfrom faster_whisper import WhisperModel\nWhisperModel(sys.argv[1], device="cpu", compute_type="int8")\nprint("ok")', dir], { timeoutMs: 180000 });
+  if (r.code !== 0 || !r.stdout.toString('utf8').includes('ok')) throw new Error(r.stderr.toString('utf8').slice(-200));
+  return {};
+}
+
+async function testBrowser() {
+  if (!browserExe()) throw new Error('크롬이나 엣지가 없습니다');
+  return {};
+}
+
+async function testAccounts() {
+  const bad = missingLogins(loginStatus().connected).required.map(([, p]) => p.name);
+  if (bad.length) throw new Error('로그인 필요: ' + bad.join(', '));
+  return {};
+}
+
+const stampFile = () => path.join(homeDir(), 'setup_ok.json');
+export function setupPassed() {
+  try { return !!JSON.parse(fs.readFileSync(stampFile(), 'utf8')).ok; } catch { return false; }
+}
+
 async function testRender(dir) {
   const spec = normalizeFrame(BASIC_FRAME, { title: '숏템\n자가점검', fonts: new Set() });
   const script = { title: '숏템\n자가점검', lines: ['숏템 자가점검 시험 렌더입니다'] };
@@ -45,7 +83,23 @@ async function testRender(dir) {
   return { file: out, duration: Number(pr.duration.toFixed(2)), size: `${pr.width}x${pr.height}` };
 }
 
+// 회원이 고른 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 지금 채널 먼저, 없으면 고른 적 있는 채널, 그래도 없으면 타입캐스트.
+export function voiceProvider(settings) {
+  const of = c => {
+    const t = ((c || {}).pack || {}).tts || {};
+    const v = String(t.voice_id || '');
+    return t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
+  };
+  const ch = (settings || {}).channels || {};
+  return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
+}
+
 async function testVoice(dir) {
+  const provider = voiceProvider(readSettings());
+  if (provider !== 'typecast') {   // 시험 합성은 타입캐스트 길뿐이다 — 다른 회사는 키만 보고, 실제 합성은 제작 때 엔진(voice_synth)이 한다
+    if (!readKey(provider)) return { skipped: true, why: `고른 목소리(${provider}) 키 없음` };
+    return { provider, key_only: true };
+  }
   if (!readKey('typecast')) return { skipped: true, why: '타입캐스트 키 없음(~/.shortem/keys/typecast)' };
   const r = await synthLines(['숏템 자가점검 목소리입니다.'], { voice_id: process.env.SHORTEM_SELFTEST_VOICE || DEFAULT_VOICE, tempo: 1.1 }, path.join(dir, '.voice'));
   const out = path.join(dir, '시험_목소리.wav');
@@ -83,13 +137,13 @@ export async function selftest() {
   } catch { fails.push({ where: 'ffmpeg', why: 'ffmpeg 를 실행하지 못했습니다', fix: '설치팩 다시', retry_ok: false }); }
   const enc = await encoderCheck();
   items.push({ name: '영상 인코딩', ok: true, encoder: enc, how: enc === 'gpu' ? '그래픽카드(NVENC) 우선' : 'CPU(그래픽카드 인코딩 없음 — 화질 같음, 렌더가 더 걸림)' });
-  for (const [name, fn, where] of [['시험 렌더', testRender, '렌더'], ['시험 목소리', testVoice, '음성'], ['시험 다운로드', testDownload, '다운로드']]) {
+  for (const [name, fn, where] of [['인터넷', testNet, '인터넷'], ['받아쓰기 모델', testWhisper, '받아쓰기'], ['브라우저', testBrowser, '브라우저'], ['계정 로그인', testAccounts, '계정'], ['시험 렌더', testRender, '렌더'], ['시험 목소리', testVoice, '음성'], ['시험 다운로드', testDownload, '다운로드']]) {
     try {
       const r = await fn(dir);
       items.push({ name, ok: !r.skipped, ...r });
     } catch (e) {
       items.push({ name, ok: false });
-      fails.push({ where, why: `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
+      fails.push({ where, why: ['인터넷', '받아쓰기', '브라우저', '계정'].includes(where) ? String(e.message || name).slice(0, 160) : `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
       if (process.env.SHORTEM_DEBUG) process.stderr.write(`[selftest] ${name}: ${e.stack || e}\n${e.detail || ''}\n`);
     }
   }
@@ -100,5 +154,6 @@ export async function selftest() {
     ...(fails.length ? ['## 고칠 것', ...fails.map(f => `- [${f.where}] ${f.why} → ${f.fix}`)] : ['모든 점검을 통과했습니다.'])].join('\n');
   const report = path.join(dir, '자가점검_결과.md');
   fs.writeFileSync(report, md + '\n');
+  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
   return { items, fails, report, dir };
 }

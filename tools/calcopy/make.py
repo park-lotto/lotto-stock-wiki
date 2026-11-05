@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 만들기 입구 CLI (관제 097) — 판단은 shopping_shorts/calcopy_make 하나, 여기는 부르고 표로 찍기만.
+"""프리셋 만들기 입구 CLI (관제 097) — 판단은 shopping_shorts/calcopy_make 하나, 여기는 부르고 표로 찍기만.
 
     PYTHONUTF8=1 py tools/calcopy/make.py start  --preset channel/banggu/preset/게시글형 --pack 1            # 후보 표
     PYTHONUTF8=1 py tools/calcopy/make.py start  --preset … --pack 1 --topic "소재 글" [--facts facts.json] [--ref URL]

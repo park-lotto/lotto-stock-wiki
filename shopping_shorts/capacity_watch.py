@@ -191,7 +191,10 @@ def sample(db_path):
 
         data = {
             "at": _utcnow(), "running": running, "queued": queued,
-            "workers": owners,                     # 실제로 일하던 워커 수
+            # 실제로 일하던 워커 수 = 물고 있는 작업 줄 수(작업 하나 = 워커 하나).
+            # ★owner 수로 세면 틀린다(관제 321, 11-04): 주인 없는 시스템 작업(길이보정)은 0으로,
+            #   한 고객이 여러 개 돌리면(관리자 2·담기분석 3) 1로 세서 '워커 0개 가동'이 떴다.
+            "workers": running,
             "load1": load1, "cores": cores,
             "disk_used_gb": round(du.used / gb, 2),
             "disk_free_gb": round(du.free / gb, 2),

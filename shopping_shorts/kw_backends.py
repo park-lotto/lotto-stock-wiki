@@ -12,6 +12,7 @@
   틱톡     : Apify 유료 — 회당 실측값은 kw_search._COST 참조
 """
 import os
+import sys
 import re
 
 from shopping_shorts import cn_backends, config
@@ -133,6 +134,12 @@ def pw_tiktok(keyword, max_results):
     relayed = _tiktok_via_relay(keyword, max_results)
     if relayed is not None:
         return relayed
+    # ★릴레이가 없으면 여기서 접는다(2026-11-03 관제 315). 아래 서버 브라우저 경로는 위 실측대로 늘 0건인데
+    #   페이지 60초+카드 9초를 다 기다려, 도우미가 꺼진 날 렌즈 검색 전체가 63~72초 걸렸다(실측).
+    #   다시 시험하려면 KW_TIKTOK_SERVER_PW=1.
+    if os.environ.get("KW_TIKTOK_SERVER_PW", "").strip() != "1":
+        print("[tiktok] PC 릴레이(쿠팡도우미) 미연결 — 서버 경로는 0건이라 건너뜀", file=sys.stderr)
+        return []
 
     session = getattr(config, "TIKTOK_SESSION_PATH", "")
     if not session or not os.path.exists(session):

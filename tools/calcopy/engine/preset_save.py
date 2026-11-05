@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""프리셋 저장·재사용 — 설계 docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §5 (channel/<slug>/preset/<스타일>/).
+"""프리셋 저장·재사용 — 설계 docs/superpowers/specs/2026-10-15-프리셋엔진-design.md §5 (channel/<slug>/preset/<스타일>/).
 
     저장: PYTHONUTF8=1 py tools/calcopy/engine/preset_save.py <뜯기.json> <frame.json> --slug sseolpulda --style A_흰바탕창 [--exclude caption]
     적용: PYTHONUTF8=1 py tools/calcopy/engine/preset_save.py apply channel/sseolpulda/preset/A_흰바탕창 --from-frame <그 편 frame.json>

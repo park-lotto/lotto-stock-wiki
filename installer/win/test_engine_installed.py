@@ -51,7 +51,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--install", required=True)
     ap.add_argument("--pack", required=True)
-    ap.add_argument("--preset", default="channel/sseolpulda/preset/A_흰바탕창/창아래_검정")
+    ap.add_argument("--preset", default="channel/humorshowshow/preset/썰템쇼_화자썰")   # 회원 길(하이브리드) 프리셋 — 옛 썰풀다 틀은 회원 목록에서 빠졌다(10-30)
     ap.add_argument("--video", default="https://www.tiktok.com/@11street_official/video/7512363471871216903")
     a = ap.parse_args()
     inst = Path(a.install).resolve()
@@ -63,10 +63,14 @@ def main() -> int:
     out = {}
     out["catalog"] = py(inst, env, "from tools.calcopy import preview_request as P;import json;c=P.catalog();print(json.dumps({'fonts':len(c['fonts']),'templates':len(c['templates']),'voices':len(c['voices'])}))")
     ch = inst / "engine" / "channel"
+    tech = inst / "engine" / "tools" / "calcopy" / "hybrid" / "styles"   # 기술 꾸러미 자리(preset_rent.TECH_DIRS) — 판 설정
+    had_tech = tech.exists()
     try:                                                   # 빌린 것처럼 풀기(PC 의 preset_rent 와 같은 자리·표식)
         with zipfile.ZipFile(a.pack) as z:
             z.extractall(inst / "engine")
         (ch / ".rented").write_text("test", encoding="utf-8")
+        if tech.exists() and not had_tech:
+            (tech / ".rented").write_text("test", encoding="utf-8")
         out["render"] = py(inst, env, f"""
 import json
 from PIL import Image
@@ -85,6 +89,8 @@ print(json.dumps({{'png': str(p), 'size': list(im.shape[:2]), 'ink': round(float
 """)
     finally:
         shutil.rmtree(ch, ignore_errors=True)
+        if not had_tech:                 # 10-30 실사고: 판 설정 자리를 안 지워 회원 프로그램이 '진짜 코드가 있다'로 프리셋 빌리기를 거절
+            shutil.rmtree(tech, ignore_errors=True)
     out["download"] = py(inst, env, f"""
 import json
 from pathlib import Path

@@ -14,6 +14,20 @@ import { api } from './api.js';
 const KEY_NAMES = new Set(Object.keys(KEY_SERVICES));
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 
+// 숏템메이커에 등록한 본인 키(버텍스 포함) 가져오기 — 판단 한 곳(관제 266 · 290: 설정 화면 버튼과 회원 Claude 도구가 같이 부른다).
+//   이 PC 가 라이선스로 서버(claude_studio.PC_KEY_SERVICES)에서 받아 바로 파일에 — 값은 돌려주지 않는다(지문만)
+export async function importMakerKeys() {
+  let r;
+  try { r = await api.studioKeys(); } catch (e) { return { ok: false, why: (e && e.msg) || '숏템메이커 서버에 연결하지 못했습니다' }; }
+  const got = (r && r.keys) || {}, done = [], bad = [];
+  const put = (svc, v) => { const x = saveKey(svc, v); (x.ok ? done : bad).push(svc); };
+  for (const [svc, v] of Object.entries(got)) {
+    if (svc === 'coupang') { const [a, b] = String(v).split(':'); if (a && b) { put('coupang_access', a); put('coupang_secret', b); } else bad.push(svc); }
+    else if (KEY_NAMES.has(svc)) put(svc, v);
+  }
+  return { ok: true, imported: done, failed: bad, keys: keyStatuses() };
+}
+
 export const BRIDGE_PORT = Number(process.env.SHORTEM_BRIDGE_PORT || 17842);
 const VERSION = 1;
 
@@ -76,17 +90,7 @@ async function route(req, res) {
   const km = u.pathname.match(/^\/bridge\/key\/([a-z_]{2,30})$/);
   if (km && req.method === 'POST') { const b = (await readBody(req)) || {}; return send(res, 200, saveKey(km[1], b.key), undefined, h); }
   // 숏템메이커에 등록한 키 가져오기 — 이 PC 가 라이선스로 서버에서 받아 바로 파일에(값은 웹 화면으로 안 돌려준다, 지문만)
-  if (u.pathname === '/bridge/import-keys' && req.method === 'POST') {
-    let r;
-    try { r = await api.studioKeys(); } catch (e) { return send(res, 200, { ok: false, why: (e && e.msg) || '숏템메이커 서버에 연결하지 못했습니다' }, undefined, h); }
-    const got = (r && r.keys) || {}, done = [], bad = [];
-    const put = (svc, v) => { const x = saveKey(svc, v); (x.ok ? done : bad).push(svc); };
-    for (const [svc, v] of Object.entries(got)) {
-      if (svc === 'coupang') { const [a, b] = String(v).split(':'); if (a && b) { put('coupang_access', a); put('coupang_secret', b); } else bad.push(svc); }
-      else if (KEY_NAMES.has(svc)) put(svc, v);
-    }
-    return send(res, 200, { ok: true, imported: done, failed: bad, keys: keyStatuses() }, undefined, h);
-  }
+  if (u.pathname === '/bridge/import-keys' && req.method === 'POST') return send(res, 200, await importMakerKeys(), undefined, h);
   const lm = u.pathname.match(/^\/bridge\/login\/([a-z]{2,20})$/);
   if (lm && req.method === 'POST') return send(res, 200, PLATFORMS[lm[1]] ? await openLogin(lm[1]) : { ok: false, why: '모르는 곳입니다' }, undefined, h);
   if (u.pathname === '/bridge/capcut' && req.method === 'POST') {

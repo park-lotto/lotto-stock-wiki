@@ -206,6 +206,47 @@ def inner_silences(full, thresh="-40dB", min_len=0.16) -> list:
     return [s for s in sil if s[0] > head + 0.05 and s[1] < tail - 0.05]
 
 
+def spans_by_speech(full, L, log=print) -> list:
+    """문장 경계(글자 시각·쉼이 없는 목소리) — 받아쓰기 낱말 시각으로 줄 끝을 찾고 ±0.25초 안 가장 조용한 자리로 옮긴다.
+    11-02 회원 피쉬 실측: 쉼이 짧아 '무음 3 < 11'로 멈췄고, 같은 방법을 손으로 해 줄 조각 받아쓰기 12/12 일치."""
+    import subprocess
+    import numpy as np
+    from tools.calcopy.engine import narr_verify as NV
+    refs = [NV.norm(l["tts"]) for l in L]
+    ref, (hyp, ts) = "".join(refs), NV.words_chars(NV.heard_words(full))
+    if not ref or len(hyp) < len(ref) * 0.6:
+        raise StageError(f"받아쓰기가 대본보다 너무 짧다({len(hyp)} < {len(ref)}) — 대본 tts_spans 를 손으로")
+    m = NV.char_map(ref, hyp)
+    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", str(full), "-f", "s16le", "-ac", "1", "-ar", "8000", "-"], capture_output=True, check=True).stdout
+    wav = np.abs(np.frombuffer(pcm, dtype=np.int16).astype(np.float32))
+    total = dur_of(full)
+    sil = silences(full, "-40dB", 0.16)
+    head = sil[0][1] if sil and sil[0][0] <= 0.02 else 0.0
+    tail = sil[-1][0] if sil and sil[-1][1] >= total - 0.02 else total
+
+    def quiet(t):
+        a, b = int(max(t - 0.25, 0) * 8000), int(min(t + 0.25, total) * 8000)
+        step = 160
+        if b - a < step:
+            return t
+        e = [float(wav[i:i + step].mean()) for i in range(a, b - step, step)]
+        return (a + int(np.argmin(e)) * step + step / 2) / 8000
+
+    cuts, at = [], 0
+    for r in refs[:-1]:
+        at += len(r)
+        lo = next((m[k] for k in range(at - 1, -1, -1) if m[k] is not None), None)
+        hi = next((m[k] for k in range(at, len(ref)) if m[k] is not None), None)
+        if lo is None or hi is None:
+            raise StageError("받아쓰기와 대본이 줄 경계에서 안 맞는다 — 대본 tts_spans 를 손으로")
+        cuts.append(quiet((ts[lo][1] + ts[hi][0]) / 2))
+    edges = [head] + cuts + [tail]
+    if any(b - a < 0.2 for a, b in zip(edges, edges[1:])):
+        raise StageError("받아쓰기로 찾은 줄 경계가 겹친다 — 대본 tts_spans 를 손으로")
+    log("문장 경계를 받아쓰기로 찾았다")
+    return list(zip(edges, edges[1:]))
+
+
 def split_sentences(full, n, chars: list[int] | None = None):
     """문장 경계(자동, align 없을 때). 손으로 확인한 tts_spans 가 있으면 그것이, 글자 시각(align)이 있으면 split_by_align 이 이긴다.
     10-18 김가연 편: '긴 무음 n-1개' 방식은 쉼표 쉼(0.42초 '최강 동안,')이 문장 끝 쉼보다 길어 H 를 '최강 동안' 으로 자르고도 조용히 렌더했다.
@@ -258,8 +299,12 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None,
     elif align:
         spans, inner, how = split_by_align(S, align), inner_silences(full), "align"
     else:
-        spans, inner = split_sentences(full, len(L), [nchar(l["tts"]) for l in L])
-        how = "silence_guess"
+        try:
+            spans, inner = split_sentences(full, len(L), [nchar(l["tts"]) for l in L])
+            how = "silence_guess"
+        except StageError as e:       # 쉼이 짧은 목소리 = 멈추지 않고 받아쓰기로(글자 시각 없는 피쉬, 11-02)
+            log(f"쉼으로 못 잘랐다({e})")
+            spans, inner, how = spans_by_speech(full, L, log), inner_silences(full), "asr"
     log(f"문장 경계({how}): " + " ".join(f"{l['id']}:{a:.2f}~{b:.2f}" for l, (a, b) in zip(L, spans)))
     P = S.get("tts_pauses") or {}
     OV = S.get("tts_override") or {}

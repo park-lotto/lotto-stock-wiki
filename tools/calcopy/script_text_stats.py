@@ -21,7 +21,7 @@ def end_form(s: str) -> str:
 
 
 def tone(sentences: list[str]) -> dict:
-    """문장(구절) 목록 → 끝 꼴 분포·존댓말 비율·전언 표지 수 (칼카피 엔진 analyze.script_tone 이 부른다)."""
+    """문장(구절) 목록 → 끝 꼴 분포·존댓말 비율·전언 표지 수 (프리셋 엔진 analyze.script_tone 이 부른다)."""
     ss = [x.strip() for x in sentences if x and x.strip()]
     if not ss:
         return {"n": 0}

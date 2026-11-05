@@ -19,8 +19,17 @@ export function keyFile(service = 'typecast') {
   return jail(homeDir(), 'keys/' + service);
 }
 
+// 화면에 가려 보이는 값(앞8·점8·뒤5, 서버 keycrypt.mask)은 키가 아니다(CS #453). 판단은 서버 keyroute.MASK_CHARS 와 같은 글자.
+export const isMaskedKey = v => /[*•●·×✕✱∗]/.test(String(v || ''));
+
 export function readKey(service = 'typecast') {
-  try { return fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
+  let k = '';
+  try { k = fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
+  if (service !== 'vertex_sa' && isMaskedKey(k)) {           // 이미 저장된 가린 값 — 없는 키로 보고 치운다. 점검이 다시 넣으라고 안내한다
+    try { fs.unlinkSync(keyFile(service)); } catch { /* 다음에 다시 */ }
+    return '';
+  }
+  return k;
 }
 
 // 회원이 넣는 키 목록 — 판단 한 곳(설정 화면·저장·엔진 환경변수가 이 표만 본다). 사장님 10-21: 미나 = 회원 일레븐랩스 키 · 쿠팡 = 회원 파트너스 키(없으면 회원 PC 크롬)
@@ -33,6 +42,7 @@ export const KEY_SERVICES = Object.freeze({
   buffer: { label: 'SNS 예약발행 키(Buffer)', where: 'buffer.com ▸ Settings ▸ API ▸ 새 키', env: 'BUFFER_API_KEY', need: '완성본을 SNS 에 예약발행할 때 씁니다(숏템메이커 예약발행과 같은 키)' },
   vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY', need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
   vertex_sa: { label: '버텍스 AI 서비스 계정(JSON)', where: '구글 클라우드 ▸ IAM ▸ 서비스 계정 ▸ 키 ▸ JSON 내려받기(역할 Vertex AI User)', env: 'GOOGLE_APPLICATION_CREDENTIALS', file: true, json: true, need: 'AI 영상(Veo)·사진(Imagen)을 만들 때 씁니다 — 숏템메이커에 등록한 것을 그대로 가져올 수 있습니다' },
+  gemini: { label: '제미나이 키(선택)', where: 'aistudio.google.com ▸ Get API key', env: 'SHORTEM_MEMBER_GEMINI_KEY', need: '있으면 고급반 벤치마킹 판독을 이 키로 먼저 합니다(없으면 Claude 가 읽습니다)' },
   speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
 });
 
@@ -50,6 +60,7 @@ export function saveKey(service, value) {
     writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
     return { ok: true, ...keyStatus(service) };
   }
+  if (isMaskedKey(k)) return { ok: false, why: `가려진 키입니다 — 점이나 별표가 섞인 값은 쓸 수 없어요. ${svc.where} 에서 전체 키를 복사해 주세요` };
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
   writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
   return { ok: true, ...keyStatus(service) };

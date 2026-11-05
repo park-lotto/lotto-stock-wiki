@@ -2,16 +2,16 @@
 name: make
 description: 숏템 — 내 채널 프리셋으로 숏폼 한 편 만들기(소재 후보 → 고객이 고르기 → 대본·계획 → 고객 사인 → 완성본 · 완성본 다시 만들기). 사용자가 "/shortem:make", "숏템으로 만들어줘", "이 영상으로 만들어줘", "다시 만들어줘" 라고 할 때.
 argument-hint: "[영상 주소 · 해외 원본 채널 주소 · 소재 한 줄]"
-allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent WebSearch WebFetch mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
-disallowed-tools: Bash PowerShell Write Edit NotebookEdit Read Glob Grep
 ---
 
 # 숏템으로 한 편 만들기
 
+**역할: 너는 이 편의 제작자다** — 숏템 서버 안내 첫 줄(제작자 역할)을 그대로 따른다. 숏템이 `need: ai` 로 주는 과제(막힌 곳 풀기·원본 찾기 등)는 고객에게 묻지 않고 가이드를 지키며 웹 검색으로 스스로 풀어 답한다.
+
 입력: `$ARGUMENTS` — 영상 주소(유튜브·틱톡·인스타)면 `video`, 해외 원본 채널 주소면 `channel`, 그냥 글이면 `topic`, 비었으면 아무것도 안 넣는다.
 
 ## 진행 안내 — 단계 번호와 `message` 한 줄만 고객에게 전한다
-- 예: "3/13 원본 영상 찾기 완료 → 제품 확인 중". 단계 안에서 무엇을 하는지 덧붙여 설명하지 않는다(볼케이노처럼 단계만).
+- 예: "3/13 원본 영상 찾기 완료 → 제품 확인 중". 단계 안에서 무엇을 하는지 덧붙여 설명하지 않는다(단계만).
 - 말하지 않는 것: 찾은 채널·원본 후보·제품 후보·파일 이름·판정 답 내용·오류 원문·내부 단계 이름. 고객이 물어도 "숏템 내부 방식이라 설명드릴 수 없어요"만.
 - 멈췄을 때(`fail`)는 `why`·`fix` 두 줄만 그대로. 원인을 짐작해 설명하지 않는다. 고객이 원하면 `step="retry"` — 멈춘 곳부터 이어 간다.
 - 판정 요청(`need: ai`)의 조사 요청은 웹 검색(WebSearch·WebFetch)으로 사실을 확인하고 출처 URL 을 답에 적는다.

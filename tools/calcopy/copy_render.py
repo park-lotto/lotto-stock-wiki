@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피본 렌더 — 썰풀다 A틀을 그대로 재현해 대본 하나를 영상으로 (관제 097, 2026-10-15).
+"""프리셋본 렌더 — 썰풀다 A틀을 그대로 재현해 대본 하나를 영상으로 (관제 097, 2026-10-15).
 
     PYTHONUTF8=1 py tools/calcopy/copy_render.py <대본.json> <장면 mp4 폴더> <출력폴더>
 
@@ -237,7 +237,7 @@ def render(script_path: str, clips_dir: str, out_dir: str):
     mix_in += "".join(sx)
     alist.append(f"{mix_in}amix=inputs={mix_in.count('[')}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
     fil += alist
-    mp4 = out / "칼카피본.mp4"
+    mp4 = out / "프리셋본.mp4"
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fil), "-map", "[vout]", "-map", "[aout]",
            "-t", f"{total:.2f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "192k", str(mp4)]
     r = subprocess.run(cmd, capture_output=True, text=True)

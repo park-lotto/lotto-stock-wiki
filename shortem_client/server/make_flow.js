@@ -8,10 +8,12 @@ import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
-import { deliverInBackground } from './deliver.js';
+import { deliverInBackground, deliverStatus } from './deliver.js';
 import { logFinal } from './work_log.js';
-import { startFlow, waitFlow, approveFlow, retryFlow, recleanFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
-import { ApiError } from './api.js';
+import { mineById } from './my_presets.js';
+import { restyleFlow, startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow, anyFlowBusy } from './flow_driver.js';
+import { api, ApiError } from './api.js';
+import { retryUpdate } from './updater.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
@@ -24,6 +26,17 @@ function aiNeed(runId) {
     next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
     hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
 }
+
+// 완성본 받기 상태(숏클 지침 8장 '연결 안 됐으면 안내') — 보내기는 뒤에서 돌아 결과를 기다리지 않는다. 어디로 가는지만 알린다
+export function deliverSay() {
+  const d = deliverStatus();
+  const to = [d.telegram.linked && d.telegram.on ? '텔레그램' : '', d.drive.found && d.drive.on ? '구글 드라이브' : ''].filter(Boolean);
+  return to.length ? { deliver: { to }, hint: `완성본을 ${to.join('·')}(으)로도 보내는 중입니다` }
+    : { deliver: { to: [] }, hint: '완성본 받기(텔레그램·구글 드라이브)가 아직 연결되지 않았습니다 — 원하시면 shortem_settings(action="open") 화면의 완성본 받기에서 연결할 수 있다고 한 줄 안내하세요' };
+}
+
+// 회원에게 물은 뒤 기다리기(숏클 지침 5장 '1분씩 최대 10분') — 셸 없이 기다리는 유일한 길. 한 번에 60초까지
+export const pauseSec = s => Math.max(5, Math.min(60, Number(s) || 60));
 
 const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
 
@@ -69,7 +82,8 @@ export function shapeSession(S) {
     const video = src && fs.existsSync(src)
       ? keepFinal(src, { sid: S.sid, title: String(t.name || ''), marker: { preset: S.preset_id || null, topic_dir: path.dirname(src) } }) : null;
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
-    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
+    const dv = deliverSay();
+    return { ...base, need: 'done', video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', dv.hint, `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
   }
   return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
 }
@@ -102,8 +116,8 @@ async function go(args, opts, presetId) {
   return r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId);
 }
 
-const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
-const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
+export const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
+export const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
 
 // 고객이 준 해외 원본 채널 → 엔진이 읽는 원본 채널 목록 파일(~/.shortem/원본채널.json, 고객 채널만)
 function originalsFile(channel) {
@@ -112,7 +126,7 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
-// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·볼케이노형 길이 같이 부르는 한 곳.
+// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·단계형 길이 같이 부르는 한 곳.
 //   다시 만들기(restyle) 뒤엔 새 완성본으로 덮는다. 기록지(~/.shortem/작업기록.jsonl, work_log.js)는 새로 복사했을 때만 1줄.
 //   marker = 표식 파일에 그대로 적을 칸(옛 꼴 유지) · preset = 기록지 style 칸(없으면 marker.preset)
 function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
@@ -126,30 +140,87 @@ function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
   return video;
 }
 
-// 볼케이노형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
+// 단계형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
 function flowOut(s) {
   if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
   const f = loadFlow(s.sid) || {};
-  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow' }, preset: f.preset || null });
-  return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
+  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow', topic_dir: path.dirname(s.video) }, preset: f.preset || null });
+  const dv = deliverSay();
+  return { ...s, video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요', dv.hint, ...(s.note ? [s.note] : [])] };
 }
 
-export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product }) {
-  if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+const idle = () => !activeRuns().length && !anyFlowBusy();
+
+// 멈춘 응답에 새 판을 싣는다 — 수리가 올라와 있으면 엔진을 덮고 회원 Claude 에게 같은 단계를 다시 부르라는 신호를 준다(사장님 10-31 "신호를 주면 새 판을 받아라")
+export async function updateSignal(o, { isIdle = idle, update = retryUpdate } = {}) {
+  if (!o || !o.fail || !isIdle()) return o;
+  const r = await update();
+  if (!r || !r.applied) return o;
+  return { ...o, fail: { ...o.fail, retry_ok: true }, hints: [...(o.hints || []), `숏템 수리판 ${r.version} 을 적용했습니다 — 회원에게 묻지 말고 같은 단계를 한 번 다시 부르세요`] };
+}
+
+export async function makeStep(a) {
+  if (a.step === 'start' && idle()) await retryUpdate();   // 새 편은 늘 최신 엔진으로
+  return updateSignal(await stepOnce(a));
+}
+
+async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds, offset }) {
+  if (step === 'pause') {
+    const sec = pauseSec(seconds);
+    await new Promise(r => setTimeout(r, sec * 1000));
+    return { paused: sec, hints: ['회원 답이 왔으면 그 답으로 이어 가고, 아직이면 같은 pause 를 다시(합쳐 10분까지). 10분이 지나면 네가 정해 완성본까지 간다'] };
+  }
+  if (sid && isFlowSid(sid)) {     // 단계형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+    if (step === 'script') {
+      const f = loadFlow(sid);
+      return f && f.script ? { sid, script: f.script, hints: ['대본을 그대로 보여 주세요. 고칠 줄을 말하면 shortem_make(step="revise", sid, revise="<줄 id 와 바꿀 말>") — 그 줄만 고치고 장면은 그대로 둡니다'] }
+        : { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝나면 다시 보세요'] };
+    }
+    if (step === 'revise') {
+      if (!String(revise || '').trim()) return { hints: ['revise 에 고칠 줄과 바꿀 말을 넣으세요(예: "L5 를 더 짧게")'] };
+      const r = await reviseFlow(sid, revise);
+      if (r && r.busy) return { sid, hints: ['지금 하던 일이 끝나는 대로 다시 보내 주세요 — shortem_make(step="wait") 뒤에 revise'] };
+      if (r && r.no_script) return { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝난 뒤 고칠 수 있습니다'] };
+      return flowOut(await waitFlow(sid, waitMs()));
+    }
     if (step === 'approve') approveFlow(sid);
-    else if (step === 'retry') retryFlow(sid);
-    else if (step === 'restyle') recleanFlow(sid);
+    else if (step === 'retry') {
+      if (idle()) await retryUpdate();      // 멈춘 사이 고쳐졌으면 새 엔진으로 이어 간다(회원은 다시 시도만)
+      retryFlow(sid);
+    }
+    else if (step === 'restyle') {
+      const r = await restyleFlow(sid);
+      return r.ok ? { need: 'done', sid, video: r.video } : { fail: { why: r.error } };
+    }
     return flowOut(await waitFlow(sid, waitMs()));
   }
-  if (step === 'start' && video && preset && !process.env.SHORTEM_DEV_PRESET) {
+  const mine = preset ? mineById(preset) : null;   // 내 벤치마킹 프리셋(관제 304) — 서버 지시서·소재 창고가 없다. 엔진 길로 간다(소재 = 준 영상 또는 벤치마킹한 채널)
+  if (mine && step === 'sources') return { hints: ['내 프리셋은 소재 창고가 없습니다 — 영상 주소를 받아 주세요'] };
+  if (step === 'sources' && preset) {   // 회원 '후보 뽑아줘' — 그 프리셋 소재 창고(벤치 채널 조회순)에서 안 만든 5개(판단 = 서버 flow.source_candidates)
     try {
-      const f = await startFlow({ preset, video, product });
+      const r = await api.step({ step: 'sources', preset, offset: offset || 0 });
+      const list = (r.sources || []).map(x => ({ n: x.n, title: x.title, views: x.views, video: x.url }));
+      return list.length ? { need: 'choose', candidates: list, next_offset: r.next_offset, more: '회원이 다른 후보를 원하면 shortem_make(step="sources", offset=next_offset)', next: '고객에게 번호·제목·조회수 표로 보여 주고, 고른 번호의 video 로 shortem_make(step="start", video=<그 주소>)',
+        hints: ['대신 고르지 마세요. 10분 동안 답이 없으면 1번으로 시작합니다(지침 5장)'] }
+        : { hints: ['이 프리셋 소재 창고에 아직 안 만든 영상이 없습니다 — 영상 주소를 받아 주세요'] };
+    } catch (e) {
+      return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', fix: '잠시 뒤 다시 해 주세요', retry_ok: true } };
+    }
+  }
+  // 주소를 주면 그 영상, 주소 없이 '만들어줘'면 서버가 소재 창고 조회 1위(사장님 10-30) — 단계 진행 프리셋만. 아니면 아래 옛 길
+  if (step === 'start' && mine && !video && !topic) {
+    channel = channel || mine.channel;
+    if (!channel) return { hints: ['이 프리셋은 영상으로 만들었습니다 — 만들 영상 주소를 video 로 주세요'] };
+  }
+  if (step === 'start' && preset && !mine && !topic && !channel && !process.env.SHORTEM_DEV_PRESET) {
+    try {
+      const f = await startFlow({ preset, video: video || '', product });
       return flowOut(await waitFlow(f.sid, waitMs()));
     } catch (e) {
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
       if (e instanceof ApiError && e.code === 'busy_flow') return { fail: { why: e.msg, code: e.code, fix: '지금 편이 끝난 뒤 시작해 주세요' } };
       if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
-        return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
+        return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
       }
     }
   }

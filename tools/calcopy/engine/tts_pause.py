@@ -27,7 +27,7 @@ PUNCT = {",": ",", ".": ".", "?": ".", "!": "."}
 
 
 def synth(text: str, out_mp3: str, voice: str, emotion: str | None, speed: float | None):
-    """숏템 typecast_tts.synthesize 를 그대로 부른다(통째 1회). 키는 칼카피 provider 키를 넘긴다."""
+    """숏템 typecast_tts.synthesize 를 그대로 부른다(통째 1회). 키는 프리셋 provider 키를 넘긴다."""
     from shopping_shorts import typecast_tts, voice_presets
     from shopping_shorts.channelkit import providers
     key = providers.typecast_key(None)

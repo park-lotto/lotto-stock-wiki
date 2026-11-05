@@ -1,0 +1,139 @@
+{
+ "topic": "CU 리센느 빵 — 하루 만에 99% 품절, 포카가 빵값 몇 배, 알고 보니 제일 많이 산 건 30대 남성",
+ "orig": [
+  "한국 코스트코가 억울했던 이유. 최근 코스트코는 비싼 두바이를 저격한 두바이 스프레드를 출시했는데 바삭한 카다이프를 넣어 차별화를 줬고 맛부터 가격까지 깔 게 없는 제품이라 해외에선 인기가 많지만 유독 한국에선",
+  "이거 그냥 초코마 카다이프 아니야? 라며 반응이 안 좋았다고 함. 사실 이는 한국인들의 스프레드 먹는 방식이 잘못됐기 때문인데",
+  "원래는 피스타치오와 초코의 맛을 따로 느낄 수 있게 크림을 분리해서 출시했지만 비빔밥의 나라 한국인들은 뭐야 크림이 두 개네? 그냥 비벼 버려야지.",
+  "라면 두 개의 맛을 혼합해 버렸고 대부분이 초코범벅 피스타치오 맛을 영접했던 것.",
+  "하지만 이후 찍어 먹는 맛을 안 유튜버들의 맛있다는 평가가 줄을 이루기 시작해서 현재는 대량 생산이 이어지고 있다고."
+ ],
+ "facts": {
+  "f1": {
+   "text": "아이뉴스24 2026-09-15: CU가 브랜드 모델 리센느와 베이커리 'BAKE405' 5종(원이의 옥수수 크림빵·미나미의 메론빵·메이의 시나몬 롤·제나의 딸기 샌드·리브의 초코 호떡) — 17일부터 순차 판매, 제품마다 한정판 투명 포토카드 27종 중 1장 무작위 동봉, BGF리테일 MD '멤버들이 각자 좋아하는 빵을 출시하면 좋겠다는 의견을 상품 기획에 반영'",
+   "url": "https://inews24.com/view/2005938"
+  },
+  "f2": {
+   "text": "뉴스1 2026-09-21: 원이의 옥수수크림빵 첫날 공급 약 3만개 중 출시 하루가 지나기 전 약 99% 판매, 나흘 누적 약 10만개 · 포토카드가 중고거래에서 빵 정가의 약 6~8배 수준에 거래되는 사례",
+   "url": "https://v.daum.net/v/zBDyNV715s"
+  },
+  "f3": {
+   "text": "SBS Biz 2026-10-05: 리센느 빵 5종 10월 1일까지 누적 60만개 넘음 · 구매자 남성 69.1% 여성 30.9% · 30대 남성 22.7%로 가장 많고 40대 남성 18.6%, 20대 남성 15.8% · 포토카드 모으려 반복 구매",
+   "url": "https://biz.sbs.co.kr/article/20000338264"
+  },
+  "c1": {
+   "text": "댓글(좋아요 555): 우리는 빵을 사는게 아니다 포카를 사는데 빵은 덤으로 따라오는거다",
+   "url": "https://www.youtube.com/watch?v=HxCitmbq968&lc=UgwQAF1ZaWDL-UdFTGJ4AaABAg"
+  },
+  "c2": {
+   "text": "댓글(좋아요 812): 포카 27개 다모은 리마인인데요 … 빵 60~70개는 먹은거같네요",
+   "url": "https://www.youtube.com/watch?v=HxCitmbq968&lc=Ugys49fgrGYjIn6MD6R4AaABAg"
+  },
+  "c3": {
+   "text": "댓글(좋아요 127·114): 포카가 메인이고 빵은 덤이니까요 / 사실상 본체는 포카임",
+   "url": "https://www.youtube.com/watch?v=piEeQ6cWpHg&lc=UgwEJU0j64m7wqmGBrt4AaABAg , https://www.youtube.com/watch?v=piEeQ6cWpHg&lc=UgxJ6b0BiBHWkyYEMuJ4AaABAg"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "상황(훅 질문+무슨 일)",
+    "text": "요즘 편의점에서 리센느 빵 구경해 본 사람 있음? CU가 리센느 멤버들이 각자 좋아하는 빵으로 다섯 가지를 내놨는데,",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://inews24.com/view/2005938"
+    ]
+   },
+   {
+    "fn": "반응",
+    "text": "첫날 풀린 원이의 옥수수크림빵이 하루도 안 돼서 99% 팔리고, 나흘 만에 10만 개가 나갔다고 함.",
+    "facts": [
+     "f2"
+    ],
+    "sources": [
+     "https://v.daum.net/v/zBDyNV715s"
+    ]
+   },
+   {
+    "fn": "진짜 이유(전언)",
+    "text": "알고 보니 빵마다 멤버 투명 포카가 한 장씩 랜덤으로 들어 있어서, 그 포카가 중고로 빵값보다 몇 배 비싸게 거래될 정도였다는데,",
+    "facts": [
+     "f1",
+     "f2"
+    ],
+    "sources": [
+     "https://inews24.com/view/2005938",
+     "https://v.daum.net/v/zBDyNV715s"
+    ]
+   },
+   {
+    "fn": "반전",
+    "text": "근데 60만 개 넘게 팔린 이 빵, 제일 많이 사 간 쪽은 10대 팬이 아니라 30대 남자들이었다는 것.",
+    "facts": [
+     "f3"
+    ],
+    "sources": [
+     "https://biz.sbs.co.kr/article/20000338264"
+    ]
+   },
+   {
+    "fn": "댓글 반응(마무리)",
+    "text": "댓글에선 우리는 빵이 아니라 포카를 사는 거고 빵은 덤이라는 쪽이랑, 포카 다 모으느라 빵만 60개 넘게 먹었다는 후기까지 나왔다고 함.",
+    "facts": [
+     "c1",
+     "c3",
+     "c2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=HxCitmbq968&lc=UgwQAF1ZaWDL-UdFTGJ4AaABAg",
+     "https://www.youtube.com/watch?v=piEeQ6cWpHg&lc=UgwEJU0j64m7wqmGBrt4AaABAg , https://www.youtube.com/watch?v=piEeQ6cWpHg&lc=UgxJ6b0BiBHWkyYEMuJ4AaABAg",
+     "https://www.youtube.com/watch?v=HxCitmbq968&lc=Ugys49fgrGYjIn6MD6R4AaABAg"
+    ]
+   }
+  ],
+  "check": {
+   "n_ok": true,
+   "lines_without_fact": [],
+   "chars": [
+    49,
+    42,
+    53,
+    41,
+    57
+   ],
+   "ranges": [
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ]
+   ],
+   "len_off_lines": [],
+   "copied_lines": [],
+   "polite_endings": 0,
+   "unsourced_numbers": []
+  },
+  "model": "오푸스 손 작성(제미나이 미사용) — 검사 style_writer.check_narration"
+ },
+ "titles": {
+  "hook": "리센느 빵을 제일\n많이 산 사람",
+  "post": "하루 만에 품절된 CU 리센느 빵, 제일 많이 산 사람"
+ },
+ "note": "'10대 팬이 아니라' = f3 연령·성별 최다가 30대 남성(22.7%)이라는 사실의 대비. 포카 시세는 '몇 배'(f2 6~8배)로만. 빵 가격(2,500원, 맛상무 영상 설명)은 대본에 안 넣음."
+}

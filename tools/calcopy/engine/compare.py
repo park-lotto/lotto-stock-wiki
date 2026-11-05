@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""칼카피 대조 도구 1판 — 원본 영상과 우리 영상을 **같은 자**(bench_one.measure)로 재서 차이표·나란히 그림을 낸다.
+"""프리셋 대조 도구 1판 — 원본 영상과 우리 영상을 **같은 자**(bench_one.measure)로 재서 차이표·나란히 그림을 낸다.
 
-설계: docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §6-5 · 2026-10-15-칼카피진행판-design.md §6·§8
+설계: docs/superpowers/specs/2026-10-15-프리셋엔진-design.md §6-5 · 2026-10-15-프리셋진행판-design.md §6·§8
 
     PYTHONUTF8=1 py tools/calcopy/engine/compare.py <원본.mp4> <우리.mp4> --out <폴더> [--layout bench|single]
                     [--asr-orig 원본받아쓰기.json --asr-ours 우리받아쓰기.json]
@@ -552,7 +552,7 @@ def _load_rules(p: str | None) -> dict | None:
 
 def to_markdown(res: dict) -> str:
     v = res["verdict"]
-    L = [f"# 칼카피 대조 차이표", "",
+    L = [f"# 프리셋 대조 차이표", "",
          f"- 원본: `{res['orig']['path']}` ({res['orig'].get('probe', {}).get('duration')}초)",
          f"- 우리: `{res['ours']['path']}` ({res['ours'].get('probe', {}).get('duration')}초)",
          f"- 자: bench_one.measure(layout_mode=`{res['layout_mode']}`) — 두 영상에 같은 함수",
@@ -602,7 +602,7 @@ def compare(orig: str, ours: str, out_dir: str, layout_mode: str = "bench",
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="칼카피 대조: 원본 vs 우리, 같은 자로 차이표")
+    ap = argparse.ArgumentParser(description="프리셋 대조: 원본 vs 우리, 같은 자로 차이표")
     ap.add_argument("orig")
     ap.add_argument("ours")
     ap.add_argument("--out", required=True)

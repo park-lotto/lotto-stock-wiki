@@ -23,6 +23,7 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 import os
 import re
 import secrets
@@ -50,7 +51,7 @@ SESSION_KICK = 300       # 페이지에서 끊은 PC 는 5분간 다시 못 잡�
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-START_TTL = 72 * 3600    # 시작.md 인증값 기한
+START_TTL = 72 * 3600    # START.md 인증값 기한
 DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 관리자 승인(관제 296)
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
@@ -78,10 +79,11 @@ RULE_TITLE = {
     "A1": "키 공유 의심(다른 국가·등록 안 된 기기)", "A2": "동시 실행 시도", "A3": "자산 긁어가기 의심",
     "A4": "짧은 시간 대량 요청", "A5": "고른 프리셋 밖 자산 요청", "A6": "회수된 키 사용",
     "A7": "하트비트 없이 끊긴 작업 반복", "A8": "엔진 버전 낮음·위조", "A9": "기기 교체 잦음", "A10": "견본 긁어가기 의심",
+    "jev_down": "채널 벤치마킹 판단 서버(Jev) 꺼짐",
 }
 
 _HTTP = {"no_key": 401, "bad_key": 401, "expired": 401, "revoked": 403, "suspended": 403, "device_unknown": 403,
-         "device_limit": 403, "account_mismatch": 403, "engine_old": 403, "not_in_plan": 403, "not_entitled": 403,
+         "device_limit": 403, "account_mismatch": 403, "engine_old": 403, "not_in_plan": 403, "not_entitled": 403, "tier_locked": 403,
          "busy_other_device": 409, "busy_session": 409, "lease_lost": 409, "rate_limited": 429, "disabled": 503, "bad_request": 400}
 
 _FP_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -304,6 +306,7 @@ def _gate(store, key, cid) -> bool:
 
 
 TRIAL_DAYS = 7
+MOVED = 2        # claude_trials.converted — Pro 회원이 버튼으로 옮겨 온 상태. 기한 없음. 관리자가 해제하면 1 로 바뀌어 다시 신청할 수 없다
 
 
 def _trial_row(store, cid):
@@ -312,18 +315,32 @@ def _trial_row(store, cid):
         return _row(c, "SELECT * FROM claude_trials WHERE cid=?", (int(cid),))
 
 
+def _pro_open(store, cid) -> bool:
+    """Pro 회원 전체 기간 공개(사장님 11-02 "1주일 숏템 숏클 같이") — claude_pro_open_until(유닉스 초)까지. 지나면 저절로 닫힌다."""
+    try:
+        if int(str(_setting(store, "claude_pro_open_until", "0") or 0)) <= _now():
+            return False
+        return (store.get_customer(int(cid)) or {}).get("plan") == "pro"
+    except (ValueError, TypeError):
+        return False
+
+
 def portal_open(store, cid) -> bool:
-    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한."""
+    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한 + Pro 전환(관제 306)."""
+    t = _trial_row(store, cid)
+    if t and t["converted"] == MOVED:
+        return True
+    if _pro_open(store, cid):
+        return True
     if not _gate(store, "claude_portal_enabled", cid):
         return False
     if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
         return True
-    t = _trial_row(store, cid)
     return not (t and not t["converted"] and t["expires"] <= _now())
 
 
 def trial_state(store, cid, eligible) -> dict:
-    """마이페이지 표시용. available=버튼을 보여도 되나, days_left=무료 기간 남은 날."""
+    """마이페이지 표시용. available=버튼을 보여도 되나(Pro 회원, 관제 306), days_left=무료 기간 남은 날."""
     store = _store(store)
     t = _trial_row(store, cid)
     if t:
@@ -333,20 +350,23 @@ def trial_state(store, cid, eligible) -> dict:
 
 
 def claim_trial(cid, eligible, store=None) -> dict:
-    """무료 업그레이드 — 계정당 한 번, 누르면 바로 승인되고 TRIAL_DAYS 뒤 닫힌다."""
+    """Pro 회원의 숏클 전환(관제 306, 사장님 11-02) — 누르면 바로 열리고 기한이 없다. 관리자 고객표에는 무료 이동으로 남는다.
+    회원별 행에 쓴다: 강의 뒤 동시에 눌러도 서로 덮어쓰지 않는다(설정값 한 칸에 쓰는 set_member 는 동시 클릭에 빠진다)."""
     store = _store(store)
     cid = int(cid)
-    if not eligible:
-        raise PortalError("bad_request", "숏템메이커 이용 회원만 신청할 수 있습니다")
     if portal_open(store, cid):
         return {"ok": True, "already": True}
+    if not eligible:
+        raise PortalError("bad_request", "Pro 회원만 신청할 수 있습니다")
     if _trial_row(store, cid):
-        raise PortalError("bad_request", "무료 업그레이드는 계정당 한 번만 쓸 수 있습니다")
+        raise PortalError("bad_request", "숏클은 관리자 확인이 필요합니다")      # 관리자가 해제했거나 무료 기간이 끝난 계정
     now = _now()
     with _tx(store, write=True) as c:
-        c.execute("INSERT INTO claude_trials(cid, started, expires) VALUES(?,?,?)", (cid, now, now + TRIAL_DAYS * 86400))
-    _write_member(store, cid, True)
-    return {"ok": True, "expires": now + TRIAL_DAYS * 86400}
+        c.execute("INSERT OR IGNORE INTO claude_trials(cid, started, expires, converted) VALUES(?,?,?,?)", (cid, now, now, MOVED))
+    saved = store.program_members().get(cid) or {}
+    store.save_program_member(cid, 1, 1, saved.get("plan") or "", saved.get("move") or "free", saved.get("tutor") or "")
+    log.info("claude_portal: cid %s Pro 전환", cid)
+    return {"ok": True, "moved": True}
 
 
 def _assets_on(store, cid) -> bool:
@@ -423,7 +443,7 @@ def member_key(cid, store=None) -> str:
 
 
 def start_token(cid) -> str:
-    """시작.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    """START.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
     cid, exp = int(cid), _now() + START_TTL
     return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
 
@@ -445,7 +465,7 @@ def start_redeem(token, store=None) -> dict:
 
 
 def start_line(cid, base) -> str:
-    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·시작.md 공용)."""
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용)."""
     return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
 
 
@@ -457,7 +477,7 @@ def start_cmd(cid, base) -> str:
 
 
 def start_md(cid, base) -> str:
-    """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    """회원별 START.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
     line = start_line(cid, base)
     return ("# 숏클 시작\n\n"
             "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
@@ -470,12 +490,12 @@ def start_md(cid, base) -> str:
 
 
 def start_zip(cid, base) -> bytes:
-    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 시작.md 대로 설치한다."""
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 START.md 대로 설치한다."""
     import io
     import zipfile
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("시작.md", start_md(cid, base))
+        z.writestr("START.md", start_md(cid, base))
     return buf.getvalue()
 
 
@@ -578,6 +598,16 @@ def _guard_session(store, cid, fh):
 def _semver(v):
     m = _SEMVER.match(v or "")
     return tuple(int(x) for x in m.groups()) if m else None
+
+
+def member_tier(store, cid) -> str:
+    """숏클 반(판단 주인) — 관리자가 정한 program_member.plan(기본반·고급반·프리미엄반). 없으면 기본. 벤치마킹 노하우는 고급 이상만."""
+    try:
+        plan = str((store.program_members().get(int(cid)) or {}).get("plan") or "")
+    except Exception as e:  # noqa: BLE001 — 반을 못 읽으면 기본으로(경보 한 줄)
+        log.warning("claude_portal: cid %s 반을 읽지 못했다: %s", cid, type(e).__name__)
+        plan = ""
+    return "premium" if "프리미엄" in plan else "advanced" if "고급" in plan else "basic"
 
 
 def _front(store, ctx, route, need_device=True):
@@ -921,7 +951,7 @@ def license(ctx: dict, store=None) -> dict:
     _guard_session(store, cid, fh)
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
-    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "expires": info["exp"],
+    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "tier": member_tier(store, cid), "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
             "devices_used": len(live), "devices_max": limit,
             "entitled_presets": _entitled(store, cid, row),
@@ -972,7 +1002,8 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
         raise PortalError("bad_request", "단계 이름이 목록에 없습니다")
     if action == "acquire" and not _JOB_RE.match(job_id):
         raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
-    cid, _, dev = _front(store, ctx, "lease")
+    # 반납은 속도 제한에 막히면 안 된다 — 막히면 임대가 3분 남아 다음 일이 줄줄이 busy 가 된다
+    cid, _, dev = _front(store, ctx, "lease_release" if action == "release" else "lease")
     fh = dev["fp_hash"]
     now = _now()
     busy = None
@@ -989,6 +1020,14 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
                           (now + LEASE_TTL, step, cid))
                 _lease_log(c, cid, fh, "acquire", job_id, cur["lease_id"], step, "renew")
                 out = {"ok": True, "lease_id": cur["lease_id"], "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+            elif cur and cur["fp_hash"] == fh and str(cur["job_id"]).startswith("u"):
+                # 같은 기기의 미리보기 임대(job u…)는 새 일에 자리를 내준다 — 반납을 못 한 채 끊긴 것까지 3분 막지 않는다
+                _lease_log(c, cid, fh, "release", cur["job_id"], cur["lease_id"], cur["step_name"], "takeover")
+                lid = "ls_" + secrets.token_hex(8)
+                c.execute("UPDATE claude_leases SET lease_id=?, job_id=?, step_name=?, acquired=?, expires=? WHERE cid=?",
+                          (lid, job_id, step, now, now + LEASE_TTL, cid))
+                _lease_log(c, cid, fh, "acquire", job_id, lid, step, "ok")
+                out = {"ok": True, "lease_id": lid, "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
             elif cur:
                 busy = cur
                 _lease_log(c, cid, fh, "acquire", job_id, None, step, "busy")
@@ -1061,6 +1100,13 @@ def _profile_row(c, cid, profile_id):
     return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
 
 
+def _lease_match(cur, job_id: str, job_request: dict) -> None:
+    """유효 작업 권한인가(그 job·그 기기·그 lease) — 판단 한 곳(_job_gate·benchmark_rent 공용)."""
+    if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
+            or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
+        raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
+
+
 def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tuple:
     """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
     스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필(또는 PC 로컬 설정이 고른 프리셋 id) → 구매(등급)한 프리셋.
@@ -1074,9 +1120,7 @@ def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tupl
         cur = _active_lease(c, cid)
         prof = _profile_row(c, cid, profile_id)
         lic = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
-    if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
-            or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
-        raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
+    _lease_match(cur, job_id, job_request)
     if not prof and not preset_id:
         raise PortalError("bad_request", "채널 프로필을 찾을 수 없습니다 — 페이지에서 프로필을 저장하세요")
     want = prof["preset_id"] if prof else str(preset_id)
@@ -1093,10 +1137,18 @@ def preset_pack_path(pid: str) -> Path:
     return store_dir() / "preset_packs" / f"{pid}.zip"
 
 
+def _seal_pack(data: bytes, cid, job_id: str) -> dict:
+    """꾸러미 잠그기 한 곳 — 요청마다 새 열쇠(AES-256-GCM), 덧붙임 글 = cid|job(preset_rent·benchmark_rent 공용). 열쇠는 PC 메모리에만 둔다."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
+    aad = f"{cid}|{job_id}".encode()
+    return {"aad": aad.decode(), "pack": base64.b64encode(nonce + AESGCM(key).encrypt(nonce, data, aad)).decode(),
+            "key": base64.b64encode(key).decode(), "sha256": hashlib.sha256(data).hexdigest()}
+
+
 def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) -> dict:
     """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
     이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
-    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     store = _store(store)
     ensure_schema(store)
     cid = int(cid)
@@ -1106,15 +1158,9 @@ def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) 
     if not f.is_file():
         log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
         raise PortalError("not_ready", "이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
-    data = f.read_bytes()
-    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
-    aad = f"{cid}|{job_id}".encode()
-    sealed = AESGCM(key).encrypt(nonce, data, aad)
     with _tx(store, write=True) as c:
         _lease_log(c, cid, job_request.get("device_hash"), "rent", job_id, job_request.get("lease_id"), None, p["id"])
-    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", "aad": aad.decode(),
-            "pack": base64.b64encode(nonce + sealed).decode(), "key": base64.b64encode(key).decode(),
-            "sha256": hashlib.sha256(data).hexdigest()}
+    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", **_seal_pack(f.read_bytes(), cid, job_id)}
 
 
 def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=None) -> dict:
@@ -1126,29 +1172,247 @@ def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=Non
                        preset_id=preset_id or None)
 
 
+def benchmark_pack_path() -> Path:
+    """고급반 벤치마킹 묶음(tools/claude_portal/benchmark_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 benchmark_rent 로만 나간다."""
+    return store_dir() / "benchmark" / "benchmark_pack.zip"
+
+
+def benchmark_rent(ctx: dict, job_id, lease_id=None, store=None) -> dict:
+    """POST /api/claude/benchmark_rent — 채널 벤치마킹 엔진 빌려주기(관제 304, 사장님 11-02 "고급형은 그 노하우를 담아준다").
+    문턱 판단 = member_tier 한 곳(고급·프리미엄). 프리셋 임대와 같은 꼴: 작업 권한 뒤 잠근 꾸러미, PC 는 쓰는 동안만 푼다."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "benchmark")
+    if member_tier(store, cid) == "basic":
+        raise PortalError("tier_locked", "채널 벤치마킹은 고급반에서 제공돼요")
+    job_id = str(job_id or "")
+    if not _JOB_RE.match(job_id):
+        raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
+    with _tx(store) as c:
+        cur = _active_lease(c, cid)
+    _lease_match(cur, job_id, {"device_hash": dev["fp_hash"], "lease_id": lease_id})
+    f = benchmark_pack_path()
+    if not f.is_file():
+        log.warning("claude_portal: 벤치마킹 묶음이 없다 — benchmark_pack.py 로 만들어 올려라")
+        raise PortalError("not_ready", "벤치마킹을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, dev["fp_hash"], "benchmark", job_id, lease_id, None, "benchmark")
+    return {"ok": True, **_seal_pack(f.read_bytes(), cid, job_id)}
+
+
 # ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────
 def update_path() -> Path:
-    """최신 앱(서버+엔진) 묶음 표 — tools/claude_portal/publish_update.py 가 쓴다. {version, sha256, size, notes}"""
+    """앱(서버+엔진) 묶음 표 — 쓰기는 update_register·rollout_* 한 곳뿐(도구가 직접 쓰지 않는다).
+    {version, sha256, size, notes}          전체 판(미리보기·빠른배포가 읽는 칸)
+    rollout {version, sha256, size, notes, percent, cids, started, stage_at, approved_by}   단계 배포 중인 후보
+    recalled {판: {at, why, by}}            되돌린 판 — 이 판을 가진 회원은 전체 판을 다시 받는다
+    previous {version, sha256, size}        rollout_finish 직전 전체 판"""
     return store_dir() / "updates" / "latest.json"
 
 
+def update_table() -> dict:
+    p = update_path()
+    return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
+
+
+def _update_save(d: dict):
+    """통째로 바꾼다(요청이 읽는 동안 반쪽 파일을 보지 않게)."""
+    p = update_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def update_register(version: str, sha256: str, size: int, notes: str = "") -> dict:
+    """전체 판 바로 등록(빠른배포·설치판 올리기) — 판 표를 쓰는 길의 주인. 단계 배포 중이면 끼어들 수 없고, 회수 기록은 지킨다."""
+    d = update_table()
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"단계 배포 중({d['rollout']['version']})입니다 — publish_update --rollout-finish 또는 --rollout-rollback 뒤에 올리세요")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    d.update(version=version, sha256=sha256, size=size, notes=notes)
+    _update_save(d)
+    return d
+
+
+# ── 단계 배포(관제 304, 사장님 11-02 "1명 → 10% → 전체, 실패율이 오르면 자동으로 되돌린다") ───────────────
+#   판단 주인: 대상 = rollout_includes·update_target / 나빠짐 = rollout_bad / 넓히기·전체 승인 = rollout_advance.
+#   재는 값: claude_flow_runs 의 engine(편을 만든 앱 판, X-Shortem-Engine). ★version 칸은 프리셋 판이라 앱 판을 못 가른다.
+ROLLOUT_STEPS = (0, 10, 100)      # 0 = 지정 회원만
+ROLLOUT_MIN_RUNS = 3              # 넓히기 전에 새 판으로 끝난 편 수(막힘+완성)
+ROLLOUT_BASE_DAYS = 30            # 옛 판 대조 구간(시작 전부터 센다 — 표본이 작은 1명 단계에서도 비교가 된다)
+ROLLOUT_WATCH_EVERY = 300         # 초 — 업데이트 창구가 불릴 때 이 간격으로 잰다(별도 크론 없이 돈다)
+ROLLOUT_MARGIN = 0.10             # 막힘 비율이 옛 판보다 이만큼은 높아야 나빠진 것
+ROLLOUT_P = 0.10                  # 우연히 그럴 확률 상한
+
+
+def rollout_includes(r: dict, cid) -> bool:
+    """이 회원이 이 후보를 받나 — 판·cid 해시로 고정. 퍼센트를 넓혀도 앞사람은 그대로, 판이 바뀌면 시험 대상도 바뀐다."""
+    if int(cid) in [int(x) for x in r.get("cids") or ()]:
+        return True
+    h = hashlib.sha256(f"shortem-rollout|{r['version']}|{int(cid)}".encode()).hexdigest()
+    return int(h[:8], 16) % 100 < int(r.get("percent") or 0)
+
+
+def update_target(d: dict, cid, have: str):
+    """이 회원에게 줄 판(없으면 None) — 단계 배포 후보 > 회수된 판 내리기 > 전체 판. 판단은 이 함수 하나."""
+    hv = _semver(str(have or ""))
+    if not hv or not d.get("version"):
+        return None
+    r = d.get("rollout")
+    if r and rollout_includes(r, cid) and _semver(r["version"]) > hv:
+        return r
+    if have in (d.get("recalled") or {}) and have != d["version"]:       # ★판 번호는 더 높지만 받아야 한다
+        return {**d, "rollback": True}
+    return d if _semver(d["version"]) > hv else None
+
+
+def rollout_bad(new_stop: int, new_n: int, old_stop: int, old_n: int) -> bool:
+    """새 판 막힘 비율이 옛 판보다 나빠졌나 — 차이가 ROLLOUT_MARGIN 을 넘고, 우연으로 보기 어려울 때(단측 정확 검정)."""
+    if new_stop < 2 or new_n <= 0:
+        return False
+    if old_n <= 0:                       # 옛 판 표본이 없으면 절대 기준만
+        return new_stop >= 3 and new_stop / new_n >= 0.6
+    if new_stop / new_n <= old_stop / old_n + ROLLOUT_MARGIN:
+        return False
+    n, k = new_n + old_n, new_stop + old_stop
+    tot = math.comb(n, new_n)
+    p = sum(math.comb(k, i) * math.comb(n - k, new_n - i) for i in range(new_stop, min(k, new_n) + 1)) / tot
+    return p < ROLLOUT_P
+
+
+def rollout_health(store=None, d: dict | None = None) -> dict:
+    """후보 판 편 vs 옛 판 편 막힘 비율. verdict = none(단계 배포 없음)·bad·thin(새 판 표본 부족)·ok."""
+    from shopping_shorts import claude_flow        # claude_flow 가 이 모듈을 부른다 — 표 주인은 저쪽
+    d = update_table() if d is None else d
+    r = d.get("rollout")
+    if not r:
+        return {"verdict": "none"}
+    store = _store(store)
+    c = claude_flow.stop_counts(store, r["version"], r["started"], r["started"] - ROLLOUT_BASE_DAYS * 86400)
+    bad = rollout_bad(c["new_stop"], c["new_n"], c["old_stop"], c["old_n"])
+    return {**c, "version": r["version"], "percent": r.get("percent"),
+            "verdict": "bad" if bad else ("thin" if c["new_n"] < ROLLOUT_MIN_RUNS else "ok")}
+
+
+def rollout_start(version: str, sha256: str, size: int, cids: list, notes: str = "") -> dict:
+    """1명 단계 시작 — 전체 판은 그대로 두고 후보만 얹는다."""
+    d = update_table()
+    if not d.get("version"):
+        raise PortalError("bad_request", "되돌아갈 전체 판이 없습니다 — 먼저 전체 판을 올리세요")
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"이미 단계 배포 중입니다({d['rollout']['version']})")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    if _semver(version) <= _semver(d["version"]):
+        raise PortalError("bad_request", f"후보 판은 전체 판({d['version']})보다 높아야 합니다")
+    cids = [int(x) for x in cids]
+    if not cids:
+        raise PortalError("bad_request", "첫 단계에 받을 회원을 지정하세요")
+    d["rollout"] = {"version": version, "sha256": sha256, "size": size, "notes": notes, "percent": 0, "cids": cids,
+                    "started": _now(), "stage_at": _now()}
+    _update_save(d)
+    return d["rollout"]
+
+
+def rollout_advance(percent: int, store=None, approved_by: str = "") -> dict:
+    """다음 단계로(0 → 10 → 100, 건너뛰기 금지). ★100 은 사람 승인 이름이 있어야만 — 자동 감시는 이 함수를 부르지 않는다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    now = ROLLOUT_STEPS.index(r["percent"])
+    if percent not in ROLLOUT_STEPS or ROLLOUT_STEPS.index(percent) != now + 1:
+        raise PortalError("bad_request", f"다음 단계는 {ROLLOUT_STEPS[now + 1:now + 2]} 입니다")
+    if percent == 100 and not str(approved_by or "").strip():
+        raise PortalError("approval_required", "전체 배포는 사람 승인이 있어야 합니다(--approved-by)")
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"넓히기 전 점검에서 나빠짐: {_health_text(h)}", by="auto", store=store)
+        raise PortalError("bad_request", f"실패율이 나빠져 되돌렸습니다: {_health_text(h)}")
+    if h["verdict"] != "ok":
+        raise PortalError("bad_request", f"새 판으로 끝난 편이 모자랍니다({h['new_n']}/{ROLLOUT_MIN_RUNS}편)")
+    r.update(percent=percent, stage_at=_now())
+    if percent == 100:
+        r["approved_by"] = str(approved_by).strip()
+    _update_save(d)
+    return r
+
+
+def rollout_finish() -> dict:
+    """100% 뒤 굳히기 — 후보가 전체 판이 된다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r or r.get("percent") != 100:
+        raise PortalError("bad_request", "100% 단계에서만 굳힙니다")
+    d["previous"] = {k: d.get(k) for k in ("version", "sha256", "size")}
+    d.update({k: r.get(k) for k in ("version", "sha256", "size", "notes")})
+    d.pop("rollout")
+    _update_save(d)
+    return d
+
+
+def _health_text(h: dict) -> str:
+    return f"새 판 {h.get('new_stop')}/{h.get('new_n')} · 옛 판 {h.get('old_stop')}/{h.get('old_n')}"
+
+
+def rollout_rollback(why: str, by: str = "auto", store=None) -> dict:
+    """멈추고 되돌린다 — 후보를 내리고 회수 표에 올린다. 이미 받은 회원은 다음 켤 때 전체 판을 받는다(update_target)."""
+    d = update_table()
+    r = d.pop("rollout", None)
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    d.setdefault("recalled", {})[r["version"]] = {"at": _now(), "why": str(why)[:200], "by": str(by)[:40]}
+    _update_save(d)
+    log.error("claude_portal: 단계 배포 되돌림 %s (%s) — %s", r["version"], by, why)
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        _raise_alert(c, 0, "rollout_rollback", "warn", 1, f"{r['version']} → {d['version']} ({by}): {str(why)[:200]}")
+    return d
+
+
+def rollout_tick(store=None, force=False) -> dict | None:
+    """감시 한 번 — 나빠졌으면 멈추고 되돌린다. 넓히기는 하지 않는다. 업데이트 창구가 주기마다 부른다."""
+    d = update_table()
+    if not d.get("rollout"):
+        return None
+    stamp = update_path().with_name("rollout_tick")
+    if not force and stamp.is_file() and time.time() - stamp.stat().st_mtime < ROLLOUT_WATCH_EVERY:
+        return None
+    stamp.touch()
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"실패율 악화: {_health_text(h)}", by="auto", store=store)
+        h["rolled_back"] = True
+    return h
+
+
 def update_info(ctx: dict, have: str, store=None) -> dict:
-    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 더 새 판이 있으면 서명 받기 주소. 판단은 이 함수 하나."""
+    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 받을 판이 있으면 서명 받기 주소. 무엇을 받나는 update_target."""
     store = _store(store)
     ensure_schema(store)
     cid, _, _ = _front(store, ctx, "update")
-    p = update_path()
-    if not p.is_file():
+    try:
+        rollout_tick(store)
+    except Exception:      # 감시가 죽어도 업데이트는 나간다 — 대신 크게 남긴다
+        log.exception("claude_portal: 단계 배포 감시 실패 — 자동 되돌리기가 멈춰 있다")
+    d = update_table()
+    if not d:
         return {"ok": True, "update": False}
-    d = json.loads(p.read_text(encoding="utf-8"))
-    if not re.fullmatch(r"\d+\.\d+\.\d+", str(have or "")) or _semver(d["version"]) <= _semver(have):
+    t = update_target(d, cid, have)
+    if not t:
         return {"ok": True, "update": False, "latest": d["version"]}
-    if not (store_dir() / "assets" / d["sha256"]).is_file():
-        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", d["version"])
+    if not (store_dir() / "assets" / t["sha256"]).is_file():
+        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", t["version"])
         return {"ok": True, "update": False}
-    url, exp = asset_url({"sha256": d["sha256"], "id": f"update:shortem-app-{d['version']}.zip"}, cid, "update")
-    return {"ok": True, "update": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url,
-            "expires": exp, "notes": str(d.get("notes") or "")[:200]}
+    url, exp = asset_url({"sha256": t["sha256"], "id": f"update:shortem-app-{t['version']}.zip"}, cid, "update")
+    out = {"ok": True, "update": True, "version": t["version"], "sha256": t["sha256"], "size": t["size"], "url": url,
+           "expires": exp, "notes": str(t.get("notes") or "")[:200]}
+    if t.get("rollback"):
+        out["rollback"] = True      # updater.js 는 판 높낮이를 안 본다 — 받아서 그대로 바꾼다
+    return out
 
 
 INSTALL_PLATS = ("win-x64", "mac-arm64", "mac-x64")
@@ -1277,6 +1541,9 @@ def feedback(ctx: dict, body: dict, store=None) -> dict:
     with _tx(store, write=True) as c:
         cur = c.execute("INSERT INTO claude_feedback(ts, cid, kind, text, job_id) VALUES(?,?,?,?,?)", (_now(), cid, kind, text.strip(), job))
         fid = cur.lastrowid
+    if kind in ("code_fix", "bug"):      # 회원 Claude 가 고친 것·고장 — 옛 프로그램도 서버에서 바로 보인다(관제 304, 판단 = claude_live). 전문은 이 표에 남는다
+        from shopping_shorts import claude_live
+        claude_live.witness(store, cid, kind, text.strip()[:claude_live.EVENT_HEAD], level="important", sid=job, ref=fid)
     return {"ok": True, "id": fid}
 
 
@@ -1339,6 +1606,15 @@ def preview(cid, kind, pid, token, headers: dict, store=None) -> dict:
 
 
 # ── 이상 행동 탐지(§7-9) ─────────────────────────────────────────────────
+# 숏클이 켜져 있으면 저절로 나가는 요청 — 사람의 속도가 아니라 A4 에 세지 않는다(11-02 실측: 이것만으로 시간당 600회, 회원 3명 오정지)
+_A4_BACKGROUND = ("session", "live_pull")
+
+
+def _count_a4(c, cid, since):
+    return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind='request' AND ts>=? AND route NOT IN (?,?)",
+                     (cid, since) + _A4_BACKGROUND).fetchone()[0]
+
+
 def _count(c, cid, kind, since, route=None):
     if route:
         return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind=? AND route=? AND ts>=?",
@@ -1420,9 +1696,9 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
             if suspended:
                 _deny("suspended", "이상 사용이 감지돼 잠시 멈췄습니다 — 관리자 확인 뒤 풀립니다", lic["suspended_until"] - now)
             else:
-                m1 = _count(c, cid, "request", now - 59)
-                h1 = _count(c, cid, "request", now - 3599)
-                if m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]:
+                m1 = _count_a4(c, cid, now - 59)
+                h1 = _count_a4(c, cid, now - 3599)
+                if route != "lease_release" and (m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]):
                     if not _alerts_since(c, cid, "A4", now - 60):
                         alerts.append(_raise_alert(c, cid, "A4", "throttle", m1 if m1 > t["a4_per_min"] else h1,
                                                    f"분당 {m1} · 시간당 {h1}"))
@@ -1729,7 +2005,7 @@ def admin_devices(cid, store=None) -> list:
 
 
 # 페이지 내려받기 칸(사장님 10-20 exe 없이) — desktop = shortem.mcpb(윈도·맥 공용, 두 번 누르면 Claude 데스크탑이 받는다)
-#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+시작.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
+#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+START.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
 #   win-x64·mac-* = 예전 설치 프로그램(서명 전엔 페이지에 안 띄운다 — 남겨 두기만)
 INSTALLER_KINDS = ("desktop", "code-win-x64", "win-x64", "mac-arm64", "mac-x64")
 
@@ -1787,7 +2063,8 @@ def home(cid, store=None) -> dict:
     def _pv(kind, pid):
         return str(pid) if pid is not None and _preview_file(kind, pid)[0] else None
 
-    passed = [r for r in led.get("results") or [] if r.get("state") == "통과"]
+    # 번호(n) 없는 장부 행은 미리보기를 못 여니 뺀다 — 한 행 때문에 회원 페이지 전체가 500 이 났다(11-02 ititemlog)
+    passed = [r for r in led.get("results") or [] if r.get("state") == "통과" and r.get("n") is not None]
     results = [{"n": r.get("n"), "brand": r.get("brand"), "style": r.get("style"), "seconds": r.get("seconds"),
                 "date": r.get("date"), "preview": _pv("result", r.get("n"))} for r in passed]
     plist = []

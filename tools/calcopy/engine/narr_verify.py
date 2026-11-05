@@ -172,8 +172,9 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
     import requests
     from tools.calcopy.engine.asr_local import speechmatics_key
     key = speechmatics_key()
-    if not key:
-        raise RuntimeError("스피치매틱스 키 없음 — 줄별 받아쓰기 관문을 못 돈다")
+    if not key:          # 키는 선택 — 없으면 이 PC 의 위스퍼로(사장님 11-02). 낱말 믿음값이 없어 1.0 으로 둔다
+        from tools.calcopy.engine.check_line_sync import asr_segments
+        return [{"s": s, "e": e, "w": w, "conf": 1.0} for s, e, w in asr_segments(path)]
     H = {"Authorization": f"Bearer {key}"}
     cfg = {"type": "transcription", "transcription_config": {"language": lang, "operating_point": "enhanced"}}
     for attempt in range(3):

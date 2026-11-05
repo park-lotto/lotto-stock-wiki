@@ -1,4 +1,4 @@
-"""칼카피 우리 브랜드 장부 읽기 — 주인 데이터 channel/브랜드.json(벤치 slug ↔ 브랜드 이름) · 스타일 장부 channel/스타일.json."""
+"""프리셋 우리 브랜드 장부 읽기 — 주인 데이터 channel/브랜드.json(벤치 slug ↔ 브랜드 이름) · 스타일 장부 channel/스타일.json."""
 import json
 from pathlib import Path
 

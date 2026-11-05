@@ -1,6 +1,6 @@
 """글꼴 창고(shopping_shorts/static/fonts/*.ttf·*.otf) 중 장면꾸미기 렌더러에 @font-face 가 없는 것을 등록한다.
 
-왜: 칼카피 글꼴 판별(engine/fontmatch.rank)은 창고 전부를 후보로 보는데, 렌더러(out/scene-style-ui-showcase.html)는 54개만
+왜: 프리셋 글꼴 판별(engine/fontmatch.rank)은 창고 전부를 후보로 보는데, 렌더러(out/scene-style-ui-showcase.html)는 54개만
 등록돼 있어 1위가 미등록이면 그릴 수 없었다(ZdeZ: Spoqa·IBMPlex·Pretendard-Bold 1~3위 전부 미등록, 2026-10-16).
 어떻게: 파일을 새로 만들지 않고 창고의 ttf/otf 를 그대로 가리킨다(크롬은 ttf/otf 를 읽는다. 서버 자산 길
 api_scene_style_asset 은 shopping_shorts/static/fonts/ 의 .ttf/.otf 를 이미 내준다). 글꼴은 쓰일 때만 내려받는다.
@@ -22,7 +22,9 @@ START, END = "<!--CALCOPY-FONTS-->", "<!--/CALCOPY-FONTS-->"
 
 
 def registered_stems(html: str) -> set:
-    return {Path(u).stem.lower() for u in re.findall(r'@font-face\s*\{[^}]*?src:\s*url\("([^"]+)"', html)}
+    """등록된 글꼴의 파일 줄기 + 글꼴 이름(to_frame.family_of 가 찾는 두 길과 같다 — 이름이 파일 줄기인 woff2 등록 글꼴을 또 등록하지 않게)."""
+    faces = re.findall(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;\s*src:\s*url\("([^"]+)"', html)
+    return {Path(u).stem.lower() for u in re.findall(r'@font-face\s*\{[^}]*?src:\s*url\("([^"]+)"', html)} | {fam.lower() for fam, _ in faces}
 
 
 def block(html_without: str) -> tuple[str, list]:

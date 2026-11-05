@@ -113,7 +113,7 @@ def catalog() -> dict:
     from shopping_shorts.calcopy_frame import schema, to_snapshot
     html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
     fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
-    # 목소리 = 칼카피 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
+    # 목소리 = 프리셋 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
     #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
     from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES, PROVIDERS, TC_EMOTIONS
     presets = json.loads((ROOT / "shopping_shorts" / "assets" / "voice_presets.json").read_text(encoding="utf-8"))
@@ -202,7 +202,7 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "title_colors", "title_scale", "caption_font", "caption", "orig_text"),
+EDITABLE = {"brand": ("channel_name", "colors", "logo"), "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption", "orig_text"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -233,6 +233,16 @@ def check(pack: dict, cat: dict | None = None) -> list:
         err.append("제목 색은 #RRGGBB 두 개까지입니다")
     if tx.get("title_scale") is not None and not (isinstance(tx["title_scale"], (int, float)) and 0.7 <= tx["title_scale"] <= 1.3):
         err.append("제목 크기는 0.7~1.3 배입니다")
+    if tx.get("caption_color") is not None and not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(tx["caption_color"])):
+        err.append("자막 색은 #RRGGBB 입니다")
+    if tx.get("caption_dy") is not None and not (isinstance(tx["caption_dy"], int) and -800 <= tx["caption_dy"] <= 500):
+        err.append("자막 위치 값이 범위를 벗어났습니다")
+    dy = tx.get("title_dy")
+    if dy is not None and not (isinstance(dy, int) and -500 <= dy <= 500):
+        err.append("제목 위치 값이 범위를 벗어났습니다")
+    lg = b.get("logo")
+    if lg is not None and not (isinstance(lg, dict) and re.fullmatch(r"p_[0-9a-z]+\.png", str(lg.get("file"))) and all(isinstance(lg.get(k), int) for k in ("x", "y", "w")) and 40 <= lg["w"] <= 1080):
+        err.append("로고 값 모양이 다릅니다")
     bgc = (b.get("colors") or {}).get("bg")
     if bgc is not None and not (isinstance(bgc, list) and len(bgc) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in bgc)):
         err.append("바탕색 모양이 다릅니다")

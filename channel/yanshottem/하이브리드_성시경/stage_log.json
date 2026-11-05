@@ -1,0 +1,238 @@
+{
+ "stages": [
+  {
+   "stage": "init",
+   "sec": 0.0,
+   "note": "",
+   "at": "2026-10-18 12:50:54"
+  },
+  {
+   "stage": "candidates",
+   "sec": 174.3,
+   "note": "",
+   "at": "2026-10-18 12:55:23"
+  },
+  {
+   "stage": "asr",
+   "sec": 24.5,
+   "note": "",
+   "at": "2026-10-18 13:08:55"
+  },
+  {
+   "stage": "screen",
+   "sec": 1545.9,
+   "note": "",
+   "at": "2026-10-18 13:21:18"
+  },
+  {
+   "stage": "plan",
+   "sec": 11.7,
+   "note": "실패: 계획에서 컷이 원본 샷보다 길다(어림): [('B4', 'ramen/FaIQ3NIgVbU.mp4', 1.808, 1.15)]",
+   "at": "2026-10-18 14:03:23"
+  },
+  {
+   "stage": "plan",
+   "sec": 11.8,
+   "note": "실패: A 컷이 원본 샷보다 길다: Wy9--jw0ZsM.mp4@274.1 2.291 > max 2.2",
+   "at": "2026-10-18 14:03:45"
+  },
+  {
+   "stage": "plan",
+   "sec": 14.1,
+   "note": "실패: A 컷이 원본 샷보다 길다: Wy9--jw0ZsM.mp4@274.0 2.291 > max 2.2",
+   "at": "2026-10-18 14:04:27"
+  },
+  {
+   "stage": "plan",
+   "sec": 0.5,
+   "note": "실패: B 컷이 원본 샷보다 길다: [('Wy9--jw0ZsM.mp4', 41.0, 1.8, 1.8)]",
+   "at": "2026-10-18 14:04:38"
+  },
+  {
+   "stage": "plan",
+   "sec": 26.2,
+   "note": "",
+   "at": "2026-10-18 14:05:14"
+  },
+  {
+   "stage": "name_check",
+   "sec": 36.9,
+   "note": "실패: 이름 받아쓰기 실패(후보 '성시경', 합성 파일은 남김·다시 돌리면 재사용): gemini-3-flash-preview: ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exc; gemini-3.5-flash: ClientError: 429 RESOURCE_EXHAUS",
+   "at": "2026-10-18 14:07:20"
+  },
+  {
+   "stage": "name_check",
+   "sec": 50.4,
+   "note": "실패: 이름 받아쓰기 실패(후보 '성시경 씨', 합성 파일은 남김·다시 돌리면 재사용): gemini-3-flash-preview: ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resourc; gemini-3.5-flash: ClientError: 429 RESOURCE_EXHA",
+   "at": "2026-10-18 14:08:26"
+  },
+  {
+   "stage": "name_check",
+   "sec": 22.0,
+   "note": "실패: 이름 받아쓰기 실패(후보 '성시경', 합성 파일은 남김·다시 돌리면 재사용): gemini-3-flash-preview: ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resourc; gemini-3.5-flash: ClientError: 429 RESOURCE_EXHAUS",
+   "at": "2026-10-18 14:09:01"
+  },
+  {
+   "stage": "name_check",
+   "sec": 21.3,
+   "note": "",
+   "at": "2026-10-18 14:11:17"
+  },
+  {
+   "stage": "plan",
+   "sec": 31.4,
+   "note": "",
+   "at": "2026-10-18 14:13:21"
+  },
+  {
+   "stage": "render:재미썸홈판",
+   "sec": 33.6,
+   "note": "실패: B 컷이 원본 샷보다 길다: [('ramen/-o8gedIaYmA.mp4', 12.0, 2.37, 2.3)]",
+   "at": "2026-10-18 14:14:03"
+  },
+  {
+   "stage": "render:잇썸홈판",
+   "sec": 198.6,
+   "note": "",
+   "at": "2026-10-18 14:16:48"
+  },
+  {
+   "stage": "render:재미썸홈판",
+   "sec": 177.9,
+   "note": "",
+   "at": "2026-10-18 14:20:08"
+  },
+  {
+   "stage": "checks:잇썸홈판",
+   "sec": 118.3,
+   "note": "",
+   "at": "2026-10-18 14:22:16"
+  },
+  {
+   "stage": "thumb:잇썸홈판",
+   "sec": 15.5,
+   "note": "",
+   "at": "2026-10-18 14:22:31"
+  },
+  {
+   "stage": "checks:재미썸홈판",
+   "sec": 125.2,
+   "note": "",
+   "at": "2026-10-18 14:24:37"
+  },
+  {
+   "stage": "thumb:재미썸홈판",
+   "sec": 35.5,
+   "note": "",
+   "at": "2026-10-18 14:25:12"
+  },
+  {
+   "stage": "plan",
+   "sec": 28.2,
+   "note": "",
+   "at": "2026-10-18 14:29:22"
+  },
+  {
+   "stage": "render:재미썸홈판",
+   "sec": 214.7,
+   "note": "",
+   "at": "2026-10-18 14:33:16"
+  },
+  {
+   "stage": "render:잇썸홈판",
+   "sec": 284.3,
+   "note": "",
+   "at": "2026-10-18 14:34:25"
+  },
+  {
+   "stage": "checks:잇썸홈판",
+   "sec": 149.9,
+   "note": "",
+   "at": "2026-10-18 14:37:04"
+  },
+  {
+   "stage": "thumb:잇썸홈판",
+   "sec": 42.9,
+   "note": "",
+   "at": "2026-10-18 14:37:47"
+  },
+  {
+   "stage": "checks:재미썸홈판",
+   "sec": 72.9,
+   "note": "",
+   "at": "2026-10-18 14:39:00"
+  },
+  {
+   "stage": "thumb:재미썸홈판",
+   "sec": 20.2,
+   "note": "",
+   "at": "2026-10-18 14:39:20"
+  },
+  {
+   "stage": "render:재미썸홈판",
+   "sec": 183.6,
+   "note": "",
+   "at": "2026-10-18 14:42:53"
+  },
+  {
+   "stage": "checks:재미썸홈판",
+   "sec": 108.1,
+   "note": "",
+   "at": "2026-10-18 14:44:45"
+  },
+  {
+   "stage": "thumb:재미썸홈판",
+   "sec": 30.2,
+   "note": "",
+   "at": "2026-10-18 14:45:15"
+  },
+  {
+   "stage": "plan",
+   "sec": 46.0,
+   "note": "",
+   "at": "2026-10-18 14:46:57"
+  },
+  {
+   "stage": "render:재미썸홈판",
+   "sec": 240.4,
+   "note": "",
+   "at": "2026-10-18 14:51:20"
+  },
+  {
+   "stage": "render:잇썸홈판",
+   "sec": 272.3,
+   "note": "",
+   "at": "2026-10-18 14:51:52"
+  },
+  {
+   "stage": "checks:잇썸홈판",
+   "sec": 79.9,
+   "note": "",
+   "at": "2026-10-18 14:53:13"
+  },
+  {
+   "stage": "thumb:잇썸홈판",
+   "sec": 38.5,
+   "note": "",
+   "at": "2026-10-18 14:53:51"
+  },
+  {
+   "stage": "checks:재미썸홈판",
+   "sec": 63.8,
+   "note": "",
+   "at": "2026-10-18 14:54:55"
+  },
+  {
+   "stage": "thumb:재미썸홈판",
+   "sec": 26.3,
+   "note": "",
+   "at": "2026-10-18 14:55:21"
+  },
+  {
+   "stage": "deliver",
+   "sec": 0.4,
+   "note": "",
+   "at": "2026-10-18 14:56:49"
+  }
+ ]
+}

@@ -9,6 +9,7 @@ import { freshDirs } from './helpers.js';
 import { makeKey } from './fake_server.js';
 
 freshDirs('flow_driver');
+(await import('../server/local_settings.js')).useCatalog({ default_pack: {}, preset_defaults: {} });   // 꾸미기 값 파일은 표만 있으면 쓴다
 const ENGINE = process.env.SHORTEM_ENGINE || path.resolve(process.cwd(), '..', '..', '..', '칼카피숏템엔진');
 const seen = [];
 
@@ -20,6 +21,7 @@ function server() {
       req.on('data', d => { b += d; });
       req.on('end', () => {
         const body = JSON.parse(b || '{}');
+        if (req.url.includes('studio')) { rsp.end('{}'); return; }   // 꾸미기 값 맞추기(packFile) — 지시서 고리 밖
         seen.push(body);
         const n = seen.length;
         const out = n === 1 ? { status: 'execute', message: '준비 확인 중', stage: { no: 1, total: 13, text: '준비 확인' }, do: [{ id: 'w', cmd: 'write_doc', files: { 'a.txt': '안녕' } }] }

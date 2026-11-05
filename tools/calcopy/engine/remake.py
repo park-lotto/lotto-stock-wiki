@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 한 편 한 명령 — 뜯기 + 틀 → (재료 후보 시트) → 대본 → 우리 영상 → 대조 (관제 097, 2026-10-16).
+"""프리셋 한 편 한 명령 — 뜯기 + 틀 → (재료 후보 시트) → 대본 → 우리 영상 → 대조 (관제 097, 2026-10-16).
 
     PYTHONUTF8=1 py tools/calcopy/engine/remake.py <뜯기.json> <frame.json> --out <폴더> [--materials 재료.json] [--script 대본.json]
           [--queries "검색어1|검색어2"] [--topic 주제 --roles "역할1,역할2,…" --scenes "화면1|…" --points "포인트"] [--bgm qiuqiu]
@@ -384,7 +384,7 @@ def write_plan(out: Path, J: dict, frames: list, S: dict, M: dict, kind: str) ->
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="칼카피 한 편 한 명령")
+    ap = argparse.ArgumentParser(description="프리셋 한 편 한 명령")
     ap.add_argument("tteutgi")
     ap.add_argument("frame", help="본문 틀(frame.json)")
     ap.add_argument("--out", required=True)
@@ -485,7 +485,36 @@ def main(argv=None):
     print(f"판정(① 픽셀): {v['verdict']} (기준 {v['n_criteria']} 중 안 {v['n_in']}) · 밖 {v['out'] or '없음'}")
     print(f"이음매(B16 되감김·점프줌): {'통과' if seam['ok'] else '걸림 ' + str(seam['되감김'])}")
     print("final:", final)
-    return 0 if v["verdict"] in ("통과", "원본 없음 — 대조 생략") and seam["ok"] else 1
+    return 0 if passed(v["verdict"], seam["ok"]) else 1
+
+
+PIXEL_PASS = ("통과", "원본 없음 — 대조 생략")      # 고객 PC 는 뜯기 원본이 없어 픽셀 대조를 생략한다(위 5) — 생략도 통과로 친다
+
+
+def passed(pixel_verdict: str, seams_ok: bool) -> bool:
+    """(판단 주인) remake 결과 통과 = 픽셀 대조 통과(또는 생략) + 이음매 걸림 없음. main 의 종료 코드와 gate_of 가 이 한 곳을 쓴다."""
+    return pixel_verdict in PIXEL_PASS and bool(seams_ok)
+
+
+def gate_of(out) -> dict:
+    """remake 결과 폴더의 관문 기록(대조/verdict.json · remake_log.json) → {ok, pixel, seams_ok, fails}. 기록이 없으면 ValueError(조용히 통과 금지).
+    verdict.json 꼴 = compare 가 쓴 판정 그대로 또는 생략 때 {"verdict": {...}, "skipped"}(위 478)."""
+    out = Path(out)
+    vp, lp = out / "대조" / "verdict.json", out / "remake_log.json"
+    if not vp.is_file() or not lp.is_file():
+        raise ValueError(f"remake 관문 기록 없음: {[p.name for p in (vp, lp) if not p.is_file()]}")
+    v = json.loads(vp.read_text(encoding="utf-8"))
+    v = v["verdict"] if isinstance(v.get("verdict"), dict) else v
+    seam = (json.loads(lp.read_text(encoding="utf-8")).get("steps") or {}).get("seams")
+    if not isinstance(seam, dict) or "ok" not in seam:
+        raise ValueError("remake_log.json 에 이음매 검사(steps.seams) 기록이 없다")
+    pv = str(v.get("verdict") or "")
+    fails = [str(x) for x in (v.get("out") or [])] + [f"미측정 {x}" for x in (v.get("failed") or [])]
+    if not seam["ok"]:
+        fails.append(f"이음매 되감김 {seam.get('rewinds')}")
+    if pv not in PIXEL_PASS and not fails:
+        fails.append(f"픽셀 판정 {pv or '없음'}")
+    return {"ok": passed(pv, seam["ok"]), "pixel": pv, "seams_ok": bool(seam["ok"]), "fails": fails}
 
 
 if __name__ == "__main__":
