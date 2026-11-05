@@ -2380,9 +2380,11 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             r = cache.get(key)
             if r is None:
                 log(f"[관문④] 컷 {k} {c['src']}@{float(c['ss']):.2f} 판정 시작 {time.strftime('%H:%M:%S')}(저장 없는 컷 — 진단 기록)")
+                _t_cut = time.time()
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
                 r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+                log(f"[관문④] 컷 {k} 판정 끝 {time.time() - _t_cut:.0f}초 · 프레임 {len(m['text'])}장(진단 — 느린 PC 실측, Jev 11-06)")
                 _cache_save(cp, cache, {**rows, key: r})       # 컷마다 저장 — 느린 PC 는 시간 한도에 끊겨 재시도마다 처음부터 쟀다(11-02 회원 수리 채택)
                 if len(ocr) != len(ocr0):
                     _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
@@ -4239,10 +4241,19 @@ LENGTH_MEMBER = "⑧ 길이 · 회원 빠르기"     # 회원이 말 빠르기�
 ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용", LENGTH_MEMBER}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
+def _free_mem_gb() -> float:
+    """여유 메모리(GB) — 진단 기록용(느린 PC 원인이 메모리 교체인지 CPU 인지 가른다, 11-06 김미화 N95 컷 하나 17분). 못 재면 -1."""
+    try:
+        import psutil
+        return psutil.virtual_memory().available / 1e9
+    except Exception:  # noqa: BLE001 — 진단만
+        return -1.0
+
+
 def _gate_step(name, fn, log):
     """관문 하나 돌리기 — 시작 시각을 한 줄 남긴다(진단 기록, 판정은 그대로). 11-05 삼현정·이용재: 장면 맞추기가 '[박힌 글자] 지움' 뒤
     기록 없이 75분 CPU 만 쓰다 끝나 어느 관문에서 멈췄는지 가를 수 없었다(Jev 진단 기록 best 0.83·위험 0.09)."""
-    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}")
+    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}" + (f" · 여유 메모리 {_free_mem_gb():.1f}GB" if name.startswith("④") else ""))
     return (name, fn())
 
 
