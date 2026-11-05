@@ -172,3 +172,20 @@ def test_맥_묶음은_윈도_도구를_빼고_맥_목록을_넣는다(tmp_path)
     assert not any(n.startswith(("tools/", "server/vcrt/")) for n in names)
     assert {"engine/a.py", "mac/tools.lock.json", "mac/requirements-engine-py312-mac.txt", "mac/write_manifest.js"} <= names
     assert rep["dropped"] == 3
+
+
+def test_맥_스크립트에_윈도_줄바꿈이_없다():
+    # 윈도 PC 에서 고쳐 쓰다 CRLF 가 섞이면 맥 bash 가 깨진다(11-05 실사고 직전 발견)
+    from pathlib import Path
+    root = Path(app_module.__file__).resolve().parents[1] / "installer"
+    for p in (root / "install.sh", root / "common" / "tools.lock.json", root / "common" / "requirements-engine-py312-mac.txt"):
+        assert b"\r" not in p.read_bytes(), p.name
+
+
+def test_맥_도구는_전부_sha256_으로_대조한다():
+    import json
+    from pathlib import Path
+    lock = json.loads((Path(app_module.__file__).resolve().parents[1] / "installer" / "common" / "tools.lock.json").read_text(encoding="utf-8"))
+    for plat in ("darwin-arm64", "darwin-x64"):
+        for n in ("node", "chrome-headless-shell", "python", "ffmpeg", "ffprobe"):
+            assert len(lock[plat][n].get("sha256") or "") == 64, (plat, n)

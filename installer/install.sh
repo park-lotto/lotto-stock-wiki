@@ -41,7 +41,8 @@ OSV="$(sw_vers -productVersion 2>/dev/null || echo 0)"
 say "맥 확인: $CHIP · macOS $OSV"
 
 # 값 하나 꺼내기(macOS 기본 plutil 은 JSON 도 읽는다 — 아직 node·python 이 없을 때 쓴다)
-jget() { plutil -extract "$2" raw -o - "$1" 2>/dev/null; }
+# 값이 없으면 빈 값 — plutil 이 실패하면 무엇을 찍었든 버린다(고객 맥 11-05: 크롬 확인값 대조 실패 뒤 단단히)
+jget() { local v; v="$(plutil -extract "$2" raw -o - "$1" 2>/dev/null)" || return 0; printf '%s' "$v"; }
 sha_of() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # ── 회원 확인 ─────────────────────────────────────────────────────────────────
@@ -111,11 +112,12 @@ else
     url="$(jget "$LOCK" "$LPLAT.$n.url")"; [ -n "$url" ] || die "도구 목록에 $n 이 없습니다"
     sha="$(jget "$LOCK" "$LPLAT.$n.sha256")"; md5="$(jget "$LOCK" "$LPLAT.$n.md5_b64")"
     f="$DL/$LPLAT-$n-$(basename "$url")"
-    ok() { if [ -n "$sha" ]; then [ "$(sha_of "$f")" = "$sha" ]; else [ "$(openssl md5 -binary "$f" | base64)" = "$md5" ]; fi; }
+    got() { if [ -n "$sha" ]; then sha_of "$f"; else openssl md5 -binary "$f" | base64; fi; }
+    ok() { [ "$(got)" = "${sha:-$md5}" ]; }
     if ! { [ -f "$f" ] && ok; }; then
       say "  $n 받는 중" >&2
       curl -fsSL --retry 5 --retry-delay 5 -o "$f" "$url" || die "$n 내려받기 실패"
-      ok || { rm -f "$f"; die "$n 확인값이 다릅니다"; }
+      ok || { printf '[숏클]   %s 받은 값 %s · 기대 값 %s · 크기 %s\n' "$n" "$(got)" "${sha:-$md5}" "$(stat -f%z "$f")" >&2; rm -f "$f"; die "$n 확인값이 다릅니다"; }
     fi
     printf '%s' "$f"
   }

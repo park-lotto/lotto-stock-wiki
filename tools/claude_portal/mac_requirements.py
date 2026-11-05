@@ -90,7 +90,7 @@ def main(argv=None) -> int:
             hs = sorted(hs)
             lines.append(f"{key}=={ver}{marker} \\")
             lines += [f"    --hash=sha256:{h}" + (" \\" if i < len(hs) - 1 else "") for i, h in enumerate(hs)]
-    MAC_REQ.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    MAC_REQ.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")   # 맥이 읽는 파일 — 윈도에서 만들어도 LF
     print(f"썼다: {MAC_REQ.relative_to(ROOT)}")
     return 0
 
