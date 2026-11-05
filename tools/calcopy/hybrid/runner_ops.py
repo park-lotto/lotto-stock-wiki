@@ -2473,6 +2473,54 @@ def c_bm_tear(W, d):
     return {"presets": sorted(groups.values(), key=lambda g: -len(g["sources"])), "failed": failed, "r7": r7, "r7_failed": r7_failed}
 
 
+TEMP_PREFIXES = ("claude_ma_",)       # %TEMP% 아래 엔진 임시 폴더(claude_cli.ask) — 이 접두어만
+
+
+def clean_targets(W: Path) -> list[Path]:
+    """(판단 주인 · 지울 목록 한 곳) 용량 부족 되살리기에서 지워도 되는 것 = 엔진이 만든 중간 파일만.
+    ① 이 작업 폴더의 뜯기 중간물(channel/*/뜯기/<편>/ 안 뜯기.json·frame.json 밖의 것 — 프레임·자막 조각, 다음 단계가 안 읽는다)
+    ② %TEMP% 아래 TEMP_PREFIXES 폴더. 절대 안 지움: src(받은 영상)·완성본·preset·줄판독·뼈대·장부·사용자 파일·다른 작업 폴더 ·
+       나란히 놓기(side/)·눈 판정 그림(eye/) — 상태에 경로가 남아 뒤 단계(확정 검사·눈 판정 다시 묻기)가 읽는다."""
+    import tempfile
+    out = []
+    for td in sorted(W.glob("channel/*/뜯기/*")):
+        if td.is_dir():
+            out += [p for p in td.iterdir() if p.name not in ("뜯기.json", "frame.json")]
+    tmp = Path(tempfile.gettempdir())
+    out += [p for p in tmp.iterdir() if p.is_dir() and p.name.startswith(TEMP_PREFIXES)] if tmp.is_dir() else []
+    return out
+
+
+def _size(p: Path) -> int:
+    try:
+        return p.stat().st_size if p.is_file() else sum(f.stat().st_size for f in p.rglob("*") if f.is_file())
+    except OSError:
+        return 0
+
+
+def c_bm_clean(W, d):
+    """용량·메모리 부족 되살리기(판단 없음): clean_targets 만 지우고 지운 경로·크기를 남긴 뒤, 메모리 여유가 wait_mem_gb 가 될 때까지(상한 wait_max_s) 기다린다."""
+    import time
+    gone, freed = [], 0
+    for p in clean_targets(W):
+        sz = _size(p)
+        try:
+            shutil.rmtree(p) if p.is_dir() else p.unlink()
+        except OSError as e:
+            gone.append({"path": str(p), "bytes": sz, "error": f"{type(e).__name__}"})
+            continue
+        freed += sz
+        gone.append({"path": str(p), "bytes": sz})
+    need, cap = float(d.get("wait_mem_gb") or 0), float(d.get("wait_max_s") or 0)
+    t0, mem = time.time(), mem_free_gb()
+    while need and mem is not None and mem < need and time.time() - t0 < cap:
+        jsave(W / "_clean_wait.json", {"mem_free_gb": mem, "need_gb": need, "waited_s": round(time.time() - t0, 1)})   # 진행 신호(감시 STALL_SEC 가 멈춤으로 안 보게)
+        time.sleep(10)
+        mem = mem_free_gb()
+    return {"removed": gone, "freed_mb": round(freed / 1e6, 1), "mem_free_gb": mem, "waited_s": round(time.time() - t0, 1),
+            "mem_ok": mem is None or not need or mem >= need, "disk_gb": round(shutil.disk_usage(str(W)).free / 1e9, 1)}
+
+
 def _r7_of(W: Path, v: dict, J: dict, longs: dict) -> dict:
     """한 편 R7 재기 — info.json(설명란) + 같은 채널 롱폼 목록(채널마다 한 번) → r7.find_pair, 쇼츠 자체 실측 → r7.measure."""
     from tools.calcopy.engine import r7 as R7, yt_channel as YC
@@ -2619,7 +2667,7 @@ def c_bm_eye_frames(W, d):
     return {"frames": out, "failed": failed}
 
 
-CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames})
+CMDS.update({"bm_skel": c_bm_skel, "bm_fill": c_bm_fill, "bm_match": c_bm_match, "bm_eye_frames": c_bm_eye_frames, "bm_clean": c_bm_clean})
 CMDS.update({"bm_fix": c_bm_fix, "bm_env": c_bm_env, "bm_fetch": c_bm_fetch, "bm_tear": c_bm_tear, "agy_read": c_agy_read, "bm_side": c_bm_side, "bm_brief": c_bm_brief})
 
 
@@ -2653,7 +2701,7 @@ def hollow(r: dict) -> str:
 BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
           "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "clean_take": 1800, "thumb_auto": 300,
-          "bm_fetch": 900, "bm_tear": 1800, "agy_read": 700}
+          "bm_fetch": 900, "bm_tear": 1800, "agy_read": 700, "bm_clean": 1200}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
@@ -2661,7 +2709,7 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리",
              "bm_env": "준비 확인", "bm_fetch": "벤치 영상 받기", "bm_tear": "벤치 뜯기", "agy_read": "제미니가 영상 보는 중", "bm_side": "나란히 놓기", "bm_brief": "프리셋 묶음 만들기", "bm_fix": "칸 고치기",
-             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "bm_skel": "자막 줄 나누기", "bm_fill": "판독표 정리", "bm_match": "벤치와 맞춰 보기", "bm_eye_frames": "화면 전환 확인", "bm_clean": "PC 정리하고 기다리기"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
 _HANG: dict = {"on": False, "t": 0.0}

@@ -10,7 +10,7 @@
   2. request.json 을 **마지막에** 쓴다(임시 이름 → 바꿔 달기). MCP(shortem)가 이것을 보고 Claude 에게 "요청 N건" 으로 넘긴다.
   3. Claude 가 답한 answer.json(JSON 객체) 이 생기면 읽어 돌려준다. 모양이 틀리면 error.json 에 이유를 적고 한 번 더 기다린다
      (하이쿠도 돌게 — 조용히 넘기지 않는다). 시간 안에 답이 없으면 (None, "client_timeout").
-  ★권장 등급(haiku/sonnet/opus)은 tier_of(tag) 한 곳 — 글쓰기(대본)는 opus, 판독·분류는 haiku, 나머지 sonnet.
+  ★권장 등급(haiku/sonnet/opus)은 tier_of(tag) 한 곳 — 글쓰기(대본)는 opus, 나머지 sonnet(하이쿠 금지, 사장님 11-05).
 """
 from __future__ import annotations
 

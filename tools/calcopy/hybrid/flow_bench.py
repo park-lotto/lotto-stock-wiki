@@ -77,13 +77,27 @@ def stop_kind(errs) -> str:
     return "env" if texts and all(any(k in t for k in ENV_MARKS) for t in texts) else "content"
 
 
-def _fail_stop(errs, why: str, fix: str, retry: str | None, retry_content: bool = True, **kw):
-    """실패 목록이 있는 멈춤 한 곳 — 환경이면 같은 단계 자동 재시도(회원 질문 없음), 내용이면 주어진 두 줄로."""
+# 환경 실패 되살리기(사장님 11-05 "용량 부족이면 지운 뒤 자동 재시작"): 실행기 bm_clean 이 엔진이 만든 중간 파일만 지우고(목록 = runner_ops.clean_targets 한 곳)
+#   메모리 여유가 WAIT_MEM_GB 가 될 때까지 기다린 뒤(상한 WAIT_MAX_S), 실패한 그 단계부터 다시 한다(처음부터 아님). 같은 단계가 flow.REDO_STUCK 번 환경 실패면 그때만 멈춤.
+#   WAIT_MEM_GB 4 = Jev 최선 후보(해결 0.79·뿌리 0.48 — 채택 기준 미달이나 사장님 직접 지시로 기다림 문턱에만 씀, 시작을 막지는 않는다).
+WAIT_MEM_GB = 4.0
+WAIT_MAX_S = 900
+
+
+def _fail_stop(st, errs, why: str, fix: str, retry: str | None, retry_content: bool = True, **kw):
+    """실패 목록이 있는 멈춤 한 곳 — 환경이면 지우기·기다리기 뒤 같은 단계 자동 재시작(dict 를 돌려준다, 회원 질문 없음), 내용이면 주어진 두 줄로 멈춘다(raise)."""
     F = _F()
     detail = json.dumps(errs, ensure_ascii=False, default=str)[:400]
-    if stop_kind(errs) == "env":
-        return F._Stop("PC가 잠깐 바빠서 이어 가지 못했어요", "잠시 뒤 다시 해 주세요", retry=retry, auto=True, ask_member=True, detail="환경 실패: " + detail)
-    return F._Stop(why, fix, retry=retry if retry_content else None, detail=detail, **kw)
+    if stop_kind(errs) == "env" and retry:
+        b = st["bm"]
+        n = b.setdefault("env_fail", {}).get(retry, 0) + 1
+        b["env_fail"][retry] = n
+        st["log"].append(f"환경 실패 {n}번째({retry}): {detail[:200]} → 중간 파일 지우고 메모리 기다린 뒤 그 단계부터 다시")
+        if n >= F.REDO_STUCK:
+            raise F._Stop("PC 사정으로 같은 곳에서 여러 번 멈췄어요", "다른 프로그램을 닫고 다시 해 주세요", retry=retry, ask_member=True,
+                          detail=f"환경 실패 {n}번 연속: " + detail)
+        return {"do": [{"id": "clean", "cmd": "bm_clean", "wait_mem_gb": WAIT_MEM_GB, "wait_max_s": WAIT_MAX_S, "try": n}], "then": retry}
+    raise F._Stop(why, fix, retry=retry if retry_content else None, detail=detail, **kw)
 
 
 def bm_setup(st, m, rp, u):
@@ -94,7 +108,7 @@ def bm_env_got(st, m, rp, u):
     F = _F()
     e = m.get("bm_env") or {}
     if e.get("error"):       # 실행기가 준비 확인을 못 돌렸다(띄우기 실패·시간 초과) — agy 가 없다는 뜻이 아니다. 잠깐의 문제로 다시
-        raise _fail_stop([e["error"]], "준비 확인을 마치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_setup", auto=True, ask_member=True)
+        return _fail_stop(st, [e["error"]], "준비 확인을 마치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_setup", auto=True, ask_member=True)
     if e.get("mem_free_gb") is not None:      # 메모리 여유는 기록만 — 시작 전 문턱은 Jev 미달(해결 0.79·뿌리 0.48)이라 보류, MemoryError 는 멈춤 분류가 자동 재시도
         st["log"].append(f"준비: 메모리(커밋) 여유 {e['mem_free_gb']}GB · 디스크 {e.get('disk_gb')}GB")
     if not e.get("agy"):
@@ -114,7 +128,7 @@ def bm_fetch_got(st, m, rp, u):
     r = m.get("bm_fetch") or {}
     vs = r.get("videos") or []
     if not vs:
-        raise _fail_stop([r["error"]] if r.get("error") else [], "벤치 영상을 받지 못했어요", "채널 주소를 확인하거나 영상 주소 3개를 주세요", "bm_fetch", auto=True)
+        return _fail_stop(st, [r["error"]] if r.get("error") else [], "벤치 영상을 받지 못했어요", "채널 주소를 확인하거나 영상 주소 3개를 주세요", "bm_fetch", auto=True)
     st["bm"]["videos"] = vs
     return bm_tear(st, m, rp, u)
 
@@ -128,7 +142,7 @@ def bm_tear_got(st, m, rp, u):
     t = m.get("bm_tear") or {}
     ps = t.get("presets") or []
     if not ps:
-        raise _fail_stop(t.get("failed") or ([t["error"]] if t.get("error") else []),
+        return _fail_stop(st, t.get("failed") or ([t["error"]] if t.get("error") else []),
                          "프리셋을 만들 수 있는 영상이 없어요", "세로 쇼츠 영상 주소를 직접 골라 주세요", "bm_tear", retry_content=False)
     b = st["bm"]
     b["style"], b["other_styles"] = ps[0]["style"], [p["style"] for p in ps[1:]]      # 편 수가 많은 틀 하나로 간다 — 나머지는 결과에 적는다
@@ -178,7 +192,7 @@ def bm_skel_got(st, m, rp, u):
     docs = k.get("docs") or {}
     b = st["bm"]
     if not docs:
-        raise _fail_stop(k.get("failed") or ([k["error"]] if k.get("error") else []), "벤치 영상의 자막 줄을 나누지 못했어요", "잠시 뒤 다시 해 주세요",
+        return _fail_stop(st, k.get("failed") or ([k["error"]] if k.get("error") else []), "벤치 영상의 자막 줄을 나누지 못했어요", "잠시 뒤 다시 해 주세요",
                          "bm_skel", auto=True)
     b["skel"] = {vid: len(d.get("lines") or []) for vid, d in docs.items()}
     b["skel_lines"] = {vid: d.get("lines") or [] for vid, d in docs.items()}
@@ -223,8 +237,8 @@ def _eye_frames_got(r, ids: list):
     return fr if fr and all(i in fr for i in ids) else None
 
 
-def _eye_stop(detail: str, retry: str):
-    return _fail_stop([detail[:400]], "화면 전환을 확인하지 못했어요", "잠시 뒤 다시 해 주세요", retry, ask_member=True)
+def _eye_stop(st, detail: str, retry: str):
+    return _fail_stop(st, [detail[:400]], "화면 전환을 확인하지 못했어요", "잠시 뒤 다시 해 주세요", retry, ask_member=True)
 
 
 def bm_read_got(st, m, rp, u):
@@ -232,7 +246,7 @@ def bm_read_got(st, m, rp, u):
     rows = {k: v.get("answer") for k, v in m.items() if k.startswith("read_") and isinstance(v, dict) and v.get("answer")}
     if not rows:
         errs = [v.get("error") or v for k, v in m.items() if k.startswith("read_") and isinstance(v, dict)]
-        raise _fail_stop(errs, "영상 보기가 모두 실패했어요", "agy 로그인을 확인한 뒤 다시 해 주세요", "bm_reread" if st["bm"].get("skel_lines") else "bm_setup",
+        return _fail_stop(st, errs, "영상 보기가 모두 실패했어요", "agy 로그인을 확인한 뒤 다시 해 주세요", "bm_reread" if st["bm"].get("skel_lines") else "bm_setup",
                          ask_member=True)
     st["bm"]["reads"] = rows
     ask = ("벤치 편마다 agy 가 적은 표다. 모든 편에 같은 칸(=채널 규칙)과 편마다 다른 칸(=소재)을 갈라라. "
@@ -246,10 +260,10 @@ def bm_read_got(st, m, rp, u):
         if "eye_b" in m:
             got = _eye_frames_got(m["eye_b"], ids)
             if got is None:
-                raise _eye_stop("bm_eye_frames: " + json.dumps(m["eye_b"], ensure_ascii=False, default=str)[:300], "bm_reread")
+                return _eye_stop(st, "bm_eye_frames: " + json.dumps(m["eye_b"], ensure_ascii=False, default=str)[:300], "bm_reread")
             b["eye_frames"] = {k: got[k] for k in ids}
         if not b.get("eye_frames"):
-            raise _eye_stop("벤치 편 눈 판정 그림 없음", "bm_reread")
+            return _eye_stop(st, "벤치 편 눈 판정 그림 없음", "bm_reread")
         rvs += [_eye_rv(f"bm_eye_{vid}", fr) for vid, fr in b["eye_frames"].items()]
     return {"review": rvs, "then": "bm_measure"}
 
@@ -280,7 +294,7 @@ def bm_measure(st, m, rp, u):
             else:
                 eyes[vid] = e
         if bad or not eyes:
-            raise _eye_stop("눈 판정 답 불합격: " + json.dumps(bad or "그림 없음", ensure_ascii=False)[:300], "bm_eye_ask" if b.get("eye_frames") else "bm_reread")
+            return _eye_stop(st, "눈 판정 답 불합격: " + json.dumps(bad or "그림 없음", ensure_ascii=False)[:300], "bm_eye_ask" if b.get("eye_frames") else "bm_reread")
         b["eye"] = eyes
         b.pop("read_reply", None)
     b.setdefault("rules", {k: r[k] for k in ("rules", "per_video")})      # 다시 읽기(못 넘은 편만)의 답이 처음 규칙을 덮지 않게
@@ -295,7 +309,7 @@ def bm_eye_ask(st, m, rp, u):
     """눈 판정 답이 비거나 틀려 멈춘 뒤 다시 시도 — 저장된 그림으로 눈 판정만 다시 묻는다(판독 답은 st 에 있다)."""
     b = st["bm"]
     if not b.get("eye_frames"):
-        raise _eye_stop("저장된 눈 판정 그림 없음", "bm_reread")
+        return _eye_stop(st, "저장된 눈 판정 그림 없음", "bm_reread")
     return {"review": [_eye_rv(f"bm_eye_{vid}", fr) for vid, fr in b["eye_frames"].items()], "then": "bm_measure"}
 
 
@@ -358,7 +372,7 @@ def bm_trial(st, m, rp, u):
     b = st["bm"]
     fx = m.get("fix") or {}
     if fx.get("error"):
-        raise _fail_stop([fx["error"]], "프리셋 칸을 고치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_panbokki", ask_member=True)
+        return _fail_stop(st, [fx["error"]], "프리셋 칸을 고치지 못했어요", "잠시 뒤 다시 해 주세요", "bm_panbokki", ask_member=True)
     src = _trial_source(b)
     pdir = f"channel/{b['slug']}/preset/{b['style']}"
     n = int(st.get("pan_n") or 0)
@@ -409,10 +423,10 @@ def bm_trial_eye(st, m, rp, u):
     if "eye_t" in m:
         got = _eye_frames_got(m["eye_t"], ["trial"])
         if got is None:
-            raise _eye_stop("bm_eye_frames(시험 편): " + json.dumps(m["eye_t"], ensure_ascii=False, default=str)[:300], "bm_trial_frames")
+            return _eye_stop(st, "bm_eye_frames(시험 편): " + json.dumps(m["eye_t"], ensure_ascii=False, default=str)[:300], "bm_trial_frames")
         b["trial_frames"] = got["trial"]
     if not b.get("trial_frames"):
-        raise _eye_stop("시험 편 눈 판정 그림 없음", "bm_trial_frames")
+        return _eye_stop(st, "시험 편 눈 판정 그림 없음", "bm_trial_frames")
     return {"review": [_eye_rv("bm_eye_trial", b["trial_frames"])], "then": "bm_trial_eye_got"}
 
 
@@ -420,7 +434,7 @@ def bm_trial_eye_got(st, m, rp, u):
     b = st["bm"]
     e, errs = _eye_of(rp.get("bm_eye_trial"), b.get("trial_frames") or {})
     if errs:
-        raise _eye_stop("시험 편 눈 판정 답 불합격: " + " / ".join(errs)[:300], "bm_trial_eye")
+        return _eye_stop(st, "시험 편 눈 판정 답 불합격: " + " / ".join(errs)[:300], "bm_trial_eye")
     b["trial_eye"] = e
     return {"do": _compare_do(st), "then": "bm_panbokki"}
 
@@ -443,7 +457,7 @@ def bm_panbokki(st, m, rp, u):
     if (m.get("side") or {}).get("side"):
         b["side"] = m["side"]["side"]       # 확정 검사·최종 판정이 좌우 영상을 본다
     if (m.get("pan") or {}).get("error"):      # 대조를 못 했다 — 빈 대조표로 '맞춤'·'다시 재기'로 새지 않게 멈춘다
-        raise _fail_stop([m["pan"]["error"]], "벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", "bm_compare", ask_member=True)   # 도구 문제 — 같은 시험 편으로 대조만 다시(30~50분 재제작 금지)
+        return _fail_stop(st, [m["pan"]["error"]], "벤치와 맞춰 보지 못했어요", "잠시 뒤 다시 해 주세요", "bm_compare", ask_member=True)   # 도구 문제 — 같은 시험 편으로 대조만 다시(30~50분 재제작 금지)
     if m.get("pan"):
         b["pan_last"] = m["pan"]
     p = b.get("pan_last") or {}             # Jev 가 쉬어서 멈춘 뒤 다시 시도하면 직전 대조표로 이어 간다
@@ -562,7 +576,7 @@ def bm_done(st, m, rp, u):
     F = _F()
     b, br = st["bm"], m.get("brief") or {}
     if not br.get("zip"):
-        raise _fail_stop([br.get("error") or br], "프리셋 묶음을 만들지 못했어요", "잠시 뒤 다시 해 주세요", "bm_brief", auto=True)
+        return _fail_stop(st, [br.get("error") or br], "프리셋 묶음을 만들지 못했어요", "잠시 뒤 다시 해 주세요", "bm_brief", auto=True)
     return {"done": {"preset": {"slug": b["slug"], "style": b["style"], "name": b["name"], "zip": br["zip"], "other_styles": b.get("other_styles") or []}}}
 
 

@@ -239,12 +239,48 @@ def test_stop_kind():
     assert FB.stop_kind([]) == "content"
 
 
-def test_tear_memory_error_retries_tear_not_asks_member():
+def test_tear_memory_error_cleans_waits_then_retries_tear_not_asks_member():
     st = _st("bm_tear_got", videos=[{"id": "a", "mp4": "src/a.mp4"}])
     f = [{"video": v, "why": "MemoryError: Unable to allocate 11.9 MiB for an array"} for v in ("a", "b", "c")]
     r = _go(st, {"bm_tear": {"presets": [], "failed": f}})
-    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_tear"]          # 사람 질문 없이 뜯기만 다시(받기부터 아님)
-    assert "세로 쇼츠" not in json.dumps(r, ensure_ascii=False)
+    assert r["status"] == "execute" and [d["cmd"] for d in r["do"]] == ["bm_clean"]          # 사람 질문 없이 지우기·기다리기
+    assert r["do"][0]["wait_mem_gb"] == FB.WAIT_MEM_GB and "세로 쇼츠" not in json.dumps(r, ensure_ascii=False)
+    r = _go(st, {"clean": {"removed": [], "mem_ok": True}})
+    assert [d["cmd"] for d in r["do"]] == ["bm_tear"]                                        # 그 단계부터(받기부터 아님)
+    for _ in range(2):                                                                        # 같은 단계 환경 실패 3번째면 그때만 멈춤
+        st["phase"] = "bm_tear_got"
+        r = _go(st, {"bm_tear": {"presets": [], "failed": f}})
+    assert r["status"] == "stop" and st["bm"]["env_fail"]["bm_tear"] == 3
+
+
+def test_clean_targets_only_engine_intermediates(tmp_path, monkeypatch):
+    import tempfile
+    tmpd = tmp_path / "tmp"
+    (tmpd / "claude_ma_x").mkdir(parents=True)
+    (tmpd / "user_stuff").mkdir()
+    monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmpd))
+    W = tmp_path / "W"
+    td = W / "channel/s/뜯기/a"
+    (td / "captions").mkdir(parents=True)
+    (td / "captions/c0.png").write_bytes(b"x" * 10)
+    for keep in ("src/a.mp4", "channel/s/뜯기/a/뜯기.json", "channel/s/preset/틀/frame.json", "channel/s/preset/틀/r7.json", "side/a.mp4", "eye/a/frame0.jpg", "make/t1/final.mp4"):
+        (W / keep).parent.mkdir(parents=True, exist_ok=True)
+        (W / keep).write_bytes(b"k")
+    out = R.run_do(W, [{"id": "c", "cmd": "bm_clean", "wait_mem_gb": 0}])["c"]
+    gone = {p["path"] for p in out["removed"]}
+    assert str(td / "captions") in gone and str(tmpd / "claude_ma_x") in gone and len(gone) == 2
+    assert all((W / k).exists() for k in ("src/a.mp4", "channel/s/뜯기/a/뜯기.json", "channel/s/preset/틀/r7.json", "side/a.mp4", "eye/a/frame0.jpg", "make/t1/final.mp4"))
+    assert (tmpd / "user_stuff").exists() and out["freed_mb"] >= 0 and "mem_free_gb" in out
+
+
+def test_clean_waits_for_memory_with_cap(tmp_path, monkeypatch):
+    import time as T
+    vals = iter([1.0, 2.0, 5.0])
+    monkeypatch.setattr(R, "mem_free_gb", lambda: next(vals))
+    monkeypatch.setattr(R, "clean_targets", lambda W: [])
+    monkeypatch.setattr(T, "sleep", lambda s: None)
+    out = R.run_do(tmp_path, [{"id": "c", "cmd": "bm_clean", "wait_mem_gb": 4, "wait_max_s": 60}])["c"]
+    assert out["mem_ok"] is True and out["mem_free_gb"] == 5.0
 
 
 def test_tear_content_failure_asks_member():
@@ -274,8 +310,8 @@ def test_claude_cli_model_table_no_haiku():
     assert CC.MODEL_DEFAULT == "sonnet" and all(m in ("sonnet", "opus") for _, m in CC.MODEL_TABLE)
     assert CC.model_for("of_cat") == "sonnet" and CC.model_for("ma_fit_origin") == "opus" and CC.model_for("fx_target_aim") == "opus"
     root = pathlib.Path(__file__).resolve().parents[2] / "tools" / "calcopy"
-    bad = [str(p) for p in root.rglob("*.py") if re.search(r"""model\s*=\s*["']haiku["']""", p.read_text(encoding="utf-8", errors="replace"))]
-    assert bad == []
+    bad = [str(p) for p in root.rglob("*.py") if re.search(r"""["']haiku["']""", p.read_text(encoding="utf-8", errors="replace"))]
+    assert bad == []                     # 하이쿠 금지(사장님 11-05) — 모델 값·기본값·별칭 어디에도 "haiku" 없음
 
 
 # ---------------------------------------------------------------- 칼카피 흐름 TTS = 피쉬 '차분한 해설가'(완성본·회원 제작 = 타입캐스트)
