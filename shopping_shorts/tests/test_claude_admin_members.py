@@ -120,3 +120,13 @@ def test_회원은_관리자_창구를_못_쓴다(m):
                             ("post", "/api/admin/claude/member/action", {"json": {"cid": 0, "action": "unbind"}})):
         assert getattr(m["client"], method)(url, **kw).status_code in (401, 403), url
     assert cp.guard_settings(m["store"])["devices_max"] == cp.DEVICES_MAX
+
+
+def test_엔진_판을_모르면_옛_엔진이라_하지_않는다(m):
+    k = _key(m)
+    m["client"].get("/api/claude/license", headers=_h(k, FP1, engine="1.0.90", name="PC-a"))
+    with cp._tx(m["store"], write=True) as c:
+        c.execute("UPDATE claude_devices SET engine=NULL")             # 이 기능 배포 전에 등록된 PC
+    _admin(m, "post", "/api/admin/claude/guard", json={"min_engine": "1.0.100"})
+    [d] = _me(m)["devices"]
+    assert (d["engine"], d["engine_old"]) == ("", False)
