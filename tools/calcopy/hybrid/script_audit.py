@@ -540,7 +540,10 @@ def alt_disclosed(d: dict) -> dict | None:
     """(판단 주인) product_mode 'alt' 대본에 '같은 제품이 아니라 비슷한 제품' 이라고 말하는 나레 줄이 있나 → 걸리면 {rule, line, why}, 아니면 None."""
     if str(d.get("product_mode") or "") != "alt":
         return None
-    hit = [l.get("id") for l in narr_lines(d) if ALT_SAY.search(_say(l))]
+    nl = narr_lines(d)
+    if nl and all(l.get("about") for l in nl) and not any(l.get("about") == "product" for l in nl):
+        return None      # 제품을 말하는 줄이 없다(회원이 '제품 안내 빼고 정보만') — 밝힐 대상이 없다(11-05 강태경 #7691 3번 연속)
+    hit = [l.get("id") for l in nl if ALT_SAY.search(_say(l))]
     if hit:
         ids = [l.get("id") for l in narr_lines(d)]
         if len(ids) > 1 and ids[-1] in hit and len(hit) == 1:      # 사장님 11-01: 끝은 고지가 아니라 맺음말
