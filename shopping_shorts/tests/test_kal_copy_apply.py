@@ -80,3 +80,34 @@ def test_copy04_strict_layer_key():
     F = {"canvas": [1080, 1920], "layers": [{"kind": "bg", "rgb": [0, 0, 0], "glow_px": 3}]}
     with pytest.raises(schema.FrameError, match="layers\[0\].glow_px"):
         schema.validate(F, strict=True)
+
+
+def test_apply01_preset_pack(tmp_path):
+    from tools.calcopy.engine import preset_pack
+    d = tmp_path / "p"
+    (d / "sources").mkdir(parents=True)
+    (d / "frame.json").write_text('{"a": 1}', encoding="utf-8")
+    (d / "sources/s.json").write_text('{"b": 2}', encoding="utf-8")
+    (d / "_hand").mkdir()
+    (d / "_hand/x.json").write_text("{}", encoding="utf-8")
+    r1 = preset_pack.pack(d, tmp_path / "a.zip")
+    r2 = preset_pack.pack(d, tmp_path / "b.zip")
+    assert r1["ok"] and r1["n"] == 2 and (tmp_path / "a.zip").read_bytes() == (tmp_path / "b.zip").read_bytes()   # 결정적
+    (d / "manifest.json").write_text('{"src": "C:/숏템_칼카피/x"}', encoding="utf-8")
+    r3 = preset_pack.pack(d, tmp_path / "c.zip")
+    assert not r3["ok"] and "절대경로" in r3["bad"][0] and not (tmp_path / "c.zip").exists()
+
+
+def test_verify49_tear_ours_reuses_by_sha(tmp_path, monkeypatch):
+    monkeypatch.setattr(kal, "ROOT", tmp_path)
+    S = kal.State("s", "@s", None, 2, None)
+    mp4 = tmp_path / "o.mp4"
+    mp4.write_bytes(b"o")
+    n = []
+
+    def fake(m, out, llm=None, materials=True):
+        n.append(materials)
+        Path(out).mkdir(parents=True, exist_ok=True)
+        (Path(out) / "뜯기.json").write_text(json.dumps({"audio": {"transcript": {"segments": [{"start": 0, "end": 1, "text": "가"}]}}}), encoding="utf-8")
+    monkeypatch.setattr(analyze, "analyze", fake)
+    assert kal.tear_ours(S, str(mp4))["segments"] and kal.tear_ours(S, str(mp4))["segments"] and n == [True]

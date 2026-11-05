@@ -162,6 +162,7 @@ def _verify_setup(tmp_path, monkeypatch, bench_mp4=True, verdict="통과"):
     monkeypatch.setattr(K, "with_pixel", lambda T, b, o, d: T)
     monkeypatch.setattr(K, "match_md", lambda T, title="": "md")
     monkeypatch.setattr(K, "watch_pack", lambda b, o, d: {"dir": str(d)})
+    monkeypatch.setattr(kal, "tear_ours", lambda S_, m: {})
     return S, ours_mp4
 
 

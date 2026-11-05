@@ -830,6 +830,25 @@ def step_make(S: State):
     return "done", {"ours_mp4": str(out / "final.mp4"), "ours_lines": str(lp), "out": str(out)}, f"preset_make 통과 {r.get('seconds')}초 · {r.get('note')}"
 
 
+def tear_ours(S: State, mp4: str) -> dict:
+    """(verify-49) 우리 완성본을 tteutgi 와 같은 analyze.analyze(llm=tear_llm.ask, materials=True) 로 뜯어 _kal/우리뜯기/ 에 — 같은 sha 면 다시 안 뜯음.
+    돌려주는 것 = 받아쓰기 구절(asr_stats 재료)·뜯기 경로. 실패는 이유를 남기고 빈 구절(match 는 미측정 — 조용히 통과로 치지 않는다).
+    compare(with_pixel)에 규칙 층(rules_json·asr)을 넘기는 것은 compare 인자 실측 뒤(남음)."""
+    from tools.calcopy.engine import analyze, tear_llm
+    od = S.dir / "_kal" / "우리뜯기"
+    sha = _sha256(mp4)
+    jp = od / "뜯기.json"
+    if not (jp.exists() and (od / "sha256.txt").exists() and (od / "sha256.txt").read_text(encoding="utf-8").strip() == sha):
+        try:
+            analyze.analyze(mp4, str(od), llm=tear_llm.ask, materials=True)
+            (od / "sha256.txt").write_text(sha, encoding="utf-8")
+        except Exception as e:  # noqa: BLE001
+            print(f"[경보] 우리 완성본 뜯기 실패 — 받아쓰기 자 미측정: {type(e).__name__} {str(e)[:120]}")
+            return {"failed": str(e)[:200]}
+    J = json.loads(jp.read_text(encoding="utf-8"))
+    return {"tteutgi": str(jp), "segments": ((J.get("audio") or {}).get("transcript") or {}).get("segments") or []}
+
+
 def frame_texts(S: State) -> list[str]:
     """copy 단계 프리셋 설명서(frame.json·manifest)의 글 칸(text·title·brand·channel_name) 전부 — 화면 틀 글 관문(verify-m01) 재료."""
     out = []
@@ -866,6 +885,9 @@ def step_verify(S: State):
     bench = K._load_docs([str(S.dir / "줄판독")])
     ours = json.loads(Path(o["ours_lines"]).read_text(encoding="utf-8"))
     K.attach_bench_asr(bench, S.dir / "뜯기")          # readlines-09·11 받아쓰기 자(벤치 = 뜯기 transcript)
+    ot = tear_ours(S, o["ours_mp4"])                    # verify-49(Jev 해결 0.68): 우리 완성본도 벤치와 같은 뜯기 함수로
+    if ot.get("segments"):
+        ours["_asr"] = ot["segments"]
     win = K._win_arg(None, bench)
     om = K.media_of(o["ours_mp4"], win)
     bm = K.bench_media_src(str(DATA / S.d["slug"] / "src"), [d.get("id") for d in bench], win)
@@ -945,6 +967,11 @@ def step_apply(S: State):
         Wd = json.loads(Path(W).read_text(encoding="utf-8"))
         froze = preset_save.freeze(Path(pdir), mo["ours_mp4"], Wd.get("verdict"), f"kal verify 시청 판정({Wd.get('who')}) · 재현일치도 통과")
     gone = cleanup(S) if froze else None                                    # apply-06: 확정 뒤에만 중간물 정리
+    if froze:                                                               # apply-01: 확정 프리셋 묶음 zip(결정적·절대경로·키 0)
+        from tools.calcopy.engine import preset_pack
+        pk = preset_pack.pack(Path(pdir), kd / f"{Path(pdir).name}.zip")
+        if not pk["ok"]:
+            return "waiting_human", {"pack_bad": pk["bad"]}, f"프리셋 묶음 검사 미달(절대경로·키 꼴) {pk['bad'][:4]} — 판 파일에서 빼고 다시"
     om = (S.step("make").get("outputs") or {}).get("ours_mp4")
     if om and om not in (S.d.get("made") or []):
         S.d.setdefault("made", []).append(om)          # 확정 시험편 = 지킬 파일(common-10 write_guard)
