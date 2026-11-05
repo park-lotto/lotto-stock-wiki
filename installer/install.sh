@@ -14,6 +14,7 @@ SHORTEM_HOME="${SHORTEM_HOME:-$HOME/.shortem}"
 mkdir -p "$SHORTEM_HOME"
 LOG="$SHORTEM_HOME/install.log"
 : > "$LOG"
+exec 3>&1 4>&2                       # 원래 터미널 출력 — 대화형 claude 는 이리로(아래 로그인·점검)
 exec > >(tee -a "$LOG") 2>&1        # 실패하면 이 파일을 보내 달라고 안내한다(맥은 우리가 직접 못 본다)
 
 say() { printf '[숏클] %s\n' "$*"; }
@@ -248,11 +249,14 @@ say '설치 완료'
 [ -n "${SHORTEM_NO_LAUNCH:-}" ] && exit 0
 
 # 온보딩을 건너뛰면 Claude 가 로그인 화면을 안 띄운다(윈도 11-01 실측) — 여기서 먼저 로그인시킨다
+# ★대화형 claude 는 /dev/tty 를 쓰지 않는다 — 맥 kqueue 는 /dev/tty 별칭을 감시하지 못해 Bun 이 'EINVAL … kqueue' 로 죽는다
+#   (고객 맥미니 11-05 로그인 단계, 근거 bun #24158 · Jev 뿌리 0.88·해결 0.79). 입력은 붙여 넣은 터미널 그대로, 출력은 보관한 3·4 로.
+[ -t 0 ] || die '터미널 앱(⌘+스페이스 → 터미널)에 설치 명령을 붙여 넣어 주세요'
 if ! out_has '"loggedIn":[[:space:]]*true' claude auth status; then
   say 'Claude 로그인 — 브라우저가 열리면 로그인하고 허용을 누르세요'
-  claude auth login </dev/tty
+  claude auth login >&3 2>&4
   out_has '"loggedIn":[[:space:]]*true' claude auth status || die 'Claude 로그인이 끝나지 않았습니다. 같은 줄을 다시 붙여 넣고 엔터를 눌러 주세요'
 fi
 say '준비 점검을 시작합니다'
 cd "$WORK" || die '작업 폴더로 가지 못했습니다'
-exec claude '숏클 점검 준비해줘' </dev/tty >/dev/tty 2>&1
+exec claude '숏클 점검 준비해줘' >&3 2>&4 3>&- 4>&-
