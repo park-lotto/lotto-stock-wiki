@@ -2253,11 +2253,11 @@ def _cut_rules_ctx(st, shots: dict | None = None) -> str:
             ("\n\n## 재료 영상 샷 구간(초, 0.8초 이상만 — 컷은 한 구간 안에서만)\n" + "\n".join(rows) if rows else ""))
 
 
-def _points_ctx(v: str) -> str:
+def _points_ctx(v: str, no_orig: bool = False) -> str:
     """이 판 대본 검사가 요구하는 포인트·표시 칸(주인 = script_audit.points_rule_for — 검사기와 같은 기준, 10-27 7번 반려)."""
     from tools.calcopy.hybrid import script_audit
     r = script_audit.points_rule_for(v)
-    rows = script_audit.rules_text(v)      # 판 script.audit 숫자 전부(줄 수·글자·길이·어미 — 10-27 반려 전수: 판마다 질문에 빠진 칸이 반려로만 알려졌다)
+    rows = script_audit.rules_text(v, no_orig=no_orig)      # 판 script.audit 숫자 전부(줄 수·글자·길이·어미 — 10-27 반려 전수: 판마다 질문에 빠진 칸이 반려로만 알려졌다)
     return ((f"\n\n## 대본 검사 규칙(이 판 숫자 그대로 — 처음부터 지켜라)\n{rows}" if rows else "") +
             (f"\n\n## 대본 검사가 보는 포인트·표시 칸(반드시)\n{r}" if r else ""))
 
@@ -2280,7 +2280,7 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            f"\n\n## 재료 파일(시트 순서 = 앞 {max(5, _material_n(st)[1])}개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) + _subject_ctx(st) +
+           _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v, _no_speech(st)) + _subject_ctx(st) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
     if ms.get("bench_caps"):     # 소재 쇼츠 박힌 한국어 자막(1초 칸) — 잘된 편의 말맛 그대로(사장님 10-26)
@@ -2360,7 +2360,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
         p = Path(td) / "대본.json"
         p.write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")
         try:
-            a = script_audit.audit(p, v)
+            a = script_audit.audit(p, v, no_orig=_no_speech(st))     # 말·소리 없는 원본 = 원음 줄 0(판 원음 줄 수 규칙을 0 으로 — 김하영 #8834)
         except Exception as e:  # noqa: BLE001 — 꼴이 틀린 대본은 검사가 죽는다 → 반려 사유로
             a = {"ok": False, "error": f"대본 꼴이 틀렸다: {type(e).__name__}: {str(e)[:200]}"}
     extra = {"title": RU.title_colors_bad(S, _style(v)), "claims": RU.script_claim_problems(S),   # 자막↔목소리 = script_audit(G-1) 안
@@ -3151,7 +3151,7 @@ def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
     st["log"].append(f"줄 고치기({st['tries']['line_fix']}번째, 재료 그대로): {why[:200]}")
     lines = "\n".join(json.dumps({k: l.get(k) for k in ("id", "tts", "caps")}, ensure_ascii=False) for l in rows)
     extra = "고칠 줄은 위에서 가장 적게 골라라(전부 고치지 마라).\n" if pick else ""
-    q = LINE_FIX_ASK.format(why=why[:1200], rules=script_audit.rules_text(st["version"])[:1500], lines=lines, extra=extra,
+    q = LINE_FIX_ASK.format(why=why[:1200], rules=script_audit.rules_text(st["version"], no_orig=_no_speech(st))[:1500], lines=lines, extra=extra,
                             title=json.dumps(S.get("title_lines") or [], ensure_ascii=False))
     return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
 
@@ -3635,7 +3635,7 @@ def _foreign_script_ctx(st: dict) -> str:
            "나레는 그 대사로 가는 다리만 놓는다(과정 설명으로 채우지 않는다). 원음 줄이 밋밋한 반응('맵다'·'맛있다')뿐이면 다시 고른다.\n"
            "### 소재 쇼츠(한국 재편집 — 이 흐름이 잘됐다) 받아쓰기\n" + (bl or "(없음)") + "\n" + (full or ""))
     if _no_speech(st):
-        hit = "\n\n## 원음 없음\n이 원본들은 말이 없다 — 원음 줄(kind orig) 없이 나레만 쓴다. 소재 쇼츠 받아쓰기:\n" + (bl or "(없음)")
+        hit = "\n\n## 원음 없음\n이 원본들은 말·소리가 없다 — 원음 줄(kind orig) 없이 쓴다(원음 줄 0 — 대본 검사도 원음 줄 수 0 으로 잰다, 판이 자막 줄(sub)을 쓰면 그대로). 소재 쇼츠 받아쓰기:\n" + (bl or "(없음)")
     if st.get("interest"):
         hit += "\n\n## 흥미 이음(뒤 체험 B3·B4 는 이 점을 중심으로)\n" + json.dumps(st["interest"], ensure_ascii=False)
     return (hit + "\n\n## 해외 원본(시간순 — 이 순서로 쓴다)\n" + "\n".join(O) + "\n\n## 박힌 글자 처리\n" + fix +
@@ -4452,12 +4452,21 @@ def f_research(st, m, rp, u):
                    for k, f in enumerate(st["origin"]["files"])], "then": "f_research_got"}
 
 
+def _silent_files(st) -> set:
+    """(판단 주인 — 이 원본에 소리가 있나) 소리 트랙 없는 원본 파일 이름들. 잰 값 = 회원 판 받아쓰기(c_origin_words → common.has_audio)의 audio 칸 /
+    원본 파일 정보의 audio 칸. 인스타·틱톡 무음 원본(이성택 #9390 · 김하영 #8834) — 조사 구간·원음 받아쓰기·대본 원음 줄 수가 모두 이 답을 쓴다."""
+    W = st.get("_fwords") or {}
+    return {f["name"] for f in (st.get("origin") or {}).get("files") or []
+            if f.get("audio") is False or (W.get(f["name"]) or {}).get("audio") is False}
+
+
 def _no_speech(st) -> bool:
-    """(판단 주인 — 원음 구간 없이 가도 되나) 받은 원본 모두 자막·받아쓰기가 비었으면 예(음악만 깔린 영상 등 — 고를 원음이 없어 조사가 3번 반려 뒤 멈췄다).
-    받아쓰기 실패(error)는 빈 것이 아니다."""
+    """(판단 주인 — 원음 구간 없이 가도 되나) 받은 원본 모두 소리가 없거나(_silent_files) 자막·받아쓰기가 비었으면 예(음악만 깔린 영상 등 — 고를 원음이 없어 조사가 3번 반려 뒤 멈췄다).
+    받아쓰기 실패(error)는 빈 것이 아니다. 예면 조사 spans 없음·원음 받아쓰기 건너뜀·대본 검사 원음 줄 0(audit_script no_orig)."""
     W = st.get("_fwords") or {}
     fs = (st.get("origin") or {}).get("files") or []
-    return bool(fs) and all(f["name"] in W and not (W[f["name"]].get("words") or W[f["name"]].get("error")) for f in fs)
+    mute = _silent_files(st)
+    return bool(fs) and all(f["name"] in mute or (f["name"] in W and not (W[f["name"]].get("words") or W[f["name"]].get("error"))) for f in fs)
 
 
 def _research_need(st) -> tuple:
@@ -4502,10 +4511,14 @@ def f_research_check(st, m, rp, u):
     spans = [s for s in r.get("spans") or [] if isinstance(s, dict)]
     if not spans and not _no_speech(st):
         bad.append("원음 구간(spans)이 없다")
+    mute = _silent_files(st)
     for s in spans:
         src = str(s.get("src") or "")
         if src not in durs:
             bad.append(f"원음 구간 {s.get('tag')} 의 src '{src}' 가 받은 원본 파일이 아니다({list(durs)})")
+            continue
+        if src in mute:
+            bad.append(f"원음 구간 {s.get('tag')} 의 원본 {src} 는 소리 트랙이 없다 — 이 파일에서는 원음 구간을 고르지 않는다")
             continue
         try:
             if not (0 <= float(s["a"]) < float(s["b"])) or orig_span_over(float(s["b"]), files_by[src]):
@@ -4835,7 +4848,12 @@ def f_draft_got(st, m, rp, u):
 
 
 def f_asr(st, m, rp, u):
-    return {"do": [{"id": "asr", "cmd": "asr_spans", "spans": st["research"].get("spans") or []}], "then": "f_asr_got"}
+    mute = _silent_files(st)            # 소리 없는 원본 구간은 받아쓰지 않는다(이성택 #9390 ffmpeg 'does not contain any stream')
+    spans = [s for s in st["research"].get("spans") or [] if str(s.get("src") or "") not in mute]
+    if not spans:                       # 받아쓸 원음 구간 없음(말·소리 없는 원본) = 건너뜀, 오류 아님
+        st["asr"] = {"spans": [], "skipped": "원음 구간 없음" + (f" — 소리 없는 원본 {sorted(mute)}" if mute else "")}
+        return {"goto": "script"}
+    return {"do": [{"id": "asr", "cmd": "asr_spans", "spans": spans}], "then": "f_asr_got"}
 
 
 def f_asr_got(st, m, rp, u):

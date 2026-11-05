@@ -1264,7 +1264,10 @@ def c_naver(W, d):
 
 
 def c_origin_words(W, d):
-    words, how = _origin_words(W, d["vid"]) if (d.get("platform") or "yt") == "yt" else ([], "")
+    from tools.calcopy.hybrid.common import has_audio
+    if (d.get("platform") or "yt") != "yt" and not has_audio(W / d["src"]):    # 소리 트랙 없는 원본(인스타·틱톡 무음) = 빈 받아쓰기(오류 아님) — 서버 flow._silent_files 가 audio 칸을 읽는다
+        return {"words": [], "from": "소리 없음", "audio": False}
+    words, how =_origin_words(W, d["vid"]) if (d.get("platform") or "yt") == "yt" else ([], "")
     if not words:                       # 자막이 아예 없다 → 받은 파일을 받아써 원본 초로(t0 더함)
         t0 = float(d.get("t0") or 0)
         for s in asr(W / d["src"]):
@@ -1425,10 +1428,14 @@ def c_orig_heard(W, d):
 
 def c_asr_spans(W, d):
     """원음 구간 받아쓰기 — 스피치매틱스(키 있으면) + 위스퍼 교차(사장님 10-21)."""
+    from tools.calcopy.hybrid.common import has_audio
     ad = W / "asr"; ad.mkdir(exist_ok=True)
     out = []
     for s in d.get("spans") or []:
         src = W / "src" / str(s["src"]) if s.get("src") else W / d["src"]      # 해외원본형 = 구간마다 원본 파일이 다르다(spans[].src)
+        if not has_audio(src):        # 소리 트랙 없는 원본 = 받아쓸 것이 없다(건너뜀, 오류 아님 — 이성택 #9390 ffmpeg 'does not contain any stream')
+            out.append({**s, "src": src.name, "skipped": "소리 없음"})
+            continue
         wav = ad / f"{s.get('tag', 'O')}.wav"
         run(["ffmpeg", "-y", "-v", "error", "-ss", f"{float(s['a']):.2f}", "-to", f"{float(s['b']):.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wav)])
         out.append({**s, "src": src.name, **asr_cross(wav)})

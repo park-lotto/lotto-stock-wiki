@@ -90,6 +90,13 @@ def orig_span_over(b: float, f: dict) -> float:
     return max(0.0, round(float(b) - end, 3))
 
 
+def has_audio(p) -> bool:
+    """(측정 주인 — 이 파일에 소리 트랙이 있나) ffprobe 로 오디오 스트림을 센다. 인스타·틱톡 무음 원본은 소리 트랙이 아예 없어
+    ffmpeg 소리 뽑기가 'Output file does not contain any stream' 으로 죽었다(이성택 #9390). 재지 못하면 예(옛 동작 그대로 — 받아쓰기가 오류를 알린다)."""
+    r = run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index", "-of", "csv=p=0", str(p)], check=False)
+    return r.returncode != 0 or bool((r.stdout or "").strip())
+
+
 def probe(p) -> tuple[int, int, float]:
     j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", p]).stdout)
     return j["streams"][0]["width"], j["streams"][0]["height"], float((j.get("format") or {}).get("duration") or 0)   # 사진(jpg)은 길이 칸이 없을 수 있다(10-27 run4 a편 쿠팡 사진 2장 KeyError → 제품 사진 0장)
