@@ -352,6 +352,8 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     caption_style = 이 편 자막이 속한 하위 스타일 이름(워커 정답 등 사람이 준 분류) — 자막 층을 뺐으면 그 스타일은 미측정으로 남는다."""
     preset_dir.mkdir(parents=True, exist_ok=True)
     fp, mp = preset_dir / "frame.json", preset_dir / "manifest.json"
+    if mp.exists() and json.loads(mp.read_text(encoding="utf-8")).get("frozen_at"):     # copy-05: 확정 프리셋은 편 추가로 바뀌지 않는다
+        raise ValueError(f"{preset_dir} 는 확정(frozen_at)됐다 — 고정 칸은 fix_value(why 필수)로만 바꾼다")
     now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     new = schema.validate(_strip(frame))                    # 형식 검사 + 정규화 모양으로 비교·저장(층마다 같은 키)
     if fp.exists():
@@ -428,10 +430,16 @@ def save_r7(preset_dir: Path, source_id: str, measured: dict) -> dict:
 def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
     """실측 대조로 정한 값을 프리셋 고정값으로 못 박는다(변수였으면 변수에서 뺀다). manifest.fixed 에 근거와 함께 남긴다.
     다음 save(편 추가)가 같은 자리를 다시 변수로 만들 수 있으므로 merge 는 fixed 자리를 건드리지 않는다."""
+    if not str(why or "").strip():
+        raise ValueError("fix_value: why(근거) 필수(copy-05)")
     frame, M = load(preset_dir)
     P = flat(frame)
     if path not in P:
         raise ValueError(f"자리 없음: {path}")
+    if M.get("frozen_at"):          # copy-05·apply-05: 확정 뒤 바꾸면 판 번호를 올리고 history 에 남긴다
+        M["version"] = int(M.get("version") or 1) + 1
+        M.setdefault("history", []).append({"at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"), "version": M["version"],
+                                            "what": f"fix_value {path}", "old": P[path], "new": value, "why": why})
     P[path] = value
     frame = unflat(P, layer_order(frame))
     M.setdefault("fixed", {})[path] = {"value": value, "why": why,
@@ -440,6 +448,25 @@ def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
     M.get("variable_stats", {}).pop(path, None)
     (preset_dir / "frame.json").write_text(json.dumps(frame, ensure_ascii=False, indent=1), encoding="utf-8")
     (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+    return M
+
+
+def freeze(preset_dir: Path, final_mp4: str, verdict: str, why: str) -> dict:
+    """(판단 주인 · apply-05) 확정 기록 — 시험편 sha256·판정을 manifest.reference 에, frozen_at·version·history 한 줄. 사람 시청 판정 통과 뒤에만 부른다."""
+    import hashlib
+    if verdict != "통과":
+        raise ValueError(f"확정은 시청 판정 통과 뒤에만(지금 {verdict})")
+    mp = Path(preset_dir) / "manifest.json"
+    M = json.loads(mp.read_text(encoding="utf-8"))
+    now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    sha = hashlib.sha256(Path(final_mp4).read_bytes()).hexdigest()
+    if (M.get("reference") or {}).get("sha256") == sha and M.get("frozen_at"):
+        return M
+    M["version"] = int(M.get("version") or 0) + 1
+    M["reference"] = {"mp4": str(final_mp4), "sha256": sha, "verdict": verdict, "why": why, "at": now}
+    M["frozen_at"] = now
+    M.setdefault("history", []).append({"at": now, "version": M["version"], "what": "freeze", "why": why, "sha256": sha})
+    mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
 
 

@@ -234,10 +234,17 @@ def stage_upgrade(S) -> dict:
           "recommend": rec, "menu": menu("all"),
           "measure": f"PYTHONUTF8=1 py tools/calcopy/engine/upgrade_table.py {name}_v2 <doc> <work>"}
     (kd / f"{S.d['slug']}_업그레이드판_초안.json").write_text(json.dumps(up, ensure_ascii=False, indent=1), encoding="utf-8")
+    one = []                                                     # apply-17(Jev 해결 0.60): 추천 후보 위 3개를 칸 하나씩 바꾼 초안(_v2a·b·c) — 뼈대 칸은 0
+    for tag, c in zip("abc", [c for c in rec["candidates"] if not c["skeleton"] and c.get("style_cell") not in (None, "미기입")][:3]):
+        d1 = {"name": f"{name}_v2{tag}", "base": name, "upgrades": [{"axis": c["element"], "what": c["what"], "source": c["kind"], "cell": c["style_cell"]}],
+              "_rule": "칸 하나만(apply-17) — 바꾼 칸 = upgrades[0].cell"}
+        bad = one_cell_check(d1)
+        (kd / f"{S.d['slug']}_업그레이드판_v2{tag}.json").write_text(json.dumps({**d1, "_check": bad or "칸 하나 · 뼈대 0"}, ensure_ascii=False, indent=1), encoding="utf-8")
+        one.append({"draft": f"v2{tag}", "cell": c["style_cell"], "check": bad or "ok"})
     recp = kd / "업그레이드_기록.md"
     if not recp.exists():
         recp.write_text(f"# {S.d['slug']} 업그레이드 기록 — 무엇을 → 왜(수치·채널·편) → 예상 효과 → 검증(측정값|사람 판정)\n(근거 없이 바꾸는 것 금지 — 지침서 §2-6-1)\n", encoding="utf-8")
-    return {"draft": str(kd / f"{S.d['slug']}_업그레이드판_초안.json"), "record": str(recp), "menu_n": len(up["menu"]), "base": name,
+    return {"one_cell": one, "draft": str(kd / f"{S.d['slug']}_업그레이드판_초안.json"), "record": str(recp), "menu_n": len(up["menu"]), "base": name,
             "kyeol": rec["kyeol"], "kyeol_src": rec["kyeol_src"], "candidates": rec["candidates"], "cannot_build": rec["cannot_build"]}
 
 
@@ -252,6 +259,21 @@ def _expand_refs(refs: list[str]) -> list[str]:
         p = Path(r)
         out += [str(x) for x in sorted(p.glob("*.mp4"))] if p.is_dir() else [r]
     return out
+
+
+SKELETON_CELLS = ("placement", "script", "cuts", "timing", "caption.typing_cps", "variant_for", "length", "sfx_key")   # stage_upgrade _rule 의 뼈대 칸
+
+
+def one_cell_check(d: dict) -> list[str]:
+    """(판단 주인 · apply-17) 업그레이드 초안이 base 와 다른 칸이 정확히 1개이고 뼈대 칸(SKELETON_CELLS)은 0개인가."""
+    cells = [u.get("cell") for u in d.get("upgrades") or []]
+    bad = []
+    if len(cells) != 1:
+        bad.append(f"바꾼 칸 {len(cells)}개(정확히 1개여야)")
+    sk = [c for c in cells if any(str(c or "").startswith(x) for x in SKELETON_CELLS)]
+    if sk:
+        bad.append(f"뼈대 칸을 바꿈 {sk} — 사장님 확인")
+    return bad
 
 
 def _slug_of(ref: str) -> str:
@@ -908,6 +930,21 @@ def step_apply(S: State):
         plan.setdefault("upload", {})["title"] = {**K.title_of(json.loads(top.read_text(encoding="utf-8"))), "_rule": "편마다 3안은 이 꼴로(사람) · 같은 문장 0"}
         pp.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     ch = S.d.get("channel") or {}
+    up = kd / "업로드글.txt"
+    if up.exists():                                                         # apply-09: 업로드 글 금지 낱말·해시태그
+        from tools.calcopy.engine import upload_pack
+        plan = json.loads(pp.read_text(encoding="utf-8")) if pp.exists() else {}
+        ub = upload_pack.check(up.read_text(encoding="utf-8"), (plan.get("upload") or {}))
+        if ub:
+            return "waiting_human", {"upload": str(up)}, f"업로드 글 관문 {ub}"
+    pdir = (S.step("copy").get("outputs") or {}).get("preset")
+    W = (S.step("verify").get("outputs") or {}).get("watch")
+    froze = None
+    if pdir and W and Path(W).exists() and mo.get("ours_mp4"):            # apply-05: 시청 판정 통과 시험편으로 확정 기록
+        from tools.calcopy.engine import preset_save
+        Wd = json.loads(Path(W).read_text(encoding="utf-8"))
+        froze = preset_save.freeze(Path(pdir), mo["ours_mp4"], Wd.get("verdict"), f"kal verify 시청 판정({Wd.get('who')}) · 재현일치도 통과")
+    gone = cleanup(S) if froze else None                                    # apply-06: 확정 뒤에만 중간물 정리
     om = (S.step("make").get("outputs") or {}).get("ours_mp4")
     if om and om not in (S.d.get("made") or []):
         S.d.setdefault("made", []).append(om)          # 확정 시험편 = 지킬 파일(common-10 write_guard)
@@ -918,7 +955,28 @@ def step_apply(S: State):
                     f"- channel/브랜드.json: 우리 브랜드 '{S.d.get('brand') or '(미정 — 사장님께)'}' ↔ 벤치 {S.d['slug']}\n"
                     f"- channel/스타일.json options/strengths: 스타일분석.md §1 규칙(근거 편·숫자·출처)\n- channel/결과물.json: 시험편 등록(preset_make 가 자동)\n"
                     f"- 하이브리드 {S.d.get('hybrid') or '(미정)'} → 하이브리드_판설계.md\n- 반영은 preset_publish.py(요청 때/02:00)\n", encoding="utf-8")
-    return "done", {"todo": str(todo)}, "원장 2단계 done · 장부 할일 적음"
+    return "done", {"todo": str(todo), "frozen": bool(froze), "cleanup": gone}, "원장 2단계 done · 장부 할일 적음" + (f" · 확정 v{froze.get('version')}" if froze else "") + (f" · 정리 {gone['removed']}개" if gone else "")
+
+
+CLEAN_DROP = ("kal/frames_*", "kal/*/strips")                 # apply-06 지울 것(확정 뒤 다시 만들 수 있는 판독 시트·띠) — DATA/<slug> 기준
+CLEAN_KEEP = ("src/*.mp4", "src/*.info.json", "src/*.vtt", "src/*.comments.json", "top.json", "선정표.md", "frames/frame_*.json")   # 남길 것(원본·유료 결과·설명서)
+
+
+def cleanup(S: State) -> dict:
+    """(판단 주인 · apply-06 Jev 해결 0.71) 확정(frozen) 뒤 중간물 정리 — 지울 목록·남길 목록 한 곳. 지운 뒤 두 목록을 다시 세어 검사(남길 것이 줄면 RuntimeError)."""
+    import shutil
+    base = DATA / S.d["slug"]
+    keep0 = sorted(str(p) for g in CLEAN_KEEP for p in base.glob(g))
+    removed = 0
+    for g in CLEAN_DROP:
+        for p in base.glob(g):
+            shutil.rmtree(p, ignore_errors=True) if p.is_dir() else p.unlink(missing_ok=True)
+            removed += 1
+    keep1 = sorted(str(p) for g in CLEAN_KEEP for p in base.glob(g))
+    left = [str(p) for g in CLEAN_DROP for p in base.glob(g)]
+    if keep1 != keep0 or left:
+        raise RuntimeError(f"정리 검사 실패 — 남길 것 {len(keep0)}→{len(keep1)} · 안 지워진 것 {left[:3]}")
+    return {"removed": removed, "kept": len(keep1)}
 
 
 RUN = {"select": step_select, "collect": step_collect, "tteutgi": step_tteutgi, "frames": step_frames, "skeleton": step_skeleton, "readlines": step_readlines,

@@ -179,4 +179,24 @@ def composition(path: str, meta: dict, asr: dict, ocr_texts: list[str]) -> dict:
     else:
         kind = "나레 없음"
     out["kind"] = kind
+    out["seg_loudness"] = seg_loudness(lv, segs) if lv is not None else {"failed": "소리 없음"}     # tteutgi-26
+    return out
+
+
+M_WIN_S = 0.4   # tteutgi-26 모멘터리 창(ebur128 M 과 같은 0.4초 — K-가중 없는 20ms RMS 파워 평균 근사)
+
+
+def seg_loudness(lv: np.ndarray, segs: list[dict]) -> dict:
+    """(판단 주인 · tteutgi-26) 받아쓰기 구절 kind(나레·원음/대화)별 0.4초 창 음량 중앙 + 말 없는 빈틈 바닥(10번째 백분위)."""
+    if lv is None or not lv.size:
+        return {"failed": "소리 없음"}
+    k = max(1, int(round(M_WIN_S / WIN)))
+    p = 10 ** (lv / 10)
+    m = 10 * np.log10(np.convolve(p, np.ones(k) / k, mode="same") + 1e-12)
+    out = {"method": f"20ms RMS → {M_WIN_S}s 창 파워 평균(ebur128 M 근사, K-가중 없음) · 구절 kind 별 중앙"}
+    for name, kinds in (("narration", ("narration",)), ("source", ("source", "dialog"))):
+        mk = _mask([s for s in segs if str(s.get("kind")) in kinds], m.size)
+        out[name] = round(float(np.median(m[mk])), 1) if mk.any() else None
+    gap = ~_mask(segs, m.size)
+    out["gap_floor"] = round(float(np.percentile(m[gap], 10)), 1) if gap.any() else None
     return out

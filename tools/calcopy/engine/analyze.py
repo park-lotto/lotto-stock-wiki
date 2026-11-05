@@ -560,6 +560,18 @@ def audio_and_tone(path, meta, llm, R: dict | None = None) -> tuple[dict, dict]:
                  else {"failed": "한국어 받아쓰기 구절 없음"})
 
 
+EDGE_S = 0.3   # tteutgi-13: 시작·끝에서 이만큼 안에 붙은 '다른 틀' 구간 = 인트로·엔딩
+
+
+def intro_outro(segs: list, dur: float) -> dict:
+    """(판단 주인 · tteutgi-13) layout other_frame_segments 중 영상 시작·끝에 붙은 구간 → intro/outro {t0,t1,len}(없으면 None)."""
+    S = [(float(a), float(b)) for a, b in (segs or []) if b is not None]
+    i = next(((a, b) for a, b in S if a <= EDGE_S), None)
+    o = next(((a, b) for a, b in reversed(S) if dur and b >= dur - EDGE_S), None)
+    f = lambda x: {"t0": round(x[0], 2), "t1": round(x[1], 2), "len": round(x[1] - x[0], 2)} if x else None  # noqa: E731
+    return {"intro": f(i), "outro": f(o) if o != i or not i else None}
+
+
 def _context(R: dict) -> str:
     """제작법 판독에 같이 주는 맥락: 자막 글자 전문 + 받아쓰기 언어·앞부분."""
     caps = " / ".join(" ".join(it["text"]) for it in (R.get("captions") or {}).get("items", []) if it.get("text"))
@@ -598,6 +610,7 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
                    "chunks": lay["window"].get("chunks", []), "caption_candidates": lay["caption_candidates"]}
     if not vl.get("window"):
         R["layout"]["failed"] = "영상 창을 못 찾음"
+    R["layout"]["intro_outro"] = intro_outro(R["layout"]["other_frame_segments"], meta["duration"])      # tteutgi-13
     if R["layout"]["other_frame_segments"]:
         unknown.append(f"틀이 다른 구간(엔딩·전체화면 등): {R['layout']['other_frame_segments']} — 창 다수결에서 뺌")
     T["layout"] = time.time() - t

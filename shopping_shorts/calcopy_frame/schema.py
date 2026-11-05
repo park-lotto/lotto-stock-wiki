@@ -317,8 +317,32 @@ def _layers(layers, W, H, where0: str) -> list:
     return out
 
 
-def validate(frame) -> dict:
-    """설명서 한 장을 검사하고 정규화한 사본을 돌려준다(원본은 건드리지 않는다). 형식이 틀리면 FrameError."""
+STRICT_META = ("made_from", "notes", "_note", "_from", "why")   # copy-04 strict 에서 버려져도 되는 기록 칸(그리기와 무관)
+
+
+def dropped_keys(frame: dict, out: dict) -> list[str]:
+    """정규화가 조용히 버린 키 — 맨 위 칸 + 층(같은 번호끼리). STRICT_META 는 뺀다."""
+    def L(x):
+        return x.get("layers") or [l for fr in x.get("frames") or [] for l in fr.get("layers") or []]
+    bad = [k for k in frame if k not in out and k not in STRICT_META]
+    for i, (a, b) in enumerate(zip(L(frame), L(out))):
+        if isinstance(a, dict) and isinstance(b, dict):
+            bad += [f"layers[{i}].{k}" for k in a if k not in b and k not in STRICT_META]
+    return bad
+
+
+def validate(frame, strict: bool = False) -> dict:
+    """설명서 한 장을 검사하고 정규화한 사본을 돌려준다(원본은 건드리지 않는다). 형식이 틀리면 FrameError.
+    strict=True(copy-04 · to_frame.main 이 씀) = 모르는 키를 조용히 버리지 않고 FrameError. 기본 False = 고객 화면(scene_style) 동작 그대로."""
+    out = _validate(frame)
+    if strict:
+        bad = dropped_keys(frame, out)
+        if bad:
+            raise FrameError(f"모르는 키(조용히 버리지 않음): {bad[:8]}")
+    return out
+
+
+def _validate(frame) -> dict:
     if not isinstance(frame, dict):
         raise FrameError("설명서는 객체(dict)여야 합니다")
     canvas = frame.get("canvas")

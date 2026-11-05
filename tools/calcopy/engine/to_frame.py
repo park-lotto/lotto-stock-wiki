@@ -949,7 +949,7 @@ def main(argv=None):
         F["made_from"]["notes"].append(f"고정 띠 OCR 실패: {err}")
     if ocr:
         F["made_from"]["ocr_model"] = ocr.get("_model")
-    schema.validate(F)      # 형식 검사 — 통과 못 하면 여기서 멈춘다(조용히 쓰지 않는다)
+    schema.validate(F, strict=True)      # 형식 검사 + 모르는 키 거절(copy-04) — 통과 못 하면 여기서 멈춘다(조용히 쓰지 않는다)
     Path(a.out).write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(F["made_from"], ensure_ascii=False, indent=1))
     print("frame:", a.out)
