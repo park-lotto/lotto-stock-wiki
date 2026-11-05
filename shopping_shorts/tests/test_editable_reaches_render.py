@@ -203,3 +203,33 @@ def test_박힌_글자_칸은_실행기가_환경으로_넘긴다():
     js = (ROOT / "shortem_client" / "server" / "flow_driver.js").read_text(encoding="utf-8")
     assert "pk.text.orig_text" in js and "SHORTEM_TEXT_MODE: textMode" in js
     assert "SHORTEM_TEXT_MODE" in inspect.getsource(VC.style_mode)
+
+
+# ── 꾸민 모양 길(web.look 있는 회원 팩) — 틀·자막을 회원 스냅샷이 그리는 길도 회원 채널명·대본 제목이 렌더 입력에 닿아야 한다 ──
+LOOK_FIX = Path(__file__).parent / "fixtures" / "look_customframe.json"
+LOOK_TL = [{"beat_idx": 0, "t0": 0, "dur": 1.9, "narration": "대본 첫 문장이 자동 제목으로 들어가면 안 된다", "caption_lines": ["대본 첫 문장"], "role": "hook",
+            "primary": {"video_id": "s0", "start": 0, "end": 1.9}},
+           {"beat_idx": 1, "t0": 1.9, "dur": 1.1, "narration": "본문", "caption_lines": ["본문"], "role": "body", "primary": {"video_id": "s0", "start": 1.9, "end": 3}}]
+
+
+def _look_text(tmp_path, monkeypatch, member, S_):
+    """회원 팩(member + web.look) → render 와 같은 순서(styles.load → member_look → look_snapshot(st, look, S)) → compose 가 그리는 글(context_for text)."""
+    from shopping_shorts import scene_style
+    pf = tmp_path / "packs" / "p.json"
+    pf.parent.mkdir(parents=True, exist_ok=True)
+    pf.write_text(json.dumps({"member": member, "web": {"look": json.loads(LOOK_FIX.read_text(encoding="utf-8"))}}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(pf))
+    st = STY.load(V)
+    snap = RB.look_snapshot(st, RB.member_look(pf), S_)
+    return scene_style.context_for(LOOK_TL, {"text": ""}, snap)["text"]      # burn_captions → compose 와 같은 headcopy·job_id 없음
+
+
+def test_꾸민_모양_길_채널명과_대본_제목이_렌더_입력에_닿는다(tmp_path, monkeypatch):
+    """#8959 서지환: 꾸민 모양 길은 look_snapshot 이 견본 글을 지우고 아무도 안 채워 채널명 '숏템메이커'·대본 첫 문장 자동 제목이 나왔다."""
+    S2 = {**S, "title_lines": [[["아무도 몰랐던", None]], [["이 제품 ", None], ["뒷이야기", "hi"]]]}       # 실제 대본 꼴(조각 [글, 색])
+    t = _look_text(tmp_path, monkeypatch, NAME, S2)
+    assert t["channel"] == "시험채널", t
+    assert (t["hook1"], t["hook2"]) == ("아무도 몰랐던", "이 제품 뒷이야기"), t
+    t0 = _look_text(tmp_path / "noname", monkeypatch, {}, S2)
+    assert t0["channel"] == "" and t0["channel"] != "숏템메이커", t0          # 채널명 안 넣은 회원 = 아무것도 안 그림(렌더러 기본 이름 금지)
+    assert "look_snapshot(st, look, S)" in inspect.getsource(RB.render)     # 렌더가 이 편 대본을 넘긴다

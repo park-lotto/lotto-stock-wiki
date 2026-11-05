@@ -3366,13 +3366,29 @@ def member_look(pack: Path | str | None) -> dict | None:
         raise StageError(f"회원 꾸민 모양(web.look) 검사 실패: {e}") from None
 
 
-def look_snapshot(st: dict, look: dict) -> dict:
-    """회원 꾸민 모양 + 판 자막팩 — 틀·글·색·자리는 회원 것, 자막팩·움직임팩은 회원이 안 정했으면(없음·'off') 판 것(snapshot(st) 의 칸)."""
+def member_texts(S: dict, st: dict) -> dict:
+    """(판단 주인 — 꾸민 모양 길의 글) 이 편의 채널명·제목 칸 {channel, hook1, hook2, bodyTitle, supportTitle}.
+    채널명 = 회원 팩 brand.channel_name(styles.member_frame 이 st['member_channel'] 로 남긴 것 — 판 틀 로고·워터마크와 같은 값). 안 넣었으면 ''
+    (빈 글이 렌더러 기본 '숏템메이커'(scene_style.DEFAULT_CHANNEL)를 덮어 아무것도 안 그린다 — 판 틀 길도 채널명 없으면 로고·워터마크를 지운다).
+    제목 = 대본 title_lines(일반 길 frame_png·title_segs 와 같은 칸) → 고객 길 규칙 template_copy.scene_text(두 줄 = hook1·hook2, 남은 줄은 hook2 에 잇기, bodyTitle 도 그 규칙).
+    #8959 서지환: 이 칸을 아무도 안 채워 compose 가 기본 채널명·대본 첫 문장 자동 제목(중복)을 그렸다."""
+    from shopping_shorts.template_copy import scene_text
+    lines = ["".join(str(c[0]) for c in ln if isinstance(c, (list, tuple)) and c) if isinstance(ln, list) else str(ln)
+             for ln in S.get("title_lines") or []]
+    lines = [t.strip() for t in lines if t.strip()]
+    return {"channel": st.get("member_channel") or "", **scene_text({"text": "\n".join(lines)})}
+
+
+def look_snapshot(st: dict, look: dict, S: dict | None = None) -> dict:
+    """회원 꾸민 모양 + 판 자막팩 — 틀·글·색·자리는 회원 것, 자막팩·움직임팩은 회원이 안 정했으면(없음·'off') 판 것(snapshot(st) 의 칸).
+    글(채널명·제목) = 이 편 것(member_texts). S 없음 = 글 칸 비움(옛 동작 — 시험용)."""
     from shopping_shorts import scene_style
     base = snapshot(st)
     snap = dict(look)
     for k in ("text", "sceneTexts", "captionTexts", "manualText"):   # 편집 화면의 견본 글 — 제목·자막 글은 이 편 대본이 주인
         snap.pop(k, None)
+    if S is not None:
+        snap["text"] = member_texts(S, st)
     for k in ("captionPack", "motionPack"):
         if (not snap.get(k) or snap.get(k) == "off") and base.get(k):
             snap[k] = base[k]
@@ -4506,7 +4522,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     segs = [] if look else frame_segments(S, T, st)
     rows = caption_rows(placed, st, segs)
-    snap = look_snapshot(st, look) if look else None
+    snap = look_snapshot(st, look, S) if look else None
     ranges = []
     if scope and not (rows or snap):      # 자막이 없으면 칸 조각도 없다 — 바탕이 곧 완성본이라 구간으로 못 나눈다
         scope = None
