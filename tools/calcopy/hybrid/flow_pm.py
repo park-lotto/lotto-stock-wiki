@@ -285,7 +285,7 @@ ROWS = """너는 PC 제작 담당과 같은 재료 담당이다. 자막 조각�
 
 ★자막 조각(행 수 = 조각 수, 순서 그대로 — 같은 컷을 이으려면 {{"cont": true}}):
 {pieces}
-★원본 파일(src 에 이 이름 그대로) — 시트 칸마다 원본 초가 적혀 있다(ss = 그 초):
+★원본 파일(src 에 이름만 그대로 — 괄호는 원본 가로×세로 px · 길이, src_crop 은 이 크기 안에서) — 시트 칸마다 원본 초가 적혀 있다(ss = 그 초):
 {files}
 ★짤(받은 것만 — src "meme:<이름>"):
 {memes}
@@ -309,13 +309,21 @@ def p_rows(st, m, rp, u):
     return _rows_ask(st)
 
 
+def _file_line(f: dict) -> str:
+    """원본 파일 한 줄 = 이름 (가로×세로 · 길이). src_crop 을 원본 px 로 쓰라면서 크기를 안 주면 회원 Claude 가 숏템 밖 도구(ffprobe)로
+    재려다 권한에 막히고 크기를 모른 채 좌표를 지었다(11-05 회원 편 f65c321f656a · Jev 뿌리 0.93·해결 0.88). 값 = 받기 때 runner_ops.dims 가 잰 것."""
+    if not (f.get("w") and f.get("h")):
+        return f["name"]
+    return f"{f['name']} ({f['w']}×{f['h']}" + (f" · {f['dur']}초" if f.get("dur") else "") + ")"
+
+
 def _rows_ask(st, more: str = "", extra_imgs: list | None = None):
     from tools.calcopy.engine import preset_make as PM
     cfg = PM.load_preset(preset_dir(st))[1]
     ps = _pieces(st)
     ask = ROWS.format(form=_doc(_slug_dir(st) / "_engine_ready.md", 5000, part="2."), guide=_doc(GUIDE / "05_material.md", 5000),
                       pieces="\n".join(f"{i}. {p['text'].replace(chr(10), ' / ')}" for i, p in enumerate(ps)),
-                      files=", ".join(f["name"] for f in st["material"]["files"]), memes=", ".join(st.get("pm_memes") or []) or "(없음)",
+                      files=", ".join(_file_line(f) for f in st["material"]["files"]), memes=", ".join(st.get("pm_memes") or []) or "(없음)",
                       win=f"{cfg['window'][0]}:{cfg['window'][1]}") + more
     imgs = [F()._img(x) for x in (extra_imgs or [])] + [F()._img(x) for x in st.get("pm_sheets") or []][:6] + ([F()._img(st["pm_meme_sheet"])] if st.get("pm_meme_sheet") else [])
     return {"review": [F()._rv("pm_rows", ask, imgs[:10], need=("재료",))], "then": "p_rows_got"}
