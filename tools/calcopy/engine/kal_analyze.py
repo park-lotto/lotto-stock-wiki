@@ -1562,9 +1562,12 @@ def script_of(docs: list[dict]) -> dict:
                    "connectors": dict(conn.most_common(10)), "exclaims": dict(exc.most_common(10)),
                    "first_lines": [str((d.get("lines") or [{}])[0].get("text") or "") for d in docs if _sp((d.get("lines") or [{}])[0].get("speaker")) == sp][:8],
                    **_flow_of(docs, sp)}
-    out["_end_forms"] = end_forms(docs)        # rules-11 (편 단위 — 화자 무관)
-    out["_title_stats"] = title_stats(docs)    # rules-25
     return out
+
+
+def script_extra(docs: list[dict]) -> dict:
+    """편 단위 대본 칸(화자 무관) — script_of(화자별 표, 소비처가 화자 이름으로 돎)와 따로 둔다: 끝맺음 꼴(rules-11)·제목 통계(rules-25)."""
+    return {"end_forms": end_forms(docs), "title_stats": title_stats(docs)}
 
 
 _CONNECT_END = ("는데", "은데", "고", "더니", "면서", "서", "니까", "지만")     # rules-12 이어지는 조각 끝
@@ -1663,13 +1666,14 @@ def write_rules(ch_dir, docs: list[dict], title: str = "") -> dict:
     ch = Path(ch_dir)
     kd = ch / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
-    R, Sc, P = rules_of(docs), script_of(docs), palette_of(docs)
+    R, Sc, P, X = rules_of(docs), script_of(docs), palette_of(docs), script_extra(docs)
     (kd / "규칙빈도_초안.md").write_text(rules_md(R, title), encoding="utf-8")
     (kd / "규칙빈도.json").write_text(json.dumps(R, ensure_ascii=False, indent=1), encoding="utf-8")
     (kd / "대본언어.md").write_text(script_md(Sc), encoding="utf-8")
     (kd / "대본언어.json").write_text(json.dumps(Sc, ensure_ascii=False, indent=1), encoding="utf-8")
+    (kd / "대본언어_편.json").write_text(json.dumps(X, ensure_ascii=False, indent=1), encoding="utf-8")   # rules-11·25
     (ch / "팔레트.json").write_text(json.dumps(P, ensure_ascii=False, indent=1), encoding="utf-8")
-    return {"rules": R, "script": Sc, "palette": P}
+    return {"rules": R, "script": Sc, "palette": P, "script_extra": X}
 
 
 def script_md(S: dict) -> str:

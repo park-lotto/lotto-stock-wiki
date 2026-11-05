@@ -26,10 +26,12 @@ def test_rules_05_09_18_form_beats_layers():
 
 
 def test_rules_11_12_25_script_flow_end_title():
-    Sc = K.script_of([_doc("a", title=[{"text": "이거 몰랐지?"}]), _doc("b", title=[{"text": "대박 3가지"}])])
-    assert Sc["_end_forms"]["mode"] == "구독CTA" and Sc["_end_forms"]["cta_rate"] == 1.0
+    docs = [_doc("a", title=[{"text": "이거 몰랐지?"}]), _doc("b", title=[{"text": "대박 3가지"}])]
+    Sc, X = K.script_of(docs), K.script_extra(docs)
+    assert all(not k.startswith("_") for k in Sc) and K.script_md(Sc)        # 화자별 표 꼴 그대로(script_md·remake 가 화자로 돎 — 연기 시험 KeyError 재발 막기)
+    assert X["end_forms"]["mode"] == "구독CTA" and X["end_forms"]["cta_rate"] == 1.0
     assert "훅" in Sc["나레"]["endings_by_pos"] and Sc["나레"]["connect_vs_close"]
-    assert Sc["_title_stats"]["n"] == 2 and Sc["_title_stats"]["question_rate"] == 0.5
+    assert X["title_stats"]["n"] == 2 and X["title_stats"]["question_rate"] == 0.5
     assert K.end_form(["그래서 결국 이렇다", "어떻게 생각해?"])["form"] == "질문"
     assert K.end_form(["다음 편에서 계속"])["teaser"]
 

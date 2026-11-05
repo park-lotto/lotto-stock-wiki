@@ -689,11 +689,11 @@ def step_rules(S: State):
             "length": {"min": round(min(durs), 1) if durs else None, "max": round(max(durs), 1) if durs else None,
                        "by_form": R.get("by_form") or {}},      # rules-05 형식별 길이(줄판독 form 칸)
             "script": {"brief": [f"{k}: 어미 " + ", ".join(e["ending"] for e in v["endings"][:4]) + f" · 존댓말 {v['honorific_rate']} · 전언 {v['report_rate']} · 자수 중앙 {v['chars']['med']}"
-                      + f" · 같은 어미 연달아 {v.get('same_ending_run')} · 잇는:맺는 {v.get('connect_vs_close')}" for k, v in Sc.items() if not k.startswith("_")]
+                      + f" · 같은 어미 연달아 {v.get('same_ending_run')} · 잇는:맺는 {v.get('connect_vs_close')}" for k, v in Sc.items()]
                      + [f"박자: {r} 첫 등장 {b['med_pct']}%({b['min_pct']}~{b['max_pct']}, {b['n']}편)" for r, b in (R.get("beat_pos") or {}).items()],
                        "example": (Sc.get("나레") or {}).get("first_lines", [])[:3], "audit": [],
                        "beat_pos": R.get("beat_pos") or {}, "tail_s": R.get("tail_s"),           # rules-09 박자 시점 %·끝 꼬리 초
-                       "end_forms": Sc.get("_end_forms"), "title_stats": Sc.get("_title_stats")},  # rules-11·25
+                       "end_forms": out["script_extra"]["end_forms"], "title_stats": out["script_extra"]["title_stats"]},  # rules-11·25
             "frame": {"window": lay.get("window"), "title": [], "logo": None, "credit": None, "watermark": None, "comment": None},
             "caption": {"pack": None, "pack_default": None, "variant_for": {}, "typing_cps": (sp.get("나레") or {}).get("cps")},
             "timing": None, "cuts": None, "sfx_files": None,
