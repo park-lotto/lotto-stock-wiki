@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import tempfile
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -32,6 +33,8 @@ VIDEO_FRAMES = 12                # 영상 파트 → 장면 그림 최대 장수
 #   그래서 기본 = opus. 하이쿠는 결과물에 안 닿는다고 이름을 대고 적은 것만(지금은 없다 — 넣을 때 왜 품질 무관인지 같이 적는다).
 #   실측(고객 모드 1편 요청 58건): score 22 · ocr0 14 · support 6 · draft/rewrite 7 · bench 7 — 전부 품질에 닿는다.
 TIERS: tuple = ()
+WAITING: set = set()             # 지금 답을 기다리는 요청 id — 실행기 감시(runner_ops._watch)가 '멈춤 아님'으로 읽는다. 판단은 감시 몫, 여기는 상태만
+_WLOCK = threading.Lock()
 
 
 def tier_of(tag: str) -> str:
@@ -144,6 +147,16 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
     tmp = d / "request.json.tmp"
     tmp.write_text(json.dumps(req, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(d / "request.json")
+    with _WLOCK:
+        WAITING.add(rid)
+    try:
+        return _wait(d, req)
+    finally:
+        with _WLOCK:
+            WAITING.discard(rid)
+
+
+def _wait(d: Path, req: dict) -> tuple[dict | None, str | None]:
     ans, err_f = d / "answer.json", d / "error.json"
     t0, tries = time.time(), 0
     while time.time() - t0 < TIMEOUT_S:

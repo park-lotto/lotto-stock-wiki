@@ -189,6 +189,28 @@ def sign_memes(res: dict, cid, sid, store) -> None:
             d["items"] = items
 
 
+ALARM_RULE = "jev_down"      # 지시서가 state["alarm"]["kind"] 로 남기는 이름 = 경보 규칙 이름(제목은 claude_portal.RULE_TITLE)
+
+
+def _raise_flow_alarm(store, cid, sid, st2: dict) -> None:
+    """지시서가 state["alarm"] 을 남겼으면 관리자 경보로 올리고 state 에서 지운다(같은 경보를 다음 걸음에 또 올리지 않는다).
+    alarm 이 없으면 아무 일도 하지 않는다. 경보 실패가 요청을 깨면 안 되므로 로그만 남긴다."""
+    alarm = st2.pop("alarm", None)
+    if not alarm:
+        return
+    if not isinstance(alarm, dict):      # 꼴이 틀린 경보도 버리지 않는다(조용한 실패 금지) — 글로 감싸 올리고 꼴 어긋남은 로그로
+        CP.log.warning("claude_flow: 흐름 경보 꼴이 dict 가 아님 sid=%s type=%s", sid, type(alarm).__name__)
+        alarm = {"why": str(alarm)}
+    rule = str((alarm or {}).get("kind") or ALARM_RULE)[:40]
+    detail = f"sid {sid} · {str(alarm.get('at') or '')[:40]} · {str(alarm.get('why') or '')[:300]}"
+    try:
+        with CP._tx(store, write=True) as c:
+            row = CP._raise_alert(c, cid, rule, "alert", 1, detail)
+        CP._notify([row])
+    except Exception:      # noqa: BLE001 — 경보 실패가 제작 요청을 깨면 안 된다. 대신 로그
+        CP.log.exception("claude_flow: 흐름 경보 기록 실패 sid=%s", sid)
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -198,7 +220,23 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     blob = json.dumps({"m": body.get("measure"), "r": body.get("replies")}, ensure_ascii=False)
     if len(blob) > MEASURE_MAX:
         raise CP.PortalError("bad_request", "보낸 결과가 너무 큽니다")
-    if kind in ("start", "sources"):
+    if kind == "bench_start":                    # 채널 벤치마킹 2판(관제 319) — 반 판단 주인 = member_tier
+        if CP.member_tier(store, cid) == "basic":
+            raise CP.PortalError("tier_locked", "채널 벤치마킹은 고급반에서 제공돼요")
+        src = body.get("source") or {}
+        url, vids = str(src.get("url") or "")[:300], [str(v)[:300] for v in (src.get("videos") or [])][:5]
+        if not url and not vids:
+            raise CP.PortalError("bad_request", "채널 주소나 영상 주소를 주세요")
+        try:
+            n = int(body.get("n") or 3)
+        except (TypeError, ValueError):
+            raise CP.PortalError("bad_request", "n 은 숫자여야 합니다")
+        sid = uuid.uuid4().hex[:12]
+        st, seq = flow.start_bench(url, vids, str(body.get("name") or "내 프리셋"), sid, n), 0
+        with CP._tx(store, write=True) as c:
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, "bench", "bench_v2", 0, "bm_setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
+    elif kind in ("start", "sources"):
         pid = str(body.get("preset") or "")
         with CP._tx(store) as c:
             lic = CP._row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
@@ -272,6 +310,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         raise
     st2 = res.pop("state")
     sign_memes(res, cid, sid, store)      # 짤 후보 받을 주소(PC 제작 라인 짤 단계)
+    _raise_flow_alarm(store, cid, sid, st2)
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",

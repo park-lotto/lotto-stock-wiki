@@ -76,8 +76,14 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     $fresh = "$homeDir.new"
     if (Test-Path $fresh) { Remove-Item $fresh -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $fresh | Out-Null
-    & "$env:SystemRoot\System32\tar.exe" -xf $zip -C $fresh
-    if ($LASTEXITCODE -ne 0) { Die "풀기 실패(tar $LASTEXITCODE)" }
+    # 윈도 내장 tar.exe 는 시스템 문자표(일본 CP932 등)로 못 바꾸는 한글 파일명을 건너뛰고 실패한다(관제 311, 일본 회원 11-03).
+    # .NET 압축 풀기는 묶음의 UTF-8 이름 표시를 그대로 따른다 — 회원 PC 언어와 무관. launcher.js unpack 과 같은 방법.
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [IO.Compression.ZipFile]::ExtractToDirectory($zip, $fresh)
+    } catch {
+        Die "풀기 실패($($_.Exception.Message))"
+    }
     if (-not (Test-Path (Join-Path $fresh 'tools\tools.manifest.json')) -or -not (Test-Path (Join-Path $fresh 'server\index.js'))) { Die '풀린 묶음이 덜 찼습니다' }
     $old = $null
     if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Move-Folder $homeDir $old }
@@ -209,9 +215,7 @@ if (-not $env:SHORTEM_NO_LAUNCH) {
     $ErrorActionPreference = 'Continue'
     $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     if (-not $logged) {
-        Say '브라우저가 열립니다. Claude 에 로그인하고 승인 버튼만 눌러 주세요'
-        Say '코드 화면이 나오면 [복사]를 눌러 여기에 붙여 넣고 엔터. 다른 글자를 넣어 Invalid code 가 떠도 창을 닫지 말고 코드만 다시 붙이면 됩니다'
-        & claude auth login
+        & $menu -LoginOnly      # 로그인은 메뉴의 Invoke-ShortclLogin 한 곳(관제 310)
         $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     }
     $ErrorActionPreference = $eap

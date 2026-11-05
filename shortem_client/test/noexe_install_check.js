@@ -80,7 +80,7 @@ const home = path.join(env.LOCALAPPDATA, 'Shortem');
 out.installed = fs.existsSync(path.join(home, 'tools', 'tools.manifest.json'));
 out.license_saved = fs.existsSync(path.join(env.SHORTEM_HOME, 'license'));
 out.desktop_start_md = fs.existsSync(path.join(dir, 'Desktop', '숏템작업', 'START.md'));
-out.leftover = fs.readdirSync(path.dirname(home)).filter((n) => n !== 'Shortem');   // .part·.new·.old 남으면 안 된다
+out.leftover = fs.readdirSync(path.dirname(home)).filter((n) => n !== 'Shortem' && n.startsWith('Shortem'));   // .part·.new·.old 남으면 안 된다(풀기용 파워쉘이 만드는 Microsoft 캐시 폴더는 회원 PC 에 원래 있다 — 관제 311)
 out.install_seconds = Math.round((Date.now() - t0) / 1000);
 
 // 다시 켜기 = 진짜 숏템 서버로 뜨는가

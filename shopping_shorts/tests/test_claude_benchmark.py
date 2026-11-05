@@ -170,3 +170,42 @@ def test_고급반_안내는_회원용_문장이다():
     assert "칼카피" not in (ROOT / "installer/common/MEMBER_GUIDE.md").read_text(encoding="utf-8")
     from tools.calcopy.hybrid import flow
     assert flow.benchmark_guide().startswith(t[:40])
+
+
+def test_v2_files_released_and_jev_not():
+    from tools.claude_portal import benchmark_pack as BP
+    for f in ("tools/calcopy/engine/agy.py", "tools/calcopy/engine/preset_brief.py", "tools/calcopy/engine/agy_check.py"):
+        assert f in BP.RELEASED
+    assert "tools/calcopy/hybrid/jev_gate.py" not in BP.RELEASED and "tools/calcopy/hybrid/flow_bench.py" not in BP.RELEASED
+    assert BP.blocked("tools/calcopy/hybrid/jev_gate.py") and BP.blocked("tools/calcopy/hybrid/flow_bench.py")   # 서버 전용 — 어느 묶음에도 안 간다
+
+
+def test_jev_key_name_is_secret():
+    from tools.claude_portal import engine_bundle as EB
+    import re
+    assert any(re.search(p, "TYPESAFE_API_KEY") for p in EB.SECRETS)
+
+
+def test_v2_runner_ops_imports_all_have_a_way_to_member_pc():
+    """실행기(runner_ops)가 부르는 파일은 기본 묶음(HAND·허용 파일)·서버 전용·고급반 묶음 셋 중 하나에 있어야 한다 — 어디에도 없으면 회원 PC 가 ImportError."""
+    from tools.claude_portal import benchmark_pack as BP, engine_bundle as EB
+    bad = [m for m in EB.hand_deps(ROOT) if EB.forbidden(m) and m not in BP.RELEASED]
+    assert bad == [] or all("community_" in b or "_server_access" in b for b in bad), bad   # 마지막 둘 = 이 과제 이전부터 열려 있던 별개 구멍(topic_find)
+    # 벤치 입구가 부르는 것은 고급반 묶음 목록에 잡혀야 한다(추적 없이도)
+    kept = set(BP.wanted(ROOT))
+    for f in ("tools/calcopy/engine/preset_brief.py", "tools/calcopy/engine/agy.py", "tools/calcopy/engine/agy_check.py"):
+        assert f in kept
+
+
+def test_v2_runner_ops_bench_deps_not_unresolved():
+    from tools.claude_portal import engine_bundle as EB
+    left = [x for x in EB.hand_unresolved(ROOT) if "runner_ops" in x]
+    assert left == [], left
+
+
+def test_v2_guide_uses_flow_sid_and_member_words():
+    t = (ROOT / "channel/production_guide/15_benchmark.md").read_text(encoding="utf-8")
+    for w in ("칼카피", "run_id"):
+        assert w not in t, w
+    for w in ("준비 확인", "벤치 받기", "뜯기", "영상 보기", "시험 편", "잡도리", "확정", "프리셋 묶음", "sid", "agy"):
+        assert w in t, w

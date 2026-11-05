@@ -9,6 +9,16 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "installer/install.ps1": {
+    "at": "2026-11-03 14:55",
+    "card": 311,
+    "track": "숏클설치오류"
+  },
+  "installer/mcpb/launcher.js:installPack": {
+    "at": "2026-11-03 14:55",
+    "card": 311,
+    "track": "숏클설치오류"
+  },
   "out/precision20-ui.js": {
     "at": "2026-09-29 23:55",
     "card": 40,
@@ -193,6 +203,11 @@
     "at": "2026-09-29 16:06",
     "card": 30,
     "track": "장면폰트"
+  },
+  "shopping_shorts/static/admin.html": {
+    "at": "2026-11-05 11:40",
+    "card": 329,
+    "track": "숏클동시접속"
   },
   "shopping_shorts/static/motion-graphics-pack.js": {
     "at": "2026-10-17 01:08",

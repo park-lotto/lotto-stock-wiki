@@ -147,6 +147,19 @@ tbody tr:hover{background:#1b1b22}
 <div id=claudeLiveEvents style="font-size:12px;max-height:360px;overflow:auto"></div>
 <pre id=claudeLiveFix style="display:none;font-size:11px;white-space:pre-wrap;max-height:420px;overflow:auto;background:#101014;border:1px solid #2a2a30;border-radius:8px;padding:10px;margin-top:10px"></pre>
 </details>
+<!-- 숏클 회원 관리(관제 329) — 계정 연결·등록 PC·지금 쓰는 PC·규칙 설정. 판단은 claude_portal.admin_members·guard_settings, 여기는 그리기·누르기만. -->
+<details class=card id=claudeMembersCard ontoggle="if(this.open) renderClaudeMembers()">
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🔐 숏클 회원 관리 <span id=cmSummary style="font-weight:400;color:#8a8a92"></span></summary>
+<div id=cmRules style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;margin:12px 0;padding:10px 12px;background:#101014;border:1px solid #2a2a30;border-radius:8px">
+  <label>PC 등록 한도 <select id=cmMax style="background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select> 대</label>
+  <label>최소 엔진 <input id=cmEngine placeholder="1.0.100" style="width:90px;background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"></label>
+  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type=checkbox id=cmAcct style="width:auto;margin:0"> Claude 계정 바뀌면 승인 받기</label>
+  <span style="color:#8a8a92">· 동시 접속은 늘 PC 1대</span>
+  <button class=bkey onclick="saveClaudeGuard()">규칙 저장</button>
+  <span id=cmMsg class=msg></span>
+</div>
+<div id=cmTable style="font-size:13px"></div>
+</details>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -520,6 +533,60 @@ async function renderClaudeChanges(){
 async function decideClaudeChange(id,approve){
   try{ await fetch('/api/admin/claude/changes/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,approve:approve})}); }catch(e){}
   renderClaudeChanges();
+  renderClaudeMembers();
+}
+// 숏클 회원 관리(관제 329) — 판단은 서버 claude_portal, 여기는 그리기·누르기만.
+function _cmTime(ts){ if(!ts) return '—'; const m=Math.round((Date.now()/1000-ts)/60); return m<1?'방금':m<60?m+'분 전':m<1440?Math.round(m/60)+'시간 전':Math.round(m/1440)+'일 전'; }
+async function renderClaudeMembers(){
+  const box=document.getElementById('cmTable'); if(!box) return;
+  const card=document.getElementById('claudeMembersCard');
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/members',{cache:'no-store'}); d=await r.json(); if(!r.ok) throw new Error(d.msg||r.status); }
+  catch(e){ box.textContent='불러오지 못했습니다: '+e.message; return; }
+  const g=d.settings||{}, ms=d.members||[];
+  if(!card.dataset.rulesShown){ document.getElementById('cmMax').value=String(g.devices_max); document.getElementById('cmEngine').value=g.min_engine||''; document.getElementById('cmAcct').checked=!!g.account_check; card.dataset.rulesShown='1'; }
+  const on=ms.filter(m=>m.online||m.making).length, ask=ms.filter(m=>m.asked.length).length, old=ms.filter(m=>m.devices.some(x=>x.engine_old)).length;
+  document.getElementById('cmSummary').textContent='회원 '+ms.length+'명 · 지금 사용 '+on+'명'+(ask?' · 승인 대기 '+ask+'명':'')+(old?' · 옛 엔진 '+old+'명':'');
+  if(!ms.length){ box.innerHTML='<div style="color:#8a8a92">숏클을 쓴 회원이 아직 없습니다</div>'; return; }
+  const nSlot=Math.max(g.devices_max||1,...ms.map(m=>Math.max(0,...m.devices.map(x=>x.slot||0))));
+  let head='<table><thead><tr><th>회원</th><th>Claude 계정</th>';
+  for(let i=1;i<=nSlot;i++) head+='<th>PC '+i+'</th>';
+  head+='<th>지금 사용</th><th></th></tr></thead><tbody>';
+  box.innerHTML=head+ms.map(m=>{
+    let cells='';
+    for(let i=1;i<=nSlot;i++){
+      const x=m.devices.find(v=>v.slot===i);
+      cells+=x?'<td><div>'+_abEsc(x.name)+'</div><div style="font-size:11px;color:'+(x.engine_old?'#ff8080':'#8a8a92')+'">'+(x.engine?'엔진 '+_abEsc(x.engine):'엔진 모름')+(x.engine_old?' (옛 엔진)':'')+' · '+_cmTime(x.last_seen)+'</div>'
+        +'<button class=bdel style="margin-top:4px;padding:4px 9px;font-size:12px" data-cid="'+m.cid+'" data-dev="'+_abEsc(x.id)+'" data-name="'+_abEsc(x.name)+'" onclick="cmRemoveDevice(this)">빼기</button></td>'
+        :'<td style="color:#55555c">'+(m.devices.length>=g.devices_max?'한도 참':'빈 칸')+'</td>';
+    }
+    const acct=m.staff?'<span style="color:#8a8a92">관리자(검사 없음)</span>':m.account.linked?'연결됨 <span style="font-size:11px;color:#8a8a92">'+_cmTime(m.account.bound)+'</span> <button class=bedit style="padding:4px 9px;font-size:12px" data-cid="'+m.cid+'" data-act="unbind" onclick="cmAction(this)">연결 풀기</button>':'<span style="color:#8a8a92">아직 없음</span>';
+    const live=m.making?'🎬 '+_abEsc(m.making.name)+' 제작 중':m.online?'🟢 '+_abEsc(m.online.name):'<span style="color:#55555c">—</span>';
+    const kick=(m.online||m.making)?'<button class=bchal style="padding:4px 9px;font-size:12px" data-cid="'+m.cid+'" data-act="kick" data-making="'+(m.making?1:0)+'" onclick="cmAction(this)">접속 끊기</button>':'';
+    const flag=(m.asked.length?'<div style="font-size:11px;color:#ffd479">승인 대기: '+m.asked.map(k=>k==='device'?'PC 교체':'계정 변경').join('·')+' (위 알림 카드)</div>':'')+(m.revoked?'<div style="font-size:11px;color:#ff8080">라이선스 회수됨</div>':'');
+    return '<tr><td>'+_abEsc(m.member||'회원')+' <span style="color:#8a8a92">('+m.cid+')</span>'+flag+'</td><td>'+acct+'</td>'+cells+'<td>'+live+'</td><td>'+kick+'</td></tr>';
+  }).join('')+'</tbody></table>';
+}
+async function cmPost(url,body){
+  const msg=document.getElementById('cmMsg');
+  try{ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const d=await r.json(); if(!r.ok||d.ok===false) throw new Error(d.msg||r.status); msg.textContent='반영했습니다'; return d; }
+  catch(e){ msg.textContent='실패: '+e.message; return null; }
+  finally{ renderClaudeMembers(); }
+}
+async function cmAction(b){
+  const action=b.dataset.act, making=b.dataset.making==='1';
+  const q=action==='unbind'?'이 회원의 Claude 계정 연결을 풀까요?\n다음에 숏클을 쓰는 Claude 계정으로 다시 연결됩니다.'
+    :(making?'이 회원은 지금 영상을 만드는 중입니다. 끊으면 그 편이 멈춥니다(다시 시작하면 이어짐).\n끊을까요?':'이 회원의 지금 접속을 끊을까요?\n끊긴 PC 는 5분 동안 다시 못 쓰고, 그동안 다른 PC 가 쓸 수 있습니다.');
+  if(!confirm(q)) return;
+  await cmPost('/api/admin/claude/member/action',{cid:Number(b.dataset.cid),action:action});
+}
+async function cmRemoveDevice(b){
+  if(!confirm('「'+b.dataset.name+'」 PC 를 뺄까요?\n빈 칸이 생겨 다른 PC 가 바로 등록될 수 있습니다.')) return;
+  await cmPost('/api/admin/claude/devices/remove',{cid:Number(b.dataset.cid),device_id:b.dataset.dev});
+}
+async function saveClaudeGuard(){
+  const d=await cmPost('/api/admin/claude/guard',{devices_max:Number(document.getElementById('cmMax').value),min_engine:document.getElementById('cmEngine').value.trim(),account_check:document.getElementById('cmAcct').checked});
+  if(d&&d.settings){ document.getElementById('cmMax').value=String(d.settings.devices_max); document.getElementById('cmEngine').value=d.settings.min_engine; document.getElementById('cmAcct').checked=!!d.settings.account_check; }
 }
 // 숏클 실시간(관제 304) — 회원별 진행판·사건·메시지 보내기·code_fix 내용 보기. 판단은 서버 claude_live, 여기는 그리기만.
 function _liveTime(ts){ return ts?new Date(ts*1000).toLocaleString():'—'; }
@@ -1283,7 +1350,8 @@ function wlAgo(sec){
 function wlWho(r){
   // ★모르면 지어내지 않는다 — 이름이 없으면 id를 그대로 보여준다(0순위: 추측 금지).
   const nm=(r.owner_name||'').trim();
-  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '–');
+  // 주인이 없는 줄 = 서버가 스스로 건 뒷정리(길이보정 등) — 고객 작업이 아니다(관제 321).
+  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '<span class=mini>시스템(자동)</span>');
 }
 async function loadWorkLines(){
   try{
@@ -1472,6 +1540,7 @@ setInterval(renderClaudeAlerts, 30000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeChanges);
 else renderClaudeChanges();
 setInterval(renderClaudeChanges, 30000);
+setInterval(()=>{ const c=document.getElementById('claudeMembersCard'); if(c&&c.open&&!document.hidden) renderClaudeMembers(); }, 30000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeLive);
 else renderClaudeLive();
 setInterval(renderClaudeLive, 20000);

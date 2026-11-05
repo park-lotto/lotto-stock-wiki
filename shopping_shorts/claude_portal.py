@@ -79,6 +79,7 @@ RULE_TITLE = {
     "A1": "키 공유 의심(다른 국가·등록 안 된 기기)", "A2": "동시 실행 시도", "A3": "자산 긁어가기 의심",
     "A4": "짧은 시간 대량 요청", "A5": "고른 프리셋 밖 자산 요청", "A6": "회수된 키 사용",
     "A7": "하트비트 없이 끊긴 작업 반복", "A8": "엔진 버전 낮음·위조", "A9": "기기 교체 잦음", "A10": "견본 긁어가기 의심",
+    "jev_down": "채널 벤치마킹 판단 서버(Jev) 꺼짐",
 }
 
 _HTTP = {"no_key": 401, "bad_key": 401, "expired": 401, "revoked": 403, "suspended": 403, "device_unknown": 403,
@@ -220,6 +221,10 @@ def _store(store=None):
     return Store(DB_PATH)
 
 
+# 나중에 붙인 칸(관제 329: 관리자 표가 PC 별 엔진 판을 보여 준다)
+_MIGRATE = ("ALTER TABLE claude_devices ADD COLUMN engine TEXT",)
+
+
 def ensure_schema(store):
     key = str(Path(store.db_path).resolve())
     if key in _schema_ready:
@@ -230,6 +235,12 @@ def ensure_schema(store):
         with _tx(store) as c:
             for sql in _SCHEMA:
                 c.execute(sql)
+            for sql in _MIGRATE:
+                try:
+                    c.execute(sql)
+                except sqlite3.OperationalError as e:   # 이미 있는 칸 — 두 번째부터는 정상
+                    if "duplicate column" not in str(e):
+                        raise
         _schema_ready.add(key)
 
 
@@ -281,9 +292,51 @@ def _thresholds(store) -> dict:
     return t
 
 
-def devices_max(cid) -> int:
-    """이 계정의 기기 상한 — 판단은 여기 한 곳."""
-    return DEVICES_MAX
+DEVICES_MAX_CAP = 5       # 관리자 화면에서 고를 수 있는 PC 한도의 끝
+
+
+def guard_settings(store) -> dict:
+    """숏클 돌려쓰기 규칙 설정(관제 329) — 판단 주인. PC 한도·최소 엔진·계정 검사를 관리자 화면에서 바꾼다.
+    설정 키: claude_devices_max(기본 DEVICES_MAX) · claude_min_engine(기본 1.0.0) · claude_account_check(기본 켬, "0" 이면 끔)."""
+    try:
+        dmax = int(str(_setting(store, "claude_devices_max", DEVICES_MAX)).strip())
+    except (TypeError, ValueError):
+        log.warning("claude_portal: claude_devices_max 값이 숫자가 아니라 기본 %s대를 쓴다", DEVICES_MAX)
+        dmax = DEVICES_MAX
+    eng = str(_setting(store, "claude_min_engine", "1.0.0")).strip()
+    return {"devices_max": max(1, min(DEVICES_MAX_CAP, dmax)),
+            "min_engine": eng if _semver(eng) else "1.0.0",
+            "account_check": str(_setting(store, "claude_account_check", "1")).strip() != "0"}
+
+
+def set_guard_settings(body, store=None) -> dict:
+    """관리자 화면 저장 — 바꿀 칸만 받는다. 틀린 값은 저장하지 않고 이유를 돌려준다."""
+    store = _store(store)
+    body = body if isinstance(body, dict) else {}
+    out = {}
+    if "devices_max" in body:
+        try:
+            n = int(body["devices_max"])
+        except (TypeError, ValueError):
+            raise PortalError("bad_request", "PC 한도는 숫자여야 합니다")
+        if not 1 <= n <= DEVICES_MAX_CAP:
+            raise PortalError("bad_request", f"PC 한도는 1~{DEVICES_MAX_CAP}대 사이여야 합니다")
+        out["claude_devices_max"] = str(n)
+    if "min_engine" in body:
+        v = str(body["min_engine"] or "").strip()
+        if not _semver(v):
+            raise PortalError("bad_request", "최소 엔진 버전은 1.0.100 같은 꼴이어야 합니다")
+        out["claude_min_engine"] = v
+    if "account_check" in body:
+        out["claude_account_check"] = "1" if body["account_check"] is not False else "0"
+    for k, v in out.items():
+        store.set_setting(k, v)
+    return {"ok": True, "settings": guard_settings(store)}
+
+
+def devices_max(cid, store=None) -> int:
+    """이 계정의 기기 상한 — 판단은 여기 한 곳(값은 guard_settings)."""
+    return guard_settings(_store(store))["devices_max"]
 
 
 def key_slots(cid) -> int:
@@ -463,8 +516,14 @@ def start_redeem(token, store=None) -> dict:
     return {"ok": True, "key": member_key(cid, store)}
 
 
-def start_line(cid, base) -> str:
-    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용)."""
+START_OS = ("win", "mac")
+
+
+def start_line(cid, base, os_id: str = "win") -> str:
+    """회원별 설치 한 줄 — 윈도는 PowerShell, 맥은 터미널에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용).
+    맥(관제 328): 스크립트 = installer/install.sh(/api/claude/start.sh). bash -c "$(curl …)" 꼴이라 키보드 입력(로그인·Claude 화면)이 살아 있다."""
+    if os_id == "mac":
+        return f"SHORTEM_START='{start_token(cid)}' bash -c \"$(curl -fsSL {base}/api/claude/start.sh)\""
     return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
 
 
@@ -566,7 +625,7 @@ def _guard_account(store, ctx, cid):
     """판정 주인(관제 296): 회원 키 1개 = Claude 계정 1개. 처음 본 계정에 묶고, 다른 계정은 승인 전까지 막는다.
     계정 값이 없는 요청(옛 엔진·Claude Desktop)은 통과한다."""
     acct = ctx.get("claude") or ""
-    if not acct or _is_staff(cid):
+    if not acct or _is_staff(cid) or not guard_settings(store)["account_check"]:
         return
     with _tx(store, write=True) as c:
         cur = _row(c, "SELECT acct FROM claude_accounts WHERE cid=?", (cid,))
@@ -579,8 +638,13 @@ def _guard_account(store, ctx, cid):
     raise PortalError("account_mismatch", "이 라이선스는 다른 Claude 계정에 연결돼 있습니다 — 계정 변경을 요청했습니다. 승인되면 바로 쓸 수 있습니다")
 
 
-def _guard_session(store, cid, fh):
-    """판정 주인(관제 296): 한 회원은 한 번에 PC 1대만 접속한다. 자리는 session() 이 잡고 여기서 막는다."""
+def _guard_session(store, cid, fh, route="", name=None):
+    """판정 주인(관제 296·324): 한 회원은 한 번에 PC 1대만 접속한다. 자리는 session() 이 잡고 여기서 막거나 넘긴다.
+
+    켜져만 있는 PC 의 저절로 나가는 신호(_A4_BACKGROUND)는 남의 자리를 못 뺏는다.
+    사람이 실제로 쓰는 요청은 다른 PC 가 영상을 만드는 중(작업 권한 살아 있음)이 아니면 자리를 가져온다.
+    (11-04 회원 572: 데스크탑 창 하나가 닫히며 자리가 비자 켜만 둔 노트북 신호가 가져가 데스크탑 제작이 3시간 막힘)
+    """
     if _is_staff(cid):
         return
     with _tx(store) as c:
@@ -589,9 +653,19 @@ def _guard_session(store, cid, fh):
         return
     now = _now()
     if s["kicked_fp"] == fh and s["kicked_until"] > now:
-        raise PortalError("busy_session", "이 PC 접속은 숏클 페이지에서 끊었습니다 — 5분 뒤 다시 시도하세요", s["kicked_until"] - now)
-    if s["fp_hash"] and s["fp_hash"] != fh and s["expires"] > now:
-        raise PortalError("busy_session", f"다른 PC({s['device_name'] or '다른 PC'})에서 숏템을 쓰는 중입니다 — 동시에 1대만 쓸 수 있습니다", s["expires"] - now)
+        raise PortalError("busy_session", "이 PC 접속이 끊겼습니다(숏클 페이지 강제 해제 또는 관리자) — 5분 뒤 다시 시도하세요", s["kicked_until"] - now)
+    if not (s["fp_hash"] and s["fp_hash"] != fh and s["expires"] > now):
+        return
+    other = s["device_name"] or "다른 PC"
+    if route in _A4_BACKGROUND:
+        raise PortalError("busy_session", f"다른 PC({other})에서 숏템을 쓰는 중입니다 — 동시에 1대만 쓸 수 있습니다", s["expires"] - now)
+    with _tx(store, write=True) as c:
+        work = _row(c, "SELECT expires FROM claude_leases WHERE cid=? AND fp_hash<>? AND expires>?", (cid, fh, now))
+        if work:
+            raise PortalError("busy_session", f"다른 PC({other})에서 영상을 만드는 중입니다 — 끝나면 이 PC 에서 이어 쓸 수 있습니다",
+                              work["expires"] - now)
+        c.execute("UPDATE claude_sessions SET fp_hash=?, device_name=?, expires=? WHERE cid=?",
+                  (fh, name, now + SESSION_TTL, cid))
 
 
 def _semver(v):
@@ -630,7 +704,7 @@ def _front(store, ctx, route, need_device=True):
     fp = ctx.get("device") or ""
     if not _FP_RE.match(fp):
         raise PortalError("bad_request", "기기 지문이 올바르지 않습니다 — 설치팩을 다시 확인하세요")
-    want = _semver(str(_setting(store, "claude_min_engine", "1.0.0")))
+    want = _semver(guard_settings(store)["min_engine"])
     have = _semver(ctx.get("engine"))
     if route != "update" and (have is None or (want and have < want)):   # 업데이트 창구는 오래된 엔진도 들어와야 새 판을 받는다
         anomaly_check(cid, {"type": "engine_old", "route": route, **_ev(ctx)}, store=store)
@@ -643,7 +717,7 @@ def _front(store, ctx, route, need_device=True):
             raise PortalError("device_unknown", "이 기기는 등록되지 않았습니다 — 먼저 '숏템 준비 점검'으로 기기를 등록하세요")
         if route != "update":                    # 막힌 PC 도 새 판은 받는다
             _guard_account(store, ctx, cid)
-            _guard_session(store, cid, dev["fp_hash"])
+            _guard_session(store, cid, dev["fp_hash"], route, dev.get("name"))
     return cid, info, dev
 
 
@@ -919,19 +993,20 @@ def license(ctx: dict, store=None) -> dict:
     name = ctx.get("device_name") or "이름 없는 기기"
     now = _now()
     fh = _fp_hash(fp)
+    engine = str(ctx.get("engine") or "")[:20]
     registered_now = False
-    limit = devices_max(cid)
+    limit = devices_max(cid, store)
     asked = other = False
     with _tx(store, write=True) as c:
         dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND fp_hash=? AND removed=0", (cid, fh))
         live = _rows(c, "SELECT slot FROM claude_devices WHERE cid=? AND removed=0", (cid,))
         if dev:
-            c.execute("UPDATE claude_devices SET last_seen=?, name=? WHERE id=?", (now, name, dev["id"]))
+            c.execute("UPDATE claude_devices SET last_seen=?, name=?, engine=? WHERE id=?", (now, name, engine, dev["id"]))
         elif len(live) < limit:
             used = {r["slot"] for r in live}
             slot = next(s for s in range(1, limit + 1) if s not in used)
-            c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen) VALUES(?,?,?,?,?,?,?)",
-                      (cid, fh, fp[:12], name, slot, now, now))
+            c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen, engine) VALUES(?,?,?,?,?,?,?,?)",
+                      (cid, fh, fp[:12], name, slot, now, now, engine))
             dev = {"slot": slot, "name": name}
             registered_now = True
             live.append({"slot": slot})
@@ -947,7 +1022,7 @@ def license(ctx: dict, store=None) -> dict:
             _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
         raise PortalError("device_limit", "기기 교체 승인을 기다리는 중입니다 — 승인되면 바로 쓸 수 있습니다" if asked else
                           f"PC {limit}대가 이미 등록돼 있습니다 — 숏클 페이지 '등록 기기'에서 뺄 PC 를 고르고 교체를 요청해 주세요")
-    _guard_session(store, cid, fh)
+    _guard_session(store, cid, fh, "license", dev.get("name"))
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
     return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "tier": member_tier(store, cid), "expires": info["exp"],
@@ -957,7 +1032,7 @@ def license(ctx: dict, store=None) -> dict:
             "presets": preset_names(store, _entitled(store, cid, row)),
             "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
                           "version": p["version"]} for p in list_profiles(cid, store)],
-            "min_engine": str(_setting(store, "claude_min_engine", "1.0.0")),
+            "min_engine": guard_settings(store)["min_engine"],
             "min_installer": str(_setting(store, "claude_min_installer", "1.0.0")), "server_time": _now()}
 
 
@@ -1727,7 +1802,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
         elif typ in ("license", "device_limit"):
             hit, detail = False, ""
             if typ == "device_limit":
-                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {devices_max(cid)}대 찬 상태)"
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {devices_max(cid, store)}대 찬 상태)"
             else:
                 n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
                               "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]
@@ -2003,6 +2078,74 @@ def admin_devices(cid, store=None) -> list:
         return _rows(c, "SELECT dev_id AS id, name, slot, last_seen FROM claude_devices WHERE cid=? AND removed=0 ORDER BY slot", (int(cid),))
 
 
+def admin_members(store=None) -> dict:
+    """관리자 '숏클 회원 관리' 표(관제 329) — 회원별 Claude 계정 연결·등록 PC·지금 쓰는 PC·제작 중·엔진 판·대기 요청.
+    화면은 그리기만 한다. 계정 값 원문은 서버에도 없다(해시) — 연결 여부와 날짜만 보낸다."""
+    store = _store(store)
+    ensure_schema(store)
+    g = guard_settings(store)
+    want = _semver(g["min_engine"])
+    now = _now()
+    with _tx(store) as c:
+        cids = [r["cid"] for r in _rows(c, "SELECT cid FROM claude_licenses UNION SELECT cid FROM claude_devices WHERE removed=0 "
+                                           "UNION SELECT cid FROM claude_accounts UNION SELECT cid FROM claude_sessions ORDER BY cid")]
+        accts = {r["cid"]: r for r in _rows(c, "SELECT cid, bound FROM claude_accounts")}
+        devs = {}
+        for r in _rows(c, "SELECT cid, dev_id, name, slot, last_seen, engine FROM claude_devices WHERE removed=0 ORDER BY slot"):
+            devs.setdefault(r["cid"], []).append(r)
+        sess = {r["cid"]: r for r in _rows(c, "SELECT * FROM claude_sessions WHERE fp_hash<>'' AND expires>?", (now,))}
+        leases = {r["cid"]: r for r in _rows(c, "SELECT cid, device_name, step_name, expires FROM claude_leases WHERE expires>?", (now,))}
+        asks = {}
+        for r in _rows(c, "SELECT cid, kind FROM claude_change_requests WHERE status='asked'"):
+            asks.setdefault(r["cid"], []).append(r["kind"])
+        revoked = {r["cid"] for r in _rows(c, "SELECT cid FROM claude_licenses WHERE revoked=1")}
+    out = []
+    for cid in cids:
+        ds = [{"id": d["dev_id"], "name": d["name"] or "이름 없는 PC", "slot": d["slot"], "last_seen": d["last_seen"],
+               "engine": d["engine"] or "", "engine_old": bool(want and (_semver(d["engine"] or "") or (0, 0, 0)) < want)}
+              for d in devs.get(cid, [])]
+        s, ls = sess.get(cid), leases.get(cid)
+        out.append({"cid": cid, "member": _member_name(store, cid), "staff": _is_staff(cid), "revoked": cid in revoked,
+                    "account": {"linked": cid in accts, "bound": (accts.get(cid) or {}).get("bound")},
+                    "devices": ds,
+                    "online": ({"name": s["device_name"] or "PC", "until": s["expires"]} if s else None),
+                    "making": ({"name": ls["device_name"] or "PC", "step": ls["step_name"] or ""} if ls else None),
+                    "asked": asks.get(cid, [])})
+    return {"ok": True, "settings": g, "members": out}
+
+
+def admin_unbind_account(cid, store=None) -> dict:
+    """관리자 '계정 연결 풀기' — 다음에 쓰는 Claude 계정으로 다시 묶인다. 대기 중인 계정 변경 요청은 닫는다."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store, write=True) as c:
+        n = c.execute("DELETE FROM claude_accounts WHERE cid=?", (cid,)).rowcount
+        c.execute("UPDATE claude_change_requests SET status='closed', decided=? WHERE cid=? AND kind='account' AND status IN ('new','asked')",
+                  (_now(), cid))
+    return {"ok": True, "unbound": bool(n)}
+
+
+def admin_kick(cid, store=None) -> dict:
+    """관리자 '접속 끊기' — 지금 쓰는 PC 의 자리와 제작 권한을 놓게 한다. 그 PC 는 5분 동안 다시 못 잡는다(다른 PC 가 쓸 수 있게).
+    제작 중이었으면 그 편은 멈춘다(다시 시작하면 이어진다)."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    now = _now()
+    with _tx(store, write=True) as c:
+        cur = _row(c, "SELECT * FROM claude_leases WHERE cid=?", (cid,))
+        if cur:
+            c.execute("DELETE FROM claude_leases WHERE cid=?", (cid,))
+            _lease_log(c, cid, cur["fp_hash"], "admin_kick", cur["job_id"], cur["lease_id"], cur["step_name"], "ok")
+        s = _row(c, "SELECT * FROM claude_sessions WHERE cid=?", (cid,))
+        kicked = bool(s and s["fp_hash"] and s["expires"] > now)
+        if kicked:
+            c.execute("UPDATE claude_sessions SET fp_hash='', expires=0, kicked_fp=?, kicked_until=? WHERE cid=?",
+                      (s["fp_hash"], now + SESSION_KICK, cid))
+    return {"ok": True, "kicked": kicked, "stopped_job": bool(cur and cur["expires"] > now)}
+
+
 # 페이지 내려받기 칸(사장님 10-20 exe 없이) — desktop = shortem.mcpb(윈도·맥 공용, 두 번 누르면 Claude 데스크탑이 받는다)
 #   code-win-x64 = Claude Code 시작 꾸러미(플러그인+START.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
 #   win-x64·mac-* = 예전 설치 프로그램(서명 전엔 페이지에 안 띄운다 — 남겨 두기만)
@@ -2126,7 +2269,7 @@ def home(cid, store=None) -> dict:
                       "caption_modes": list(channel_profile.CAPTION_MODES)},
             "profiles": list_profiles(cid, store), "license": lic_out,
             "devices": [{"id": d["dev_id"], "name": d["name"], "slot": d["slot"], "last_seen": d["last_seen"]} for d in devs],
-            "devices_max": devices_max(cid),
+            "devices_max": devices_max(cid, store),
             "lease": ({"device": cur["device_name"], "step": cur["step_name"], "since": cur["acquired"]} if cur else None),
             "session": ({"device": sess["device_name"]} if sess else None),
             "swap": ({"name": swap["name"], "status": swap["status"]} if swap else None),

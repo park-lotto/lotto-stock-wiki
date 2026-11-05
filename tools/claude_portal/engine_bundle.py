@@ -41,7 +41,7 @@ FORBIDDEN = (
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
 #   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
 SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
-           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=",
+           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=", r"TYPESAFE_API_KEY",   # Jev(서버 판단) 열쇠 이름 — 관제 319, 회원 묶음 어디에도 없어야 한다
            r"(?m)^\s*[A-Z][A-Z0-9_]*(?:API_KEY|_KEY|SECRET|TOKEN)\s*=\s*['\"]?[A-Za-z0-9_\-]{20,}['\"]?\s*$")   # .env 꼴 키 줄(일레븐랩스·타입캐스트·쿠팡 등) — 10-26
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
@@ -201,8 +201,11 @@ HAND_SERVER_ONLY = {
     # 11-04 preset_gates → quality_gate → styles → preview_request → calcopy_make → topic_find 가 함수 안에서 부르는 서버 수집·접속(회원 PC 갈래 아님)
     "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",
     "tools/live_admin.py",       # worker.py 가 함수 안에서 부르는 관리자 쿠키(서버 주소·키 이름) — 회원 PC 엔 절대 안 보낸다(검사 SECRETS 에 걸림)
-    # preset_save.py(프리셋 만드는 기술)는 여기 두지 않는다 — 11-04 회원 렌더가 preset_make→preset_save import 로 멈췄는데 이 목록이 가려 의존 검사가 못 잡았다.
+    # ★preset_save.py(프리셋 만드는 기술)는 고급반 벤치마킹 묶음(benchmark_pack)으로만 빌려준다 — 기본 묶음 회원 렌더가 다시 부르면 안 된다(11-04 preset_make→preset_save 로 멈춘 사고).
     #   적용(load·apply·규칙·글꼴)은 shopping_shorts/calcopy_frame/preset_apply.py(묶음 안) — 회원 쪽이 preset_save 를 다시 부르면 hand_unresolved 가 빨강
+    "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+    # 관제 319 과제 9: 실행기 벤치마킹 2판 명령(bm_*)이 함수 안에서 부른다 — 기본 묶음엔 안 넣고 고급반 묶음(benchmark_pack.RELEASED)으로만 빌려준다
+    "tools/calcopy/engine/bench_member.py", "tools/calcopy/engine/preset_brief.py",
     # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
     #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
     "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
@@ -215,7 +218,7 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/hybrid/flow.py",
     # 11-03 topic_find 가 함수 안에서 부르는 우리 PC 전용 갈래 — 서버 SSH 정보(_server_access, 관제 234)·커뮤니티 수집(community_mine, 보배드림 크롤)
     #   회원 PC 소재는 서버 소재 창고가 준다(make_flow startFlow) — 이 갈래가 회원 PC 에서 돌면 그 자리에서 멈춘다(묶음 금지 꼴 tools/calcopy/community_*.py)
-    "tools/calcopy/engine/_server_access.py", "tools/calcopy/community_mine.py",
+    "tools/calcopy/community_mine.py", "tools/calcopy/engine/_server_access.py",   # preset_gates 는 PC제작형으로 회원 PC 에 보낸다(위 HAND, 11-04 Jev 0.78)
 }
 
 

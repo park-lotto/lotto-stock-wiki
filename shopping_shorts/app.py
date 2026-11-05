@@ -17713,6 +17713,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "claude_preset_names",
                        # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
                        "claude_min_engine", "claude_min_installer",
+                       # 숏클 돌려쓰기 규칙(관제 329) — PC 한도(1~5, 기본 2)·Claude 계정 검사("0" 끔). 판정은 claude_portal.guard_settings
+                       "claude_devices_max", "claude_account_check",
                        # 클로드형 이상 행동 임계값(JSON, 설계 §7-9 초기안을 덮어쓴다)
                        "claude_anomaly_thresholds"}
 
@@ -19597,7 +19599,10 @@ def api_claude_me_start_line(request: Request):
     if denied:
         return denied
     from shopping_shorts import claude_portal as _cp
-    return JSONResponse({"ok": True, "line": _cp.start_line(cid, _public_base(request))}, headers={"Cache-Control": "no-store"})
+    os_id = request.query_params.get("os") or "win"
+    if os_id not in _cp.START_OS:
+        return JSONResponse({"ok": False, "error": "bad_request"}, status_code=400)
+    return JSONResponse({"ok": True, "os": os_id, "line": _cp.start_line(cid, _public_base(request), os_id)}, headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/claude/start/redeem")
@@ -19628,6 +19633,13 @@ def api_claude_me_start_cmd(request: Request):
 def api_claude_start_ps1(request: Request):
     """설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다). 주인 파일 = installer/install.ps1."""
     body = (Path(__file__).resolve().parents[1] / "installer" / "install.ps1").read_text(encoding="utf-8")
+    return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/claude/start.sh")
+def api_claude_start_sh(request: Request):
+    """맥 설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다, 관제 328). 주인 파일 = installer/install.sh."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
     return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
 
 
@@ -19766,6 +19778,44 @@ async def api_admin_claude_devices_remove(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
     return _claude_json(_cp.call(_cp.remove_device, cid, body.get("device_id"), Store(DB_PATH)))
+
+
+@app.get("/api/admin/claude/members")
+def api_admin_claude_members(request: Request):
+    """숏클 회원 관리 표(관제 329) — 판단은 claude_portal.admin_members."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.admin_members, Store(DB_PATH)))
+
+
+@app.post("/api/admin/claude/guard")
+async def api_admin_claude_guard(request: Request):
+    """숏클 규칙 설정 저장 {devices_max?, min_engine?, account_check?} — 판단은 claude_portal.set_guard_settings."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.set_guard_settings, await _claude_body(request), Store(DB_PATH)))
+
+
+@app.post("/api/admin/claude/member/action")
+async def api_admin_claude_member_action(request: Request):
+    """회원 한 명 조작 {cid, action: unbind|kick} — 계정 연결 풀기·접속 끊기(관제 329)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    fn = {"unbind": _cp.admin_unbind_account, "kick": _cp.admin_kick}.get(body.get("action"))
+    if not fn:
+        return JSONResponse({"ok": False, "msg": "action 은 unbind·kick 중 하나입니다"}, status_code=400)
+    return _claude_json(_cp.call(fn, cid, Store(DB_PATH)))
 
 
 @app.post("/api/admin/claude/license/revoke")

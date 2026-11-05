@@ -124,3 +124,14 @@ test('회원 지침이 시작 훅으로 들어간다 — 덩어리마다 훅 한
   }
   assert.equal(joined.trim(), fs.readFileSync(GUIDE, 'utf8').trim());
 });
+
+test('/벤치마킹 명령 = 벤치마킹 스킬이 shortem_benchmark 고리를 끝까지 돈다(관제 319)', () => {
+  // 플러그인 skills/ 는 폴더 이름만 쓰고 한글을 '----' 로 바꾼다(11-04 실측) — 한글 명령은 commands/벤치마킹.md 라야 /shortem:벤치마킹 이 된다
+  const s = fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'commands', '벤치마킹.md'), 'utf8');
+  assert.doesNotMatch(s, /^(allowed|disallowed)-tools:/m);
+  assert.ok(!fs.existsSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', '벤치마킹')), '한글 스킬 폴더는 깨진 이름으로 잡힌다');
+  for (const k of ['shortem_benchmark(step="start"', 'shortem_benchmark(step="wait"', 'shortem_ai(action="list")', 'shortem_ai(action="answer"', 'shortem_make(step="start", preset=']) assert.ok(s.includes(k), k);
+  assert.doesNotMatch(s, /칼카피/, '회원 화면에 칼카피 금지(잡도리는 사장님 11-04 원래 이름으로 씀)');
+  const { BENCH_TEXT } = { BENCH_TEXT: fs.readFileSync(path.join(REPO, 'shortem_client', 'server', 'benchmark.js'), 'utf8') };
+  assert.match(BENCH_TEXT, /\/벤치마킹/);
+});

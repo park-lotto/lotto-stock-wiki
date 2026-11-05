@@ -26,7 +26,7 @@ import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented, renting } from './preset_rent.js';
 import { withMine } from './my_presets.js';
-import { registerBenchmark, sweepBench } from './benchmark.js';
+import { recoverBench, registerBenchmark, sweepBench } from './benchmark.js';
 import { retryUpdate, checkUpdate, installDir } from './updater.js';
 import { anyFlowBusy } from './flow_driver.js';
 import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
@@ -411,6 +411,7 @@ async function main() {
   registerServer();     // 한 PC 여러 창 — 점검이 두 번째 창부터 알린다(instances.js)
   try { gcCache(); } catch { /* 캐시 없음 */ }
   try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
+  recoverBench().catch(e => audit('benchmark_recover', { result: String((e && e.message) || e).slice(0, 70) }));   // 흐름 도중 꺼졌던 벤치마킹 — 임시본 되살림·끝 정리 다시 걸기(디스크 흐름 상태로 판단, 임대 반납은 뒤에서)
   try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
   const server = buildServer();
   await server.connect(new StdioServerTransport());

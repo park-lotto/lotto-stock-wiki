@@ -78,12 +78,74 @@ def run(dry=False):
         print(prompt)
         return 0
     cmd = ["claude", "-p", prompt, "--allowedTools", "Bash Read Write Edit Glob Grep",
-           "--add-dir", SHOPLINK_DIR, "--add-dir", bp.DRIVE, "--add-dir", LOG_DIR]
-    _log("claude 시작")
-    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                       timeout=2 * 3600, stdin=subprocess.DEVNULL)
-    _log(f"claude 끝 rc={r.returncode} " + (r.stdout or "")[-1500:].replace("\n", " / ") + (r.stderr or "")[-500:])
-    return r.returncode
+           "--add-dir", SHOPLINK_DIR, "--add-dir", bp.DRIVE, "--add-dir", LOG_DIR,
+           "--output-format", "stream-json", "--verbose"]
+    # 11-03 사고: claude 가 첫 단계도 안 하고 2시간 멈춤 → 시간초과로 출력까지 버려져 원인을 못 봤고, 그날 예약 0건.
+    # 그래서 ① 출력을 줄마다 <날짜>.out.log 에 바로 남기고 ② STALL 동안 한 줄도 안 나오면 끊고
+    # ③ 오늘 예약이 0건이면 한 번 더 돈다(칸·중복은 buffer_post 관문이 다시 지킨다).
+    rc = 1
+    for attempt in (1, 2):
+        rc = _run_claude(cmd, os.path.join(LOG_DIR, f"{day}.out.log"), attempt)
+        n = _today_rows(day)
+        _log(f"시도 {attempt} 끝 rc={rc} · 오늘 예약 행 {n}")
+        if n or dt.datetime.now(bp.KST).hour >= 19:
+            break
+    if not _today_rows(day):
+        _log("★오늘 예약 0건 — 사람이 봐야 한다")
+    return rc
+
+
+STALL = 20 * 60        # 이 시간 동안 출력이 한 줄도 없으면 멈춘 것으로 본다
+LIMIT = 100 * 60       # 한 번 시도의 최대 시간
+
+
+def _run_claude(cmd, out_path, attempt):
+    import threading
+    import time
+    _log(f"claude 시작(시도 {attempt}) → {out_path}")
+    last = [time.time()]
+    with open(out_path, "a", encoding="utf-8") as out:
+        out.write(f"\n===== {dt.datetime.now(bp.KST):%H:%M:%S} 시도 {attempt}\n")
+        out.flush()
+        # ★11-03·04 멈춤의 뿌리(실측): ~/.claude 에 켜진 숏템 회원 플러그인의 SessionStart 훅 wake.js 가
+        #   팀 메시지를 6시간 기다리는데(asyncRewake), 헤드리스 -p 는 그 훅이 끝나길 기다려 아무것도 안 한다.
+        #   이 실행에서만 대기 시간을 0 으로 — wake.js 가 첫 확인에서 바로 끝난다(회원 플러그인 자체는 그대로).
+        env = dict(os.environ, SHORTEM_WAKE_LIFE_MS="0")
+        p = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                             text=True, encoding="utf-8", errors="replace", env=env)
+
+        def pump():
+            for line in p.stdout:
+                out.write(line)
+                out.flush()
+                last[0] = time.time()
+        th = threading.Thread(target=pump, daemon=True)
+        th.start()
+        t0 = time.time()
+        why = ""
+        while p.poll() is None:
+            time.sleep(5)
+            if time.time() - last[0] > STALL:
+                why = f"{STALL // 60}분 동안 출력 없음"
+            elif time.time() - t0 > LIMIT:
+                why = f"{LIMIT // 60}분 넘음"
+            if why:
+                _log(f"claude 끊음(시도 {attempt}): {why}")
+                subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True)
+                break
+        th.join(timeout=10)
+        return p.wait() if not why else 124
+
+
+def _today_rows(day):
+    """장부에서 오늘(KST) 게시 예정인 행 수 — '오늘 예약이 들어갔나'의 판정은 장부 하나로 한다."""
+    n = 0
+    for r in bp._load(bp.LEDGER, []):
+        u = str(r.get("due") or "")
+        if len(u) >= 16 and r.get("final_status") != "deleted":
+            d = dt.datetime.strptime(u[:16], "%Y-%m-%dT%H:%M").replace(tzinfo=dt.timezone.utc).astimezone(bp.KST)
+            n += d.strftime("%Y-%m-%d") == day
+    return n
 
 
 def main():

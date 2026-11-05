@@ -4,6 +4,8 @@
   py tools/claude_portal/upload_release.py --dist <빌드>/dist --packs <프리셋 꾸러미 폴더> --version 1.0.0 [--dry]
   py tools/claude_portal/upload_release.py … --version 1.0.1 --update-stage <빌드>/win-x64/Shortem   ← 이미 깐 PC 용 자동 업데이트도
 
+판 번호 규칙(사장님 11-03 "큰변화.기능추가.작은수정"): X.Y.Z — X 큰 변화(설치 다시·옛 판과 안 맞음) / Y 기능 추가(Z 는 0 으로) / Z 작은 수정·수리.
+  1.0.62 까지는 순번으로 올렸다(마지막 숫자만). 비교는 숫자 세 칸(claude_portal._semver)이라 1.0.62 → 1.1.0 도 새 판으로 받는다.
 올리는 것: ①프리셋 꾸러미 p_*.zip → preset_packs/ ②연결 파일 shortem.mcpb·Claude Code 꾸러미 → installers/ + manifest.json(페이지 ④ 두 칸)
           ③설치 묶음 shortem-win-x64-<판>.zip → publish_update.py --install(내용주소 assets/ + install/latest-win-x64.json)
 확인: 라이브 /api/claude/install 이 키 없으면 막는가(창구가 살아 있나) · 서버 디스크 여유. 결과 JSON 한 줄.

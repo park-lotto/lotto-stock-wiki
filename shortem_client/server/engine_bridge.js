@@ -62,11 +62,11 @@ export function startScript(script, args, { packFile, env: extraEnv, onClose } =
   const queue = ensureDir(aiRoot(), runId);
   const proc = spawn(pythonExe(), [script, ...args],
     { cwd: engineRoot(), env: engineEnv(queue, packFile, extraEnv), shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-  const r = { runId, queue, proc, done: false, out: [], err: '', code: null, started: Date.now() };
-  proc.stdout.on('data', d => r.out.push(d));
-  proc.stderr.on('data', d => { if (r.err.length < 200000) r.err += String(d); });
+  const r = { runId, queue, proc, done: false, out: [], err: '', code: null, started: Date.now(), moved: Date.now() };
+  proc.stdout.on('data', d => { r.moved = Date.now(); r.out.push(d); });
+  proc.stderr.on('data', d => { r.moved = Date.now(); if (r.err.length < 200000) r.err += String(d); });
   const closed = () => { if (onClose) Promise.resolve(onClose()).catch(() => {}); };   // 빌린 프리셋 지우기·작업 권한 반납
-  proc.on('close', code => { r.done = true; r.code = code; closed(); });
+  proc.on('close', code => { r.done = true; r.code = code; r.moved = Date.now(); closed(); });
   proc.on('error', e => { r.done = true; r.code = -1; r.err += String(e && e.message); closed(); });
   runs.set(runId, r);
   return r;
@@ -80,6 +80,8 @@ export function runResult(r) {
 
 export const getRun = id => runs.get(id);
 export const activeRuns = () => [...runs.values()].filter(r => !r.done);
+// 엔진 실행(make.py 등)이 마지막으로 움직인 때(출력·끝남) — 흐름 멈춤 감시가 시험 편 제작 진행을 본다(flow_driver.flowStall)
+export const lastRunMove = () => [...runs.values()].reduce((t, r) => Math.max(t, r.moved || r.started || 0), 0);
 
 export async function waitRun(r, waitMs) {
   const t0 = Date.now();

@@ -8107,6 +8107,29 @@ class Store:
                 ")", (*self._HEAVY_TASKS, f"-{self._HEAVY_STALE_MINUTES} minutes")).fetchone()[0]
         return n > 0
 
+    def _nonig_sql(self, al):
+        """이 작업이 **인스타가 아님을 확신**할 수 있나(SQL 조건). 표식이 있고 instagram이 없어야 한다
+        (캡션에 'instagram'이 섞인 틱톡까지 병렬로 내보내면 계정이 위험하다).
+        claim_next(배타 판단)와 exclusive_waiting(양보 판단)이 같은 이 한 곳을 쓴다."""
+        marks = " OR ".join(f"{al}.args_json LIKE '%{m}%'" for m in self._PARALLEL_SAFE_MARKS)
+        return f"(({marks}) AND {al}.args_json NOT LIKE '%instagram%')"
+
+    def exclusive_waiting(self, besides="durfill"):
+        """인스타 배타 칸을 기다리며 줄 선 **고객 작업** 수(관제 321, 2026-11-04).
+
+        길이보정(durfill)은 서버가 스스로 거는 뒷정리인데, 인스타 배타 칸을 한 번 잡으면
+        40건을 다 돌 때까지(최장 41.8분 실측) 고객의 인스타 담기분석이 못 들어왔다
+        (11-04 하루 114건, 대기 평균 13분·최장 34.7분). 길이보정은 이 값을 보고 칸을 비켜 준다.
+        claim_next 가 '배타'로 막는 것과 똑같은 조건(_nonig_sql)으로 센다 — 기준이 두 벌이면 어긋난다."""
+        others = tuple(t for t in self._EXCLUSIVE_TASKS if t != besides)
+        if not others:
+            return 0
+        ph = ",".join("?" * len(others))
+        with self._conn() as c:
+            return c.execute(
+                f"SELECT COUNT(*) FROM job_queue q WHERE q.state='queued' AND q.task IN ({ph}) "
+                f"AND NOT {self._nonig_sql('q')}", others).fetchone()[0]
+
     def claim_next(self):
         """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
 
@@ -8128,13 +8151,7 @@ class Store:
             #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
             ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
             lph = ",".join("?" * len(self._LIGHT_TASKS))
-
-            def _nonig(al):
-                """이 작업이 **인스타가 아님을 확신**할 수 있나. 표식이 있고 instagram이 없어야 한다
-                (캡션에 'instagram'이 섞인 틱톡까지 병렬로 내보내면 계정이 위험하다)."""
-                marks = " OR ".join(f"{al}.args_json LIKE '%{m}%'" for m in self._PARALLEL_SAFE_MARKS)
-                return f"(({marks}) AND {al}.args_json NOT LIKE '%instagram%')"
-            _safe, _safe_r = _nonig("q"), _nonig("r")
+            _safe, _safe_r = self._nonig_sql("q"), self._nonig_sql("r")
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
