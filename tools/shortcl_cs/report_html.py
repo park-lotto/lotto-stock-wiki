@@ -45,7 +45,28 @@ def esc(x) -> str:
     return html.escape(str(x if x is not None else ""))
 
 
-def build(state: dict, events: list[dict]) -> str:
+RECUR = [("같은 원인 3번 연속", ("3번 연속", "고치기 한도")), ("회원 Claude 대기", ("Claude 답을",)), ("준비 덜 됨", ("준비가 아직 덜", "준비가 필요한")),
+         ("영상 받기 실패", ("받지 못했어요", "진행 신호")), ("프리셋 busy", ("busy",)), ("자막 지우기", ("자막 지우기", "글자 지우기")),
+         ("렌더 멈춤", ("영상을 만들다", "Timeout")), ("키 문제", ("401", "키가 없", "Invalid credentials"))]
+
+
+def recur_table(events: list[dict]) -> str:
+    """수리가 듣는지 — 멈춤·오류 사건을 원인별로 6시간 칸에 센다(사장님 11-05 '수리 잘 되는지'). 줄어야 수리가 든 것."""
+    bad = [e for e in events if e.get("kind") in ("stuck", "error", "bug")]
+    if not bad:
+        return "<p class='sub'>사건 없음</p>"
+    t1 = max(float(e.get("ts") or 0) for e in bad)
+    slots = [(t1 - (i + 1) * 21600, t1 - i * 21600) for i in range(7, -1, -1)]
+    head = "".join(f"<th class='num'>{time.strftime('%m-%d %H시', time.localtime(a))}~</th>" for a, _ in slots)
+    rows = []
+    for name, keys in RECUR:
+        cnt = [sum(1 for e in bad if a < float(e.get("ts") or 0) <= b and any(k in str(e.get("text") or "") for k in keys)) for a, b in slots]
+        if sum(cnt):
+            rows.append(f"<tr><td class='who'>{esc(name)}</td>" + "".join(f"<td class='num'>{n or '·'}</td>" for n in cnt) + "</tr>")
+    return f"<div class='scroll'><table><thead><tr><th>원인</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
+
+
+def build(state: dict, events: list[dict], recur_events: list[dict] | None = None) -> str:
     now = time.strftime("%Y-%m-%d %H:%M")
     cases = state.get("cases") or []
     rc = Counter(c.get("root") for c in cases)
@@ -114,6 +135,7 @@ ul {{ margin:0; padding-left:18px; display:grid; gap:6px }}
 <div class="stat"><b>{rc.get('뿌리', 0)}</b><span>뿌리 수리(함수 한 곳)</span></div>
 <div class="stat"><b>{rc.get('부분', 0) + rc.get('증상', 0)}</b><span>뿌리 아님·일부</span></div>
 </div>
+<section><h2>수리가 듣는지 — 원인별 사건 수(최근 48시간, 6시간 칸)</h2><div class="sub" style="margin-bottom:8px">고친 판이 나간 뒤 칸 숫자가 줄면 수리가 든 것, 그대로·늘면 아직 안 나갔거나 뿌리가 아닌 것</div>{recur_table(recur_events or events)}</section>
 <section><h2>회원 증상 → 원인 → 해결</h2><div class="scroll"><table>
 <thead><tr><th>회원</th><th>증상 · 결과</th><th>문제점(원인)</th><th>해결 · 주인 함수</th><th>Jev</th><th>뿌리?</th><th>상태</th></tr></thead>
 <tbody>{''.join(rows)}</tbody></table></div></section>
@@ -134,11 +156,13 @@ def main():
     out = Path(sys.argv[1])
     state = json.loads(STATE.read_text(encoding="utf-8"))
     try:
-        ev = fetch_events()
+        ev48 = fetch_events(48)
     except Exception as e:      # noqa: BLE001 — 서버가 안 되면 수리 표만이라도
         print("사건 못 읽음:", type(e).__name__, e)
-        ev = []
-    out.write_text(build(state, ev), encoding="utf-8")
+        ev48 = []
+    cut = time.time() - 86400
+    ev = [e for e in ev48 if float(e.get("ts") or 0) >= cut]
+    out.write_text(build(state, ev, ev48), encoding="utf-8")
     print("만듦", out, "사건", len(ev), "결함", len(state.get("cases") or []))
 
 
