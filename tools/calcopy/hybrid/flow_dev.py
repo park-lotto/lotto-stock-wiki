@@ -21,8 +21,10 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -30,6 +32,32 @@ sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid import flow  # noqa: E402
 
 CLAUDE = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or str(Path.home() / ".local" / "bin" / "claude.exe")
+
+
+def ask_claude(prompt: str, cwd: Path, add_dir: Path, model: str, need, on_err=None) -> tuple:
+    """Claude CLI 한 번(모양이 틀리면 한 번 더) → (JSON 객체 또는 None, 원문). review 답(answer)·엔진 줄 답하기(_queue_answerer)가 같이 부른다."""
+    txt, a = "", None
+    for _ in range(2):
+        try:
+            r = subprocess.run([CLAUDE, "-p", "--model", model, "--allowedTools", "Read,Glob,Grep,WebSearch,WebFetch", "--add-dir", str(add_dir),   # 작업 폴더 전체를 열어 볼 수 있게(10-27 '두뇌가 재료 없이 다시만')
+                                "--output-format", "json", "--max-turns", "30"],
+                               input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(cwd), timeout=1800)
+            try:
+                txt = json.loads(r.stdout).get("result") or ""
+            except Exception:  # noqa: BLE001
+                txt = r.stdout
+        except Exception as e:  # noqa: BLE001
+            txt = ""
+            if on_err:
+                on_err(f"{type(e).__name__}: {e}"[:300])
+        s, e = txt.find("{"), txt.rfind("}")
+        try:
+            a = json.loads(txt[s:e + 1]) if s >= 0 else None
+        except Exception:  # noqa: BLE001
+            a = None
+        if isinstance(a, dict) and all(k in a for k in need or []):
+            break
+    return (a if isinstance(a, dict) else None), txt
 
 
 def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
@@ -50,26 +78,7 @@ def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     (d / "ask.txt").write_text(prompt, encoding="utf-8")
     model = {"opus": "opus", "sonnet": "sonnet"}.get(os.environ.get("FLOW_DEV_MODEL") or rv.get("model") or "opus", "opus")   # FLOW_DEV_MODEL = 전 질문 모델 강제(opus|sonnet — 하이쿠 금지, 사장님 11-05)
     t0 = time.time()
-    txt = ""
-    for _ in range(2):
-        try:
-            r = subprocess.run([CLAUDE, "-p", "--model", model, "--allowedTools", "Read,Glob,Grep,WebSearch,WebFetch", "--add-dir", str(W),   # 작업 폴더 전체를 열어 볼 수 있게(10-27 '두뇌가 재료 없이 다시만')
-                                "--output-format", "json", "--max-turns", "30"],
-                               input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(d), timeout=1800)
-            try:
-                txt = json.loads(r.stdout).get("result") or ""
-            except Exception:  # noqa: BLE001
-                txt = r.stdout
-        except Exception as e:  # noqa: BLE001
-            txt = ""
-            log({"review_error": rv["id"], "why": f"{type(e).__name__}: {e}"[:300]})
-        s, e = txt.find("{"), txt.rfind("}")
-        try:
-            a = json.loads(txt[s:e + 1]) if s >= 0 else None
-        except Exception:  # noqa: BLE001
-            a = None
-        if isinstance(a, dict) and all(k in a for k in rv.get("need") or []):
-            break
+    a, txt = ask_claude(prompt, d, W, model, rv.get("need") or [], lambda why: log({"review_error": rv["id"], "why": why}))
     a = a if isinstance(a, dict) else {"_raw": txt[:2000]}
     rf = next((f for f in sorted((replay or Path("/nonexistent")).glob("*.json"), key=lambda f: -len(f.stem)) if rv["id"].startswith(f.stem)), None) if replay else None
     if rf:
@@ -79,6 +88,153 @@ def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     (d / "answer.json").write_text(json.dumps(a, ensure_ascii=False, indent=1), encoding="utf-8")
     log({"review": rv["id"], "model": model, "sec": round(time.time() - t0), "imgs": len(imgs), "head": json.dumps(a, ensure_ascii=False)[:200]})
     return a
+
+
+# ── 회원 과제(채널 벤치마킹 2판 시험 편, review meta.kind=member_task) — 회원 PC 의 shortem_make 를 대신하는 손(개발 도구 몫, 관제 319) ──
+#   회원 PC 길(shortem_client make_flow.js 내 프리셋 → 엔진 make.py · flow_driver.trialIn)과 같은 꼴: 임시 프리셋으로 엔진 길(calcopy_make start→choose→approve)을
+#   이 시험기 프로세스에서 끝까지 돌리고, 결과 폴더(remake 출력 = 엔진 창고 make/<sid>/work/<topic_id>/제작)를 W/trial/t<try>_<sid> 로 옮겨 work_dir 로 답한다.
+#   엔진의 AI 질문(CALCOPY_GEMINI_BACKEND=client → SHORTEM_LLM_QUEUE)은 _queue_answerer 가 Claude CLI 로 답한다(회원 Claude 대신).
+#   목소리 = 대본 purpose=calcopy(voices.tts_for — 피쉬 차분한 해설가) · 소재 = 과제 source.channel(1판 규칙) · 사인 = 고객(--approve 처럼 자동).
+#   서버(flow·flow_bench)·회원 경로(shortem_client) 코드는 안 바꾼다(Jev 해결 0.77·위험 0.21).
+MAKE_PY = ROOT / "tools" / "calcopy" / "make.py"
+
+
+def _run_make(args: list, env: dict) -> dict:
+    """엔진 입구 make.py --json 한 번 → 마지막 줄 JSON(세션 status 또는 {error, code})."""
+    r = subprocess.run([sys.executable, str(MAKE_PY), "--json", *args], cwd=str(ROOT), env=env, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    last = (r.stdout.strip().splitlines() or [""])[-1]
+    try:
+        out = json.loads(last)
+    except ValueError:
+        out = {"error": f"make.py 출력 없음(rc={r.returncode}): " + (r.stderr or last)[-400:], "code": "no_json"}
+    return out if isinstance(out, dict) else {"error": f"make.py 출력 꼴: {last[:200]}", "code": "no_json"}
+
+
+def _queue_prompt(d: Path, req: dict) -> str:
+    texts = [x["text"] for x in req.get("parts") or [] if x.get("kind") == "text" and x.get("text")]
+    imgs = [str(d / x["file"]) for x in req.get("parts") or [] if x.get("kind") == "image" and x.get("file") and (d / x["file"]).exists()]
+    why = ""
+    if (d / "error.json").exists():
+        try:
+            why = "\n\n앞 답이 틀렸다(다시 답하라): " + str(json.loads((d / "error.json").read_text(encoding="utf-8")).get("why"))[:400]
+        except (OSError, ValueError):
+            why = ""
+    return (str(req.get("prompt") or "") + ("\n\n" + "\n".join(texts) if texts else "") +
+            ("\n\n그림 파일(Read 로 열어 본다):\n" + "\n".join(imgs) if imgs else "") + why + "\n\n답은 JSON 객체 하나만, 다른 글 없이.")
+
+
+def _queue_answer_one(d: Path, log, ask=None) -> bool:
+    """줄 요청 하나(request.json) → Claude CLI → answer.json(임시 이름 → 바꿔 달기, client_llm._wait 가 다 써진 뒤 읽는다). 답을 썼으면 True."""
+    try:
+        req = json.loads((d / "request.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    model = {"opus": "opus", "sonnet": "sonnet"}.get(os.environ.get("FLOW_DEV_MODEL") or req.get("tier") or "opus", "opus")    # 하이쿠 금지 — 모르는 등급은 opus
+    t0 = time.time()
+    a, txt = (ask or ask_claude)(_queue_prompt(d, req), d, d, model, [])
+    a = a if isinstance(a, dict) else {"_raw": txt[:2000]}
+    tmp = d / "answer.json.tmp"
+    tmp.write_text(json.dumps(a, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(d / "answer.json")
+    log({"engine_ask": req.get("tag"), "model": model, "sec": round(time.time() - t0), "head": json.dumps(a, ensure_ascii=False)[:160]})
+    return True
+
+
+def _queue_answerer(q: Path, stop: threading.Event, log, workers: int = 2, ask=None):
+    """엔진 줄 폴더(SHORTEM_LLM_QUEUE)를 지켜 새 요청·다시 묻기(error.json 이 새로 생김)를 Claude CLI 로 답한다 — 회원 PC 에서 회원 Claude 가 하던 일."""
+    busy: set = set()
+    seen: dict = {}        # 폴더 이름 → 마지막으로 답한 때의 error.json 시각(0 = 첫 답)
+    lock = threading.Lock()
+
+    def job(d: Path, key):
+        try:
+            _queue_answer_one(d, log, ask)
+        except Exception as e:  # noqa: BLE001 — 답 못 한 이유를 남긴다(엔진은 client_timeout 으로 멈춘다)
+            log({"engine_ask_error": d.name, "why": f"{type(e).__name__}: {e}"[:300]})
+        finally:
+            with lock:
+                busy.discard(d.name)
+                seen[d.name] = key
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        while not stop.is_set():
+            for d in (sorted(q.glob("*")) if q.is_dir() else []):
+                if not (d / "request.json").exists() or (d / "done").exists() or (d / "answer.json").exists():
+                    continue
+                ef = d / "error.json"
+                key = ef.stat().st_mtime if ef.exists() else 0
+                with lock:
+                    if d.name in busy or seen.get(d.name) == key:
+                        continue
+                    busy.add(d.name)
+                pool.submit(job, d, key)
+            stop.wait(1.0)
+
+
+def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None) -> dict:
+    """회원 과제 한 건 → 엔진 길로 1편 → {work_dir: 'trial/t<try>_<sid>', ok: True} / {work_dir: '', ok: False, why}."""
+    run = run or _run_make
+    answerer = answerer or _queue_answerer
+    m = rv.get("meta") or {}
+    pr = m.get("preset") or {}
+    n_try = int(m.get("try") or 0)
+
+    def bad(why):
+        log({"member_task": "fail", "why": str(why)[:300]})
+        return {"work_dir": "", "ok": False, "why": str(why)[:300]}
+    if m.get("kind") != "member_task" or not pr.get("dir") or pr.get("dir") != f"channel/{pr.get('slug')}/preset/{pr.get('style')}":
+        return bad("과제의 프리셋 칸 꼴이 다르다")
+    pdir = (job / pr["dir"]).resolve()
+    if not (pdir / "frame.json").exists() or not (pdir / "manifest.json").exists():
+        return bad(f"작업 폴더에 프리셋이 없다: {pr['dir']}")
+    data = job.parent / "trial_data"
+    q = data / "_q"
+    q.mkdir(parents=True, exist_ok=True)
+    env2 = {**env, "CALCOPY_GEMINI_BACKEND": "client", "CALCOPY_CUSTOMER_MODE": "1", "SHORTEM_LLM_QUEUE": str(q), "CALCOPY_DATA_DIR": str(data)}
+    ch = str((m.get("source") or {}).get("channel") or "")
+    if ch:          # 회원 PC make_flow.originalsFile 과 같은 꼴 — 벤치 채널이 소재 채널(영상 파일은 안 넣는다)
+        of = data / "originals.json"
+        of.write_text(json.dumps({"note": "시험 편 소재 채널(flow_dev 회원 과제)", "channels": [{"platform": "youtube", "url": ch}]}, ensure_ascii=False), encoding="utf-8")
+        env2["CALCOPY_ORIGINALS_FILE"] = str(of)
+    stop = threading.Event()
+    th = threading.Thread(target=answerer, args=(q, stop, log), daemon=True)
+    th.start()
+    t0 = time.time()
+    try:
+        S = run(["start", "--preset", str(pdir), "--pack", "1"], env2)
+        log({"member_task": "start", "state": S.get("state"), "sid": S.get("sid"), "n_cand": len(S.get("candidates") or []), "error": S.get("error")})
+        if S.get("error") and not S.get("sid"):
+            return bad("시작 못 함: " + str(S["error"]))
+        if S.get("state") == "candidates":
+            if not S.get("candidates"):
+                return bad("소재 후보 0개(채널 " + ch + ")")
+            S = run(["choose", S["sid"], "1"], env2)      # 회원이 안 고르면 1번(지침 5장 — 10분 답 없으면 1번)
+            log({"member_task": "choose", "state": S.get("state"), "topic": S.get("topic_id"), "error": S.get("error")})
+        if S.get("state") != "plan_review":
+            return bad(f"계획까지 못 감({S.get('state')}): {S.get('error') or (S.get('log') or [''])[-1]}")
+        work = Path(S["merged_preset"]).parent / "work" / str(S["topic_id"]) / "제작"
+        sp = work / "대본.json"
+        if not sp.exists():
+            return bad(f"대본이 없다: {sp}")
+        sj = json.loads(sp.read_text(encoding="utf-8"))
+        sj["purpose"] = m.get("purpose") or "calcopy"      # 과제 지시 '대본 purpose=calcopy' — 목소리는 voices.tts_for 한 곳이 정한다
+        sp.write_text(json.dumps(sj, ensure_ascii=False, indent=1), encoding="utf-8")
+        sid = S["sid"]
+        S = run(["approve", sid, "--by", "고객"], env2)
+        log({"member_task": "approve", "state": S.get("state"), "error": S.get("error"), "min": round((time.time() - t0) / 60, 1)})
+        if not (work / "final.mp4").exists():
+            return bad(f"완성본 없음({S.get('state')}): {S.get('error') or (S.get('log') or [''])[-1]}")
+        T = job / "trial"
+        shutil.rmtree(T, ignore_errors=True)         # 늘 한 벌(flow_driver.trialIn 과 같다)
+        T.mkdir(parents=True, exist_ok=True)
+        leaf = f"t{n_try}_{sid}"
+        shutil.move(str(work), str(T / leaf))
+        log({"member_task": "done", "work_dir": f"trial/{leaf}", "min": round((time.time() - t0) / 60, 1)})
+        return {"work_dir": f"trial/{leaf}", "ok": True}
+    finally:
+        stop.set()
+        th.join(timeout=5)
 
 
 def main():
@@ -186,7 +342,10 @@ def main():
         elif res["status"] in ("review", "reject"):
             for rv in res.get("review") or []:
                 counts["review"] += 1
-                replies[rv["id"]] = answer(W / "job", rv, log, replay)
+                if (rv.get("meta") or {}).get("kind") == "member_task":      # 회원 과제 = 회원 PC 의 shortem_make 를 대신(엔진 길 1편)
+                    replies[rv["id"]] = member_task(W / "job", rv, log, env)
+                else:
+                    replies[rv["id"]] = answer(W / "job", rv, log, replay)
         elif res["status"] == "wait_user":
             (W / "sign.json").write_text(json.dumps(res.get("wait"), ensure_ascii=False, indent=1), encoding="utf-8")
             if not a.approve:
