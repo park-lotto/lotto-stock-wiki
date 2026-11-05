@@ -35,3 +35,13 @@ def test_sb_pick_long_origin_is_sections():
     st = {"sb": {"L": 1}, "src_mixed": [{"id": "L", "dur": 1260}], "log": []}
     d = F.ph_sb_pick(st, {}, {"origin_sb": {"origin_id": "L", "origin_t": [400.0], "why": "w"}}, None)["do"][0]
     assert d["full"] is False and d["a"] <= 400 <= d["b"] and d["ts"] == [400.0]
+
+
+def test_receiver_turns_long_full_into_sections(tmp_path):
+    """받는 쪽 한 곳(runner_ops.long_full_to_sections) — flow 가 길이를 모르는 자리(given)도 통째 요청이 거절되지 않게."""
+    from tools.calcopy.hybrid import runner_ops as R
+    d = {"vid": "V", "a": 0.0, "b": 987.0, "ts": [365.4, 387.2], "full": True}
+    out = R.long_full_to_sections(d, "V", tmp_path / "V.mp4", seconds=lambda u: 1236.0)
+    assert out["full"] is False and out["a"] <= 365.4 and out["b"] >= 387.2
+    assert R.long_full_to_sections(d, "V", tmp_path / "V.mp4", seconds=lambda u: 300.0)["full"] is True     # 짧으면 그대로 통째
+    assert R.long_full_to_sections({**d, "ts": []}, "V", tmp_path / "V.mp4", seconds=lambda u: 1236.0)["full"] is True   # 시각 모르면 못 줄인다(받는 쪽이 거절 → 다음 후보)

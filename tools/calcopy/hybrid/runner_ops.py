@@ -291,6 +291,36 @@ def dims(p: Path) -> dict:
     return {"name": p.name, "w": w, "h": h, "dur": round(d, 2), **({"vdur": round(vd, 3)} if vd else {})}   # vdur = 화면 끝(원음 구간 검사 common.orig_span_over)
 
 
+def vtt_lines(vtt) -> list[dict]:
+    """유튜브 자막 낱말을 3초씩 묶어 말 줄로(받아쓰기 대신)."""
+    lines, cur, t0, t = [], [], None, 0.0
+    for t, w in vtt_words(vtt) if vtt else []:
+        if t0 is None:
+            t0 = t
+        cur.append(w)
+        if t - t0 > 3.0:
+            lines.append({"t0": t0, "t1": t, "text": " ".join(cur)}); cur, t0 = [], None
+    if cur:
+        lines.append({"t0": t0, "t1": t0, "text": " ".join(cur)})
+    return lines
+
+
+def bench_lines(mp4: Path, vtt, dur: float) -> tuple:
+    """(판단 주인 — 소재 받아쓰기를 얼마나) 쇼츠 길이면 통째 받아쓰기. 긴 소재(롱폼)는 유튜브 자동 자막이 있으면 그것, 없으면 앞 BENCH_ASR_MAX_SEC 만
+    받아쓰기(사장님 11-05 '부분만 받는 게 맞지 않나' · Jev 해결 0.59/선택 0.96 — 11-05 김미향 #7001: 8분22초 통째 받아쓰기가 CPU PC 에서 수 분).
+    돌려줌 = (말 줄, 어디서 얻었나). 상한 주인 = yt_fetch(BENCH_LONG_SEC·BENCH_ASR_MAX_SEC)."""
+    from tools.calcopy.engine import yt_fetch as YF
+    if dur <= YF.BENCH_LONG_SEC:
+        return asr(mp4), "받아쓰기"
+    if vtt:
+        got = vtt_lines(vtt)
+        if got:
+            return got, "유튜브 자막"
+    head = mp4.with_name("bench_head.wav")
+    run(["ffmpeg", "-y", "-v", "error", "-t", str(YF.BENCH_ASR_MAX_SEC), "-i", str(mp4), "-vn", "-ac", "1", "-ar", "16000", str(head)])
+    return asr(head), f"받아쓰기(앞 {YF.BENCH_ASR_MAX_SEC}초)"
+
+
 def vtt_words(p: Path) -> list:
     from tools.calcopy.yanshot.common import vtt_words as V
     return [[round(float(t), 2), w] for t, w in V(p)]
@@ -521,17 +551,9 @@ def c_bench(W, d):
                  "-vf", "scale=720:-2", str(bd / "big.jpg")])
             if (bd / "big.jpg").exists():
                 out["big"] = "bench/big.jpg"
-            lines = asr(mp4)
+            lines, out["asr_from"] = bench_lines(mp4, vtt, float(out.get("dur") or 0))
     else:                              # 받아 둔 벤치에 영상이 없다(시험) — 자막 낱말을 3초씩 묶어 말 줄로
-        lines, cur, t0 = [], [], None
-        for t, w in vtt_words(vtt):
-            if t0 is None:
-                t0 = t
-            cur.append(w)
-            if t - t0 > 3.0:
-                lines.append({"t0": t0, "t1": t, "text": " ".join(cur)}); cur, t0 = [], None
-        if cur:
-            lines.append({"t0": t0, "t1": t0, "text": " ".join(cur)})
+        lines = vtt_lines(vtt)
         out["note"] = "벤치 영상 없음 — 자막으로 대신(시트 없음)"
     jsave(bd / "asr.json", lines)
     out["lines"] = lines
@@ -899,6 +921,22 @@ def origin_offset(W: Path, vid: str, src: Path, guess: float, ts: list[float]) -
     return round(median(diffs), 2), True
 
 
+def long_full_to_sections(d: dict, vid: str, dst: Path, seconds=None) -> dict:
+    """(판단 주인 — 통째 요청을 그대로 받나) 통째(full) 요청인데 원본이 통째 상한(yt_fetch.FULL_MAX_SEC, 사장님 11-02)을 넘고 맞은 시각(ts)이 있으면
+    그 시각 ±90초 구간으로 바꾼다. 길이를 아는 곳이 받는 쪽뿐이라 여기 한 곳 — flow 가 길이를 모르는 자리(회원이 준 원본 given 등)도 같이 덕을 본다.
+    11-05 얜샷템 회원 편: 21분 원본(PC 04편 원본 8Vhy53eDdS8)을 시각 365~387초까지 알고도 통째 요청 → 거절 → 원본을 잃었다(실측 재현)."""
+    ts = [float(x) for x in d.get("ts") or [] if isinstance(x, (int, float))]
+    if not d.get("full") or not ts or dst.exists():
+        return d
+    from tools.calcopy.engine import yt_fetch as YF
+    sec = (seconds or YF.video_seconds)(f"https://www.youtube.com/watch?v={vid}")
+    if sec <= YF.FULL_MAX_SEC:
+        return d
+    a, b = max(0.0, min(ts) - 90), max(ts) + 90
+    print(f"[origin_get] 긴 원본 {sec:.0f}초 — 통째 대신 맞은 시각 앞뒤 {a:.0f}~{b:.0f}초만 {vid}", file=sys.stderr, flush=True)
+    return {**d, "full": False, "a": a, "b": b}
+
+
 def c_origin_get(W, d):
     vid, a, b = d["vid"], float(d["a"]), float(d["b"])
     src = W / "src"; src.mkdir(exist_ok=True)
@@ -944,6 +982,8 @@ def c_origin_get(W, d):
     from tools.calcopy.hybrid import screen
     if d.get("full") and bench_as_source(W, vid, dst):
         print(f"[origin_get] 소재 = 원본 — 1080 벤치를 그대로 씀(다시 안 받음) {vid}", file=sys.stderr, flush=True)
+    d = long_full_to_sections(d, vid, dst)
+    a, b = float(d["a"]), float(d["b"])
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
