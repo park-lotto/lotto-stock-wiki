@@ -230,6 +230,11 @@ def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
     if len(todo) < 2:
         return {}
     errs = {}
+    try:      # 병렬 전에 주 스레드에서 모델·tqdm 잠금 준비(11-05 박상혁 #8049 맥 스레드 안 첫 tqdm 멈춤)
+        from tools.calcopy.engine.check_line_sync import whisper_model
+        whisper_model()
+    except ImportError:
+        pass
     with ThreadPoolExecutor(max_workers=min(workers, len(todo))) as ex:
         futs = [(p, ex.submit(heard_words, p, lang)) for p in todo]
         for p, f in futs:
