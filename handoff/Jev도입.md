@@ -20,3 +20,11 @@
 1. 사장님 카드 등록(Vercel) 또는 TypeSafe 충전 → `node --env-file=.env jev_test_vercel.js`
 2. 한국어 정확도 측정: 텔레그램 뉴스 50건 정답셋, 영어 지시문 vs 한국어 지시문 A/B (공식: 한국어 약함)
 3. 붙일 곳 1개 선정(뉴스 1차 선별 / 레퍼런스 영상 선별 / 훅 점수 후보)
+
+## 2026-11-05 (TheRose PC) — 판정기 저장소 한 벌 (관제 332)
+- `tools/jev/judge.py` = 정본(must4: 뿌리원인·근본해결·한줄기·두더지아님, where 필수). 키는 `~/jev-lab/.env`에서 읽음(저장소에 키 없음)
+- 실행: `~/jev-lab/.venv/Scripts/python -X utf8 tools/jev/judge.py 질문.json`
+- 시험(저장소 판): 모으는 수리 = 통과(0.93·0.87·0.87·0.11) / 두더지 후보만 = 보류(근본 0.39·한줄기 0.14·두더지 0.90)
+- CLAUDE.md 0원칙 맨 위에 "정본 경로 + 커밋 트랙 = Jev도입" 적음
+## ⏭ 다음
+- CH PC·다른 PC의 `jev-lab/judge.py`(옛 판)는 더 쓰지 않는다 — 지워도 됨(사장님 확인 후)
