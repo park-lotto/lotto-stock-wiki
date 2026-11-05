@@ -291,6 +291,7 @@ def main():
     ap.add_argument("--no-paid", action="store_true", help="돈 드는 호출 0(TTS 캐시만·스피치매틱스·VMake 안 부름)")
     ap.add_argument("--tts-seed", help="narr_full.mp3(+.tts.json) 가 있는 렌더 폴더 — 작업 폴더 <판>/render/ 로 복사")
     ap.add_argument("--replay", help="review 답 고정 폴더(<review id 앞부분>.json)")
+    ap.add_argument("--goto", help="(개발) --resume 상태를 이 세부 단계부터 다시(예 bm_tear — 엔진을 고친 뒤 받기는 그대로 두고 뜯기부터). 처음부터 다시 금지 규칙용")
     ap.add_argument("--max-calls", type=int, default=400)
     ap.add_argument("--stop-at", default="", help="이 세부 단계(쉼표 목록)에 닿으면 멈춤 — 예 thumb = 장면 맞추기 통과 직후(10-27 사장님 '원본·대본·장면 구간만 계속')")
     ap.add_argument("--from-plan", help="(시험) 대본 답 JSON {대본, 재료, 근거_md} — --resume 상태에 대본 검사 없이 넣고 계획부터(TTS 캐시가 있는 승인본으로 렌더·검사)")
@@ -345,6 +346,16 @@ def main():
     calls, t_all = 0, time.time()
     if a.retry:
         user = {"retry": True}
+    if a.goto:
+        if not a.resume:
+            raise SystemExit("--goto 는 --resume 과 같이")
+        ok = flow.FORMAT_PHASES.get(st.get("fmt") or "", {}).get(a.goto) or flow.PHASES.get(a.goto)
+        if not ok:
+            raise SystemExit(f"모르는 세부 단계: {a.goto}")
+        log({"goto": a.goto, "from": st.get("phase")})
+        st["phase"] = a.goto
+        st.pop("stopped", None)
+        measure, replies = {}, {}
     while True:
         res = flow.step(st, measure, replies, user)
         calls += 1

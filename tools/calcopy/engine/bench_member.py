@@ -122,7 +122,7 @@ def tear(mp4: Path, d: Path, llm) -> tuple[dict, dict, Path]:
     """영상 한 편 → (뜯기, 틀 설명서, 뜯기 파일). 주인 = analyze.analyze · to_frame.main."""
     from tools.calcopy.engine import analyze as A, to_frame as T
     d.mkdir(parents=True, exist_ok=True)
-    J = A.analyze(str(mp4), str(d), llm=llm, materials=False)
+    J = A.analyze(str(mp4), str(d), llm=llm, materials=True)    # 꾸밈 판독(짤·스티커·도형·글자짤) 켬 — 지침서 §3-8 필수 칸, r7 deco_kinds(Jev 해결 0.63·위험 0.26, 11-06)
     jp, fp = d / "뜯기.json", d / "frame.json"
     T.main([str(jp), "--out", str(fp)])
     return J, json.loads(fp.read_text(encoding="utf-8")), jp

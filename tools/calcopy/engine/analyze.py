@@ -42,7 +42,6 @@ ENGINE_VERSION = "뜯기 1판 2026-10-15"
 MATERIAL_KINDS = ["남의영상재편집", "스톡영상", "사진+움직임", "기사·화면캡처", "AI그림", "AI영상", "짤·밈",
                   "역할극·인물컷", "화면녹화", "글자만", "직접촬영", "모름"]
 FONT_CROPS = 6          # 글꼴 대조 자막 크롭 최대 수
-MOTION_STARTS = 3       # 등장 곡선 잴 자막 시작 수
 MOTION_HALF = 9         # ±9프레임(원 fps)
 BATCH = 10              # 제미나이 한 번에 보낼 그림 수(큰 시트 한 번에 주면 번호를 순서대로 찍는다 — 메모리)
 
@@ -306,28 +305,87 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
     return out
 
 
-# ── 6. 등장 곡선 ─────────────────────────────────────────────────────────
-def caption_motion(path, vl, cap, meta) -> dict:
+# ── 6. 등장·퇴장 곡선(지침서 §3-1 A — 줄마다 전부, 숫자로) ─────────────────
+def _curve(path, W, y0, y1, pol, ss, n):
+    """띠 [y0,y1] 의 ss 부터 n 프레임 잉크 bbox·잉크량."""
+    out = []
+    fps_t = None
+    for k, f in enumerate(probe.frames(path, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0, ss=ss, dur=n[1])):
+        m = layout.ink_mask(f, pol)
+        ys, xs = np.where(m)
+        bb = [int(xs.min()), int(ys.min() + y0), int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)] if len(ys) else None
+        out.append({"t": round(ss + k / n[0], 3), "bbox": bb, "ink": int(m.sum())})
+    return out
+
+
+def curve_stats(curve: list, t_ref: float, fps: float, end: bool = False) -> dict:
+    """(판단 주인 · 움직임 숫자) 잉크 곡선 → {ms, steps(0.1초마다 폭%·잉크%·y), kind}. 기준 = 등장이면 마지막 프레임(자리 잡은 자막), 퇴장이면 첫 프레임.
+    ms = 기준 잉크의 10%→90% 사이(등장) / 90%→10% 사이(퇴장) 걸린 시간. 1프레임 안이면 instant. 폭이 기준의 ±10% 넘게 변하면 크기 변화, 잉크만 차면 페이드/타자.
+    1초 미만 움직임은 프로그램으로 잰다(agy 는 0.4초 이하를 못 본다 — 11-04 실측)."""
+    if len(curve) < 4:
+        return {"failed": "프레임 부족"}
+    ref = curve[0] if end else curve[-1]
+    ri, rw = max(ref["ink"], 1), max((ref["bbox"] or [0, 0, 1])[2], 1)
+    after = [c for c in curve if (c["t"] >= t_ref - 0.5 / fps)]
+    ink = [c["ink"] / ri for c in after]
+    if end:
+        a = next((i for i, v in enumerate(ink) if v < 0.9), None)
+        b = next((i for i, v in enumerate(ink) if v < 0.1), None)
+    else:
+        a = next((i for i, v in enumerate(ink) if v >= 0.1), None)
+        b = next((i for i, v in enumerate(ink) if v >= 0.9), None)
+    ms = round(1000 * (b - a) / fps) if a is not None and b is not None and b >= a else None
+    step = max(1, round(fps / 10))
+    steps = [{"t": round(c["t"] - t_ref, 2), "w_pct": round(100 * (c["bbox"] or [0, 0, 0])[2] / rw), "ink_pct": round(100 * c["ink"] / ri),
+              "y": (c["bbox"] or [None, None])[1]} for c in after[::step]]
+    ws = [round(100 * (c["bbox"] or [0, 0, 0])[2] / rw) for c in after if c["ink"] / ri >= 0.3]     # 모든 프레임(0.1초 표본은 팝 꼭대기를 놓친다)
+    if ms is None and end and a is not None and b is None:
+        kind = "교체(띠가 비지 않고 다음 자막으로 바로)"      # 다음 줄이 같은 프레임에 들어와 잉크가 10% 아래로 안 내려간다(Z956 실측 11/20)
+    elif ms is None:
+        kind = "판정불가"
+    elif ms <= round(1000 / fps):
+        kind = "instant"
+    elif ws and (max(ws) > 110 or min(ws) < 90):
+        kind = "크기 변화(팝·확대/축소)" + (f" 최대 {max(ws)}%" if max(ws) > 110 else "")
+    else:
+        kind = "페이드/타자"
+    return {"ms": ms, "kind": kind, "steps": steps, "ref": "끝 프레임" if not end else "첫 프레임"}
+
+
+def caption_motion(path, vl, cap, meta, above=None) -> dict:
+    """자막 줄마다 전부(지침서 §3-1 A '줄마다 센다', 11-06 3개만 재던 것을 전부로) 등장(±MOTION_HALF 프레임)·퇴장 곡선 + 숫자(curve_stats)
+    + 창 위 고정 띠(제목·로고) 0초 등장. 이름(anim)은 captions.caption_anim 그대로(to_frame enter 최빈값이 읽는다)."""
     reg = captions.caption_region(vl)
     y0, y1 = reg
     W = vl["canvas"][0]
     fps = meta["fps"]
     pol = vl["caption"]["ink"]
-    starts = [it for it in cap["items"] if it["t0"] > 0 and it["t1"] - it["t0"] >= 0.5]
-    out = []
-    for it in _pick_even(starts, MOTION_STARTS):
-        t0 = it["t0"]
-        ss = max(0.0, t0 - MOTION_HALF / fps)
-        curve = []
-        for k, f in enumerate(probe.frames(path, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0, ss=ss,
-                                           dur=(2 * MOTION_HALF + 1) / fps)):
-            m = layout.ink_mask(f, pol)
-            ys, xs = np.where(m)
-            bb = [int(xs.min()), int(ys.min() + y0), int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)] if len(ys) else None
-            curve.append({"t": round(ss + k / fps, 3), "bbox": bb, "ink": int(m.sum())})
-        out.append({"caption": it["i"], "t0": t0, "anim": captions.caption_anim(path, vl, t0 + 0.03, fps), "curve": curve})
-    return {"ok": True, "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim", "starts": out} if out \
-        else {"failed": "0.5초 넘는 자막 시작이 없음"}
+    win = (fps, (2 * MOTION_HALF + 1) / fps)
+    items = [it for it in cap["items"] if it["t1"] - it["t0"] >= 0.5]
+    out, ends = [], []
+    for it in items:
+        if it["t0"] > 0:
+            t0 = it["t0"]
+            curve = _curve(path, W, y0, y1, pol, max(0.0, t0 - MOTION_HALF / fps), win)
+            out.append({"caption": it["i"], "t0": t0, "anim": captions.caption_anim(path, vl, t0 + 0.03, fps), "curve": curve,
+                        "num": curve_stats(curve, t0, fps)})
+        if it["t1"] < meta["duration"] - 0.3:
+            t1 = it["t1"]
+            curve = _curve(path, W, y0, y1, pol, max(0.0, t1 - MOTION_HALF / fps), win)
+            ends.append({"caption": it["i"], "t1": t1, "num": curve_stats(curve, t1, fps, end=True)})
+    bands = []
+    for b in above or []:
+        bpol = "dark" if (vl.get("bg_rgb") and sum(vl["bg_rgb"]) / 3 >= 128) else "bright"
+        curve = _curve(path, W, int(b[0]), int(b[1]), bpol, 0.0, (fps, 1.0))
+        bands.append({"band": list(b), "num": curve_stats(curve, 0.0, fps), "hold_ink_pct": [round(100 * c["ink"] / max(curve[-1]["ink"], 1)) for c in curve[::max(1, round(fps / 10))]] if curve else []})
+    if not out:
+        return {"failed": "0.5초 넘는 자막 시작이 없음"}
+    kinds = [s["num"].get("kind") for s in out if s.get("num")]
+    return {"ok": True, "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임, 자막 줄마다 전부·끝도) + captions.caption_anim + curve_stats",
+            "starts": out, "ends": ends, "bands": bands, "n": {"starts": len(out), "ends": len(ends), "of": len(cap["items"])},
+            "summary": {"enter_kinds": {k: kinds.count(k) for k in set(kinds)},
+                        "enter_ms_med": st.median([s["num"]["ms"] for s in out if s["num"].get("ms") is not None]) if any(s["num"].get("ms") is not None for s in out) else None,
+                        "exit_kinds": {k: [e["num"].get("kind") for e in ends].count(k) for k in {e["num"].get("kind") for e in ends}}}}
 
 
 # ── 7·8. 컷 · 제작법 ─────────────────────────────────────────────────────
@@ -606,7 +664,7 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
     T["fonts_fx"] = time.time() - t
 
     t = time.time()
-    R["caption_motion"] = caption_motion(mp4, vl, cap, meta) if cap and cap.get("region") else {"failed": "자막 없음"}
+    R["caption_motion"] = caption_motion(mp4, vl, cap, meta, lay["bench_full"].get("above_bands")) if cap and cap.get("region") else {"failed": "자막 없음"}
     for s in R["caption_motion"].get("starts", []):
         if s["anim"] == "판정불가":
             unknown.append(f"등장효과 판정불가: 자막 {s['caption']} ({s['t0']}s)")
