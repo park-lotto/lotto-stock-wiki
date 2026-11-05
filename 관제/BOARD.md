@@ -1,6 +1,6 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-11-05 11:40 · 카드 329장
+갱신: 2026-11-05 11:53 · 카드 329장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
@@ -133,7 +133,7 @@
 | [325](cards/325-숏클_판올림이_플러그인(훅)엔_켤_때_한_번.md) | 숏클 판올림이 플러그인(훅)엔 켤 때 한 번 늦게 반영 — 받는 즉시 플러그인도 갱신 | 숏클깨우기 | - | shortem_client/server/plugin_sync.js:syncPlugin | 새 판을 받은 그 실행 안에서 claude-plugin/shortem 의 wake.js·plugin.json 이 새 판으로 바뀌고 plugin_version.txt = 새 판(시험 + 이 PC 실측) | 2026-11-04 18:02 등록 · 분배 → 숏클깨우기 |
 | [326](cards/326-숏클_맥_한_줄_설치(curl_bash)_—.md) | 숏클 맥 한 줄 설치(curl|bash) — 맥 설치 묶음 빌더 통합·깃허브 맥 서버 빌드·인코더 VideoToolbox | 칼카피숏템엔진 | 2026-11-04 22:01 · 사장님 | installer/win/build_win.py:main(빌더 하나·--plat) / shopping_shorts/claude_portal.py:start_line(운영체제별 한 줄) / tools/calcopy/engine/encoder.py:venc | 깃허브 맥 서버(arm64·x64)에서 한 줄 설치→도구 sha 일치→MCP setup ok→시험 렌더 잉크>0 + 사장님 인텔 맥에서 한 줄 붙여넣기→Claude 로그인→'숏클 점검' 완료 | 2026-11-04 22:01 승인: 사장님 |
 | [327](cards/327-숏클메이커_PC관리_옛_설치방법_칸_제거.md) | 숏클메이커 PC관리 옛 설치방법 칸 제거 | 숏클PC관리정리, 숏클설치안내정리 | - | shopping_shorts/static/claude.html:renderInstall | 라이브 /claude 페이지 PC관리 펼침에 설치 카드 2개·설치파일/START.md 버튼이 안 보이고 등록PC·지금접속은 그대로 | 2026-11-05 00:23 분배 → 숏클설치안내정리 |
-| [328](cards/328-숏클_맥_한_줄_설치.md) | 숏클 맥 한 줄 설치 | 숏클맥설치 | **필요** | installer/install.sh;shopping_shorts/claude_portal.py:start_line | 맥에서 페이지 복사 한 줄을 터미널에 붙여 넣으면 설치·키 저장·플러그인 등록·shortem_setup 점검(라이선스·기기·도구)까지 끝난다(라이브 주소, 실제 맥 실측) | 2026-11-05 11:20 등록 · 분배 → 숏클맥설치 |
+| [328](cards/328-숏클_맥_한_줄_설치.md) | 숏클 맥 한 줄 설치 | 숏클맥설치 | 2026-11-05 11:53 · 사장님 | installer/install.sh;shopping_shorts/claude_portal.py:start_line | 맥에서 페이지 복사 한 줄을 터미널에 붙여 넣으면 설치·키 저장·플러그인 등록·shortem_setup 점검(라이선스·기기·도구)까지 끝난다(라이브 주소, 실제 맥 실측) | 2026-11-05 11:53 승인: 사장님 |
 | [329](cards/329-숏클_회원_관리_표_계정·PC·접속을_관리자.md) | 숏클 회원 관리 표: 계정·PC·접속을 관리자 페이지에서 보고 조작 | 숏클동시접속 | **필요** | shopping_shorts/claude_portal.py:admin_members | 관리자 페이지 한 표에서 회원별 계정 연결·등록 PC·사용 중 PC·엔진 버전이 보이고, 연결 풀기·PC 빼기·접속 끊기·PC 한도·최소 엔진 설정을 누르면 실제 회원 엔진(PC 3대·계정 2개)이 그대로 막히고 풀린다 — tools/shortcl_guard 실측 | 2026-11-05 11:39 등록 · 분배 → 숏클동시접속 |
 
 ## 병합 (119)
