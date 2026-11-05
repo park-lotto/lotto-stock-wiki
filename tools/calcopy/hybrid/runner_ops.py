@@ -1590,7 +1590,8 @@ def _cut_faces(W: Path, src: Path, ss: float, dur: float, crop) -> int:
     if not Path(FACE_MODEL).exists():
         sys.stderr.write(f"[faces] 얼굴 모델 없음 {FACE_MODEL} — 원본 밖 컷 얼굴 검사를 건너뜀\n")
         return 0
-    det = cv2.FaceDetectorYN.create(FACE_MODEL, "", (320, 320), 0.6, 0.3, 50)
+    from tools.calcopy.hybrid.common import face_detector
+    det = face_detector()
     tmp = W / "_faces"; tmp.mkdir(exist_ok=True)
     still = src.suffix.lower() in RU.STILL_EXT
     worst = 0

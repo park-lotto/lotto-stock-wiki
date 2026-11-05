@@ -1224,7 +1224,8 @@ def face_crop(src: Path, t: float, ar: float) -> list[int]:
     cx = sw / 2
     if ok:
         if _det is None:
-            _det = cv2.FaceDetectorYN.create(FACE_MODEL, "", (320, 320), 0.6, 0.3, 50)
+            from tools.calcopy.hybrid.common import face_detector
+            _det = face_detector()
         _det.setInputSize((f.shape[1], f.shape[0]))
         _, faces = _det.detect(f)
         if faces is not None and len(faces):

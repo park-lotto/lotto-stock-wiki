@@ -22,6 +22,17 @@ if not os.path.isfile(FACE_MODEL):
         if (_d / "face_detection_yunet_2023mar.onnx").is_file():
             FACE_MODEL = str(_d / "face_detection_yunet_2023mar.onnx")
             break
+
+
+def face_detector(w: int = 320, h: int = 320):
+    """얼굴 검출기(YuNet) 만들기 한 곳 — 모델을 바이트로 읽어 넘긴다. 경로로 넘기면 OpenCV ANSI 로더가 한글 경로(윈도 사용자 폴더)를 못 열어
+    렌더가 멈췄다(11-05 박세현 #8643). render_bench·runner_ops·thumb 가 이걸 부른다(경로로 따로 만들던 3벌)."""
+    import cv2
+    import numpy as np
+    buf = np.frombuffer(Path(FACE_MODEL).read_bytes(), dtype=np.uint8)
+    return cv2.FaceDetectorYN.create("onnx", buf, np.empty(0, dtype=np.uint8), (w, h), 0.6, 0.3, 50)
+
+
 WORK_BASE = Path("C:/숏템_칼카피/yanshottem")
 DOC_BASE = ROOT / "channel" / "yanshottem"
 DESK_DIR = Path("C:/Users/CH/Desktop/칼카피영상/얜샷템/하이브리드")
