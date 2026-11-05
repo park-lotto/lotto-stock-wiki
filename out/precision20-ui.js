@@ -2221,7 +2221,9 @@
     let box=base.box;const pb=pk.box;
     if(pb&&typeof pb==='object'){const c=/^#[0-9a-f]{6}$/i.test(pb.color||'')?pb.color:'#000000',a=Number.isFinite(+pb.alpha)?Math.max(0,Math.min(100,+pb.alpha)):100;
       box={...box,background:`rgba(${[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)).join(',')},${(a/100).toFixed(3)})`,...(Number.isFinite(+pb.radius)?{borderRadius:`${Math.max(0,+pb.radius)}px`}:{})};}
-    return {...base,box,color:pk.text?.color||base.color,text};
+    // 상자를 글자에 맞춰(11-05 숏템리폿판_v2 — PC 납품 자막 = 글자 둘레 pad 30 둥근 상자). 팩 box.fit:true 일 때만 — 다른 팩은 그대로 틀 자막 칸 폭
+    const fit=pb&&typeof pb==='object'&&pb.fit?{pad:Number.isFinite(+pb.pad)?+pb.pad:30}:null;
+    return {...base,box,color:pk.text?.color||base.color,text,...(fit?{fit}:{})};
   }
   // 장면 i 의 자막팩 한 벌(관제 235) — 팩 기본 위에 그 장면 화자(speakers[scene.speaker])·줄 변형(variants[scene.variant])을 덮는다.
   //   화자·변형 값은 서버 scene_style.scene_marks 가 장면에 싣는다(판단의 주인). 글꼴·크기·글자색·꾸밈·두 겹 테·강조 색 목록을 바꾼다 — 등장은 ownMotionKey.
@@ -2278,6 +2280,8 @@
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
+    if(capLook?.fit&&text.textContent.trim()){const pv=preview.getBoundingClientRect(),rg=document.createRange();rg.selectNodeContents(text);const bb=rg.getBoundingClientRect(),pad=capLook.fit.pad*preview.clientHeight/frame.height;
+      if(bb.width>0&&pv.width>0)Object.assign(patch.style,{left:((bb.left-pv.left-pad)/pv.width*100)+'%',width:((bb.width+2*pad)/pv.width*100)+'%',top:((bb.top-pv.top-pad)/pv.height*100)+'%',height:((bb.height+2*pad)/pv.height*100)+'%'});}   // 글자 둘레만 상자(팩 box.fit)
     emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
     captionCycleStatic(layer.querySelector('.precision-text[data-edit-bind="caption"]'));   // 무지개 돌림(관제 235) — 정지 그림 색

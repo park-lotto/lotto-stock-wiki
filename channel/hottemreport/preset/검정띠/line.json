@@ -1,6 +1,7 @@
 {
  "_rule": "이 회원 프리셋이 쓰는 제작 라인 — 주인 한 곳. 기술 꾸러미 = tools/claude_portal/preset_pack.tech_files",
  "line": "hybrid",
- "version": "숏템리폿판",
- "_from": "10-29 사장님 '하나의 MCP'(지침서 🛑15) — 옛 길(preset_make·script_engine)에서 멈추던 것을 잇템로그와 같은 해외원본형 단계 진행으로. flow_format_of('숏템리폿판') = 해외원본형 · 판 렌더러 bench(잇템로그와 같은 엔진)"
+ "version": "숏템리폿판_v2",
+ "_from": "10-29 사장님 '하나의 MCP'(지침서 🛑15) — 옛 길(preset_make·script_engine)에서 멈추던 것을 잇템로그와 같은 해외원본형 단계 진행으로. flow_format_of('숏템리폿판') = 해외원본형 · 판 렌더러 bench(잇템로그와 같은 엔진)",
+ "_v2": "11-05 사장님 '숏클 = PC 제작 라인과 완벽히 같게' — PC 숏템리폿 납품 겉모습(분홍 제목·검정 둥근 상자 자막·원음 하늘색) 업그레이드 판. 1차 숏템리폿판은 base 로 상속"
 }

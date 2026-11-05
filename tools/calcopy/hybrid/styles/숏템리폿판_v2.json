@@ -1,0 +1,73 @@
+{
+ "name": "숏템리폿판_v2",
+ "base": "숏템리폿판",
+ "_note": "숏템리폿 업그레이드 판(11-05 사장님 '숏클 = PC 제작 라인과 완벽히 같게') — 1차 숏템리폿판(벤치 핫템리포트 100%)을 상속하고 PC 납품 겉모습만 덮는다. 근거 = 1차 판 _pending.upgrade_from_hand_scripts 가 가리킨 손 스크립트 channel/hottemreport/make_frame_숏템리폿.py(외관 B 블랙·핑크네온, 10-17) 값 그대로 · 대조 = PC 34편(Chessnut Move, renderer hottem_render_front) vs 회원 hr_run2 같은 소재. 이야기 꼴(앞 원본 반응 → '쿠팡에 쳐 봤더니' → 뒤 체험)은 1차 판에서 이미 같다(11-05 대조).",
+ "upgrades": [
+  {
+   "axis": "look",
+   "what": "틀 = 검정 바탕·영상 창 y560~1920·제목 BlackHanSans 흰(94)/분홍(136) 2줄·채널명 GmarketSans 분홍 네온",
+   "why": "PC 숏템리폿 납품 23~34편 겉모습(make_frame_숏템리폿.py Y_T1 212·line_h 126·line_scale 94/136·PINK [255,130,195]·shadow dy5)",
+   "source": "channel/hottemreport/make_frame_숏템리폿.py",
+   "verify": "PC 34편 1초 시트와 같은 소재 회원 렌더 대조"
+  },
+  {
+   "axis": "look",
+   "what": "자막 = 흰 CcPretendard-Bold 62 · 검정 둥근 상자(radius 22) · 강조 분홍",
+   "why": "PC 납품 자막 box rgb(10,10,14) pad 30 radius 22 · emph 노랑→분홍 YEL [255,130,195](make_render_숏템리폿.py)",
+   "source": "caption-motions.js hottemreport_v2",
+   "verify": "같은 대조"
+  }
+ ],
+ "frame": {
+  "window": [
+   0,
+   560,
+   1080,
+   1360
+  ],
+  "title": [
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 94,
+    "center": 275,
+    "color": "#FFFFFF",
+    "max_w": 1040
+   },
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 136,
+    "center": 401,
+    "color": "#FF82C3",
+    "max_w": 1040
+   }
+  ],
+  "logo": {
+   "text": "숏템리폿",
+   "font": "GmarketSansBold.otf",
+   "px": 70,
+   "x": 400,
+   "y": 62,
+   "rgba": [
+    255,
+    230,
+    245,
+    255
+   ],
+   "stroke": 0,
+   "glow": {
+    "px": 30,
+    "color": "#FF32A5",
+    "strength": 1.0
+   }
+  }
+ },
+ "packs": {
+  "caption": {
+   "pack": "hottemreport_v2",
+   "from": "PC 숏템리폿 납품 자막(검정 둥근 상자 · 흰 CcPretendard-Bold 62 · 강조 분홍) — make_frame/make_render_숏템리폿.py"
+  }
+ },
+ "caption": {
+  "pack": "hottemreport_v2"
+ }
+}
