@@ -51,7 +51,9 @@
       "version": "131.0.6778.204",
       "url": "https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/mac-arm64/chrome-headless-shell-mac-arm64.zip",
       "md5_b64": "KGcVn+kNzykm+WFgk0IlDQ==",
-      "size": 87816893
+      "size": 87816893,
+      "sha256": "9dae11ffda8d77f92c56f64de84f81fa6781c9d41235a8e9397117d7d004a017",
+      "sha256_source": "2026-11-05 GCS md5_b64·size 일치 파일에서 계산(맥 설치 대조용, 관제 328)"
     },
     "python": {
       "version": "3.12.15+20261013",
@@ -87,7 +89,9 @@
       "version": "131.0.6778.204",
       "url": "https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/mac-x64/chrome-headless-shell-mac-x64.zip",
       "md5_b64": "3lu5U6NzWJrFn9AI+6u+aA==",
-      "size": 91525108
+      "size": 91525108,
+      "sha256": "933463c27a951d3fc153c408c4b8a96c89b9344379963f68a5ff9aa1718bcaf9",
+      "sha256_source": "2026-11-05 GCS md5_b64·size 일치 파일에서 계산(맥 설치 대조용, 관제 328)"
     },
     "python": {
       "version": "3.12.15+20261013",
