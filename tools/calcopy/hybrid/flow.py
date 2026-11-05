@@ -2720,8 +2720,13 @@ def ph_plan_look(st, m, rp, u):
             return got
         if _lines_reask(st):        # 버리고 지나가면 화면은 새 컷·자막과 목소리는 옛 문장으로 나간다(11-03 강태경 L2)
             return _back_to_look(st, "보낸 대본줄이 반영되지 않았다: " + st["_lines_why"] + " — 고쳐서 다시 보내라")
-    _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
+    # 재료를 먼저 받는다 — 멈춤 판정이 먼저면 마지막 답의 재료가 버려지고, 다시 시도가 옛 재료.json 으로 같은 반려를 되풀이했다
+    #   (11-05 김미향 #7764 task_2~4 · 김효준 #6079). 회원이 재료를 실제로 바꿨으면 '같은 원인 연속'으로 세지 않는다(고치기 한도는 그대로).
+    before = json.dumps((st.get("script") or {}).get("M"), sort_keys=True, ensure_ascii=False, default=str)
     M = _take_fix(st, r)
+    if M is not None and json.dumps(M, sort_keys=True, ensure_ascii=False, default=str) != before:
+        (st.get("redo_hist") or {}).pop("plan", None)
+    _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     if M is not None:
         st["_plan_fixed"] = True      # 다음 계획이 엔진 검사를 통과하면 다시 묻지 않는다(ph_plan_got)
     if M is None:
