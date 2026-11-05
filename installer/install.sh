@@ -41,8 +41,12 @@ OSV="$(sw_vers -productVersion 2>/dev/null || echo 0)"
 say "맥 확인: $CHIP · macOS $OSV"
 
 # 값 하나 꺼내기(macOS 기본 plutil 은 JSON 도 읽는다 — 아직 node·python 이 없을 때 쓴다)
-jget() { plutil -extract "$2" raw -o - "$1" 2>/dev/null; }
+# 값이 없으면 빈 값 — plutil 이 실패하면 무엇을 찍었든 버린다(고객 맥 11-05: 크롬 확인값 대조 실패 뒤 단단히)
+jget() { local v; v="$(plutil -extract "$2" raw -o - "$1" 2>/dev/null)" || return 0; printf '%s' "$v"; }
 sha_of() { shasum -a 256 "$1" | awk '{print $1}'; }
+# out_has <정규식> <명령…> — 출력을 다 받은 뒤 찾는다. 'cmd | grep -q' 는 grep 이 먼저 끝나 cmd 가 SIGPIPE(141)로 죽고
+#   pipefail 때문에 '없다'가 된다(고객 맥미니 11-05: 자막 필터가 있는데 'ffmpeg 에 자막 기능이 없습니다'). 이 꼴을 새로 쓰지 마라.
+out_has() { local re="$1" o; shift; o="$("$@" 2>&1)"; grep -Eq -- "$re" <<<"$o"; }
 
 # ── 회원 확인 ─────────────────────────────────────────────────────────────────
 say '회원 확인 중'
@@ -90,6 +94,8 @@ else
   if [ -d "$APP" ]; then OLD="$APP.old-$(date +%Y%m%d%H%M%S)"; mv "$APP" "$OLD"; fi
   mv "$FRESH" "$APP"
   printf '%s' "$SHA" > "$MARK"
+  # 묶음에는 tools/ 가 없다 — 치워 둔 실행 도구를 '이미 깔림' 확인 전에 제자리로(11-05 리허설: 순서가 뒤라 매번 다시 받았다, Jev 뿌리 0.93)
+  [ -d "$APP/tools.prev" ] && [ ! -e "$APP/tools" ] && mv "$APP/tools.prev" "$APP/tools"
   rm -f "$ZIP"
   [ -n "$OLD" ] && rm -rf "$OLD"
 fi
@@ -111,11 +117,12 @@ else
     url="$(jget "$LOCK" "$LPLAT.$n.url")"; [ -n "$url" ] || die "도구 목록에 $n 이 없습니다"
     sha="$(jget "$LOCK" "$LPLAT.$n.sha256")"; md5="$(jget "$LOCK" "$LPLAT.$n.md5_b64")"
     f="$DL/$LPLAT-$n-$(basename "$url")"
-    ok() { if [ -n "$sha" ]; then [ "$(sha_of "$f")" = "$sha" ]; else [ "$(openssl md5 -binary "$f" | base64)" = "$md5" ]; fi; }
+    got() { if [ -n "$sha" ]; then sha_of "$f"; else openssl md5 -binary "$f" | base64; fi; }
+    ok() { [ "$(got)" = "${sha:-$md5}" ]; }
     if ! { [ -f "$f" ] && ok; }; then
       say "  $n 받는 중" >&2
       curl -fsSL --retry 5 --retry-delay 5 -o "$f" "$url" || die "$n 내려받기 실패"
-      ok || { rm -f "$f"; die "$n 확인값이 다릅니다"; }
+      ok || { printf '[숏클]   %s 받은 값 %s · 기대 값 %s · 크기 %s\n' "$n" "$(got)" "${sha:-$md5}" "$(stat -f%z "$f")" >&2; rm -f "$f"; die "$n 확인값이 다릅니다"; }
     fi
     printf '%s' "$f"
   }
@@ -157,7 +164,7 @@ SH
   chmod 755 "$T/yt-dlp/yt-dlp"
 
   say '실행 도구 확인 중'
-  "$T/ffmpeg/ffmpeg" -hide_banner -filters 2>/dev/null | grep -q ' ass ' || die 'ffmpeg 에 자막 기능이 없습니다'
+  out_has ' ass ' "$T/ffmpeg/ffmpeg" -hide_banner -filters || die 'ffmpeg 에 자막 기능이 없습니다'
   "$T/chrome-headless-shell/chrome-headless-shell" --version >/dev/null 2>&1 || die '렌더러(크롬)가 실행되지 않습니다'
   "$PY" -I -c 'import PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv,onnxruntime,av;from google import genai' \
     || die '엔진 부품 확인 실패'
@@ -201,7 +208,7 @@ say '숏클 연결 중'
 claude plugin marketplace add "$APP/claude-plugin" >/dev/null 2>&1
 claude plugin marketplace update shortem >/dev/null 2>&1
 claude plugin install 'shortem@shortem' >/dev/null 2>&1
-claude plugin list 2>&1 | grep -q shortem || die '숏클 플러그인 등록을 확인하지 못했습니다'
+out_has shortem claude plugin list || die '숏클 플러그인 등록을 확인하지 못했습니다'
 
 # ── 작업 폴더·회원 지침·첫 화면 설정 ─────────────────────────────────────────
 WORK="$SHORTEM_HOME/work"
@@ -241,10 +248,10 @@ say '설치 완료'
 [ -n "${SHORTEM_NO_LAUNCH:-}" ] && exit 0
 
 # 온보딩을 건너뛰면 Claude 가 로그인 화면을 안 띄운다(윈도 11-01 실측) — 여기서 먼저 로그인시킨다
-if ! claude auth status 2>&1 | grep -Eq '"loggedIn":[[:space:]]*true'; then
+if ! out_has '"loggedIn":[[:space:]]*true' claude auth status; then
   say 'Claude 로그인 — 브라우저가 열리면 로그인하고 허용을 누르세요'
   claude auth login </dev/tty
-  claude auth status 2>&1 | grep -Eq '"loggedIn":[[:space:]]*true' || die 'Claude 로그인이 끝나지 않았습니다. 같은 줄을 다시 붙여 넣고 엔터를 눌러 주세요'
+  out_has '"loggedIn":[[:space:]]*true' claude auth status || die 'Claude 로그인이 끝나지 않았습니다. 같은 줄을 다시 붙여 넣고 엔터를 눌러 주세요'
 fi
 say '준비 점검을 시작합니다'
 cd "$WORK" || die '작업 폴더로 가지 못했습니다'

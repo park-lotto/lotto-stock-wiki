@@ -172,3 +172,29 @@ def test_맥_묶음은_윈도_도구를_빼고_맥_목록을_넣는다(tmp_path)
     assert not any(n.startswith(("tools/", "server/vcrt/")) for n in names)
     assert {"engine/a.py", "mac/tools.lock.json", "mac/requirements-engine-py312-mac.txt", "mac/write_manifest.js"} <= names
     assert rep["dropped"] == 3
+
+
+def test_맥_스크립트에_윈도_줄바꿈이_없다():
+    # 윈도 PC 에서 고쳐 쓰다 CRLF 가 섞이면 맥 bash 가 깨진다(11-05 실사고 직전 발견)
+    from pathlib import Path
+    root = Path(app_module.__file__).resolve().parents[1] / "installer"
+    for p in (root / "install.sh", root / "common" / "tools.lock.json", root / "common" / "requirements-engine-py312-mac.txt"):
+        assert b"\r" not in p.read_bytes(), p.name
+
+
+def test_맥_도구는_전부_sha256_으로_대조한다():
+    import json
+    from pathlib import Path
+    lock = json.loads((Path(app_module.__file__).resolve().parents[1] / "installer" / "common" / "tools.lock.json").read_text(encoding="utf-8"))
+    for plat in ("darwin-arm64", "darwin-x64"):
+        for n in ("node", "chrome-headless-shell", "python", "ffmpeg", "ffprobe"):
+            assert len(lock[plat][n].get("sha256") or "") == 64, (plat, n)
+
+
+def test_맥_스크립트에_파이프_grep_q_꼴이_없다():
+    # set -o pipefail 아래 'cmd | grep -q' 는 grep 이 먼저 끝나 cmd 가 SIGPIPE 로 죽어 '없다'가 된다(고객 맥미니 11-05 자막 기능 오판)
+    import re
+    from pathlib import Path
+    body = (Path(app_module.__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
+    code = "\n".join(l for l in body.splitlines() if not l.lstrip().startswith("#"))
+    assert "pipefail" in code and not re.search(r"\|\s*grep\s+-[A-Za-z]*q", code)
