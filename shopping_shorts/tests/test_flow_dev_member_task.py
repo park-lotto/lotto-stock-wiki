@@ -46,7 +46,14 @@ def test_member_task_runs_engine_path_and_moves_trial(tmp_path):
         raise AssertionError(args)
 
     started = []
-    a = FD.member_task(job, RV, lambda o: None, {"X": "1"}, run=run, answerer=lambda q, stop, log: started.append(q))
+    eng = tmp_path / "eng"
+
+    def run0(args, env):
+        if args[0] == "start":     # 회원 PC 빌리기와 같이 엔진 루트 channel/<slug> 로 복사돼 상대 경로로 부른다
+            assert args[1:3] == ["--preset", "channel/my_t/preset/틀"] and (eng / "channel/my_t/preset/틀/frame.json").exists()
+        return run(args, env)
+    a = FD.member_task(job, RV, lambda o: None, {"X": "1"}, run=run0, answerer=lambda q, stop, log: started.append(q), eng_root=eng)
+    assert not (eng / "channel/my_t").exists()        # 끝나면 빌린 폴더를 지운다
     assert a == {"work_dir": "trial/t1_abcdef123456", "ok": True}
     assert calls == ["start", "choose", "approve"]
     assert (job / "trial" / "t1_abcdef123456" / "final.mp4").exists() and not work.exists()
@@ -59,10 +66,14 @@ def test_member_task_runs_engine_path_and_moves_trial(tmp_path):
 def test_member_task_fail_is_ok_false_with_why(tmp_path):
     job = _job(tmp_path)
     a = FD.member_task(job, RV, lambda o: None, {}, run=lambda args, env: {"sid": "abcdef123456", "state": "candidates", "candidates": []},
-                       answerer=lambda q, stop, log: None)
+                       answerer=lambda q, stop, log: None, eng_root=tmp_path / "eng")
     assert a["ok"] is False and a["work_dir"] == "" and "후보 0개" in a["why"]
     bad = {**RV, "meta": {**RV["meta"], "preset": {"slug": "my_t", "style": "틀", "dir": "../x"}}}
-    assert FD.member_task(job, bad, lambda o: None, {}, run=None, answerer=lambda q, s, l: None)["ok"] is False
+    assert FD.member_task(job, bad, lambda o: None, {}, run=None, answerer=lambda q, s, l: None, eng_root=tmp_path / "eng")["ok"] is False
+    keep = tmp_path / "eng2" / "channel" / "my_t"
+    keep.mkdir(parents=True)                           # 남의 같은 이름 폴더는 덮지 않고 그대로 둔다
+    r = FD.member_task(job, RV, lambda o: None, {}, run=None, answerer=lambda q, s, l: None, eng_root=tmp_path / "eng2")
+    assert r["ok"] is False and keep.exists()
 
 
 def test_queue_answerer_answers_request_with_claude_shape(tmp_path):

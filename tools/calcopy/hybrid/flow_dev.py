@@ -172,7 +172,7 @@ def _queue_answerer(q: Path, stop: threading.Event, log, workers: int = 2, ask=N
             stop.wait(1.0)
 
 
-def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None) -> dict:
+def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None, eng_root: Path | None = None) -> dict:
     """회원 과제 한 건 → 엔진 길로 1편 → {work_dir: 'trial/t<try>_<sid>', ok: True} / {work_dir: '', ok: False, why}."""
     run = run or _run_make
     answerer = answerer or _queue_answerer
@@ -197,12 +197,20 @@ def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None) ->
         of = data / "originals.json"
         of.write_text(json.dumps({"note": "시험 편 소재 채널(flow_dev 회원 과제)", "channels": [{"platform": "youtube", "url": ch}]}, ensure_ascii=False), encoding="utf-8")
         env2["CALCOPY_ORIGINALS_FILE"] = str(of)
+    # 회원 PC 프리셋 빌리기(preset_rent.js)와 같은 꼴 — 내 프리셋 폴더 channel/<slug> 통째를 엔진 루트 channel/<slug> 로 복사하고 상대 경로로 돌린 뒤 지운다.
+    #   manifest 의 뜯기 경로가 엔진 루트 기준 상대 경로라 W/job 절대 경로로 주면 load_preset 이 뜯기를 못 찾는다(11-06 실측 '프리셋에 뜯기/틀 없음', Jev 0.96·해결 0.51)
+    eng = Path(eng_root or ROOT)
+    rent = eng / "channel" / pr["slug"]
+    if rent.exists():
+        return bad(f"엔진 루트에 같은 이름 프리셋 폴더가 이미 있다(남의 것일 수 있어 덮지 않는다): {rent}")
+    shutil.copytree(job / "channel" / pr["slug"], rent)
+    (rent / ".flow_dev_rent").write_text(str(job), encoding="utf-8")      # 이 시험기가 빌린 표식 — 지울 때 이것만 지운다
     stop = threading.Event()
     th = threading.Thread(target=answerer, args=(q, stop, log), daemon=True)
     th.start()
     t0 = time.time()
     try:
-        S = run(["start", "--preset", str(pdir), "--pack", "1"], env2)
+        S = run(["start", "--preset", pr["dir"], "--pack", "1"], env2)
         log({"member_task": "start", "state": S.get("state"), "sid": S.get("sid"), "n_cand": len(S.get("candidates") or []), "error": S.get("error")})
         if S.get("error") and not S.get("sid"):
             return bad("시작 못 함: " + str(S["error"]))
@@ -235,6 +243,8 @@ def member_task(job: Path, rv: dict, log, env: dict, run=None, answerer=None) ->
     finally:
         stop.set()
         th.join(timeout=5)
+        if (rent / ".flow_dev_rent").exists():
+            shutil.rmtree(rent, ignore_errors=True)
 
 
 def main():
