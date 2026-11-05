@@ -4145,6 +4145,27 @@ def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -
     return out
 
 
+def crop_ar_gate(T: dict, M: dict, st: dict) -> list[str]:
+    """(판단 주인 — 숫자로 적은 자를 칸이 창 비율과 달라 엔진이 넓히나) 넓히는 계산은 cut_crop/fit_crop_ar 그대로 — 렌더 전에 그 줄을 알린다.
+    11-05 얜샷템 회원 편: 두 칸 비교 원본의 왼쪽 칸만 [100,0,606,1080](0.56)으로 잘랐는데 창이 1:1 → 엔진이 [0,0,1080,1080]로 넓혀
+    오른쪽 칸 테두리(원본 x 976~)가 완성본에 들어갔다(자동 검사 통과). #5442 서지환(608x1080 → 1080x870 창)도 같은 꼴."""
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    win = tuple(frame_window(st["frame"])[2:])
+    out = []
+    for c in T["cuts"]:
+        cr = c.get("crop")
+        src = src_dir / str(c.get("src") or "")
+        if not (isinstance(cr, list) and len(cr) == 4) or not src.exists() or src.suffix.lower() in IMG_EXT:
+            continue
+        used = cut_crop({**c}, src, win)
+        if list(used) != [int(v) for v in cr]:
+            out.append(f"{c.get('line')} {c.get('src')}@{c.get('ss')} crop {list(cr)}(비율 {cr[2] / cr[3]:.2f})가 창 비율 {win[0] / win[1]:.2f} 와 달라 "
+                       f"엔진이 {list(used)} 로 넓힌다 — 넓힌 칸에 뺀 것(옆 화면·글자·다른 사람)이 들어오니 창 비율로 다시 자른다(높이 = 폭 ÷ {win[0] / win[1]:.2f})")
+    return out
+
+
 def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str]:
     """(판단 주인 — 사진이 이어져 멈춘 듯 보이나) 사진 컷이 연달아 max_sec 를 넘으면 영상 컷을 끼우게 한다."""
     out, run, first = [], 0.0, None
@@ -4189,6 +4210,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("사진", photo_gate(T, st, M)),
            ("흐림 면적", blur_cut_gate(T, M, st)),
            ("사진 연속", photo_run_gate(T, M)),
+           ("자를 칸 비율", crop_ar_gate(T, M, st)),
            ("B13 재사용", plan_reuse_gate(T, M, st)),
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
