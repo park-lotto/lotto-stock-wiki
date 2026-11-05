@@ -28,4 +28,5 @@ def test_pack_box_fits_text_and_orig_is_sky_blue():
 
 def test_member_preset_uses_v2():
     line = json.loads((ROOT / "channel/hottemreport/preset/검정띠/line.json").read_text(encoding="utf-8"))
-    assert line["version"] == "숏템리폿판_v2"
+    # 사장님 11-05 "다음 주에 한다" — 그때까지 회원 프리셋은 1차 판. 다음 주에 v2 로 바꾸면 이 줄도 v2 로
+    assert line["version"] == "숏템리폿판"
