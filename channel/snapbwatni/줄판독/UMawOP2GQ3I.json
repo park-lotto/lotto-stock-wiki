@@ -1,0 +1,3140 @@
+{
+ "id": "UMawOP2GQ3I",
+ "dur": 33.533,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "자매가 진지하게",
+   "colors": [
+    {
+     "word": "자매가 진지하게",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    351,
+    421
+   ],
+   "x": [
+    280,
+    797
+   ]
+  },
+  {
+   "text": "말싸움하면 생기는 일 ㅋㅋㅋ",
+   "colors": [
+    {
+     "word": "말싸움하면 생기는 일 ㅋㅋㅋ",
+     "hex": "#FA3EA4"
+    }
+   ],
+   "y": [
+    433,
+    506
+   ],
+   "x": [
+    97,
+    978
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   526,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   1314,
+   1421
+  ],
+  "dialogue_band": [
+   968,
+   1072
+  ],
+  "title_y": [
+   [
+    351,
+    421
+   ],
+   [
+    433,
+    506
+   ]
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": [
+   193,
+   316
+  ],
+  "logo_x": [
+   109,
+   408
+  ],
+  "logo": "초록 개구리 그림(x109~228) + 'Snap_This!'(y211~241, #3AB34A·검정) + '스냅봤니'(y257~285)",
+  "bg_hex": "#FFFFFF",
+  "watermark": {
+   "present": false,
+   "alpha": null
+  },
+  "_basis": "3.0초 프레임 행별 비백색 비율·픽셀 중앙값(창은 아래 끝 1919까지 — 뼈대의 1394 는 뜯기 오측)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.833,
+   "speaker": "나레",
+   "text": "동생 : 근거 제시 체급차이 어필",
+   "layer": "스냅봤니:이름표",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     14,
+     0,
+     0
+    ],
+    [
+     0.033,
+     74,
+     34,
+     0
+    ],
+    [
+     0.067,
+     96,
+     79,
+     0
+    ],
+    [
+     0.1,
+     98,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 833,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생(분홍 옷)이 언니(줄무늬)에게 키 차이 주장 — 두 아이 얼굴",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "언니는 크고 나는 [웃음] 난 알고"
+   ]
+  },
+  {
+   "t0": 0.1,
+   "t1": 1.267,
+   "speaker": "원음:동생",
+   "text": "언니는 크고 나는",
+   "layer": "스냅봤니:대사",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     54,
+     31,
+     0
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 444,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 1.5,
+   "t1": 2.7,
+   "speaker": "원음:동생",
+   "text": "나는 아이고 언니는 언니고",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     31,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 707,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 1.833,
+   "t1": 3.433,
+   "speaker": "나레",
+   "text": "동생 : 팩트 기반 주장중ㅋㅋㅋ",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     42,
+     0,
+     0
+    ],
+    [
+     0.033,
+     74,
+     36,
+     0
+    ],
+    [
+     0.067,
+     96,
+     83,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 821,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 얼굴 근접 → 2.7초 컷 동생 전신",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    2.7
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "언니는 크고 나는 [웃음] 난 알고",
+    "언니는 언니 크고 나도 조금 작거든"
+   ]
+  },
+  {
+   "t0": 2.733,
+   "t1": 4.333,
+   "speaker": "원음:동생",
+   "text": "나는 조금 작거든",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     54,
+     32,
+     1
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     100,
+     98,
+     -4
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    988,
+    1046
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 453,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 3.7,
+   "t1": 6.1,
+   "speaker": "나레",
+   "text": "동생 : 구체적 수치(쪼매)강조중",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     24,
+     0,
+     0
+    ],
+    [
+     0.033,
+     71,
+     34,
+     0
+    ],
+    [
+     0.067,
+     95,
+     85,
+     0
+    ],
+    [
+     0.1,
+     99,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 860,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 근접, 4.57초 컷 두 아이",
+   "motion": "pan",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    4.567
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "언니는 언니 크고 나도 조금 작거든",
+    "&gt;&gt; 네가 그랬으니까 양보해 줘야지 뭘"
+   ]
+  },
+  {
+   "t0": 4.3,
+   "t1": 5.367,
+   "speaker": "나레",
+   "text": "순간 당황ㅋㅋㅋ",
+   "layer": "스냅봤니:반응",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "초록 반응 글 — 창 위쪽 오른편, 약 -5° 기울임, 위아래 통통(0.5초 주기, 위 끝 y 552↔600, 진폭 48px)",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ],
+    [
+     0.033,
+     100,
+     100,
+     -2
+    ],
+    [
+     0.067,
+     100,
+     100,
+     -8
+    ],
+    [
+     0.1,
+     100,
+     100,
+     -18
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    552,
+    687
+   ],
+   "x": 722,
+   "align": "center",
+   "max_w": 450,
+   "fill_hex": "#1AFF26",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 89,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 얼굴(당황 표정) — 4.57초 컷 걸침",
+   "motion": "pan",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    4.567
+   ],
+   "confidence": "픽셀",
+   "notes": "첫 프레임부터 100%(팝 없음), dy 는 통통 움직임(위 끝 y 기준). 목소리 없는 채널 반응 글 → speaker=나레"
+  },
+  {
+   "t0": 4.9,
+   "t1": 6.8,
+   "speaker": "원음:동생",
+   "text": "그랬으니까 양보해줘야지",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     51,
+     30,
+     2
+    ],
+    [
+     0.033,
+     90,
+     81,
+     1
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1045
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 677,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 6.533,
+   "t1": 8.2,
+   "speaker": "나레",
+   "text": "언니 : 안건의 구체적 대상요구",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "분홍 상자(언니)",
+   "enter_curve": [
+    [
+     0.0,
+     55,
+     0,
+     0
+    ],
+    [
+     0.033,
+     91,
+     40,
+     0
+    ],
+    [
+     0.067,
+     98,
+     81,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 836,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#E832B0",
+    "alpha": 0.69,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(6.50→6.60초, 위 0.73·아래 0.65 평균) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "언니 쪽 장면, 7.8초 흔들린 컷",
+   "motion": "cam",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    6.8,
+    7.8
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '언니'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 네가 그랬으니까 양보해 줘야지 뭘",
+    "양보해",
+    "&gt;&gt; 언니가 자리니까 양보해 주라고 하지"
+   ]
+  },
+  {
+   "t0": 6.833,
+   "t1": 7.667,
+   "speaker": "원음:언니",
+   "text": "뭘 양보해",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     30,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     2
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    986,
+    1047
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 257,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='언니' = 겹치는 이름표('언니 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 7.933,
+   "t1": 9.267,
+   "speaker": "원음:동생",
+   "text": "언니가 때리니까 다",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     55,
+     31,
+     2
+    ],
+    [
+     0.033,
+     91,
+     81,
+     0
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 512,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 8.467,
+   "t1": 11.3,
+   "speaker": "나레",
+   "text": "동생 : 피해보상(?)차원의 양보 촉구",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     25,
+     0,
+     0
+    ],
+    [
+     0.033,
+     73,
+     36,
+     0
+    ],
+    [
+     0.067,
+     94,
+     83,
+     0
+    ],
+    [
+     0.1,
+     99,
+     100,
+     0
+    ],
+    [
+     0.133,
+     99,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 983,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생이 고개 들어 말함",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 언니가 자리니까 양보해 주라고 하지",
+    "&gt;&gt; 야 그게 양보해 틀리가"
+   ]
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.933,
+   "speaker": "원음:동생",
+   "text": "양보해 주라고 하지",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     31,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     2
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1045
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 518,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 11.033,
+   "t1": 12.767,
+   "speaker": "원음:언니",
+   "text": "야 그게 양보해 줄 일이가?",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     55,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1047
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 716,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='언니' = 겹치는 이름표('언니 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 11.3,
+   "t1": 13.267,
+   "speaker": "나레",
+   "text": "언니 : 안건 성립 요건 기각",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "분홍 상자(언니)",
+   "enter_curve": [
+    [
+     0.0,
+     57,
+     0,
+     0
+    ],
+    [
+     0.033,
+     92,
+     41,
+     0
+    ],
+    [
+     0.067,
+     98,
+     87,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 735,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#E832B0",
+    "alpha": 0.69,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(6.50→6.60초, 위 0.73·아래 0.65 평균) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "언니 옆모습 + 동생",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '언니'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 야 그게 양보해 틀리가",
+    "&gt;&gt; 그래 양보 해 줄리다"
+   ]
+  },
+  {
+   "t0": 13.167,
+   "t1": 14.6,
+   "speaker": "원음:동생",
+   "text": "그래! 양보해 줄 일이다",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     54,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1047
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 615,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 13.4,
+   "t1": 15.333,
+   "speaker": "나레",
+   "text": "동생 : 기존 입장 강경 고수",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     17,
+     0,
+     0
+    ],
+    [
+     0.033,
+     71,
+     37,
+     0
+    ],
+    [
+     0.067,
+     92,
+     84,
+     0
+    ],
+    [
+     0.1,
+     98,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 717,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생, 14.83초 컷",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    14.833
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 그래 양보 해 줄리다",
+    "&gt;&gt; 양보 해줬으면 뭐 하게 양보 해줬으면"
+   ]
+  },
+  {
+   "t0": 15.033,
+   "t1": 16.367,
+   "speaker": "원음:언니",
+   "text": "양보해 줘서 뭐 하게",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     56,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     83,
+     2
+    ],
+    [
+     0.067,
+     99,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    986,
+    1045
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 541,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='언니' = 겹치는 이름표('언니 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 15.4,
+   "t1": 17.0,
+   "speaker": "나레",
+   "text": "언니 : 실질적 목적과 효용성 검증",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "분홍 상자(언니)",
+   "enter_curve": [
+    [
+     0.0,
+     56,
+     0,
+     0
+    ],
+    [
+     0.033,
+     91,
+     37,
+     0
+    ],
+    [
+     0.067,
+     98,
+     83,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 901,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#E832B0",
+    "alpha": 0.69,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(6.50→6.60초, 위 0.73·아래 0.65 평균) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "언니 쪽, 16.47초 컷 동생 근접",
+   "motion": "pan",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    16.467
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '언니'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 양보 해줬으면 뭐 하게 양보 해줬으면"
+   ]
+  },
+  {
+   "t0": 16.567,
+   "t1": 17.8,
+   "speaker": "원음:동생",
+   "text": "양보해 줬으면 아",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     1
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 455,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 17.167,
+   "t1": 19.133,
+   "speaker": "나레",
+   "text": "동생 : 다수의 행복(공리주의 )호소",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     47,
+     0,
+     0
+    ],
+    [
+     0.033,
+     74,
+     0,
+     0
+    ],
+    [
+     0.067,
+     85,
+     36,
+     0
+    ],
+    [
+     0.1,
+     94,
+     83,
+     0
+    ],
+    [
+     0.133,
+     98,
+     100,
+     0
+    ],
+    [
+     0.167,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 914,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 얼굴 근접(입 벌림)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 양보 해줬으면 뭐 하게 양보 해줬으면",
+    "아이들이 좋아할 거 아니가"
+   ]
+  },
+  {
+   "t0": 18.0,
+   "t1": 19.5,
+   "speaker": "원음:동생",
+   "text": "아이들이 좋아할 거 아이가ㅋㅋ",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     52,
+     31,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     1
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    986,
+    1047
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 834,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 19.533,
+   "t1": 21.2,
+   "speaker": "나레",
+   "text": "언니 : 완벽한 팩트 방어 ㅋㅋㅋ",
+   "layer": "스냅봤니:이름표",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "분홍 상자(언니)",
+   "enter_curve": [
+    [
+     0.0,
+     56,
+     0,
+     0
+    ],
+    [
+     0.033,
+     91,
+     37,
+     0
+    ],
+    [
+     0.067,
+     98,
+     82,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 869,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#E832B0",
+    "alpha": 0.69,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(6.50→6.60초, 위 0.73·아래 0.65 평균) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "언니 + 동생, 20.97초 컷 동생 근접",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    20.967
+   ],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '언니'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "아이들이 좋아할 거 아니가",
+    "&gt;&gt; 아이 나도 아이다"
+   ]
+  },
+  {
+   "t0": 19.567,
+   "t1": 20.7,
+   "speaker": "원음:언니",
+   "text": "아이 나도 아이다",
+   "layer": "스냅봤니:대사",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     54,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1045
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 456,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='언니' = 겹치는 이름표('언니 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 21.4,
+   "t1": 23.7,
+   "speaker": "나레",
+   "text": "동생 : 언니라는 존재론적 접근",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     15,
+     0,
+     0
+    ],
+    [
+     0.033,
+     55,
+     37,
+     0
+    ],
+    [
+     0.067,
+     91,
+     80,
+     0
+    ],
+    [
+     0.1,
+     98,
+     100,
+     0
+    ],
+    [
+     0.133,
+     99,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 809,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 얼굴 근접",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 아이 나도 아이다",
+    "&gt;&gt; 어 [비명] 그래 언니가 언니 자지"
+   ]
+  },
+  {
+   "t0": 21.7,
+   "t1": 23.867,
+   "speaker": "원음:동생",
+   "text": "어 그래 언니가 언니 되지",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     54,
+     32,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 675,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 24.3,
+   "t1": 26.933,
+   "speaker": "나레",
+   "text": "동생 : 외부기관 권위 인용 시도",
+   "layer": "스냅봤니:이름표",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     43,
+     0,
+     0
+    ],
+    [
+     0.033,
+     76,
+     38,
+     0
+    ],
+    [
+     0.067,
+     95,
+     83,
+     0
+    ],
+    [
+     0.1,
+     99,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 837,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 아이(뒤 파란 화면)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 어 [비명] 그래 언니가 언니 자지",
+    "&gt;&gt; 그러니까 학 학교에서 학교에는 입지"
+   ]
+  },
+  {
+   "t0": 24.333,
+   "t1": 27.3,
+   "speaker": "원음:동생",
+   "text": "그러니까 학 학교에서 학교에는",
+   "layer": "스냅봤니:대사",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     30,
+     2
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     99,
+     97,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1045
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 831,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 27.8,
+   "t1": 28.567,
+   "speaker": "원음:동생",
+   "text": "찍지 마라!!ㅋㅋㅋ",
+   "layer": "스냅봤니:대사",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "크게(잉크 높이 84px vs 기본 약 70px)",
+   "enter_curve": [
+    [
+     0.0,
+     53,
+     31,
+     4
+    ],
+    [
+     0.033,
+     91,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    981,
+    1052
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 599,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 84,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자='동생' = 겹치는 이름표('동생 :' 화면 글자) 다수 시간 기준."
+  },
+  {
+   "t0": 27.8,
+   "t1": 29.5,
+   "speaker": "나레",
+   "text": "동생 : 언론(카메라)통제 시도ㅋㅋㅋ",
+   "layer": "스냅봤니:이름표",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "기본(어두운 반투명 상자)",
+   "enter_curve": [
+    [
+     0.0,
+     51,
+     33,
+     0
+    ],
+    [
+     0.033,
+     90,
+     81,
+     0
+    ],
+    [
+     0.067,
+     97,
+     100,
+     0
+    ],
+    [
+     0.1,
+     98,
+     100,
+     0
+    ],
+    [
+     0.133,
+     99,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1314,
+    1421
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 980,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#423A3A",
+    "alpha": 0.87,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "회귀(상자 전후 프레임 B=(1-a)·bg+a·P, 8.47→8.57초 위·아래 여백 줄) — 근사"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "동생 얼굴이 카메라 쪽 — 찍지 말라며 손",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "상자 먼저(1프레임 상자만) → 글자가 작고 흐리게 → 100%. enter_curve scale=상자 폭 비, alpha=글자 잉크 비(capseg). '동생'은 이름표 글자 그대로 — 목소리 없는 해설 글이라 speaker=나레(Jev 0.66)",
+   "_asr": [
+    "&gt;&gt; 그러니까 학 학교에서 학교에는 입지",
+    "마라",
+    "&gt;&gt; [웃음]"
+   ]
+  },
+  {
+   "t0": 28.667,
+   "t1": 29.767,
+   "speaker": "불명",
+   "text": "ㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎ",
+   "layer": "스냅봤니:대사",
+   "role": "이음",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "ㅎ 글자마다 크기 다름·위아래 통통(잉크 y 968~1044 흔들림)",
+   "enter_curve": [
+    [
+     0.0,
+     50,
+     24,
+     0
+    ],
+    [
+     0.033,
+     90,
+     82,
+     0
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    995,
+    1036
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 600,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "원음 화자 장면(이름표 줄과 같은 컷)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 5,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 웃음 소리 글 — 화자 판별 안 함. 화자 불명."
+  },
+  {
+   "t0": 29.733,
+   "t1": 31.267,
+   "speaker": "나레",
+   "text": "팽팽했던 자매의 논리 대결!",
+   "layer": "스냅봤니:끝카드",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "검정 상자(끝 줄)",
+   "enter_curve": [
+    [
+     0.0,
+     12,
+     0,
+     0
+    ],
+    [
+     0.033,
+     55,
+     0,
+     0
+    ],
+    [
+     0.067,
+     91,
+     59,
+     0
+    ],
+    [
+     0.1,
+     98,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1310,
+    1424
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 823,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "픽셀 중앙값 #000000(31.5·33.3초)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타(미확인 — 휙 화면 전환과 겹침)",
+    "t": 29.81,
+    "basis": "파형 솟음"
+   },
+   "scene": "기타",
+   "scene_desc": "카메라가 휙 내려가 젓가락·분홍 옷 흐림(29.37~29.77 휙)",
+   "motion": "cam",
+   "transition": "cut",
+   "fit": 4,
+   "cut_at": [
+    29.767
+   ],
+   "confidence": "픽셀",
+   "notes": "끝 카드 — 검정 불투명 상자, 이름표와 같은 자리·같은 팝. 목소리 없음",
+   "_asr": [
+    "&gt;&gt; [웃음]",
+    "&gt;&gt; 가고"
+   ]
+  },
+  {
+   "t0": 30.5,
+   "t1": 31.6,
+   "speaker": "불명",
+   "text": "ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
+   "layer": "스냅봤니:대사",
+   "role": "이음",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "ㅋ 줄이 물결(기울어 흔들림, 잉크 y 960~1072, 매 프레임 바뀜)",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     -20
+    ],
+    [
+     0.033,
+     100,
+     100,
+     -20
+    ],
+    [
+     0.067,
+     100,
+     100,
+     -20
+    ],
+    [
+     0.1,
+     100,
+     100,
+     -20
+    ],
+    [
+     0.133,
+     100,
+     100,
+     -20
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1033,
+    1043
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 74,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흔들린 화면·젓가락·흐림(끝)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 5,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 웃음 글 — 채널 반응인지 원음인지 못 가름. 화자 불명."
+  },
+  {
+   "t0": 31.267,
+   "t1": 33.533,
+   "speaker": "나레",
+   "text": "여러분은 누구 편이신가요?ㅋㅋㅋ",
+   "layer": "스냅봤니:끝카드",
+   "role": "질문",
+   "enter": "pop",
+   "enter_ms": 133,
+   "variant": "검정 상자(끝 줄)",
+   "enter_curve": [
+    [
+     0.0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     53,
+     0,
+     0
+    ],
+    [
+     0.067,
+     91,
+     40,
+     0
+    ],
+    [
+     0.1,
+     98,
+     69,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ],
+    [
+     0.167,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1291,
+    1425
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 1020,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위(0.54~0.91) + 눈(둥근 획 끝)"
+   },
+   "size_px": 64,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": [
+     20,
+     22
+    ],
+    "radius": 14,
+    "basis": "픽셀 중앙값 #000000(31.5·33.3초)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흐린 화면 → 33.1초 검정으로 끝",
+   "motion": "cam",
+   "transition": "black",
+   "fit": 5,
+   "cut_at": [
+    32.9,
+    33.1
+   ],
+   "confidence": "픽셀",
+   "notes": "끝 카드 — 검정 불투명 상자, 이름표와 같은 자리·같은 팝. 목소리 없음",
+   "_asr": [
+    "&gt;&gt; 가고"
+   ]
+  },
+  {
+   "t0": 31.933,
+   "t1": 33.033,
+   "speaker": "불명",
+   "text": "뭘 찍고 있는데 ㅋㅋㅋㅋ",
+   "layer": "스냅봤니:대사",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     55,
+     31,
+     1
+    ],
+    [
+     0.033,
+     91,
+     81,
+     2
+    ],
+    [
+     0.067,
+     98,
+     96,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.133,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    987,
+    1046
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 654,
+   "fill_hex": "#F8DC0C",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 고딕)",
+    "basis": "눈 — fontmatch 대상 크롭 없음(이름표만 돌았다)"
+   },
+   "size_px": 70,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흔들린 화면·젓가락·흐림(끝)",
+   "motion": "cam",
+   "transition": "cut",
+   "fit": 5,
+   "cut_at": [
+    32.9
+   ],
+   "confidence": "픽셀",
+   "notes": "노랑 대사 자막 — 원음 받아쓰기. 팝 3프레임(작고 어둡게 약 54%→91%→98%→100%), 넘침 없음. 화자 불명."
+  }
+ ],
+ "beats": "훅(0~1.8초 '동생 : 근거 제시 체급차이 어필' 이름표 + 대사 '언니는 크고 나는') → 자매 말싸움 주고받기(대사 노랑 19줄 × 이름표 13줄, 화자 바뀔 때마다 이름표 갈림: 동생=어두운 상자, 언니=분홍 상자, 논문체 해설) → 고조(27.8초 '찍지 마라!!' 카메라 통제) → 끝(29.7초 '팽팽했던 자매의 논리 대결!' → 31.3초 '여러분은 누구 편이신가요?ㅋㅋㅋ' 검정 상자 질문, 33.1초 검정)",
+ "narr_share": "나레(목소리 없는 채널 글: 이름표·끝 카드·반응) 16/35줄, 31.0초/57.9초(층 겹침 합산) · 소리 나레 0(원음만)",
+ "notes": [
+  "목소리 나레 없음 — 소리는 원음(자매 대화). 채널 글은 무음 자막(이름표·끝 카드·초록 반응)이라 speaker=나레로 적음(Jev root 0.66·fix 0.52, C:/숏템_칼카피/snapbwatni/work/_jev/q_UMaw3AqK_layers.out)",
+  "층 넷: 이름표(y1314~1421, 흰 글+검정 6px 외곽+어두운/분홍 반투명 상자) · 대사(y968~1072 노랑 #F8DC0C+검정 5px) · 반응(초록 #1AFF26, 1회) · 끝 카드(검정 불투명 상자 2줄)",
+  "등장: 이름표 = 상자 먼저 1프레임(14~57%) → 글자 작고 흐리게 → 0.1~0.13초에 100%. 대사 = 3프레임 팝(54/31%→91/82%→98/97%→100), 넘침(overshoot) 0. 퇴장 = 전부 cut, 다음 줄 전 0~1초 빈칸",
+  "지휘자 관찰과 다른 점: ① 창은 아래 끝(1919)까지 ② 팝은 30fps 로 3프레임(대사)·4~5프레임(이름표, 상자 선행) ③ 왼쪽 위 작은 어두운 상자 글은 이 편에 없음 ④ 끝 질문 상자는 이름표 자리(y1291~1425)에서 같은 팝 ⑤ 초록 반응 글 '순간 당황ㅋㅋㅋ'(4.3~5.37초, 통통 움직임) 1회",
+  "효과음: 원음 말소리가 빽빽해 파형 솟음으로 효과음을 가를 수 없음 — 29.81초 솟음(+12.8dB)만 후보로 적음(확인 못 함)",
+  "전환: cutdet v2 컷 13곳, 29.367초는 카메라 휙(같은 촬영, 컷 아님)이라 뺌, 24.3·32.9 zoomblur 판정은 눈으로 보니 일반 컷/어두워짐 → cut 으로 적음, 33.1 검정",
+  "글꼴 이름(BMJUA)은 fontmatch 후보일 뿐 확정 아님. 대사 글꼴은 미식별",
+  "대사 화자 동생/언니 는 겹치는 이름표 기준(16.57초 줄은 언니 0.43초·동생 0.6초로 갈림 — 확신 낮음)",
+  "enter_curve 측정 도구가 readline_tools 에 없어 scratch 스크립트(프레임 순차 읽기 잉크 폭·수)로 쟀다 — 엔진 요청 대상"
+ ],
+ "name_evidence": [
+  "'동생'·'언니' = 해설 이름표 화면 글자('동생 : …','언니 : …') — 실명 없음"
+ ],
+ "_made_by": "kal_analyze.skeleton → 워커 눈 판독(11-06, 픽셀 실측)",
+ "frame0": {
+  "what": "두 아이(언니 줄무늬·동생 분홍 옷) 실내, 동생이 언니를 올려다봄",
+  "face_frac": 0.12,
+  "text": ""
+ },
+ "frame0_kind": "scene"
+}
