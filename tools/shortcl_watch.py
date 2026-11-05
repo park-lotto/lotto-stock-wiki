@@ -4,7 +4,7 @@
     py tools/shortcl_watch.py          # 이어서 돈다(Ctrl+C = 일부러 끔 — 서버가 '끊김' 알림을 안 보낸다)
 
 한 줄 꼴: [11-02 14:03:21] #123 stuck 홍길동(12) 제품 확인 sid=abcd…: 글
-그 밖의 줄: [대기실] … (시작·끊김·복구)
+그 밖의 줄: [숏클CS] … (시작·끊김·복구)
 - 15초마다 새 사건, 60초마다 생존 신호(ping). 무엇이 긴급인지는 서버 claude_live.is_urgent 한 곳(urgent=1).
 - 인증 = tools/live_admin.admin_cookie(2시간짜리 관리자 쿠키). 403·401·리다이렉트면 새로 받는다.
 - 어디까지 읽었는지 ~/.shortcl_watch_last 에 남긴다 — 창을 껐다 켜도 그동안의 사건을 놓치지 않는다. 처음이면 옛 사건은 쏟지 않는다.
@@ -57,12 +57,12 @@ class Watcher:
     def _broke(self, why):
         if not self.down:
             self.down = True
-            self.emit(f"[대기실] 서버 연결이 끊겼습니다 — 다시 시도 중({why})")
+            self.emit(f"[숏클CS] 서버 연결이 끊겼습니다 — 다시 시도 중({why})")
 
     def _ok(self):
         if self.down:
             self.down = False
-            self.emit("[대기실] 서버 연결이 돌아왔습니다")
+            self.emit("[숏클CS] 서버 연결이 돌아왔습니다")
 
     def tick(self) -> bool:
         """한 번 살핀다. 성공하면 True. 끊겨도 죽지 않는다(다음 tick 이 다시)."""
@@ -97,7 +97,7 @@ class Watcher:
         try:
             self.state_file.write_text(str(self.last), encoding="utf-8")
         except OSError as e:
-            self.emit(f"[대기실] 읽은 자리를 저장하지 못했습니다: {e}")
+            self.emit(f"[숏클CS] 읽은 자리를 저장하지 못했습니다: {e}")
 
     def ping(self, stop=False):
         try:
@@ -122,7 +122,7 @@ def main():
         print(x, flush=True)
 
     w = Watcher(s, mint, emit, base=base)
-    emit(f"[대기실] 감시 시작 — {base} · 읽은 자리 {w.last if w.last is not None else '처음'}")
+    emit(f"[숏클CS] 감시 시작 — {base} · 읽은 자리 {w.last if w.last is not None else '처음'}")
     next_ping, fails = 0.0, 0
     try:
         while True:
@@ -134,7 +134,7 @@ def main():
             time.sleep(min(BACKOFF_MAX, POLL_SEC * (2 ** min(fails, 2))))
     except KeyboardInterrupt:
         w.ping(stop=True)
-        emit("[대기실] 감시를 끕니다")
+        emit("[숏클CS] 감시를 끕니다")
 
 
 if __name__ == "__main__":

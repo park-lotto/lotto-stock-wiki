@@ -480,7 +480,10 @@ def blur_minus_spans(M: dict, done: dict) -> int:
 
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
     """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
-    ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다
+    ① max(샷 한도)는 쓰지 않는다 — 주인 = 회원 PC render_bench.shot_cap(관문·완성본 검사와 같은 경계 shot_starts). 관제 318(11-04 대기실 전수조사):
+       여기서 거친 샷 표(yanshot.shots_in — 실영상 6편에서 관문 경계 11·103·205·344 개 중 3·28·166·9 개만 잡음)로 max 를 먼저 채우면
+       shot_cap(max 가 비었을 때만 돈다)이 막히고, 회원이 줄인 max 를 재료 답마다 다시 늘려 '컷 길이·장면 경계 3번 연속'이 났다(#2976 L9 ss5.6 max 16.733).
+       회원(Claude)이 재료에 직접 적은 max 는 그대로 둔다.
     ② 칸이 정해지지 않은 주인공 컷('face'·없음)만 **주인공 얼굴 가운데·원본 높이 그대로(확대 1.0)** + 박힌 글자는 흐림(M.blur, 사장님 10-21·10-22).
        숫자로 정한 칸은 절대 덮지 않는다 — 대본·재료 고치기가 정한 칸을 엔진이 되돌리면 같은 칸을 두 곳이 정한다(98 #21·#25, 0순위-B).
     ③ 사진 재료(쿠팡 상품 사진)가 이어지면 움직임을 번갈아(in·left·out·right) — 대본이 정한 move 는 그대로."""
@@ -505,7 +508,6 @@ def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict
             s = shot_at(shots_by_src.get(src.rsplit(".", 1)[0]) or [], ss)
             if not s:
                 continue
-            c["max"] = round(s["b"] - ss, 3)
             if isinstance(c.get("crop"), list) and len(c["crop"]) == 4:
                 continue
             if not ar or str(c.get("face") or "").strip() in NO_FACE:
