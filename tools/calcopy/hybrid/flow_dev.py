@@ -83,7 +83,10 @@ def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ref", required=True)
+    ap.add_argument("--ref", help="프리셋 제작의 벤치 URL(--bench 가 없을 때 필수)")
+    ap.add_argument("--bench", help="채널 벤치마킹 2판(관제 319) — 채널 주소. 서버 claude_flow bench_start 와 같은 flow.start_bench 로 시작")
+    ap.add_argument("--bench-name", default="내 프리셋")
+    ap.add_argument("--bench-n", type=int, default=3)
     ap.add_argument("--version", default="키치잇판")
     ap.add_argument("--work", required=True)
     ap.add_argument("--cache")
@@ -108,8 +111,15 @@ def main():
             f.write(json.dumps(o, ensure_ascii=False) + "\n")
         print(json.dumps(o, ensure_ascii=False)[:300], flush=True)
     sp = W / "flow_state.json"
-    st = json.loads(sp.read_text(encoding="utf-8")) if a.resume and sp.exists() else flow.start(a.ref, a.version, uuid.uuid4().hex[:12], fmt=a.fmt)
-    log({"start": st.get("fmt"), "slug": st.get("slug"), "version": a.version, "ref": a.ref, "stages": [t for _, t in flow.FORMAT_STAGES.get(st.get("fmt") or "연예인형", flow.STAGES)]})
+    if not a.ref and not a.bench and not (a.resume and sp.exists()):
+        raise SystemExit("--ref 또는 --bench 가 필요합니다")
+    if a.resume and sp.exists():
+        st = json.loads(sp.read_text(encoding="utf-8"))
+    elif a.bench:
+        st = flow.start_bench(a.bench, [], a.bench_name, uuid.uuid4().hex[:12], a.bench_n)
+    else:
+        st = flow.start(a.ref, a.version, uuid.uuid4().hex[:12], fmt=a.fmt)
+    log({"start": st.get("fmt"), "slug": st.get("slug"), "version": a.version, "ref": a.ref or a.bench, "stages": [t for _, t in flow.FORMAT_STAGES.get(st.get("fmt") or "연예인형", flow.STAGES)]})
     env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "CALCOPY_CUSTOMER_MODE": "1", "SHORTEM_DEV": "1", "SHORTEM_YT_PROFILES": os.environ.get("SHORTEM_YT_PROFILES") or "mcp"}
     if a.cache:
         env["SHORTEM_SOURCE_CACHE"] = str(Path(a.cache).resolve())
