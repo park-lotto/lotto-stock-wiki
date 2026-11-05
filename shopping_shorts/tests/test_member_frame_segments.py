@@ -32,3 +32,10 @@ def test_안_바꾼_칸은_구간_판_값(tmp_path, monkeypatch, v):
     Fi = _hook(tmp_path, monkeypatch, v, {"brand": {"channel_name": "테스트채널"}})
     assert Fi["bg"] == base["bg"]                       # 바탕색은 안 바꿨다 = 훅 카드 판 색
     assert Fi.get("watermark") == base.get("watermark")  # 워터마크 칸을 안 정했다 = 구간 판 값(없음) 그대로
+
+
+def test_hook_card_gets_channel_name_when_only_head_bar_has_it(tmp_path, monkeypatch):
+    # 11-05 김효준 #7230: 썰템쇼판은 본 틀 머리띠에만 채널명 자리 — 훅 카드 머리띠가 비어 첫 구간에 채널명이 안 나왔다(렌더 길 frame_segments 로 잰다)
+    Fi = _hook(tmp_path, monkeypatch, "썰템쇼판", {"brand": {"channel_name": "살까말까잡화점"}})
+    icons = ((Fi.get("post") or {}).get("head_bar") or {}).get("icons") or []
+    assert any(ic.get("text") == "살까말까잡화점" for ic in icons), "훅 카드에 채널명이 없다"
