@@ -198,3 +198,11 @@ def test_맥_스크립트에_파이프_grep_q_꼴이_없다():
     body = (Path(app_module.__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
     code = "\n".join(l for l in body.splitlines() if not l.lstrip().startswith("#"))
     assert "pipefail" in code and not re.search(r"\|\s*grep\s+-[A-Za-z]*q", code)
+
+
+def test_맥_스크립트는_dev_tty_를_쓰지_않는다():
+    # 맥 kqueue 는 /dev/tty 별칭을 감시 못 해 Claude Code(Bun)가 'EINVAL … kqueue' 로 죽는다(고객 맥미니 11-05 로그인 단계)
+    from pathlib import Path
+    body = (Path(app_module.__file__).resolve().parents[1] / "installer" / "install.sh").read_text(encoding="utf-8")
+    code = "\n".join(l for l in body.splitlines() if not l.lstrip().startswith("#"))
+    assert "/dev/tty" not in code and "exec 3>&1 4>&2" in code
