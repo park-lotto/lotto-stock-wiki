@@ -77,7 +77,20 @@ def test_make_without_work_waits(tmp_path, monkeypatch):
     S = _state(tmp_path, monkeypatch)
     monkeypatch.setattr(kal, "disk_gate", lambda what: None)
     st, out, note = kal.step_make(S)
-    assert st == "waiting_human"
+    assert st == "waiting_human" and "--work" in note           # 옛 판 안내는 --ours-mp4(파일만 넣기) — 새 판은 작업 폴더로 렌더
+
+
+def test_make_reaches_real_make_one(tmp_path, monkeypatch):
+    """감시 F: kal.step_make 가 진짜 preset_make.make_one 까지 간다 — 판 칸 없는 manifest 면 make_one 자신의 멈춤 글이 kal note 로 나온다(옛 kal 은 make_one 을 안 불렀다)."""
+    S = _state(tmp_path, monkeypatch)
+    pdir = tmp_path / "channel/t1/preset/p1"
+    pdir.mkdir(parents=True)
+    (pdir / "manifest.json").write_text("{}", encoding="utf-8")
+    S.step("copy").update({"state": "done", "outputs": {"preset": str(pdir)}})
+    S.d["work"] = str(tmp_path / "w")
+    monkeypatch.setattr(kal, "disk_gate", lambda what: None)
+    st, out, note = kal.step_make(S)
+    assert st == "failed" and "channel_rules.make 가 없다" in note
 
 
 def test_make_rejects_unrendered_ours_mp4(tmp_path, monkeypatch):
@@ -185,3 +198,14 @@ def test_verify_missing_bench_mp4_fails(tmp_path, monkeypatch):
     assert st == "failed" and "벤치 mp4 없음" in note
     T = json.loads((S.dir / "_kal/재현일치도.json").read_text(encoding="utf-8"))
     assert T["verdict"] == "미달" and T["pixel"]["failed"]
+
+
+def test_judge_failed_saved_in_tteutgi(tmp_path, monkeypatch):
+    """감시 D: tear_llm 의 _judge_failed(제미나이 소리 판독 실패 이유)가 뜯기 transcript 에 남는다."""
+    from tools.calcopy.engine import analyze
+    from shopping_shorts.channelkit.bench import audio as baudio
+    monkeypatch.setattr(baudio, "measure_video", lambda p, m: {"has_audio": True, "I": -20})
+    monkeypatch.setattr(analyze.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": b"mp3"})())
+    llm = lambda parts, prompt, tag: ({"segments": [{"start": 0, "end": 1, "text": "가", "lang": "ko"}], "_asr": "speechmatics", "_judge_failed": "quota"}, None)  # noqa: E731
+    res, tone = analyze.audio_and_tone("x.mp4", {"duration": 2.0}, llm, {})
+    assert res["transcript"]["judge_failed"] == "quota" and res["transcript"]["asr_engine"] == "speechmatics"

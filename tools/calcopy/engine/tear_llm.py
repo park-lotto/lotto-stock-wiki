@@ -34,7 +34,7 @@ def listen(audio: bytes, prompt: str, tag: str = "", asr=None, judge=None, mime:
         from tools.calcopy.engine import asr_local
 
         def asr(p):
-            return asr_local.transcribe(p, engine="speechmatics")
+            return asr_local.transcribe(p, engine="speechmatics", strict=True)   # 칼카피 경로만 엄격(make-공통-05)
     if judge is None:
         from tools.calcopy.engine import gemini_free
         judge = gemini_free.ask

@@ -18,13 +18,23 @@ def test_common05_no_silent_whisper(monkeypatch):
     monkeypatch.setattr(asr_local, "speechmatics_key", lambda: "")
     monkeypatch.setattr(asr_local, "_whisper", lambda a: pytest.fail("위스퍼로 넘어가면 안 된다"))
     with pytest.raises(RuntimeError, match="키 없음"):
-        asr_local.transcribe("x.wav", engine="speechmatics")
+        asr_local.transcribe("x.wav", engine="speechmatics", strict=True)
     monkeypatch.setattr(asr_local, "speechmatics_key", lambda: "k")
     n = []
     monkeypatch.setattr(asr_local, "_speechmatics", lambda p: n.append(1) or (_ for _ in ()).throw(OSError("net")))
     with pytest.raises(RuntimeError, match="2번 실패"):
-        asr_local.transcribe("x.wav", engine="speechmatics")
+        asr_local.transcribe("x.wav", engine="speechmatics", strict=True)
     assert len(n) == 2
+
+
+def test_common05_default_keeps_old_fallback(monkeypatch):
+    """감시 A: 회원 라인(runner_ops.asr_cross:1319 — try 없음)·narr_pause·편 make.py 는 기본(strict=False) = 옛 동작(위스퍼 + note)."""
+    monkeypatch.setattr(asr_local, "pcm", lambda p: __import__("numpy").zeros(16000, dtype="float32"))
+    monkeypatch.setattr(asr_local, "speechmatics_key", lambda: "k")
+    monkeypatch.setattr(asr_local, "_speechmatics", lambda p: (_ for _ in ()).throw(OSError("net")))
+    monkeypatch.setattr(asr_local, "_whisper", lambda a: {"engine": "whisper:small", "segments": []})
+    r = asr_local.transcribe("x.wav", engine="speechmatics")
+    assert r["engine"].startswith("whisper") and "speechmatics 실패" in r["note"]
 
 
 def test_common20_key_rotation(monkeypatch, tmp_path):
@@ -61,11 +71,24 @@ def test_moksori08_tts_symbols():
     assert "/¦‖|" in src
 
 
-def test_sojae06_render02_part_vf():
+def test_sojae06_render02_part_vf_flags(capsys):
     c = {"box": [0, 0, 1080, 1920], "speed": 1.0}
-    assert "scale=1080:1920" in PM.part_vf(c, 1080, 1919)          # 홀수 → 짝수
+    assert "scale=1080:1920" in PM.part_vf(c, 1080, 1919, {"even_height": True})    # 판 칸 켜면 홀수 → 짝수
+    assert "scale=1080:1919" in PM.part_vf(c, 1080, 1919)                           # 기본 = 옛 동작
+    sq = {"box": [0, 0, 1080, 1080], "speed": 1.0}
     with pytest.raises(ValueError, match="늘어짐"):
-        PM.part_vf({"box": [0, 0, 1080, 1080], "speed": 1.0}, 1080, 1920)
+        PM.part_vf(sq, 1080, 1920, {"no_stretch": True})
+    PM.part_vf(sq, 1080, 1920)                                                       # 기본 = 경보만(옛 동작)
+    assert "늘어짐" in capsys.readouterr().out
+
+
+def test_text_gate_flags_default_off():
+    w = {"lines": [{"text": "이거 몰랐는데", "tts": "a"}, {"text": "대박이던데", "tts": "b"}], "pieces": [{"text": "오늘 시"}, {"text": "발표"}]}
+    import tools.calcopy.hybrid.script_audit as SA
+    on = PG.text_gate(w, {"checks": {"hook_ending": True, "join_forbid": True}})
+    off = PG.text_gate(w, {"checks": {}})
+    assert any("같은 어미" in x for x in on) and any("이어 읽으면" in x for x in on)
+    assert not any("같은 어미" in x or "이어 읽으면" in x for x in off)
 
 
 def test_render01_slot(tmp_path, monkeypatch):
@@ -101,10 +124,33 @@ def test_copy01_space_width(monkeypatch):
 
 
 def test_done_by_make00_make_one_calls_owners():
-    src = inspect.getsource(PM.make_one)
-    for call in ("timing(", "build_cuts(", "encode_final(", "PG.pre_render(", "cover_card("):     # 목소리-13 · 소리-09 · 소재-09(cut_gates ④ = pre_render 안)
-        assert call in src
-    assert "cut_gates(" in inspect.getsource(PG.pre_render)
+    """목소리-13·소리-09·소재-09 = 이미 make_one 안에 있던 함수(추가 코드 0). 실제 동작으로 잰다: kal.step_make → make_one 이 timing·encode_final 까지 가는지는
+    test_kal_core5::test_make_reaches_real_make_one(진짜 make_one 호출) + 아래 — make_one 을 돌려 timing 이 불리는지(앞 단계는 가짜로 통과)."""
+    import types
+    calls = []
+    PMm = PM
+    orig = (PMm.load_preset, PMm.load_work, PMm.plan_check, PMm.tts, PMm.narration, PMm.timing)
+    try:
+        PMm.load_preset = lambda p: ({}, {"checks": {}, "window": [1080, 1920]})
+        PMm.load_work = lambda w, M, c: {"S": {}, "data": Path("."), "lines": [], "pieces": [], "cuts": [], "name": "x", "dir": None}
+        PMm.plan_check = lambda w, c: {}
+        PMm.tts = lambda *a, **k: Path("n.wav")
+        PMm.narration = lambda *a, **k: (Path("n.wav"), 1.0)
+        def timing(*a, **k):
+            calls.append("timing")
+            raise RuntimeError("멈춤(시험)")
+        PMm.timing = timing
+        PG_ = PG
+        o2 = (PG_.text_gate, PG_.voice_gate)
+        PG_.text_gate = lambda w, c=None: []
+        PG_.voice_gate = lambda *a, **k: []
+        a = types.SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=str(Path(__import__("tempfile").mkdtemp())), tag=None, cache=None, desktop_dir=".", results=".")
+        with pytest.raises(RuntimeError, match="멈춤"):
+            PMm.make_one(Path("."), Path("."), a)
+        assert calls == ["timing"]
+    finally:
+        PMm.load_preset, PMm.load_work, PMm.plan_check, PMm.tts, PMm.narration, PMm.timing = orig
+        PG_.text_gate, PG_.voice_gate = o2
 
 
 def test_m03_timing_words_flag(monkeypatch, tmp_path):

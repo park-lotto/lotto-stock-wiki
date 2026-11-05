@@ -567,12 +567,17 @@ def _move(c, W, H) -> str:
     return "," + move_vf(c["move"], c["n"], W, H)
 
 
-def part_vf(c, W, H2) -> str:
+def part_vf(c, W, H2, checks: dict | None = None) -> str:
     """(판단 주인) 컷 조각이 어떤 그림이 되나 — 늘림(setpts)·크롭·창 크기·fps·move. render_parts(굽기)·preset_gates(멈춤 재기)가 같이 부른다."""
     x, y, cw, ch = c["box"]
-    H2 = int(H2) + (int(H2) % 2)                       # make-렌더-02: 홀수 높이 인코딩 실패 — render_parts 와 같은 올림(짝수)
-    if ch and abs(cw / ch - W / H2) > 0.01:            # make-소재-06: 늘어짐(비율 다른 상자를 창에 맞춰 늘림) 거절
-        raise ValueError(f"컷 상자 비율 {cw}x{ch}={cw / ch:.3f} ≠ 창 {W}x{H2}={W / H2:.3f} — 늘어짐(재료 box 를 창 비율로)")
+    ck = checks or {}
+    if ck.get("even_height"):                           # make-렌더-02(판 칸 기본 꺼짐 — 감시 B·Jev 신뢰 0.36): 홀수 높이를 render_parts 와 같은 올림(짝수)으로
+        H2 = int(H2) + (int(H2) % 2)
+    if ch and abs(cw / ch - W / H2) > 0.01:             # make-소재-06 늘어짐: 판 칸 checks.no_stretch 면 멈춤, 아니면 경보 한 줄(옛 동작 그대로)
+        msg = f"컷 상자 비율 {cw}x{ch}={cw / ch:.3f} ≠ 창 {W}x{H2}={W / H2:.3f} — 늘어짐(재료 box 를 창 비율로)"
+        if ck.get("no_stretch"):
+            raise ValueError(msg)
+        print(f"  [경보] {msg}", flush=True)
     return ((f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
             f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2))
 
@@ -601,7 +606,7 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
         c, dst = job
         tmp = dst.with_name(dst.stem + ".part.mp4")
         with (_E.slot(slots) if slots else _E.no_slot()):
-            run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf", part_vf(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
+            run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf", part_vf(c, W, H2, cfg.get("checks")), "-frames:v", c["n"], *ENC, tmp])
         tmp.replace(dst)
     with cf.ThreadPoolExecutor(FF_PAR) as ex:
         list(ex.map(one, jobs))
@@ -1082,7 +1087,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     plan = plan_check(w, cfg)
     clk.lap("읽기·재료 확인")
     from tools.calcopy.engine import preset_gates as PG   # 렌더 전 관문(판정 주인 = script_audit·narr_verify·render_bench — 부르기만)
-    g1 = PG.text_gate(w)                                  # G-1 대본 글(TTS 전)
+    g1 = PG.text_gate(w, cfg)                             # G-1 대본 글(TTS 전) — 판 칸 checks 로 켜는 관문(대본-04·화면자막-11)
     if a.plan:
         plan_sheet(w, cfg, wdir / "plan" / "계획_시트_자동.jpg")
         clk.lap("계획 시트")

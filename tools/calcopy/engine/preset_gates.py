@@ -118,13 +118,17 @@ def join_gate(pieces: list[dict]) -> list[str]:
     return bad
 
 
-def text_gate(w: dict) -> list[str]:
+def text_gate(w: dict, cfg: dict | None = None) -> list[str]:
     """G-1(TTS 전) — preset_make 는 TTS 를 덩어리마다 따로 합성하므로 joined=False(줄 끝 부호 규칙 없음).
     + 판 대본 규칙 = script_audit.audit(대본.json) 의 실패 규칙(10-26 — 재미썸홈 beats·sibling_repeat, 잇썸홈 itssum 엔진·forbid·alt_disclosed).
     audit 안의 text: 규칙은 joined=True 판정이라 빼고 위 joined=False 판정만 센다(같은 글 규칙 두 번 세지 않게)."""
     from tools.calcopy.hybrid import script_audit as SA
     bad = [f"G-1 {x['line']} {x['rule']}: {x['why']}" for x in SA.text_defects(bench_script(w), joined=False)]
-    bad += hook_ending_gate(w.get("lines") or []) + join_gate(w.get("pieces") or [])     # 11-06 make-대본-04 · make-화면자막-11
+    ck = (cfg or {}).get("checks") or {}                 # 판 칸 기본 꺼짐(감시 B — 기존 대본 172편 실측 0 걸림이지만 모든 판 기본 동작을 바꾸지 않는다)
+    if ck.get("hook_ending"):
+        bad += hook_ending_gate(w.get("lines") or [])      # make-대본-04
+    if ck.get("join_forbid"):
+        bad += join_gate(w.get("pieces") or [])            # make-화면자막-11
     sp = Path(w["dir"]) / "대본.json" if w.get("dir") else None
     if sp and sp.exists():
         try:

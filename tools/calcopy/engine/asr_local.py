@@ -217,13 +217,15 @@ def _speechmatics(path: str, post=None) -> dict:
             "segments": out, "words": words}   # words = 낱말 단위(쉼 없이 이어 읽은 TTS 는 segments 가 한 덩어리 — 줄 시작 맞추기는 words 로, 10-22 썰템홈샷)
 
 
-def transcribe(path: str, engine: str | None = None) -> dict:
-    """engine='speechmatics' = 프리셋 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로)."""
+def transcribe(path: str, engine: str | None = None, strict: bool = False) -> dict:
+    """engine='speechmatics' = 프리셋 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로).
+    strict=True(make-공통-05 — 칼카피 경로 tear_llm 만): 스피치매틱스 키 없음·실패면 위스퍼로 넘어가지 않고 1회 다시 뒤 예외.
+    strict=False(기본 — 회원 라인 asr_cross·narr_pause·편 make.py 옛 동작 그대로): 실패면 위스퍼 + note(이유)(감시 11-06, Jev 해결 0.44·위험 0.49·신뢰 0.69)."""
     a = pcm(path)
     res = None
-    if engine == "speechmatics":      # make-공통-05(Jev 해결 0.79): 명시로 부르면 공급자를 몰래 바꾸지 않는다 — 1회 다시 뒤 실패면 예외
+    if strict and engine == "speechmatics":
         if not speechmatics_key():
-            raise RuntimeError("스피치매틱스 키 없음 — 위스퍼로 몰래 바꾸지 않는다(engine='speechmatics' 명시)")
+            raise RuntimeError("스피치매틱스 키 없음 — 위스퍼로 몰래 바꾸지 않는다(strict)")
         err = None
         for _ in range(2):
             try:
@@ -233,7 +235,7 @@ def transcribe(path: str, engine: str | None = None) -> dict:
                 err = e
         if res is None:
             raise RuntimeError(f"스피치매틱스 2번 실패: {type(err).__name__} {str(err)[:160]}")
-    elif os.environ.get("SHORTEM_ASR") == "speechmatics" and speechmatics_key():
+    elif (engine or os.environ.get("SHORTEM_ASR")) == "speechmatics" and speechmatics_key():
         try:
             res = _speechmatics(path)
         except Exception as e:  # noqa: BLE001 — 고객 키 실패는 이유를 남기고 위스퍼로(조용히 삼키지 않는다)
