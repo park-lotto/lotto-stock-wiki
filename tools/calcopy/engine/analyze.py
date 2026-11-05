@@ -231,15 +231,24 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
     t = (items[0]["t0"] + items[0]["t1"]) / 2 if items else min(1.0, meta["duration"] / 2)
     fdir = Path(out_dir) / "fonts"
     fdir.mkdir(exist_ok=True)
-    hmax = max(b[1] - b[0] for b in above)
-    bands = []
+    from tools.calcopy.engine.to_frame import band_is_brand, ink_columns     # 고정 띠 역할 판단 한 곳(to_frame 층 나누기와 같은 함수, 11-06)
+    top = min(b[0] for b in above)
+    crops, logo = {}, set()
     for k, (y0, y1) in enumerate(above):
         a0, a1 = max(0, y0 - 6), min(H, y1 + 6)
-        img = probe.grab(path, t, f"crop={W}:{a1 - a0}:0:{a0}", W, a1 - a0)
+        crops[k] = (a0, probe.grab(path, t, f"crop={W}:{a1 - a0}:0:{a0}", W, a1 - a0))
+        im = crops[k][1]
+        cols = ink_columns(im, y0 - a0, y1 - a0, vl["bg_rgb"]) if im is not None and vl.get("bg_rgb") else None
+        if band_is_brand((y0, y1), cols, W, H, first=len(above) > 1 and y0 == top):
+            logo.add(k)
+    hmax = max([b[1] - b[0] for k, b in enumerate(above) if k not in logo] or [b[1] - b[0] for b in above])   # 높이 비교는 로고 띠를 빼고
+    bands = []
+    for k, (y0, y1) in enumerate(above):
+        img = crops[k][1]
         if img is None:
             continue
         pol = "dark" if float(np.median(layout.lum(img))) >= 128 else "bright"
-        role = "brand" if (y1 - y0) < BRAND_H_FRAC * hmax else "title"
+        role = "brand" if k in logo or (y1 - y0) < BRAND_H_FRAC * hmax else "title"
         (Path(out_dir) / "captions").mkdir(exist_ok=True)
         Image.fromarray(img).save(Path(out_dir) / "captions" / f"{role}{k}.png")
         bands.append({"k": k, "band": [int(y0), int(y1)], "role": role, "pol": pol, "img": img})

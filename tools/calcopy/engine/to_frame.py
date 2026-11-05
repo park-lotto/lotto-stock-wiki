@@ -34,6 +34,16 @@ from shopping_shorts.calcopy_frame import schema  # noqa: E402
 
 BRAND_TOP = 0.06        # 화면 높이 대비 — 이 위에서 시작하는 좁은 띠는 고정 문구
 BRAND_MAX_W = 0.40      # 화면 폭 대비
+BRAND_LEFT = 0.35       # 맨 위 좁은 띠의 잉크 가운데가 화면 폭의 이 비율보다 왼쪽이면 로고(채널 표식) — 제목 줄은 가운데 정렬(스냅봤니 11-06)
+
+
+def band_is_brand(b, cols, W: int, H: int, first: bool = False, small: bool = False) -> bool:
+    """(판단 주인 · 창 위 고정 띠 = 고정 문구(brand)인가) analyze.title_fonts·to_frame 층 나누기·OCR 나누기가 모두 이 함수를 부른다.
+    ① 화면 맨 위(6%) 좁은 띠 ② 진한 글자 몸이 좁고 작음(small — to_frame 이 잰다) ③ 띠가 여럿일 때 맨 위 띠가 좁고 왼쪽 정렬(로고+채널명, 스냅봤니 11-06:
+    개구리 그림 때문에 띠가 가장 커서 제목 1줄로 들어가 제목 3줄·r7 제목 '1줄 14자'가 됐다)."""
+    narrow = bool(cols) and (cols[1] - cols[0]) < BRAND_MAX_W * W
+    left = bool(cols) and (cols[0] + cols[1]) / 2 < BRAND_LEFT * W
+    return bool((b[0] < BRAND_TOP * H and narrow) or small or (first and narrow and left))
 LOW_FONT = 0.5          # 글꼴 1위 점수 문턱(뜯기 unknown 과 같은 값)
 SIDE_PAD = 40           # 가운데 정렬 글자 칸 = 화면 폭 − 양쪽 40px
 TITLE_W_PAD = 20        # 제목 칸 = 원본 잉크 폭 + 양쪽 이만큼(가운데 정렬 기본 칸보다 넓을 때만)
@@ -597,7 +607,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         # 화면 맨 위가 아니어도, 진한 글자 몸이 좁고 다른 띠 글자보다 많이 작으면 고정 문구(채널명) — 핫템 OE11: 초록 글로우 채널명
         #   (글로우로 띠가 126px 로 부풀어 제목 1줄로 들어가 제목이 3줄·한 색이 됐다, 10-16)
         small = bool(c and c["w"] < BRAND_MAX_W * W and len(core_h) > 1 and c["h"] < BRAND_CORE_RATIO * max(h for h in core_h if h != c["h"] or core_h.count(h) > 1))
-        (brand_b if (b[0] < BRAND_TOP * H and narrow) or small else title_b).append((b, cols))
+        (brand_b if band_is_brand(b, cols, W, H, first=len(bands) > 1 and b == min(bands), small=small) else title_b).append((b, cols))
     if frame_img is None and bands:
         notes.append("원본 프레임 없음 — 띠 가로 범위를 못 재 모든 띠를 제목으로 봄")
     otext = ocr or {}
@@ -925,7 +935,7 @@ def main(argv=None):
     elif img is not None and not a.no_ocr:
         bands = sorted(tuple(b) for b in L.get("above_bands") or [])
         bg = L.get("bg_rgb")
-        brand = [b for b in bands if b[0] < BRAND_TOP * H and (lambda c: c and c[1] - c[0] < BRAND_MAX_W * W)(ink_columns(img, b[0], b[1], bg))]
+        brand = [b for b in bands if band_is_brand(b, ink_columns(img, b[0], b[1], bg), W, H, first=len(bands) > 1 and b == bands[0])]
         title = [b for b in bands if b not in brand]
         ocr, err = ocr_fixed(img, title, brand)
     probe_fn = None
