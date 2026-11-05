@@ -18,3 +18,7 @@ test('이미 떠 있던 크롬에 더 열었으면 모두 닫으라고 안내한
   assert.match(loginOpenedText({ already: true }, '인스타그램'), /모두 닫아/);
   assert.doesNotMatch(loginOpenedText({}, '인스타그램'), /모두 닫아/);
 });
+test('맥이면 Cmd+Q 로 크롬을 끝내라고 안내한다(11-05 박상혁 #7756)', () => {
+  assert.match(loginOpenedText({}, '인스타그램', 'darwin'), /Cmd\+Q/);
+  assert.doesNotMatch(loginOpenedText({}, '인스타그램', 'win32'), /Cmd\+Q/);
+});

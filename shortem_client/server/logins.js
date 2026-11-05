@@ -119,7 +119,12 @@ export function openPlan(procs, open) {
 }
 
 // 회원 Claude 에게 줄 말 — 이미 떠 있던 크롬에 더 열었으면 그 창을 모두 닫아야 쿠키가 읽힌다
-export function loginOpenedText(r, name) {
+export function loginOpenedText(r, name, platform = process.platform) {
+  // 맥 크롬은 창을 다 닫아도 앱이 살아 있어 로그인 저장(쿠키 읽기)이 안 된다 — Cmd+Q 로 끝내야 한다(11-05 박상혁 #7756)
+  const mac = platform === 'darwin' ? ' 맥에서는 창을 닫는 것만으로는 저장이 안 됩니다 — 로그인한 뒤 그 크롬에서 Cmd+Q 로 크롬을 완전히 끝내 주세요.' : '';
+  return loginOpenedTextBase(r, name) + mac;
+}
+function loginOpenedTextBase(r, name) {
   if (r.already) return `이미 떠 있는 숏클 전용 크롬에 ${name} 창을 열었습니다. 그 창에서 ${name}에 로그인한 뒤, 숏클 전용 크롬 창을 모두 닫아 주세요(앞에 열린 다른 사이트 창 포함 — 다 닫아야 저장됩니다). 닫으면 shortem_login(action="status") 로 확인하세요`;
   return `고객에게: 영상 수집 절차에 세션 기록이 한 번 필요합니다. 열린 크롬 창에서 ${name}에 로그인한 뒤 창을 닫아 주세요. 닫으면 shortem_login(action="status") 로 확인하세요`;
 }
