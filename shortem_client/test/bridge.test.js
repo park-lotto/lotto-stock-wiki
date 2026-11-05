@@ -83,3 +83,9 @@ test('판정 요청은 지금 편 것만 — 이전 편·취소된 편은 내주
   const c = mk('cccccccccccc', 3, { cancelled: true });
   assert.ok(!pending().some(p => p.id === c));
 });
+
+test('fable 자리는 페이블·아스트라 권고로 보인다(11-05)', async () => {
+  const { tierLabel } = await import('../server/engine_bridge.js');
+  assert.match(tierLabel('fable'), /페이블\(Claude\) 또는 아스트라\(코덱스\) 권고 — 필수 아님/);
+  assert.equal(tierLabel('opus'), 'opus');
+});

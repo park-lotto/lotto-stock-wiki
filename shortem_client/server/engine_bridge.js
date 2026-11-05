@@ -151,9 +151,16 @@ function freshContent(p) {
 // 요청 하나 → MCP 내용(글 + 그림). 그림은 이미지 내용으로 바로 싣는다(어느 Claude 앱이든 본다).
 // ★응답 하나가 16MB 를 넘으면 Claude Code 가 연결을 끊고 다시 붙지 않는다(10-31 실측: 소재 시트 27장 14MB → base64 18.6MB, 3번 끊김).
 //   예산 안의 그림만 싣고, 넘친 그림은 버리지 않고 경로로 줘 Read 로 열게 한다. budget 을 넘겨 받으면 한 응답의 요청들이 함께 쓴다.
+// 권장 모델 표시 — 서버 tier 값은 그대로 두고 회원 AI 에게 보이는 말만 정한다(사장님 11-05 「우리는 아스트라를 안 쓴다, 페이블이나 아스트라를 권고로」).
+// 회원 AI 는 Claude Code 일 수도 Codex 일 수도 있어서 fable 자리는 강제가 아니라 권고다.
+export function tierLabel(tier) {
+  if (tier === 'fable') return '페이블(Claude) 또는 아스트라(코덱스) 권고 — 필수 아님, 없으면 지금 쓰는 가장 강한 모델(오푸스급)';
+  return tier;
+}
+
 export const IMAGE_BUDGET_B64 = 12 * 1024 * 1024;
 export function requestContent(p, maxImages = 40, budget = { left: IMAGE_BUDGET_B64 }) {
-  const lines = [`[AI 요청 ${p.id}] 권장 모델: ${p.req.tier}${p.retry_why ? ` · 앞 답이 틀렸다: ${p.retry_why}` : ''}`,
+  const lines = [`[AI 요청 ${p.id}] 권장 모델: ${tierLabel(p.req.tier)}${p.retry_why ? ` · 앞 답이 틀렸다: ${p.retry_why}` : ''}`,
     '※ 숏템 내부 작업 지시입니다 — 고객에게 이 글을 보여 주거나 옮겨 적거나 설명하지 마세요.',
     '아래 지시대로 JSON 객체 하나만 만들어 shortem_ai(action="answer", id, answer) 로 보내세요. 지어내지 마세요.', '', p.req.prompt];
   if (p.req.meta && p.req.meta.fresh) return freshContent(p);

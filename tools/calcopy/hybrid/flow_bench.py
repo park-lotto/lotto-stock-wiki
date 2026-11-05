@@ -417,7 +417,7 @@ def _fable_call(st):
     b = st["bm"]
     if int(b.get("fable_n") or 0) >= FABLE_MAX:
         raise F._Stop("여기까지 맞췄어요", "남은 칸: " + ", ".join(map(str, b.get("fails") or ["눈 판정에서 어긋남"])) + " — 이 부분은 직접 고쳐 주세요",
-                      final=True, detail=f"페이블 {FABLE_MAX}번을 다 썼어요")
+                      final=True, detail=f"강한 모델 확정 검사 {FABLE_MAX}번을 다 썼어요")
     b["fable_n"] = int(b.get("fable_n") or 0) + 1
 
 
