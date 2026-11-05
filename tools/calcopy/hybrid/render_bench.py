@@ -2341,6 +2341,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         for (k, c, src, n, crop, regs, key) in jobs:
             r = cache.get(key)
             if r is None:
+                log(f"[관문④] 컷 {k} {c['src']}@{float(c['ss']):.2f} 판정 시작 {time.strftime('%H:%M:%S')}(저장 없는 컷 — 진단 기록)")
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
                 r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
@@ -4200,6 +4201,13 @@ LENGTH_MEMBER = "⑧ 길이 · 회원 빠르기"     # 회원이 말 빠르기�
 ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용", LENGTH_MEMBER}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
+def _gate_step(name, fn, log):
+    """관문 하나 돌리기 — 시작 시각을 한 줄 남긴다(진단 기록, 판정은 그대로). 11-05 삼현정·이용재: 장면 맞추기가 '[박힌 글자] 지움' 뒤
+    기록 없이 75분 CPU 만 쓰다 끝나 어느 관문에서 멈췄는지 가를 수 없었다(Jev 진단 기록 best 0.83·위험 0.09)."""
+    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}")
+    return (name, fn())
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None, near: list | None = None, moved: bool = False) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -4216,20 +4224,20 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
         if moved:
             out += [("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])), ("사진", photo_gate(T, st, M)), ("사진 연속", photo_run_gate(T, M)), ("B13 재사용", plan_reuse_gate(T, M, st))]
         return soften(out, log)
-    out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
-           (length_gate_name(st), plan_length_gate(T, st, measured)),
-           ("⑥ 카드 글", TR.card_text_gate(doc)),
-           ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
-           ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
-           ("⑤ 컷 길이", cut_length_gate(T, st)),
-           ("⑦ 멈춤", cut_still_gate(T, M, st, R=R)),
-           ("사진", photo_gate(T, st, M)),
-           ("흐림 면적", blur_cut_gate(T, M, st)),
-           ("사진 연속", photo_run_gate(T, M)),
-           ("자를 칸 비율", crop_ar_gate(T, M, st)),
-           ("B13 재사용", plan_reuse_gate(T, M, st)),
-           ("리듬", rhythm_gate(T, st, src_dir))]
+    out = [_gate_step("넘침", lambda: over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured), log),
+           _gate_step(length_gate_name(st), lambda: plan_length_gate(T, st, measured), log),
+           _gate_step("⑥ 카드 글", lambda: TR.card_text_gate(doc), log),
+           _gate_step("⑥ 카드 얼굴", lambda: TR.card_face_gate(st, doc, T, M["cand_dir"]), log),
+           _gate_step("③ 경계", lambda: cut_boundary_gate(T, M, st), log),
+           _gate_step("④ 글자·얼굴", lambda: cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True), log),
+           _gate_step("⑤ 컷 길이", lambda: cut_length_gate(T, st), log),
+           _gate_step("⑦ 멈춤", lambda: cut_still_gate(T, M, st, R=R), log),
+           _gate_step("사진", lambda: photo_gate(T, st, M), log),
+           _gate_step("흐림 면적", lambda: blur_cut_gate(T, M, st), log),
+           _gate_step("사진 연속", lambda: photo_run_gate(T, M), log),
+           _gate_step("자를 칸 비율", lambda: crop_ar_gate(T, M, st), log),
+           _gate_step("B13 재사용", lambda: plan_reuse_gate(T, M, st), log),
+           _gate_step("리듬", lambda: rhythm_gate(T, st, src_dir), log)]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
     out = soften(out, log)
