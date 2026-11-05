@@ -28,6 +28,13 @@ const aiRoot = () => ensureDir(homeDir(), 'ai');
 export const aiRootDir = aiRoot;
 export const dataDir = () => ensureDir(homeDir(), '창고');
 
+// 동봉 도구 뒤에 붙이는 OS 기본 명령 폴더 — 윈도 System32 / 맥·리눅스 /usr/bin·/bin. 맥은 이게 없어 yt-dlp sh 감싸개의 dirname 을 못 찾아
+//   'engine/../python/bin/python3: cannot execute' 로 유튜브 받기 시험이 멈췄다(11-05 박상혁 #7942 — 맥 회원 전원)
+export function systemPathTail(platform = process.platform, systemRoot = process.env.SystemRoot) {
+  if (platform === 'win32') return systemRoot ? path.join(systemRoot, 'System32') : '';
+  return ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':');
+}
+
 function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     CALCOPY_GEMINI_BACKEND: 'client', CALCOPY_CUSTOMER_MODE: '1', SHORTEM_LLM_QUEUE: queue,
@@ -43,7 +50,7 @@ function engineEnv(queue, packFile, extraEnv) {
   if (!devMode()) {                                      // 설치본: 동봉 도구만 PATH 에(ffmpeg·yt-dlp + 이 MCP 를 돌리는 동봉 node — 엔진 렌더러가 node 를 부른다)
     const dirs = ['ffmpeg', 'ytdlp'].map(t => { try { return path.dirname(toolPath(t)); } catch { return null; } }).filter(Boolean);
     dirs.push(path.dirname(process.execPath));
-    env.PATH = [...new Set(dirs)].join(path.delimiter) + path.delimiter + (process.env.SystemRoot ? path.join(process.env.SystemRoot, 'System32') : '');
+    env.PATH = [...new Set(dirs)].join(path.delimiter) + path.delimiter + systemPathTail();
     try { env.PUPPETEER_EXECUTABLE_PATH = toolPath('chrome'); } catch { /* 자가점검이 알린다 */ }
     env.NODE_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'node_modules');   // 엔진 렌더러의 puppeteer 연결(engine/node_modules/puppeteer)이 puppeteer-core 를 찾는 곳
     const wd = path.join(toolsDir(), '..', 'models', 'whisper');                                 // 받아쓰기 모델(설치팩 동봉)
