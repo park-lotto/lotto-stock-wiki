@@ -687,7 +687,13 @@ def _glow(lay, G: dict):
 
 
 def _spaced(dl, xy, text, f, ls: float, **kw) -> float:
-    """글을 그린다 — ls(자간 px, 글자 사이 더 띄우기)가 0 이면 한 번에(옛 그림 그대로), 아니면 글자마다. 반환 = 그린 폭(끝 자간 뺌)."""
+    """글을 그린다 — ls(자간 px, 글자 사이 더 띄우기)가 0 이면 한 번에(옛 그림 그대로), 아니면 글자마다. 반환 = 그린 폭(끝 자간 뺌).
+    (판단 주인 — 외곽선 글) stroke_width 가 있으면 채움 마스크를 그 폭만큼 둥글게 키운 외곽선을 먼저 깔고 그 위에 Pillow 외곽선+채움을 그린다.
+    11-06 박은숙 #9849·#9859: Pillow(FreeType) 외곽선이 일부 글자 모양(BlackHanSans 아·안·하·히·뒤 등, 글꼴 20개)에서 빠져
+    full 틀 제목 '갈아도'의 ㅏ 자리가 투명 → 밝은 장면에서 글자가 사라졌다. 정상 글자는 두 외곽선이 거의 겹쳐 그대로다."""
+    sw = int(kw.get("stroke_width") or 0)
+    if sw > 0:
+        _stroke_under(dl, xy, text, f, ls, sw, kw.get("stroke_fill") or (0, 0, 0, 255))
     if not ls:
         dl.text(xy, text, font=f, **kw)
         return f.getlength(text)
@@ -696,6 +702,38 @@ def _spaced(dl, xy, text, f, ls: float, **kw) -> float:
         dl.text((x, xy[1]), ch, font=f, **kw)
         x += f.getlength(ch) + ls
     return x - xy[0] - (ls if text else 0)
+
+
+def _stroke_under(dl, xy, text, f, ls: float, sw: int, color):
+    """_spaced 의 외곽선 바닥 — 채움 마스크(글자 잉크)를 반지름 sw 원판으로 키워(가장자리 0.5px 부드럽게) color 로 깐다."""
+    from PIL import Image, ImageDraw
+    import numpy as np
+    if not text:
+        return
+    m = sw + 2
+    w = int(math.ceil(_text_w(f, text, ls))) + 2 * m + int(f.size)
+    h = int(sum(f.getmetrics())) + 2 * m + int(f.size // 2)
+    mk = Image.new("L", (w, h), 0)
+    md = ImageDraw.Draw(mk)
+    ox, oy = xy[0] - int(xy[0]), xy[1] - int(xy[1])
+    if not ls:
+        md.text((m + ox, m + oy), text, font=f, fill=255)
+    else:
+        x = m + ox
+        for ch in text:
+            md.text((x, m + oy), ch, font=f, fill=255)
+            x += f.getlength(ch) + ls
+    src = np.asarray(mk, dtype=np.float32) / 255.0
+    out = np.zeros_like(src)
+    for dy in range(-sw - 1, sw + 2):
+        for dx in range(-sw - 1, sw + 2):
+            wt = min(1.0, max(0.0, sw + 0.5 - math.hypot(dx, dy)))
+            if wt <= 0:
+                continue
+            ys0, ys1 = max(0, dy), h + min(0, dy)
+            xs0, xs1 = max(0, dx), w + min(0, dx)
+            np.maximum(out[ys0:ys1, xs0:xs1], src[ys0 - dy:ys1 - dy, xs0 - dx:xs1 - dx] * wt, out=out[ys0:ys1, xs0:xs1])
+    dl.bitmap((int(xy[0]) - m, int(xy[1]) - m), Image.fromarray((out * 255 + 0.5).astype(np.uint8), "L"), fill=tuple(color))
 
 
 def _text_w(f, text: str, ls: float) -> float:
@@ -1060,7 +1098,7 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
         G = LG.get("glow")              # 로고 번짐(네온) — {px,color,strength} · 외곽선 = stroke(px)·stroke_rgba
         mg = int(math.ceil(3 * float(G["px"]))) if G else 0
         lay = Image.new("RGBA", (W, 160 + 2 * mg), (0, 0, 0, 0))
-        ImageDraw.Draw(lay).text((LG["x"], 10 + mg), LG["text"], font=f, fill=tuple(LG["rgba"]), stroke_width=LG.get("stroke", 0), stroke_fill=tuple(LG.get("stroke_rgba", [0, 0, 0, 255])))
+        _spaced(ImageDraw.Draw(lay), (LG["x"], 10 + mg), LG["text"], f, 0, fill=tuple(LG["rgba"]), stroke_width=LG.get("stroke", 0), stroke_fill=tuple(LG.get("stroke_rgba", [0, 0, 0, 255])))
         if G:
             lay = _glow(lay, G)
         im.alpha_composite(lay, (0, LG["y"] - 10 - mg))
@@ -1203,7 +1241,7 @@ def lyric_png(x: dict, LY: dict, out: Path):
         sp = LY[k]
         f = _font(sp["font"], sp["px"])
         bb = d.textbbox((0, 0), x[k], font=f, stroke_width=LY["stroke"]["px"])
-        d.text((W // 2 - (bb[2] - bb[0]) // 2 - bb[0], sp["cy"] - (bb[1] + bb[3]) // 2), x[k], font=f, fill=_rgb(sp["color"]),
+        _spaced(d, (W // 2 - (bb[2] - bb[0]) // 2 - bb[0], sp["cy"] - (bb[1] + bb[3]) // 2), x[k], f, 0, fill=_rgb(sp["color"]),
                stroke_width=LY["stroke"]["px"], stroke_fill=_rgb(LY["stroke"]["color"]))
     im.save(out)
 
@@ -2342,9 +2380,11 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             r = cache.get(key)
             if r is None:
                 log(f"[관문④] 컷 {k} {c['src']}@{float(c['ss']):.2f} 판정 시작 {time.strftime('%H:%M:%S')}(저장 없는 컷 — 진단 기록)")
+                _t_cut = time.time()
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
                 r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+                log(f"[관문④] 컷 {k} 판정 끝 {time.time() - _t_cut:.0f}초 · 프레임 {len(m['text'])}장(진단 — 느린 PC 실측, Jev 11-06)")
                 _cache_save(cp, cache, {**rows, key: r})       # 컷마다 저장 — 느린 PC 는 시간 한도에 끊겨 재시도마다 처음부터 쟀다(11-02 회원 수리 채택)
                 if len(ocr) != len(ocr0):
                     _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
@@ -3305,7 +3345,7 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
             cd.ellipse([px_, CR["cy"] - P["r"] - 6, px_ + 2 * P["r"], CR["cy"] + P["r"] - 6], fill=_rgb(P["color"]), outline=(0, 0, 0), width=2)
             cd.line([px_ + P["r"], CR["cy"] + P["r"] - 6, px_ + P["r"], CR["cy"] + P["r"] + 8], fill=_rgb(P["color"]), width=4)
             px_ += 2 * P["r"] + 8
-        cd.text((px_ - bb[0], CR["cy"] - (bb[1] + bb[3]) // 2), S["source_label"], font=f, fill=_rgb(CR["color"]),
+        _spaced(cd, (px_ - bb[0], CR["cy"] - (bb[1] + bb[3]) // 2), S["source_label"], f, 0, fill=_rgb(CR["color"]),
                 stroke_width=CR.get("stroke", 0), stroke_fill=_rgb(CR.get("stroke_color", "#000000")))
         cim.save(R / "credit.png")
         k = len([a for a in ins if a == "-i"])
@@ -4201,10 +4241,19 @@ LENGTH_MEMBER = "⑧ 길이 · 회원 빠르기"     # 회원이 말 빠르기�
 ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "B13 재사용", LENGTH_MEMBER}     # 흐림 면적은 막는다 — 권고로 내렸더니 41%·64% 회색 상자가 그대로 나갔다(11-03 김미향 "엉망진창")     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
 
 
+def _free_mem_gb() -> float:
+    """여유 메모리(GB) — 진단 기록용(느린 PC 원인이 메모리 교체인지 CPU 인지 가른다, 11-06 김미화 N95 컷 하나 17분). 못 재면 -1."""
+    try:
+        import psutil
+        return psutil.virtual_memory().available / 1e9
+    except Exception:  # noqa: BLE001 — 진단만
+        return -1.0
+
+
 def _gate_step(name, fn, log):
     """관문 하나 돌리기 — 시작 시각을 한 줄 남긴다(진단 기록, 판정은 그대로). 11-05 삼현정·이용재: 장면 맞추기가 '[박힌 글자] 지움' 뒤
     기록 없이 75분 CPU 만 쓰다 끝나 어느 관문에서 멈췄는지 가를 수 없었다(Jev 진단 기록 best 0.83·위험 0.09)."""
-    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}")
+    log(f"[관문] {name} 시작 {time.strftime('%H:%M:%S')}" + (f" · 여유 메모리 {_free_mem_gb():.1f}GB" if name.startswith("④") else ""))
     return (name, fn())
 
 

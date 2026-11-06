@@ -1757,15 +1757,20 @@ def c_plan(W, d):
         return _c_plan(W, d)
 
 
-def _plan_reuse(W, v, T) -> list:
-    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_bad) · 옛 렌더러 판은 샷 안 옮기기 결과."""
+def _plan_reuse(W, v, T, warn: list | None = None) -> list:
+    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_split) · 옛 렌더러 판은 샷 안 옮기기 결과.
+    반환 = 막을 것(반려). 원본 한계로 못 지키는 거리 위반은 warn 에 담아 경고로 넘긴다(11-06 짧은 원본 반려 되풀이)."""
     from tools.calcopy.hybrid import quality_gate as QG, styles as ST
     st = ST.load(v)
     if st.get("renderer") in QG.OLD_PAUSE_RENDERERS:
         return [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed']}"
                 for c in T["cuts"] if c.get("reuse_unfixed")]
     cuts = [{**c, "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"])} for c in T["cuts"]]
-    bad, _ = QG.reuse_bad(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    bad, soft, _ = QG.reuse_split(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    if soft:
+        sys.stderr.write("[B13 원본 한계] " + " / ".join(soft)[:600] + "\n")
+        if warn is not None:
+            warn += soft
     return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
 
 
@@ -1826,7 +1831,10 @@ def _c_plan(W, d):
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
-        reuse = _plan_reuse(W, v, T)
+        soft = []
+        reuse = _plan_reuse(W, v, T, warn=soft)
+        if soft:
+            out["warn"] = soft      # 원본 한계 — 경고로 넘김(flow.ph_plan_got 이 st.warn 에 기록만, 반려 아님)
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
         from tools.calcopy.hybrid import checks as CK      # B16 도 같은 꼴 — 판정 주인 checks.aba_violations(완성본 검사 quality_gate 와 같은 함수·같은 컷)
         aba = CK.aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in T["cuts"] if c.get("kind") != "orig"])
@@ -2378,7 +2386,7 @@ def c_clean_text(W, d):
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
     if d.get("bg"):         # 기다리지 않고 뒤로 — 렌더는 임시 흐림으로 간다(관제 304). None = 뒤로 못 보내는 경우(구간 없음·흐림·무료 엔진) → 아래 옛 길
-        j = VC.bg_start(src, send, mode, d.get("spots"))
+        j = VC.bg_start(src, send, mode, d.get("spots"), used=used)
         if j:
             sys.stderr.write(f"[clean_text] 뒤에서 지우기 시작 — 자막 컷 {VC.span_sec(send)}초\n")
             return {**j, "send": send, "send_sec": VC.span_sec(send), "used_sec": VC.span_sec(used)}
@@ -2413,7 +2421,9 @@ def c_clean_take(W, d):
     t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at if at > 0 else time.time() - VC.BG_MAX))
     r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
     if r.get("state") == "done" and not r.get("error"):
-        _, _, used = VC.plan_spans(doc, {}, {})
+        # 쓰는 구간 = 보낸 때 기록(job.json used) 먼저 — 받는 때 계획을 다시 읽으면 그 사이 계획 파일의 vmake_cuts 가 사라져 used 0초 →
+        #   정상 전송 32.9초를 '쓰지 않는 구간까지 보냄'(final)으로 편을 끝냈다(11-06 김준용 a18d9ca952a7, Jev 뿌리 0.89·증명 0.69). 옛 job(기록 없음)만 지금 계획
+        used = r.get("used_at_send") or VC.plan_spans(doc, {}, {})[2]
         sent = VC.sent_from_ledger(src, t0)
         r.update({"sent": sent, "used_sec": VC.span_sec(used), "send_sec": r.get("sec"), "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_take] {r.get('state')} · 호출 {r.get('calls')}회: {r.get('why')}\n")
@@ -3182,6 +3192,25 @@ def _end_now() -> None:
     os._exit(0)
 
 
+def keep_awake(platform: str | None = None) -> str:
+    """(판단 주인 — 실행기 일을 도는 동안 PC 절전 막기) 이 프로세스가 사는 동안만 — 끝나면 저절로 풀린다. 화면 끄기는 허용.
+    11-06 삼현정 #10009·#10010: 전원 5분·배터리 3분 절전(Modern Standby)에 렌더·계획이 잠들어 기다림 무응답 21702초·렌더 프로세스 사라짐
+    (시스템 로그 Kernel-Power 506/507 이 무응답과 일치). 반환 = 쓴 방법('win'·'mac'·'' — 진단·시험용)."""
+    plat = platform or sys.platform
+    try:
+        if plat == "win32":
+            import ctypes
+            ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+            return "win"
+        if plat == "darwin":
+            subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return "mac"
+    except Exception as e:  # noqa: BLE001 — 절전 막기 실패는 일을 막지 않는다(기록만)
+        print(f"[절전 막기] 못 함 {type(e).__name__}: {str(e)[:120]}", file=sys.stderr)
+    return ""
+
+
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
     res_file, log_file = os.environ.get("SHORTEM_RESULT"), os.environ.get("SHORTEM_RUNNER_LOG")
@@ -3189,6 +3218,7 @@ def main():
         _log_to_file(log_file)
     _HANG["on"] = True
     _hang_arm()
+    keep_awake()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
     body = json.dumps(res, ensure_ascii=False)
     if res_file:        # 새 앱(engine_bridge.runOps)은 이 파일을 읽는다 — 파이프에 안 쓴다(앱이 못 읽으면 print 가 막힌다)

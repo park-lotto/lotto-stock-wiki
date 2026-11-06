@@ -655,7 +655,7 @@ def _spawn_bg(d: Path) -> int:
                             creationflags=flags).pid
 
 
-def bg_start(src_dir: Path, spans: dict, mode: str = "vmake", spots: dict | None = None) -> dict | None:
+def bg_start(src_dir: Path, spans: dict, mode: str = "vmake", spots: dict | None = None, used: dict | None = None) -> dict | None:
     """(판단 주인 — 뒤로 보내도 되나) 돈 드는 길(VMake)이고 지울 구간이 있으면 뒤 프로세스를 띄운다. None = 앞에서 기다리는 옛 길로(무료 엔진은 이 PC 그래픽카드를 렌더와 나눠 쓰니 뒤로 안 보낸다)."""
     src_dir = Path(src_dir)
     spans = {n: iv for n, iv in (spans or {}).items() if iv and (src_dir / n).exists()}
@@ -667,7 +667,7 @@ def bg_start(src_dir: Path, spans: dict, mode: str = "vmake", spots: dict | None
         raise RuntimeError("뒤에서 지우는 일이 이미 돈다")
     shutil.rmtree(d, ignore_errors=True)
     d.mkdir()
-    (d / "job.json").write_text(json.dumps({"src": str(src_dir), "spans": spans, "rd": rd, "spots": spots or {}, "at": time.time()}, ensure_ascii=False), encoding="utf-8")
+    (d / "job.json").write_text(json.dumps({"src": str(src_dir), "spans": spans, "rd": rd, "spots": spots or {}, "at": time.time(), "used": used or {}}, ensure_ascii=False), encoding="utf-8")
     _spawn_bg(d)
     return {"mode": "bg", "via": rd.get("via"), "sec": span_sec(spans)}
 
@@ -723,7 +723,8 @@ def bg_take(src_dir: Path, wait: float = 0, tick=None) -> dict:
         pieces = {n: [(Path(p), a, b) for p, a, b in ps] for n, ps in r["pieces"].items()}
         res = _put_back(src_dir, job["spans"], pieces, r, job["rd"])
     shutil.rmtree(d, ignore_errors=True)
-    return {**res, "state": "done"}
+    # 보낸 때의 쓰는 구간 — 받는 때 계획 파일이 바뀌어도(렌더 실패·vmake_cuts 사라짐) 보낸 초를 그때 기준과 견준다(11-06 김준용 #10406)
+    return {**res, "state": "done", "used_at_send": job.get("used") or None}
 
 
 def plan_spans(doc: Path, shots: dict | None = None, done: dict | None = None, style_name: str | None = None) -> tuple:
