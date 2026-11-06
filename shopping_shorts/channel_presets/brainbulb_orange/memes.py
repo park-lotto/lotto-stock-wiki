@@ -13,6 +13,8 @@ import json
 import os
 import subprocess
 
+from shopping_shorts.channelkit import render
+
 PACK_DIR = os.environ.get("BRAINBULB_MEME_PACK") or os.path.join(os.path.expanduser("~"), "Desktop", "볼케이노", "밈팩")
 
 EMOTION_WORDS = {"경악/충격": ["놀란", "놀라", "충격", "경악", "눈을 크게"], "의심/떨떠름": ["의심", "곁눈", "떨떠름", "째려", "노려", "못마땅", "흘겨"],
@@ -52,17 +54,17 @@ GREEN_MAX = 0.20     # 화면의 20% 넘게 크로마키 초록이면 빼다(11-
 
 
 def green_ratio(mp4, at=0.5):
-    """영상 한 장면(at 초)의 크로마키 초록 비율 0~1 — 32×32로 줄여 G가 R·B보다 60 넘게 밝은 화소를 센다. 못 재면 0."""
+    """영상 한 장면(at 초)의 크로마키 초록 비율 0~1 — 32×32로 줄여 G가 R·B보다 60 넘게 밝은 화소를 센다. 화면을 못 얻으면 None(고르는 쪽이 건너뜀)."""
     try:
         r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{at:.2f}", "-i", mp4, "-frames:v", "1", "-vf", "scale=32:32",
                             "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, timeout=30, stdin=subprocess.DEVNULL)
         px = r.stdout
-    except Exception:  # noqa: BLE001 — 재기 실패는 '초록 아님'으로(밈 칸이 비는 쪽이 더 나쁘다) — 대신 로그
-        print(f"[memes] 초록 검사 실패(통과 처리): {mp4}")
-        return 0.0
+    except Exception:  # noqa: BLE001 — 재기 실패는 None(세 지점 중 잰 것만으로 판단, 다 못 재면 그 밈은 건너뜀) — 대신 로그
+        print(f"[memes] 초록 검사 실패(못 잼 — 이 지점은 빼고 판단): {mp4}")
+        return None
     n = len(px) // 3
     if not n:
-        return 0.0
+        return None          # 화면을 못 얻음(시작점이 파일 밖 등) — '초록 아님'으로 치지 않는다(11-06 태권도 편 사고)
     g = sum(1 for i in range(n) if px[3 * i + 1] > 120 and px[3 * i + 1] > px[3 * i] + 60 and px[3 * i + 1] > px[3 * i + 2] + 60)
     return g / n
 
@@ -84,11 +86,16 @@ def pick(emotions, seed, pack_dir=None):
         c = None
         for cand in sorted(pool, key=key):            # 초록 배경(크로마키) 영상은 건너뛴다
             used.add(cand[0])
-            if green_ratio(os.path.join(pack_dir, cand[0] + ".mp4"), float(cand[1].get("start") or 0) + 0.5) <= GREEN_MAX:
-                c = cand
+            src = os.path.join(pack_dir, cand[0] + ".mp4")
+            ss = render.meme_start(src, cand[1].get("start"))     # 렌더와 같은 시작점(주인 한 곳)에서 잰다
+            gs = [green_ratio(src, ss + a) for a in (0.2, 0.8, 1.4)]
+            gs = [g for g in gs if g is not None]
+            if gs and max(gs) <= GREEN_MAX:
+                c = (cand, ss)
                 break
         if c is None:
             continue
-        out.append({"src": os.path.join(pack_dir, c[0] + ".mp4"), "start": float(c[1].get("start") or 0.0),
+        (c, ss) = c
+        out.append({"src": os.path.join(pack_dir, c[0] + ".mp4"), "start": ss,
                     "key": c[0], "what": c[1].get("what", "")})
     return out

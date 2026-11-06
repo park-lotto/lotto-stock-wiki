@@ -100,6 +100,16 @@ def _probe_len(path, wd):
         return 0.0
 
 
+def meme_start(src, start, span=1.0):
+    """밈 파일 안에서 실제로 틀 시작점(초) — 주인 한 곳. 고르기(memes.pick 초록 검사)와 렌더(meme_overlay_args)가 같이 부른다.
+    ★highlights 의 start 는 잘리기 전 원본 기준이라 2초짜리 파일보다 클 수 있다(10-28 실측, 11-06 팩 45개 중 16개)
+      → start+span 이 파일 안이면 start, 아니면 0. (11-06 태권도 편: 고르기만 원본 기준 4.75초를 재다 화면을 못 얻어
+      '초록 아님'으로 통과 → 렌더는 0초부터 틀어 초록 배경 고양이가 나왔다)"""
+    flen = _probe_len(os.path.abspath(src), os.path.dirname(os.path.abspath(src)))
+    ss = float(start or 0.0)
+    return ss if ss + span < flen else 0.0
+
+
 def meme_overlay_args(overlays, wd, first_input, base_label="bg"):
     """영상 밈을 슬롯 자리에 그 시각만 얹는 ffmpeg 입력·필터(다듬기 10-16 방식, 관제 322).
     → (입력 argv, 필터 조각 목록, 마지막 라벨). overlays = frames timeline 의 kind "meme_video" 항목.
@@ -109,9 +119,7 @@ def meme_overlay_args(overlays, wd, first_input, base_label="bg"):
     for k, o in enumerate(overlays):
         src = os.path.abspath(o["src"])
         t, d = float(o["t"]), float(o["d"])
-        flen = _probe_len(src, wd)
-        ss = o.get("start") or 0.0
-        ss = ss if ss + min(d, 1.0) < flen else 0.0
+        ss = meme_start(src, o.get("start"), min(d, 1.0))
         ins += ["-stream_loop", "-1", "-ss", f"{ss:.3f}", "-i", _rel(src, wd)]
         n = first_input + k
         fc.append(f"[{n}:v]trim=0:{d + 0.3:.3f},setpts=PTS-STARTPTS+{max(t - 0.1, 0):.3f}/TB,"

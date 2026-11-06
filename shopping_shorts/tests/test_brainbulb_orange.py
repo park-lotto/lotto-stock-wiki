@@ -61,3 +61,18 @@ def test_output_name_original_brainbulb_unchanged():
     from shopping_shorts.channelkit import render
     registry.use("brainbulb")
     assert render.output_name({"title": {"slug": "x"}}) == "out/final.mp4"
+
+
+def test_meme_start_falls_back_to_zero_when_past_file_end(tmp_path):
+    """11-06 태권도 편: 밈 목록 start(원본 기준 4.25초)가 2초짜리 파일 밖이라 고르기는 화면을 못 재고 통과,
+    렌더는 0초부터 틀어 초록 배경 고양이가 나왔다. 고르기·렌더가 같은 시작점(render.meme_start)을 써야 한다."""
+    import subprocess
+    from shopping_shorts.channelkit import render
+    from shopping_shorts.channel_presets.brainbulb_orange import memes
+    clip = tmp_path / "green2s.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=0x00FF00:s=64x64:d=2", str(clip)],
+                   check=True, stdin=subprocess.DEVNULL)
+    assert render.meme_start(str(clip), 4.25) == 0.0
+    assert render.meme_start(str(clip), 0.5) == 0.5
+    assert memes.green_ratio(str(clip), 4.75) is None            # 파일 밖 = 못 잼(예전엔 0 = '초록 아님'으로 통과)
+    assert memes.green_ratio(str(clip), render.meme_start(str(clip), 4.25) + 0.2) > memes.GREEN_MAX
