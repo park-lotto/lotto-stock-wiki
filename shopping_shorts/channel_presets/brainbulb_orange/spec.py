@@ -98,3 +98,7 @@ TITLE_TARGET_INK = 910
 # ── 완성본 이름 = out/sesangcham_<대본 title.slug>.mp4 — 사장님 11-06 "렌더할 때 바로 저장, moacco 말고 sesangcham"
 #   (채널 '세상참'). final.mp4 를 따로 남기지 않는다. 이름 정하는 곳 = channelkit/render.output_name
 OUTPUT_PREFIX = "sesangcham"
+
+# ── 효과음 크기 — 사장님 11-06 "볼케이노만큼". 원본 −8 은 볼케이노 실측(나레보다 16~17dB 아래)에 맞춘 값인데,
+#   성권 목소리로 만든 편은 나레보다 18.6dB 아래였다(엘니뇨 실측) vs 볼케이노 좌회전깜빡이 17.0dB → 1.6dB 올린다
+SFX_BED_DB = -6.4
