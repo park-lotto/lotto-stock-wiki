@@ -74,5 +74,35 @@ def test_meme_start_falls_back_to_zero_when_past_file_end(tmp_path):
                    check=True, stdin=subprocess.DEVNULL)
     assert render.meme_start(str(clip), 4.25) == 0.0
     assert render.meme_start(str(clip), 0.5) == 0.5
-    assert memes.green_ratio(str(clip), 4.75) is None            # 파일 밖 = 못 잼(예전엔 0 = '초록 아님'으로 통과)
-    assert memes.green_ratio(str(clip), render.meme_start(str(clip), 4.25) + 0.2) > memes.GREEN_MAX
+    assert memes.is_chroma(str(clip))                             # 초록 배경 = 안 쓴다(영상 전체를 잼)
+
+
+def test_chroma_rule_green_screen_vs_pepe_like(tmp_path):
+    """11-06 사장님 '크로마키(초록 배경) 밈은 안 쓴다'. 형광 초록 배경은 걸리고, 흰 바탕 위 어두운 초록 캐릭터(페페 같은)는 안 걸린다."""
+    import subprocess
+    from shopping_shorts.channel_presets.brainbulb_orange import memes
+    def mk(name, vf):
+        p = tmp_path / name
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=white:s=128x128:d=1", "-vf", vf, str(p)],
+                       check=True, stdin=subprocess.DEVNULL)
+        return str(p)
+    screen = mk("screen.mp4", "drawbox=x=0:y=0:w=128:h=128:color=0x10F010:t=fill,drawbox=x=40:y=40:w=48:h=48:color=0x804020:t=fill")
+    patch = mk("patch.mp4", "drawbox=x=50:y=60:w=40:h=30:color=0x00FF00:t=fill")
+    pepe = mk("pepe.mp4", "drawbox=x=24:y=24:w=80:h=80:color=0x5A9A3C:t=fill")
+    assert memes.is_chroma(screen) and memes.is_chroma(patch)
+    assert not memes.is_chroma(pepe)
+
+
+def test_chroma_keys_never_picked(tmp_path):
+    """11-06 사장님 '검사에 걸린 건 아예 안 쓰도록' — CHROMA_KEYS 는 감정이 딱 맞아도 안 뽑힌다(만들 때 재지 않는다)."""
+    import json, shutil, subprocess
+    from shopping_shorts.channel_presets.brainbulb_orange import memes
+    (tmp_path / "_meta").mkdir()
+    bad, ok = sorted(memes.CHROMA_KEYS)[0], "ok_clip"
+    for k in (bad, ok):
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=white:s=64x64:d=2", str(tmp_path / f"{k}.mp4")],
+                       check=True, stdin=subprocess.DEVNULL)
+    meta = {bad: {"what": "놀란 표정 충격", "usable": True, "start": 0}, ok: {"what": "무표정", "usable": True, "start": 0}}
+    (tmp_path / "_meta" / "highlights.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    for seed in ("a", "b", "c", "d"):
+        assert [x["key"] for x in memes.pick(["경악/충격"], seed, pack_dir=str(tmp_path))] == [ok]

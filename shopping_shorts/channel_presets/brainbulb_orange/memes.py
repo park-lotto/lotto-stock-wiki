@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""brainbulb_orange 밈 — 페페 그림 대신 **동물 영상 밈**(사장님 10-16 다듬기 방식을 처음부터, 관제 322).
+"""brainbulb_orange 밈 — 밈 팩 영상(사장님 11-06 "동물말고 밈폴더에 있는거 모두", 초록 배경 밈은 금지).
 
 밈 팩 = 숏템메이커 서버 research/meme_pack 에서 받은 영상 밈(<키>.mp4) + _meta/highlights.json(설명·쓸 구간·usable).
 위치: 환경변수 BRAINBULB_MEME_PACK > 바탕화면/볼케이노/밈팩. ★팩은 git 에 없다(남의 영상 짤 — 저작권 미확인, 원본 brainbulb 와 같은 원칙).
 
 고르는 규칙은 다듬기(볼케이노/다듬기_오렌지_페이퍼로지_동물밈.py animal_memes·pick)와 같다:
-  사람 없이 동물만 · 페페(pp_) 제외 · usable 만 · 감정 낱말이 설명에 든 것 · 한 편 안에서 안 겹치게 · 편마다 다르게(작업폴더 이름 씨앗)
+  (11-06부터) 팩 전부 · usable 만 · 초록 배경(is_chroma) 제외 · 감정 낱말이 설명에 든 것 · 한 편 안에서 안 겹치게 · 편마다 다르게(작업폴더 이름 씨앗)
   ⚠️ 다듬기 스크립트는 볼케이노 완성본용으로 따로 남아 있다(레포 밖). 우리 엔진으로 넘어오면 그쪽은 은퇴한다.
 """
 import hashlib
@@ -22,15 +22,24 @@ EMOTION_WORDS = {"경악/충격": ["놀란", "놀라", "충격", "경악", "눈�
                  "만족/엄지척": ["만족", "엄지", "흐뭇", "미소", "뿌듯"], "무표정/멍": ["멍하", "무표정", "멍한"],
                  "분노": ["분노", "화난", "화를", "으르렁", "성난"], "슬픔/울음": ["슬픈", "슬퍼", "울고", "눈물", "울먹"],
                  "피곤/지침": ["피곤", "지친", "하품", "졸린", "축 처"]}
-ANIMALS = ["고양이", "강아지", "개가", "개 ", "원숭이", "침팬지", "고릴라", "햄스터", "앵무", "오리", "물개", "너구리",
-           "수달", "펭귄", "곰", "라쿤", "염소", "토끼", "다람쥐", "여우", "판다", "라마", "알파카", "부엉", "올빼미"]
 MOODS = ["놀", "웃", "장난", "메롱", "능글", "의기양양", "씩", "곁눈", "한심", "황당", "멍하", "째려", "노려", "당황", "충격"]
-PEOPLE = ["사람", "남자", "여자", "아이", "아기", "소녀", "소년", "배우", "가수"]
-DRAWN = ["캐릭터", "만화", "일러스트", "애니", "그림", "이모티콘", "인형"]   # 진짜 동물만(11-04 시험판: «분홍색 토끼 캐릭터» 그림 짤이 뽑혔다)      # 실존 인물 짤 막기(10-28 '토끼' 낱말로 아이돌 영상이 뽑혔다)
 
 
 # 설명에 '캐릭터·만화' 낱말이 없어 DRAWN 으로 못 거르는 그림 짤(11-04 락스 편: fm_thisisfine = 불타는 방 만화 강아지)
-EXCLUDE_KEYS = {"fm_thisisfine", "gdb_1aubp94slkac2s27", "tnr_5991920615405934389"}   # + 영어 자막 박힌 영상(11-04 의대 편 «You stared me!»)
+EXCLUDE_KEYS = {"gdb_1aubp94slkac2s27", "tnr_5991920615405934389"}   # (fm_thisisfine 그림 짤은 11-06 '팩 전부'로 다시 허용)   # + 영어 자막 박힌 영상(11-04 의대 편 «You stared me!»)
+
+# 초록 배경(크로마키) 밈 — 사장님 11-06 "할때마다 검사하지말고 지금 검사에 걸린건 아예 안쓰도록".
+#   팩 1,228개를 is_chroma 기준으로 한 번 재서 걸린 19개 + 화면을 못 읽는 깨진 파일 10개. 만들 때는 재지 않고 이 목록만 뺀다.
+#   팩에 밈을 새로 넣었으면 다시 잰다: py -m shopping_shorts.channel_presets.brainbulb_orange.memes --scan (새 목록을 찍어 준다)
+CHROMA_KEYS = frozenset({
+    "0rIVToIx9c8", "36kI8XZlxUI", "4D0o8exrcAk", "8DXsEQKR4pk", "DxYgkPGiBhM", "Hra7rZxuqFQ", "ISs1T4lQspg", "K4zQFw1hIe0",
+    "Uv27Jag_k1w", "WsLn9U4VF1w", "fm_carlton", "fm_crycat", "fm_freshprince", "fm_frysquint", "fm_homerhedge", "fm_joeyshock",
+    "fm_ohmygodwow", "gfr_CjqN", "pp_16761834542196815081",
+})
+BROKEN_KEYS = frozenset({
+    "gdb_j0u1yrjah5a2a96e", "gdb_mz567cufi33ij9bg", "gfr_25ci", "gph_J3T9b6JFfxFT2", "gph_N7vysOmYh5sru",
+    "pp_17124539", "pp_18862714", "pp_24418434", "tnr_11454518", "tnr_12632100731716971368",
+})
 
 
 def candidates(pack_dir=None):
@@ -42,36 +51,58 @@ def candidates(pack_dir=None):
     out = []
     for k, v in json.load(open(meta, encoding="utf-8")).items():
         w = v.get("what", "")
-        if k.startswith("pp_") or k in EXCLUDE_KEYS or not v.get("usable") or not os.path.exists(os.path.join(pack_dir, k + ".mp4")):
+        # 사장님 11-06 "동물말고 밈폴더에 있는거 모두 사용해도 되는 것으로" — 동물·사람·그림·페페(pp_) 구분 없이 팩 전부.
+        #   남는 거름 = usable·파일 있음·EXCLUDE_KEYS. 크로마키는 고를 때 영상 전체를 재서 뺀다(pick·is_chroma)
+        if k in EXCLUDE_KEYS or k in CHROMA_KEYS or k in BROKEN_KEYS or not v.get("usable") or not os.path.exists(os.path.join(pack_dir, k + ".mp4")):
             continue
-        if any(a in w for a in ANIMALS) and not any(p in w for p in PEOPLE) and not any(x in w for x in DRAWN):
-            out.append((k, v, sum(m in w for m in MOODS)))
+        out.append((k, v, sum(m in w for m in MOODS)))
     out.sort(key=lambda x: (-x[2], x[0]))
     return out
 
 
-GREEN_MAX = 0.20     # 화면의 20% 넘게 크로마키 초록이면 빼다(11-04 시험판: 우는 고양이 fm_crycat 이 초록 배경째 나옴)
+# 크로마키(초록 배경) 밈 금지 — 사장님 11-06 "크로마키가 들어간 밈은 사용하지 않는다 / 크로마키=초록배경"
+#   기준은 팩 1,228개를 전부 재고 걸린 것·경계 31개를 눈으로 대조해 정했다(11-06):
+#   ① 형광 초록(G>170·R,B<110) 이 한 장면이라도 화면의 4% 넘음 → 초록 화면·초록 사각형(가운데 박힌 것 포함)
+#   ② 연두·청록까지 넓힌 초록이 화면 가장자리의 30% 넘음 → 초록 배경
+#   페페(초록 개구리) 피부는 ① 보다 어둡고 가장자리에 안 닿아 안 걸린다(옛 기준은 페페를 초록 배경으로 잡았다). 걸림 19개
+CHROMA_STRICT_MAX = 0.04
+CHROMA_EDGE_MAX = 0.30
+_N = 32
+_RING = [(x, y) for y in range(_N) for x in range(_N) if x in (0, 1, _N - 2, _N - 1) or y in (0, 1, _N - 2, _N - 1)]
 
 
-def green_ratio(mp4, at=0.5):
-    """영상 한 장면(at 초)의 크로마키 초록 비율 0~1 — 32×32로 줄여 G가 R·B보다 60 넘게 밝은 화소를 센다. 화면을 못 얻으면 None(고르는 쪽이 건너뜀)."""
+def _strict(r, g, b):
+    return g > 170 and r < 110 and b < 110 and g - max(r, b) > 100
+
+
+def _loose(r, g, b):
+    return g > 150 and g - b > 80 and g - r > 40
+
+
+def is_chroma(mp4):
+    """영상 전체(초당 4장)를 재서 초록 배경이면 True. 화면을 못 얻으면 True(안 쓴다 — 후보는 많다)."""
     try:
-        r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{at:.2f}", "-i", mp4, "-frames:v", "1", "-vf", "scale=32:32",
-                            "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, timeout=30, stdin=subprocess.DEVNULL)
+        r = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", f"fps=4,scale={_N}:{_N}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                           capture_output=True, timeout=60, stdin=subprocess.DEVNULL)
         px = r.stdout
-    except Exception:  # noqa: BLE001 — 재기 실패는 None(세 지점 중 잰 것만으로 판단, 다 못 재면 그 밈은 건너뜀) — 대신 로그
-        print(f"[memes] 초록 검사 실패(못 잼 — 이 지점은 빼고 판단): {mp4}")
-        return None
-    n = len(px) // 3
-    if not n:
-        return None          # 화면을 못 얻음(시작점이 파일 밖 등) — '초록 아님'으로 치지 않는다(11-06 태권도 편 사고)
-    g = sum(1 for i in range(n) if px[3 * i + 1] > 120 and px[3 * i + 1] > px[3 * i] + 60 and px[3 * i + 1] > px[3 * i + 2] + 60)
-    return g / n
+    except Exception:  # noqa: BLE001 — 못 재면 쓰지 않는다 — 로그
+        print(f"[memes] 초록 배경 검사 실패(안 씀): {mp4}")
+        return True
+    fs = _N * _N * 3
+    frames = [px[i:i + fs] for i in range(0, len(px) - fs + 1, fs)]
+    if not frames:
+        return True
+    for f in frames:
+        if sum(1 for i in range(0, fs, 3) if _strict(f[i], f[i + 1], f[i + 2])) / (_N * _N) > CHROMA_STRICT_MAX:
+            return True
+        if sum(1 for x, y in _RING if _loose(*f[(y * _N + x) * 3:(y * _N + x) * 3 + 3])) / len(_RING) > CHROMA_EDGE_MAX:
+            return True
+    return False
 
 
 def pick(emotions, seed, pack_dir=None):
     """밈 칸마다(감정 순서대로) → [{"src": mp4, "start": 초, "key", "what"}]. 팩이 없으면 [].
-    감정에 맞는 게 없으면 표정 분명한 아무 동물 밈. 한 편 안에서 겹치지 않는다."""
+    감정에 맞는 게 없으면 표정 분명한 아무 밈. 한 편 안에서 겹치지 않는다."""
     pack_dir = pack_dir or PACK_DIR
     cands = candidates(pack_dir)
     if not cands:
@@ -83,19 +114,34 @@ def pick(emotions, seed, pack_dir=None):
         pool = [c for c in cands if c[0] not in used and any(w in c[1].get("what", "") for w in words)]
         if not pool:
             pool = [c for c in cands if c[0] not in used and c[2] > 0] or [c for c in cands if c[0] not in used] or cands
-        c = None
-        for cand in sorted(pool, key=key):            # 초록 배경(크로마키) 영상은 건너뛴다
-            used.add(cand[0])
-            src = os.path.join(pack_dir, cand[0] + ".mp4")
-            ss = render.meme_start(src, cand[1].get("start"))     # 렌더와 같은 시작점(주인 한 곳)에서 잰다
-            gs = [green_ratio(src, ss + a) for a in (0.2, 0.8, 1.4)]
-            gs = [g for g in gs if g is not None]
-            if gs and max(gs) <= GREEN_MAX:
-                c = (cand, ss)
-                break
-        if c is None:
-            continue
-        (c, ss) = c
-        out.append({"src": os.path.join(pack_dir, c[0] + ".mp4"), "start": ss,
+        c = sorted(pool, key=key)[0]                  # 초록 배경·깨진 파일은 candidates 가 이미 뺐다(CHROMA_KEYS·BROKEN_KEYS)
+        used.add(c[0])
+        src = os.path.join(pack_dir, c[0] + ".mp4")
+        out.append({"src": src, "start": render.meme_start(src, c[1].get("start")),   # 렌더와 같은 시작점(주인 한 곳)
                     "key": c[0], "what": c[1].get("what", "")})
     return out
+
+
+def scan(pack_dir=None):
+    """팩 전체를 is_chroma 로 재서 (초록 배경 키, 못 읽는 키) — 팩을 바꿨을 때 CHROMA_KEYS·BROKEN_KEYS 를 새로 적으려고."""
+    pack_dir = pack_dir or PACK_DIR
+    meta = json.load(open(os.path.join(pack_dir, "_meta", "highlights.json"), encoding="utf-8"))
+    chroma, broken = [], []
+    for k, v in sorted(meta.items()):
+        p = os.path.join(pack_dir, k + ".mp4")
+        if k in EXCLUDE_KEYS or not v.get("usable") or not os.path.exists(p):
+            continue
+        r = subprocess.run(["ffmpeg", "-v", "error", "-i", p, "-frames:v", "1", "-f", "null", "-"], capture_output=True, stdin=subprocess.DEVNULL)
+        if r.returncode != 0:
+            broken.append(k)
+        elif is_chroma(p):
+            chroma.append(k)
+    return chroma, broken
+
+
+if __name__ == "__main__":
+    import sys
+    if "--scan" in sys.argv:
+        c, b = scan()
+        print("CHROMA_KEYS", len(c), c)
+        print("BROKEN_KEYS", len(b), b)
