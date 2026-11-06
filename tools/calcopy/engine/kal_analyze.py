@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import time
 import re
 import statistics
 import sys
@@ -867,6 +868,94 @@ def is_stage_direction(text) -> bool:
     """지문 줄 = 줄 통째가 괄호(표 #230, Jev 해결 0.54·0.54·위험 0.28·0.27 · 11-06). 판단 한 곳 — 줄판독 초안·make 관문이 부른다.
     줄 일부 괄호는 지문이 아니다(벤치 3235줄 실측: 통째 4줄 = '(바로 퀵 전화해봄)' 지문 / 일부 11줄 = 'PPL(광고)' 뜻풀이)."""
     return bool(_PAREN_LINE.match(str(text or "")))
+
+
+STATE_STEP_S = 0.1
+
+
+def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
+    """0.1초 4상태 격자 — 판단 한 곳(표 #32·#33, Jev 해결 0.85·위험 0.23 · 11-06). 측정만(규칙·판정 칸은 안 바꾼다).
+    칸마다: 자막 있음 = 뜯기 captions.spans · 사람 목소리 = separation.voice.frames(separate.voice_frames) · 배경 = separation.bg.frames.
+    N = 목소리∧나레 줄 / A = 목소리∧나레 줄 아님(원음 대사) / S = 자막∧목소리 없음 / C = 자막 없음∧목소리 없음∧배경 / _ = 무음.
+    줄판독(lines[].speaker)이 없으면 목소리 칸 = V(나레/원음 미구분).
+    지표: 지분 · 런 길이(중앙·평균 초) · 분당 바뀜(N↔S·N↔A·N↔C) · 상태별 가장 긴 구간(초·시작 위치 %) · 런 3-gram 상위 5(리듬 지문)."""
+    sep = tteutgi.get("separation") or {}
+    vf = (sep.get("voice") or {}).get("frames")
+    bf = (sep.get("bg") or {}).get("frames")
+    if not vf or sep.get("failed"):
+        return {"failed": f"목소리 나누기 없음({sep.get('failed') or 'separation 칸 없음'}) — 4상태 못 잼"}
+    n = len(vf)
+    spans = (tteutgi.get("captions") or {}).get("spans") or []
+    narr = [(float(l["t0"]), float(l["t1"])) for l in lines or [] if str(l.get("speaker") or "").startswith("나레")]
+    seq = []
+    for k in range(n):
+        t = (k + 0.5) * STATE_STEP_S
+        cap = any(a <= t < b for a, b in spans)
+        if vf[k]:
+            seq.append("V" if lines is None else ("N" if any(a <= t < b for a, b in narr) else "A"))
+        elif cap:
+            seq.append("S")
+        elif bf and k < len(bf) and bf[k]:
+            seq.append("C")
+        else:
+            seq.append("_")
+    s = "".join(seq)
+    runs = []
+    for ch in s:
+        if runs and runs[-1][0] == ch:
+            runs[-1][1] += 1
+        else:
+            runs.append([ch, 1])
+    dur_min = n * STATE_STEP_S / 60 or 1
+    sw = {}
+    for (a, _), (b, _) in zip(runs, runs[1:]):
+        k = "↔".join(sorted((a, b), key="NAVSC_".index))
+        sw[k] = sw.get(k, 0) + 1
+    longest, pos = {}, 0
+    for ch, m in runs:
+        if m > longest.get(ch, {}).get("n", 0):
+            longest[ch] = {"n": m, "sec": round(m * STATE_STEP_S, 1), "pos_pct": round(100 * pos / n)}
+        pos += m
+    tri = {}
+    letters = [c for c, _ in runs]
+    for i in range(len(letters) - 2):
+        g = "".join(letters[i:i + 3])
+        tri[g] = tri.get(g, 0) + 1
+    rl = sorted(m * STATE_STEP_S for _, m in runs)
+    return {"seq": s, "step_s": STATE_STEP_S, "share": {c: round(s.count(c) / n, 3) for c in "NAVSC_" if c in s},
+            "runs": {"n": len(runs), "median_s": round(rl[len(rl) // 2], 2), "mean_s": round(sum(rl) / len(rl), 2)},
+            "switch_per_min": {k: round(v / dur_min, 1) for k, v in sorted(sw.items())},
+            "longest": {c: {"sec": v["sec"], "pos_pct": v["pos_pct"]} for c, v in longest.items()},
+            "trigram": sorted(tri.items(), key=lambda x: -x[1])[:5],
+            "note": "나레/원음 = 줄판독 speaker" if lines is not None else "줄판독 없음 — 목소리 칸 V(나레/원음 미구분)"}
+
+
+def write_state4(chan_dir: Path, ids: list, tear_root: Path | None = None) -> dict:
+    """편마다 state4_of → <채널>/_kal/4상태.json(편별 + 채널 요약: 지분·런 길이·분당 바뀜 중앙값, 편 수 n 병기). 쓰는 자리 한 곳."""
+    import statistics as _st
+    chan_dir, tear_root = Path(chan_dir), Path(tear_root or Path(chan_dir) / "뜯기")
+    per = {}
+    for vid in ids:
+        tp = tear_root / vid / "뜯기.json"
+        if not tp.exists():
+            per[vid] = {"failed": "뜯기 없음"}
+            continue
+        lp = chan_dir / "줄판독" / f"{vid}.json"
+        lines = json.loads(lp.read_text(encoding="utf-8")).get("lines") if lp.exists() else None
+        r = state4_of(json.loads(tp.read_text(encoding="utf-8")), lines)
+        per[vid] = r
+    ok = [r for r in per.values() if not r.get("failed")]
+    keys = sorted({k for r in ok for k in r["share"]})
+    summ = {"n": len(ok), "share_median": {k: round(_st.median(r["share"].get(k, 0) for r in ok), 3) for k in keys} if ok else {},
+            "run_median_s": round(_st.median(r["runs"]["median_s"] for r in ok), 2) if ok else None,
+            "switch_per_min_median": {k: round(_st.median(r["switch_per_min"].get(k, 0) for r in ok), 1)
+                                      for k in sorted({k for r in ok for k in r["switch_per_min"]})} if ok else {},
+            "_note": "n<10 이면 범위(대역)를 말하지 않는다 — 중앙값만(1주차 대조 #12)"}
+    out = {"made": time.strftime("%Y-%m-%d %H:%M"), "summary": summ, "per_video": per}
+    kd = chan_dir / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)
+    (kd / "4상태.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    return out
 
 
 def cut_in_line(c: float, t0: float, t1: float) -> bool:

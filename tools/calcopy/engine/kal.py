@@ -746,6 +746,7 @@ def step_rules(S: State):
     docs = K._load_docs([str(S.dir / "줄판독")])
     out = K.write_rules(S.dir, docs, S.d["slug"])        # 쓰는 자리 한 곳(회원 흐름 bm_rules 와 같은 함수)
     R, Sc, P = out["rules"], out["script"], out["palette"]
+    st4 = K.write_state4(S.dir, S.step("tteutgi")["outputs"]["ids"])     # 표 #32·#33: 0.1초 4상태 격자(측정만) → _kal/4상태.json
     draft = S.dir / "_kal" / "스타일분석_초안.md"
     draft.write_text("# 스타일분석 초안(kal.py rules — 규칙빈도·대본언어·팔레트 자동 집계. 사람이 §3 꼴로 옮겨 적고 규칙을 채택한다)\n\n"
                      + K.rules_md(R, S.d["slug"]) + "\n" + K.script_md(Sc) + "\n## 팔레트(channel/<slug>/팔레트.json)\n"
