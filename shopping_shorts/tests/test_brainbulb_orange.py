@@ -47,3 +47,17 @@ def test_subtitle_built_with_new_preset_uses_paperlogy():
         {"i": 1, "t": 2.0, "d": 2.0, "color": "YELLOW", "role": "NARR", "lines": ["숫자 3개가 나옴"]}]}
     text = ass_gen.build({"h1": "윗줄 제목", "h2": "아랫줄 3개"}, "오프닝 카드 문장임", tm)
     assert "Paperlogy" in text and "에스코어" not in text and "SB 어그로" not in text
+
+
+def test_output_name_orange_uses_sesangcham_slug():
+    """사장님 11-06: 완성본은 렌더할 때 바로 sesangcham_<영어 요약>.mp4 하나만(final.mp4 + 복사본 두 개 금지)."""
+    from shopping_shorts.channelkit import render
+    registry.use("brainbulb_orange")
+    assert render.output_name({"title": {"slug": "Basic-Pension 5yr"}}) == "out/sesangcham_basic-pension-5yr.mp4"
+    assert render.output_name({"title": {}}, log=lambda *_: None) == "out/final.mp4"
+
+
+def test_output_name_original_brainbulb_unchanged():
+    from shopping_shorts.channelkit import render
+    registry.use("brainbulb")
+    assert render.output_name({"title": {"slug": "x"}}) == "out/final.mp4"

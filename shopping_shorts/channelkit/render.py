@@ -155,8 +155,25 @@ def video(ass_path, audio_wav, wd, total, *, bg_image=None, frames_list=None, fo
     return os.path.join(wd, out_name)
 
 
+def output_name(script, log=print):
+    """완성본 파일 이름(작업폴더 기준) — 주인 한 곳. 채널 spec.OUTPUT_PREFIX 와 대본 title.slug(영어 요약)로 정한다.
+
+    사장님 11-06: "렌더할 때 바로 저장 / 채널명은 sesangcham 으로" — 예전엔 final.mp4 를 만든 뒤
+    손으로 moacco_<영어 요약>.mp4 로 복사해 같은 영상이 두 개 남았다. 이제 처음부터 한 이름으로만 쓴다.
+    접두어가 없는 채널(원본 brainbulb)은 그대로 out/final.mp4.
+    """
+    prefix = getattr(spec, "OUTPUT_PREFIX", "") or ""
+    if not prefix:
+        return "out/final.mp4"
+    slug = re.sub(r"[^a-z0-9-]+", "-", str((script.get("title") or {}).get("slug") or "").lower()).strip("-")
+    if not slug:
+        log(f"[brainbulb.render] ★대본 title.slug(영어 요약)가 없어 out/final.mp4 로 저장 — {prefix}_<slug>.mp4 로 쓰려면 slug 를 넣는다")
+        return "out/final.mp4"
+    return f"out/{prefix}_{slug}.mp4"
+
+
 def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_image=None, frames_list=None, fonts_dir=None, log=print,
-          overlays=None):
+          overlays=None, out_name="out/final.mp4"):
     wd = os.path.abspath(workdir)
     total = timing["total"]
     narr = concat_narration(narr_files, wd)
@@ -164,6 +181,7 @@ def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_i
     if bed is None:
         log("[brainbulb.render] 효과음 팩 없음 — 베드 생략(나레만)")
     final = mix(narr, bed, wd, total)
-    mp4 = video(ass_path, final, wd, total, bg_image=bg_image, frames_list=frames_list, fonts_dir=fonts_dir, overlays=overlays)
+    mp4 = video(ass_path, final, wd, total, bg_image=bg_image, frames_list=frames_list, fonts_dir=fonts_dir, overlays=overlays,
+                out_name=out_name)
     log(f"[brainbulb.render] {mp4} ({total}s)")
     return {"mp4": mp4, "narr": narr, "bed": bed, "audio": final}

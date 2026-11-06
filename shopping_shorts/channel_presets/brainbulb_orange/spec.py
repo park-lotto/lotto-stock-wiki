@@ -94,3 +94,7 @@ POLICY_MIN_FONT_SCALE = 0.75     # 11-04 C편 15번(오른쪽 108 넘침)이 0.7
 #   볼케이노 완성본 긴 제목 실측 잉크: 담배 906·백신 908·좌회전깜빡이 914·일본비축 910·AI안경커닝 910·898·902px
 #   → 910 으로 맞춘다(넘는 줄만 비례 축소 — ass_gen.title_sizes·review 가 이 값 하나를 읽는다)
 TITLE_TARGET_INK = 910
+
+# ── 완성본 이름 = out/sesangcham_<대본 title.slug>.mp4 — 사장님 11-06 "렌더할 때 바로 저장, moacco 말고 sesangcham"
+#   (채널 '세상참'). final.mp4 를 따로 남기지 않는다. 이름 정하는 곳 = channelkit/render.output_name
+OUTPUT_PREFIX = "sesangcham"
