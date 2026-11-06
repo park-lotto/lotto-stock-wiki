@@ -54,9 +54,42 @@ def glyph_mask(img: np.ndarray, pol: str) -> np.ndarray:
     return layout.ink_fill(img, pol)
 
 
-def line_masks(img: np.ndarray, pol: str) -> list[np.ndarray]:
-    """자막 크롭(RGB) → 줄별 글자 채움 마스크(bbox로 자름, 위→아래). 행 잉크 > GLYPH_ROW_PX 인 덩어리."""
+LINE_PAD_PX = 6          # 줄 창 = 줄 높이 + 6px(외곽선·안티에일리어싱 여유)
+ISLAND_GAP_FRAC = 0.6    # 줄 높이의 60% 넘는 빈 열 = 글자 덩어리 밖(영상 속 밝은 것)
+
+
+def _island(b: np.ndarray, h: float) -> np.ndarray:
+    """줄 창 안에서 줄 높이 0.6배 넘는 빈 열로 나뉜 덩어리 중 잉크 최대만."""
+    sg = layout.segs(b.any(axis=0), min_len=1, gap=int(ISLAND_GAP_FRAC * h))
+    if not sg:
+        return b
+    q = max(sg, key=lambda q: int(b[:, q[0]:q[1]].sum()))
+    return b[:, q[0]:q[1]]
+
+
+def line_masks(img: np.ndarray, pol: str, line_h: float | None = None, n_lines: int | None = None) -> list[np.ndarray]:
+    """자막 크롭(RGB) → 줄별 글자 채움 마스크(bbox로 자름, 위→아래). 행 잉크 > GLYPH_ROW_PX 인 덩어리.
+    line_h(분석기 자막 줄 높이 — 이 크롭과 따로 잰 값)·n_lines(OCR 줄 수)를 받으면 줄 높이 창 n 개를 잉크 큰 순서로 겹치지 않게 고르고
+    창마다 섬 자르기 — 자막이 영상 위일 때 영상 속 밝은 픽셀이 줄에 붙는 오염을 버린다(11-06 표 #222 자리, Jev 해결 0.51·0.53·위험 0.31·0.30).
+    실측 스냅봤니 4편 1줄 자막 62개: 쓸 수 있음 53 → 62 · 정답 글꼴(BMJUA) 1위 24 → 39 · 1위 점수 중앙 0.24~0.31 → 0.34~0.47(fFhPI 실패 → 0.337)."""
     ink = glyph_mask(img, pol)
+    if line_h and n_lines:
+        H = int(round(line_h)) + LINE_PAD_PX
+        r = ink.sum(axis=1).astype(np.float64)
+        used = np.zeros(len(r), bool)
+        got = []
+        for _ in range(int(n_lines)):
+            if len(r) < H:
+                break
+            c = np.convolve(np.where(used, 0.0, r), np.ones(H), "valid")
+            if c.max() <= 0:
+                break
+            k = int(c.argmax())
+            used[max(0, k - int(0.2 * line_h)):k + H + int(0.2 * line_h)] = True
+            m = _bbox(_island(ink[k:k + H], line_h))
+            if m is not None and m.shape[1] >= 20:
+                got.append((k, m))
+        return [m for _, m in sorted(got, key=lambda x: x[0])]
     bands = layout.segs(ink.sum(axis=1) > C.GLYPH_ROW_PX, min_len=C.GLYPH_FIRST_LINE_MIN, gap=4)
     out = []
     for s, e in bands:

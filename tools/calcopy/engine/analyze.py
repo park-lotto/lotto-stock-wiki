@@ -171,12 +171,15 @@ def fonts_and_fx(cap, ocr, vl, out_dir) -> tuple[dict, dict]:
     fdir = Path(out_dir) / "fonts"
     fdir.mkdir(exist_ok=True)
     usable = []
+    _gl = [g["line_h"] for g in cap.get("glyph") or [] if g.get("line_h")]
+    glyph_lh = float(np.median(_gl)) if _gl else None          # 자막 줄 높이(bench captions glyph 중앙) — 줄 마스크 창(없으면 옛 동작)
     for it in cap["items"]:
         i = it["i"]
         lines = [x for x in ocr["texts"].get(i, []) if x.strip()]
         if i not in ocr["crops"] or not lines:
             continue
-        masks = fontmatch.line_masks(ocr["crops"][i], pol)
+        lh = glyph_lh
+        masks = fontmatch.line_masks(ocr["crops"][i], pol, line_h=lh, n_lines=len(lines))   # 표 #222 자리: 줄 높이 창 + 섬(영상 픽셀 오염 버림)
         if len(masks) != len(lines):
             continue
         usable.append((i, lines, masks))
