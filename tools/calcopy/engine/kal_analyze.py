@@ -5,7 +5,7 @@
            2fps 시트 + 10fps 글자 띠 변화(견본 channel/starpickroom/_tools/sheets.py 그대로 부름) → change_<id>.json
            + 바뀌는 지점마다 0.1초 띠(±0.3초) strips/ + 판독목록.json  (판독은 사람 눈 — 이 도구는 볼 프레임만 고른다)
            + 30fps 픽셀 실측 seg_<id>.json(capseg 자막 띠)·cut_<id>.json(cutdet 컷)·segsheet_<id>_NN.jpg — engine/readline_tools (--no-readline 로 끔)
-  skeleton <뜯기.json> [--vtt <id>.ko.vtt] --out 줄판독/<id>.json
+  skeleton <뜯기.json> [--vtt <id>.ko.vtt] --out 줄판독/<id>.json   (낱편·회원 옛 모양 — kal 흐름 뼈대는 kal.py step_skeleton)
   skeleton <frames 폴더> --spec <spec.py> --mp4 <원본> [--sfx-raw] [--profile] --out 줄판독/<id>.json   (눈 spec + 픽셀 실측 → readline_tools.build_lr)
            줄판독 뼈대: t0·t1·text 는 기계값(뜯기 OCR·vtt), 나머지 칸은 null(=눈으로 채움). _todo 가 남아 있으면 check 가 거절.
   check    <줄판독.json ...> [--strict]
@@ -840,7 +840,7 @@ SCENE_T = 0.3   # bench.cuts.SCENE_T 와 같은 문턱. 창 밖(검정 틀·제�
 
 def scene_cuts(mp4: str, win: tuple | None = None, th: float = SCENE_T, merge_s: float = 0.2, exact: bool = False) -> list[float]:
     """창 크롭 뒤 ffmpeg scene 감지 → 컷 시각(0.2초 안 묶음은 하나). 재현일치도의 컷 자(벤치·우리 공용).
-    exact=True = 홀수 창이 1px 밀리지 않게(표 #71) — kal 경로가 켜서 부른다. 꺼짐(회원 PC 실행기·upgrade_table) = 옛 crop 문자열(11-06 재감시 ①)."""
+    exact=True = 홀수 창이 1px 밀리지 않게(표 #71). 지금 켜서 부르는 제품 자리는 0곳(11-06 감시 — kal.py 는 이 함수를 직접 안 부름 · 회원 PC 실행기·upgrade_table 은 꺼짐 = 옛 crop 문자열) — #2 exact 는 crop_vf(계획 시트)·판 칸 exact_crop(part_vf) 길로만 켜진다."""
     import subprocess
     from tools.calcopy.engine.crop import crop_vf
     vf = (crop_vf(win, exact=exact) + "," if win else "") + f"select='gt(scene,{th})',showinfo"
@@ -2061,6 +2061,8 @@ def main(argv=None) -> int:
         Path(A.out).parent.mkdir(parents=True, exist_ok=True)
         Path(A.out).write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{vid} 뼈대 줄 {len(d['lines'])} → {A.out} (_todo {len(d['_todo'])} 칸은 눈으로)")
+        print("[경보] 이 명령은 kal 흐름 뼈대가 아니다(괄호 _jimun·줄 종류 _kind_draft·loud 열 없음 — 회원 실행기 옛 모양). "
+              "kal 흐름 뼈대는 kal.py step_skeleton 한 곳: kal.py <채널> --slug <slug> --from frames(뼈대까지 만들고 readlines 에서 멈춤)")
         return 0
     if A.cmd == "check":
         bad = 0
