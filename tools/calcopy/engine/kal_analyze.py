@@ -251,6 +251,10 @@ def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None 
                       "loud": loud[int(t0 / LOUD_STEP_S):max(int(t0 / LOUD_STEP_S) + 1, int(t1 / LOUD_STEP_S))] if loud else None,
                       "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)",
                       **({"_jimun": "통째 괄호 = 지문 줄로 보임(우리 대본에선 TTS 하지 않는 자막만 — 눈으로 확인)"} if is_stage_direction(text) else {})})
+    kinds = line_kind_draft(lines, (tteutgi.get("audio") or {}).get("transcript") or {}, tteutgi.get("text_fx") or {}, int(pr.get("h") or 1920),
+                            idx=[it.get("i") for it in items])         # 표 #30: 줄 종류 초안(세 증거) — 사람 칸은 비워 둔다
+    for l, kd in zip(lines, kinds):
+        l["_kind_draft"] = kd
     todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share", "form"]
     return {"id": vid, "dur": pr.get("duration"), "fps": pr.get("fps"), "size": [pr.get("w"), pr.get("h")],
             "title_lines": [], "source_label": None, "form": None, "_form_vocab": "형식(유형) 한 낱말 — 예 리액션·랭킹·사연·정보·리뷰(rules-05, 형식별 집계)",
@@ -955,6 +959,71 @@ def write_state4(chan_dir: Path, ids: list, tear_root: Path | None = None) -> di
     kd = chan_dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
     (kd / "4상태.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    return out
+
+
+KIND_SIM = 0.62          # 받아쓰기 부분 유사(줄 글자 중 겹친 비율) 문턱(1주차 자료와 같은 값)
+KIND_GAP_S = 1.01       # 줄 앞뒤 이 초 안 구절까지 본다
+KIND_Y_FRAC = 0.03      # y 군집 폭(화면 높이 비)
+KIND_COLOR = 40         # 채움색 같은 군집(채널 최대 차)
+KIND_GROUP_RATE = 0.6   # 군집 안 받아쓰기 일치 줄 비율 ≥ 이 값이면 '말과 같은 자막'
+
+
+def _segments(transcript: dict) -> list:
+    sg = (transcript or {}).get("segments") or []
+    if isinstance(sg, str):            # 옛 뜯기는 구절 목록을 글로 저장했다
+        import ast
+        try:
+            sg = ast.literal_eval(sg)
+        except (ValueError, SyntaxError):
+            sg = []
+    return [x for x in sg if isinstance(x, dict) and x.get("text")]
+
+
+def line_kind_draft(lines: list, transcript: dict, text_fx: dict, H: int, idx: list | None = None) -> list:
+    """자막 줄 종류 초안 — 판단 한 곳(표 #30, Jev 해결 0.68·위험 0.43 · 11-06). 증거 셋:
+    ① 받아쓰기 부분 유사(±1.01초 구절 글과 겹친 글자 ÷ 줄 글자) ② y 군집(±0.03H) ③ 채움색(text_fx.per_crop, idx = 줄의 뜯기 자막 번호).
+    (y, 색) 군집마다 일치 줄 비율 ≥0.6 → '말과 같은 자막(대사·나레)', 아니면 '말과 다른 자막(해설·효과)'. 받아쓰기 없으면 '군집만'.
+    사람 칸(speaker·layer)은 안 채운다 — 초안 _kind_draft 로만. 받아쓰기가 배경 노래 가사일 수 있다(11-06 fFhPI 실측)."""
+    import difflib
+    seg = _segments(transcript)
+    nz = lambda t: re.sub(r"[^가-힣A-Za-z0-9]", "", str(t or ""))  # noqa: E731
+    fills = {int(c["caption"]): c.get("fill_rgb") for c in (text_fx or {}).get("per_crop") or [] if c.get("fill_rgb") and c.get("caption") is not None}
+    ys = [((l.get("y") or [None])[0]) for l in lines]
+    ygroups, cgroups = [], []
+
+    def grp(val, groups, close):
+        for k, g in enumerate(groups):
+            if close(val, g):
+                return k
+        groups.append(val)
+        return len(groups) - 1
+    out = []
+    for k, l in enumerate(lines):
+        a = nz(l.get("text"))
+        part = None
+        if seg:
+            near = "".join(x["text"] for x in seg if float(x["start"]) < float(l["t1"]) + KIND_GAP_S and float(x["end"]) > float(l["t0"]) - KIND_GAP_S)
+            b = nz(near)
+            m = sum(q.size for q in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks())
+            part = round(m / max(1, len(a)), 2)
+        yg = grp(ys[k], ygroups, lambda v, g: v is not None and g is not None and abs(v - g) <= KIND_Y_FRAC * H) if ys[k] is not None else None
+        col = fills.get(idx[k]) if idx and k < len(idx) else None
+        cg = grp(col, cgroups, lambda v, g: max(abs(int(p) - int(q)) for p, q in zip(v, g)) <= KIND_COLOR) if col else None
+        out.append({"asr_part": part, "y_group": yg, "color_group": cg})
+    by = {}
+    for o in out:
+        by.setdefault((o["y_group"], o["color_group"]), []).append(o)
+    for key, os_ in by.items():
+        parts = [o["asr_part"] for o in os_ if o["asr_part"] is not None]
+        if not parts:
+            guess, why = "군집만(받아쓰기 없음)", "받아쓰기 없음 — y·색 군집만"
+        else:
+            rate = sum(p >= KIND_SIM for p in parts) / len(parts)
+            guess = "말과 같은 자막(대사·나레)" if rate >= KIND_GROUP_RATE else "말과 다른 자막(해설·효과)"
+            why = f"군집 y{key[0]}·색{key[1]} {len(parts)}줄 중 받아쓰기 일치(≥{KIND_SIM}) {rate:.0%} — 받아쓰기가 노래 가사면 '다른 자막'으로 나온다(눈으로 확인)"
+        for o in os_:
+            o.update({"guess": guess, "why": why})
     return out
 
 
