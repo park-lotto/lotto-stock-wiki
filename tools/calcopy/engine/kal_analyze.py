@@ -248,7 +248,8 @@ def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None 
                       "words": [{"t0": round(float(w["start"]), 2), "t1": round(float(w["end"]), 2), "text": w.get("text")} for w in words
                                 if float(w["start"]) < t1 and float(w["end"]) > t0],
                       "loud": loud[int(t0 / LOUD_STEP_S):max(int(t0 / LOUD_STEP_S) + 1, int(t1 / LOUD_STEP_S))] if loud else None,
-                      "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)"})
+                      "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)",
+                      **({"_jimun": "통째 괄호 = 지문 줄로 보임(우리 대본에선 TTS 하지 않는 자막만 — 눈으로 확인)"} if is_stage_direction(text) else {})})
     todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share", "form"]
     return {"id": vid, "dur": pr.get("duration"), "fps": pr.get("fps"), "size": [pr.get("w"), pr.get("h")],
             "title_lines": [], "source_label": None, "form": None, "_form_vocab": "형식(유형) 한 낱말 — 예 리액션·랭킹·사연·정보·리뷰(rules-05, 형식별 집계)",
@@ -857,6 +858,15 @@ EYE_FRAME_H = 240       # 띠 그림 한 칸 높이(px)
 EYE_F0_H = 480          # 0초 그림 한 칸 높이 — 표지 글을 읽을 수 있게
 EYE_COLS = 4            # 띠 그림 가로 칸 수 — 넘으면 다음 줄로(한 줄 12칸은 1만 px 넘게 길어져 보는 쪽에서 작게 줄어든다 · 실측 13896×240)
 F0_KINDS = ("card", "scene")
+
+
+_PAREN_LINE = re.compile(r"^\s*[\(（\[［【][^\)）\]］】]*[\)）\]］】]\s*$")
+
+
+def is_stage_direction(text) -> bool:
+    """지문 줄 = 줄 통째가 괄호(표 #230, Jev 해결 0.54·0.54·위험 0.28·0.27 · 11-06). 판단 한 곳 — 줄판독 초안·make 관문이 부른다.
+    줄 일부 괄호는 지문이 아니다(벤치 3235줄 실측: 통째 4줄 = '(바로 퀵 전화해봄)' 지문 / 일부 11줄 = 'PPL(광고)' 뜻풀이)."""
+    return bool(_PAREN_LINE.match(str(text or "")))
 
 
 def cut_in_line(c: float, t0: float, t1: float) -> bool:

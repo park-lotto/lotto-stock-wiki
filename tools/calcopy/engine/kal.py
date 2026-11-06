@@ -866,6 +866,18 @@ def glyph_gate(pdir: Path, wdir: Path) -> list[str]:
     return out
 
 
+def paren_gate(wdir: Path) -> list[str]:
+    """(표 #230 · Jev 해결 0.54·위험 0.28) 렌더 전 — 대본 TTS 줄(원음 줄 제외)이 통째 괄호(지문)면 줄 번호·글. 판단 = kal_analyze.is_stage_direction."""
+    from tools.calcopy.engine.kal_analyze import is_stage_direction
+    sp = wdir / "대본.json"
+    if not sp.exists():
+        return []
+    S_ = json.loads(sp.read_text(encoding="utf-8"))
+    return [f"{i + 1}줄 {str(l.get('tts') or l.get('text') or l.get('line'))[:30]!r}"
+            for i, l in enumerate(S_.get("lines") or S_.get("spine55") or [])
+            if isinstance(l, dict) and l.get("kind") != "orig" and is_stage_direction(l.get("tts") or l.get("text") or l.get("line"))]
+
+
 def step_make(S: State):
     """제작 — 판단 주인 preset_make.make_one 을 부른다(make-00 Jev 해결 0.88 · 구현 방식 해결 0.74). 입력 = copy 단계 프리셋 폴더 + --work 작업 폴더(대본.json·재료.json).
     출력 = final.mp4 + 우리줄.json(kal_analyze.ours_from_preset_make). make_one 미달·멈춤 = failed. --ours-mp4 직접 넣기는 렌더 기록(_rendered)이 있을 때만."""
@@ -890,6 +902,9 @@ def step_make(S: State):
     miss = glyph_gate(Path(pdir), Path(wd))
     if miss:
         return "failed", {}, f"판 글꼴에 없는 대본 글자 — {miss[:6]} (글꼴 몰래 바꾸기 금지 · make-화면자막-06)"
+    jm = paren_gate(Path(wd))
+    if jm:
+        return "failed", {}, f"TTS 줄이 통째 괄호(지문) — {jm[:6]} · 지문은 TTS 하지 않는다(그 줄을 원음 줄 kind=orig 로 두거나 대본에서 뺀다 — preset_make 는 빈 tts 를 자막 글로 읽는다) — 표 #230"
     from types import SimpleNamespace
     from tools.calcopy.engine import preset_make
     a = SimpleNamespace(plan=False, allow_tts=True, tts=None, test=True, out=str(Path(wd) / f"kal_make_{time.strftime('%m%d_%H%M%S')}"), tag=None, cache=None,   # common-10: 매번 새 이름(지난 편 덮어쓰기 금지)
