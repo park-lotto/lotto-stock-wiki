@@ -43,6 +43,9 @@ def test_registered_key_buys_free_usage(store):
 def test_unregistered_customer_is_still_charged(store):
     """키를 안 낸 회원은 그대로 과금 — 면제는 '키를 낸 사람'만."""
     for svc in keyroute.WIRED:
+        if svc in keyroute.FREE_POOL:                        # 제미나이 = 전 회원 무료 공용 풀(관제 334)
+            assert keyroute.should_charge(store, 99, svc) is False, svc
+            continue
         assert keyroute.should_charge(store, 99, svc) is True, svc
 
 

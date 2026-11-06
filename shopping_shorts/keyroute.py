@@ -515,6 +515,9 @@ def borrow_status(store, limit_per_key=BORROW_PER_KEY, month=None):
             "used": sum(used.values()), "left": left}
 
 
+FREE_POOL = (SVC_GEMINI,)   # 키 등록과 무관하게 포인트를 안 깎는 공용 풀(should_charge 참조)
+
+
 def should_charge(store, customer_id, service):
     """포인트를 깎아야 하는가. 사용자 키를 쓰면 안 깎는다.
 
@@ -533,6 +536,13 @@ def should_charge(store, customer_id, service):
             return False
     except Exception as e:                      # noqa: BLE001 — 면제 조회 실패로 작업을 막지 않는다
         logging.warning("면제 조회 실패(과금으로 진행): %r", e)
+    # ★제미나이 = 전 회원 무료 공용 풀(2026-11-06 사장님 "공용풀로 줘 — 제미니 많이 등록돼 있고
+    #   안 쓰는 회원이 대부분", 관제 334). 종전엔 회원 제미나이 키가 없으면 영상제작 3P·대본 0.1P를
+    #   깎아, 버텍스까지 등록한 회원(717 박영상)이 100P를 33편에 다 쓰고 402로 막혔다.
+    #   풀은 이미 사장님 키 + 회원 키 합류(gemini_keys)라 키 주인과 무관하게 같은 풀을 쓴다 →
+    #   과금도 키 등록 여부와 무관하게 0. 차감·환불·화면 표시가 전부 이 함수를 부르므로 여기 한 곳.
+    if service in FREE_POOL:
+        return False
     if not uses_customer_key(service):
         return True
     _, is_user = keys_for(store, customer_id, service)

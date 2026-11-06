@@ -75,12 +75,13 @@ def test_owner_is_not_refunded(store):
 
 
 def test_legacy_job_without_amount_still_refunds(store):
-    """mix_charged가 없는 옛 job(배포 직후 진행 중이던 것)은 종전 동작으로 환불한다.
-    구멍은 남지만 몇 분이면 사라지고, 고객이 손해 보는 쪽으로 실패하지 않는다."""
+    """mix_charged가 없는 옛 job은 환불 시점에 다시 판단한다.
+    ★2026-11-06(관제 334) 제미나이 공용 풀 = 영상제작 무과금 → 재판단도 '안 깎임'이라 환불 없음.
+      (그날 이후 job은 전부 mix_charged를 저장하므로 실제로 깎인 job은 저장 액수로 환불된다)"""
     points.add(store, 9, 1000)
     before = points.balance(store, 9)
     mp._refund_mix_points(store, 9, "2026-08-24")          # charged 인자 없음
-    assert points.balance(store, 9) == before + pricing.cost(store, pricing.OP_MIX)
+    assert points.balance(store, 9) == before, "안 깎는 서비스인데 환불로 포인트가 생겼다"
 
 
 def test_charge_reports_actual_amount():

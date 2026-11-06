@@ -52,7 +52,17 @@ def store(tmp_path, _master_key):
 def test_lens_charges_when_owner_key(store, monkeypatch):
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
     points.add(store, 4, 1000)
-    assert keyroute.should_charge(store, 4, keyroute.SVC_GEMINI) is True
+    assert keyroute.should_charge(store, 4, keyroute.SVC_SERPAPI) is True
+
+
+def test_gemini_is_free_pool_without_own_key(store, monkeypatch):
+    """2026-11-06 사장님 "공용풀로 줘"(관제 334) — 제미나이 키가 없어도 대본·영상제작 차감 0.
+    실사고: 717 박영상(버텍스만 등록)이 100P를 33편에 다 쓰고 0.8P로 402."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    points.add(store, 4, 80)                                  # 0.8P — 3P 영상제작 못 하던 잔액
+    assert keyroute.should_charge(store, 4, keyroute.SVC_GEMINI) is False
+    store.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
+    assert keyroute.should_charge(store, 4, keyroute.SVC_GEMINI) is False
 
 
 def test_script_free_with_user_key(store, monkeypatch):
@@ -114,10 +124,13 @@ def charge(tmp_path, monkeypatch, _master_key):
     return app_mod._charge_or_402, Store(db)
 
 
+# ★차감 장치 시험은 계속 과금되는 서비스(SerpApi)로 한다 — 제미나이는 2026-11-06부터 무료 공용 풀(관제 334)
+
+
 def test_charge_returns_none_when_balance_enough(charge):
     _charge_or_402, st = charge
     points.add(st, 4, 1000)
-    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
 
 
 def test_charge_actually_deducts(charge):
@@ -125,7 +138,7 @@ def test_charge_actually_deducts(charge):
     _charge_or_402, st = charge
     points.add(st, 4, 1000)
     before = points.balance(st, 4)
-    assert _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_SERPAPI) is None
     after = points.balance(st, 4)
     assert before - after == pricing.cost(st, pricing.OP_MIX)
     assert after == 1000 - pricing.cost(st, pricing.OP_MIX)
@@ -137,7 +150,7 @@ def test_charge_deducts_each_call(charge):
     points.add(st, 4, 1000)
     unit = pricing.cost(st, pricing.OP_MIX)
     for n in (1, 2, 3):
-        assert _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_GEMINI) is None
+        assert _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_SERPAPI) is None
         assert points.balance(st, 4) == 1000 - unit * n
 
 
@@ -146,7 +159,7 @@ def test_charge_402_when_insufficient(charge):
     from starlette.responses import JSONResponse
     _charge_or_402, st = charge
     points.add(st, 4, 5)                       # OP_MIX(300)보다 적다
-    resp = _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    resp = _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_SERPAPI)
     assert isinstance(resp, JSONResponse)
     assert resp.status_code == 402
     assert points.balance(st, 4) == 5, "실패했는데 잔액이 줄면 안 된다"
@@ -156,7 +169,7 @@ def test_402_body_has_need_and_have(charge):
     """402 body에 필요·보유 포인트가 화면 단위로 들어간다."""
     _charge_or_402, st = charge
     points.add(st, 4, 5)
-    body = _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_GEMINI).body.decode()
+    body = _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_SERPAPI).body.decode()
     assert '"ok":false' in body.replace(" ", "")
     need = pricing.to_display(pricing.cost(st, pricing.OP_MIX))
     assert f"필요 {need}P" in body
@@ -179,7 +192,7 @@ def test_charge_owner_cid_zero_not_charged(charge):
       자기한테 청구하는 꼴이기 때문. 여기도 같은 결과여야 한다."""
     _charge_or_402, st = charge
     assert points.balance(st, 0) == 0
-    assert _charge_or_402(0, pricing.OP_MIX, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(0, pricing.OP_MIX, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 0) == 0
 
 
@@ -196,7 +209,7 @@ def test_charge_uses_admin_price_setting(charge):
     _charge_or_402, st = charge
     st.set_setting("point_cost_lens", "250")
     points.add(st, 4, 1000)
-    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) == 750
 
 
@@ -215,9 +228,9 @@ def test_refund_restores_points(refund):
     """★깎았다가 실패하면 원래 잔액으로 돌아온다 — 크레딧 환불과 대칭."""
     _charge, _refund_points, st = refund
     points.add(st, 4, 1000)
-    assert _charge(4, pricing.OP_SCRIPT, keyroute.SVC_GEMINI) is None
+    assert _charge(4, pricing.OP_SCRIPT, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) < 1000
-    _refund_points(4, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+    _refund_points(4, pricing.OP_SCRIPT, keyroute.SVC_SERPAPI)
     assert points.balance(st, 4) == 1000
 
 
@@ -233,7 +246,7 @@ def test_refund_noop_for_user_key(refund):
 def test_refund_noop_for_owner(refund):
     """cid 0(사장님)은 안 깎았으니 환불도 없다."""
     _charge, _refund_points, st = refund
-    _refund_points(0, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _refund_points(0, pricing.OP_MIX, keyroute.SVC_SERPAPI)
     assert points.balance(st, 0) == 0
 
 
@@ -243,7 +256,7 @@ def test_refund_survives_db_error(refund, monkeypatch):
     monkeypatch.setattr(points, "refund",
                         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("DB 락")))
     points.add(st, 4, 1000)
-    _refund_points(4, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)   # 안 터져야 한다
+    _refund_points(4, pricing.OP_SCRIPT, keyroute.SVC_SERPAPI)   # 안 터져야 한다
 
 
 def test_refund_wired_wherever_credit_refunded():
@@ -315,3 +328,12 @@ def test_prewarm_not_charged():
     from pathlib import Path
     from shopping_shorts import prewarm
     assert "_charge_or_402" not in Path(prewarm.__file__).read_text(encoding="utf-8")
+
+
+def test_gemini_mix_never_402_on_low_balance(charge):
+    """관제 334 — 0.8P 남은 회원(717 실사고)도 영상제작·대본이 402 없이 통과, 잔액 그대로."""
+    _charge_or_402, st = charge
+    points.add(st, 4, 80)
+    assert _charge_or_402(4, pricing.OP_MIX, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_SCRIPT, keyroute.SVC_GEMINI) is None
+    assert points.balance(st, 4) == 80, "제미나이 공용 풀인데 포인트가 깎였다"
