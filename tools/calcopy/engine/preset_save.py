@@ -306,6 +306,10 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     mf = frame.get("made_from") or {}
     slug, style = slug_style(preset_dir)
     M.update({"slug": slug, "style": style, "updated_at": now, "variables": variables(preset)})
+    try:        # 꾸러미 목록엔 저장소 기준 상대경로만 — 절대경로면 회원 꾸러미가 빌림 자리 밖 파일을 가리킨다(11-06 member_check ✗ 샥탬판·두유노판)
+        tteutgi_path = Path(tteutgi_path).resolve().relative_to(ROOT).as_posix()
+    except (ValueError, TypeError, OSError):
+        tteutgi_path = str(tteutgi_path)
     M["sources"].append({"id": source_id, "tteutgi": tteutgi_path, "engine": J.get("engine"), "measured_at": J.get("measured_at"),
                          "frame_tool": mf.get("tool"), "font": mf.get("font"), "font_confidence": mf.get("font_confidence"),
                          "notes": mf.get("notes") or [], "unknown": J.get("unknown") or [], "excluded_layers": list(exclude),
