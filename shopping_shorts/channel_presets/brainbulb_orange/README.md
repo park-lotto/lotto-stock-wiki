@@ -11,7 +11,7 @@
 - `밈팩/` 통째로 — **`밈팩/_meta/emotions.json`(밈 감정 표, 숏템메이커 서버에서 받은 것) 포함**. 없으면 감정을 설명 낱말로 고르는 옛 방식으로 돈다
 - `효과음/` (효과음 82개 — make 의 `--sfx-dir`, 11-06 천원중국빵 폴더에서 옮김) · `이슈후보/` · 확정·진행 중 편 폴더
 - 키: `~/.volcano/keys/evolink`(그림) · `typecast`(목소리) — 키 값은 채팅에 쓰지 않는다. `~/.volcano/keys/serper` 가 있으면 실제 사진을 자동 검색(헬로2 PC 엔 없음)
-- 제미나이 사진 검수는 트랙 폴더 `.env` 의 `GEMINI_API_KEY`(없으면 `--no-review`, 장면은 Claude 가 눈으로)
+- 사진 검수(제미나이)는 이 프리셋에서 **끔**(spec `POLICY_PHOTO_REVIEW = False`, 사장님 11-06 — 생성 그림을 늘 반려해 4회 헛돎). 키가 있어도 안 돈다. 장면은 Claude 가 컷 모음 그림으로 눈으로 본다
 - 엔진 코드: 그 PC 에서 `git fetch` → `py tools/track.py use 뇌전구오렌지`(폴더 없으면 `git worktree add .tracks/뇌전구오렌지 track/뇌전구오렌지`)
 - 같은 편 폴더를 두 PC 에서 동시에 돌리지 않는다
 

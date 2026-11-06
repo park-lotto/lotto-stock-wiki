@@ -33,6 +33,12 @@ def images(job, d, wd, kw):
         #   (실측 2026-09-13: computer screen을 막으니 digital sign으로, 그걸 막으니 또 다른
         #    표현으로 나왔다. 검수는 «종합주가지수 -2,886.83 신한투자증권»을 읽어내 반려했다).
         #   볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
+        # ★프리셋이 검수를 끄면(spec.POLICY_PHOTO_REVIEW=False) 키가 있어도 안 돈다 — 판단 주인 = 여기 한 곳.
+        #   brainbulb_orange 는 그림이 전부 생성 그림이라 「사진인가」가 늘 반려, 「대상 특정」이 기사 실명 기관에도
+        #   걸려 4회 돌고 하나도 못 고쳤다(11-06 코레일 편 7/7 반려 ×4, 약 20분) → 사장님 11-06 "이 검수 생략".
+        if reviewer is not None and not getattr(spec, "POLICY_PHOTO_REVIEW", True):
+            log("[brainbulb.images] 사진 검수 생략 — 프리셋 설정(POLICY_PHOTO_REVIEW=False)")
+            reviewer = None
         if reviewer is not None:
             topic = ((d["script"]["script"].get("title") or {}).get("h1") or "")
             searched = _images.searched_map(files)   # 「검색 진짜 됐나」 — 기록만 한다
