@@ -22,6 +22,31 @@ EMOTION_WORDS = {"경악/충격": ["놀란", "놀라", "충격", "경악", "눈�
                  "만족/엄지척": ["만족", "엄지", "흐뭇", "미소", "뿌듯"], "무표정/멍": ["멍하", "무표정", "멍한"],
                  "분노": ["분노", "화난", "화를", "으르렁", "성난"], "슬픔/울음": ["슬픈", "슬퍼", "울고", "눈물", "울먹"],
                  "피곤/지침": ["피곤", "지친", "하품", "졸린", "축 처"]}
+# 대본 밈 칸 감정(spec.EMOTIONS) → 숏템메이커 밈 감정(서버 scene_assets.tone 12가지, 밈팩 _meta/emotions.json).
+#   사장님 11-06 "숏템메이커에 감정분류가 되어있을텐데" — 설명 낱말 맞추기(후보 66%가 어느 감정에도 안 걸렸다) 대신 이 표로 고른다.
+#   앞쪽 감정이 먼저(첫 감정에 후보가 있으면 그것만), 없으면 뒤 감정, 그래도 없으면 설명 낱말, 그래도 없으면 아무 밈.
+TONE_FOR = {
+    "경악/충격": ["충격_입막", "놀람"],
+    "당황": ["당황_멘붕"],
+    "만족/엄지척": ["끄덕_엄지", "감탄_박수"],
+    "무표정/멍": ["의심_황당", "당황_멘붕"],
+    "분노": ["분노_짜증"],
+    "비웃음/조롱": ["웃음"],
+    "슬픔/울음": ["슬픔"],
+    "의심/떨떠름": ["의심_황당", "거절_절레"],
+    "피곤/지침": ["거절_절레", "슬픔"],
+    "기타": [],
+}
+
+
+def tones(pack_dir=None):
+    """밈 키 → 숏템메이커 감정. 표가 없으면 {}(설명 낱말로 고르는 옛 방식으로 돈다)."""
+    p = os.path.join(pack_dir or PACK_DIR, "_meta", "emotions.json")
+    if not os.path.exists(p):
+        return {}
+    return json.load(open(p, encoding="utf-8")).get("tone", {})
+
+
 MOODS = ["놀", "웃", "장난", "메롱", "능글", "의기양양", "씩", "곁눈", "한심", "황당", "멍하", "째려", "노려", "당황", "충격"]
 
 
@@ -108,10 +133,17 @@ def pick(emotions, seed, pack_dir=None):
     if not cands:
         return []
     key = lambda c: hashlib.md5((seed + c[0]).encode()).hexdigest()
+    tone = tones(pack_dir)
     used, out = set(), []
     for emo in emotions:
         words = EMOTION_WORDS.get(emo or "", [])
-        pool = [c for c in cands if c[0] not in used and any(w in c[1].get("what", "") for w in words)]
+        pool = []
+        for t in TONE_FOR.get(emo or "", []):          # 숏템메이커 감정 표 먼저
+            pool = [c for c in cands if c[0] not in used and tone.get(c[0]) == t]
+            if pool:
+                break
+        if not pool:
+            pool = [c for c in cands if c[0] not in used and any(w in c[1].get("what", "") for w in words)]
         if not pool:
             pool = [c for c in cands if c[0] not in used and c[2] > 0] or [c for c in cands if c[0] not in used] or cands
         c = sorted(pool, key=key)[0]                  # 초록 배경·깨진 파일은 candidates 가 이미 뺐다(CHROMA_KEYS·BROKEN_KEYS)
