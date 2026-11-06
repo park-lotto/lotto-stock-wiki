@@ -562,7 +562,7 @@ def band_body(b, cols, o: int, ital: bool) -> tuple[int, int, int]:
 
 
 def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None, cap_word_gap: float | None = None,
-          title_font_fixed: str | None = None) -> dict:
+          title_font_fixed: str | None = None, cap_samples: list | None = None) -> dict:
     """뜯기 → 설명서(검사 전 원본 모양 + notes). frame_img = 틀이 있는 구간의 원본 한 프레임(RGB),
     ocr = {"title": [줄...], "brand": "글"} 또는 None, tail_probe(t)→bool = 그 시각 틀이 있나(없으면 뜯기 값 그대로)."""
     notes = []
@@ -703,6 +703,18 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             ink_h = ink_h - 2 * fxs["outline_px"]
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
+        clu = caption_cluster(fam, fit["size"], items, W, notes)     # 표 #112·#174: 가운데 자막 칸 폭 = 벤치 군집 폭(못 믿으면 옛 상수)
+        if cap_samples:                                               # 표 #174: 크기 = 결과물 겹침이 가장 큰 후보(높이 역산·외곽선 안 뺀 높이·군집 폭 역산)
+            raw_h = fxs.get("line_h_px") or ink_h
+            cands = {"높이 역산": fit["size"], "높이(외곽선 안 뺌)": size_and_top(fam, first, top, raw_h, None)["size"] if raw_h != ink_h else None,
+                     "군집 폭 역산": clu.get("size_from_w")}
+            pk = caption_size_pick(fam, cands, cap_samples)
+            if pk.get("pick") and pk["pick"] != "높이 역산":
+                fit = size_and_top(fam, first, top, ink_h * pk["size"] / fit["size"], None)
+                clu = caption_cluster(fam, fit["size"], items, W, [])
+            notes.append(f"자막 크기 {fit['size']} = 겹침 고르기 {pk.get('pick')} {pk.get('scores')}(표본 {pk.get('n', 0)}개, 늘리지 않고 그린 IoU)")
+        else:
+            notes.append("자막 크기 = 높이 역산(겹침 표본 없음 — 원본 영상 없거나 1줄 글 자막 없음)")
         it0 = caption_width_ref(fam, fit["size"], items, notes)
         cap_ls, cap_ws = spacing_and_word_gap(fam, fit["size"], it0["text"][0], it0["widths"][0], cap_word_gap,
                                               [" ".join(i.get("text") or []) for i in items]) if it0 else (0, 0)
@@ -719,6 +731,8 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         boxes = [b for c in (J.get("caption_motion") or {}).get("starts") or []
                  for b in [next((k.get("bbox") for k in c.get("curve") or [] if k.get("bbox")), None)] if b]
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
+        if al["align"] == "center" and clu["trusted"]:
+            al = {**al, "w": clu["w"]}
         ol = fxs.get("outline_px")
         ol_rgb = fxs.get("outline_rgb")
         if frame_img is not None and fxs.get("fill_rgb"):
@@ -739,7 +753,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
                        "outline": {"px": ol, "rgb": ol_rgb} if ol and ol_rgb else None,
                        "shadow": None, "box": ({"rgb": fxs["box"]["color"], "pad": 0, "radius": 0} if fxs.get("box") else None),
                        "italic": False, "letter_spacing": cap_ls if cap_ls is not None else 0, "word_spacing": cap_ws or 0,
-                       "enter": caption_enter_of(J, notes), "emphasis": None})
+                       "enter": caption_enter_of(J, notes), "emphasis": None})   # 군집 값은 notes 에(설명서 스키마는 모르는 키를 거절한다)
         notes.append("자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록")
         if fxs.get("shadow"):
             notes.append(f"자막 그림자 {fxs['shadow']} — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)")
@@ -870,6 +884,117 @@ def caption_width_ref(fam: str, size: float, items: list, notes: list) -> dict |
     return first
 
 
+UI_SAFE_FRAC = 0.86     # 쇼츠 오른쪽 아이콘·아래 글에 안 가리는 가로 폭 비 — 고객 라인 video_assemble._SAFE_W 와 같은 값(기록용, 판단은 벤치 군집)
+CLUSTER_N_P99 = 10      # 줄 폭 분포를 대역(p99)으로 말하는 최소 표본 — 그 밑은 최대값(1주차 대조 #12: n<10 대역 금지)
+
+
+def caption_cluster(fam: str, size: float, items: list, W: int, notes: list) -> dict:
+    """자막 군집 폭 — 판단 한 곳(표 #112·#174, Jev 해결 0.73·위험 0.47 · 11-06). 벤치 1줄 자막 잰 폭 분포로 자막 칸 폭을 정한다.
+    잰 폭을 믿는 조건 = caption_width_ref 와 같다(그 함수를 부른다). 못 믿으면 옛 상수 W−2×SIDE_PAD + 사유.
+    함께 기록: 폭 역산 크기(그 글꼴로 그린 폭 대비 — 높이 역산 크기와 어긋나면 글꼴·자간이 다르다는 증거) · UI 안전 폭 넘음.
+    11-06 스냅봤니 실측: 벤치 최대 폭 1015·975·950·1014, 손으로 고친 판 자막 칸 w 1014(자동 1000 아님)."""
+    base = W - 2 * SIDE_PAD
+    one = [it for it in items if it.get("text") and it.get("widths") and int(it.get("lines") or 1) == 1 and it["widths"][0]]
+    trust = caption_width_ref(fam, size, items, []) is not None
+    out = {"n": len(one), "trusted": trust, "safe_w": round(UI_SAFE_FRAC * W)}
+    if not trust:
+        out.update({"w": base, "stat": None, "why": "잰 폭을 못 믿음(caption_width_ref 조건 — 폭 ≥" f"{CAP_W_MIN}px 3개 미만이거나 잰 폭이 글 길이를 안 따름)",
+                    "size_from_w": None, "over_safe": None})
+        notes.append(f"자막 칸 폭 {base}(상수) — {out['why']}")
+        return out
+    ws = sorted(it["widths"][0] for it in one)
+    if len(ws) >= CLUSTER_N_P99:
+        w, stat = float(np.percentile(ws, 99)), "p99"
+    else:
+        w, stat = float(ws[-1]), "max"
+    font = _pil_font(fam, size)
+    rs = sorted(size * it["widths"][0] / font.getlength(it["text"][0]) for it in one if font.getlength(it["text"][0]) > 0)
+    sfw = round(rs[len(rs) // 2], 1) if rs else None
+    out.update({"w": int(min(W, round(w))), "stat": stat, "size_from_w": sfw, "over_safe": w > out["safe_w"]})
+    notes.append(f"자막 칸 폭 {out['w']}px = 벤치 1줄 자막 {len(ws)}개 잰 폭 {stat}(상수 {base} 대신)"
+                 + (f" · UI 안전 폭 {out['safe_w']}px 넘음(벤치가 그렇게 씀)" if out["over_safe"] else "")
+                 + (f" · 폭으로 역산한 크기 {sfw} vs 높이 역산 {size}({(sfw / size - 1) * 100:+.0f}%)" if sfw else ""))
+    return out
+
+
+CAP_PICK_N = 5          # 크기 고르기 겹침 표본 자막 수(1줄·글 있는 것, 고르게)
+CAP_PICK_COLOR = 45     # 채움색 거리(최대 채널 차) 문턱 — 이 안이면 채움 후보 픽셀
+
+
+def caption_fill_mask(img: np.ndarray, fill_rgb, outline_rgb=None) -> np.ndarray | None:
+    """자막 줄 크롭(RGB) → 채움 글자 마스크(bbox 로 자름). 채움색 가까운 픽셀 중 외곽선 색 옆(있으면)·30px 넘는 덩어리만 — 영상 속 같은 색을 덜 잡는다."""
+    a = img.astype(np.int16)
+    m = np.abs(a - np.array(fill_rgb, np.int16)).max(axis=2) <= CAP_PICK_COLOR
+    import cv2
+    if outline_rgb is not None:
+        ol = np.abs(a - np.array(outline_rgb, np.int16)).max(axis=2) <= CAP_PICK_COLOR + 15
+    else:                     # 외곽선 색을 모르면 채움과 반대 밝기(밝은 채움 → 어두운 픽셀) 옆만
+        ol = a.max(axis=2) < 80 if sum(fill_rgb) > 382 else a.min(axis=2) > 175
+    m &= cv2.dilate(ol.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
+    n, lab, st_, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8))
+    keep = np.isin(lab, [k for k in range(1, n) if st_[k, 4] > 30])
+    ys, xs = np.where(keep)
+    if len(ys) < 200:
+        return None
+    return keep[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+
+
+def _iou_unstretched(a: np.ndarray, b: np.ndarray) -> float:
+    H, Wd = max(a.shape[0], b.shape[0]), max(a.shape[1], b.shape[1])
+    P = np.zeros((H, Wd), bool); Q = np.zeros((H, Wd), bool)
+    P[:a.shape[0], :a.shape[1]] = a; Q[:b.shape[0], :b.shape[1]] = b
+    return float((P & Q).sum() / max(1, (P | Q).sum()))
+
+
+def caption_size_pick(fam: str, cands: dict, samples: list) -> dict:
+    """자막 크기 고르기 — 판단 한 곳(표 #174, Jev 해결 0.70·0.71·위험 0.37·0.39 · 11-06). 후보 크기마다 같은 글꼴로 **늘리지 않고** 그려
+    벤치 프레임 자막 채움과 겹친다(IoU, 위·왼쪽 맞춤) → 표본 중앙값이 가장 큰 후보. samples = [(채움 마스크, 글)].
+    11-06 스냅봤니 Z95 실측: 39.2 → 0.123 · 52.8 → 0.171 · 62(손 판) → 0.239 · 66.5 → 0.387 · 67.4(폭 역산) → 0.558."""
+    from PIL import Image, ImageDraw
+    sc = {}
+    for name, size in cands.items():
+        if not size:
+            continue
+        f = _pil_font(fam, size)
+        vals = []
+        for ref, txt in samples:
+            l, t, r, b = f.getbbox(txt)
+            im = Image.new("L", (int(r - l) + 40, int(b - t) + 40), 0)
+            ImageDraw.Draw(im).text((20 - l, 20 - t), txt, font=f, fill=255)
+            a = np.array(im) > 127
+            ys, xs = np.where(a)
+            if len(ys):
+                vals.append(_iou_unstretched(a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], ref))
+        if vals:
+            sc[name] = (round(float(np.median(vals)), 3), float(size))
+    if not sc:
+        return {"pick": None, "scores": {}, "why": "겹침 표본 없음"}
+    best = max(sc, key=lambda k: sc[k][0])
+    return {"pick": best, "size": sc[best][1], "scores": {k: v[0] for k, v in sc.items()}, "n": len(samples)}
+
+
+def caption_samples(src: str, J: dict, W: int, H: int) -> list:
+    """크기 고르기 표본 — 1줄·글 있는 자막 CAP_PICK_N 개(고르게)의 가운데 시각 프레임에서 자막 줄을 잘라 채움 마스크로."""
+    from shopping_shorts.channelkit.bench import probe
+    fxs = (J.get("text_fx") or {}).get("summary") or {}
+    fill = fxs.get("fill_rgb")
+    if not fill:
+        return []
+    items = [i for i in (J.get("captions") or {}).get("items") or [] if i.get("text") and int(i.get("lines") or 1) == 1 and i.get("top_y") is not None]
+    if not items:
+        return []
+    pick = [items[int(round(k))] for k in np.linspace(0, len(items) - 1, min(CAP_PICK_N, len(items)))]
+    lh = fxs.get("line_h_px") or 60
+    out = []
+    for it in pick:
+        y0, y1 = int(max(0, it["top_y"] - 20)), int(min(H, it["top_y"] + lh + 30))
+        img = probe.grab(src, (it["t0"] + it["t1"]) / 2, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
+        m = caption_fill_mask(img, fill, None) if img is not None else None     # 분석기 요약 외곽선 색은 못 믿는다(위 주석 OE11·mY) — 반대 밝기로
+        if m is not None:
+            out.append((m, it["text"][0]))
+    return out
+
+
 def refine_tail(is_framed, t0: float, t1: float, step: float = 0.1) -> float | None:
     """[t0,t1) 를 step 간격으로 보며 틀이 있는 마지막 시각 + step = 틀이 사라지는 시각. 처음부터 없으면 None."""
     last = None
@@ -944,7 +1069,7 @@ def main(argv=None):
         probe_fn = lambda t: (lambda f: f is not None and framed(f, rows, L["bg_rgb"]))(probe.grab(src, t, f"scale={W}:{H}", W, H))  # noqa: E731
     pol = L.get("ink_polarity") or "dark"            # build 의 자막 극성과 같은 값
     gap = caption_word_gap(src, J, W, H, pol) if src and Path(src).exists() else None
-    F = build(J, img, ocr, probe_fn, gap, title_font_fixed=a.title_font)
+    F = build(J, img, ocr, probe_fn, gap, title_font_fixed=a.title_font, cap_samples=caption_samples(src, J, W, H) if src and Path(src).exists() else None)
     if err:
         F["made_from"]["notes"].append(f"고정 띠 OCR 실패: {err}")
     if ocr:
