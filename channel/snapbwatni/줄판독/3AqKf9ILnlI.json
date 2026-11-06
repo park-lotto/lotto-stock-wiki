@@ -1,0 +1,1538 @@
+{
+ "id": "3AqKf9ILnlI",
+ "dur": 20.533,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "육교 위에서 건넨",
+   "colors": [
+    {
+     "word": "육교 위에서 건넨",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    312,
+    393
+   ],
+   "x": [
+    140,
+    834
+   ]
+  },
+  {
+   "text": "세상 가장 아름다운 마중",
+   "colors": [
+    {
+     "word": "세상 가장 아름다운 마중",
+     "hex": "#FA3DA6"
+    }
+   ],
+   "y": [
+    406,
+    491
+   ],
+   "x": [
+    89,
+    987
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   517,
+   1080,
+   1401
+  ],
+  "below_window": "y1401~1919 흰 빈칸(글 없음)",
+  "caption_band": [
+   1028,
+   1100
+  ],
+  "title_y": [
+   [
+    312,
+    393
+   ],
+   [
+    406,
+    491
+   ]
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": [
+   194,
+   346
+  ],
+  "logo_x": [
+   109,
+   408
+  ],
+  "logo": "초록 개구리 그림 + 'Snap_This!'(y214~243, #3AB348) + '스냅봤니'(y259~288) — UMaw 와 같은 자리",
+  "bg_hex": "#FFFFFF",
+  "watermark": {
+   "present": false,
+   "alpha": null
+  },
+  "_basis": "0.5초 프레임 행별 비백색 비율·픽셀 중앙값(뼈대 창 884 는 뜯기 오측 — 실측 1401)"
+ },
+ "lines": [
+  {
+   "t0": 0.067,
+   "t1": 1.033,
+   "speaker": "나레",
+   "text": "날이 저무는 늦은 오후",
+   "layer": "스냅봤니:나레",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     10,
+     0
+    ],
+    [
+     0.033,
+     100,
+     57,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 531,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀 옆얼굴 → 웃음, 0.6초 점프컷",
+   "motion": "cam",
+   "transition": "cut",
+   "fit": 6,
+   "cut_at": [
+    0.6
+   ],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": []
+  },
+  {
+   "t0": 1.1,
+   "t1": 2.233,
+   "speaker": "나레",
+   "text": "한 소녀는 오늘도 육교에서",
+   "layer": "스냅봤니:나레",
+   "role": "다리",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     10,
+     0
+    ],
+    [
+     0.033,
+     100,
+     97,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 604,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀가 손으로 입 가리고 웃음, 1.53초 점프컷",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    1.533
+   ],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "널 만나러 [음악]"
+   ]
+  },
+  {
+   "t0": 2.3,
+   "t1": 3.3,
+   "speaker": "나레",
+   "text": "애타게 누군가를 기다립니다",
+   "layer": "스냅봤니:나레",
+   "role": "다리",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     9,
+     0
+    ],
+    [
+     0.033,
+     100,
+     95,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 688,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀 두 팔 벌리고 웃음(육교 위)",
+   "motion": "zoom_in",
+   "transition": "none",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "널 만나러 [음악]",
+    "가는 길에"
+   ]
+  },
+  {
+   "t0": 3.367,
+   "t1": 4.867,
+   "speaker": "나레",
+   "text": "그건 새벽에 일하러 나간 아빠였습니다",
+   "layer": "스냅봤니:나레",
+   "role": "공개",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     5,
+     0
+    ],
+    [
+     0.033,
+     100,
+     33,
+     0
+    ],
+    [
+     0.067,
+     100,
+     93,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 948,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀가 손 흔들며 환호",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "가는 길에"
+   ]
+  },
+  {
+   "t0": 4.867,
+   "t1": 6.267,
+   "speaker": "불명",
+   "text": "아빠~~아빠!",
+   "layer": "스냅봤니:대사",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "노랑 외침 글(창 위쪽, 반짝이)",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ],
+    [
+     0.033,
+     100,
+     100,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     -1
+    ],
+    [
+     0.1,
+     100,
+     100,
+     -2
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    611,
+    712
+   ],
+   "x": 568,
+   "align": "center",
+   "max_w": 321,
+   "fill_hex": "#EACF20",
+   "font": {
+    "name": "불명(둥근 굵은 손글씨풍 — UMaw 대사 자막과 같은 꼴로 보임)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(노랑 반짝이 ✦ 2~3개)",
+     "t_in": 4.867,
+     "t_out": 6.233,
+     "x": 400,
+     "y": 580,
+     "w": 360,
+     "anim": "글 둘레에서 반짝(크기 깜빡) — 자리 눈대중"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀가 두 팔 흔들며 외침",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "첫 프레임 100%(팝 없음), 위 끝이 633→609 로 1.3초 동안 천천히 올라감(반짝이 포함 잉크). 딸의 외침을 적은 글 — 원음에 외침이 들리는지 확인 못 함(vtt 는 노래 가사만) → 화자 불명"
+  },
+  {
+   "t0": 4.967,
+   "t1": 6.967,
+   "speaker": "나레",
+   "text": "아빠아-! 온 힘을 다해 부르는 딸",
+   "layer": "스냅봤니:나레",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본+낱말 노랑",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     0
+    ],
+    [
+     0.033,
+     100,
+     84,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 660,
+   "align": "center",
+   "max_w": 554,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "아빠아-!",
+     "hex": "#F4E77F",
+     "outline": "#000000 5px"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "소녀가 두 팔 흔들며 외침 → 카메라가 고속도로 쪽으로 돌아감(한 샷 팬)",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66) · '아빠아-!'만 연노랑",
+   "_asr": [
+    "가는 길에",
+    "내에화한",
+    "미순이"
+   ]
+  },
+  {
+   "t0": 7.067,
+   "t1": 8.533,
+   "speaker": "나레",
+   "text": "아빠 역시 단번에 딸을 알아보고는",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     5,
+     0
+    ],
+    [
+     0.033,
+     100,
+     49,
+     0
+    ],
+    [
+     0.067,
+     100,
+     98,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 838,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "고속도로를 내려다보며 손 흔드는 소녀 뒷모습",
+   "motion": "pan",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "미순이"
+   ]
+  },
+  {
+   "t0": 8.733,
+   "t1": 10.2,
+   "speaker": "나레",
+   "text": "딸의 목소리에 답하듯",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     18,
+     0
+    ],
+    [
+     0.033,
+     100,
+     91,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 530,
+   "align": "center",
+   "max_w": 523,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간원+화살표",
+     "t_in": 9.433,
+     "t_out": 10.0,
+     "x": 4,
+     "y": 604,
+     "w": 191,
+     "anim": "첫 프레임 100%(즉시), 화살표 위아래 흔들림(y 604→628), 원 #E4000B 고정, 10.0초 cut"
+    },
+    {
+     "what": "기타(효과 글 '빵빵~~' 분홍 #E7259F+검정 외곽+노랑 반짝이)",
+     "t_in": 9.433,
+     "t_out": 10.533,
+     "x": 124,
+     "y": 865,
+     "w": 182,
+     "anim": "즉시 등장, 위아래 통통(y 865~887), 10.53초 cut"
+    }
+   ],
+   "sfx": {
+    "kind": "기타(트럭 경적 원음 추정)",
+    "t": 9.89,
+    "basis": "파형 솟음"
+   },
+   "scene": "기타",
+   "scene_desc": "먼 고속도로의 트럭(빨간 원·화살표로 가리킴)",
+   "motion": "cam",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    9.3
+   ],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "미순이",
+    "흐르고 있어"
+   ]
+  },
+  {
+   "t0": 10.467,
+   "t1": 11.967,
+   "speaker": "나레",
+   "text": "우렁찬 경적 소리를 내며 반갑게 인사합니다",
+   "layer": "스냅봤니:나레",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     6,
+     0
+    ],
+    [
+     0.033,
+     100,
+     51,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     99,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 997,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "트럭이 전조등 켜고 다가옴",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "흐르고 있어"
+   ]
+  },
+  {
+   "t0": 12.333,
+   "t1": 13.433,
+   "speaker": "나레",
+   "text": "찰나의 순간이지만",
+   "layer": "스냅봤니:나레",
+   "role": "이음",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     6,
+     0
+    ],
+    [
+     0.033,
+     100,
+     77,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 530,
+   "align": "center",
+   "max_w": 460,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(눈알 2개+주황 웃는 입 얼굴 스티커)",
+     "t_in": 12.733,
+     "t_out": 14.867,
+     "x": 430,
+     "y": 760,
+     "w": 180,
+     "anim": "즉시 등장·자리 고정(입 상자 x506~568 y829~875 이 12.73~14.83초 그대로), 즉시 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "트럭 지나감 + 소녀 손",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "흐르고 있어"
+   ]
+  },
+  {
+   "t0": 13.5,
+   "t1": 14.567,
+   "speaker": "나레",
+   "text": "서로를 향한 이 짧은 화답은",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     2,
+     0
+    ],
+    [
+     0.033,
+     100,
+     67,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 676,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(눈알 2개+주황 웃는 입 얼굴 스티커)",
+     "t_in": 12.733,
+     "t_out": 14.867,
+     "x": 430,
+     "y": 760,
+     "w": 180,
+     "anim": "즉시 등장·자리 고정(입 상자 x506~568 y829~875 이 12.73~14.83초 그대로), 즉시 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "소녀 손 흔듦 + 트럭",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "흐르고 있어",
+    "사랑해 너 [음악] 사랑해"
+   ]
+  },
+  {
+   "t0": 14.633,
+   "t1": 15.667,
+   "speaker": "나레",
+   "text": "아빠의 고단함을",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     10,
+     0
+    ],
+    [
+     0.033,
+     100,
+     97,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 427,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(눈알 2개+주황 웃는 입 얼굴 스티커)",
+     "t_in": 12.733,
+     "t_out": 14.867,
+     "x": 430,
+     "y": 760,
+     "w": 180,
+     "anim": "즉시 등장·자리 고정(입 상자 x506~568 y829~875 이 12.73~14.83초 그대로), 즉시 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "트럭 가까이 지나감",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "사랑해 너 [음악] 사랑해"
+   ]
+  },
+  {
+   "t0": 15.733,
+   "t1": 16.967,
+   "speaker": "나레",
+   "text": "잊게 만드는, 세상 가장 따뜻한 인사입니다",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     27,
+     0
+    ],
+    [
+     0.033,
+     100,
+     97,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 976,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "♥",
+     "t_in": 16.1,
+     "t_out": 19.267,
+     "x": 842,
+     "y": 819,
+     "w": 177,
+     "anim": "16.1초 100% → 16.23초 거의 0으로 줄었다가 16.27~16.5초 다시 100%(팝) → 고정, 분홍 번짐 하트 #F0719F, 19.27초 cut"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "트럭 지나가며 소녀 손 흔듦",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "사랑해 너 [음악] 사랑해"
+   ]
+  },
+  {
+   "t0": 17.033,
+   "t1": 18.133,
+   "speaker": "나레",
+   "text": "수백 킬로의 피로를 잊게 만드는 기적",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     18,
+     0
+    ],
+    [
+     0.033,
+     100,
+     96,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 905,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "♥",
+     "t_in": 16.1,
+     "t_out": 19.267,
+     "x": 842,
+     "y": 819,
+     "w": 177,
+     "anim": "16.1초 100% → 16.23초 거의 0으로 줄었다가 16.27~16.5초 다시 100%(팝) → 고정, 분홍 번짐 하트 #F0719F, 19.27초 cut"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "카메라가 육교 위로 돌아감(난간·도로)",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 6,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "사랑해 너 [음악] 사랑해",
+    "하도록 사랑해 He"
+   ]
+  },
+  {
+   "t0": 18.2,
+   "t1": 19.3,
+   "speaker": "나레",
+   "text": "바로 나를 불러주고 알아봐 주는",
+   "layer": "스냅봤니:나레",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     16,
+     0
+    ],
+    [
+     0.033,
+     100,
+     92,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 781,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "♥",
+     "t_in": 16.1,
+     "t_out": 19.267,
+     "x": 842,
+     "y": 819,
+     "w": 177,
+     "anim": "16.1초 100% → 16.23초 거의 0으로 줄었다가 16.27~16.5초 다시 100%(팝) → 고정, 분홍 번짐 하트 #F0719F, 19.27초 cut"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "소녀 뒷모습 + 멀어지는 트럭",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "하도록 사랑해 He"
+   ]
+  },
+  {
+   "t0": 19.4,
+   "t1": 20.533,
+   "speaker": "나레",
+   "text": "사랑하는 가족이 있기 때문인거 같네요",
+   "layer": "스냅봤니:나레",
+   "role": "끝",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     9,
+     0
+    ],
+    [
+     0.033,
+     100,
+     97,
+     0
+    ],
+    [
+     0.067,
+     100,
+     99,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "y": [
+    1036,
+    1100
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 952,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "BMJUA(배민 주아) 후보",
+    "basis": "뜯기 fontmatch 1위 0.89~0.90 + 눈(둥근 획 끝)"
+   },
+   "size_px": 54,
+   "letter_gap_px": 0,
+   "line_gap_px": 0,
+   "outline": {
+    "px": 5,
+    "hex": "#050306"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 7,
+    "hex": "#000000",
+    "basis": "외곽선 밖 어두운 번짐(거리 p90 11.5~12.4px)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "소녀 뒷모습·고속도로",
+   "motion": "cam",
+   "transition": "none",
+   "fit": 6,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": "페이드 등장 — 첫 프레임부터 폭 100%(크기 변화 없음), 밝기 V 219→255·잉크 비가 3프레임에 오름(alpha=잉크 화소 비, 문턱 V>215 근사). 퇴장 cut 뒤 1~3프레임 빈칸. 목소리 없는 글 나레(Jev 0.66)",
+   "_asr": [
+    "하도록 사랑해 He"
+   ]
+  }
+ ],
+ "beats": "훅(0.07~1.0초 '날이 저무는 늦은 오후' — 상황 깔기) → 다리(1.1~3.3초 소녀가 누군가를 기다림) → 공개(3.37초 '그건 새벽에 일하러 나간 아빠였습니다') → 고조(4.97~6.97초 '아빠아-!' 노랑 강조 + 외침 글 + 카메라가 고속도로로 팬) → 증거 장면(8.7~11.97초 트럭에 빨간 원·화살표·'빵빵~~', 경적) → 이음(12.3~15.7초 눈알 스티커, 화답) → 감상(15.7~19.3초 하트) → 끝(19.4~20.5초 '사랑하는 가족이 있기 때문인거 같네요' 감상 맺음, 질문 없음)",
+ "narr_share": "나레(목소리 없는 글) 15/16줄, 18.8초/20.2초 · 소리 = 배경 노래(vtt 가사), 목소리 나레 확인 못 함",
+ "notes": [
+  "목소리 나레 없음으로 봄 — vtt 는 노래 가사('널 만나러 가는 길에','사랑해')만. 글 나레는 speaker=나레(Jev root 0.66·fix 0.52, C:/숏템_칼카피/snapbwatni/work/_jev/q_UMaw3AqK_layers.out). 들어서 확인하지는 못함",
+  "자막 모양이 UMaw 와 다르다: 상자 없음, 흰 글+검정 5px 외곽+어두운 번짐, 등장은 팝이 아니라 페이드(폭 100% 그대로, 3프레임에 밝아짐). 퇴장 cut",
+  "지휘자 관찰과 다른 점: ① 컷 2개가 아니라 5개(0.6·1.533 점프컷, 3.3, 9.3, 12.233) — 3.3~9.3초는 한 샷 안 카메라 팬(소녀→고속도로), 12.2~20.5초도 한 샷(트럭 따라가다 육교로) ② 창이 아래 끝까지 아니고 y517~1401, 그 아래 흰 빈칸 ③ 제목 2줄 끝 'ㅋㅋㅋ' 없음(감동형) ④ 나레 자막 띠 y1028~1100(창 안 가운데보다 아래)",
+  "스티커 5종 5회: 노랑 반짝이(외침 글), 빨간원+화살표(9.43~10.0), '빵빵~~' 분홍 효과 글(9.43~10.53), 눈알 얼굴(12.73~14.87, 자리 고정 — 트럭을 따라가지 않음), ♥ 분홍 번짐(16.1~19.27, 다시 팝). 스티커는 겹치는 나레 줄마다 적음(줄 수 기준 분모)",
+  "강조: 나레 15줄 중 1줄('아빠아-!' 연노랑 #F4E77F — 채도 낮은 노랑, 중앙값)",
+  "효과음: 9.89초 파형 솟음(+17.6dB) = 트럭 경적 원음으로 추정(빨간 원·'빵빵~~'과 같은 때). 그 밖 솟음 없음 — 들어서 확인 못 함",
+  "글꼴 이름(BMJUA)은 fontmatch 후보일 뿐 확정 아님",
+  "enter_curve 측정 도구가 readline_tools 에 없어 scratch 스크립트(프레임 순차 읽기 잉크 폭·수)로 쟀다 — 엔진 요청 대상"
+ ],
+ "name_evidence": [
+  "사람 이름 화면 글자 없음 — '소녀'·'아빠'·'딸'은 나레 글의 일반 명사"
+ ],
+ "_made_by": "kal_analyze.skeleton → 워커 눈 판독(11-06, 픽셀 실측)",
+ "frame0": {
+  "what": "육교 위 소녀 옆얼굴(흰 옷, 땋은 머리), 0.0초엔 자막 없음",
+  "face_frac": 0.2,
+  "text": ""
+ },
+ "frame0_kind": "scene"
+}

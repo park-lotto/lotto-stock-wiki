@@ -2579,6 +2579,9 @@ def ph_plan_got(st, m, rp, u):
     over += RU.material_problems(st["script"]["M"], known, orig_lines, _all_dims(st), _ar(st["version"]))        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     over += p.get("jumps") or []
+    if p.get("warn"):        # 원본 한계(quality_gate.source_limited) — 반려 아님, 경고로 남기고 간다(11-06 짧은 원본 B13 반려 3~8번 되풀이)
+        st.setdefault("warn", []).append({"stage": "plan", "causes": ["원본 한계"], "why": " / ".join(str(x) for x in p["warn"])[:300]})
+        st["log"].append("장면 맞추기 경고(원본 한계): " + " / ".join(str(x) for x in p["warn"])[:300])
     if over and _auto_blur(st, "; ".join(over)) and all("흐림 밖 남의 박힌 글자" in x for x in "; ".join(over).split(" / ") if x.strip()):
         v = st["version"]           # 걸린 것이 남은 글자뿐이면 흐림 칸만 넣고 계획을 다시(Claude 고치기 없이)
         return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": st["script"]["M"]}, "cand_dir": True, "version": v}], "then": "plan"}

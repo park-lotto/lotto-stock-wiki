@@ -490,14 +490,66 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
     return bad
 
 
-def reuse_bad(cuts: list, cand_dir: Path, st: dict) -> tuple[list, dict]:
-    """(판단 주인 — B13 을 재는 한 곳) 계획(runner_ops)과 완성본 검사가 같이 부른다. 10-31 회원 글로스 편: 계획은 옮긴 컷만 보고 통과, 완성본만 L1↔L4 를 잡아 12/13 에서 멈췄다.
+VIDEO_EXT = (".mp4", ".mov", ".webm", ".mkv", ".m4v", ".avi")
+
+
+def source_limited(cuts: list, lens: dict) -> dict | None:
+    """(판단 주인 — 원본 한계: 재료 원본 총 길이로 B13 거리를 지킬 수 있나) lens = 재료 영상 원본 전부의 길이 {이름: 초}.
+    필요 길이 = 영상 컷이 원본에서 쓰는 초 합 + 떨어져야 할 사이 수 × 거리 문턱. 사이 수 = (이어 붙인 앞으로 가기가 아닌 컷 덩어리 수 − 원본 수),
+    문턱 = 원본마다 min(3.0, 0.25×길이) 중 가장 작은 값(적게 잡아 '못 지킨다'를 아끼는 쪽). 필요 > 가진 것이면 {need, have, blocks, files}, 아니면 None.
+    11-06 짧은 원본(10~23초, 원본 1개) 편: 거리 3초를 수학적으로 못 지키는데 3~8번 반려를 되풀이하다 회원 Claude 가 넘기기로 끝냈다
+    (김하영 #8834 · 이부윤 #8978·#9006 · 김효준 #9864 · 이성택 #9390, Jev 해결 0.98·위험 0.30). 겹침(같은 화면 두 번)은 여기와 상관없이 결함이다."""
+    from tools.calcopy.hybrid.render_bench import IMG_EXT
+    have = {k: float(x) for k, x in (lens or {}).items() if x and float(x) > 0}
+    vids = sorted([c for c in cuts if Path(str(c["src"])).suffix.lower() not in IMG_EXT], key=lambda c: float(c["t0"]))
+    if not have or not vids:
+        return None
+    used = sum(float(c["dur"]) * float(c.get("speed") or 1.0) for c in vids)
+    blocks, prev = 0, None
+    for c in vids:      # 화면에서 바로 이어 붙은 같은 원본 앞으로 가기 = 한 덩어리(reuse_violations_bench 사슬과 같은 뜻)
+        fwd = prev is not None and prev["src"] == c["src"] and abs(float(prev["t1"]) - float(c["t0"])) < 0.06 and \
+            float(c["ss"]) >= float(prev["ss"]) + float(prev["dur"]) * float(prev.get("speed") or 1.0) - 1 / 30
+        blocks += 0 if fwd else 1
+        prev = c
+    th = min(min(B13_GAP_MAX, B13_GAP_FRAC * x) for x in have.values())
+    need = used + max(0, blocks - len(have)) * th
+    total = sum(have.values())
+    if need <= total:
+        return None
+    return {"need": round(need, 2), "have": round(total, 2), "blocks": blocks, "files": len(have)}
+
+
+def reuse_split(cuts: list, cand_dir: Path, st: dict) -> tuple[list, list, dict]:
+    """(판단 주인 — B13 을 재는 한 곳) (막을 것, 경고, 원본 길이). 겹침은 늘 막는다. 거리 위반은 원본 한계(source_limited)면 '원본 한계 — 경고로 넘김'.
+    계획(runner_ops._plan_reuse)·렌더 전(render_bench.plan_reuse_gate)·완성본 B13 행이 같이 부른다(10-31 글로스 편: 계획·완성본이 다르게 쟀다).
     그림 컷은 reuse_violations_bench 가 뺀다 — 길이도 안 잰다(ffprobe 'N/A' 로 통째 미측정이 됐다, 관제26)."""
     from tools.calcopy.hybrid.common import dur_of
     from tools.calcopy.hybrid.render_bench import IMG_EXT
     lens = {c["src"]: dur_of(cand_dir / c["src"]) for c in cuts
             if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cand_dir / c["src"]).exists()}
-    return reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run"))), lens     # 판 칸 reuse.adjacent_run(10-26 두유노판)
+    bad = reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run")))     # 판 칸 reuse.adjacent_run(10-26 두유노판)
+    near = [x for x in bad if not x.startswith("겹침")]
+    if not near:
+        return bad, [], lens
+    pool = dict(lens)      # 원본 한계는 재료 폴더의 다른 영상까지 센다(옮길 자리가 있으면 한계가 아니다) — 거리 위반이 있을 때만 잰다
+    if cand_dir and Path(cand_dir).is_dir():
+        for p in Path(cand_dir).iterdir():
+            if p.is_file() and p.suffix.lower() in VIDEO_EXT and not p.name.startswith("_") and p.name not in pool:
+                try:
+                    pool[p.name] = dur_of(p)
+                except Exception as e:  # noqa: BLE001 — 못 잰 파일 = 옮길 자리로 안 친다(기록만)
+                    print(f"[B13 원본 한계] {p.name} 길이 못 잼: {e}", flush=True)
+    lim = source_limited(cuts, pool)
+    if not lim:
+        return bad, [], lens
+    why = f"원본 한계 — 경고로 넘김(재료 원본 {lim['files']}개 {lim['have']}초 < 거리 지키는 데 필요한 {lim['need']}초): "
+    return [x for x in bad if x.startswith("겹침")], [why + x for x in near], lens
+
+
+def reuse_bad(cuts: list, cand_dir: Path, st: dict) -> tuple[list, dict]:
+    """막을 B13 만(reuse_split 의 막을 것) — 옛 부름 꼴 그대로."""
+    block, _, lens = reuse_split(cuts, cand_dir, st)
+    return block, lens
 
 
 def drop_verdict(ours: list, bench: list, plan: dict | None = None, kinds=TD_KINDS) -> tuple[bool | None, str]:
@@ -889,8 +941,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if st.get("renderer") in OLD_PAUSE_RENDERERS:
                 v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))
                 return not v, v or "0"
-            v, lens = reuse_bad(cuts, Path(jload(doc / "재료.json")["cand_dir"]), st)
-            return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
+            v, soft, lens = reuse_split(cuts, Path(jload(doc / "재료.json")["cand_dir"]), st)      # 원본 한계 거리 위반 = 경고(soft) — 통과로 치고 값에 남긴다
+            return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})" + (f" · 경고 {soft}" if soft else "")
         row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
         row("재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")
 
