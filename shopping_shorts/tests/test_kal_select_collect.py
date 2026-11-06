@@ -81,6 +81,7 @@ def test_common23_given_files_skip_channel(tmp_path, monkeypatch):
     st, out, note = kal.step_select(S)
     assert st == "done" and S.d["channel"]["top_ids"] == ["v1"]
     monkeypatch.setattr(kal, "disk_gate", lambda w: None)
+    monkeypatch.setattr(kal, "check_fetched", lambda p, m: [])        # 가짜 바이트 — 받은 영상 검사는 test_kal_add_collect_check 가 진짜 mp4 로 잰다
     st, out, note = kal.step_collect(S)
     assert st == "done" and (tmp_path / "data/s1/src/v1.mp4").read_bytes() == b"one"
 
@@ -121,6 +122,8 @@ def test_collect_m01_and_04_dedupe_and_comments(tmp_path, monkeypatch):
         (base / f"{vid}.mp4").write_bytes(b"same" if vid in ("a", "b") else b"other")
         return 0, ""
     monkeypatch.setattr(kal, "fetch_one", fake_fetch)
+    monkeypatch.setattr(kal, "check_fetched", lambda p, m: [])        # 가짜 바이트 — 검사는 test_kal_add_collect_check
+    monkeypatch.setattr(kal, "meta_duration", lambda b, v: 1.0)
 
     def fake_run(cmd, timeout=0):
         if "--write-comments" in cmd:

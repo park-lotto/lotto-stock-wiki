@@ -453,6 +453,62 @@ def fetch_one(base: Path, vid: str, url: str, fmt: str, ytdlp=None) -> tuple[int
     return 1, " | ".join(tried) + " " + (r.stderr or "")[-160:]
 
 
+MIN_FILE_BYTES = 300_000      # 받은 영상 검사(표 #14): 300KB 밑은 받다 만 파일
+MIN_HEIGHT = 720               # 해상도 하한 — 봇 검증에 걸리면 오류 없이 360p 를 '성공'으로 받는다(lite 도 720 까지는 받는다)
+DUR_TOL_S = 1.5                # 길이 = 메타(info.json, 정수초) 대비 ±1.5초(표 #15)
+SILENT_DB = -50.0              # 소리 있음 = volumedetect max_volume 이 이보다 크다
+REFETCH_MAX = 2                # 검사 불통과면 지우고 재수신 최대 2회(표 #15)
+
+
+def meta_duration(base: Path, vid: str) -> float | None:
+    """받을 때 같이 쓴 <id>.info.json 의 길이(초). 없으면 None(부르는 쪽이 사유를 남긴다)."""
+    p = base / f"{vid}.info.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8")).get("duration")
+        return float(d) if d is not None else None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def check_fetched(mp4: Path, meta_dur: float | None) -> list[str]:
+    """받은 영상 검사 한 곳(표 #14·#15, Jev 해결 0.79·위험 0.26) — 불통과 사유 목록, 빈 목록 = 통과.
+    크기·열림·영상 트랙·오디오 트랙·높이 하한·길이(meta 대비 ±1.5초)·소리 있음. 검사 자체가 실패하면 '검사 못 함' = 불통과."""
+    from shopping_shorts.channelkit.bench import probe
+    why = []
+    try:
+        size = mp4.stat().st_size
+    except OSError as e:
+        return [f"검사 못 함(파일 없음: {e})"]
+    if size < MIN_FILE_BYTES:
+        why.append(f"크기 {size}B < {MIN_FILE_BYTES}B")
+    try:
+        inf = probe.info(str(mp4))
+    except Exception as e:     # 열리지 않음 = 불통과(조용히 넘기지 않는다)
+        return why + [f"열림 실패·검사 못 함({type(e).__name__}: {str(e)[:80]})"]
+    if not inf.get("has_audio"):
+        why.append("오디오 트랙 없음")
+    if (inf.get("height") or 0) < MIN_HEIGHT and (inf.get("width") or 0) < MIN_HEIGHT:
+        why.append(f"높이 {inf.get('width')}x{inf.get('height')} — 짧은 변 < {MIN_HEIGHT}")
+    dur = inf.get("duration")
+    if meta_dur is not None and (dur is None or dur != dur or abs(dur - meta_dur) > DUR_TOL_S):
+        why.append(f"길이 {dur}초 ≠ 메타 {meta_dur}초(±{DUR_TOL_S})")
+    if inf.get("has_audio"):
+        log = probe.ffmpeg_log(["-i", str(mp4), "-vn", "-af", "volumedetect", "-f", "null", "-"])
+        m = re.search(r"max_volume:\s*(-?[\d.]+|-inf) dB", log)
+        if not m:
+            why.append("소리 검사 못 함(volumedetect 결과 없음)")
+        elif m.group(1) == "-inf" or float(m.group(1)) <= SILENT_DB:
+            why.append(f"소리 없음(max_volume {m.group(1)}dB ≤ {SILENT_DB})")
+        ns = [int(x) for x in re.findall(r"n_samples:\s*(\d+)", log)]
+        rate = (inf.get("asr") or 0) * (inf.get("ach") or 0)
+        got = max(ns) / rate if ns and rate else None
+        if got is None:
+            why.append("끝까지 풀리나 검사 못 함(n_samples 없음)")
+        elif dur and abs(got - dur) > DUR_TOL_S:     # 11-06 실측: 앞 2MB 만 남긴 파일도 머리(moov)가 앞이라 ffprobe 는 16초로 읽는다 — 풀어 보면 7.5초
+            why.append(f"끝까지 안 풀림(소리 {got:.1f}초까지만 · 머리 길이 {dur}초)")
+    return why
+
+
 def step_collect(S: State):
     why = disk_gate("받기")
     if why:
@@ -463,16 +519,35 @@ def step_collect(S: State):
     given = {g["id"]: g for g in S.d.get("given") or []}
     fmt = YTDLP_LITE if S.d.get("lite") else YTDLP_F
     todo = [i for i in ids if not (base / f"{i}.mp4").exists()]
+    checked: dict[str, list[str]] = {}
 
     def dl(vid):
         g = given.get(vid)
         if g and Path(g["url"]).is_file():          # common-23: 로컬 파일은 복사만
             import shutil
             shutil.copyfile(g["url"], base / f"{vid}.mp4")
-            return vid, 0, "로컬 파일 복사"
+            bad = check_fetched(base / f"{vid}.mp4", None)     # 로컬 파일은 재수신할 곳이 없다 — 메타 길이도 없다(길이 대조만 뺌, 표시)
+            checked[vid] = bad
+            if bad:
+                (base / f"{vid}.mp4").unlink(missing_ok=True)
+                return vid, 1, f"검사 불통과(로컬 파일): {bad}"
+            return vid, 0, "로컬 파일 복사(길이 대조 기준 없음)"
         url = (g or {}).get("url") or (f"https://www.youtube.com/watch?v={vid}" if S.d.get("format") == "long" else f"https://www.youtube.com/shorts/{vid}")
         # 영상·info 먼저, 자막·댓글은 따로 — 자막 429 하나로 영상까지 버리던 결함(10-27 별헤는쏭 3/5편 실패)
         rc, err = fetch_one(base, vid, url, fmt)
+        for k in range(REFETCH_MAX + 1):          # 표 #15: 받은 파일 검사 → 불통과면 지우고 재수신 최대 2회
+            if rc != 0:
+                break
+            md = meta_duration(base, vid)
+            bad = check_fetched(base / f"{vid}.mp4", md) + ([] if md is not None else ["메타 길이 없음(info.json) — 길이 대조 못 함"])
+            checked[vid] = bad
+            if not bad:
+                break
+            (base / f"{vid}.mp4").unlink(missing_ok=True)
+            if k == REFETCH_MAX:
+                return vid, 1, f"검사 불통과(재수신 {REFETCH_MAX}회 뒤): {bad}"
+            print(f"[경보] {vid} 받은 파일 검사 불통과 {bad} — 재수신 {k + 1}/{REFETCH_MAX}")
+            rc, err = fetch_one(base, vid, url, fmt)
         if rc == 0 and not list(base.glob(f"{vid}*.vtt")):
             s = _run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--write-auto-subs", "--sub-langs", "ko",
                       "-o", str(base / "%(id)s.%(ext)s"), url], timeout=300)
@@ -503,7 +578,8 @@ def step_collect(S: State):
     have, dup = dedupe_ids(base, have)
     if len(have) < max(2, len(ids) // 2) and not (given and len(have) == len(ids) - len(dup)):
         return "failed", {"have": have}, "받은 편이 절반 미만: " + " | ".join(errs) + (f" · 같은 파일 뺌 {dup}" if dup else "")
-    return "done", {"src": str(base), "ids": have}, (f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)"
+    fail_chk = {v: b for v, b in checked.items() if b and v not in have}
+    return "done", {"src": str(base), "ids": have, "checked": checked}, (("검사 불통과 " + str(fail_chk) + " · " if fail_chk else "") + f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)"
                                                      + (f" 실패 {errs}" if errs else "") + (f" · 같은 파일(sha256) 뺌 {dup}" if dup else "") + (f" · {notes}" if notes else ""))
 
 
