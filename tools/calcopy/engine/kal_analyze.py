@@ -833,7 +833,8 @@ SCENE_T = 0.3   # bench.cuts.SCENE_T 와 같은 문턱. 창 밖(검정 틀·제�
 def scene_cuts(mp4: str, win: tuple | None = None, th: float = SCENE_T, merge_s: float = 0.2) -> list[float]:
     """창 크롭 뒤 ffmpeg scene 감지 → 컷 시각(0.2초 안 묶음은 하나). 재현일치도의 컷 자(벤치·우리 공용)."""
     import subprocess
-    vf = (f"crop={win[2]}:{win[3]}:{win[0]}:{win[1]}," if win else "") + f"select='gt(scene,{th})',showinfo"
+    from tools.calcopy.engine.crop import crop_vf      # 표 #71: 홀수 창(스냅봤니 y=521)이 1px 밀리지 않게 exact
+    vf = (crop_vf(win) + "," if win else "") + f"select='gt(scene,{th})',showinfo"
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", mp4, "-vf", vf, "-an", "-f", "null", "-"],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     ts = [float(x) for x in re.findall(r"pts_time:([0-9.]+)", r.stderr)]
@@ -883,7 +884,8 @@ def eye_frames(mp4: str, out_dir, win: tuple | None = None) -> dict:
     meta = probe.info(mp4)
     fps = float(meta.get("fps") or 30) or 30.0
     dur = float(meta.get("duration") or 0)
-    crop = f"crop={win[2]}:{win[3]}:{win[0]}:{win[1]}," if win else ""
+    from tools.calcopy.engine.crop import crop_vf
+    crop = crop_vf(win) + "," if win else ""
     f0 = out / "frame0.jpg"
     _ff(["-i", mp4, "-vf", f"{crop}scale=-2:{EYE_F0_H},tile=2x2", "-frames:v", "1", "-q:v", "3", str(f0)])
     cuts = [c for c in scene_cuts(mp4, win) if c > 0.05]

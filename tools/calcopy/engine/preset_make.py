@@ -578,11 +578,16 @@ def part_vf(c, W, H2, checks: dict | None = None) -> str:
         if ck.get("no_stretch"):
             raise ValueError(msg)
         print(f"  [경보] {msg}", flush=True)
+    from tools.calcopy.engine.crop import check_crop, crop_vf
+    odd = check_crop(c["box"])
+    if odd and not ck.get("exact_crop"):               # 표 #71(Jev 해결 0.81): 판 칸 checks.exact_crop 기본 꺼짐 — 꺼짐이면 옛 문자열 그대로 + 경보 한 줄
+        print(f"  [경보] 크롭 {c['box']} {odd} — 판 칸 checks.exact_crop 켜면 1px 그대로", flush=True)
     return ((f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
-            f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2))
+            crop_vf(c["box"], exact=bool(ck.get("exact_crop"))) + f",scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2))
 
 
 def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]:
+    from tools.calcopy.engine.crop import check_crop
     W, H = cfg["window"]
     H2 = H + (H % 2)
     pdir = cache / "parts"
@@ -592,7 +597,8 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
         st = c["path"].stat()
         sp = c.get("speed", 1.0)
         key = sha([str(c["path"]), st.st_size, int(st.st_mtime), round(c["ss"], 3), c["box"], W, H2, c["n"], FPS, ENC] + ([sp] if sp != 1.0 else [])
-                  + ([["move", c["move"]]] if c.get("move") else []))   # move 없는 컷은 예전 키 그대로(옛 편 불변)
+                  + ([["move", c["move"]]] if c.get("move") else [])   # move 없는 컷은 예전 키 그대로(옛 편 불변)
+                  + (["exact_crop"] if (cfg.get("checks") or {}).get("exact_crop") and check_crop(c["box"]) else []))   # 켠 판의 홀수 상자만 새 키(옛 조각 재사용 금지)
         c["part_key"] = key
         mat_map.append((key, c["n"]))
         dst = pdir / f"{key}.mp4"
@@ -1037,6 +1043,7 @@ def plan_rules(w, cfg, plan) -> list:
 
 # ── 8) 계획 시트(TTS 전 선검수) ──────────────────────────────────────────
 def plan_sheet(w, cfg, dst: Path):
+    from tools.calcopy.engine.crop import crop_vf
     from PIL import Image, ImageDraw, ImageFont
     W, H = cfg["window"]
     tw, th = 200, int(200 * H / W)
@@ -1053,7 +1060,7 @@ def plan_sheet(w, cfg, dst: Path):
         x, y, bw, bh = c["box"]
         for j, t in enumerate((c["ss"] + 0.1, c["ss"] + max(0.2, span - 0.1))):
             b = run_bytes(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", c["path"], "-frames:v", "1", "-vf",
-                           f"crop={bw}:{bh}:{x}:{y},scale={tw}:{th}", "-f", "image2pipe", "-vcodec", "png", "-"])
+                           crop_vf(c["box"]) + f",scale={tw}:{th}", "-f", "image2pipe", "-vcodec", "png", "-"])   # 계획 시트 그림(보기용) — 1px 그대로
             if b:
                 S.paste(Image.open(io.BytesIO(b)).convert("RGB"), (x0 + j * tw, y0))
         tx = x0 + 2 * tw + 6
