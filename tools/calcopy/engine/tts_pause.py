@@ -33,7 +33,8 @@ def synth(text: str, out_mp3: str, voice: str, emotion: str | None, speed: float
     key = providers.typecast_key(None)
     typecast_tts.api_key = lambda *a, **k: key            # keyroute DB 가 없는 로컬 실행용
     sp = speed if speed is not None else voice_presets.default_speed(voice)
-    align = typecast_tts.synthesize(text, out_mp3, voice_id=voice, speed=sp, emotion=emotion, intensity=1.0 if emotion else None)
+    from tools.calcopy.engine.voice_synth import typecast_say      # 낱자 빼기·원문 시각 = 한 문(11-06 #11577)
+    align = typecast_say(text, out_mp3, voice_id=voice, speed=sp, emotion=emotion, intensity=1.0 if emotion else None)
     return align, sp
 
 

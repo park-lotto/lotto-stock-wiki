@@ -28,6 +28,8 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
+from tools.calcopy.engine import voice_synth as VS     # 타입캐스트로 보낼 글 = VS.typecast_say 한 문(11-06 #11577)
+
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -212,7 +214,7 @@ def _synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model:
     try:
         with _TTS_SEM:
             t0 = time.time()
-            align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model)
+            align = VS.typecast_say(text, str(out), voice_id=voice_id, speed=tempo, model_id=model)
     finally:
         for lk in locks:
             try:
@@ -317,7 +319,7 @@ def _synth_member(text: str, voice_id: str, tempo, out: Path, key: str, model: s
                 if not key_tc:
                     raise RuntimeError("Typecast 키가 없다(설정 화면의 목소리 키 또는 TYPECAST_API_KEY)")
                 typecast_tts.api_key = lambda *a, **k: key_tc
-                align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model, emotion=emo)
+                align = VS.typecast_say(text, str(out), voice_id=voice_id, speed=tempo, model_id=model, emotion=emo)
             else:
                 from tools.calcopy.engine import voice_synth as PM
                 r = PM.make_synth(prov, voice_id, tempo, emo)(text, str(out))

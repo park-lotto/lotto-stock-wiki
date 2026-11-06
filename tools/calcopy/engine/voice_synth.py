@@ -61,6 +61,15 @@ def realign(align, text: str, sent: str):
     return {**align, "characters": list(text), "character_start_times_seconds": s2, "character_end_times_seconds": e2}
 
 
+def typecast_say(text: str, out, **kw):
+    """(판단 주인 — 타입캐스트로 보낼 글) 엔진의 타입캐스트 합성은 전부 여기를 거친다: 낱자 빼기(speakable) → 타임스탬프 합성 → 원문 시각(realign).
+    11-06 황선희 #11577: 옛 길(narr_align._synth_cached)·감정 길·tts_pause 가 typecast_tts.synthesize 를 직접 불러 'ㄷㄷ·ㅋㅋ'를 소리 내어 읽었다
+    (make_synth 만 speakable 을 썼다 — 같은 꼴 0f65a1f45·eb1b17712). 직접 호출 금지는 test_typecast_one_door 가 잡는다."""
+    from shopping_shorts import typecast_tts
+    sent = speakable(text)
+    return realign(typecast_tts.synthesize(sent, out, **kw), text, sent)
+
+
 def make_synth(provider: str, voice: str, tempo, emotion):
     synth = _make_synth(provider, voice, tempo, emotion)
 
