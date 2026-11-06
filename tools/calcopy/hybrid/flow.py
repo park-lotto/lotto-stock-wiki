@@ -1477,6 +1477,11 @@ def _over_budget(st) -> bool:
     return (time.time() - float(st.get("started_at") or time.time())) / 60 > EPISODE_BUDGET_MIN
 
 
+def _waived_ok(st: dict, r: dict, why: str) -> bool:
+    """(판단 주인 — 넘긴 편의 렌더 걸림을 경고로 둘까) 회원이 넘기기(waive)를 줬고 영상이 실제로 나왔고(ok) 금지선(출처·지어낸 사실)이 아니면 True."""
+    return bool(st.get("waive_gate") and r.get("ok") and not HARD_PLAN_RX.search(str(why or "")))
+
+
 def _waive(st: dict, stage: str) -> dict | None:
     """(판단 주인 — 권고 넘기기) 품질 걸림을 경고로 남기고 다음으로. 금지선(HARD_SCRIPT)은 넘기지 않는다 → None."""
     st["waive_gate"] = True
@@ -2854,6 +2859,12 @@ def ph_render_got(st, m, rp, u):
     if r.get("conflict"):
         return _conflict_rewrite(st, r["conflict"])
     why = r.get("error") or "; ".join(r.get("jumps") or [])
+    if why and _waived_ok(st, r, why):
+        # 넘긴 편(waive) — 영상이 나왔으면 남은 걸림은 경고로 두고 검사로(11-06 임수정 6283df26ebdb: waive 뒤 같은 계획을 다시 굽고
+        #   렌더 뒤 판정이 _tries 한도를 곧바로 넘겨 task_4 로 다시 멈춤 · 같은 꼴 b63eee316·139ba75dc·baf4e72cb). 금지선은 그대로 멈춘다
+        st.setdefault("warn", []).append({"stage": "render", "causes": ["넘긴 뒤 남은 렌더 걸림"], "why": str(why)[:300]})
+        st["log"].append("넘긴 편 — 렌더 뒤 걸림을 경고로: " + str(why)[:200])
+        why = ""
     if not why and r.get("ok"):
         tl = r.get("tempo") or {}
         cap = 1.36 if str((_style(st["version"]).get("voice") or {}).get("voice_id", "")).startswith("kr-mina") else 1.26
