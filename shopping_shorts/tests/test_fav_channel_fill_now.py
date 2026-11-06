@@ -31,6 +31,15 @@ def _drain():
         appmod._FAV_FILL_POOL.submit(lambda: None).result(timeout=10)
 
 
+def _wait_avatar(db, chid, want, cid=0, sec=10.0):
+    """풀 일꾼이 2명이라 빈 작업이 다른 일꾼에서 먼저 끝나면 채우기가 아직 도는 중일 수 있다(11-06 관문 우연 실패) — 채워질 때까지 기다린다."""
+    import time
+    end = time.time() + sec
+    while time.time() < end and _avatar(db, chid, cid) != want:
+        time.sleep(0.05)
+    return _avatar(db, chid, cid)
+
+
 def _avatar(db, chid, cid=0):
     return next(i for i in Store(db).fav_channel_list(customer_id=cid) if i["channel_id"] == chid)["avatar"]
 
@@ -41,7 +50,7 @@ def test_register_fills_avatar_right_away(tmp_path, monkeypatch):
     r = appmod._fav_channel_register(0, "https://www.youtube.com/@newchan")
     assert r["status"] == "added"
     _drain()
-    assert _avatar(db, "newchan") == AV + "/newchan"
+    assert _wait_avatar(db, "newchan", AV + "/newchan") == AV + "/newchan"
 
 
 def test_paste_add_fills_avatar_right_away(tmp_path, monkeypatch):
@@ -52,7 +61,7 @@ def test_paste_add_fills_avatar_right_away(tmp_path, monkeypatch):
                                     json={"url": "https://www.youtube.com/@pasted"}).json()
     assert r["ok"] and r["added"]
     _drain()
-    assert _avatar(db, "pasted") == AV + "/pasted"
+    assert _wait_avatar(db, "pasted", AV + "/pasted") == AV + "/pasted"
 
 
 def test_existing_avatar_not_probed_again(tmp_path, monkeypatch):
