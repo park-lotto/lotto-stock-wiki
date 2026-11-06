@@ -740,6 +740,12 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
             unknown.append(f"{k}: {R[k]['failed']}")
     T["rules"] = time.time() - t
 
+    t = time.time()
+    from tools.calcopy.engine import separate as SEP      # 표 #28(Jev 해결 0.84): 목소리/배경 나누기 + 0.1초 목소리·배경 칸 — 만드는 영상은 안 바뀐다(분석 칸만)
+    R["separation"] = SEP.separation_of(mp4, str(Path(out_dir) / "sep"))
+    if R["separation"].get("failed"):
+        unknown.append(f"목소리 나누기 실패: {R['separation']['failed']}")
+    T["separation"] = time.time() - t
     R["unknown"] = unknown
     R["llm_calls"] = list(gemini_free.CALLS)
     R["timing_sec"] = {k: round(v, 1) for k, v in T.items()} | {"total": round(time.time() - t_all, 1)}

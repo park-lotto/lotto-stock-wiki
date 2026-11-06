@@ -596,6 +596,17 @@ def _stale_tear(p: Path) -> str | None:
     return None
 
 
+def add_separation(tear: Path, mp4: Path) -> str | None:
+    """옛 뜯기.json 에 separation 칸이 없으면 separate.separation_of 로 채워 저장(판단 한 곳은 separate). 더했으면 한 줄, 아니면 None."""
+    J = json.loads(tear.read_text(encoding="utf-8"))
+    if J.get("separation") and not J["separation"].get("failed"):
+        return None
+    from tools.calcopy.engine import separate as SEP
+    J["separation"] = SEP.separation_of(str(mp4), str(tear.parent / "sep"))
+    tear.write_text(json.dumps(J, ensure_ascii=False, indent=1), encoding="utf-8")
+    return "나누기 칸 더함" if not J["separation"].get("failed") else f"나누기 실패 {J['separation']['failed'][:60]}"
+
+
 def step_tteutgi(S: State):
     """뜯기 — analyze.analyze 를 materials=True(꾸밈·제작법 판독, tteutgi-29 · Jev 해결 0.77)·llm=tear_llm.ask(그림 claude_cli / 받아쓰기 스피치매틱스 + 소리 판독 제미나이,
     Jev 해결 0.82)로 부른다. 옛 결과가 _stale_tear 에 걸리면 다시 뜯는다(옛 결과 재사용 금지)."""
@@ -611,6 +622,9 @@ def step_tteutgi(S: State):
         if (out / "뜯기.json").exists():
             why = _stale_tear(out / "뜯기.json")
             if not why:
+                sep_note = add_separation(out / "뜯기.json", base / f"{vid}.mp4")    # 옛 뜯기는 나누기 칸만 더한다(LLM 다시 안 부름)
+                if sep_note:
+                    redo.append(f"{vid}({sep_note})")
                 done.append(vid)
                 continue
             redo.append(f"{vid}({why})")
