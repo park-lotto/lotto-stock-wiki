@@ -454,10 +454,10 @@ def fetch_one(base: Path, vid: str, url: str, fmt: str, ytdlp=None) -> tuple[int
 
 
 MIN_FILE_BYTES = 300_000      # 받은 영상 검사(표 #14): 300KB 밑은 받다 만 파일
-MIN_HEIGHT = 720               # 해상도 하한 — 봇 검증에 걸리면 오류 없이 360p 를 '성공'으로 받는다(lite 도 720 까지는 받는다)
-DUR_TOL_S = 1.5                # 길이 = 메타(info.json, 정수초) 대비 ±1.5초(표 #15)
+MIN_HEIGHT = 720               # 해상도 하한 — 봇 확인 화면이 뜨면 오류 표시 없이 360p 를 '성공'으로 받는다(lite 도 720 까지는 받는다)
+DUR_TOL_S = 1.5                # 길이 = 메타(info.json, 정수초) 대비 길이 1.5초 안(표 #15)
 SILENT_DB = -50.0              # 소리 있음 = volumedetect max_volume 이 이보다 크다
-REFETCH_MAX = 2                # 검사 불통과면 지우고 재수신 최대 2회(표 #15)
+REFETCH_MAX = 2                # 검사 불통과면 지우고 다시 받기 두 번까지(표 #15)
 
 
 def meta_duration(base: Path, vid: str) -> float | None:
@@ -472,7 +472,7 @@ def meta_duration(base: Path, vid: str) -> float | None:
 
 def check_fetched(mp4: Path, meta_dur: float | None) -> list[str]:
     """받은 영상 검사 한 곳(표 #14·#15, Jev 해결 0.79·위험 0.26) — 불통과 사유 목록, 빈 목록 = 통과.
-    크기·열림·영상 트랙·오디오 트랙·높이 하한·길이(meta 대비 ±1.5초)·소리 있음. 검사 자체가 실패하면 '검사 못 함' = 불통과."""
+    파일 크기·열리는지·영상/소리 트랙·높이 하한·길이(meta 대비 길이 1.5초 안)·소리 있음. 검사 자체가 실패하면 '검사 못 함' = 불통과."""
     from shopping_shorts.channelkit.bench import probe
     why = []
     try:
@@ -535,7 +535,7 @@ def step_collect(S: State):
         url = (g or {}).get("url") or (f"https://www.youtube.com/watch?v={vid}" if S.d.get("format") == "long" else f"https://www.youtube.com/shorts/{vid}")
         # 영상·info 먼저, 자막·댓글은 따로 — 자막 429 하나로 영상까지 버리던 결함(10-27 별헤는쏭 3/5편 실패)
         rc, err = fetch_one(base, vid, url, fmt)
-        for k in range(REFETCH_MAX + 1):          # 표 #15: 받은 파일 검사 → 불통과면 지우고 재수신 최대 2회
+        for k in range(REFETCH_MAX + 1):          # 표 #15: 받은 파일 검사 → 불통과면 지우고 다시 받기 두 번까지
             if rc != 0:
                 break
             md = meta_duration(base, vid)
@@ -604,7 +604,7 @@ def _read_json(p: Path):
 
 
 def add_separation(tear: Path, mp4: Path) -> str | None:
-    """kal 로 뜯은 옛 뜯기.json 에 칼카피 칸을 더해 저장 — separation(없거나 실패면 separate.separation_of, 판단 한 곳은 separate) + kal_mode 표식
+    """kal 로 뜯은 옛 뜯기.json 에 kal 칸을 더해 저장 — separation(없거나 실패면 separate.separation_of, 판단 한 곳은 separate) + kal_mode 표식
     (analyze kal=True 와 같은 표식 — to_frame 군집 폭·겹침 크기가 이 표식을 본다. 글꼴 칸은 옛 마스크 그대로, 다시 뜯어야 바뀐다). 더했으면 한 줄, 아니면 None."""
     J = json.loads(tear.read_text(encoding="utf-8"))
     if J.get("separation") and not J["separation"].get("failed") and J.get("kal_mode"):
@@ -648,9 +648,9 @@ def step_tteutgi(S: State):
             errs.append(f"{vid}: {type(e).__name__} {str(e)[:120]}")
     if not done:
         return "failed", {}, "뜯기 0편: " + " | ".join(errs)
-    nosep = [v for v in done if ((_read_json(out_root / v / "뜯기.json") or {}).get("separation") or {}).get("failed")]   # 조용한 실패 금지 — 나누기 못 한 편을 note 에
+    nosep = [v for v in done if ((_read_json(out_root / v / "뜯기.json") or {}).get("separation") or {}).get("failed")]   # 말없이 넘어감 금지 — 나누기 못 한 편을 note 에
     return "done", {"ids": done, "dir": str(out_root)}, (f"뜯기 {len(done)}편" + (f" 다시 뜯음 {redo}" if redo else "") + (f" 실패 {errs}" if errs else "")
-                                                         + (f" · 목소리 줄기 가르기 못 함 {len(nosep)}편 {nosep}(4상태 못 잼)" if nosep else "")
+                                                         + (f" · 목소리 줄기 가르기 못 함 {len(nosep)}편 {nosep}(소리·자막 칸 못 잼)" if nosep else "")
                                                          + " (판독=tear_llm: 그림 claude_cli · 받아쓰기 스피치매틱스 · 소리 판독 제미나이)")
 
 
@@ -698,7 +698,7 @@ def step_skeleton(S: State):
         except Exception as e:  # noqa: BLE001 — 음량 열만 빠지고 뼈대는 만든다(이유를 남김)
             loud = None
             print(f"[경보] {vid} 음량 열 못 잼: {type(e).__name__} {str(e)[:80]}")
-        d = K.skeleton(vid, tt, str(vtt) if vtt.exists() else None, loud=loud)
+        d = K.skeleton(vid, tt, str(vtt) if vtt.exists() else None, loud=loud, kal=True)   # 괄호·줄 종류 초안은 kal 경로만
         p.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
         made.append(vid)
     ids = S.step("tteutgi")["outputs"]["ids"]
@@ -761,7 +761,7 @@ def step_rules(S: State):
     docs = K._load_docs([str(S.dir / "줄판독")])
     out = K.write_rules(S.dir, docs, S.d["slug"])        # 쓰는 자리 한 곳(회원 흐름 bm_rules 와 같은 함수)
     R, Sc, P = out["rules"], out["script"], out["palette"]
-    st4 = K.write_state4(S.dir, S.step("tteutgi")["outputs"]["ids"])     # 표 #32·#33: 0.1초 4상태 격자(측정만) → _kal/소리자막칸.json
+    st4 = K.write_state4(S.dir, S.step("tteutgi")["outputs"]["ids"])     # 표 #32·#33: 0.1초 소리·자막 칸 격자(측정만) → _kal/소리자막칸.json
     draft = S.dir / "_kal" / "스타일분석_초안.md"
     draft.write_text("# 스타일분석 초안(kal.py rules — 규칙빈도·대본언어·팔레트 자동 집계. 사람이 §3 꼴로 옮겨 적고 규칙을 채택한다)\n\n"
                      + K.rules_md(R, S.d["slug"]) + "\n" + K.script_md(Sc) + "\n## 팔레트(channel/<slug>/팔레트.json)\n"

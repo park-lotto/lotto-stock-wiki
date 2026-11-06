@@ -1,10 +1,10 @@
-"""separate — 목소리/배경음 나누기 + 사람 목소리 판정 한 곳(표 #28, 11-06).
+"""separate — 목소리 줄기/배경 소리 가르기 + 사람 말소리 판정 한 곳(표 #28, 11-06).
 
-목소리 나누기 = demucs htdemucs(전용 가상환경 C:/Users/CH/demucs-venv, CPU torch — 엔진 파이썬과 따로: 3.14 에 torch 를 넣지 않는다).
-엔진은 하위 프로세스로 부르고 결과 wav(vocals·no_vocals)만 받는다. 가상환경이 없으면 조용히 넘기지 않고 {"failed": 사유}.
+목소리 줄기 가르기 = demucs htdemucs(전용 가상환경 C:/Users/CH/demucs-venv, CPU torch — 엔진 파이썬과 따로: 3.14 에 torch 를 넣지 않는다).
+엔진은 따로 띄운 프로세스로 부르고 결과 wav(vocals·no_vocals)만 받는다. 가상환경이 없으면 조용히 넘기지 않고 {"failed": 사유}.
 사람 목소리 판정(voice_frames) = 0.1초 칸마다 목소리 줄기 RMS 가 ① 기준선(같은 칸 배경 줄기 − 6dB) 위 ② 절대 하한 −40dBFS 위 — 둘 다
-(배경음이 새어 든 작은 소리·조용한 편의 잡음을 사람 목소리로 치지 않게).
-★초안(draft) — 11-06 Jev 해결 0.69·위험 0.26: 판정·규칙 칸은 이 값을 쓰지 않는다(4상태 측정만, 초안 표시를 옮긴다).
+(배경음이 새어 든 작은 소리·조용한 편의 잡음을 사람 말소리로 치지 않게).
+★초안(draft) — 11-06 Jev 해결 0.69·위험 0.26: 판정·규칙 칸은 이 값을 쓰지 않는다(소리·자막 칸 측정만, 초안 표시를 옮긴다).
 규칙으로 올리는 조건 = 사람 말 정답 편 중 '말 있는 칸·없는 칸이 섞인 편'(정답 목소리 지분 MIXED_LO~MIXED_HI) VOICE_RULE_MIN_MIXED 편 이상에서 F1 확인.
 가상환경 경로는 이 PC 기준(C:/Users/CH/demucs-venv, 바꾸기 SHORTEM_DEMUCS_PY) — kal 경로에서만 부른다(analyze kal=True), 없으면 failed + [경보].
 """
@@ -21,7 +21,7 @@ import numpy as np
 VENV_PY = Path(os.environ.get("SHORTEM_DEMUCS_PY") or "C:/Users/CH/demucs-venv/Scripts/python.exe")
 MODEL = "htdemucs"
 SR = 44100
-STEP_S = 0.1               # 판정 격자(0.1초 — 4상태 격자와 같은 칸)
+STEP_S = 0.1               # 판정 격자(0.1초 — 소리·자막 칸 격자와 같은 칸)
 VOICE_OVER_BG_DB = 6.0     # 기준선 = 같은 칸 배경 줄기 — 목소리가 배경 − 6dB 보다 커야
 VOICE_ABS_DB = -40.0       # 절대 하한(dBFS) — 둘 다 넘어야 사람 목소리
 BG_ABS_DB = -45.0          # 배경 줄기 있음 하한(dBFS)
@@ -67,7 +67,7 @@ def separate(mp4: str, out_dir: str, timeout: int = 1800) -> dict:
         except ValueError:
             pass
     if not VENV_PY.exists():
-        return {"failed": f"demucs 가상환경 없음({VENV_PY}) — 목소리 나누기 못 함(판정 칸은 '못 잼')"}
+        return {"failed": f"demucs 가상환경 없음({VENV_PY}) — 목소리 줄기 가르기 못 함(판정 칸은 '못 잼')"}
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False, encoding="utf-8") as f:
         f.write(_WORKER)
         wp = f.name
@@ -116,7 +116,7 @@ def voice_frames(vocals_wav: str, no_vocals_wav: str) -> dict:
 
 
 def draft_mark() -> dict:
-    """목소리 칸 초안 표시 한 곳 — 쌓인 정답이 조건(VOICE_RULE_MIN_MIXED)에 못 미치면 draft=True. 4상태가 이 표시를 옮긴다."""
+    """목소리 칸 초안 표시 한 곳 — 쌓인 정답이 조건(VOICE_RULE_MIN_MIXED)에 못 미치면 draft=True. 소리·자막 칸이 이 표시를 옮긴다."""
     ready = VOICE_EVIDENCE["mixed_videos"] >= VOICE_RULE_MIN_MIXED
     return {"draft": not ready, "evidence": VOICE_EVIDENCE,
             "use": "규칙·판정에 써도 됨" if ready else
@@ -131,7 +131,7 @@ def bg_frames(no_vocals_wav: str) -> dict:
 
 
 def separation_of(mp4: str, out_dir: str) -> dict:
-    """뜯기 칸 'separation' — 나누기 + 목소리·배경 칸 판정. 못 하면 {"failed"} (4상태 격자는 그때 원음 대사/현장음을 못 가른다고 적는다)."""
+    """뜯기 칸 'separation' — 나누기 + 목소리·배경 칸 판정. 못 하면 {"failed"} (소리·자막 칸 격자는 그때 원음 대사/현장음을 못 가른다고 적는다)."""
     r = separate(mp4, out_dir)
     if r.get("failed"):
         return {"failed": r["failed"], "model": MODEL}

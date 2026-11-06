@@ -586,7 +586,7 @@ def _context(R: dict) -> str:
 
 # ── 묶기 ─────────────────────────────────────────────────────────────────
 def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True, kal: bool = False) -> dict:
-    """kal=True = 칼카피 경로(kal.py 뜯기·우리뜯기만 켠다 · 11-06 Jev 해결 0.80·위험 0.29). 켜면 글꼴 줄 마스크 창(표 #222)·목소리 나누기(표 #28)를 하고
+    """kal=True = kal 경로(kal.py 뜯기·우리뜯기만 켠다 · 11-06 Jev 해결 0.80·위험 0.29). 켜면 글꼴 줄 마스크 창(표 #222)·목소리 줄기 가르기(표 #28)를 하고
     뜯기.json 에 kal_mode=True 표식을 남긴다 — to_frame 은 그 표식이 있을 때만 자막 군집 폭·겹침 크기(표 #112·#174)를 쓴다(판단 = 뜯기 표식 한 곳).
     꺼짐(기본) = 회원 PC 벤치마킹(bench_member)·recheck 옛 동작 그대로."""
     if llm is None:
@@ -750,8 +750,8 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True, kal: bool 
         from tools.calcopy.engine import separate as SEP  # 만드는 영상은 안 바뀐다(분석 칸만) · 목소리 칸은 초안(draft)
         R["separation"] = SEP.separation_of(mp4, str(Path(out_dir) / "sep"))
         if R["separation"].get("failed"):
-            unknown.append(f"목소리 나누기 실패: {R['separation']['failed']}")
-            print(f"[경보] 목소리 줄기 가르기 못 함 — {R['separation']['failed'][:160]} (4상태 못 잼)", flush=True)
+            unknown.append(f"목소리 줄기 가르기 실패: {R['separation']['failed']}")
+            print(f"[경보] 목소리 줄기 가르기 못 함 — {R['separation']['failed'][:160]} (소리·자막 칸 못 잼)", flush=True)
         T["separation"] = time.time() - t
     R["unknown"] = unknown
     R["llm_calls"] = list(gemini_free.CALLS)

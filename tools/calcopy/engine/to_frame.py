@@ -703,7 +703,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             ink_h = ink_h - 2 * fxs["outline_px"]
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
-        kal_mode = bool(J.get("kal_mode"))                            # 표 #112·#174 는 칼카피 뜯기 표식이 있을 때만(회원 벤치마킹 = 옛 동작 · 11-06 Jev 해결 0.80)
+        kal_mode = bool(J.get("kal_mode"))                            # 표 #112·#174 는 kal 뜯기 표식이 있을 때만(회원 벤치마킹 = 옛 동작 · 11-06 Jev 해결 0.80)
         clu = caption_cluster(fam, fit["size"], items, W, notes) if kal_mode else {"trusted": False}   # 가운데 자막 칸 폭 = 벤치 군집 폭(못 믿으면 옛 상수)
         if kal_mode:
             fit, clu = caption_size_route(fam, first, top, ink_h, fit, clu, fxs.get("line_h_px") or ink_h, items, W, cap_samples, notes)
@@ -993,7 +993,7 @@ def caption_size_pick(fam: str, cands: dict, samples: list) -> dict:
 
 
 def caption_samples(src: str, J: dict, W: int, H: int) -> list:
-    """크기 고르기 표본 — 1줄·글 있는 자막 CAP_PICK_N 개(고르게)의 가운데 시각 프레임에서 자막 줄을 잘라 채움 마스크로."""
+    """크기 고르기 표본 — 1줄·글 있는 자막 CAP_PICK_N 개(고르게)의 가운데 시각 프레임의 자막 줄을 잘라 채움 마스크로."""
     from shopping_shorts.channelkit.bench import probe
     fxs = (J.get("text_fx") or {}).get("summary") or {}
     fill = fxs.get("fill_rgb")

@@ -228,8 +228,9 @@ def loud_track(mp4: str, step: float = LOUD_STEP_S) -> list[float]:
     return [round(_db(a[i:i + n]), 1) for i in range(0, len(a), n)]
 
 
-def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None = None) -> dict:
+def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None = None, kal: bool = False) -> dict:
     """줄판독 뼈대 — 기계값만 채우고 눈으로 볼 칸은 null. check 가 _todo 로 거절한다.
+    kal=True = kal 경로(kal.py)만 — 괄호 줄 _jimun 표시(표 #230)·줄 종류 초안 _kind_draft(표 #30)를 붙인다. 꺼짐(회원 PC 실행기) = 옛 모양(11-06 재감시 ① Jev 해결 0.84·위험 0.18).
     skeleton-01: 받아쓰기 낱말 시각(뜯기 audio.transcript.words — tear_llm 스피치매틱스)을 줄마다 words 열로, loud(0.25초 RMS dB, loud_track)를 줄 구간 loud 열로."""
     pr = tteutgi.get("probe") or {}
     lay = tteutgi.get("layout") or {}
@@ -250,11 +251,12 @@ def skeleton(vid: str, tteutgi: dict, vtt: str | None = None, loud: list | None 
                                 if float(w["start"]) < t1 and float(w["end"]) > t0],
                       "loud": loud[int(t0 / LOUD_STEP_S):max(int(t0 / LOUD_STEP_S) + 1, int(t1 / LOUD_STEP_S))] if loud else None,
                       "_asr": near, "_src": "뜯기 OCR(기계값 — 눈으로 확인)",
-                      **({"_jimun": "통째 괄호 = 지문 줄로 보임(우리 대본에선 TTS 하지 않는 자막만 — 눈으로 확인)"} if is_stage_direction(text) else {})})
-    kinds = line_kind_draft(lines, (tteutgi.get("audio") or {}).get("transcript") or {}, tteutgi.get("text_fx") or {}, int(pr.get("h") or 1920),
-                            idx=[it.get("i") for it in items])         # 표 #30: 줄 종류 초안(세 증거) — 사람 칸은 비워 둔다
-    for l, kd in zip(lines, kinds):
-        l["_kind_draft"] = kd
+                      **({"_jimun": "통째 괄호 = 지문 줄로 보임(우리 대본에선 TTS 하지 않는 자막만 — 눈으로 확인)"} if kal and is_stage_direction(text) else {})})
+    if kal:
+        kinds = line_kind_draft(lines, (tteutgi.get("audio") or {}).get("transcript") or {}, tteutgi.get("text_fx") or {}, int(pr.get("h") or 1920),
+                                idx=[it.get("i") for it in items])         # 표 #30: 줄 종류 초안(세 증거) — 사람 칸은 비워 둔다
+        for l, kd in zip(lines, kinds):
+            l["_kind_draft"] = kd
     todo = ["speaker", "layer", "role", "enter", "fill_hex", "emph", "sticker", "sfx", "scene", "fit", "beats", "narr_share", "form"]
     return {"id": vid, "dur": pr.get("duration"), "fps": pr.get("fps"), "size": [pr.get("w"), pr.get("h")],
             "title_lines": [], "source_label": None, "form": None, "_form_vocab": "형식(유형) 한 낱말 — 예 리액션·랭킹·사연·정보·리뷰(rules-05, 형식별 집계)",
@@ -836,11 +838,12 @@ def match_md(T: dict, title: str = "") -> str:
 SCENE_T = 0.3   # bench.cuts.SCENE_T 와 같은 문턱. 창 밖(검정 틀·제목)은 안 바뀌어 전체 프레임 점수가 묽어지므로 창을 잘라 잰다
 
 
-def scene_cuts(mp4: str, win: tuple | None = None, th: float = SCENE_T, merge_s: float = 0.2) -> list[float]:
-    """창 크롭 뒤 ffmpeg scene 감지 → 컷 시각(0.2초 안 묶음은 하나). 재현일치도의 컷 자(벤치·우리 공용)."""
+def scene_cuts(mp4: str, win: tuple | None = None, th: float = SCENE_T, merge_s: float = 0.2, exact: bool = False) -> list[float]:
+    """창 크롭 뒤 ffmpeg scene 감지 → 컷 시각(0.2초 안 묶음은 하나). 재현일치도의 컷 자(벤치·우리 공용).
+    exact=True = 홀수 창이 1px 밀리지 않게(표 #71) — kal 경로가 켜서 부른다. 꺼짐(회원 PC 실행기·upgrade_table) = 옛 crop 문자열(11-06 재감시 ①)."""
     import subprocess
-    from tools.calcopy.engine.crop import crop_vf      # 표 #71: 홀수 창(스냅봤니 y=521)이 1px 밀리지 않게 exact
-    vf = (crop_vf(win) + "," if win else "") + f"select='gt(scene,{th})',showinfo"
+    from tools.calcopy.engine.crop import crop_vf
+    vf = (crop_vf(win, exact=exact) + "," if win else "") + f"select='gt(scene,{th})',showinfo"
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", mp4, "-vf", vf, "-an", "-f", "null", "-"],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     ts = [float(x) for x in re.findall(r"pts_time:([0-9.]+)", r.stderr)]
@@ -896,16 +899,16 @@ def _fill_voice_gaps(seq: str, n_min: int) -> tuple[str, int]:
 
 
 def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
-    """0.1초 4상태 격자 — 판단 한 곳(표 #32·#33, Jev 해결 0.85·위험 0.23 · 11-06). 측정만(규칙·판정 칸은 안 바꾼다).
+    """0.1초 소리·자막 칸 격자 — 판단 한 곳(표 #32·#33, Jev 해결 0.85·위험 0.23 · 11-06). 측정만(규칙·판정 칸은 안 바꾼다).
     칸마다: 자막 있음 = 뜯기 captions.spans · 사람 목소리 = separation.voice.frames(separate.voice_frames) · 배경 = separation.bg.frames.
     N = 목소리∧나레 줄 / A = 목소리∧나레 줄 아님(원음 대사) / S = 자막∧목소리 없음 / C = 자막 없음∧목소리 없음∧배경 / _ = 무음.
     줄판독(lines[].speaker)이 없으면 목소리 칸 = V(나레/원음 미구분).
-    지표: 지분 · 런 길이(중앙·평균 초) · 분당 바뀜(N↔S·N↔A·N↔C) · 상태별 가장 긴 구간(초·시작 위치 %) · 런 3-gram 상위 5(리듬 지문)."""
+    지표: 지분 · 이어진 길이(중앙·평균 초) · 분당 바뀜(N↔S·N↔A·N↔C) · 상태별 가장 긴 구간(초·시작 위치 %) · 이어진 칸 3개 묶음 상위 5(바뀜 무늬)."""
     sep = tteutgi.get("separation") or {}
     vf = (sep.get("voice") or {}).get("frames")
     bf = (sep.get("bg") or {}).get("frames")
     if not vf or sep.get("failed"):
-        return {"failed": f"목소리 나누기 없음({sep.get('failed') or 'separation 칸 없음'}) — 4상태 못 잼"}
+        return {"failed": f"목소리 줄기 가르기 없음({sep.get('failed') or 'separation 칸 없음'}) — 소리·자막 칸 못 잼"}
     n = len(vf)
     spans = (tteutgi.get("captions") or {}).get("spans") or []
     narr = [(float(l["t0"]), float(l["t1"])) for l in lines or [] if str(l.get("speaker") or "").startswith("나레")]
@@ -958,7 +961,7 @@ def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
 
 
 def write_state4(chan_dir: Path, ids: list, tear_root: Path | None = None) -> dict:
-    """편마다 state4_of → <채널>/_kal/소리자막칸.json(편별 + 채널 요약: 지분·런 길이·분당 바뀜 중앙값, 편 수 n 병기). 쓰는 자리 한 곳."""
+    """편마다 state4_of → <채널>/_kal/소리자막칸.json(편별 + 채널 요약: 지분·이어진 길이·분당 바뀜 중앙값, 편 수 n 병기). 쓰는 자리 한 곳."""
     import statistics as _st
     chan_dir, tear_root = Path(chan_dir), Path(tear_root or Path(chan_dir) / "뜯기")
     per = {}
@@ -1043,7 +1046,7 @@ def line_kind_draft(lines: list, transcript: dict, text_fx: dict, H: int, idx: l
     for key, os_ in by.items():
         parts = [o["asr_part"] for o in os_ if o["asr_part"] is not None]
         if not parts:
-            guess, why = "군집만(받아쓰기 없음)", "받아쓰기 없음 — y·색 군집만"
+            guess, why = "군집만(받아쓰기 못 받음)", "받아쓰기 못 받음 — y·색 군집만"
         else:
             rate = sum(p >= KIND_SIM for p in parts) / len(parts)
             guess = "말과 같은 자막(대사·나레)" if rate >= KIND_GROUP_RATE else "말과 다른 자막(해설·효과)"
@@ -1065,7 +1068,7 @@ def _ff(args: list) -> None:
         raise RuntimeError("프레임 뽑기 실패: " + (r.stderr or b"").decode("utf-8", "replace")[-300:])
 
 
-def eye_frames(mp4: str, out_dir, win: tuple | None = None) -> dict:
+def eye_frames(mp4: str, out_dir, win: tuple | None = None, exact: bool = False) -> dict:
     """(프로그램 — 판단 없음) 눈 판정용 그림. 0초 첫 프레임 0~3번(표지 2프레임 + 그 뒤 바뀌나)을 가로로 한 장, scene_cuts 컷마다 컷 EYE_PRE_S 앞부터
     EYE_WIN_S 동안 이어진 프레임을 가로 띠 한 장. 컷이 EYE_CUTS_MAX 넘으면 고르게 뽑는다. 프레임 뽑기라 인코딩(venc)과 무관.
     → {"dur", "fps", "n_cuts_all", "frame0": <그림>, "cuts": [{"t", "img"}]} (경로는 out_dir 안 절대 경로 — 부르는 쪽이 상대로 바꾼다)."""
@@ -1079,10 +1082,10 @@ def eye_frames(mp4: str, out_dir, win: tuple | None = None) -> dict:
     fps = float(meta.get("fps") or 30) or 30.0
     dur = float(meta.get("duration") or 0)
     from tools.calcopy.engine.crop import crop_vf
-    crop = crop_vf(win) + "," if win else ""
+    crop = crop_vf(win, exact=exact) + "," if win else ""        # exact 꺼짐(회원 PC 실행기) = 옛 crop 문자열 · 표 #71
     f0 = out / "frame0.jpg"
     _ff(["-i", mp4, "-vf", f"{crop}scale=-2:{EYE_F0_H},tile=2x2", "-frames:v", "1", "-q:v", "3", str(f0)])
-    cuts = [c for c in scene_cuts(mp4, win) if c > 0.05]
+    cuts = [c for c in scene_cuts(mp4, win, exact=exact) if c > 0.05]
     allc = len(cuts)
     if len(cuts) > EYE_CUTS_MAX:
         step = len(cuts) / EYE_CUTS_MAX

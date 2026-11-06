@@ -1,4 +1,4 @@
-"""칼카피 엔진 추가 1~8번 — 동작 시험(11-06 감시 ② 보강).
+"""kal 엔진 추가 1~8번 — 동작 시험(11-06 감시 ② 보강).
 
 앞 시험은 고치기 전 판에서 '함수가 없어서' 실패했다(무엇을 고쳤는지 재지 못함). 여기 시험은 **고치기 전부터 있던 입구**
 (step_collect·scene_cuts·to_frame.build·fontmatch.line_masks·preset_gates.text_gate·step_tteutgi·step_rules·skeleton)만 부르고,
@@ -67,9 +67,23 @@ def test_2_scene_cuts_crop_is_exact(monkeypatch):
         seen.append(cmd)
         return subprocess.CompletedProcess(cmd, 0, "", "")
     monkeypatch.setattr(subprocess, "run", fake_run)
-    KA.scene_cuts("x.mp4", win=(0, 521, 1080, 1399))
+    _kw(KA.scene_cuts, "x.mp4", win=(0, 521, 1080, 1399), exact=True)   # kal 경로가 켜서 부른다
     vf = next(c[c.index("-vf") + 1] for c in seen if "-vf" in c)
     assert vf.startswith("crop=1080:1399:0:521:exact=1"), vf   # 고치기 전: 'crop=1080:1399:0:521,' (짝수로 내려 한 줄 위)
+
+
+def test_2_scene_cuts_default_is_old_crop(monkeypatch):
+    """회원 PC 실행기(runner_ops c_bm_eye_frames → eye_frames → scene_cuts)는 인자 없이 부른다 = 옛 crop 그대로(11-06 재감시 ①)."""
+    seen = []
+
+    def fake_run(cmd, **k):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    KA.scene_cuts("x.mp4", win=(0, 521, 1080, 1399))
+    vf = next(c[c.index("-vf") + 1] for c in seen if "-vf" in c)
+    assert vf == "crop=1080:1399:0:521,select='gt(scene,0.3)',showinfo", vf
+    assert inspect.signature(KA.eye_frames).parameters["exact"].default is False
 
 
 # 3 · 표 #112·#174 — kal 뜯기(kal_mode)는 자막 칸 폭 = 벤치 1줄 자막 잰 폭, 크기 = (표본 없으면) 군집 폭 역산
@@ -199,7 +213,19 @@ def test_8_skeleton_fills_kind_draft():
                                  {"i": 1, "t0": 1, "t1": 2, "top_y": 1200, "text": ["오늘은 이걸 봐요"]},
                                  {"i": 2, "t0": 2, "t1": 3, "top_y": 600, "text": ["쾅 터졌다"]}]},
           "audio": {"transcript": {"segments": [{"start": 0.0, "end": 2.0, "text": "안녕하세요 여러분 오늘은 이걸 봐요"}]}}}
-    L = KA.skeleton("v1", tt)["lines"]
+    L = _kw(KA.skeleton, "v1", tt, kal=True)["lines"]                          # kal 경로(kal.py)가 켜서 부른다
     g = [(l.get("_kind_draft") or {}).get("guess") for l in L]
     assert g[0] == g[1] == "말과 같은 자막(대사·나레)" and g[2] == "말과 다른 자막(해설·효과)", g   # 고치기 전: 칸 없음(None)
     assert all(l["speaker"] is None and l["layer"] is None for l in L)          # 사람 칸은 비워 둔다
+
+
+def test_8_5_skeleton_default_is_old_shape():
+    """회원 PC 실행기(runner_ops c_bm_skel)는 kal 없이 부른다 = 줄 종류 초안(#8)·괄호 표시(#5) 칸 없음(11-06 재감시 ①)."""
+    tt = {"probe": {"h": 1920, "duration": 4},
+          "captions": {"items": [{"i": 0, "t0": 0, "t1": 1, "top_y": 1200, "text": ["안녕하세요 여러분"]},
+                                 {"i": 1, "t0": 1, "t1": 2, "top_y": 600, "text": ["(쾅 터졌다)"]}]},
+          "audio": {"transcript": {"segments": [{"start": 0.0, "end": 2.0, "text": "안녕하세요 여러분"}]}}}
+    L = KA.skeleton("v1", tt)["lines"]
+    assert not any("_kind_draft" in l or "_jimun" in l for l in L), L
+    K = KA.skeleton("v1", tt, kal=True)["lines"]
+    assert "_jimun" in K[1] and all("_kind_draft" in l for l in K)

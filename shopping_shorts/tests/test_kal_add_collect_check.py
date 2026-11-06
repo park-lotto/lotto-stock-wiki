@@ -1,7 +1,7 @@
-"""칼카피 받은 영상 검사(표 #14·#15, Jev 해결 0.79·위험 0.26 · 11-06).
+"""kal 받은 영상 검사(표 #14·#15, Jev 해결 0.79·위험 0.26 · 11-06).
 
-받은 mp4 마다 크기·열림·영상 트랙·오디오 트랙·높이 하한·길이(메타 대비 ±1.5초)·소리 있음을 잰다.
-어긋나면 지우고 재수신 최대 2회, 검사 자체가 실패하면 '검사 못 함' = 불통과.
+받은 mp4 마다 파일 크기·열리는지·영상/소리 트랙·높이 하한·길이(메타 대비 길이 1.5초 안)·소리 있음을 잰다.
+어긋나면 지우고 다시 받기 두 번까지, 검사 자체가 실패하면 '검사 못 함' = 불통과.
 """
 import json
 import subprocess
@@ -49,7 +49,7 @@ def test_small_and_broken_are_fail_not_pass(tmp_path):
     big = tmp_path / "b.mp4"
     big.write_bytes(b"\0" * (kal.MIN_FILE_BYTES + 10))
     why = kal.check_fetched(big, 3)
-    assert any("열림" in w or "검사 못 함" in w for w in why), why      # 검사 못 함 ≠ 통과
+    assert any("열림" in w or "검사 못 함" in w for w in why), why      # 검사가 실패하면 불통과
 
 
 def test_meta_duration_from_info_json(tmp_path):
