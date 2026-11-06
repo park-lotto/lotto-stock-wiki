@@ -2386,7 +2386,7 @@ def c_clean_text(W, d):
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
     if d.get("bg"):         # 기다리지 않고 뒤로 — 렌더는 임시 흐림으로 간다(관제 304). None = 뒤로 못 보내는 경우(구간 없음·흐림·무료 엔진) → 아래 옛 길
-        j = VC.bg_start(src, send, mode, d.get("spots"))
+        j = VC.bg_start(src, send, mode, d.get("spots"), used=used)
         if j:
             sys.stderr.write(f"[clean_text] 뒤에서 지우기 시작 — 자막 컷 {VC.span_sec(send)}초\n")
             return {**j, "send": send, "send_sec": VC.span_sec(send), "used_sec": VC.span_sec(used)}
@@ -2421,7 +2421,9 @@ def c_clean_take(W, d):
     t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at if at > 0 else time.time() - VC.BG_MAX))
     r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
     if r.get("state") == "done" and not r.get("error"):
-        _, _, used = VC.plan_spans(doc, {}, {})
+        # 쓰는 구간 = 보낸 때 기록(job.json used) 먼저 — 받는 때 계획을 다시 읽으면 그 사이 계획 파일의 vmake_cuts 가 사라져 used 0초 →
+        #   정상 전송 32.9초를 '쓰지 않는 구간까지 보냄'(final)으로 편을 끝냈다(11-06 김준용 a18d9ca952a7, Jev 뿌리 0.89·증명 0.69). 옛 job(기록 없음)만 지금 계획
+        used = r.get("used_at_send") or VC.plan_spans(doc, {}, {})[2]
         sent = VC.sent_from_ledger(src, t0)
         r.update({"sent": sent, "used_sec": VC.span_sec(used), "send_sec": r.get("sec"), "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_take] {r.get('state')} · 호출 {r.get('calls')}회: {r.get('why')}\n")
