@@ -3,7 +3,10 @@
 목소리 나누기 = demucs htdemucs(전용 가상환경 C:/Users/CH/demucs-venv, CPU torch — 엔진 파이썬과 따로: 3.14 에 torch 를 넣지 않는다).
 엔진은 하위 프로세스로 부르고 결과 wav(vocals·no_vocals)만 받는다. 가상환경이 없으면 조용히 넘기지 않고 {"failed": 사유}.
 사람 목소리 판정(voice_frames) = 0.1초 칸마다 목소리 줄기 RMS 가 ① 기준선(같은 칸 배경 줄기 − 6dB) 위 ② 절대 하한 −40dBFS 위 — 둘 다
-(배경음이 새어 든 작은 소리·조용한 편의 잡음을 사람 목소리로 치지 않게). 근거 표본 1편 — 받아쓰기 낱말이 쌓이면 다시 잰다.
+(배경음이 새어 든 작은 소리·조용한 편의 잡음을 사람 목소리로 치지 않게).
+★초안(draft) — 11-06 Jev 해결 0.69·위험 0.26: 판정·규칙 칸은 이 값을 쓰지 않는다(4상태 측정만, 초안 표시를 옮긴다).
+규칙으로 올리는 조건 = 사람 말 정답 편 중 '말 있는 칸·없는 칸이 섞인 편'(정답 목소리 지분 MIXED_LO~MIXED_HI) VOICE_RULE_MIN_MIXED 편 이상에서 F1 확인.
+가상환경 경로는 이 PC 기준(C:/Users/CH/demucs-venv, 바꾸기 SHORTEM_DEMUCS_PY) — kal 경로에서만 부른다(analyze kal=True), 없으면 failed + [경보].
 """
 from __future__ import annotations
 
@@ -22,6 +25,14 @@ STEP_S = 0.1               # 판정 격자(0.1초 — 4상태 격자와 같은 �
 VOICE_OVER_BG_DB = 6.0     # 기준선 = 같은 칸 배경 줄기 — 목소리가 배경 − 6dB 보다 커야
 VOICE_ABS_DB = -40.0       # 절대 하한(dBFS) — 둘 다 넘어야 사람 목소리
 BG_ABS_DB = -45.0          # 배경 줄기 있음 하한(dBFS)
+MIXED_LO, MIXED_HI = 0.2, 0.8   # '말 없는 칸을 가려내는 힘'을 재는 정답 편 = 정답 목소리 지분이 이 사이
+VOICE_RULE_MIN_MIXED = 3        # 그런 편이 이만큼 쌓여야 규칙으로 올린다(그 전 draft)
+VOICE_EVIDENCE = {             # 11-06 실측(C:/t/eng_fix_run/06_voice_10.json · 정답 = 스피치매틱스 받아쓰기 구절 시각)
+    "truth_videos": 7,          # fFhPI(받아쓰기 = 배경 노래 가사) + 나레 채널 6편(유머쇼쇼 4·이븐쇼핑 1·해외쇼쇼 1)
+    "f1": {"fFhPI": 0.88, "BlA9": 0.982, "NBdm": 0.989, "Lr2H": 0.884, "jECu": 0.933, "QMJt": 0.655, "ABjQ": 0.99},
+    "mixed_videos": 0,          # 정답 목소리 지분 0.2~0.8 = QMJt(0.5) 하나뿐인데 그 정답은 제미나이 무료 구절 시각이라 품질 낮음 → 0 으로 센다
+    "same_f1_rule": "절대 −40dBFS 하나만도 F1 차 ≤0.012 — 기준선 조건이 더 낫다는 증거 없음",
+    "gap": "원음 대사·노래가 섞인 편(스냅봤니 꼴)의 사람 말 정답 0편 · 목소리 줄기에 노래 부르는 소리도 들어간다"}
 
 _WORKER = r'''
 import sys, json, subprocess, numpy as np, torch, soundfile as sf
@@ -90,8 +101,8 @@ def _db_grid(wav_path: str, step: float = STEP_S) -> np.ndarray:
 
 def voice_frames(vocals_wav: str, no_vocals_wav: str) -> dict:
     """0.1초 칸마다 사람 목소리 있음(bool) — ① 기준선 = 같은 칸 배경 줄기: 목소리 > 배경 − VOICE_OVER_BG_DB ② 목소리 > VOICE_ABS_DB. 둘 다.
-    (Jev 해결 0.84·위험 0.38 · 11-06) 정답 = 받아쓰기 낱말 시각, 표본 1편(fFhPI): F1 0.88(정밀 0.80·재현 0.97).
-    처음 설계(편 목소리 하위 20% + 12dB)는 말이 계속되는 편에서 기준선이 곧 목소리라 F1 0.03 — 버림."""
+    (Jev 해결 0.84·위험 0.38 · 11-06) 정답 = 받아쓰기 구절 시각 7편(VOICE_EVIDENCE) — 초안(draft_mark).
+    처음 설계(편 목소리 하위 20% + 12dB)는 말이 계속되는 편에서 기준선이 곧 목소리라 F1 0.0~0.33 — 버림."""
     a, b = _db_grid(vocals_wav), _db_grid(no_vocals_wav)
     n = min(len(a), len(b))
     if not n:
@@ -100,7 +111,16 @@ def voice_frames(vocals_wav: str, no_vocals_wav: str) -> dict:
     v = (a > b - VOICE_OVER_BG_DB) & (a > VOICE_ABS_DB)
     return {"frames": v.tolist(), "voiced_share": round(float(v.mean()), 3), "step_s": STEP_S,
             "vocals_db_median": round(float(np.median(a)), 1), "bg_db_median": round(float(np.median(b)), 1),
-            "rule": f"vocals RMS > 같은 칸 배경 − {VOICE_OVER_BG_DB}dB 그리고 > {VOICE_ABS_DB}dBFS (0.1초 칸)", "evidence": "정답 표본 1편(fFhPI 받아쓰기 낱말) F1 0.88"}
+            "rule": f"vocals RMS > 같은 칸 배경 − {VOICE_OVER_BG_DB}dB 그리고 > {VOICE_ABS_DB}dBFS (0.1초 칸)",
+            **draft_mark()}
+
+
+def draft_mark() -> dict:
+    """목소리 칸 초안 표시 한 곳 — 쌓인 정답이 조건(VOICE_RULE_MIN_MIXED)에 못 미치면 draft=True. 4상태가 이 표시를 옮긴다."""
+    ready = VOICE_EVIDENCE["mixed_videos"] >= VOICE_RULE_MIN_MIXED
+    return {"draft": not ready, "evidence": VOICE_EVIDENCE,
+            "use": "규칙·판정에 써도 됨" if ready else
+                   f"초안 — 측정만(규칙·판정 칸에 쓰지 않는다 · 말 섞인 정답 편 {VOICE_EVIDENCE['mixed_videos']}/{VOICE_RULE_MIN_MIXED})"}
 
 
 def bg_frames(no_vocals_wav: str) -> dict:

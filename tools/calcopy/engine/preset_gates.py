@@ -106,6 +106,21 @@ def hook_ending_gate(lines: list[dict]) -> list[str]:
     return [f"G-1 훅 1·2줄 같은 어미 무리 '{a}'·'{b}'(~데 ~데 금지)"] if same else []
 
 
+def paren_tts_gate(lines: list[dict]) -> list[str]:
+    """(관문 주인 · 표 #230 · 11-06 Jev 해결 0.50·위험 0.62) TTS 줄(원음 줄 제외)이 통째 괄호(지문 '(바로 퀵 전화해봄)')면 실패 — 지문은 읽지 않는다.
+    판단 = kal_analyze.is_stage_direction 한 곳. 줄 꼴은 preset_make w['lines'](orig 칸) 와 대본.json 줄(kind=orig) 둘 다 받는다.
+    실측: voice_synth.speakable 은 괄호를 모른다('(의자찾는중)' 그대로) · 사람 줄판독 5558줄 중 통째 괄호 45줄(나레로 적힌 27)."""
+    from tools.calcopy.engine.kal_analyze import is_stage_direction
+    out = []
+    for i, l in enumerate(lines or []):
+        if not isinstance(l, dict) or l.get("orig") or l.get("kind") == "orig":
+            continue
+        t = l.get("tts") or l.get("text") or l.get("line")
+        if is_stage_direction(t):
+            out.append(f"G-1 {i + 1}줄 TTS 가 통째 괄호(지문) {str(t)[:30]!r} — 원음 줄(kind=orig)로 두거나 대본에서 뺀다(표 #230)")
+    return out
+
+
 def join_gate(pieces: list[dict]) -> list[str]:
     """(판단 주인 · make-화면자막-11) 자막 조각 경계 앞 끝 2글자 + 뒤 첫 2글자를 붙이면 금칙어가 되는데 각 조각엔 없으면 실패."""
     bad = []
@@ -129,6 +144,8 @@ def text_gate(w: dict, cfg: dict | None = None) -> list[str]:
         bad += hook_ending_gate(w.get("lines") or [])      # make-대본-04
     if ck.get("join_forbid"):
         bad += join_gate(w.get("pieces") or [])            # make-화면자막-11
+    if ck.get("paren_tts"):
+        bad += paren_tts_gate(w.get("lines") or [])        # 표 #230 — kal.step_make 는 판 칸이 꺼져 있어도 같은 함수를 부른다
     sp = Path(w["dir"]) / "대본.json" if w.get("dir") else None
     if sp and sp.exists():
         try:

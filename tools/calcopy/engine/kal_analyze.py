@@ -875,6 +875,24 @@ def is_stage_direction(text) -> bool:
 
 
 STATE_STEP_S = 0.1
+STATE_GAP_FILL_S = 0.2   # 목소리 상태 사이 비목소리 틈이 이 초 미만이면 메운다(말 사이 쉼 — 11-06 Jev 해결 0.40·위험 0.30).
+                         # 실측: 메우기 전 바뀜 분당 스냅봤니 163/97/44/69·유머쇼쇼 17/21/55 → 0.2초 미만 메움 104/50/7/48·9/0/0 (C:/t/eng_fix_run/07_fill.json)
+
+
+def _fill_voice_gaps(seq: str, n_min: int) -> tuple[str, int]:
+    """상태열에서 같은 목소리 상태(N·A·V) 사이 n_min 칸 미만 비목소리 런을 앞 상태로 메운다 → (메운 열, 메운 칸 수)."""
+    runs = []
+    for ch in seq:
+        if runs and runs[-1][0] == ch:
+            runs[-1][1] += 1
+        else:
+            runs.append([ch, 1])
+    filled = 0
+    for i in range(1, len(runs) - 1):
+        if runs[i][0] not in "NAV" and runs[i][1] < n_min and runs[i - 1][0] == runs[i + 1][0] and runs[i - 1][0] in "NAV":
+            filled += runs[i][1]
+            runs[i][0] = runs[i - 1][0]
+    return "".join(c * m for c, m in runs), filled
 
 
 def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
@@ -903,7 +921,8 @@ def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
             seq.append("C")
         else:
             seq.append("_")
-    s = "".join(seq)
+    raw = "".join(seq)
+    s, filled = _fill_voice_gaps(raw, int(round(STATE_GAP_FILL_S / STATE_STEP_S)))
     runs = []
     for ch in s:
         if runs and runs[-1][0] == ch:
@@ -926,7 +945,11 @@ def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
         g = "".join(letters[i:i + 3])
         tri[g] = tri.get(g, 0) + 1
     rl = sorted(m * STATE_STEP_S for _, m in runs)
-    return {"seq": s, "step_s": STATE_STEP_S, "share": {c: round(s.count(c) / n, 3) for c in "NAVSC_" if c in s},
+    raw_runs = 1 + sum(1 for a, b in zip(raw, raw[1:]) if a != b) if raw else 0
+    vdraft = (sep.get("voice") or {}).get("draft", True)        # 목소리 칸 초안 표시(separate.draft_mark)를 옮긴다 — 표시가 없으면(옛 칸) 초안으로 본다
+    return {"seq": s, "seq_raw": raw, "step_s": STATE_STEP_S, "gap_fill": {"under_s": STATE_GAP_FILL_S, "cells": filled,
+            "switch_per_min_raw": round((raw_runs - 1) / dur_min, 1)},
+            "draft": bool(vdraft), "share": {c: round(s.count(c) / n, 3) for c in "NAVSC_" if c in s},
             "runs": {"n": len(runs), "median_s": round(rl[len(rl) // 2], 2), "mean_s": round(sum(rl) / len(rl), 2)},
             "switch_per_min": {k: round(v / dur_min, 1) for k, v in sorted(sw.items())},
             "longest": {c: {"sec": v["sec"], "pos_pct": v["pos_pct"]} for c, v in longest.items()},
@@ -935,7 +958,7 @@ def state4_of(tteutgi: dict, lines: list | None = None) -> dict:
 
 
 def write_state4(chan_dir: Path, ids: list, tear_root: Path | None = None) -> dict:
-    """편마다 state4_of → <채널>/_kal/4상태.json(편별 + 채널 요약: 지분·런 길이·분당 바뀜 중앙값, 편 수 n 병기). 쓰는 자리 한 곳."""
+    """편마다 state4_of → <채널>/_kal/소리자막칸.json(편별 + 채널 요약: 지분·런 길이·분당 바뀜 중앙값, 편 수 n 병기). 쓰는 자리 한 곳."""
     import statistics as _st
     chan_dir, tear_root = Path(chan_dir), Path(tear_root or Path(chan_dir) / "뜯기")
     per = {}
@@ -954,15 +977,18 @@ def write_state4(chan_dir: Path, ids: list, tear_root: Path | None = None) -> di
             "run_median_s": round(_st.median(r["runs"]["median_s"] for r in ok), 2) if ok else None,
             "switch_per_min_median": {k: round(_st.median(r["switch_per_min"].get(k, 0) for r in ok), 1)
                                       for k in sorted({k for r in ok for k in r["switch_per_min"]})} if ok else {},
-            "_note": "n<10 이면 범위(대역)를 말하지 않는다 — 중앙값만(1주차 대조 #12)"}
+            "draft": any(r.get("draft", True) for r in ok) if ok else True,
+            "_note": "n<10 이면 범위(대역)를 말하지 않는다 — 중앙값만(표본이 작으면 분위수가 한두 편에 끌린다) · 목소리 칸 초안이면 측정만(규칙·판정에 쓰지 않는다)"}
     out = {"made": time.strftime("%Y-%m-%d %H:%M"), "summary": summ, "per_video": per}
     kd = chan_dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
-    (kd / "4상태.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    (kd / "소리자막칸.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     return out
 
 
-KIND_SIM = 0.62          # 받아쓰기 부분 유사(줄 글자 중 겹친 비율) 문턱(1주차 자료와 같은 값)
+KIND_SIM = 0.60          # 받아쓰기 부분 유사(줄 글자 중 겹친 비율) 문턱 — 우리 표본 6편 146줄 실측(11-06, Jev 해결 0.31·위험 0.16):
+                         # 말과 다른 자막(스냅봤니 fFhPI 14줄) 최대 0.56 · 나레 줄(유머쇼쇼 4·이븐쇼핑 1편 132줄) 0.60 이상 126(0.955) — 0.60 에서 음성 오판 0
+                         # (0.55 오판 0.071 · 0.65 재현 0.939) C:/t/eng_fix_run/08_kind_ours.json
 KIND_GAP_S = 1.01       # 줄 앞뒤 이 초 안 구절까지 본다
 KIND_Y_FRAC = 0.03      # y 군집 폭(화면 높이 비)
 KIND_COLOR = 40         # 채움색 같은 군집(채널 최대 차)

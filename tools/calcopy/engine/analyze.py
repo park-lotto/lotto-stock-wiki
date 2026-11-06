@@ -166,20 +166,20 @@ def text_fx_one(img: np.ndarray, pol: str, canvas_bg: list[int]) -> dict | None:
             "box": box if box and "note" not in box else None, "box_note": box.get("note") if box else None}
 
 
-def fonts_and_fx(cap, ocr, vl, out_dir) -> tuple[dict, dict]:
+def fonts_and_fx(cap, ocr, vl, out_dir, line_window: bool = False) -> tuple[dict, dict]:
     pol = vl["caption"]["ink"]
     fdir = Path(out_dir) / "fonts"
     fdir.mkdir(exist_ok=True)
     usable = []
-    _gl = [g["line_h"] for g in cap.get("glyph") or [] if g.get("line_h")]
-    glyph_lh = float(np.median(_gl)) if _gl else None          # 자막 줄 높이(bench captions glyph 중앙) — 줄 마스크 창(없으면 옛 동작)
+    _gl = [g["line_h"] for g in cap.get("glyph") or [] if g.get("line_h")] if line_window else []
+    glyph_lh = float(np.median(_gl)) if _gl else None          # 자막 줄 높이(bench captions glyph 중앙) — 줄 마스크 창. line_window 꺼짐(회원 벤치마킹 등) = 옛 동작
     for it in cap["items"]:
         i = it["i"]
         lines = [x for x in ocr["texts"].get(i, []) if x.strip()]
         if i not in ocr["crops"] or not lines:
             continue
-        lh = glyph_lh
-        masks = fontmatch.line_masks(ocr["crops"][i], pol, line_h=lh, n_lines=len(lines))   # 표 #222 자리: 줄 높이 창 + 섬(영상 픽셀 오염 버림)
+        masks = (fontmatch.line_masks(ocr["crops"][i], pol, line_h=glyph_lh, n_lines=len(lines)) if glyph_lh   # 표 #222 자리: 줄 높이 창 + 섬(kal 경로만)
+                 else fontmatch.line_masks(ocr["crops"][i], pol))
         if len(masks) != len(lines):
             continue
         usable.append((i, lines, masks))
@@ -585,7 +585,10 @@ def _context(R: dict) -> str:
 
 
 # ── 묶기 ─────────────────────────────────────────────────────────────────
-def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
+def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True, kal: bool = False) -> dict:
+    """kal=True = 칼카피 경로(kal.py 뜯기·우리뜯기만 켠다 · 11-06 Jev 해결 0.80·위험 0.29). 켜면 글꼴 줄 마스크 창(표 #222)·목소리 나누기(표 #28)를 하고
+    뜯기.json 에 kal_mode=True 표식을 남긴다 — to_frame 은 그 표식이 있을 때만 자막 군집 폭·겹침 크기(표 #112·#174)를 쓴다(판단 = 뜯기 표식 한 곳).
+    꺼짐(기본) = 회원 PC 벤치마킹(bench_member)·recheck 옛 동작 그대로."""
     if llm is None:
         from tools.calcopy.engine import claude_cli
         llm = claude_cli.analyze_llm
@@ -594,6 +597,8 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
     T = {}
     t_all = time.time()
     R: dict = {"engine": ENGINE_VERSION, "source": str(mp4), "measured_at": time.strftime("%Y-%m-%d %H:%M")}
+    if kal:
+        R["kal_mode"] = True
     unknown: list[str] = []
 
     t = time.time()
@@ -642,7 +647,7 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
 
     t = time.time()
     if ocr:
-        R["fonts"], fx = fonts_and_fx(cap, ocr, vl, out_dir)
+        R["fonts"], fx = fonts_and_fx(cap, ocr, vl, out_dir, line_window=kal)
         try:
             tf = title_fonts(mp4, meta, vl, lay["bench_full"].get("above_bands") or [], cap, out_dir, llm)
         except Exception as e:  # noqa: BLE001 — 제목 대조 실패는 항목에 남기고 계속
@@ -740,12 +745,14 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
             unknown.append(f"{k}: {R[k]['failed']}")
     T["rules"] = time.time() - t
 
-    t = time.time()
-    from tools.calcopy.engine import separate as SEP      # 표 #28(Jev 해결 0.84): 목소리/배경 나누기 + 0.1초 목소리·배경 칸 — 만드는 영상은 안 바뀐다(분석 칸만)
-    R["separation"] = SEP.separation_of(mp4, str(Path(out_dir) / "sep"))
-    if R["separation"].get("failed"):
-        unknown.append(f"목소리 나누기 실패: {R['separation']['failed']}")
-    T["separation"] = time.time() - t
+    if kal:                                                # 표 #28(Jev 해결 0.84): 목소리/배경 나누기(kal 경로만 — 회원 PC 엔 demucs 가상환경이 없다)
+        t = time.time()
+        from tools.calcopy.engine import separate as SEP  # 만드는 영상은 안 바뀐다(분석 칸만) · 목소리 칸은 초안(draft)
+        R["separation"] = SEP.separation_of(mp4, str(Path(out_dir) / "sep"))
+        if R["separation"].get("failed"):
+            unknown.append(f"목소리 나누기 실패: {R['separation']['failed']}")
+            print(f"[경보] 목소리 줄기 가르기 못 함 — {R['separation']['failed'][:160]} (4상태 못 잼)", flush=True)
+        T["separation"] = time.time() - t
     R["unknown"] = unknown
     R["llm_calls"] = list(gemini_free.CALLS)
     R["timing_sec"] = {k: round(v, 1) for k, v in T.items()} | {"total": round(time.time() - t_all, 1)}

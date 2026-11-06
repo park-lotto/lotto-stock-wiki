@@ -147,10 +147,10 @@ def test_tteutgi_uses_materials_and_tear_llm(tmp_path, monkeypatch):
     (old / "뜯기.json").write_text(json.dumps({"overlay_rules": {"failed": "건너뜀(--no-materials)"}}, ensure_ascii=False), encoding="utf-8")
     seen = []
     from tools.calcopy.engine import analyze, tear_llm
-    monkeypatch.setattr(analyze, "analyze", lambda mp4, out, llm=None, materials=True: seen.append((Path(mp4).stem, llm, materials)) or {})
+    monkeypatch.setattr(analyze, "analyze", lambda mp4, out, llm=None, materials=True, kal=False: seen.append((Path(mp4).stem, llm, materials, kal)) or {})
     st, out, note = kal.step_tteutgi(S)
     assert [s[0] for s in seen] == ["a", "b"]                      # 옛 '건너뜀' 뜯기(b)도 다시
-    assert all(s[2] is True and s[1] is tear_llm.ask for s in seen)
+    assert all(s[2] is True and s[1] is tear_llm.ask and s[3] is True for s in seen)   # kal 경로 = kal=True(11-06 Jev 해결 0.80)
 
 
 # ---------------------------------------------------------------- 4·5 verify

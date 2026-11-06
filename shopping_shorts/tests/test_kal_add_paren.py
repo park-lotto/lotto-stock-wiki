@@ -23,7 +23,7 @@ def test_paren_gate(tmp_path):
         {"text": "첫 줄"}, {"text": "(후다닥)"}, {"text": "(원음 지문)", "kind": "orig", "src": "a", "spans": []},
         {"text": "이걸(채소보관용기) 팔더라고요"}]}, ensure_ascii=False), encoding="utf-8")
     got = kal.paren_gate(tmp_path)
-    assert len(got) == 1 and got[0].startswith("2줄")
+    assert len(got) == 1 and "2줄" in got[0] and got[0].startswith("G-1")
 
 
 def test_skeleton_marks_jimun():

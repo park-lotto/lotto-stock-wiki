@@ -703,18 +703,10 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             ink_h = ink_h - 2 * fxs["outline_px"]
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
-        clu = caption_cluster(fam, fit["size"], items, W, notes)     # 표 #112·#174: 가운데 자막 칸 폭 = 벤치 군집 폭(못 믿으면 옛 상수)
-        if cap_samples:                                               # 표 #174: 크기 = 결과물 겹침이 가장 큰 후보(높이 역산·외곽선 안 뺀 높이·군집 폭 역산)
-            raw_h = fxs.get("line_h_px") or ink_h
-            cands = {"높이 역산": fit["size"], "높이(외곽선 안 뺌)": size_and_top(fam, first, top, raw_h, None)["size"] if raw_h != ink_h else None,
-                     "군집 폭 역산": clu.get("size_from_w")}
-            pk = caption_size_pick(fam, cands, cap_samples)
-            if pk.get("pick") and pk["pick"] != "높이 역산":
-                fit = size_and_top(fam, first, top, ink_h * pk["size"] / fit["size"], None)
-                clu = caption_cluster(fam, fit["size"], items, W, [])
-            notes.append(f"자막 크기 {fit['size']} = 겹침 고르기 {pk.get('pick')} {pk.get('scores')}(표본 {pk.get('n', 0)}개, 늘리지 않고 그린 IoU)")
-        else:
-            notes.append("자막 크기 = 높이 역산(겹침 표본 없음 — 원본 영상 없거나 1줄 글 자막 없음)")
+        kal_mode = bool(J.get("kal_mode"))                            # 표 #112·#174 는 칼카피 뜯기 표식이 있을 때만(회원 벤치마킹 = 옛 동작 · 11-06 Jev 해결 0.80)
+        clu = caption_cluster(fam, fit["size"], items, W, notes) if kal_mode else {"trusted": False}   # 가운데 자막 칸 폭 = 벤치 군집 폭(못 믿으면 옛 상수)
+        if kal_mode:
+            fit, clu = caption_size_route(fam, first, top, ink_h, fit, clu, fxs.get("line_h_px") or ink_h, items, W, cap_samples, notes)
         it0 = caption_width_ref(fam, fit["size"], items, notes)
         cap_ls, cap_ws = spacing_and_word_gap(fam, fit["size"], it0["text"][0], it0["widths"][0], cap_word_gap,
                                               [" ".join(i.get("text") or []) for i in items]) if it0 else (0, 0)
@@ -731,7 +723,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         boxes = [b for c in (J.get("caption_motion") or {}).get("starts") or []
                  for b in [next((k.get("bbox") for k in c.get("curve") or [] if k.get("bbox")), None)] if b]
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
-        if al["align"] == "center" and clu["trusted"]:
+        if al["align"] == "center" and clu.get("trusted"):
             al = {**al, "w": clu["w"]}
         ol = fxs.get("outline_px")
         ol_rgb = fxs.get("outline_rgb")
@@ -885,7 +877,7 @@ def caption_width_ref(fam: str, size: float, items: list, notes: list) -> dict |
 
 
 UI_SAFE_FRAC = 0.86     # 쇼츠 오른쪽 아이콘·아래 글에 안 가리는 가로 폭 비 — 고객 라인 video_assemble._SAFE_W 와 같은 값(기록용, 판단은 벤치 군집)
-CLUSTER_N_P99 = 10      # 줄 폭 분포를 대역(p99)으로 말하는 최소 표본 — 그 밑은 최대값(1주차 대조 #12: n<10 대역 금지)
+CLUSTER_N_P99 = 10      # 줄 폭 분포를 분위수(p99)로 말하는 최소 표본 — 그 밑은 최대값(표본이 작으면 p99 가 사실상 최댓값 하나에 끌린다 · 스냅봤니 편당 1줄 자막 11~21개)
 
 
 def caption_cluster(fam: str, size: float, items: list, W: int, notes: list) -> dict:
@@ -944,6 +936,33 @@ def _iou_unstretched(a: np.ndarray, b: np.ndarray) -> float:
     P = np.zeros((H, Wd), bool); Q = np.zeros((H, Wd), bool)
     P[:a.shape[0], :a.shape[1]] = a; Q[:b.shape[0], :b.shape[1]] = b
     return float((P & Q).sum() / max(1, (P | Q).sum()))
+
+
+def caption_size_route(fam, first, top, ink_h, fit, clu, raw_h, items, W, samples, notes) -> tuple[dict, dict]:
+    """자막 크기 길 — 판단 한 곳(표 #174 · 11-06 Jev 해결 0.59·위험 0.30, 감시 잉크 실측 반영). ① 겹침 표본이 있으면 caption_size_pick(늘리지 않고 그린 IoU 최대)
+    ② 표본이 없으면 군집 폭 역산 크기(폭을 믿을 때) + [경보] ③ 그것도 없으면 높이 역산 그대로 + [경보]. 고른 길·후보 점수는 notes 에.
+    감시 실측(스냅봤니 13줄): 벤치 흰 채움 높이 55~59px — BMJUA 62 → 52~55px · 66.5~67 → 57~59px · 67.8~68 → 57~61px(67 근처가 맞다)."""
+    def resize(size):
+        f2 = size_and_top(fam, first, top, ink_h * size / fit["size"], None)
+        return f2, caption_cluster(fam, f2["size"], items, W, [])
+    if samples:
+        cands = {"높이 역산": fit["size"], "높이(외곽선 안 뺌)": size_and_top(fam, first, top, raw_h, None)["size"] if raw_h != ink_h else None,
+                 "군집 폭 역산": clu.get("size_from_w")}
+        pk = caption_size_pick(fam, cands, samples)
+        if pk.get("pick"):
+            if pk["pick"] != "높이 역산":
+                fit, clu = resize(pk["size"])
+            notes.append(f"자막 크기 {fit['size']} = 겹침 고르기 {pk['pick']} {pk['scores']}(표본 {pk.get('n', 0)}개, 늘리지 않고 그린 IoU)")
+            return fit, clu
+    if clu.get("trusted") and clu.get("size_from_w"):
+        old = fit["size"]
+        fit, clu = resize(clu["size_from_w"])
+        msg = f"자막 크기 {fit['size']} = 군집 폭 역산(겹침 표본 없음 — 원본 영상·채움색·1줄 글 자막 중 없음 · 높이 역산 {old})"
+    else:
+        msg = f"자막 크기 {fit['size']} = 높이 역산(겹침 표본도 믿을 폭도 없음 — 외곽선 포함 여부를 모르는 높이 한 자만 씀, 눈으로 확인)"
+    print(f"[경보] {msg}", flush=True)
+    notes.append("[경보] " + msg)
+    return fit, clu
 
 
 def caption_size_pick(fam: str, cands: dict, samples: list) -> dict:
@@ -1069,7 +1088,7 @@ def main(argv=None):
         probe_fn = lambda t: (lambda f: f is not None and framed(f, rows, L["bg_rgb"]))(probe.grab(src, t, f"scale={W}:{H}", W, H))  # noqa: E731
     pol = L.get("ink_polarity") or "dark"            # build 의 자막 극성과 같은 값
     gap = caption_word_gap(src, J, W, H, pol) if src and Path(src).exists() else None
-    F = build(J, img, ocr, probe_fn, gap, title_font_fixed=a.title_font, cap_samples=caption_samples(src, J, W, H) if src and Path(src).exists() else None)
+    F = build(J, img, ocr, probe_fn, gap, title_font_fixed=a.title_font, cap_samples=caption_samples(src, J, W, H) if J.get("kal_mode") and src and Path(src).exists() else None)
     if err:
         F["made_from"]["notes"].append(f"고정 띠 OCR 실패: {err}")
     if ocr:

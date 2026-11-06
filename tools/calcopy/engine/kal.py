@@ -596,15 +596,28 @@ def _stale_tear(p: Path) -> str | None:
     return None
 
 
-def add_separation(tear: Path, mp4: Path) -> str | None:
-    """옛 뜯기.json 에 separation 칸이 없으면 separate.separation_of 로 채워 저장(판단 한 곳은 separate). 더했으면 한 줄, 아니면 None."""
-    J = json.loads(tear.read_text(encoding="utf-8"))
-    if J.get("separation") and not J["separation"].get("failed"):
+def _read_json(p: Path):
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
         return None
-    from tools.calcopy.engine import separate as SEP
-    J["separation"] = SEP.separation_of(str(mp4), str(tear.parent / "sep"))
+
+
+def add_separation(tear: Path, mp4: Path) -> str | None:
+    """kal 로 뜯은 옛 뜯기.json 에 칼카피 칸을 더해 저장 — separation(없거나 실패면 separate.separation_of, 판단 한 곳은 separate) + kal_mode 표식
+    (analyze kal=True 와 같은 표식 — to_frame 군집 폭·겹침 크기가 이 표식을 본다. 글꼴 칸은 옛 마스크 그대로, 다시 뜯어야 바뀐다). 더했으면 한 줄, 아니면 None."""
+    J = json.loads(tear.read_text(encoding="utf-8"))
+    if J.get("separation") and not J["separation"].get("failed") and J.get("kal_mode"):
+        return None
+    J["kal_mode"] = True
+    if not (J.get("separation") and not J["separation"].get("failed")):
+        from tools.calcopy.engine import separate as SEP
+        J["separation"] = SEP.separation_of(str(mp4), str(tear.parent / "sep"))
     tear.write_text(json.dumps(J, ensure_ascii=False, indent=1), encoding="utf-8")
-    return "나누기 칸 더함" if not J["separation"].get("failed") else f"나누기 실패 {J['separation']['failed'][:60]}"
+    if J["separation"].get("failed"):
+        print(f"[경보] {tear.parent.name} 목소리 줄기 가르기 못 함 — {J['separation']['failed'][:120]}", flush=True)
+        return f"나누기 실패 {J['separation']['failed'][:60]}"
+    return "나누기 칸 더함"
 
 
 def step_tteutgi(S: State):
@@ -629,13 +642,15 @@ def step_tteutgi(S: State):
                 continue
             redo.append(f"{vid}({why})")
         try:
-            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=tear_llm.ask, materials=True)
+            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=tear_llm.ask, materials=True, kal=True)   # kal 경로 표식·나누기·줄 마스크 창
             done.append(vid)
         except Exception as e:  # 조용한 실패 금지 — 편별로 기록
             errs.append(f"{vid}: {type(e).__name__} {str(e)[:120]}")
     if not done:
         return "failed", {}, "뜯기 0편: " + " | ".join(errs)
+    nosep = [v for v in done if ((_read_json(out_root / v / "뜯기.json") or {}).get("separation") or {}).get("failed")]   # 조용한 실패 금지 — 나누기 못 한 편을 note 에
     return "done", {"ids": done, "dir": str(out_root)}, (f"뜯기 {len(done)}편" + (f" 다시 뜯음 {redo}" if redo else "") + (f" 실패 {errs}" if errs else "")
+                                                         + (f" · 목소리 줄기 가르기 못 함 {len(nosep)}편 {nosep}(4상태 못 잼)" if nosep else "")
                                                          + " (판독=tear_llm: 그림 claude_cli · 받아쓰기 스피치매틱스 · 소리 판독 제미나이)")
 
 
@@ -746,7 +761,7 @@ def step_rules(S: State):
     docs = K._load_docs([str(S.dir / "줄판독")])
     out = K.write_rules(S.dir, docs, S.d["slug"])        # 쓰는 자리 한 곳(회원 흐름 bm_rules 와 같은 함수)
     R, Sc, P = out["rules"], out["script"], out["palette"]
-    st4 = K.write_state4(S.dir, S.step("tteutgi")["outputs"]["ids"])     # 표 #32·#33: 0.1초 4상태 격자(측정만) → _kal/4상태.json
+    st4 = K.write_state4(S.dir, S.step("tteutgi")["outputs"]["ids"])     # 표 #32·#33: 0.1초 4상태 격자(측정만) → _kal/소리자막칸.json
     draft = S.dir / "_kal" / "스타일분석_초안.md"
     draft.write_text("# 스타일분석 초안(kal.py rules — 규칙빈도·대본언어·팔레트 자동 집계. 사람이 §3 꼴로 옮겨 적고 규칙을 채택한다)\n\n"
                      + K.rules_md(R, S.d["slug"]) + "\n" + K.script_md(Sc) + "\n## 팔레트(channel/<slug>/팔레트.json)\n"
@@ -882,15 +897,14 @@ def glyph_gate(pdir: Path, wdir: Path) -> list[str]:
 
 
 def paren_gate(wdir: Path) -> list[str]:
-    """(표 #230 · Jev 해결 0.54·위험 0.28) 렌더 전 — 대본 TTS 줄(원음 줄 제외)이 통째 괄호(지문)면 줄 번호·글. 판단 = kal_analyze.is_stage_direction."""
-    from tools.calcopy.engine.kal_analyze import is_stage_direction
+    """(표 #230) 렌더 전 — 대본 TTS 줄이 통째 괄호(지문)면 사유 목록. 관문 주인 = preset_gates.paren_tts_gate(판 칸 checks.paren_tts 로 preset_make 안에서도 켜진다) —
+    kal 흐름은 판 칸이 꺼져 있어도 이 자리에서 같은 함수를 부른다(11-06 Jev 해결 0.50·위험 0.62)."""
+    from tools.calcopy.engine.preset_gates import paren_tts_gate
     sp = wdir / "대본.json"
     if not sp.exists():
         return []
     S_ = json.loads(sp.read_text(encoding="utf-8"))
-    return [f"{i + 1}줄 {str(l.get('tts') or l.get('text') or l.get('line'))[:30]!r}"
-            for i, l in enumerate(S_.get("lines") or S_.get("spine55") or [])
-            if isinstance(l, dict) and l.get("kind") != "orig" and is_stage_direction(l.get("tts") or l.get("text") or l.get("line"))]
+    return paren_tts_gate(S_.get("lines") or S_.get("spine55") or [])
 
 
 def step_make(S: State):
@@ -986,7 +1000,7 @@ def tear_ours(S: State, mp4: str) -> dict:
     jp = od / "뜯기.json"
     if not (jp.exists() and (od / "sha256.txt").exists() and (od / "sha256.txt").read_text(encoding="utf-8").strip() == sha):
         try:
-            analyze.analyze(mp4, str(od), llm=tear_llm.ask, materials=True)
+            analyze.analyze(mp4, str(od), llm=tear_llm.ask, materials=True, kal=True)
             (od / "sha256.txt").write_text(sha, encoding="utf-8")
         except Exception as e:  # noqa: BLE001
             print(f"[경보] 우리 완성본 뜯기 실패 — 받아쓰기 자 미측정: {type(e).__name__} {str(e)[:120]}")

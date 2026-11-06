@@ -105,8 +105,8 @@ def test_verify49_tear_ours_reuses_by_sha(tmp_path, monkeypatch):
     mp4.write_bytes(b"o")
     n = []
 
-    def fake(m, out, llm=None, materials=True):
-        n.append(materials)
+    def fake(m, out, llm=None, materials=True, kal=False):
+        n.append(materials and kal)            # 우리 뜯기도 kal 경로(kal_mode·나누기 — 11-06)
         Path(out).mkdir(parents=True, exist_ok=True)
         (Path(out) / "뜯기.json").write_text(json.dumps({"audio": {"transcript": {"segments": [{"start": 0, "end": 1, "text": "가"}]}}}), encoding="utf-8")
     monkeypatch.setattr(analyze, "analyze", fake)
