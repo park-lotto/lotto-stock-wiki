@@ -3,6 +3,9 @@
 import json, os, re, sys, time, subprocess, urllib.request, concurrent.futures as cf
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+if len(sys.argv) < 3 or sys.argv[1].startswith("-") or sys.argv[2].startswith("-"):
+    # 출력폴더 자리에 옵션(--parse-only 등)을 넣으면 그 이름의 폴더로 유료 녹음이 돌던 사고(11-07, 347줄)를 막는다
+    sys.exit("사용: narrate.py <대본.md> <출력폴더> [옵션] — 대본·출력폴더는 옵션보다 먼저 적는다")
 SCRIPT, OUT = sys.argv[1], sys.argv[2]
 args = sys.argv[3:]
 def opt(name, default):
