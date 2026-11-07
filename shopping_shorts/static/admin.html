@@ -245,7 +245,7 @@ tbody tr:hover{background:#1b1b22}
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="_CUST_SHOW=50;renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="_lvReset('cust');renderCustomers()">
     <select id=progFilter onchange="renderCustomers()">
       <option value="">전체 프로그램</option>
       <option value="shortem">숏템메이커</option>
@@ -278,7 +278,11 @@ tbody tr:hover{background:#1b1b22}
 <!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
 <div class=card>
   <h2>결제 내역 <span id=plSum class=wlnote></span>
-    <select id=plFilter onchange="_PL_SHOW=30;renderLedger()" style="margin-left:8px"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select></h2>
+  </h2>
+  <div class=filterbar>
+    <input id=plSearch placeholder="🔍 결제자 이름·전화·이메일·상품으로 찾기" oninput="_lvReset('pl');renderLedger()">
+    <select id=plFilter onchange="_lvReset('pl');renderLedger()"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select>
+  </div>
   <table class=ctable><thead><tr><th>시각</th><th>상품</th><th>금액</th><th>수단 · 상태</th><th>결제자</th><th class=mini>계정</th></tr></thead>
   <tbody id=plrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
   <div id=plMore class=moreRow></div>
@@ -950,14 +954,48 @@ async function saveProgram(cid,btn){
   });
 }
 function alertLine(t){ const m=document.getElementById('cMsg'); if(m) m.textContent=t; }
-// ── 표 나눠 보기(2026-11-07 관제 335) — 고객 50명·결제 30건씩. 검색·필터는 전체에서 하고 보여주기만 자른다.
-let _CUST_SHOW=50, _PL_SHOW=30;
-function _pageMore(id,total,shown,onclick){
-  const b=document.getElementById(id); if(!b) return;
-  b.innerHTML = total>shown ? `<button class=moreBtn onclick="${onclick}">더 보기 (${Math.min(shown,total)} / ${total})</button>` : (total?`<span class=csub2>전부 ${total}건 표시</span>`:'');
+// ── 표 기본 보기(2026-11-07 관제 335) — 사장님 "결제내역·고객관리 펼치지 말고, 검색 쉽게, 오늘 된 사람만 미리보기".
+// ★몇 행·어떤 행을 보일지와 아래 버튼은 _listView 한 곳만 정한다. 두 표(고객·결제)는 부르기만 한다.
+//   검색·필터가 비면 = 오늘 해당자만 미리보기 / 검색 중이거나 '전체 보기'를 누르면 = 전체를 나눠 보기.
+const _LV={cust:{all:false,show:50,step:50,unit:'명'}, pl:{all:false,show:30,step:30,unit:'건'}};
+function _tsMs(t){
+  if(t==null||t==='') return 0;
+  const n=Number(t);
+  if(!isNaN(n)) return n<1e12 ? n*1000 : n;          // 초·밀리초 둘 다 받는다
+  let s=String(t).trim();
+  // ★시간대 없는 'YYYY-MM-DD HH:MM:SS' = SQLite datetime('now') = UTC(store.add_customer). 그냥 읽으면 한국시간으로 읽혀 9시간 밀린다
+  if(/^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(:\d\d(\.\d+)?)?$/.test(s)) s=s.replace(' ','T')+'Z';
+  const d=Date.parse(s); return isNaN(d)?0:d;         // ISO 문자열(+09:00 등 시간대 붙은 것은 그대로)
 }
-function custMoreClick(){ _CUST_SHOW+=50; renderCustomers(); }
-function plMoreClick(){ _PL_SHOW+=30; renderLedger(); }
+function _isTodayKST(t){                              // ★'오늘' 판정은 이 함수 하나(한국시간)
+  const ms=_tsMs(t); if(!ms) return false;
+  const day=x=>new Date(x+9*3600e3).toISOString().slice(0,10);
+  return day(ms)===day(Date.now());
+}
+function _listView(kind, all, isToday, searching, moreId){
+  const st=_LV[kind], u=st.unit, b=document.getElementById(moreId);
+  const full = searching || st.all;
+  const rows = full ? all.slice(0,st.show) : all.filter(isToday);
+  if(b){
+    if(!full){
+      b.innerHTML = `<span class=csub2>오늘 ${rows.length}${u}만 미리보기 · 찾으려면 위 검색창에 입력하세요</span> `
+        + (all.length ? `<button class=moreBtn onclick="_lvAll('${kind}',true)">전체 보기 (${all.length}${u})</button>` : '');
+    }else{
+      const more = all.length>st.show ? `<button class=moreBtn onclick="_lvMore('${kind}')">더 보기 (${st.show} / ${all.length})</button> ` : (all.length?`<span class=csub2>전부 ${all.length}${u} 표시</span> `:'');
+      const fold = (st.all && !searching) ? `<button class=moreBtn onclick="_lvAll('${kind}',false)">접기 (오늘만 보기)</button>` : '';
+      b.innerHTML = more + fold;
+    }
+  }
+  return {rows, full};
+}
+function _lvRender(kind){ kind==='cust' ? renderCustomers() : renderLedger(); }
+function _lvAll(kind,on){ _LV[kind].all=on; _LV[kind].show=_LV[kind].step; _lvRender(kind); }
+function _lvMore(kind){ _LV[kind].show+=_LV[kind].step; _lvRender(kind); }
+function _lvReset(kind){ _LV[kind].show=_LV[kind].step; }
+function _custToday(c){
+  return _isTodayKST(c.created_at) || _isTodayKST(c.acked_at) || _isTodayKST(c.approved_at)
+      || _isTodayKST((c.last_payment||{}).paid_at);
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
@@ -975,7 +1013,7 @@ function renderCustomers(){
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
-  const _restAll=rest; rest=rest.slice(0,_CUST_SHOW);
+  const _lv=_listView('cust', rest, _custToday, !!(q||tier||prog||onl), 'custMore'); rest=_lv.rows;
   // ★"조회가 안 된다"의 정체를 화면이 직접 말한다(2026-08-28). 승인된 목록에서
   //   0건인데 대기 명단에 있으면, 없는 게 아니라 **아직 승인 전**인 것이다.
   try{
@@ -1033,8 +1071,7 @@ function renderCustomers(){
           <button class=bsheet onclick="location.href='/admin/customer/${c.id}'" title="날짜별 활동·API 원가">📄 상세</button>
           <button class=bpay onclick="addPayment(${c.id})">결제추가</button></div>
           <div style="margin-top:4px;white-space:nowrap">${scBtn}</div></td></tr>`;
-  }).join('') : '<tr><td colspan=7 class=empty>조건에 맞는 고객이 없어요</td></tr>';
-  _pageMore('custMore', _restAll.length, _CUST_SHOW, 'custMoreClick()');
+  }).join('') : `<tr><td colspan=7 class=empty>${_lv.full?'조건에 맞는 고객이 없어요':'오늘 가입·승인·결제한 고객이 없어요 — 위 검색창으로 찾거나 아래 «전체 보기»'}</td></tr>`;
 }
 // ── 입금 신고 (2026-08-23) ──────────────────────────────────
 // 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
@@ -1057,10 +1094,13 @@ async function loadLedger(){
 function renderLedger(){
   const esc=s=>(s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const g=document.getElementById('plFilter').value;
-  const items=ledgerItems.filter(x=>!g||x.group===g);
+  const pq=((document.getElementById('plSearch')||{}).value||'').trim().toLowerCase();
+  const items=ledgerItems.filter(x=>!g||x.group===g)
+    .filter(x=>!pq||_custMatch({name:x.payer,phone:x.phone,email:x.email,username:x.name},pq));
+  const _lv=_listView('pl', items, x=>_isTodayKST(x.at), !!(pq||g), 'plMore');
   const cl=ledgerItems.filter(x=>x.group==='숏클').length;
   document.getElementById('plSum').textContent=`숏템 ${ledgerItems.length-cl}건 · 숏클 ${cl}건`;
-  document.getElementById('plrows').innerHTML=items.length?items.slice(0,_PL_SHOW).map(x=>{
+  document.getElementById('plrows').innerHTML=_lv.rows.length?_lv.rows.map(x=>{
     const t=x.at?new Date(x.at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'-';
     const tag=x.group==='숏클'
       ?`<span class="badge pending">숏클 ${esc(x.plan)}${x.upgrade?' · 숏템에서 이동':''}</span>`:'<span class="badge pro">숏템</span>';
@@ -1070,8 +1110,7 @@ function renderLedger(){
       +`<td>${esc(x.method)}<div class=csub2 style="color:${okSt?'#7ee787':'#ffd479'}">${esc(x.status)}</div></td>`
       +`<td><b>${esc(x.payer)}</b><div class=csub>${[esc(x.phone),esc(x.email)].filter(Boolean).join(' · ')||'—'}</div></td>`
       +`<td>${x.customer_id==null?'<span class=csub2>비회원</span>':'#'+esc(x.customer_id)}</td></tr>`;
-  }).join(''):'<tr><td colspan=6 class=empty>결제 내역이 없습니다.</td></tr>';
-  _pageMore('plMore', items.length, _PL_SHOW, 'plMoreClick()');
+  }).join(''):`<tr><td colspan=6 class=empty>${_lv.full?'조건에 맞는 결제가 없습니다.':'오늘 결제가 없습니다 — 위 검색창으로 찾거나 아래 «전체 보기»'}</td></tr>`;
 }
 async function loadDepositClaims(){
   try{
