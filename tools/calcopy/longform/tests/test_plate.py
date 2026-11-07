@@ -160,3 +160,24 @@ def test_narrate_stretch_plate(tmp_path):
     d1, _, out = _narrate(tmp_path / "b", {"plate": "모둠경제"})
     assert "voice_stretch 0.917" in out
     assert abs(d1 / d0 - 1 / PLATE["voice_stretch"]) < 0.03, (d0, d1)   # atempo 는 끝을 20~40ms 짧게 낸다(실녹음 3줄 1.080~1.089 / 기대 1.0905)
+
+
+WRAP = """from studio.stage import side_word
+from studio.settings import W, H
+from PIL import Image
+import numpy as np
+im = Image.new('RGBA', (W, H), (0, 0, 0, 255)); side_word(im, 'slant_r', '1인당 5845만 원', 1.0)
+a = np.asarray(im.convert('RGB'))[:, 1430:1900].max(axis=2) > 200
+rows = np.where(a.any(axis=1))[0]; bands, cur = [], [rows[0], rows[0]]
+for y in rows[1:]:
+    if y - cur[1] > 8: bands.append(cur); cur = [y, y]
+    else: cur[1] = y
+bands.append(cur); last = a[bands[-1][0]:bands[-1][1] + 1]; xs = np.where(last.any(axis=0))[0]
+print(json.dumps(dict(n=len(bands), last_w=int(xs.max() - xs.min()))))
+"""
+
+
+def test_side_word_keeps_number_with_unit(tmp_path):
+    """옆 큰 글자: '5845만 원' 의 단위가 혼자 다음 줄로 떨어지지 않는다(timing.glued)."""
+    m = run(work(tmp_path, {"plate": "모둠경제"}), WRAP)
+    assert m["last_w"] > 150, m   # 마지막 줄이 '원' 한 글자(약 70px)면 실패

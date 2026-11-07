@@ -66,6 +66,10 @@ def make_schedule():
         print(f"[판 {CFG.get('plate')}] 샷 길이 중앙 {np.median(durs):.2f}초 / 판 목표 {CFG['shot_target_sec']}초 · 한 샷 안 등장 간격 목표 {CFG.get('element_every_sec')}초")
     return tl
 
+def glued(a, b):
+    """(판단 주인) 두 낱말을 한 줄에 붙여 둘까 — 숫자 뒤에 단위가 오면(300억 / 유로, 5845만 / 원). 자막·옆 큰 글자가 함께 부른다."""
+    return bool(re.search(r"\d(억|만|조|천)?$", a) and re.match(r"^(유로|달러|원|명|표|퍼센트|%|년|월|개월|배)", b))
+
 NOBREAK_AFTER = {"이", "그", "저", "안", "못", "좀", "더", "잘", "다", "또", "제일", "딱", "꼭", "한", "두", "세", "그냥", "아주", "진짜", "엄청", "확"}
 NOBREAK_BEFORE = {"게", "건", "거", "것", "거죠", "거예요", "수", "데", "줄", "때", "적", "뿐", "만큼", "중", "있다는", "없다는"}
 GOOD_END = re.compile(r"(,|고|서|면|데|니까|는데|은데|지만|면서|어서|아서|해서|라서|다가|든|요\?|요|죠|다)$")
@@ -84,7 +88,7 @@ def cut_caption(text, t0, t1, mx=None):
         if re.match(r"^\d", b) and re.search(r"\d,$", a): p += 60          # 1, 2위
         if GOOD_END.search(a): p -= 8
         if re.search(r"[.?!]$", a): p -= 30                                   # 문장 끝은 꼭 끊기
-        if re.search(r"\d(억|만|조|천)?$", a) and re.match(r"^(유로|달러|원|명|표|퍼센트|%|년|월|개월|배)", b): p += 50  # 300억 / 유로
+        if glued(a, b): p += 50  # 300억 / 유로
         if a.endswith(",") and len(a) <= 4 and len(b.rstrip(",")) <= 3: p += 35  # 짧은 나열(좌파, 중도, 극우)
         if re.search(r"(러|어|아|여)$", a) and re.match(r"^(가|오|주|보|있|놓|두|버리)", b): p += 25  # 놀러 가는, 보여 주고
         return p

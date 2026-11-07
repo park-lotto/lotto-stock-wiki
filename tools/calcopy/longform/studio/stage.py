@@ -2,6 +2,7 @@
 from .settings import *
 from .footage import *
 from .motion import *
+from .timing import glued
 FOCI = [(0.5, 0.45), (0.3, 0.4), (0.7, 0.4), (0.5, 0.6)]
 
 def camera(im, p, move, focus):
@@ -96,7 +97,11 @@ SIDE = {"slant": (70, 500), "slant_r": (1400, 450), "iris": (90, 700), "offset":
 def side_word(img, name, text, p):
     """옆자리에 그 장면의 키워드를 크게 쓴다."""
     x, wd = SIDE[name]; f = face("HAN", 76); d = ImageDraw.Draw(img); rows, cur = [], ""
-    for w in text.split():
+    words = []
+    for w in text.split():   # 숫자와 단위는 한 덩어리(timing.glued)
+        if words and glued(words[-1], w): words[-1] += " " + w
+        else: words.append(w)
+    for w in words:
         if cur and d.textlength(cur + " " + w, font=f) > wd: rows.append(cur); cur = w
         else: cur = (cur + " " + w).strip()
     rows.append(cur); lh = 104; y = H // 2 - 30 - lh * (len(rows) - 1) // 2; g = smooth(p / 0.14)
