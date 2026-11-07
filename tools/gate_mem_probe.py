@@ -61,13 +61,14 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--n", default="2")
     ap.add_argument("--chunk", default="")
+    ap.add_argument("--gate-dir", default="tools", help="merge_gate.py 가 있는 폴더(고치기 전 판과 비교할 때 옛 판을 둔 폴더)")
     a = ap.parse_args(argv)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, GATE_XDIST_N=a.n, PYTHONIOENCODING="utf-8")
     if a.chunk:
         env["GATE_CHUNK_FILES"] = a.chunk
-    code = ("import sys, json; sys.path.insert(0, 'tools'); import merge_gate; "
+    code = (f"import sys, json; sys.path.insert(0, r'{a.gate_dir}'); import merge_gate; "
             "s = merge_gate.snapshot(cwd='.'); "
             f"json.dump(s, open(r'{out / 'snapshot.json'}', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)")
     t0 = time.time()
@@ -98,7 +99,7 @@ def main(argv=None):
     summary = {"sec": int(time.time() - t0), "rc": proc.returncode, "peak_tree_mb": peak_tree,
                "peak_one_mb": peak_one, "min_commit_free_mb": min_commit, "min_phys_free_mb": min_phys,
                "commit_total_mb": _mem_status()[2], "killed": killed, "temp_removed": removed,
-               "xdist_n": a.n, "chunk": a.chunk or "기본"}
+               "xdist_n": a.n, "chunk": a.chunk or "기본", "gate_dir": a.gate_dir}
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False))
 
