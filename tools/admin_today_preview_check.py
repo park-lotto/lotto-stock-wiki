@@ -60,6 +60,17 @@ def main(argv):
             bad.append(f"처음 결제 행 {p0['rows']} ≠ 오늘 결제 {nt['today_pay_total']}")
         if shot:
             pg.screenshot(path=shot, full_page=True)
+        # 상단 탭(관제 335): 탭 6개·보이는 구획 1개·누르면 바뀌나
+        tabs = pg.evaluate("""()=>({tabs:[...document.querySelectorAll('#gtabs .gtab')].map(b=>b.textContent.trim()),
+            shown:[...document.querySelectorAll('section.group')].filter(s=>getComputedStyle(s).display!=='none').map(s=>s.id)})""")
+        print("탭", tabs)
+        if len(tabs["tabs"]) < 6 or len(tabs["shown"]) != 1:
+            bad.append(f"탭 {len(tabs['tabs'])}개·보이는 구획 {tabs['shown']}")
+        pg.click('#gtabs .gtab[data-g="g_cust"]')
+        pg.wait_for_timeout(200)
+        sh = pg.evaluate("[...document.querySelectorAll('section.group')].filter(s=>getComputedStyle(s).display!=='none').map(s=>s.id)")
+        if sh != ["g_cust"]:
+            bad.append(f"고객 탭 눌렀는데 보이는 구획 {sh}")
         # 검색
         name = q or pg.evaluate("(window._CUST||[]).filter(c=>c.acked_at!=null && c.name && !_custToday(c))[0].name")
         pg.fill("#custSearch", name)
@@ -72,6 +83,7 @@ def main(argv):
         pg.wait_for_timeout(300)
         payer = pg.evaluate("(ledgerItems||[]).filter(x=>x.payer && !_isTodayKST(x.at))[0]?.payer || ''")
         if payer:
+            pg.click('#gtabs .gtab[data-g="g_pay"]')
             pg.fill("#plSearch", payer)
             pg.wait_for_timeout(400)
             ps = pg.evaluate(PROBE, "pl")

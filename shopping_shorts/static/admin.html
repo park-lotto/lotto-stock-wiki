@@ -115,14 +115,26 @@ tbody tr:hover{background:#1b1b22}
 /* 처리할 게 남아 있으면 숫자가 스스로 알린다(0이면 조용하다) */
 .sv.need{color:#ffd479}
 /* ── 구역 제목 — 카드가 늘어서기만 하면 어디가 어딘지 모른다 ── */
-.grouphead{font-size:13px;color:#8a8a92;font-weight:700;margin:22px 0 10px;
-           letter-spacing:.4px;border-bottom:1px solid #23232a;padding-bottom:7px}
+.group{margin:0 0 6px}
+.group+.group{margin-top:38px}
+/* 상단 탭(2026-11-07 사장님 "상단 탭으로 두고 선택하면 나오게") — 탭은 아래 section 나열에서 만든다(_groupTabs). */
+.gtabs{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:10px 0;background:#0b0b0e;border-bottom:1px solid #2a2a32}
+.gtab{background:#1a1a20;border:1px solid #2e2e38;color:#cfd2d6;font-size:15px;font-weight:700;padding:9px 16px;border-radius:10px;cursor:pointer}
+.gtab:hover{background:#24242c}
+.gtab.on{background:#2b4a7a;border-color:#4f9dfa;color:#fff}
+.gtab .gbadge{display:inline-block;margin-left:6px;min-width:18px;padding:0 6px;border-radius:9px;background:#ffd479;color:#1a1a20;font-size:12px;font-weight:800;text-align:center}
+.gtabs~.group{margin-top:0}
+.gtabs~.group.gh{display:none}
+.grouphead{font-size:19px;color:#f4f4f6;font-weight:800;margin:0 0 14px;line-height:1.25;letter-spacing:-.2px;
+           padding:2px 0 10px 12px;border-left:4px solid #4f9dfa;border-bottom:1px solid #30303a}
+.group.todo .grouphead{border-left-color:#ffd479}
+.grouphead .wlnote{font-size:12px;color:#8a8a92;font-weight:500;margin-left:10px;letter-spacing:0}
 /* ★사이드바와 나란히 놓기(2026-08-24 사장님 "따로 뜨지 말고 이어서").
    sidebar.js가 body{display:flex}를 주입하고 <aside class="ss-nav">를 맨 앞에
    넣는다 → 본문은 남은 폭을 채우는 flex 자식이어야 한다. min-width:0이 없으면
    넓은 표가 사이드바를 밀어낸다(flex 자식 기본 min-width:auto). */
 .main{flex:1;min-width:0;padding:16px 20px 40px;overflow-x:auto}
-/* 정리(2026-11-07 관제 335) — 알림은 접힌 한 줄, 제작 현황이 맨 위, 잘 안 쓰는 것은 기타 도구 안 */
+/* 정리(2026-11-07 관제 335) — 알림은 접힌 한 줄, 잘 안 쓰는 것은 기타 도구 안(구획 순서는 본문 section 나열이 주인) */
 .alertFold{margin:0 0 14px}
 .alertFold>summary{cursor:pointer;list-style:none;font-weight:800;font-size:14px;padding:10px 14px;border:1px solid #33353b;border-radius:10px;background:#141418}
 .alertFold>summary::-webkit-details-marker{display:none}
@@ -130,8 +142,9 @@ tbody tr:hover{background:#1b1b22}
 .alertFold[open] .afHint{display:none}
 .alertFoldBody{margin-top:8px;max-height:60vh;overflow:auto}
 .alertFoldBody .alertBoard{margin:0}
-.grouphead .gh-link{float:right;font-weight:600;font-size:12px;color:#4f9dfa;text-decoration:none}
-.subhead{font-size:13px;color:#cfd2d6;font-weight:700;margin:4px 0 8px}
+.grouphead .gh-link{float:right;font-weight:600;font-size:13px;color:#4f9dfa;text-decoration:none;margin-top:4px}
+.subhead{font-size:14px;color:#cfd2d6;font-weight:700;margin:4px 0 8px}
+.summary.compact{grid-template-columns:repeat(auto-fit,minmax(112px,200px))}
 .quicknav .qbtn{min-width:0;padding:8px 12px;font-size:13px}
 #moreTools>summary{color:#a8a8b0}
 .moreBody{margin-top:12px}
@@ -155,7 +168,7 @@ tbody tr:hover{background:#1b1b22}
 </style></head><body>
 <div class="main">
 <h1>🔐 관리자</h1>
-<div class=sub>제작 현황 → 처리할 일 → 고객 순서. 자주 안 쓰는 도구는 맨 아래 「기타 도구」에 접어 두었습니다.</div>
+<div class=sub>위 탭을 누르면 그 구획만 나옵니다. 고른 탭은 다음에 열 때도 기억합니다.</div>
 
 <!-- 알림 한 줄(2026-11-07 사장님 "알림 펼치기 다 접고", 관제 335) — 일반 경보·클로드형 경보·계정 변경 요청을
      접힌 상자 하나에 모은다. 접기·건수 합산·전부 0이면 숨기기는 _alertFold 한 곳만 정한다.
@@ -173,7 +186,14 @@ tbody tr:hover{background:#1b1b22}
 </div>
 </details>
 
+<!-- ★구획 배치 규칙(2026-11-07 사장님 "제목 잘 보이게·순서 뒤죽박죽" → 정리, 관제 335) — 순서·묶음의 주인은 아래 <section class=group> 나열 순서 **이 한 곳**이다.
+     순서 = 알림(접힘) → 🎬 제작 현황(사장님 11-07 "맨 위") → 🔔 오늘 처리할 일 → 👥 고객 관리 → 💳 결제 내역 → 🔗 바로가기 → 🗂 기타 도구(접힘).
+     · 구획 = 관리자 업무 단위(제작 상황 → 처리할 일 → 고객·결제 찾기 → 도구). 새 카드는 반드시 이 section 중 하나 **안에** 넣는다(구획 밖에 띄우지 마라).
+     · 숫자 칸(.summary)은 그 숫자가 속한 구획 안에 둔다(11-07 전엔 고객 통계가 '처리할 일' 칸에 섞여 있었다).
+     · 평소 안 여는 카드는 맨 아래 기타 도구 안. 순서를 다른 데(안내 문장·CSS 주석)에 글로 다시 적지 마라 — 두 곳이면 어긋난다. -->
 
+<nav class=gtabs id=gtabs></nav>
+<section class=group id=g_prod>
 <!-- 제작 현황(2026-11-07 사장님 "필요한 건 제작현황") — 숫자는 /api/admin/production(app._admin_production) 그대로 그리기만. -->
 <h2 class=grouphead>🎬 제작 현황 <span class=wlnote>오늘 · 30초마다 갱신</span>
   <a href="/admin/production" target="_blank" rel="noopener" class=gh-link>전체 보기 ↗</a></h2>
@@ -197,16 +217,14 @@ tbody tr:hover{background:#1b1b22}
   <table><thead><tr><th class=mini>상태</th><th>고객</th><th>작업</th><th class=mini>경과</th><th>작업번호</th><th>비고</th></tr></thead>
   <tbody id=wlrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
+</section>
 
-<h2 class=grouphead>🔔 오늘 처리할 일</h2>
-
-<!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. -->
-<div class=summary id=summary>
+<section class="group todo" id=g_todo>
+<h2 class=grouphead>🔔 오늘 처리할 일 <span class=wlnote>건수가 0이면 조용하다 · 남아 있으면 노랗게</span></h2>
+<!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. 채우는 곳 = fillSummary(id 로 찾음). -->
+<div class="summary compact" id=summary>
   <div class=sbox><div class=sk>입금 신고</div><div class=sv id=sum_dep>–</div></div>
   <div class=sbox><div class=sk>승인 대기</div><div class=sv id=sum_pend>–</div></div>
-  <div class=sbox><div class=sk>전체 고객</div><div class=sv id=sum_all>–</div></div>
-  <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
-  <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
 </div>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
@@ -235,12 +253,20 @@ tbody tr:hover{background:#1b1b22}
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
   <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </details>
+</section>
+
+<section class=group id=g_cust>
+<h2 class=grouphead>👥 고객 관리 <span class=wlnote>처음엔 오늘 해당자만 · 검색하면 전체에서</span></h2>
+<!-- 고객 통계 — 처리할 일이 아니라 고객 구획의 숫자다. 채우는 곳 = fillSummary(id 로 찾음). -->
+<div class="summary compact" id=custSummary>
+  <div class=sbox><div class=sk>전체 고객</div><div class=sv id=sum_all>–</div></div>
+  <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
+  <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
+</div>
 
 <div class=mask id=cmask onclick="if(event.target===this)closeCust()">
   <div class=modal id=cmodal></div>
 </div>
-
-<h2 class=grouphead>👥 고객 관리</h2>
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
@@ -273,8 +299,10 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=rows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
   <div id=custMore class=moreRow></div>
 </div>
+</section>
 
-<h2 class=grouphead>💳 결제 내역</h2>
+<section class=group id=g_pay>
+<h2 class=grouphead>💳 결제 내역 <span class=wlnote>처음엔 오늘 결제만 · 검색하면 전체에서</span></h2>
 <!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
 <div class=card>
   <h2>결제 내역 <span id=plSum class=wlnote></span>
@@ -287,7 +315,9 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=plrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
   <div id=plMore class=moreRow></div>
 </div>
+</section>
 
+<section class=group id=g_links>
 <h2 class=grouphead>🔗 바로가기</h2>
 <!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
      외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
@@ -307,7 +337,9 @@ tbody tr:hover{background:#1b1b22}
   <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
   <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
 </nav>
+</section>
 
+<section class=group id=g_more data-tablabel="🗂 기타 도구">
 <!-- 기타 도구(2026-11-07, 관제 335) — 평소 안 여는 카드. 지운 게 아니라 접어 둔 것이다(되돌리기 쉽게). -->
 <details class=card id=moreTools>
 <summary>🗂 기타 도구 — 숏클 실시간·숏클 회원·관제 보드·설정·대본 규칙·최근 1시간·작업 진단·정확도 측정</summary>
@@ -402,6 +434,7 @@ tbody tr:hover{background:#1b1b22}
 </details>
 </div>
 </details>
+</section>
 
 
 <script>
@@ -1749,5 +1782,39 @@ function runDiag(){
 }
 </script>
 </div>
+<script>
+// ── 상단 탭(2026-11-07 관제 335) — 사장님 "상단 탭으로 두고 선택하면 나오게".
+// ★탭 목록·이름은 아래 <section class=group> 나열과 그 제목(.grouphead)에서 **만든다** — 탭 이름을 따로 적지 않는다(두 곳이면 어긋난다).
+//   보이는 구획은 _groupShow 한 곳만 정한다. 고른 탭은 이 브라우저에만 기억(주소 #g_cust 로도 바로 연다).
+(function(){
+  const nav=document.getElementById('gtabs'); if(!nav) return;
+  const secs=[...document.querySelectorAll('section.group[id]')];
+  const label=sec=>{
+    if(sec.dataset.tablabel) return sec.dataset.tablabel;
+    const h=sec.querySelector('.grouphead'); if(!h) return sec.id;
+    return [...h.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+  };
+  nav.innerHTML=secs.map(s=>`<button class=gtab data-g="${s.id}">${label(s)}<span class=gbadge style="display:none"></span></button>`).join('');
+  function _groupShow(id){
+    if(!secs.some(s=>s.id===id)) id=secs[0].id;
+    secs.forEach(s=>s.classList.toggle('gh', s.id!==id));
+    nav.querySelectorAll('.gtab').forEach(b=>b.classList.toggle('on', b.dataset.g===id));
+    if(id==='g_more'){ const d=document.getElementById('moreTools'); if(d && !d.open) d.open=true; }
+    try{ localStorage.setItem('admin_tab', id); }catch(e){}
+  }
+  window._groupShow=_groupShow;
+  nav.addEventListener('click',e=>{ const b=e.target.closest('.gtab'); if(b){ _groupShow(b.dataset.g); window.scrollTo({top:0}); } });
+  let first=(location.hash||'').slice(1);
+  if(!first){ try{ first=localStorage.getItem('admin_tab')||''; }catch(e){} }
+  _groupShow(first);
+  // 처리할 일 탭 숫자 = 화면에 이미 그려진 건수(입금 신고·승인 대기·오류 신고)를 읽기만 한다(새로 세지 않는다)
+  function _todoBadge(){
+    const n=['sum_dep','sum_pend','bcnt'].map(i=>parseInt((document.getElementById(i)||{}).textContent,10)||0).reduce((a,b)=>a+b,0);
+    const b=nav.querySelector('.gtab[data-g="g_todo"] .gbadge'); if(!b) return;
+    b.textContent=n; b.style.display=n>0?'inline-block':'none';
+  }
+  _todoBadge(); setInterval(_todoBadge,5000);
+})();
+</script>
 <script src="/sidebar.js?v=4"></script>
 </body></html>
