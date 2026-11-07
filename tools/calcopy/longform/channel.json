@@ -1,0 +1,158 @@
+{
+ "channel_name": "내 채널",
+ "outro_left": "추천 영상",
+ "outro_right": "최신 영상",
+ "fps_num": 30000,
+ "fps_den": 1001,
+ "width": 1920,
+ "height": 1080,
+ "voice": "Piljae",
+ "line_gap": 0.1,
+ "chapter_gap": 0.25,
+ "bumper_main_sec": 1.3,
+ "bumper_short_sec": 0.75,
+ "bumper_short_before": [],
+ "outro_sec": 10.0,
+ "bgm_main": "media/bgm/Bass_Walker.mp3",
+ "bgm_alt": "media/bgm/Local_Forecast.mp3",
+ "bgm_alt_from_chapter": null,
+ "jingle": "media/bgm/Pamgaea.mp3",
+ "jingle_start": 0.0,
+ "outro_music_start": 0.0,
+ "bgm_db": -26.0,
+ "jingle_db": -6.0,
+ "target_lufs": -16.0,
+ "colors": {
+  "sub_box": [
+   12,
+   16,
+   20,
+   214
+  ],
+  "sub_bar": [
+   255,
+   197,
+   51,
+   255
+  ],
+  "paper": [
+   240,
+   244,
+   243
+  ],
+  "blue": [
+   255,
+   197,
+   51
+  ],
+  "blue_light": [
+   176,
+   232,
+   222
+  ],
+  "navy": [
+   30,
+   38,
+   52
+  ],
+  "red": [
+   255,
+   90,
+   78
+  ],
+  "gray": [
+   96,
+   104,
+   118
+  ],
+  "yellow": [
+   255,
+   197,
+   51
+  ],
+  "wine": [
+   255,
+   90,
+   78
+  ],
+  "beige": [
+   239,
+   230,
+   213
+  ],
+  "beige_border": [
+   140,
+   115,
+   75
+  ],
+  "table_head": [
+   18,
+   120,
+   110
+  ],
+  "table_alt": [
+   232,
+   245,
+   242
+  ],
+  "table_hl": [
+   208,
+   238,
+   232
+  ],
+  "night": [
+   9,
+   11,
+   16
+  ]
+ },
+ "no_capsule": [
+  "훅"
+ ],
+ "para_gap": 0.25,
+ "bgm_rotation": [
+  "media/bgm/Bass_Walker.mp3",
+  "media/bgm/Thinking_Music.mp3",
+  "media/bgm/Local_Forecast.mp3"
+ ],
+ "bgm_highpass": 150,
+ "output_name": "완성본.mp4",
+ "tempo": 1.2,
+ "font_main": "GmarketSansBold.otf",
+ "photo_motion": "pan",
+ "logo_side": "right",
+ "sfx": {
+  "whoosh": "media/sfx/transition_swipe.mp3",
+  "pop": "media/sfx/pop_appear.mp3",
+  "type": "media/sfx/tick.mp3",
+  "thud": "media/sfx/impact.mp3",
+  "ding": "media/sfx/chime_up.mp3"
+ },
+ "typo_colors": {
+  "lime": [
+   255,
+   197,
+   51
+  ],
+  "pink": [
+   255,
+   90,
+   78
+  ],
+  "blue": [
+   32,
+   44,
+   92
+  ],
+  "black": [
+   9,
+   11,
+   16
+  ],
+  "ivory": [
+   238,
+   239,
+   235
+  ]
+ }
+}
