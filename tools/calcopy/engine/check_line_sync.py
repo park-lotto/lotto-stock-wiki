@@ -36,6 +36,27 @@ def _sec(v) -> float:
     return float(v)
 
 
+import threading as _th
+_WHISPER_LOCK = _th.Lock()
+
+
+def whisper_model():
+    """받아쓰기 모델 만들기 한 곳 — 여러 스레드가 동시에 처음 불러도 한 번만(잠금). tqdm 잠금도 스레드용으로 먼저 정한다:
+    맥은 스레드 안 첫 진행 막대가 multiprocessing 잠금(resource_tracker)을 만들다 멈춰 렌더가 5분 시간초과로 죽었다(11-05 박상혁 #8049)."""
+    with _WHISPER_LOCK:
+        if _WHISPER.get("m") is None:
+            try:
+                from tqdm import tqdm as _tq
+                _tq.set_lock(_th.RLock())
+            except ImportError:
+                pass
+            from faster_whisper import WhisperModel
+            # 받아 둔 폴더가 있으면 그 경로로 — 허깅페이스 내려받기 길은 engine/filelock.py 가 같은 이름 라이브러리를 가려 깨진다(10-18)
+            snap = sorted((Path.home() / ".cache/huggingface/hub/models--Systran--faster-whisper-small/snapshots").glob("*/model.bin"))
+            _WHISPER["m"] = WhisperModel(str(snap[-1].parent) if snap else "small", device="cpu", compute_type="int8")
+        return _WHISPER["m"]
+
+
 def asr_segments(final: Path) -> list[tuple[float, float, str]]:
     """받아쓰기 = 이 PC 의 faster-whisper(small·낱말 시각) — 무료·한도 없음·같은 소리면 같은 답.
     10-18 실측: 제미나이 2.5-flash 는 로컬 161키 한도 끝·서버 풀 404(신규 사용자 중단), 3-flash 는 시각이 늘어지고 flash-lite 는 빈 답 →
@@ -49,11 +70,7 @@ def asr_segments(final: Path) -> list[tuple[float, float, str]]:
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(final), "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
                          capture_output=True).stdout     # 소리는 ffmpeg 로 풀어 넘긴다(faster_whisper 의 av 해독은 설치된 av 판과 안 맞음)
     audio = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
-    if _WHISPER.get("m") is None:
-        # 받아 둔 폴더가 있으면 그 경로로 — 허깅페이스 내려받기 길은 engine/filelock.py 가 같은 이름 라이브러리를 가려 깨진다(10-18)
-        snap = sorted((Path.home() / ".cache/huggingface/hub/models--Systran--faster-whisper-small/snapshots").glob("*/model.bin"))
-        _WHISPER["m"] = WhisperModel(str(snap[-1].parent) if snap else "small", device="cpu", compute_type="int8")
-    segs, _ = _WHISPER["m"].transcribe(audio, language="ko", word_timestamps=True)
+    segs, _ = whisper_model().transcribe(audio, language="ko", word_timestamps=True)
     # 구절 시작은 앞 구절 끝에 붙어 0.2~0.4초 이르다(작품1 실측) — 낱말 단위로 쓴다
     out = [(float(w.start), float(w.end), w.word) for s in segs for w in (s.words or []) if w.word.strip()]
     if not out:

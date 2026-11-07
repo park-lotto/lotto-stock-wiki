@@ -43,7 +43,8 @@ def _detector():
     if not MODEL.exists():
         MODEL.parent.mkdir(parents=True, exist_ok=True)
         run(["curl", "-sL", "-o", str(MODEL), MODEL_SRC])
-    return cv2.FaceDetectorYN.create(str(MODEL), "", (320, 320), 0.6, 0.3, 50)
+    from tools.calcopy.hybrid.common import face_detector
+    return face_detector()
 
 
 def _frame(mp4, t: float, crop=None):

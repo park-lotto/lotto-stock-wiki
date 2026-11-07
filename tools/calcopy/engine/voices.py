@@ -20,6 +20,7 @@ import pathlib as _pathlib
 import re as _re
 
 PROVIDERS = ("typecast", "elevenlabs", "fish")
+PROVIDER_ALIAS = {"fishaudio": "fish", "fish_audio": "fish", "eleven": "elevenlabs"}     # 설정 화면 이름 → 엔진 이름(11-03)
 TC_EMOTIONS = ("angry", "happy", "normal", "sad", "tonedown", "toneup", "whisper")   # 팩 tts.emotion 한 곳 — 타입캐스트만
 _ID_RE = {"typecast": _re.compile(r"tc_[0-9a-f]{24}"),
           "elevenlabs": _re.compile(r"kr-[a-z0-9]+-[a-z]+|[A-Za-z0-9]{20}"),     # 숏템 추천 프리셋 id | 일레븐 검색 성우 id
@@ -41,7 +42,7 @@ def provider_of(tts: dict) -> str | None:
     """명시한 provider 그대로. 없으면(옛 팩) voice_id 꼴로 — tc_ = 타입캐스트, kr- = 일레븐(미나), fs- = 피쉬. 모르면 None."""
     p = (tts or {}).get("provider")
     if p:
-        return p
+        return PROVIDER_ALIAS.get(p, p)
     v = str((tts or {}).get("voice_id") or "")
     return "typecast" if v.startswith("tc_") else "elevenlabs" if v.startswith("kr-") else "fish" if v.startswith("fs-") else None
 

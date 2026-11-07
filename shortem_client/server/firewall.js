@@ -130,7 +130,8 @@ export function shape(out, secret) {
 
 // 점검·프리셋·프로필 응답(info) — 글·참거짓·작은 정수만
 function shapeInfo(v, secret, d = 0) {
-  if (d > 4) return undefined;
+  // 깊이 한도 4 였을 때 settings>text>caption>enter>kind 가 잘려 get 이 enter·emphasis 를 {} 로 보였다(11-05 문인석 #7895) — 값 거르기는 그대로, 깊이만
+  if (d > 7) return undefined;
   if (Array.isArray(v)) return v.slice(0, 50).map(x => shapeInfo(x, secret, d + 1));
   if (isObj(v)) { const o = {}; for (const [k, x] of Object.entries(stripForbidden(v))) o[k] = shapeInfo(x, secret, d + 1); return o; }
   if (typeof v === 'string') return clean(v, secret, 600);

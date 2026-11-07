@@ -171,6 +171,54 @@ def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5
     return dst
 
 
+MAT_STEP, MAT_TILES, MAT_PAGES = 2.0, 30, 4     # 재료 시트 칸 간격(초)·한 장 칸 수·한 파일 장 수 상한 — 길면 간격을 늘려 원본 전체를 덮는다
+
+
+def mat_tiles(video: Path, tmp: Path, w: int = 240) -> list[tuple[float, Path]]:
+    """재료 시트 칸 [(원본 초, 그림)] — ffmpeg 한 번. 칸 초 = 그 칸 화면의 실제 시각(showinfo pts_time − 파일 시작).
+    fps 필터는 간격 절반만큼 밀린 화면을 내고 시각도 격자로 바꿔 버린다(2초 간격 → '6초' 칸 = 7초 화면) — 옛 시트를 '칸 번호×2초'로 읽으면 1초 어긋났다.
+    select(앞 칸에서 간격 이상 지난 첫 화면)는 시각을 안 바꾼다. 렌더 `-ss ss -i` 도 파일 시작(format start_time)부터 센다."""
+    dur = float(dims(video)["dur"] or 0)
+    step = max(MAT_STEP, round(dur / (MAT_TILES * MAT_PAGES) + 0.05, 1))
+    shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    pick = f"select='isnan(prev_selected_t)+gte(t-prev_selected_t\\,{step - 0.01:.2f})'"
+    r = run(["ffmpeg", "-y", "-hide_banner", "-i", str(video), "-vf", f"{pick},showinfo,scale={w}:-2", "-fps_mode", "vfr", "-q:v", "4", str(tmp / "%05d.jpg")])
+    pts = [float(x) for x in re.findall(r"pts_time:\s*(-?[\d.]+)", r.stderr or "")]
+    pr = run(["ffprobe", "-v", "error", "-show_entries", "format=start_time", "-of", "csv=p=0", str(video)], check=False).stdout.strip()
+    t0 = float(pr) if re.fullmatch(r"-?[\d.]+", pr or "") else 0.0
+    return [(round(max(0.0, p - t0), 2), f) for p, f in zip(pts, sorted(tmp.glob("*.jpg")))]
+
+
+def mat_sheets(video: Path, dst: Path, cols: int = 6, w: int = 240) -> list[Path]:
+    """(판단 주인 — 재료 시트) 칸마다 원본 초를 적는다 — 시트 초 = 재료 ss(렌더 `-ss ss -i` 와 같은 기준: 첫 화면 = 0초).
+    옛 시트(fps=0.5 tile 6×5 한 장)는 칸에 초가 없어 '칸 번호×2초'로 읽혔고 60초 뒤는 아예 안 보였다
+    (#464 김용덕 p00 시트 초 ≠ 실제 클립 초 — 원본에서 손으로 프레임을 뽑아 맞춤). 뽑기는 옛처럼 ffmpeg 한 번(저사양 PC — 칸마다 따로 뜨면 수십 배)."""
+    from PIL import Image, ImageDraw
+    if Path(video).suffix.lower() in RU.STILL_EXT:
+        return [sheet(video, dst, w=w)]
+    tmp = dst.parent / f"{dst.stem}_t"
+    got = mat_tiles(video, tmp, w)
+    times, shots = [t for t, _ in got], [f for _, f in got]
+    out = []
+    for pg in range(0, len(times), MAT_TILES):
+        tiles = [(t, Image.open(f).convert("RGB")) for t, f in zip(times[pg:pg + MAT_TILES], shots[pg:pg + MAT_TILES])]
+        th = max(im.height for _, im in tiles)
+        rows = (len(tiles) + cols - 1) // cols
+        sh = Image.new("RGB", (cols * w, rows * th), (0, 0, 0))
+        dr = ImageDraw.Draw(sh)
+        for j, (t, im) in enumerate(tiles):
+            x, y = (j % cols) * w, (j // cols) * th
+            sh.paste(im, (x, y))
+            dr.rectangle((x, y, x + 64, y + 16), fill=(0, 0, 0))
+            dr.text((x + 3, y + 2), f"{t:.1f}s", fill=(255, 255, 0))
+        p = dst if pg == 0 else dst.with_name(f"{dst.stem}_{pg // MAT_TILES}{dst.suffix}")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        sh.save(p, quality=85)
+        out.append(p)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
 FRAME_TAIL = 0.15     # 끝 여유(초) — 영상 길이 바로 앞 시각은 디코더가 그림을 못 내 ffmpeg 가 실패한다(10-27 41.93초 영상 41.92초 → 계획 실패)
 
 
@@ -237,8 +285,40 @@ def asr_cross(path: Path) -> dict:
 
 def dims(p: Path) -> dict:
     from tools.calcopy.hybrid.common import probe
+    from tools.calcopy.hybrid.common import video_dur
     w, h, d = probe(p)
-    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2)}
+    vd = video_dur(p) if p.suffix.lower() in (".mp4", ".mkv", ".webm", ".mov") else 0.0
+    return {"name": p.name, "w": w, "h": h, "dur": round(d, 2), **({"vdur": round(vd, 3)} if vd else {})}   # vdur = 화면 끝(원음 구간 검사 common.orig_span_over)
+
+
+def vtt_lines(vtt) -> list[dict]:
+    """유튜브 자막 낱말을 3초씩 묶어 말 줄로(받아쓰기 대신)."""
+    lines, cur, t0, t = [], [], None, 0.0
+    for t, w in vtt_words(vtt) if vtt else []:
+        if t0 is None:
+            t0 = t
+        cur.append(w)
+        if t - t0 > 3.0:
+            lines.append({"t0": t0, "t1": t, "text": " ".join(cur)}); cur, t0 = [], None
+    if cur:
+        lines.append({"t0": t0, "t1": t0, "text": " ".join(cur)})
+    return lines
+
+
+def bench_lines(mp4: Path, vtt, dur: float) -> tuple:
+    """(판단 주인 — 소재 받아쓰기를 얼마나) 쇼츠 길이면 통째 받아쓰기. 긴 소재(롱폼)는 유튜브 자동 자막이 있으면 그것, 없으면 앞 BENCH_ASR_MAX_SEC 만
+    받아쓰기(사장님 11-05 '부분만 받는 게 맞지 않나' · Jev 해결 0.59/선택 0.96 — 11-05 김미향 #7001: 8분22초 통째 받아쓰기가 CPU PC 에서 수 분).
+    돌려줌 = (말 줄, 어디서 얻었나). 상한 주인 = yt_fetch(BENCH_LONG_SEC·BENCH_ASR_MAX_SEC)."""
+    from tools.calcopy.engine import yt_fetch as YF
+    if dur <= YF.BENCH_LONG_SEC:
+        return asr(mp4), "받아쓰기"
+    if vtt:
+        got = vtt_lines(vtt)
+        if got:
+            return got, "유튜브 자막"
+    head = mp4.with_name("bench_head.wav")
+    run(["ffmpeg", "-y", "-v", "error", "-t", str(YF.BENCH_ASR_MAX_SEC), "-i", str(mp4), "-vn", "-ac", "1", "-ar", "16000", str(head)])
+    return asr(head), f"받아쓰기(앞 {YF.BENCH_ASR_MAX_SEC}초)"
 
 
 def vtt_words(p: Path) -> list:
@@ -361,6 +441,12 @@ def c_env(W, d):
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
     advice = advice_list(d.get("fmt") or "")
+    try:
+        from tools.calcopy import vmake_clean as _VC
+        if _VC.bad_key():          # 확정 실패한 VMake 키 — 시작 전에 한 번 알린다(제작 중 렌더에서야 알던 것)
+            advice.append("VMake 키가 지금 쓸 수 없는 키예요(" + _VC.HARD_FIX[_VC.bad_key()] + "). 이번 편은 박힌 글자를 흐림으로 가려서 만들게요")
+    except Exception as e:  # noqa: BLE001 — 안내만, 막지 않는다
+        sys.stderr.write(f"[env] VMake 키 확인 못 함 {type(e).__name__}\n")
     if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1" and not _cookie_ok("tiktok") and not any(x.get("id") == "login:tiktok" for x in missing):
         advice.append("틱톡 로그인이 안 됐어요. 제작은 그대로 진행하고, 틱톡 소재는 받기가 안 될 수 있고 틱톡 재료 찾기 결과가 적을 수 있어요")
     if _cp_last:
@@ -438,8 +524,10 @@ def c_bench(W, d):
         from tools.calcopy.engine import yt_fetch as YF
         t0 = time.time()
         head = ["--download-sections", f"*0-{YF.FULL_MAX_SEC}"] if YF.video_seconds(url) > YF.FULL_MAX_SEC else []      # 회원이 준 긴 영상 = 앞부분만
+        # --ignore-errors: 자막은 덤 — 자막 받기가 429(요청 많음)로 실패해도 영상은 받는다(11-03 김근호: 자막 429 로 영상 받기 전에 끝나 3번 멈춤).
+        #   영상이 없으면 아래 mp4 검사가 그대로 잡는다. 자막 받기 판단(yt_fetch 자막 받기)과 같은 꼴
         yt(head + bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
-                                                      "-o", str(bd / "bench.%(ext)s"), url])
+                                                      "--ignore-errors", "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
         YF.fetch_note(mp4, "벤치 1080(재료 될 수 있음)" if d.get("material") else "벤치 720", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
@@ -455,24 +543,17 @@ def c_bench(W, d):
         mm = meta(url)
         out["subs"], out["views"] = mm.get("subs"), out["views"] if out["views"] is not None else mm.get("views")
     if mp4.exists():
-        sheet(mp4, bd / "sheet.jpg")
-        out["sheet"] = "bench/sheet.jpg"
-        # 출처 글자 읽기용 큰 장면 한 장(98 #69: 시트 칸 300px 이면 '출처 : 셀코TV' 가 8px — 같은 영상을 '없음'·'쌩코TV'로 읽었다)
-        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{min(1.5, float(out.get('dur') or 3) / 2):.2f}", "-i", str(mp4), "-frames:v", "1",
-             "-vf", "scale=720:-2", str(bd / "big.jpg")])
-        if (bd / "big.jpg").exists():
-            out["big"] = "bench/big.jpg"
-        lines = asr(mp4)
+        with _Alive(W, "소재 확인"):      # 롱폼 소재는 시트·받아쓰기가 180초 넘게 무음 — 감시가 끊었다(11-05 김미향 #7001 8분22초 3번)
+            sheet(mp4, bd / "sheet.jpg")
+            out["sheet"] = "bench/sheet.jpg"
+            # 출처 글자 읽기용 큰 장면 한 장(98 #69: 시트 칸 300px 이면 '출처 : 셀코TV' 가 8px — 같은 영상을 '없음'·'쌩코TV'로 읽었다)
+            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{min(1.5, float(out.get('dur') or 3) / 2):.2f}", "-i", str(mp4), "-frames:v", "1",
+                 "-vf", "scale=720:-2", str(bd / "big.jpg")])
+            if (bd / "big.jpg").exists():
+                out["big"] = "bench/big.jpg"
+            lines, out["asr_from"] = bench_lines(mp4, vtt, float(out.get("dur") or 0))
     else:                              # 받아 둔 벤치에 영상이 없다(시험) — 자막 낱말을 3초씩 묶어 말 줄로
-        lines, cur, t0 = [], [], None
-        for t, w in vtt_words(vtt):
-            if t0 is None:
-                t0 = t
-            cur.append(w)
-            if t - t0 > 3.0:
-                lines.append({"t0": t0, "t1": t, "text": " ".join(cur)}); cur, t0 = [], None
-        if cur:
-            lines.append({"t0": t0, "t1": t0, "text": " ".join(cur)})
+        lines = vtt_lines(vtt)
         out["note"] = "벤치 영상 없음 — 자막으로 대신(시트 없음)"
     jsave(bd / "asr.json", lines)
     out["lines"] = lines
@@ -840,6 +921,22 @@ def origin_offset(W: Path, vid: str, src: Path, guess: float, ts: list[float]) -
     return round(median(diffs), 2), True
 
 
+def long_full_to_sections(d: dict, vid: str, dst: Path, seconds=None) -> dict:
+    """(판단 주인 — 통째 요청을 그대로 받나) 통째(full) 요청인데 원본이 통째 상한(yt_fetch.FULL_MAX_SEC, 사장님 11-02)을 넘고 맞은 시각(ts)이 있으면
+    그 시각 ±90초 구간으로 바꾼다. 길이를 아는 곳이 받는 쪽뿐이라 여기 한 곳 — flow 가 길이를 모르는 자리(회원이 준 원본 given 등)도 같이 덕을 본다.
+    11-05 얜샷템 회원 편: 21분 원본(PC 04편 원본 8Vhy53eDdS8)을 시각 365~387초까지 알고도 통째 요청 → 거절 → 원본을 잃었다(실측 재현)."""
+    ts = [float(x) for x in d.get("ts") or [] if isinstance(x, (int, float))]
+    if not d.get("full") or not ts or dst.exists():
+        return d
+    from tools.calcopy.engine import yt_fetch as YF
+    sec = (seconds or YF.video_seconds)(f"https://www.youtube.com/watch?v={vid}")
+    if sec <= YF.FULL_MAX_SEC:
+        return d
+    a, b = max(0.0, min(ts) - 90), max(ts) + 90
+    print(f"[origin_get] 긴 원본 {sec:.0f}초 — 통째 대신 맞은 시각 앞뒤 {a:.0f}~{b:.0f}초만 {vid}", file=sys.stderr, flush=True)
+    return {**d, "full": False, "a": a, "b": b}
+
+
 def c_origin_get(W, d):
     vid, a, b = d["vid"], float(d["a"]), float(d["b"])
     src = W / "src"; src.mkdir(exist_ok=True)
@@ -885,6 +982,8 @@ def c_origin_get(W, d):
     from tools.calcopy.hybrid import screen
     if d.get("full") and bench_as_source(W, vid, dst):
         print(f"[origin_get] 소재 = 원본 — 1080 벤치를 그대로 씀(다시 안 받음) {vid}", file=sys.stderr, flush=True)
+    d = long_full_to_sections(d, vid, dst)
+    a, b = float(d["a"]), float(d["b"])
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
@@ -1088,6 +1187,22 @@ def _cp_cached(f: Path):
     return None
 
 
+def merge_items(results: list) -> list:
+    """(판단 주인 — 검색어 여러 개의 쿠팡 결과를 후보 한 줄로) 검색어마다 1위·2위…를 번갈아 넣는다(같은 상품은 한 번).
+    11-05 숏템리폿 회원 편(체스넛 무브): 검색어 순서대로 이어 붙이고 앞 12개만 판정에 보내, 첫 검색어(한글 음역 → 신발 12개)가
+    자리를 다 차지했다 — 둘째·셋째 검색어 1위였던 같은 제품(Chessnut Move 로봇 체스보드)이 판정에 실리지 않아 소재를 버렸다."""
+    lists = [list((v or {}).get("items") or []) for v in results]
+    items, seen = [], set()
+    for rank in range(max((len(x) for x in lists), default=0)):
+        for x in lists:
+            if rank < len(x):
+                it = x[rank]
+                k = str(it.get("product_id") or it.get("productId") or it.get("id") or it.get("name"))
+                if k not in seen:
+                    seen.add(k); items.append(it)
+    return items
+
+
 def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
@@ -1116,12 +1231,7 @@ def c_coupang(W, d):
         sys.stderr.write(f"[coupang] 저장본 재사용 {len(hit)}개 · 새로 부름 {len(miss)}개\n")
     found = {**hit, **found}
     jsave(W / "look" / f"coupang_{int(time.time())}.json", found)
-    items, seen = [], set()
-    for v in found.values():
-        for it in (v or {}).get("items") or []:
-            k = str(it.get("product_id") or it.get("productId") or it.get("id") or it.get("name"))
-            if k not in seen:
-                seen.add(k); items.append(it)
+    items = merge_items([found.get(q) or {} for q in qs] + [v for q, v in found.items() if q not in qs])
     # 검색어가 하나도 성공 못 했으면(쿠팡이 회선을 막음·창 실패) '제품 없음'이 아니다 — flow 가 '막힘·다시 시도'로 멈추게 표시(10-26)
     failed = bool(found) and not any((v or {}).get("ok") for v in found.values())
     return {"items": items[:16], **({"search_failed": True} if failed and not items else {})}
@@ -1154,7 +1264,10 @@ def c_naver(W, d):
 
 
 def c_origin_words(W, d):
-    words, how = _origin_words(W, d["vid"]) if (d.get("platform") or "yt") == "yt" else ([], "")
+    from tools.calcopy.hybrid.common import has_audio
+    if (d.get("platform") or "yt") != "yt" and not has_audio(W / d["src"]):    # 소리 트랙 없는 원본(인스타·틱톡 무음) = 빈 받아쓰기(오류 아님) — 서버 flow._silent_files 가 audio 칸을 읽는다
+        return {"words": [], "from": "소리 없음", "audio": False}
+    words, how =_origin_words(W, d["vid"]) if (d.get("platform") or "yt") == "yt" else ([], "")
     if not words:                       # 자막이 아예 없다 → 받은 파일을 받아써 원본 초로(t0 더함)
         t0 = float(d.get("t0") or 0)
         for s in asr(W / d["src"]):
@@ -1222,7 +1335,7 @@ def section_fallback_warn(vid: str, spans: list, f: Path) -> str:
 
 def c_download(W, d):
     src = W / "src"; src.mkdir(exist_ok=True)
-    files, warns = [], []
+    files, warns, fail = [], [], {}
     for it in d.get("items") or []:
         vid = it["id"]
         if CACHE:
@@ -1234,11 +1347,16 @@ def c_download(W, d):
         from tools.calcopy.engine import yt_fetch as YF
         from tools.calcopy.hybrid import screen
         secs = [tuple(x) for x in it.get("sections") or []] or None
-        for f in screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD):
+        try:      # 영상마다 따로 — 하나 실패(403 등)가 이미 받은 다른 영상까지 날리지 않게(#4732 강태경). 실패는 fail 로 지시서에(조용히 넘기지 않는다)
+            got = screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD)
+        except StageError as e:
+            fail[vid] = str(e)[:300]
+            continue
+        for f in got:
             files.append(dims(Path(f)))
             if secs and not YF.sections_meta(Path(f)) and dims(Path(f))["dur"] > sum(b - a for a, b in secs) + 2 * SECTION_PAD * len(secs) + 120:
                 warns.append(section_fallback_warn(vid, secs, Path(f)))
-    return {"files": files, **({"warn": warns} if warns else {})}
+    return {"files": files, **({"warn": warns} if warns else {}), **({"fail": fail} if fail else {})}
 
 
 def c_product_stills(W, d):
@@ -1310,10 +1428,14 @@ def c_orig_heard(W, d):
 
 def c_asr_spans(W, d):
     """원음 구간 받아쓰기 — 스피치매틱스(키 있으면) + 위스퍼 교차(사장님 10-21)."""
+    from tools.calcopy.hybrid.common import has_audio
     ad = W / "asr"; ad.mkdir(exist_ok=True)
     out = []
     for s in d.get("spans") or []:
         src = W / "src" / str(s["src"]) if s.get("src") else W / d["src"]      # 해외원본형 = 구간마다 원본 파일이 다르다(spans[].src)
+        if not has_audio(src):        # 소리 트랙 없는 원본 = 받아쓸 것이 없다(건너뜀, 오류 아님 — 이성택 #9390 ffmpeg 'does not contain any stream')
+            out.append({**s, "src": src.name, "skipped": "소리 없음"})
+            continue
         wav = ad / f"{s.get('tag', 'O')}.wav"
         run(["ffmpeg", "-y", "-v", "error", "-ss", f"{float(s['a']):.2f}", "-to", f"{float(s['b']):.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wav)])
         out.append({**s, "src": src.name, **asr_cross(wav)})
@@ -1364,7 +1486,7 @@ def c_mat_sheets(W, d):
             continue
         dur = dims(p)["dur"]
         lst.append({"file": p.name, "dur": dur})
-        sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
+        sheets += [rel(W, x) for x in mat_sheets(p, W / f"_sheet_{p.stem[:40]}.jpg")]     # 칸마다 원본 초(렌더와 같은 시계)
         if p.suffix.lower() not in render_bench.IMG_EXT and dur:   # 샷 구간 = 계획 관문이 재는 경계 그대로(shot_starts) — 처음 컷을 고를 때 넘지 않게(10-27 반려 71건)
             b = [0.0] + [x for x in render_bench.shot_starts(p) if 0 < x < dur] + [round(float(dur), 2)]
             shots[p.name] = jump_free_spans(p, [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])])   # 디졸브·끊김 자리는 검사와 같은 자로 미리 뺌
@@ -1475,7 +1597,8 @@ def _cut_faces(W: Path, src: Path, ss: float, dur: float, crop) -> int:
     if not Path(FACE_MODEL).exists():
         sys.stderr.write(f"[faces] 얼굴 모델 없음 {FACE_MODEL} — 원본 밖 컷 얼굴 검사를 건너뜀\n")
         return 0
-    det = cv2.FaceDetectorYN.create(FACE_MODEL, "", (320, 320), 0.6, 0.3, 50)
+    from tools.calcopy.hybrid.common import face_detector
+    det = face_detector()
     tmp = W / "_faces"; tmp.mkdir(exist_ok=True)
     still = src.suffix.lower() in RU.STILL_EXT
     worst = 0
@@ -1558,7 +1681,7 @@ def tts_cache_miss(W: Path, v: str) -> str:
         return ""
     st = STY.load(v)
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id") if k in st["voice"]})
-    S["voice"].update(st.get("member_voice") or {})
+    RI.member_voice(S, st)
     key = NA.voice_key(RI.tts_text({**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}), S["voice"]["voice_id"], S["voice"].get("tempo"), NA.TTS_MODEL, **RI.voice_args(S))
     sc = W / v / "render" / "narr_full.mp3.tts.json"
     have = json.loads(sc.read_text(encoding="utf-8")).get("key") if sc.exists() else None
@@ -1634,29 +1757,43 @@ def c_plan(W, d):
         return _c_plan(W, d)
 
 
-def _plan_reuse(W, v, T) -> list:
-    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_bad) · 옛 렌더러 판은 샷 안 옮기기 결과."""
+def _plan_reuse(W, v, T, warn: list | None = None) -> list:
+    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_split) · 옛 렌더러 판은 샷 안 옮기기 결과.
+    반환 = 막을 것(반려). 원본 한계로 못 지키는 거리 위반은 warn 에 담아 경고로 넘긴다(11-06 짧은 원본 반려 되풀이)."""
     from tools.calcopy.hybrid import quality_gate as QG, styles as ST
     st = ST.load(v)
     if st.get("renderer") in QG.OLD_PAUSE_RENDERERS:
         return [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed']}"
                 for c in T["cuts"] if c.get("reuse_unfixed")]
     cuts = [{**c, "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"])} for c in T["cuts"]]
-    bad, _ = QG.reuse_bad(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    bad, soft, _ = QG.reuse_split(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    if soft:
+        sys.stderr.write("[B13 원본 한계] " + " / ".join(soft)[:600] + "\n")
+        if warn is not None:
+            warn += soft
     return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
 
 
 class _Alive:
-    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 살아 있는 동안 30초마다 progress. 계획·렌더가 같이 쓴다.
-    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측)."""
+    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 CPU 를 쓰는 동안만 30초마다 progress. 계획·렌더·완성본 검사가 같이 쓴다.
+    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측).
+    살아만 있으면 보내던 신호는 막혀 기다리는 계산(CPU 0)도 '진행 중'으로 만들어 감시가 30분(예산 3배)까지 못 끊었다(11-03 완성본 검사 멈춤 5건) —
+    그래서 이 프로세스 CPU(감시 고리 자기 몫은 뺀다)가 늘었을 때만 보낸다. 하위 프로그램(ffmpeg) CPU 는 감시가 따로 본다."""
+    EVERY = 30.0
+    MIN_CPU = 0.5
+
     def __init__(self, W, what):
         import threading
         self.W, self.what, self.stop = W, what, threading.Event()
         threading.Thread(target=self._run, daemon=True).start()
 
     def _run(self):
-        while not self.stop.wait(30):
-            progress(self.W, self.what)
+        cpu = _work_cpu()
+        while not self.stop.wait(self.EVERY):
+            c2 = _work_cpu()
+            if c2 - cpu >= self.MIN_CPU:
+                progress(self.W, self.what)
+            cpu = c2
 
     def __enter__(self):
         return self
@@ -1694,7 +1831,10 @@ def _c_plan(W, d):
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
-        reuse = _plan_reuse(W, v, T)
+        soft = []
+        reuse = _plan_reuse(W, v, T, warn=soft)
+        if soft:
+            out["warn"] = soft      # 원본 한계 — 경고로 넘김(flow.ph_plan_got 이 st.warn 에 기록만, 반려 아님)
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
         from tools.calcopy.hybrid import checks as CK      # B16 도 같은 꼴 — 판정 주인 checks.aba_violations(완성본 검사 quality_gate 와 같은 함수·같은 컷)
         aba = CK.aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in T["cuts"] if c.get("kind") != "orig"])
@@ -1713,6 +1853,19 @@ def _c_render(W, d):
     miss = tts_cache_miss(W, v)
     if miss:
         return {"ok": False, "error": miss}
+    if os.environ.get("SHORTEM_RESTYLE"):
+        # 다시 만들기 = 완성 뒤 끝난 뒤 지우기(VMake) 결과가 있으면 먼저 원본에 끼운다 — 완성 렌더가 결과를 기다리지 않고 끝났으면
+        #   다시 만들기도 받지 않아 박힌 글자가 그대로 남았다(11-03 강병주: bg_take 를 손으로 불러야 지워짐). 판단 주인 = vmake_clean.bg_take
+        tk = c_clean_take(W, {"version": v, "wait": 0})
+        sys.stderr.write(f"[다시 만들기] 뒤 지우기 결과 {tk.get('state')}\n")
+        if tk.get("state") == "done" and not tk.get("error") and tk.get("done"):
+            # 지운 구간의 흐림도 뺀다 — 안 빼면 지운 원본 위에 흐림 띠를 다시 덮는다(11-04 강병주 #5656·#5864). 판단 주인 = rules.accept_erased(지시서와 같은 함수)
+            mp = W / "doc" / v / "재료.json"
+            M = jload(mp)
+            nb = RU.accept_erased(M, None, tk)
+            if nb:
+                jsave(mp, M)
+                sys.stderr.write(f"[다시 만들기] 지운 구간의 흐림 {nb}칸 뺌\n")
     try:
         with _Alive(W, "영상 만들기"):
             info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
@@ -1742,7 +1895,8 @@ def c_check(W, d):
     final = W / v / "render" / "final.mp4"
     if not final.exists():
         return {"error": "완성본 없음"}
-    r = QG.gate(v, W / "doc" / v, W / v, mode="full" if d.get("mode", "full") == "full" else "fast", log=lambda s: print(s, file=sys.stderr))
+    with _Alive(W, "완성본 확인"):      # 관문 글자 검출이 CPU PC 에서 180초 넘게 무음이라 감시가 끊었다(11-03 회원 i5-1335U)
+        r = QG.gate(v, W / "doc" / v, W / v, mode="full" if d.get("mode", "full") == "full" else "fast", log=lambda s: print(s, file=sys.stderr))
     rows = [{k: x.get(k) for k in ("group", "what", "ok", "value")} | ({"ref": True} if x.get("ref") else {}) for x in r.get("rows") or []]
     ok = bool(r.get("ok"))
     if os.environ.get("QG_FORCE_FAIL") == "1":
@@ -2225,13 +2379,14 @@ def c_clean_text(W, d):
     if d.get("replan"):                     # 재료가 계획 뒤에 바뀌었다(렌더 고치기) — 같은 계획 함수로 시간표만 새로(합성은 캐시)
         from tools.calcopy.hybrid import render_bench
         try:
-            render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)
+            with _Alive(W, "자막 지우기 — 계획 다시"):   # 느린 PC 에서 관문④ 글자 검출이 컷당 수 분 무음 — 감시가 180초로 끊었다(11-03 최성영 4번, 회원 Claude 진단)
+                render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)
         except StageError:
             pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
     if d.get("bg"):         # 기다리지 않고 뒤로 — 렌더는 임시 흐림으로 간다(관제 304). None = 뒤로 못 보내는 경우(구간 없음·흐림·무료 엔진) → 아래 옛 길
-        j = VC.bg_start(src, send, mode, d.get("spots"))
+        j = VC.bg_start(src, send, mode, d.get("spots"), used=used)
         if j:
             sys.stderr.write(f"[clean_text] 뒤에서 지우기 시작 — 자막 컷 {VC.span_sec(send)}초\n")
             return {**j, "send": send, "send_sec": VC.span_sec(send), "used_sec": VC.span_sec(used)}
@@ -2257,10 +2412,18 @@ def c_clean_take(W, d):
     from tools.calcopy import vmake_clean as VC
     doc = W / "doc" / d["version"]
     src = Path(jload(doc / "재료.json").get("cand_dir") or (W / "src"))
-    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - VC.BG_MAX))
+    # 보낸 초는 '이번 뒤 작업'이 시작된 때부터 센다 — 지금-30분부터 세면 다시 만들기 전 호출까지 합쳐 '쓰지 않는 구간까지 보냄'으로
+    #   편을 끝냈다(11-03 정민혜: 22:47 첫 호출 13.2초 + 22:52 다시 만들기 뒤 0.97초를 이번 쓰는 구간과 비교). job.json 이 없으면 옛 창
+    try:
+        at = float(jload(src / VC.BG_DIR / "job.json").get("at") or 0) - 1
+    except (OSError, ValueError, TypeError):
+        at = 0
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at if at > 0 else time.time() - VC.BG_MAX))
     r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
     if r.get("state") == "done" and not r.get("error"):
-        _, _, used = VC.plan_spans(doc, {}, {})
+        # 쓰는 구간 = 보낸 때 기록(job.json used) 먼저 — 받는 때 계획을 다시 읽으면 그 사이 계획 파일의 vmake_cuts 가 사라져 used 0초 →
+        #   정상 전송 32.9초를 '쓰지 않는 구간까지 보냄'(final)으로 편을 끝냈다(11-06 김준용 a18d9ca952a7, Jev 뿌리 0.89·증명 0.69). 옛 job(기록 없음)만 지금 계획
+        used = r.get("used_at_send") or VC.plan_spans(doc, {}, {})[2]
         sent = VC.sent_from_ledger(src, t0)
         r.update({"sent": sent, "used_sec": VC.span_sec(used), "send_sec": r.get("sec"), "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_take] {r.get('state')} · 호출 {r.get('calls')}회: {r.get('why')}\n")
@@ -2327,7 +2490,175 @@ def c_thumb_auto(W, d):
     return {"ok": True, "pick": {k: opt.get(k) for k in ("part", "t", "measure")} if opt else None, "cuts": len(T.get("cuts") or [])}
 
 
-CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
+PM_DOC = "pm"          # PC 제작 라인 작품 폴더 = W/doc/pm/{대본.json, 재료.json, 근거.md, plan/} — PC channel/<slug>/작품N 과 같은 꼴
+
+
+def pm_member_patch(W: Path, doc: Path) -> dict:
+    """회원 PC 가 PC 제작기(preset_make)에 덮는 것 — 짤 폴더 = 이 편이 받은 짤(W/memes), 회원 목소리 = 대본 voice 칸(preset_make.voice_spec 이 읽는 자리),
+    회원 빠르기 = make tts_tempo(회원이 정했을 때만 — #1893 회원 요청이 판을 이긴다). 회원 팩이 없으면 짤 폴더만."""
+    patch = {"meme_dir": str(W / "memes")}
+    f = os.environ.get("SHORTEM_MEMBER_PACK")
+    tts = {}
+    if f and Path(f).is_file():
+        tts = (json.loads(Path(f).read_text(encoding="utf-8")).get("member") or {}).get("tts") or {}
+    if tts.get("voice_id") and (doc / "대본.json").exists():
+        S = jload(doc / "대본.json")
+        want = {k: tts[k] for k in ("voice_id", "provider", "emotion") if tts.get(k)}
+        if S.get("voice") != want:
+            S["voice"] = want
+            jsave(doc / "대본.json", S)
+    if tts.get("tempo"):
+        patch["tts_tempo"] = float(tts["tempo"])
+    return patch
+
+
+def c_pm(W, d):
+    """PC 제작 라인 — 썰템쇼처럼 PC 가 engine/preset_make 로 납품한 판(사장님 11-03 '완벽하게 똑같이'). 회원 작업 폴더 doc/pm 의 대본·재료·근거로
+    PC 와 같은 함수(preset_make.make_one)를 부른다 — 계획 검사·렌더 전 관문·완성 검사(manifest checks) 전부 그 한 곳. 판단을 두 벌로 만들지 않는다.
+    d = {mode: plan|make, preset: 빌린 프리셋 경로(엔진 상대, 예 channel/humorshowshow/preset/썰템쇼_화자썰)}.
+    반환 {ok(계획 통과 None·미달 False·완성 True/False), note, problems[관문 글], sheets[계획 시트], final, rows(B표)}."""
+    from types import SimpleNamespace
+    from tools.calcopy.engine import preset_make as PM, preset_gates as PG
+    root = Path(__file__).resolve().parents[3]
+    pdir, doc, out = root / d["preset"], W / "doc" / PM_DOC, W / PM_DOC / "make"
+    if not (doc / "대본.json").exists() or not (doc / "재료.json").exists():
+        return {"ok": False, "error": "대본.json·재료.json 이 아직 없다(doc/pm)"}
+    make = d.get("mode") == "make"
+    if PAID_OFF and make:
+        return {"ok": False, "error": "SHORTEM_NO_PAID — 목소리 합성 막음"}
+    a = SimpleNamespace(plan=not make, allow_tts=make, tts=None, test=True, out=str(out), tag=None, cache=str(W / PM_DOC / "_cache"),
+                        desktop_dir=str(W / PM_DOC), results=str(W / PM_DOC / "results.json"))
+    try:
+        with _Alive(W, "영상 만들기" if make else "장면 계획"):
+            old_edge = os.environ.get("CALCOPY_EDGE_GATE")
+            os.environ["CALCOPY_EDGE_GATE"] = "1"      # 칸 가장자리 남의 글자 판정 — PC 제작 라인만 켠다(render_bench.edge_gate_on, 사장님 11-04)
+            try:
+                r = PM.make_one(pdir, doc, a, cfg_patch=pm_member_patch(W, doc))
+            finally:
+                if old_edge is None:
+                    os.environ.pop("CALCOPY_EDGE_GATE", None)
+                else:
+                    os.environ["CALCOPY_EDGE_GATE"] = old_edge
+    except PG.GateStop as e:              # 렌더 전 관문 멈춤 — 글에 관문·컷·이유가 다 있다(preset_gates._stop)
+        return {"ok": False, "problems": [x.strip() for x in str(e).split(" / ") if x.strip()][:40], "error": str(e)[:1200]}
+    except (ValueError, SystemExit, StageError) as e:      # 재료 행 수·자막 조각·목소리 칸 등 — 회원 Claude 가 고칠 글 그대로
+        return {"ok": False, "error": str(e)[:1200]}
+    sheets = [rel(W, p) for p in (doc / "plan" / "계획_시트_자동.jpg", doc / "plan" / "계획_접촉시트.jpg", out / "sheet_1s.jpg") if p.exists()]
+    rows = jload(out / "run_log.json").get("checks") if make and (out / "run_log.json").exists() else None
+    final = out / "final.mp4"
+    fails = [] if make else list(r.get("fails") or [])   # 계획 표 미달 행 — PC 는 담당이 표를 눈으로 봤다. 회원 길은 고칠 거리로 넘긴다(넘기지 않아 A-B-A 가 렌더 뒤에야 걸렸다)
+    return {"ok": False if fails else r.get("ok"), "note": r.get("note"), "sheets": sheets, **({"problems": fails} if fails else {}),
+            **({"final": str(final)} if make and final.exists() else {}),   # 절대 경로 = c_finish video 와 같은 꼴(회원 앱 keepFinal)
+            **({"rows": rows} if rows else {}), "seconds": r.get("seconds")}
+
+
+def c_pm_sheet(W, d):
+    """(눈 — PC 담당이 원본을 보고 자를 자리를 정하던 것) 재료 행마다 원본 그 초 화면 + 구워질 칸(빨강) + 10% 눈금(원본 px).
+    칸 = preset_make.crop_box(계획 검사와 같은 함수) — 회원이 본 칸 = 구워지는 칸. 회원 Claude 가 Bash 로 프레임을 뽑지 않게(베이글·와사비 결함 B).
+    d = {preset, items?: [{src, ss, src_crop?, crop_x?}]} — items 가 없으면 doc/pm/재료.json 의 영상 행(cont·짤 빼고). 반환 {sheets, rows:[{k, src, ss, box, src_wh}]}."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy.engine import preset_make as PM
+    root = Path(__file__).resolve().parents[3]
+    WW, HH = PM.load_preset(root / d["preset"])[1]["window"]
+    doc = W / "doc" / PM_DOC
+    R = jload(doc / "재료.json") if (doc / "재료.json").exists() else {}
+    src_dir = Path(R.get("cand_dir") or (W / "src"))
+    items = d.get("items") or [dict(r, k=k) for k, r in enumerate(R.get("shots") or [])
+                               if not r.get("cont") and str(r.get("src") or "").endswith(".mp4")]
+    out_dir = doc / "plan" / "자를칸"
+    shutil.rmtree(out_dir, ignore_errors=True)
+    tiles, rows = [], []
+    for i, it in enumerate(items):
+        p = src_dir / str(it["src"])
+        if not p.exists():
+            rows.append({"k": it.get("k", i), "src": it["src"], "error": "원본 없음"})
+            continue
+        dm = dims(p)
+        sw, sh = int(dm["w"]), int(dm["h"])
+        box = PM.crop_box(it.get("src_crop"), it.get("crop_x"), sw, sh, WW, HH)
+        im = Image.open(frame(p, float(it.get("ss") or 0), out_dir / f"f{i:03d}.jpg")).convert("RGB")
+        dr = ImageDraw.Draw(im)
+        for g in range(1, 10):                       # 10% 눈금 + 원본 px 좌표
+            x, y = sw * g // 10, sh * g // 10
+            dr.line([(x, 0), (x, sh)], fill=(255, 255, 255), width=1)
+            dr.line([(0, y), (sw, y)], fill=(255, 255, 255), width=1)
+            dr.text((x + 3, 3), str(x), fill=(255, 255, 0))
+            dr.text((3, y + 3), str(y), fill=(255, 255, 0))
+        x0, y0, cw, ch = box
+        dr.rectangle([x0, y0, x0 + cw - 1, y0 + ch - 1], outline=(255, 0, 0), width=max(3, sw // 300))
+        lab = f"#{it.get('k', i)} {it['src']}@{float(it.get('ss') or 0):.2f} box {box} x{HH / ch:.2f}"
+        dr.rectangle([0, sh - 34, min(sw, 11 * len(lab)), sh], fill=(0, 0, 0))
+        dr.text((6, sh - 28), lab, fill=(255, 80, 80))
+        im.thumbnail((720, 720))
+        tiles.append(im)
+        rows.append({"k": it.get("k", i), "src": it["src"], "ss": it.get("ss"), "box": box, "src_wh": [sw, sh]})
+    sheets = []
+    for s in range(0, len(tiles), 6):                # 한 장 6칸(3×2)
+        part = tiles[s:s + 6]
+        tw, th = max(t.width for t in part), max(t.height for t in part)
+        sheet = Image.new("RGB", (tw * 3, th * ((len(part) + 2) // 3)), (20, 20, 20))
+        for j, t in enumerate(part):
+            sheet.paste(t, ((j % 3) * tw, (j // 3) * th))
+        sp = out_dir / f"자를칸_{s // 6 + 1}.jpg"
+        sheet.save(sp, quality=85)
+        sheets.append(rel(W, sp))
+    for f in out_dir.glob("f*.jpg"):
+        f.unlink()
+    return {"sheets": sheets, "rows": rows, "window": [WW, HH]}
+
+
+def c_memes(W, d):
+    """짤 후보 받기 + 미리보기(PC 담당이 짤 팩을 보고 2~5개 넣던 것 — PC 썰템쇼 10편 편당 2~5개). 서버(claude_flow)가 고른 후보에 받을 주소·지문을 붙여 준다.
+    d = {items: [{stem, url, sha256, tone?, title?}]} → W/memes/<stem>.mp4(지문 다르면 버림) + 시트(가운데 화면·이름·감정). 반환 {got, fail, sheet}."""
+    import hashlib
+    import urllib.parse
+    import urllib.request
+    from PIL import Image, ImageDraw
+    md = W / "memes"
+    md.mkdir(parents=True, exist_ok=True)
+    got, fail, tiles = [], {}, []
+    for it in (d.get("items") or [])[:20]:
+        stem = re.sub(r"[^\w-]", "", str(it.get("stem") or ""))
+        if not stem:
+            continue
+        p = md / f"{stem}.mp4"
+        if not (p.exists() and hashlib.sha256(p.read_bytes()).hexdigest() == it.get("sha256")):
+            try:          # 서버가 상대 주소(/api/claude/blob/…)로 준다 — 회원 앱 api.js baseUrl 과 같은 값으로 푼다
+                url = urllib.parse.urljoin((os.environ.get("SHORTEM_BASE") or "https://shoppingshorts.duckdns.org").rstrip("/") + "/", str(it["url"]))
+                with urllib.request.urlopen(url, timeout=60) as r:
+                    b = r.read()
+            except Exception as e:  # noqa: BLE001 — 그 짤만 빠진다
+                fail[stem] = f"{type(e).__name__}: {str(e)[:120]}"
+                continue
+            if it.get("sha256") and hashlib.sha256(b).hexdigest() != it["sha256"]:
+                fail[stem] = "지문 다름"
+                continue
+            p.write_bytes(b)
+        got.append(stem)
+        try:
+            im = Image.open(frame(p, max(0.0, float(dims(p)["dur"] or 0) / 2), md / f"_{stem}.jpg")).convert("RGB")
+            im.thumbnail((320, 320))
+            dr = ImageDraw.Draw(im)
+            dr.rectangle([0, 0, im.width, 22], fill=(0, 0, 0))
+            dr.text((4, 4), f"meme:{stem} {it.get('tone') or ''}", fill=(255, 255, 0))
+            tiles.append(im)
+            (md / f"_{stem}.jpg").unlink(missing_ok=True)
+        except Exception:  # noqa: BLE001 — 미리보기 못 그린 짤은 시트에서만 빠진다
+            pass
+    sheet = None
+    if tiles:
+        tw, th = max(t.width for t in tiles), max(t.height for t in tiles)
+        sh = Image.new("RGB", (tw * 4, th * ((len(tiles) + 3) // 4)), (20, 20, 20))
+        for j, t in enumerate(tiles):
+            sh.paste(t, ((j % 4) * tw, (j // 4) * th))
+        sp = W / "doc" / PM_DOC / "plan" / "짤후보.jpg"
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sh.save(sp, quality=85)
+        sheet = rel(W, sp)
+    return {"got": got, "fail": fail, "sheet": sheet}
+
+
+CMDS = {"env": c_env, "pm": c_pm, "pm_sheet": c_pm_sheet, "memes": c_memes, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
@@ -2666,8 +2997,16 @@ def progress(W: Path, what: str, n: int | None = None, m: int | None = None) -> 
         pass
 
 
+def _work_cpu() -> float:
+    """이 프로세스 CPU 에서 감시 고리 자기 몫(_dir_sig 훑기)을 뺀 것 — _Alive 가 '계산이 실제로 도나'를 본다."""
+    return time.process_time() - float(_PROG.get("watch_cpu") or 0.0)
+
+
 def _dir_sig(W: Path, cap: int = 4000) -> tuple:
-    """작업 폴더 파일 크기 합·개수 — 받기·렌더처럼 파일이 자라면 진행 중(명시 신호 없는 긴 일도 멈춤으로 오판하지 않게)."""
+    """작업 폴더 파일 크기 합·개수 — 받기·렌더처럼 파일이 자라면 진행 중(명시 신호 없는 긴 일도 멈춤으로 오판하지 않게).
+    뒤에서 도는 VMake(vmake_clean.BG_DIR — 실행기 밖 프로세스)가 쓰는 파일은 뺀다: 지금 일과 무관한데 '진행 중'으로 보여
+    막힌 완성본 검사를 감시가 못 끊었다(11-03 정민혜 check 12분+ 멈춤, VMake 가 그동안 같은 작업 폴더에 씀)."""
+    from tools.calcopy.vmake_clean import BG_DIR
     tot = cnt = 0
     stack = [str(W)]
     while stack and cnt < cap:
@@ -2675,10 +3014,13 @@ def _dir_sig(W: Path, cap: int = 4000) -> tuple:
             with os.scandir(stack.pop()) as it:
                 for e in it:
                     if e.is_dir(follow_symlinks=False):
-                        stack.append(e.path)
+                        if e.name != BG_DIR:
+                            stack.append(e.path)
                     else:
                         try:
-                            tot += e.stat().st_size; cnt += 1
+                            # os.stat(경로) — 윈도 scandir 항목 크기는 쓰는 중인 파일이 닫힐 때까지 0 에 멈춘다(11-05 실측 1·2·3MB 써도 0).
+                            #   그래서 구간 받기(yt-dlp→ffmpeg 손자)가 파일을 키워도 '진행 신호 180초 없음'으로 끊었다(김미향 #7614 2번)
+                            tot += os.stat(e.path).st_size; cnt += 1
                         except OSError:
                             pass
         except OSError:
@@ -2733,7 +3075,9 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
         next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
         now = time.time()
         _hang_arm()
+        w0 = time.thread_time()
         s2, c2 = _dir_sig(W), _child_cpu()
+        _PROG["watch_cpu"] = float(_PROG.get("watch_cpu") or 0.0) + time.thread_time() - w0
         if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
             sig, last, cpu = s2, now, c2
         cpu = min(cpu, c2)                        # 하위 프로그램이 끝나 합이 줄면 기준도 내린다
@@ -2795,6 +3139,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         except BaseException as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다). SystemExit 도 — 판 없음(styles.path_of)이
             #   SystemExit 라 Exception 으로는 안 잡혀 스레드가 기록 없이 죽고 서버엔 빈 결과만 갔다(10-29 회원 잇템로그 '같은 원인 3번')
             out.setdefault(rid, {"error": f"{type(e).__name__}: {str(e)[:500]}"})
+            import traceback      # 어느 줄인지 runner.log 에 남긴다 — 'KeyError: ss' 한 줄로는 30곳 중 어디인지 몰랐다(11-03 회원 김미향)
+            sys.stderr.write("".join(traceback.format_exception(e))[-4000:])
         finally:
             r0 = out.get(rid)
             if isinstance(r0, dict) and not r0.get("timed_out"):
@@ -2823,15 +3169,68 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
 PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "product_stills", "mat_sheets", "sheet", "origin_foreign"}   # origin_foreign = 소재 2편 칸(sub 다름)을 동시에(10-27 run4: 차례로 510+537초·810+560초)   # 유튜브를 부르지 않고 서로의 결과를 읽지 않는 일
 
 
+def _log_to_file(f: str) -> None:
+    """stderr(로그·faulthandler 위치 기록)를 파이프 대신 파일로 — 앱이 파이프를 못 읽어도 막히지 않고 멈춤 기록이 남는다."""
+    try:
+        fh = open(f, "a", encoding="utf-8", errors="replace", buffering=1)
+    except OSError:
+        return
+    os.dup2(fh.fileno(), 2)
+    sys.stderr = sys.__stderr__ = fh
+
+
+def _end_now() -> None:
+    """(판단 주인 — 실행기 끝내기) 윈도는 TerminateProcess: os._exit(ExitProcess)는 DLL 정리를 돌아 거기서 멈출 수 있다
+    (11-03 정민혜 check — 산출물 다 쓴 뒤 스레드 1개·CPU 0 으로 10분+, faulthandler 스레드도 이미 없음)."""
+    if os.name == "nt":
+        try:
+            import ctypes
+            k = ctypes.windll.kernel32
+            k.TerminateProcess(k.GetCurrentProcess(), 0)
+        except Exception:  # noqa: BLE001
+            pass
+    os._exit(0)
+
+
+def keep_awake(platform: str | None = None) -> str:
+    """(판단 주인 — 실행기 일을 도는 동안 PC 절전 막기) 이 프로세스가 사는 동안만 — 끝나면 저절로 풀린다. 화면 끄기는 허용.
+    11-06 삼현정 #10009·#10010: 전원 5분·배터리 3분 절전(Modern Standby)에 렌더·계획이 잠들어 기다림 무응답 21702초·렌더 프로세스 사라짐
+    (시스템 로그 Kernel-Power 506/507 이 무응답과 일치). 반환 = 쓴 방법('win'·'mac'·'' — 진단·시험용)."""
+    plat = platform or sys.platform
+    try:
+        if plat == "win32":
+            import ctypes
+            ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+            return "win"
+        if plat == "darwin":
+            subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return "mac"
+    except Exception as e:  # noqa: BLE001 — 절전 막기 실패는 일을 막지 않는다(기록만)
+        print(f"[절전 막기] 못 함 {type(e).__name__}: {str(e)[:120]}", file=sys.stderr)
+    return ""
+
+
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
+    res_file, log_file = os.environ.get("SHORTEM_RESULT"), os.environ.get("SHORTEM_RUNNER_LOG")
+    if log_file:
+        _log_to_file(log_file)
     _HANG["on"] = True
     _hang_arm()
+    keep_awake()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
-    print(json.dumps(res, ensure_ascii=False), flush=True)
+    body = json.dumps(res, ensure_ascii=False)
+    if res_file:        # 새 앱(engine_bridge.runOps)은 이 파일을 읽는다 — 파이프에 안 쓴다(앱이 못 읽으면 print 가 막힌다)
+        tmp = res_file + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        os.replace(tmp, res_file)
+    else:
+        print(body, flush=True)
     sys.stderr.flush()
     # 결과를 냈으면 바로 끝낸다 — 끊긴 일의 풀 스레드를 파이썬 종료가 기다리면 프로세스가 안 닫혀 회원 앱은 결과를 영영 못 받는다(11-02 check 멈춤)
-    os._exit(0)
+    _end_now()
 
 
 if __name__ == "__main__":

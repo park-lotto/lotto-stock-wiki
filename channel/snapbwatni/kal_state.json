@@ -1,0 +1,120 @@
+{
+ "slug": "snapbwatni",
+ "ref": "https://www.youtube.com/@스냅봤니/shorts",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 364.4,
+   "at": "2026-11-06 01:57",
+   "outputs": {
+    "ids": [
+     "UMawOP2GQ3I",
+     "d-jFF79JU2g",
+     "3AqKf9ILnlI"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\snapbwatni\\뜯기"
+   },
+   "note": "뜯기 3편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 3.4,
+   "at": "2026-11-06 01:51",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\snapbwatni\\top.json"
+   },
+   "note": "스냅봤니 구독 76200 편 165 조회중앙 410,000 최대 22,000,000 (구독 대비 중앙 5.38)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 16.8,
+   "at": "2026-11-06 01:51",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\snapbwatni\\src",
+    "ids": [
+     "UMawOP2GQ3I",
+     "d-jFF79JU2g",
+     "3AqKf9ILnlI"
+    ]
+   },
+   "note": "받음 3/3(1080p, C 여유 4.8GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 114.9,
+   "at": "2026-11-06 01:59",
+   "outputs": {
+    "dirs": {
+     "UMawOP2GQ3I": "C:\\숏템_칼카피\\snapbwatni\\kal\\frames_UMawOP2GQ3I",
+     "d-jFF79JU2g": "C:\\숏템_칼카피\\snapbwatni\\kal\\frames_d-jFF79JU2g",
+     "3AqKf9ILnlI": "C:\\숏템_칼카피\\snapbwatni\\kal\\frames_3AqKf9ILnlI"
+    }
+   },
+   "note": "시트·0.1초 띠 3편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-11-06 01:59",
+   "outputs": {
+    "skeletons": [
+     "UMawOP2GQ3I",
+     "d-jFF79JU2g",
+     "3AqKf9ILnlI"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\snapbwatni\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\snapbwatni\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 3편 새로, 묶음 3편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-11-06 01:59",
+   "outputs": {
+    "pending": {
+     "UMawOP2GQ3I": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.8) 칸 누락(strict): transition",
+      "줄0(0.0~1.8) 칸 누락(strict): motion",
+      "줄0(0.0~1.8) 칸 누락(strict): confidence",
+      "줄0(0.0~1.8) speaker 미기입"
+     ],
+     "d-jFF79JU2g": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.1) 칸 누락(strict): transition",
+      "줄0(0.0~2.1) 칸 누락(strict): motion",
+      "줄0(0.0~2.1) 칸 누락(strict): confidence",
+      "줄0(0.0~2.1) speaker 미기입"
+     ],
+     "3AqKf9ILnlI": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.0) 칸 누락(strict): transition",
+      "줄0(0.0~1.0) 칸 누락(strict): motion",
+      "줄0(0.0~1.0) 칸 누락(strict): confidence",
+      "줄0(0.0~1.0) speaker 미기입"
+     ]
+    }
+   },
+   "note": "줄판독 미완 3/3편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "스냅봤니형(임시)",
+ "n": 3,
+ "hybrid": "예",
+ "channel": {
+  "name": "스냅봤니",
+  "url": "https://www.youtube.com/@스냅봤니/shorts",
+  "subs": 76200,
+  "total": 165,
+  "view_median": 410000,
+  "view_max": 22000000,
+  "top_ids": [
+   "UMawOP2GQ3I",
+   "d-jFF79JU2g",
+   "3AqKf9ILnlI"
+  ],
+  "views_per_sub": 5.38
+ }
+}

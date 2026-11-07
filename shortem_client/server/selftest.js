@@ -2,16 +2,19 @@
 //   · 시험_다운로드.mp4(공개 영상 5초) + 자가점검_결과.md. ffmpeg -version 첫 줄 + -filters 의 ' ass ' 확인.
 //   실패 모양 {where, why, fix, retry_ok}.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import os from 'node:os';
 import path from 'node:path';
 import { workDir, ensureDir, homeDir } from './paths.js';
 import { run, runOk, resolveTools, toolsDir } from './tools_paths.js';
-import { browserExe, status as loginStatus, missingLogins } from './logins.js';
+import { browserExe, status as loginStatus, missingLogins, engineCookieEnv } from './logins.js';
 import { normalizeFrame, BASIC_FRAME } from './engine/frame.js';
 import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
-import { readSettings } from './local_settings.js';
+import { readSettings, providerOf, engineVoice } from './local_settings.js';
+import { engineRoot } from './engine_bridge.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
 const DEFAULT_VOICE = 'tc_68257f68bc6e3c161ab5078d';
@@ -83,21 +86,85 @@ async function testRender(dir) {
   return { file: out, duration: Number(pr.duration.toFixed(2)), size: `${pr.width}x${pr.height}` };
 }
 
-// 회원이 고른 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 지금 채널 먼저, 없으면 고른 적 있는 채널, 그래도 없으면 타입캐스트.
-export function voiceProvider(settings) {
-  const of = c => {
-    const t = ((c || {}).pack || {}).tts || {};
-    const v = String(t.voice_id || '');
-    return t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
-  };
-  const ch = (settings || {}).channels || {};
-  return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
+// 점검이 볼 목소리 = 엔진이 실제로 쓸 목소리 하나(local_settings.engineVoice → memberVoice) — 점검과 제작이 따로 정하던 두 벌을 합쳤다(11-03)
+
+// 일레븐 목소리 id(프리셋 이름 또는 20자 id) → 일레븐 목소리 id. 프리셋 표 = 엔진 voice_presets.json(엔진 narr_align.eleven_direct 와 같은 표)
+export function elevenBaseId(voiceId, presets) {
+  const p = (presets || []).find(x => x.preset_id === voiceId);
+  if (p) return p.base_voice_id || '';
+  return /^[A-Za-z0-9]{20}$/.test(String(voiceId || '')) ? voiceId : '';
+}
+
+// (판단 주인 — 이 일레븐 키로 고른 목소리를 쓸 수 있나) 무료 요금제는 공유 목록(라이브러리) 목소리를 API 로 못 쓴다 — 키만 보고 통과시키면
+//   제작 중 장면 맞추기에서야 payment_required 로 멈췄다(11-03 윤상길). 돈 안 드는 조회 2번(요금제·목소리 종류)만 한다
+const ELEVEN_FREE_OK = new Set(['premade', 'cloned', 'generated']);
+export async function elevenUsable(key, voiceId, { get = elevenGet, presets = null } = {}) {
+  const rows = presets || (() => {
+    try {
+      const d = JSON.parse(fs.readFileSync(path.join(engineRoot(), 'shopping_shorts', 'assets', 'voice_presets.json'), 'utf8'));
+      return Array.isArray(d) ? d : Object.values(d)[0];
+    } catch { return []; }
+  })();
+  const base = elevenBaseId(voiceId, rows);
+  if (!base) return;
+  // 이 조회(요금제·목소리 종류)는 user_read·voices_read 권한이 있어야 된다 — 그 권한만 없는 키(TTS 는 됨)는 '판별 못 함'으로 막지 않는다
+  //   (11-05 이준연 #7048: 1.0.104 다시 확인이 TTS 되는 키를 '권한 꺼짐'으로 막았다). 진짜 TTS 권한 문제는 제작 합성 때 엔진이 상태별 문구로 알린다.
+  const look = async p => { try { return await get(p, key); } catch (e) { if (e && e.status === 'missing_permissions') return null; throw e; } };
+  const sub = await look('/v1/user/subscription');
+  if (!sub || String(sub.tier || '').toLowerCase() !== 'free') return;
+  const v = await look(`/v1/voices/${base}`);
+  if (!v) return;
+  if (ELEVEN_FREE_OK.has(String(v.category || ''))) return;
+  throw Object.assign(new Error('eleven_free_library'), {
+    why: `일레븐랩스 무료 요금제는 고른 목소리(${voiceId})처럼 공유 목록 목소리를 쓸 수 없습니다`,
+    fix: "설정 화면 소리 단계에서 '내가 만든 목소리'(내 계정 목소리)를 고르거나, 일레븐랩스 유료 요금제로 바꾸거나, 타입캐스트·피쉬오디오 키를 넣으세요",
+  });
+}
+// (판단 주인 — 점검 통과가 지금 목소리·키에도 맞나) #3698·#3701(11-03 박준영): 점검 통과 뒤 일레븐 키·목소리를 바꿨는데 통과 표식이 그대로라
+//   권한 제한 키가 제작 8/11 장면 맞추기에서야 멈췄다. 표식에 점검 때 목소리·키 지문(해시 앞 12자 — 키 값은 남기지 않는다)을 묶는다.
+export async function voiceStamp(settings = readSettings(), { key = readKey } = {}) {
+  const v = await engineVoice(s => !!key(s), settings);
+  if (!v) return null;
+  const provider = providerOf(v) || 'typecast';
+  const k = key(provider);
+  return { provider, voice: String(v.voice_id || ''), key: k ? crypto.createHash('sha256').update(k).digest('hex').slice(0, 12) : '' };
+}
+// 제작 시작(flow_driver.startFlow)이 부른다 — 점검 때와 목소리·키가 같으면 아무것도 안 부른다(돈·시간 0). 다르면(옛 표식 포함) 목소리 검사만 다시 하고 표식을 고친다.
+export async function recheckVoice(preset, { settings = readSettings(), key = readKey, usable = elevenUsable } = {}) {
+  let d;
+  try { d = JSON.parse(fs.readFileSync(stampFile(), 'utf8')); } catch { return; }
+  if (!d || !d.ok) return;
+  const s = { ...(settings || {}), current: /^p_[0-9a-f]{10}$/.test(String(preset || '')) ? preset : (settings || {}).current };
+  const now = await voiceStamp(s, { key });
+  if (!now || JSON.stringify(now) === JSON.stringify(d.voice || null)) return;
+  if (!key(now.provider)) throw Object.assign(new Error('voice_key'), { why: `고른 목소리(${now.provider}) 키가 없습니다`, fix: '설정 화면 키 칸에 그 목소리 회사 키를 넣으세요' });
+  if (now.provider === 'elevenlabs') await usable(key('elevenlabs'), now.voice);
+  fs.writeFileSync(stampFile(), JSON.stringify({ ...d, voice: now }));
+}
+// 일레븐 401 본문 status → 회원에게 할 말. 엔진 쪽 같은 표 = tools/calcopy/engine/narr_align.ELEVEN_STATUS_WHY(문구를 바꾸면 둘 다)
+const ELEVEN_STATUS_WHY = {
+  payment_issue: '일레븐랩스 계정의 구독 결제가 실패(또는 미완료)해 사용이 멈췄습니다 — elevenlabs.io 에서 최근 청구서 결제를 마치거나, 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요',
+  missing_permissions: '일레븐랩스 키는 맞지만 필요한 권한(음성 만들기 text_to_speech 등)이 꺼진 키입니다 — elevenlabs.io ▸ API Keys 에서 권한을 켠 새 키를 만들어 설정 화면에 넣으세요',
+  detected_unusual_activity: '일레븐랩스가 무료 요금제의 비정상 사용으로 이 키를 막았습니다 — 유료 요금제로 바꾸거나 다른 회사(타입캐스트·피쉬오디오) 목소리를 고르세요',
+};
+export const elevenStatusWhy = s => ELEVEN_STATUS_WHY[s] || '일레븐랩스 키가 맞지 않습니다';
+async function elevenGet(p, key) {
+  const r = await fetch('https://api.elevenlabs.io' + p, { headers: { 'xi-api-key': key }, signal: AbortSignal.timeout(15000) });
+  if (r.status === 401) {
+    let st = '';
+    try { st = String(((await r.json()) || {}).detail?.status || ''); } catch { /* 본문 없음 = 키 문제로 */ }
+    throw Object.assign(new Error('eleven_key'), { status: st, why: elevenStatusWhy(st), fix: ELEVEN_STATUS_WHY[st] ? '' : '설정 화면 키 칸에 일레븐랩스 API 키(sk_…)를 다시 넣으세요' });
+  }
+  if (!r.ok) return {};          // 조회 실패는 막지 않는다(제작 때 엔진이 실제로 부른다)
+  return r.json();
 }
 
 async function testVoice(dir) {
-  const provider = voiceProvider(readSettings());
+  const v = await engineVoice(s => !!readKey(s));
+  const provider = (v && providerOf(v)) || 'typecast';
   if (provider !== 'typecast') {   // 시험 합성은 타입캐스트 길뿐이다 — 다른 회사는 키만 보고, 실제 합성은 제작 때 엔진(voice_synth)이 한다
     if (!readKey(provider)) return { skipped: true, why: `고른 목소리(${provider}) 키 없음` };
+    if (provider === 'elevenlabs') await elevenUsable(readKey('elevenlabs'), v.voice_id);
     return { provider, key_only: true };
   }
   if (!readKey('typecast')) return { skipped: true, why: '타입캐스트 키 없음(~/.shortem/keys/typecast)' };
@@ -114,7 +181,7 @@ async function testDownload(dir) {
   const { toolPath } = await import('./tools_paths.js');
   // 구간 받기는 유튜브에서 느리다 — 짧은 공개 영상을 낮은 화질로 통째로 받고 5초만 잘라 쓴다
   const r = await run('ytdlp', ['--no-playlist', '--no-warnings', '--ffmpeg-location', path.dirname(toolPath('ffmpeg')), '-f', 'bv*[height<=480][ext=mp4]+ba[ext=m4a]/b[height<=480][ext=mp4]/bv*+ba/b', '--merge-output-format', 'mp4', '--max-filesize', '60M',
-    '-o', path.join(tmp, 'dl.%(ext)s'), SELFTEST_URL()], { timeoutMs: 5 * 60000 });
+    '-o', path.join(tmp, 'dl.%(ext)s'), SELFTEST_URL()], { timeoutMs: 5 * 60000, env: { ...process.env, ...engineCookieEnv() } });   // 제작 받기와 같은 쿠키(11-03 회원 윤주홍: 점검만 무쿠키라 봇 확인에 막힘)
   const got = fs.readdirSync(tmp).find(n => n.endsWith('.mp4'));
   if (!got) { fs.rmSync(tmp, { recursive: true, force: true }); throw Object.assign(new Error('download'), { detail: r.stderr.slice(-400) }); }
   const out = path.join(dir, '시험_다운로드.mp4');
@@ -143,6 +210,7 @@ export async function selftest() {
       items.push({ name, ok: !r.skipped, ...r });
     } catch (e) {
       items.push({ name, ok: false });
+      if (e.why) { fails.push({ where, why: e.why, fix: e.fix || '', retry_ok: true }); continue; }
       fails.push({ where, why: ['인터넷', '받아쓰기', '브라우저', '계정'].includes(where) ? String(e.message || name).slice(0, 160) : `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
       if (process.env.SHORTEM_DEBUG) process.stderr.write(`[selftest] ${name}: ${e.stack || e}\n${e.detail || ''}\n`);
     }
@@ -154,6 +222,19 @@ export async function selftest() {
     ...(fails.length ? ['## 고칠 것', ...fails.map(f => `- [${f.where}] ${f.why} → ${f.fix}`)] : ['모든 점검을 통과했습니다.'])].join('\n');
   const report = path.join(dir, '자가점검_결과.md');
   fs.writeFileSync(report, md + '\n');
-  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
+  let voice = null;
+  try { voice = await voiceStamp(); } catch (e) { process.stderr.write(`[selftest] 목소리 지문 못 만듦: ${e.message || e}
+`); }
+  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where), voice }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
   return { items, fails, report, dir };
+}
+
+// (판단 주인 — 이 PC 가 느린 PC 인가) 회원 Claude 가 느릴 때마다 고객에게 'PC 사양 때문에 시간이 더 걸린다'고 설명하는 근거(사장님 11-04).
+//   CPU 스레드 8 미만 또는 메모리 12GB 미만 = 느린 PC. 그래픽카드 인코딩 여부는 video_encoder 가 따로 준다
+export function pcSpec(cpus = os.cpus(), mem = os.totalmem()) {
+  const threads = (cpus || []).length;
+  const ram_gb = Math.round(mem / 1e9);
+  const slow = threads < 8 || ram_gb < 12;
+  return { cpu: String((cpus[0] || {}).model || '').trim().slice(0, 60), threads, ram_gb, slow,
+    ...(slow ? { say: `이 PC 는 CPU ${threads}스레드·메모리 ${ram_gb}GB 라 영상 분석·굽기가 일반 PC 보다 2~4배 오래 걸릴 수 있어요. 고장이 아니라 사양 때문이니 조금만 기다려 주세요.` } : {}) };
 }

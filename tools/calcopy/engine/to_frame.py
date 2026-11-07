@@ -21,7 +21,6 @@ import json
 import re
 import statistics as st
 import sys
-from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +30,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from shopping_shorts.calcopy_frame import schema  # noqa: E402
+from shopping_shorts.calcopy_frame.preset_apply import _pil_font, _pil_font_px, font_faces  # noqa: E402,F401 — 글꼴 주인(고객 묶음 쪽)
 
 BRAND_TOP = 0.06        # 화면 높이 대비 — 이 위에서 시작하는 좁은 띠는 고정 문구
 BRAND_MAX_W = 0.40      # 화면 폭 대비
@@ -45,16 +45,6 @@ CAP_W_MIN = 400         # 자간·낱말 간격을 역산할 자막의 최소 �
 CAP_W_SPREAD = 0.15     # 잰 폭/그린 폭 비의 사분위 폭(중앙값 대비) — 넘으면 잰 폭이 글 길이를 안 따른다(못 믿음)
 LINE_RGB_DIFF = 40      # 제목 줄끼리 채움색이 이 값(채널 최대차)보다 다르면 줄마다 색(line_rgb)
 FRAMED_TOL = 30         # 틀 있음 판정: 띠 사이 빈 줄이 바탕색 ±30 안
-
-
-@lru_cache(maxsize=1)
-def font_faces() -> dict:
-    """장면꾸미기 화면의 @font-face: 글꼴 이름 → 파일 경로(첫 등록). 렌더러가 실제로 쓰는 파일."""
-    html = (ROOT / "out/scene-style-ui-showcase.html").read_text(encoding="utf-8")
-    out = {}
-    for fam, url in re.findall(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;\s*src:\s*url\("([^"]+)"', html):
-        out.setdefault(fam, (ROOT / "out" / url).resolve())
-    return out
 
 
 def family_of(font_file: str) -> str | None:
@@ -96,17 +86,6 @@ def pick_font(fonts: dict | None) -> tuple[str | None, dict]:
         note["skipped"].append(f"{f}(장면꾸미기 미등록)")
     note["why"] = "순위 안에 장면꾸미기 등록 글꼴이 없음"
     return None, note
-
-
-def _pil_font(fam: str, size: float):
-    return _pil_font_px(fam, max(1, int(round(size))))
-
-
-@lru_cache(maxsize=256)
-def _pil_font_px(fam: str, px: int):
-    """woff2 는 열 때마다 압축을 풀어 느리다(시험 52초 실측) — 글꼴·크기별로 한 번만 연다."""
-    from PIL import ImageFont
-    return ImageFont.truetype(str(font_faces()[fam]), px)
 
 
 def size_and_top(fam: str, text: str | None, ink_top: float, ink_h: float, line_h: float | None) -> dict:

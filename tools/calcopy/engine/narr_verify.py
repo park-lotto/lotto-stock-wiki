@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import re
 import time
 from difflib import SequenceMatcher
@@ -20,7 +21,8 @@ from pathlib import Path
 
 CACHE = Path("C:/숏템_칼카피/_cache/asr_sm")
 
-KEEP = re.compile(r"[가-힣A-Za-z0-9]")
+from tools.calcopy.hybrid.common import SPOKEN  # noqa: E402 — 소리 내 읽는 글자 판단 주인 한 곳(가나·한자 포함, 11-03)
+KEEP = re.compile(SPOKEN)
 DIG = "영일이삼사오육칠팔구"
 
 
@@ -163,6 +165,12 @@ def _md5(p) -> str:
     return h.hexdigest()
 
 
+def _whisper_words(path) -> list[dict]:
+    """이 PC 의 위스퍼 받아쓰기(스피치매틱스 키가 없거나 실패할 때 한 곳). 낱말 믿음값이 없어 1.0."""
+    from tools.calcopy.engine.check_line_sync import asr_segments
+    return [{"s": s, "e": e, "w": w, "conf": 1.0} for s, e, w in asr_segments(path)]
+
+
 def heard_words(path, lang: str = "ko") -> list[dict]:
     """[{s, e, w, conf}] — 키는 asr_local.speechmatics_key() 한 곳(값은 어디에도 찍지 않는다)."""
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -173,8 +181,7 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
     from tools.calcopy.engine.asr_local import speechmatics_key
     key = speechmatics_key()
     if not key:          # 키는 선택 — 없으면 이 PC 의 위스퍼로(사장님 11-02). 낱말 믿음값이 없어 1.0 으로 둔다
-        from tools.calcopy.engine.check_line_sync import asr_segments
-        return [{"s": s, "e": e, "w": w, "conf": 1.0} for s, e, w in asr_segments(path)]
+        return _whisper_words(path)
     H = {"Authorization": f"Bearer {key}"}
     cfg = {"type": "transcription", "transcription_config": {"language": lang, "operating_point": "enhanced"}}
     for attempt in range(3):
@@ -183,9 +190,11 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
                 r = requests.post("https://asr.api.speechmatics.com/v2/jobs", headers=H, files={"data_file": f}, data={"config": json.dumps(cfg)}, timeout=120)
             r.raise_for_status()
             break
-        except Exception as e:  # noqa: BLE001 — 3번 실패면 관문이 멈춘다(조용히 넘기지 않음)
+        except Exception as e:  # noqa: BLE001 — 3번 실패면 위스퍼로(키 없을 때와 같은 길) — 멈추지 않되 이유를 남긴다
             if attempt == 2:
-                raise RuntimeError(f"스피치매틱스 올리기 실패 {type(e).__name__}")
+                code = getattr(getattr(e, "response", None), "status_code", "")
+                sys.stderr.write(f"[받아쓰기] 스피치매틱스 올리기 실패 {type(e).__name__} {code} — 위스퍼로 받아쓴다(11-03 회원 임수정·윤주홍 멈춤)\n")
+                return _whisper_words(path)
             time.sleep(5)
     jid = r.json()["id"]
     for _ in range(200):
@@ -205,6 +214,12 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
 ASR_PAR = 4      # 동시 받아쓰기 상한(스피치매틱스 작업 동시 수 — 10-26 검수 단축 ⑥: 렌더 전 ② 9작업이 순차로 56초)
 
 
+def par_ok(platform: str | None = None) -> bool:
+    """받아쓰기를 여러 스레드로 돌려도 되나 — 맥은 numpy OpenBLAS 가 스레드 여럿의 행렬곱을 잠금으로 다퉈 멈췄다
+    (11-05 박상혁 #8071 M1: 4스레드 중 3개 pthread mutex 대기·6분+ CPU 100%). 윈도는 그대로 병렬."""
+    return (platform or sys.platform) != "darwin"
+
+
 def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
     """여러 소리를 동시에 받아쓰기해 캐시(CACHE)에 채운다 — 판정은 그대로(뒤 순차 heard_words 가 캐시를 읽는다).
     실패한 것은 {경로: 오류 이름}으로 돌려주고, 같은 파일을 뒤 순차 호출이 다시 겪어 그 자리에서 멈춘다(조용히 넘기지 않음)."""
@@ -218,9 +233,14 @@ def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
             continue
         seen.add(m)
         todo.append(p)
-    if len(todo) < 2:
-        return {}
+    if len(todo) < 2 or not par_ok():
+        return {}      # 순차면 뒤 heard_words 가 하나씩 받아쓴다(판정 같음)
     errs = {}
+    try:      # 병렬 전에 주 스레드에서 모델·tqdm 잠금 준비(11-05 박상혁 #8049 맥 스레드 안 첫 tqdm 멈춤)
+        from tools.calcopy.engine.check_line_sync import whisper_model
+        whisper_model()
+    except ImportError:
+        pass
     with ThreadPoolExecutor(max_workers=min(workers, len(todo))) as ex:
         futs = [(p, ex.submit(heard_words, p, lang)) for p in todo]
         for p, f in futs:
@@ -286,7 +306,7 @@ def slice_checks(lines, paths):
         rates[l["id"]] = len(N[l["id"]]) / talk
         res[l["id"]] = {"wav": str(p), "dur": d, "heard": " ".join(w["w"] for w in words), "ratio": round(ratio, 3), "issues": iss,
                         "talk": round(talk, 2), "words": words}
-    if rates:
+    if rates and sum(rates.values()) > 0:
         mean = sum(rates.values()) / len(rates)
         for i, r in rates.items():
             res[i]["rate"] = round(r, 2); res[i]["rate_rel"] = round(r / mean, 2)
@@ -404,6 +424,10 @@ def name_breaks(S: dict, align: dict | None) -> list[str]:
 
 def gate_sent(S: dict, sent: list[dict], R: Path, log=print) -> list[str]:
     """(판단 주인 — 렌더 전 관문 ②) make_sentences 결과(sent: id·wav)로 줄별 대조. 문제 목록(빈 목록 = 통과). 결과 = R/narr_verify.json."""
+    from tools.calcopy.hybrid.common import script_lang
+    if script_lang(S) == "ja":      # 임시(뿌리 수리 아님): 대조에 일본어 갈래가 없어 'TTS 빠뜨림'으로 거짓 멈춤(#4239 윤상길) — 일본어 대조를 만들 때까지 건너뛴다
+        log("[줄별 받아쓰기] 경보: 일본어 대본 — 대조를 건너뜀(일본어 대조 미구현)")
+        return []
     txt = {l["id"]: l["tts"] for l in S["lines"] if l.get("kind") == "tts"}
     lines = [{"id": s["id"], "text": txt[s["id"]]} for s in sent if s["id"] in txt]
     rep = verify(lines, {s["id"]: s.get("wav") for s in sent}, Path(R) / "narr_full.mp3", Path(R) / "narr_verify.json")

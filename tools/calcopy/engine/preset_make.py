@@ -214,6 +214,19 @@ def voice_spec(v: dict, cfg: dict, voice: str) -> tuple:
     return VO.provider_of(t), VO.emotion_of(t)
 
 
+def crop_box(crop, crop_x, sw: int, sh: int, W: int, H: int) -> list[int]:
+    """(판단 주인 — 원본에서 자를 칸) 재료 src_crop 이 있으면 그대로, 없으면 원본 높이 전체·창 비율 가운데(crop_x 면 그 가로 자리).
+    계획 검사(plan_check)와 회원 자를 칸 시트(runner_ops.c_pm_sheet)가 같이 부른다 — 회원이 본 칸 = 구워지는 칸."""
+    if crop:
+        x, y, cw, ch = crop
+    else:
+        ch = sh
+        cw = min(sw, int(sh * W / H) // 2 * 2)
+        x = (sw - cw) // 2 if crop_x is None else int(crop_x)
+        y = 0
+    return [int(x), int(y), int(cw), int(ch)]
+
+
 def plan_check(w: dict, cfg: dict) -> dict:
     """소스 있나·길이 되나·해상도 ≥720p·확대 ≤2.3배(A4). 크롭 상자도 여기서 정한다(판단 한 곳)."""
     W, H = cfg["window"]
@@ -224,14 +237,8 @@ def plan_check(w: dict, cfg: dict) -> dict:
             continue
         sw, sh, sd = probe(c["path"])
         c["src_wh"], c["src_dur"] = (sw, sh), sd
-        if c["crop"]:
-            x, y, cw, ch = c["crop"]
-        else:
-            ch = sh
-            cw = min(sw, int(sh * W / H) // 2 * 2)
-            x = (sw - cw) // 2 if c["crop_x"] is None else int(c["crop_x"])
-            y = 0
-        c["box"] = [int(x), int(y), int(cw), int(ch)]
+        c["box"] = crop_box(c.get("crop"), c.get("crop_x"), sw, sh, W, H)
+        ch = c["box"][3]
         z = round(H / ch, 2)
         zooms.append(z)
         if not c["meme"] and min(sw, sh) < 720:
@@ -658,7 +665,7 @@ def hook_end_s(w, cfg) -> float:
 
 def frame_spans(pre: dict, t: float) -> dict:
     """틀 2장(훅+본문) 프리셋의 span 변수 = [0, t] · [t, 끝]. span 이 고정값이면 손대지 않는다(프리셋이 이긴다)."""
-    from tools.calcopy.engine import preset_save as P
+    from shopping_shorts.calcopy_frame import preset_apply as P   # 적용만(만들기 preset_save 는 고객 묶음 밖)
     fr = pre["frames"]
     if len(fr) != 2:
         raise ValueError(f"틀 {len(fr)}장 — 제작기는 훅+본문 2장만 안다(경계를 정할 규칙을 manifest 에 먼저 적어라)")
@@ -670,7 +677,7 @@ def snapshot_and_timeline(w, M, cfg, pdir: Path):
     from shopping_shorts import scene_style
     fr = cfg["frame"]["kind"]
     if fr == "preset_save":
-        from tools.calcopy.engine import preset_save as P
+        from shopping_shorts.calcopy_frame import preset_apply as P   # 적용만(만들기 preset_save 는 고객 묶음 밖)
         from shopping_shorts.calcopy_frame import to_snapshot
         from shopping_shorts.calcopy_frame import schema
         pre, Mf = P.load(pdir)
@@ -712,7 +719,9 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
     rsig = _renderer_sig()
     LAYER_GLOBS = ("scene-style-layer-*.png", "scene-style-motion-*.png", "scene-style-capcut-*.png", "scene-style-layers.json")
 
-    def layers_cached(timeline, snapshot, output, headcopy=None, job_id=None):
+    def layers_cached(timeline, snapshot, output, headcopy=None, job_id=None, only=None):
+        if only is not None:          # 부분 렌더(고른 장면만 — 결과 꼴이 전체 캐시와 다르다) = 캐시 없이 원래 함수 그대로
+            return orig_layers(timeline, snapshot, output, headcopy, job_id, only=only)
         snapv = SS.validate_snapshot(snapshot)
         key = sha([snapv, SS.context_for(timeline, headcopy, snapv, job_id), rsig])
         d = cache / "layers" / key
@@ -744,10 +753,10 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
             base += cnt
         return out
 
-    def ff(cmd, cwd=None):
+    def ff(cmd, cwd=None, **kw):
         dst = Path(str(cmd[-1]))
         if not re.fullmatch(r"scene-style-\d{4}\.mp4", dst.name) or "-filter_complex" not in cmd:
-            return orig_ff(cmd, cwd)
+            return orig_ff(cmd, cwd, **kw)
         c = list(map(str, cmd))
         first = round(float(c[c.index("-ss") + 1]) * FPS)
         n = int(c[c.index("-frames:v") + 1])
@@ -771,7 +780,7 @@ def compose_cached(mat: Path, mat_map: list, tl, snap, head, out_mp4: Path, work
             shutil.copyfile(hit, target)
             st["scenes_cached"] += 1
             return None
-        r = orig_ff(cmd, cwd)
+        r = orig_ff(cmd, cwd, **kw)
         copy_atomic(target, hit)
         st["scenes_rendered"] += 1
         return r
@@ -966,6 +975,15 @@ def reuse_rows(w, cfg) -> list[str]:
     return reuse_violations_bench(cuts, lens, bool((cfg.get("reuse") or {}).get("adjacent_run")))
 
 
+def caption_over(pieces: list, cfg: dict) -> tuple[int, int, list]:
+    """A9 자막 화면 줄 자수 — 판단 주인(계획 관문 plan_rules · 대본 단계 flow_pm.script_problems 가 같이 부른다).
+    화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌) 잰다. 반환 = (최대 자수, 상한, 넘은 줄 [(글, 자수)])."""
+    lim = int(cfg["checks"]["caption_max_chars"])
+    rows = [re.sub(r"^[^:\n]{1,10} : ", "", x) for p in pieces for x in p["text"].split("\n")]
+    over = list(dict.fromkeys((x, len(x)) for x in rows if len(x) > lim))
+    return max((len(x) for x in rows), default=0), lim, over
+
+
 def plan_rules(w, cfg, plan) -> list:
     """TTS·렌더 전에 잴 수 있는 것 — 계획 단계(--plan)와 완성 검사에 같은 표로 나온다(판단 한 곳)."""
     C, rows = cfg["checks"], []
@@ -976,8 +994,8 @@ def plan_rules(w, cfg, plan) -> list:
     aba = aba_list(cs, near)
     rows.append({"B": "A12", "항목": f"A-B-A 끼움(같은 소스 ±{near:g}초 사이 다른 컷 하나)", "값": aba or 0, "ok": not aba,
                  "기준": "0 — 같은 인물은 이어 붙이고 끼운 컷은 묶음 앞·뒤로(표시만, 자동 재배치 안 함)"})
-    mc = max(len(re.sub(r"^[^:\n]{1,10} : ", "", x)) for p in w["pieces"] for x in p["text"].split("\n"))   # 화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌)
-    rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {C['caption_max_chars']}", "ok": mc <= C["caption_max_chars"]})
+    mc, lim, _ = caption_over(w["pieces"], cfg)   # 판단 주인 caption_over — 대본 단계(flow_pm)도 같은 함수
+    rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {lim}", "ok": mc <= lim})
     if C.get("tts_no_jamo"):   # A11: 읽는 글에 ㅋㅋ·ㄷㄷ 같은 낱자 금지(자막엔 둔다)
         jamo = [l["tts"] for l in w["lines"] if re.search(r"[ㄱ-ㅎㅏ-ㅣ]", l["tts"])]
         rows.append({"B": "A11", "항목": "TTS 글 낱자(ㅋㅋ·ㄷㄷ) 없음", "값": jamo or 0, "ok": not jamo, "기준": "0 — 대본 줄 tts 칸에서 뺄 것"})
@@ -1024,11 +1042,17 @@ def plan_sheet(w, cfg, dst: Path):
 
 
 # ── 9) 한 작품 ──────────────────────────────────────────────────────────
-def make_one(pdir: Path, wdir: Path, a) -> dict:
+def make_one(pdir: Path, wdir: Path, a, cfg_patch: dict | None = None) -> dict:
+    """cfg_patch = 회원 PC 가 덮는 make 칸(짤 폴더·회원 빠르기 — runner_ops.c_pm 만 준다). PC 명령(main)은 안 준다 = PC 동작 그대로."""
     M, cfg = load_preset(pdir)
+    if cfg_patch:
+        cfg = {**cfg, **cfg_patch}
     clk = Clock()
     log = {"preset": str(pdir), "work": str(wdir), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     w = load_work(wdir, M, cfg)
+    lj = pdir / "line.json"      # 이 프리셋의 짝 판(대본 검사 기준) — 경로로 짐작하면 판 이름 없는 작품 폴더가 잇썸홈판으로 재졌다(11-03 썰템쇼 작품1·2)
+    if lj.exists():
+        w["style_version"] = json.loads(lj.read_text(encoding="utf-8")).get("version")
     if w["S"].get("hybrid"):   # 하이브리드(앞 프리셋 줄 + 뒤 체험 줄을 한 대본으로, 사장님 10-20) — 검사 기준만 manifest hybrid_checks 로 덮는다
         if not cfg.get("hybrid_checks"):
             raise SystemExit(f"{pdir}/manifest.json channel_rules.make 에 hybrid_checks 가 없다 — 하이브리드 길이·효과음 기준을 먼저 적어라")
@@ -1051,7 +1075,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
         rows += [{"B": "관문", "항목": "렌더 전 관문(G-1·③⑤⑦④, 어림 시각)", "값": (g1 + pr["bad"]) or 0, "기준": "0 — preset_gates", "ok": not (g1 + pr["bad"])}]
         print_table(w["name"] + " (계획 단계)", rows)
         fails = [f"{r['B']} {r['항목']} {r['값']}" for r in rows if not r["ok"]]
-        return {"work": w["name"], "ok": False if (g1 + pr["bad"]) else None,
+        return {"work": w["name"], "ok": False if (g1 + pr["bad"]) else None, "fails": fails,   # fails = 표 미달 행(PC 는 담당이 표를 봤다 — 회원 실행기 c_pm 은 이것을 고칠 거리로 넘긴다)
                 "note": f"계획 시트 {wdir / 'plan' / '계획_시트_자동.jpg'} · " + ("; ".join(fails) or "계획 검사 통과"),
                 "total_s": round(sum(clk.steps.values()), 1)}
     PG._stop("G-1 대본 글(TTS 전)", g1)

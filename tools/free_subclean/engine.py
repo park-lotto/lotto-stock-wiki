@@ -36,10 +36,40 @@ def model_path() -> Path:
     return HOME / "big-lama.pt"
 
 
+PIP_VER = "24.3.1"
+
+
+def _has(py, mod: str) -> bool:
+    return subprocess.run([str(py), "-c", f"import {mod}"], capture_output=True, stdin=subprocess.DEVNULL).returncode == 0
+
+
+def _bootstrap_pip(log=print) -> None:
+    """가상환경에 pip 를 깐다 — 설치본 내장 파이썬은 ensurepip·pip 를 뺀 채 묶인다(installer/win/build_win.py slim_python).
+    #3558 이용재: `-m venv` 가 ensurepip 없이 실패해 무료 자막 지우기 설치가 모든 회원 PC 에서 조용히 멈췄다.
+    pip 휠 하나를 PyPI 에서 받아(PyPI 가 알려 주는 sha256 대조) 그 휠 안의 pip 로 자기 자신을 깐다."""
+    import hashlib
+    import urllib.request as U
+    meta = json.loads(U.urlopen(f"https://pypi.org/pypi/pip/{PIP_VER}/json", timeout=60).read())
+    whl = next(u for u in meta["urls"] if u["filename"].endswith("-py3-none-any.whl"))
+    data = U.urlopen(whl["url"], timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != whl["digests"]["sha256"]:
+        raise RuntimeError("pip 휠 지문이 다릅니다")
+    f = HOME / whl["filename"]
+    f.write_bytes(data)
+    log("pip 설치 중")
+    # Windows pip 는 `python -m pip` 꼴일 때만 자기 자신을 깐다 — 휠을 PYTHONPATH 에 얹고 -m pip
+    subprocess.run([str(py_path()), "-m", "pip", "install", "-q", "--no-index", str(f)], check=True, stdin=subprocess.DEVNULL,
+                   env={**os.environ, "PYTHONPATH": str(f)})
+    f.unlink(missing_ok=True)
+
+
 def install(log=print) -> dict:
     HOME.mkdir(parents=True, exist_ok=True)
     if not py_path().exists():
-        subprocess.run([sys.executable, "-m", "venv", str(HOME / "v")], check=True, stdin=subprocess.DEVNULL)
+        venv = [sys.executable, "-m", "venv"] + ([] if _has(sys.executable, "ensurepip") else ["--without-pip"])   # 설치본 파이썬 = ensurepip 없음
+        subprocess.run(venv + [str(HOME / "v")], check=True, stdin=subprocess.DEVNULL)
+    if not _has(py_path(), "pip"):
+        _bootstrap_pip(log)
     pip = [str(py_path()), "-m", "pip", "-q", "install"]
     subprocess.run(pip + ["torch", "--index-url", TORCH_INDEX], check=True, stdin=subprocess.DEVNULL)
     subprocess.run(pip + ["numpy", "opencv-python-headless"], check=True, stdin=subprocess.DEVNULL)

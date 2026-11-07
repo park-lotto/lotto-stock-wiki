@@ -107,12 +107,31 @@ def preview(req: dict) -> dict:
     return {"snapshot": snap, "context": ctx, "applied": cfg["applied"], "title": head["text"], "sfx": sfx, "detail": detail}
 
 
+def font_files() -> dict:
+    """(판단 주인 — 화면 글꼴 이름 → 렌더 글꼴 파일) 이름의 주인은 렌더러 화면의 @font-face 다. 그 src 파일과 같은 이름의 ttf/otf 가
+    fonts 폴더에 있으면 그것, 없으면 src 파일 그대로(PIL 이 woff·woff2 를 읽는다). 값 = fonts 폴더 기준 상대 경로.
+    11-03 한정수: 목록 이름(PretendardXBold)으로 파일을 찾아 88개 중 70개가 다시 만들기에서 멈췄다."""
+    fonts = ROOT / "shopping_shorts" / "static" / "fonts"
+    html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'@font-face\s*\{([^}]*)\}', html):
+        fam = re.search(r'font-family:\s*"?([A-Za-z0-9_-]+)"?;', m.group(1))
+        src = re.search(r'url\("?[^")]*?static/fonts/([^")]+)"?\)', m.group(1))
+        if not fam or not src or fam.group(1) in out:
+            continue
+        rel = src.group(1)
+        stem = pathlib.PurePosixPath(rel).stem
+        full = next((f"{stem}{e}" for e in (".otf", ".ttf") if (fonts / f"{stem}{e}").exists()), None)
+        if full or (fonts / rel).exists():
+            out[fam.group(1)] = full or rel
+    return out
+
+
 def catalog() -> dict:
     """고를 수 있는 값 — 각 주인이 아는 이름만(렌더러 @font-face · 틀 규칙 · 목소리 목록 · 곡 목록)."""
     from shopping_shorts import bgm_lib
     from shopping_shorts.calcopy_frame import schema, to_snapshot
-    html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
-    fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
+    fonts = sorted(font_files())          # 렌더 파일이 있는 이름만 고를 수 있다
     # 목소리 = 프리셋 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
     #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
     from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES, PROVIDERS, TC_EMOTIONS
@@ -124,7 +143,9 @@ def catalog() -> dict:
         p = next((v for v in presets if v.get("base_voice_id") == k["voice_id"] or v.get("preset_id") == k["voice_id"]), {})
         voices.append({"voice_id": k["voice_id"], "name": k["name"], "preset_id": p.get("preset_id") or k["voice_id"],
                        "engine": "elevenlabs" if k["engine"] == "일레븐랩스" else "typecast", "about": p.get("one_liner") or k.get("note") or ""})
-    return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
+    from shopping_shorts import scene_style
+    return {"fonts": fonts, "caption_packs": list(scene_style.caption_pack_keys()),   # 자막팩 이름(caption-motions.js PACKS — 주인 scene_style.caption_pack_keys)
+            "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
             "caption_mode": ["accumulate", "replace"], "voices": voices, "tts_emotions": list(TC_EMOTIONS), "tts_providers": list(PROVIDERS), "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
             "preset_defaults": preset_defaults_table(),   # 프리셋마다 기본값(원본 영상 기준) — packFor 가 엔진 기본 팩 위에 얹는다
             # 숏템메이커 템플릿(썰20·고정20) — 이름만(견본 그림은 벤치 화면이라 고객에게 안 보낸다). 고르면 렌더러가 그 자리에서 그린다
@@ -202,9 +223,29 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors", "logo"), "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption", "orig_text"),
+EDITABLE = {"brand": ("channel_name", "colors", "logo", "name_scale", "name_color", "watermark"),
+            "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_color", "caption_dy", "caption_font", "caption_scale", "caption", "caption_pack", "orig_text", "post_author", "layout", "caption_stack"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
+
+
+# (판단 주인 — 회원 워터마크 값이 그릴 수 있는 값인가) #3951 김효준: 채널명 워터마크 자리·크기·투명도. 그림 = render_bench.frame_png(cx·cy·px·alpha).
+#   오른쪽 위는 광고 표시 자리(engine/ad_mark, 사장님 11-02) — 거기엔 못 둔다.
+WATERMARK_RANGE = {"cx": (0, 1080), "cy": (0, 1920), "px": (20, 200), "alpha": (20, 255)}
+
+
+def watermark_errors(wm) -> list:
+    if wm is None:
+        return []
+    if not isinstance(wm, dict) or not wm or set(wm) - set(WATERMARK_RANGE):
+        return [f"워터마크 칸은 {sorted(WATERMARK_RANGE)} 만 받습니다"]
+    err = []
+    for k, (lo, hi) in WATERMARK_RANGE.items():
+        if k in wm and not (isinstance(wm[k], (int, float)) and not isinstance(wm[k], bool) and lo <= wm[k] <= hi):
+            err.append(f"워터마크 {k} 는 {lo}~{hi} 숫자여야 합니다")
+    if not err and wm.get("cx", 540) > 860 and wm.get("cy", 110) < 200:
+        err.append("워터마크는 오른쪽 위(광고 표시 자리)에 둘 수 없습니다")
+    return err
 
 
 def check(pack: dict, cat: dict | None = None) -> list:
@@ -223,9 +264,28 @@ def check(pack: dict, cat: dict | None = None) -> list:
     b, tx, tts, bgm = pack.get("brand") or {}, pack.get("text") or {}, pack.get("tts") or {}, pack.get("bgm") or {}
     if not isinstance(b.get("channel_name", ""), str) or len(b.get("channel_name", "")) > 30 or re.search(r"[<>{}$\\]", b.get("channel_name", "")):
         err.append("채널명은 30자 이하 글자여야 합니다")
+    err += watermark_errors(b.get("watermark"))
     for key in ("title_font", "caption_font"):
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
+    if tx.get("caption_pack") is not None and tx["caption_pack"] not in (cat.get("caption_packs") or ()):
+        err.append(f"모르는 자막팩: {tx['caption_pack']}")
+    if tx.get("layout") not in (None, "", "full"):      # 화면 틀: full = 9:16 전체 화면(주인 styles._member_layout, 11-05 박은숙)
+        err.append(f"모르는 화면 틀: {tx.get('layout')} (full)")
+    cs = tx.get("caption_stack")
+    if cs is not None:      # 자막 쌓기 자리 — 판 caption.stack 의 y·pitch(짝)·break 만(주인 styles._member_layout · 끊기 목록 주인 render_bench.STACK_BREAKS)
+        from tools.calcopy.hybrid.render_bench import STACK_BREAKS
+        num = lambda v, lo, hi: isinstance(v, (int, float)) and not isinstance(v, bool) and lo <= v <= hi      # noqa: E731
+        if not isinstance(cs, dict) or set(cs) - {"y", "pitch", "break"} or ("y" in cs) != ("pitch" in cs):
+            err.append("자막 쌓기 칸은 y·pitch(짝)·break 만 받습니다")
+        else:
+            if "y" in cs and not (num(cs["y"], 200, 1800) and num(cs["pitch"], 40, 300)):
+                err.append("자막 쌓기 y 는 200~1800, pitch 는 40~300 입니다")
+            if "break" in cs and cs["break"] not in STACK_BREAKS:
+                err.append(f"자막 쌓기 끊기는 {STACK_BREAKS} 중 하나입니다")
+    pa = tx.get("post_author")
+    if pa is not None and (not isinstance(pa, str) or len(pa) > 20 or re.search(r"[<>{}$\\]", pa)):
+        err.append("게시글 작성자 줄은 20자 이하 글자여야 합니다('' = 안 그림)")
     if tx.get("orig_text") not in (None, "", "auto", "vmake", "blur"):      # 원본 박힌 글자: auto(VMake 키 있으면 지우기·없으면 흐림) | vmake | blur — 사장님 10-30(vmake_clean.style_mode)
         err.append(f"모르는 글자 처리: {tx.get('orig_text')} (auto·vmake·blur)")
     tc = tx.get("title_colors")
@@ -235,6 +295,12 @@ def check(pack: dict, cat: dict | None = None) -> list:
         err.append("제목 크기는 0.7~1.3 배입니다")
     if tx.get("caption_color") is not None and not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(tx["caption_color"])):
         err.append("자막 색은 #RRGGBB 입니다")
+    if tx.get("caption_scale") is not None and not (isinstance(tx["caption_scale"], (int, float)) and 0.6 <= tx["caption_scale"] <= 2.0):
+        err.append("자막 크기는 0.6~2.0 배입니다")
+    if b.get("name_scale") is not None and not (isinstance(b["name_scale"], (int, float)) and 0.5 <= b["name_scale"] <= 3.0):
+        err.append("채널명 크기는 0.5~3.0 배입니다")
+    if b.get("name_color") is not None and not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(b["name_color"])):
+        err.append("채널명 색은 #RRGGBB 입니다")
     if tx.get("caption_dy") is not None and not (isinstance(tx["caption_dy"], int) and -800 <= tx["caption_dy"] <= 500):
         err.append("자막 위치 값이 범위를 벗어났습니다")
     dy = tx.get("title_dy")

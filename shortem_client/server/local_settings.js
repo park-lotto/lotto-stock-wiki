@@ -6,6 +6,7 @@ import path from 'node:path';
 import { homeDir, writeFileIn, jail } from './paths.js';
 import { engineTool } from './engine_bridge.js';
 import { api } from './api.js';
+import { keyStatus } from './engine/voice.js';
 
 const FILE = 'settings.json';
 export const PID_RE = /^p_[0-9a-f]{10}$/;
@@ -74,6 +75,16 @@ export function resetPack(pid) {
 
 // 서버 '내 채널 설정'(웹 /claude/studio)과 맞추기(관제 266) — 이 PC 설정을 보내고, 서버가 합친 결과(프리셋마다 더 최근 것)를 그대로 쓴다.
 //   합치는 판단은 서버 claude_studio.sync_merge 한 곳. 서버에 못 닿으면(키 없음·오프라인) 이 PC 설정 그대로 간다.
+// 받은 결과에 합칠 때도 서버 sync_merge 와 같은 규칙(프리셋마다 더 최근에 바꾼 쪽) — 서버 저장 관문이 이 PC 칸을 거절하면(서버 엔진이 아직 모르는 칸
+//   caption_scale·name_style 등, 관문 차이) 서버는 옛 칸을 돌려준다. 그대로 쓰면 회원이 방금 바꾼 칸이 사라졌다(#1958 이성택·#1041 최일환 목소리 되돌아감).
+export function mergeChannels(server, local) {
+  const out = { ...(server || {}) };
+  for (const [pid, ch] of Object.entries(local || {})) {
+    if (!out[pid] || Number((ch || {}).updated || 0) > Number(out[pid].updated || 0)) out[pid] = ch;
+  }
+  return out;
+}
+
 let lastSync = 0;
 export async function syncFromServer({ force = false } = {}) {
   if (!force && Date.now() - lastSync < 30000) return { skipped: true };
@@ -85,7 +96,7 @@ export async function syncFromServer({ force = false } = {}) {
   const got = (r && r.settings) || null;
   if (!got || typeof got.channels !== 'object') return { ok: false, why: 'bad_reply' };
   // 꾸민 모양(looks) = 이 PC 저장(saveLook, 사장님 11-01 '로컬로') + 웹에서 꾸민 프리셋은 받아 온다
-  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels,
+  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: mergeChannels(got.channels, s.channels),
     looks: { ...((got.looks && typeof got.looks === 'object') ? got.looks : {}), ...(s.looks || {}) } };   // 이 PC 에서 꾸민 것이 먼저
   if (JSON.stringify(next) !== JSON.stringify(s)) writeSettings(next);
   return { ok: true };
@@ -131,12 +142,88 @@ export async function saveLook(pid, snapshot) {
   return { ok: true };
 }
 
+// 꾸민 모양 끄기 — 지우지 않고 빈 표식(snapshot null + 지금 시각). 지우면 서버 맞추기(syncFromServer: 서버 looks 위에 이 PC looks)에서
+//   웹에 꾸민 모양이 다시 받아졌다. 엔진은 web.look = looks[pid].snapshot || null 을 읽어 프리셋 기본 틀로 간다(11-06 문인석 #9438)
+export function clearLook(pid) {
+  if (!PID_RE.test(String(pid || ''))) return { ok: false, error: '프리셋 id 모양이 아닙니다' };
+  const s = readSettings();
+  s.looks = { ...(s.looks || {}), [pid]: { snapshot: null, updated: Date.now() } };
+  writeSettings(s);
+  return { ok: true };
+}
+
+// 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 모르면 null
+export function providerOf(t) {
+  const v = String((t || {}).voice_id || '');
+  const p = (t || {}).provider;
+  return ({ fishaudio: 'fish', fish_audio: 'fish', eleven: 'elevenlabs' })[p] || p || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
+}
+
+const VOICE_KEYS = ['voice_id', 'name', 'provider', 'preset_id', 'emotion'];
+export const VOICE_SERVICES = ['typecast', 'elevenlabs', 'fish'];      // 목소리 키는 이 셋 중 하나면 된다(사장님 11-03)
+// 프리셋 목소리 회사 키가 없을 때 그 회사 기본 성우(사장님 11-03): 일레븐 = 미나·표현(숏템메이커 typecast_tts.FALLBACK_VOICE) ·
+//   피쉬 = 추천 여자 성우 일반여성2(voice_presets fs-ilban2-stable — 사장님 11-03 지정). 타입캐스트 = 프리셋에 세팅한 성우
+//   (숏템메이커 기본 필재는 숏클에서 금지 — engine/voices 사장님 10-20). 타입캐스트가 아닌 프리셋에서 타입캐스트 키만 있으면 썰템쇼 프리셋 성우(박창수).
+export const DEFAULT_VOICES = {
+  elevenlabs: { voice_id: 'kr-mina-expressive', name: '미나', provider: 'elevenlabs' },
+  fish: { voice_id: 'fs-ilban2-stable', name: '일반여성2', provider: 'fish' },
+  typecast: { voice_id: 'tc_6059dad0b83880769a50502f', name: '박창수', provider: 'typecast' },
+};
+// (판단 주인 — 이 프리셋에서 엔진이 쓸 회원 목소리 칸) 순서:
+//   ① 회원이 이 프리셋 목소리를 정했으면 그대로(설정 화면 소리 단계·shortem_settings — 회원 요청이 이긴다)
+//   ② 프리셋 목소리 회사 키가 있으면 프리셋 목소리(사장님이 세팅한 기본값)
+//   ③ 회원이 다른 프리셋에서 고른 목소리 중 키가 있는 것(지금 채널 먼저) — #1186·#953·#1846
+//   ④ 키가 있는 회사의 기본 성우(DEFAULT_VOICES, 일레븐 → 피쉬 → 타입캐스트) — 처음 세팅에 일레븐 키만 있는 회원(사장님 11-03 '셋 중 하나만')
+//   반환 = 팩 member.tts 에 넣을 칸(빈 객체 = 프리셋 목소리). hasKey(회사) 는 키 파일 판정(engine/voice.keyStatus).
+//   ★11-05 얜샷템 회원 편: ② 에서 {} 를 돌려주면 엔진은 프리셋 목소리가 아니라 **판 voice**(키치잇판 = 일레븐 미나)로 합성했다 —
+//   여기가 '프리셋 목소리(문정, 타입캐스트)'라고 판단해 타입캐스트 키만 본 회원이 렌더에서 막혔다. 그래서 ② 는 프리셋 목소리 정체를 실어 보낸다
+//   (여기가 판단한 목소리 = 엔진이 합성하는 목소리). 회원 칸에 voice_id 없이 이름만 남은 반쪽({name:'박창수'})은 목소리를 못 고르므로 이름을 버리고 빠르기·감정만 남긴다.
+const VOICE_ID_KEYS = ['voice_id', 'name', 'provider', 'preset_id'];
+export function memberVoice(settings, pid, presetTts, hasKey) {
+  const ch = (settings || {}).channels || {};
+  const own0 = ((ch[pid] || {}).pack || {}).tts || {};
+  if (own0.voice_id) return own0;
+  const own = Object.fromEntries(Object.entries(own0).filter(([k]) => !VOICE_ID_KEYS.includes(k)));
+  if (hasKey(providerOf(presetTts) || 'typecast')) {
+    const pre = presetTts && presetTts.voice_id ? Object.fromEntries(VOICE_KEYS.filter(k => presetTts[k] != null).map(k => [k, presetTts[k]])) : {};
+    return { ...pre, ...own };
+  }
+  const other = [(settings || {}).current, ...Object.keys(ch)].filter(p => p && p !== pid)
+    .map(p => ((ch[p] || {}).pack || {}).tts).find(t => t && t.voice_id && hasKey(providerOf(t)));
+  const pick = other || DEFAULT_VOICES[['elevenlabs', 'fish', 'typecast'].find(k => hasKey(k))];
+  return pick ? { ...Object.fromEntries(VOICE_KEYS.filter(k => pick[k] != null).map(k => [k, pick[k]])), ...own } : own;
+}
+
+// 지금 채널에서 엔진이 실제로 쓸 목소리 {voice_id, provider…} — 시작 점검(키·목소리 시험·일레븐 요금제)이 이것 하나만 본다(엔진 팩 packFile 과 같은 memberVoice).
+//   채널을 안 골랐으면 키가 있는 회사 기본 성우, 키도 없으면 null.
+export async function engineVoice(hasKey = s => keyStatus(s).present, settings = readSettings()) {
+  const pid = (settings || {}).current;
+  let presetTts = null;
+  if (pid) { try { presetTts = (await packFor(pid)).tts || null; } catch { /* 프리셋 표 못 읽음 */ } }
+  const t = pid ? memberVoice(settings, pid, presetTts, hasKey) : {};
+  if (t.voice_id) return t;
+  if (presetTts && presetTts.voice_id) return presetTts;
+  return DEFAULT_VOICES[['elevenlabs', 'fish', 'typecast'].find(k => hasKey(k))] || null;
+}
+
+// 시작 점검이 볼 목소리 회사 — 지금 채널에서 엔진이 쓸 목소리(memberVoice)의 회사. 프리셋 목소리를 모르면(채널 안 고름) null = 셋 중 아무 키
+export function voiceServiceFor(settings, presetTts, hasKey) {
+  const pid = (settings || {}).current;
+  if (!pid) return null;
+  const t = memberVoice(settings, pid, presetTts, hasKey);
+  return providerOf(t.voice_id ? t : presetTts) || null;
+}
+
 // 엔진 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩}) — 만들 때마다 지금 설정으로 새로 쓴다(웹에서 바꾼 것도 먼저 받는다)
-export async function packFile(pid) {
+export async function packFile(pid, { hasKey = s => keyStatus(s).present } = {}) {
   await syncFromServer({ force: true });
   const rel = path.join('packs', `${pid}.json`);
   const st = readSettings();
   const web = { look: ((st.looks || {})[pid] || {}).snapshot || null };   // 엔진이 읽는 웹 설정(꾸민 모양) — 팩 검사 밖 칸. 감정은 팩 tts.emotion
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), member: (st.channels[pid] || {}).pack || {}, web }));   // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
+  const full = await packFor(pid);
+  const member = { ...((st.channels[pid] || {}).pack || {}) };      // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
+  const tts = memberVoice(st, pid, full.tts, hasKey);
+  if (Object.keys(tts).length) member.tts = tts;
+  writeFileIn(homeDir(), rel, JSON.stringify({ 1: tts.voice_id ? { ...full, tts: { ...full.tts, ...tts } } : full, member, web }));
   return path.join(homeDir(), rel);
 }

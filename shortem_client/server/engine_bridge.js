@@ -28,11 +28,19 @@ const aiRoot = () => ensureDir(homeDir(), 'ai');
 export const aiRootDir = aiRoot;
 export const dataDir = () => ensureDir(homeDir(), '창고');
 
+// 동봉 도구 뒤에 붙이는 OS 기본 명령 폴더 — 윈도 System32 / 맥·리눅스 /usr/bin·/bin. 맥은 이게 없어 yt-dlp sh 감싸개의 dirname 을 못 찾아
+//   'engine/../python/bin/python3: cannot execute' 로 유튜브 받기 시험이 멈췄다(11-05 박상혁 #7942 — 맥 회원 전원)
+export function systemPathTail(platform = process.platform, systemRoot = process.env.SystemRoot) {
+  if (platform === 'win32') return systemRoot ? path.join(systemRoot, 'System32') : '';
+  return ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':');
+}
+
 function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     CALCOPY_GEMINI_BACKEND: 'client', CALCOPY_CUSTOMER_MODE: '1', SHORTEM_LLM_QUEUE: queue,
     CALCOPY_DATA_DIR: dataDir(), CALCOPY_PACK_ROOT: packRoot(), CHANNEL_FIND_CACHE: ensureDir(homeDir(), 'cache', 'channel_find'),
-    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright', SHORTEM_BROWSER_OFFSCREEN: '1' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
+    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright', SHORTEM_BROWSER_OFFSCREEN: '1',   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
+    OPENCV_OPENCL_RUNTIME: 'disabled' };   // 그래픽 드라이버 OpenCL 안 올림(#1397) — 엔진 tools/__init__.py 도 같은 값(옛 앱+새 엔진)
   if (packFile) env.CALCOPY_PACKS = packFile;
   Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});
@@ -42,7 +50,7 @@ function engineEnv(queue, packFile, extraEnv) {
   if (!devMode()) {                                      // 설치본: 동봉 도구만 PATH 에(ffmpeg·yt-dlp + 이 MCP 를 돌리는 동봉 node — 엔진 렌더러가 node 를 부른다)
     const dirs = ['ffmpeg', 'ytdlp'].map(t => { try { return path.dirname(toolPath(t)); } catch { return null; } }).filter(Boolean);
     dirs.push(path.dirname(process.execPath));
-    env.PATH = [...new Set(dirs)].join(path.delimiter) + path.delimiter + (process.env.SystemRoot ? path.join(process.env.SystemRoot, 'System32') : '');
+    env.PATH = [...new Set(dirs)].join(path.delimiter) + path.delimiter + systemPathTail();
     try { env.PUPPETEER_EXECUTABLE_PATH = toolPath('chrome'); } catch { /* 자가점검이 알린다 */ }
     env.NODE_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'node_modules');   // 엔진 렌더러의 puppeteer 연결(engine/node_modules/puppeteer)이 puppeteer-core 를 찾는 곳
     const wd = path.join(toolsDir(), '..', 'models', 'whisper');                                 // 받아쓰기 모델(설치팩 동봉)
@@ -192,8 +200,17 @@ export function answer(id, obj) {
 //   띄워 두고 줄마다 부른다. 서버 설정 화면(claude_studio)도 같은 파일을 쓴다. 워커가 죽으면 다음 요청에 다시 띄운다(오류는 화면에 그대로).
 const WORKER_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'engine_worker.py');
 let W = null;
+// 엔진 파일이 바뀌면(updater.applyDownloaded) 떠 있는 워커는 옛 코드를 붙잡고 있다 — 다음 요청부터 새로 띄운다.
+//   하던 요청은 끝까지 답하고 끈다(11-03 김만기: 1.0.85 의 text.post_author 를 18:48 에 뜬 워커가 '모르는 칸'으로 거절)
+export const workerPid = () => (W && !W.dead ? W.proc.pid : null);     // 시험용
+export function resetEngineWorker() {
+  if (!W || W.dead) return false;
+  W.stale = true;
+  if (!W.q.length) { try { W.proc.kill(); } catch { /* 이미 끝 */ } }
+  return true;
+}
 function engineWorker() {
-  if (W && !W.dead) return W;
+  if (W && !W.dead && !W.stale) return W;
   const root = engineRoot();
   const proc = spawn(pythonExe(), ['-u', WORKER_FILE, root],
     { cwd: root, env: engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -209,10 +226,11 @@ function engineWorker() {
       let j; try { j = JSON.parse(line); } catch { j = { error: '엔진 미리보기 응답 모양이 다릅니다' }; }
       if (j.ready && w.onReady) { w.onReady(true); w.onReady = null; continue; }
       const cb = w.q.shift(); if (cb) cb(j);
+      if (w.stale && !w.q.length) { try { proc.kill(); } catch { /* 이미 끝 */ } }
     }
   });
   proc.stderr.on('data', d => { if (w.err.length < 20000) w.err += String(d); });
-  const die = why => { w.dead = true; if (w.onReady) { w.onReady(false); w.onReady = null; } for (const cb of w.q.splice(0)) cb({ error: why, tail: w.err.slice(-400) }); };
+  const die = why => { w.dead = true; if (W === w) W = null; if (w.onReady) { w.onReady(false); w.onReady = null; } for (const cb of w.q.splice(0)) cb({ error: why, tail: w.err.slice(-400) }); };
   proc.on('error', e => die(String(e && e.message)));
   proc.on('close', () => die('엔진 미리보기가 멈췄습니다'));
   // 워커가 MCP·시험 프로세스를 붙잡아 두지 않게(기다리는 요청은 타이머가 붙잡는다), 끝날 때 같이 끈다
@@ -254,33 +272,57 @@ export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
 // 단계형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
 //   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
 const EXIT_GRACE_MS = 5000;   // 실행기가 끝난 뒤 남은 출력을 받을 시간
-export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
+const RESULT_POLL_MS = 1000;
+// 결과는 파이프가 아니라 파일(SHORTEM_RESULT)로 받는다 — 판단 주인은 runner_ops.main 과 이 runOps 두 곳 짝.
+//   11-03 완성본 검사 멈춤(정민혜 1.0.52·1.0.54): 산출물을 다 쓴 실행기가 스레드 1개·CPU 0 으로 10분+ 안 끝났다(종료 정리에서 멈춤으로 본다).
+//   결과 파일이 생기면 프로세스가 안 끝나도 잠깐 뒤 끄고 그 파일로 끝낸다. 옛 엔진(파일을 안 씀)은 예전처럼 stdout 마지막 줄.
+const killTree = pid => { try { if (process.platform === 'win32') spawn('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, stdio: 'ignore' }); else process.kill(pid, 'SIGKILL'); } catch { /* 이미 끝 */ } };
+export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {}, signal = null } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
-  const doFile = path.join(jobDir, '..', `do_${Date.now()}.json`);
+  const ts = Date.now();
+  const doFile = path.join(jobDir, '..', `do_${ts}.json`);
+  const resFile = path.join(jobDir, '..', `result_${ts}.json`);
+  const logFile = path.join(jobDir, '..', 'runner.log');
   fs.writeFileSync(doFile, JSON.stringify(doList || []));
   return new Promise(resolve => {
     const proc = spawn(pythonExe(), ['-m', 'tools.calcopy.hybrid.runner_ops', jobDir, doFile],
-      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir(), ...extra }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir(), SHORTEM_RESULT: resFile, SHORTEM_RUNNER_LOG: logFile, ...extra }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const readRes = () => { try { return JSON.parse(fs.readFileSync(resFile, 'utf8')); } catch { return null; } };
+    const logTail = () => { try { const s = fs.readFileSync(logFile, 'utf8'); return s.slice(-300); } catch { return ''; } };
     const out = [];
     let err = '';
     const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
     proc.stdout.on('data', d => out.push(d));
     proc.stderr.on('data', d => { if (err.length < 200000) err += String(d); });
     const fail = why => Object.fromEntries((doList || []).map(d => [String(d.id || d.cmd), { error: why }]));
-    proc.on('error', e => { clearTimeout(t); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
+    proc.on('error', e => { clearTimeout(t); clearInterval(poll); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
     // close 만 기다리면 손자 프로세스가 출력을 쥐고 있는 동안 실행기가 끝나도 영영 안 온다(11-02 완성본 검사 멈춤 3건 — exit 뒤 12초 재현)
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
       clearTimeout(t);
-      try { fs.appendFileSync(path.join(jobDir, '..', 'runner.log'), err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ }
+      clearInterval(poll);
+      if (err) { try { fs.appendFileSync(logFile, err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ } }   // 새 엔진은 runner.log 에 직접 쓴다(err 빈칸)
       try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
+      const r = readRes();
+      try { fs.unlinkSync(resFile); } catch { /* 옛 엔진 = 파일 없음 */ }
+      if (r) return resolve(r);
       const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
-      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
+      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + (err.slice(-300) || logTail()))); }
     };
+    let seen = 0;
+    const poll = setInterval(() => {      // 결과 파일이 생겼는데 EXIT_GRACE_MS 안에 안 끝나면 끄고 끝낸다
+      if (!fs.existsSync(resFile)) return;
+      if (!seen) { seen = Date.now(); return; }
+      if (Date.now() - seen >= EXIT_GRACE_MS && readRes()) { killTree(proc.pid); finish(); }
+    }, RESULT_POLL_MS);
+    poll.unref();
     proc.on('close', finish);
     proc.on('exit', () => setTimeout(finish, EXIT_GRACE_MS).unref());
+    // 편 멈춤(cancelFlow) — 돌던 실행기를 끄고 바로 끝낸다. 안 끄면 끝날 때까지 프리셋 빌림이 남아 새 편 준비 확인이 busy 로 멈췄다(#2027·#502)
+    const stop = () => { killTree(proc.pid); if (!done) { done = true; clearTimeout(t); clearInterval(poll); try { fs.unlinkSync(doFile); } catch { /* 이미 */ } resolve(fail('사용자가 멈췄다')); } };
+    if (signal) { if (signal.aborted) stop(); else signal.addEventListener('abort', stop, { once: true }); }
   });
 }
 

@@ -55,3 +55,31 @@ def test_customer_without_key_stops_with_fix(tmp_path, monkeypatch):
         assert "일레븐랩스 키가 필요합니다" in str(e)
     else:
         raise AssertionError("키 없이 넘어갔다")
+
+
+def _raise_with(status, message, code=401):
+    def fake(req, timeout=0):
+        body = io.BytesIO(json.dumps({"detail": {"status": status, "message": message}}).encode())
+        raise urllib.error.HTTPError(req.full_url, code, "x", {}, body)
+    return fake
+
+
+def _why(tmp_path, monkeypatch, status, message):
+    monkeypatch.setattr("urllib.request.urlopen", _raise_with(status, message))
+    try:
+        N.eleven_direct("가.", "kr-mina-expressive", tmp_path / "a.mp3", "sk_x")
+    except RuntimeError as e:
+        return str(e)
+    raise AssertionError("오류가 안 올라왔다")
+
+
+def test_401_은_일레븐_상태로_갈라_말한다(tmp_path, monkeypatch):
+    """11-04 김미화 #4038 payment_issue · 11-03 박준영 #3698 missing_permissions — 키는 맞는데 '키가 맞지 않습니다'로 시작해 엉뚱한 곳을 보게 했다."""
+    w = _why(tmp_path, monkeypatch, "payment_issue", "Your subscription has a failed or incomplete payment. Complete the latest invoice to continue usage.")
+    assert not w.startswith("일레븐랩스 키가 맞지 않습니다") and "결제" in w and "payment_issue" in w
+    w = _why(tmp_path, monkeypatch, "missing_permissions", "The API key you used is missing the permission text_to_speech to execute this operation.")
+    assert not w.startswith("일레븐랩스 키가 맞지 않습니다") and "권한" in w and "missing_permissions" in w
+    w = _why(tmp_path, monkeypatch, "detected_unusual_activity", "Unusual activity detected. Free Tier usage disabled.")
+    assert not w.startswith("일레븐랩스 키가 맞지 않습니다") and "유료" in w
+    w = _why(tmp_path, monkeypatch, "invalid_api_key", "Invalid API key")
+    assert w.startswith("일레븐랩스 키가 맞지 않습니다")

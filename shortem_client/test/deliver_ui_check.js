@@ -51,7 +51,7 @@ const out = {};
 const click = async sel => { await page.waitForSelector(sel, { timeout: 15000 }); await page.click(sel); await new Promise(r => setTimeout(r, 700)); };
 const text = sel => page.$eval(sel, e => e.innerText).catch(() => '');
 
-await click('.step[data-k="videos"]');
+await click('.step[data-k="setup"]');
 await page.screenshot({ path: path.join(OUT, '1_처음.png') });
 await page.type('#tgtoken', TOKEN);
 await click('[data-dl="link"]');

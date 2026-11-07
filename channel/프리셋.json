@@ -27,7 +27,7 @@
     "hottemreport": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "핫템리포트(현장썰 1번)", "brand_ref": "hottemreport",
       "engine": {"style_file": "tools/calcopy/hybrid/styles/숏템리폿판.json", "renderer": "hand", "preset_dir": "channel/hottemreport/preset/검정띠", "hand_scripts": ["channel/hottemreport/make_frame_숏템리폿.py", "channel/hottemreport/make_render_숏템리폿.py", "channel/hottemreport/현장썰하이브리드/render_front.py", "channel/hottemreport/현장썰_run.py"]},
       "member": {"line_json": "channel/hottemreport/preset/검정띠/line.json", "preset_name": "해외핫영상+리뷰형", "flow_format": "해외원본형"}},
-    "foreignshowshow": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "해외쇼츠 샤크탱크 편", "brand_ref": "foreignshowshow",
+    "foreignshowshow": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "해외쇼츠 샤크탱크 편", "brand_ref": "foreignshowshow", "scope": "내부용", "source_exception": "방송 원본 예외 — 11-01 방송사 공식 영상 금지에서 이 프리셋만 뺌, 회원 미공개(사장님 11-02, 관제 307)",
       "engine": {"style_file": "tools/calcopy/hybrid/styles/샥탬판.json", "renderer": "hand", "preset_dir": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄", "hand_scripts": ["tools/calcopy/shark/render.py", "tools/calcopy/shark/fx_place.py", "channel/foreignshowshow/<편>/make_plan.py(편마다)"]},
       "member": {"line_json": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄/line.json", "preset_name": "샤크탱크+리뷰형", "flow_format": "해외원본형"}},
     "ititemlog": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "잇템로그(현장썰 2번·화장품)", "brand_ref": null, "brand_note": "브랜드.json 미등록 — 드라이브 '잇템로그 대기중'·6번 잇템로그_998, 우리 이름 '잇템로그'(01b 문서)",

@@ -99,9 +99,9 @@ def test_final_sheet_problem_goes_to_fix_with_line_way(monkeypatch):
     st["phase"] = "check_got"
     F.step(st, _chk(), {}, {})
     out = F.step(st, {}, {"sheet_썰템쇼판": _seen(st, ok=False, problems=["7초 L3 자막 넘침"])}, {})
-    assert out["review"][0]["id"] == "final_fix_썰템쇼판" and seen["final_fix_썰템쇼판"].endswith("시트_1초.jpg")
-    out = F.step(st, {}, {"final_fix_썰템쇼판": {"ok": False, "대본줄": {"L3": {"tts": "짧은 줄.", "caps": ["짧은 줄"]}}}}, {})
-    assert out["do"][0]["id"] == "save_script" and st["phase"] == "plan"
+    # 11-02 22:09 aa31b3da2(관제 304 '완성본 뒤 재계획 금지') — LIMITS['look'] = 0: 시트 지적은 고치기로 가지 않고 알림과 함께 완성
+    assert F.LIMITS["look"] == 0 and "final_fix_썰템쇼판" not in seen
+    assert out["do"][0]["cmd"] == "finish" and st["look_left"] == ["7초 L3 자막 넘침"] and "7초 L3 자막 넘침" in st["notice"]
 
 
 def test_final_fix_question_offers_line_way_not_more_material():

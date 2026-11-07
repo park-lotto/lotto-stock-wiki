@@ -165,7 +165,11 @@ def from_flow(store, cid, sid, res: dict, state: dict):
         stage = str((res.get("stage") or {}).get("text") or "")
         if status == "stop":
             fix = str(res.get("fix") or "")
-            witness(store, cid, "stuck", (str(res.get("why") or res.get("message") or "멈췄습니다")[:EVENT_HEAD] + (f" / 할 일: {fix[:100]}" if fix else "")), sid=sid, stage=stage)
+            # 원인 원문(지시서가 회원 응답에선 빼고 상태 기록에만 남긴 '멈춤 속사정')은 관리자 사건에만 — 회원 화면은 10-22 결정대로 쉬운 말만.
+            #   11-05: '이 PC 준비가 아직 덜 됐어요'가 3명에게 났는데 원문을 회원도 CS 도 못 봐 원인을 못 가렸다
+            inner = next((str(x)[len("멈춤 속사정: "):] for x in reversed(state.get("log") or []) if str(x).startswith("멈춤 속사정: ")), "")
+            witness(store, cid, "stuck", (str(res.get("why") or res.get("message") or "멈췄습니다")[:EVENT_HEAD] + (f" / 할 일: {fix[:100]}" if fix else "")
+                                          + (f" / 속사정: {inner[:200]}" if inner else "")), sid=sid, stage=stage)
         elif status == "reject":        # 반려 = 평범한 고쳐 쓰기 — 진행판에만
             why = str((res.get("reject") or {}).get("why") or res.get("message") or "")
             witness(store, cid, "progress", f"반려: {why[:EVENT_HEAD]}", sid=sid, stage=stage)

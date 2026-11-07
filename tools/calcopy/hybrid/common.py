@@ -22,6 +22,17 @@ if not os.path.isfile(FACE_MODEL):
         if (_d / "face_detection_yunet_2023mar.onnx").is_file():
             FACE_MODEL = str(_d / "face_detection_yunet_2023mar.onnx")
             break
+
+
+def face_detector(w: int = 320, h: int = 320):
+    """얼굴 검출기(YuNet) 만들기 한 곳 — 모델을 바이트로 읽어 넘긴다. 경로로 넘기면 OpenCV ANSI 로더가 한글 경로(윈도 사용자 폴더)를 못 열어
+    렌더가 멈췄다(11-05 박세현 #8643). render_bench·runner_ops·thumb 가 이걸 부른다(경로로 따로 만들던 3벌)."""
+    import cv2
+    import numpy as np
+    buf = np.frombuffer(Path(FACE_MODEL).read_bytes(), dtype=np.uint8)
+    return cv2.FaceDetectorYN.create("onnx", buf, np.empty(0, dtype=np.uint8), (w, h), 0.6, 0.3, 50)
+
+
 WORK_BASE = Path("C:/숏템_칼카피/yanshottem")
 DOC_BASE = ROOT / "channel" / "yanshottem"
 DESK_DIR = Path("C:/Users/CH/Desktop/칼카피영상/얜샷템/하이브리드")
@@ -60,6 +71,32 @@ def dur_of(p) -> float:
     return float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p]).stdout.strip())
 
 
+def video_dur(p) -> float:
+    """영상 스트림 길이(초) — 파일 길이(format)는 소리가 더 길면 화면 끝보다 길다. 스트림 칸이 없으면 파일 길이."""
+    j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration:format=duration", "-of", "json", p]).stdout)
+    return float((j.get("streams") or [{}])[0].get("duration") or (j.get("format") or {}).get("duration") or 0)
+
+
+def orig_span_over(b: float, f: dict) -> float:
+    """(판단 주인 — 원음 구간 끝이 원본 화면 안인가, #4089 박영상) 넘은 초(0 = 안 넘음). f = 원본 파일 정보(runner_ops.dims).
+    화면 끝 = 영상 스트림 길이 − 1프레임 = render_bench.src_left(src, 0) 과 같은 자 — 조사·대본 검사(flow)와 계획이 같은 끝을 본다.
+    vdur 가 없는 옛 회원 엔진 결과면 옛 기준(파일 길이 + 0.5)으로 — 거짓 반려를 내지 않는다."""
+    if f.get("vdur"):
+        end = float(f["vdur"]) - 1 / FPS
+    elif f.get("dur"):
+        end = float(f["dur"]) + 0.5
+    else:
+        return 0.0
+    return max(0.0, round(float(b) - end, 3))
+
+
+def has_audio(p) -> bool:
+    """(측정 주인 — 이 파일에 소리 트랙이 있나) ffprobe 로 오디오 스트림을 센다. 인스타·틱톡 무음 원본은 소리 트랙이 아예 없어
+    ffmpeg 소리 뽑기가 'Output file does not contain any stream' 으로 죽었다(이성택 #9390). 재지 못하면 예(옛 동작 그대로 — 받아쓰기가 오류를 알린다)."""
+    r = run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index", "-of", "csv=p=0", str(p)], check=False)
+    return r.returncode != 0 or bool((r.stdout or "").strip())
+
+
 def probe(p) -> tuple[int, int, float]:
     j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", p]).stdout)
     return j["streams"][0]["width"], j["streams"][0]["height"], float((j.get("format") or {}).get("duration") or 0)   # 사진(jpg)은 길이 칸이 없을 수 있다(10-27 run4 a편 쿠팡 사진 2장 KeyError → 제품 사진 0장)
@@ -90,9 +127,26 @@ def silences(p, noise="-40dB", d=0.1, merge=0.01) -> list[tuple[float, float]]:
     return out
 
 
+# (판단 주인 — 소리 내 읽는 글자) 한글·영문·숫자 + 가나·한자. 말속도·자막 시작·글자 시각·받아쓰기 대조가 모두 이 자를 쓴다
+#   (11-03 윤상길 일본어판: 곳곳에 한글만 세는 자가 따로 있어 일본어 대본이 0자 → 나눗셈·자막 시각이 깨졌다)
+SPOKEN = r"[가-힣A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff]"
+
+
+JP_FONT = "NotoSansKR-Bold.otf"     # 일본어 글자가 다 있는 글꼴(fontTools: Pretendard 는 가나 일부 누락) — 일본어 대본이면 렌더 글꼴을 이것으로
+
+
+def script_lang(S: dict | None = None) -> str:
+    """(판단 주인 — 이 편 대본 언어) 'ja' = 나레 줄에 가나가 있다 · 아니면 'ko'. 렌더가 정해 SHORTEM_SCRIPT_LANG 에 두면
+    같은 실행의 글꼴(render_bench._font)·광고 표시(ad_mark)가 그 값을 읽는다(11-03 윤상길 일본어판 — 사장님 승인)."""
+    if S is None:
+        return os.environ.get("SHORTEM_SCRIPT_LANG") or "ko"
+    kana = re.compile(r"[\u3040-\u30ff]")
+    return "ja" if any(kana.search(str(l.get("tts") or "")) for l in S.get("lines") or []) else "ko"
+
+
 def nchar(s: str) -> int:
-    """읽는 글자 수(한글·영문·숫자만) — 말속도의 분자. 잇썸·재미썸 두 렌더러가 같은 자를 쓴다."""
-    return len(re.findall(r"[가-힣A-Za-z0-9]", s or ""))
+    """읽는 글자 수(SPOKEN) — 말속도의 분자. 잇썸·재미썸 두 렌더러가 같은 자를 쓴다."""
+    return len(re.findall(SPOKEN, s or ""))
 
 
 def md5(p) -> str:

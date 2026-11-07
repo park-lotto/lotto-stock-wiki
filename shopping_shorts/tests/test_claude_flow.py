@@ -86,3 +86,17 @@ def test_다른_고객_payload_거절(env, monkeypatch):
     assert c.get("/api/claude/license", headers=_h(key2, fp="d" * 64)).status_code == 200
     r = c.post("/api/claude/step", headers=_h(key2, fp="d" * 64), json={"step": "go", "payload": p1})
     assert r.status_code == 400 and "찾을 수 없습니다" in r.json()["msg"]
+
+
+def test_같은_요청_다시면_같은_응답(env, monkeypatch):
+    """응답을 못 받은 회원 PC 가 같은 요청을 다시 보내면(네트워크·502 재시도) stale 이 아니라 같은 응답 — 편이 죽지 않는다(11-03 김유선)."""
+    c, key, calls = _setup(env, monkeypatch)
+    p1 = c.post("/api/claude/step", headers=_h(key), json={"step": "start", "preset": env["preset"], "source": {"url": URL}}).json()["next_payload"]
+    body = {"step": "go", "payload": p1, "measure": {"env": {"ok": 1}}}
+    r2 = c.post("/api/claude/step", headers=_h(key), json=body)
+    n = len(calls)
+    r2b = c.post("/api/claude/step", headers=_h(key), json=body)
+    assert r2b.status_code == 200 and r2b.json()["next_payload"] == r2.json()["next_payload"]
+    assert len(calls) == n                     # 지시서를 다시 돌리지 않았다
+    r3 = c.post("/api/claude/step", headers=_h(key), json={"step": "go", "payload": p1, "measure": {"env": {"ok": 2}}})
+    assert r3.json()["code"] == "stale"        # 다른 요청이면 그대로 거절

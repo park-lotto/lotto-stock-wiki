@@ -57,6 +57,7 @@ def walk(mod, st, ctx, limit=300):
 def _no_heavy(monkeypatch):
     monkeypatch.setattr(F, "audit_script", lambda st, S, M: {"ok": True})
     monkeypatch.setattr(F, "ALT_LIST", "_시험_없음.json")   # 소재 한 편(둘째 소재 없음) — 이 묶음은 제작자 과제 길만 본다(소재 2편은 test_origin_member_find)
+    monkeypatch.setattr(F, "MIX_POOLS", {})                 # 11-02 f9c160c42 공동 소재 창고(잇템로그 = 외국인K뷰티)도 끈다 — 안 끄면 창고에서 둘째 소재가 생겨 bench 가 칸마다 2번
     yield
 
 

@@ -1332,9 +1332,13 @@
         c.querySelectorAll('*').forEach(e=>{e.className='';e.style.cssText=`color:${col};background:none;-webkit-text-stroke:0;text-shadow:none;transform:none;translate:none;opacity:1;clip-path:none`;});
         Object.assign(c.style,{position:'absolute',zIndex:String((parseInt(getComputedStyle(text).zIndex,10)||0)+1),color:col,webkitTextStroke:'0',textShadow:'none',pointerEvents:'none',opacity:'0',animation:'none',transition:'none'});return c};
       let tail=text;
+      // 복사본도 원래 글자의 크기 변화(scale 키프레임)를 같이 탄다 — 팝+잔상(잇템로그 itlHookPop)에서 다 큰 복사본이 작게 시작한 글자 위에 두 벌로 겹쳤다
+      //   (11-04 #3580·#3702 임수정 · 우리 ep16 1.50~1.65초 재현, Jev 뿌리 0.91·해결 0.85). scale 없는 효과(rgbGlitch 스타픽룸)는 그림 그대로
+      const popK=(motion.frames||[]).some(f=>f.scale!=null)?motion.frames.map(f=>({...(f.offset!=null?{offset:f.offset}:{}),scale:String(f.scale??1)})):null;
+      const pop=c=>{if(!popK)return;c.style.transformOrigin=text.style.transformOrigin||getComputedStyle(text).transformOrigin;drive(c.animate(popK,{duration:ms,easing:motion.easing||'linear',fill:'none'}));};
       g.colors.forEach(([col,mul])=>{const c=mk(col);tail.after(c);tail=c;
-        drive(c.animate(g.keys.map(([o,v])=>({offset:o,translate:`${mul*v*g.amp}em 0`,opacity:v>0?g.alpha:0})),{duration:ms,easing:'linear',fill:'none'}));});
-      const core=mk(getComputedStyle(text).color);tail.after(core);drive(core.animate([{opacity:1},{opacity:1}],{duration:ms,easing:'linear',fill:'none'}));
+        drive(c.animate(g.keys.map(([o,v])=>({offset:o,translate:`${mul*v*g.amp}em 0`,opacity:v>0?g.alpha:0})),{duration:ms,easing:'linear',fill:'none'}));pop(c);});
+      const core=mk(getComputedStyle(text).color);tail.after(core);drive(core.animate([{opacity:1},{opacity:1}],{duration:ms,easing:'linear',fill:'none'}));pop(core);
     }
     // 글자마다 무지개 돌림(스타픽룸 j5D 0.2~1.0) — 색 칸 하나 = cycle.ms, 글자 k 는 칸이 k 만큼 어긋남(공백도 한 글자)
     if(motion.cycle&&motion.unit==='char'){
@@ -1477,7 +1481,8 @@
     el.classList.add('wfx-on');Object.keys(WORD_FX_STYLES).forEach(k=>el.classList.toggle('wfx-'+k,wordFx.style===k));
     marks.forEach((m,k)=>{let s=spans[m.w];if(!s)return;s.classList.add('wfx-mk');if(Number.isInteger(m.n)&&m.n>0&&m.n<s.textContent.length&&!s.querySelector('.wfx-part')){const t=s.textContent,p=document.createElement('span');p.className='wfx-part';p.textContent=t.slice(0,m.n);s.textContent='';s.append(p,t.slice(m.n));}   // 어절 앞부분만 칠하기(m.n, 주인 scene_style.scene_marks) — 나머지 글자는 본래 색
       s=s.querySelector('.wfx-part')||s;s.style.color=colors[k];
-      const g=WORD_FX_GROWS[m.grow];if(!g)return;
+      const g=WORD_FX_GROWS[m.grow||wordFx.grow];if(!g)return;   // 회원 강조 키우기(wordFx.grow) — 장면 표식 grow 가 먼저
+      
       const at=Array.isArray(sc.words)&&Number.isFinite(sc.words[m.w])?Math.max(0,sc.words[m.w]-sc.start):0,scale=Math.round(growScale(g,wordFxClock+WORD_FX_LEAD-at)*1000)/1000;
       s.style.transformOrigin='50% 60%';s.style.transform=scale!==1?`scale(${scale})`:'';scales.push(scale);});
     return '0:'+(scales.join('|')||'1');
@@ -2217,7 +2222,9 @@
     let box=base.box;const pb=pk.box;
     if(pb&&typeof pb==='object'){const c=/^#[0-9a-f]{6}$/i.test(pb.color||'')?pb.color:'#000000',a=Number.isFinite(+pb.alpha)?Math.max(0,Math.min(100,+pb.alpha)):100;
       box={...box,background:`rgba(${[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)).join(',')},${(a/100).toFixed(3)})`,...(Number.isFinite(+pb.radius)?{borderRadius:`${Math.max(0,+pb.radius)}px`}:{})};}
-    return {...base,box,color:pk.text?.color||base.color,text};
+    // 상자를 글자에 맞춰(11-05 숏템리폿판_v2 — PC 납품 자막 = 글자 둘레 pad 30 둥근 상자). 팩 box.fit:true 일 때만 — 다른 팩은 그대로 틀 자막 칸 폭
+    const fit=pb&&typeof pb==='object'&&pb.fit?{pad:Number.isFinite(+pb.pad)?+pb.pad:30}:null;
+    return {...base,box,color:pk.text?.color||base.color,text,...(fit?{fit}:{})};
   }
   // 장면 i 의 자막팩 한 벌(관제 235) — 팩 기본 위에 그 장면 화자(speakers[scene.speaker])·줄 변형(variants[scene.variant])을 덮는다.
   //   화자·변형 값은 서버 scene_style.scene_marks 가 장면에 싣는다(판단의 주인). 글꼴·크기·글자색·꾸밈·두 겹 테·강조 색 목록을 바꾼다 — 등장은 ownMotionKey.
@@ -2274,6 +2281,8 @@
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
+    if(capLook?.fit&&text.textContent.trim()){const pv=preview.getBoundingClientRect(),rg=document.createRange();rg.selectNodeContents(text);const bb=rg.getBoundingClientRect(),pad=capLook.fit.pad*preview.clientHeight/frame.height;
+      if(bb.width>0&&pv.width>0)Object.assign(patch.style,{left:((bb.left-pv.left-pad)/pv.width*100)+'%',width:((bb.width+2*pad)/pv.width*100)+'%',top:((bb.top-pv.top-pad)/pv.height*100)+'%',height:((bb.height+2*pad)/pv.height*100)+'%'});}   // 글자 둘레만 상자(팩 box.fit)
     emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
     captionCycleStatic(layer.querySelector('.precision-text[data-edit-bind="caption"]'));   // 무지개 돌림(관제 235) — 정지 그림 색
@@ -2747,8 +2756,11 @@
       {const ov=saved&&saved.captionOverride,pk=ov&&CAPTION_PACKS[saved.captionPack];   // 회원 자막 값 = 강조·효과는 팩 그대로, 글꼴·기본색·세로 위치만
        if(pk&&!pk.__ov){pk.__ov=1;if(ov.font){pk.font=ov.font;if(pk.emph)pk.emph.font=ov.font}
         if(ov.color&&pk.text)pk.text.color=ov.color;
-        if(ov.dy){const mv=o=>{if(o&&o.place&&typeof o.place.y==='number')o.place.y+=o.place.y<=100?ov.dy/19.2:ov.dy};mv(pk);Object.values(pk.variants||{}).forEach(mv)}
-        if(ov.color)Object.values(pk.variants||{}).forEach(o=>{if(o.text&&o.text.color)o.text.color=ov.color})}}
+        if(ov.dy){const mv=o=>{if(o&&o.place&&typeof o.place.y==='number')o.place.y+=o.place.y<=100?ov.dy/19.2:ov.dy};mv(pk);[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(mv)}
+        if(ov.color)[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(o=>{if(o.text&&o.text.color)o.text.color=ov.color})   // 11-05 김효준 #6290: 화자 층(speakers) 색이 회원색을 덮어 narr 줄이 팩 노란색으로 나왔다
+        if(ov.scale>0){const sc=o=>{if(!o)return;if(typeof o.size==='number')o.size*=ov.scale;if(o.emph&&typeof o.emph.size==='number')o.emph.size*=ov.scale};sc(pk);[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(sc)}
+        if(ov.outline){const o=ov.outline,base=+pk.size||100,re=/^\s*([\d.]+)em\s+(#[0-9a-f]{3,8})/i,put=(s,force)=>{if(!s)return;const cur=re.exec(String(s.WebkitTextStroke||''));if(!force&&!cur)return;const w=typeof o.px==='number'?2*o.px/base:(cur?+cur[1]:0),c=o.rgb||(cur?cur[2]:'#000000');if(w>0){s.WebkitTextStroke=`${+w.toFixed(4)}em ${c}`;s.paintOrder='stroke fill';s.strokeLinejoin='round'}else delete s.WebkitTextStroke};pk.text=pk.text||{};pk.text.style=pk.text.style||{};put(pk.text.style,typeof o.px==='number');if(pk.emph){pk.emph.style=pk.emph.style||{};put(pk.emph.style,typeof o.px==='number')}[...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(L=>{put(L.text&&L.text.style,false);put(L.emph&&L.emph.style,false)})}   // 회원 외곽선(text.caption.outline_px·rgb → styles._member_caption_fx) = 팩 테 굵기(em=2·px/팩 글자 크기)·색. 변형·화자 층은 자기 테가 있을 때만
+        if(ov.enter&&typeof ov.enter==='object')[pk,...Object.values(pk.variants||{}),...Object.values(pk.speakers||{})].forEach(L=>{L.enter=ov.enter})}}   // 회원 등장(clean_caption_enter 스펙) = captionEnterSpec 이 읽는 팩·변형·화자 enter 칸 모두에(팩 motion 보다 이긴다) · 자막 크기(회원 text.caption_scale → styles.member_frame) = 팩 글자·강조 크기 배율
       sceneContext=context;adminView=context?.adminView===true;if(!saved)renderGrid();   // 관리자 전용 틀 노출은 context 를 받아야 정해진다(rowVisible)
       sceneTexts.clear();for(const k of Object.keys(shownBase))delete shownBase[k];shownAt=-1;   // 관제 219: 장면별 글은 이 작업 저장본 것만
       for(const [key,value] of Object.entries(saved?.sceneTexts||{}))if(typeof value==='string')sceneTexts.set(key,value);
