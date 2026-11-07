@@ -54,7 +54,9 @@ def direct(tl):
             if T > 2 * BEAT_SEC:   # 다 찬 그래프가 오래 머물면 도중에 다른 모양으로 바꿔 보여 준다
                 n = math.ceil(T / (2 * BEAT_SEC)); s["swaps"] = [(T * b / n, bags["bar"].take(lambda x: x in fits), bags["cut"].take()) for b in range(1, n)]
         elif ty == "typo": s["modes"] = [bags["type"].take() for _ in s["items"]]
-        elif ty == "labels": s["look"] = bags["label"].take()
+        elif ty == "labels":
+            from .cards import flow_fits   # 원 치수의 주인은 cards.flow_geom — 여기서는 맞는지만 묻는다
+            s["look"] = bags["label"].take(lambda x: x != "flow" or flow_fits(s))
         elif ty == "vs":
             s["look"] = bags["versus"].take()
             if T > 2 * BEAT_SEC: s["swaps"] = [(T / 2, bags["versus"].take(), bags["cut"].take())]

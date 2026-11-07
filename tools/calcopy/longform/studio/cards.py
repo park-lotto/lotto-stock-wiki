@@ -250,11 +250,21 @@ def chips_list(img, s, lt, tl):
         if g > 0.5: d.line([(326, y + 16), (326 + 26 * (g - 0.5) * 2, y + 16 - 36 * (g - 0.5) * 2)], fill=GOLD + (255,), width=7)
         glow_text(img, it[1], 400 + (1 - g) * 60, y, f, INK, 0, g, "l")
 
+def flow_geom(s):
+    """(치수 주인) 원 노드 목록의 칸 폭·원 반지름·글꼴 — chips_flow 와 flow_fits 가 함께 쓴다."""
+    items = s["items"]; slot = (W - 240) / len(items); r = min(slot * 0.42, 150)
+    return slot, r, fit_face("HAN", 60, max((it[1] for it in items), key=len), r * 1.75)
+
+def flow_fits(s):
+    """가장 긴 글자도 원 안에 들어가나 — direction 이 labels 모양을 고를 때 부른다."""
+    slot, r, f = flow_geom(s); d = ImageDraw.Draw(Image.new("L", (4, 4)))
+    return all(d.textlength(it[1], font=f) <= 2 * r - 24 for it in s["items"])
+
 def chips_flow(img, s, lt, tl):
     """화살표로 이어지는 원 노드."""
-    items = s["items"]; n = len(items); slot = (W - 240) / n; y = H / 2 - 30; f = fit_face("HAN", 60, max((it[1] for it in items), key=len), min(slot * 0.42, 150) * 1.75); d = ImageDraw.Draw(img)
+    items = s["items"]; slot, r, f = flow_geom(s); y = H / 2 - 30; d = ImageDraw.Draw(img)
     for j, it in enumerate(items):
-        p = lt - label_shown(tl, s, j); cx = 120 + slot * (j + 0.5); r = min(slot * 0.42, 150)
+        p = lt - label_shown(tl, s, j); cx = 120 + slot * (j + 0.5)
         if p <= 0: d.ellipse([cx - r, y - r, cx + r, y + r], outline=LINE, width=3); continue
         g = smooth(p / 0.12); col = (GOLD, HOT)[j % 2]; ping(img, cx, y, p / 0.35, col, r * 0.67, r * 1.1); panel(img, [cx - r, y - r, cx + r, y + r], (14, 14, 16), col, width=4, radius=int(r), blur=12, a=int(255 * g)); glow_text(img, it[1], cx, y, f, INK, 0, g); d = ImageDraw.Draw(img)
         if j: px = cx - slot + r + 8; d.line([(px, y), (px + (slot - 2 * r - 16) * g, y)], fill=col + (255,), width=5)

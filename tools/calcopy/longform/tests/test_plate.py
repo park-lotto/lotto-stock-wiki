@@ -188,3 +188,19 @@ def test_captions_hold_through_line_gaps(tmp_path):
     code = "from studio.timing import make_schedule\ntl = make_schedule()\nS = tl['subs']\nprint(json.dumps(dict(gaps=[round(b['t0'] - a['t1'], 3) for a, b in zip(S, S[1:])])))"
     m = run(work(tmp_path, {"plate": "모둠경제"}, LINES), code)
     assert all(g <= 0 or g >= 1.0 for g in m["gaps"]), m
+
+
+FLOW = """from studio.direction import direct
+from studio.cards import flow_fits
+long = dict(s=[1, 1], type='labels', items=[(1, '2015.10 대법원 징역 7년', ''), (1, '정진석 징역 2년6월', '')], t0=0.0, t1=5.0)
+shots = [dict(long, s=[i, i], t0=i * 5.0, t1=i * 5.0 + 5) for i in range(1, 13)]
+tl = dict(shots=shots, events=[])
+direct(tl)
+print(json.dumps(dict(looks=[s['look'] for s in tl['shots']], fits=flow_fits(long))))
+"""
+
+
+def test_labels_flow_only_when_text_fits(tmp_path):
+    """원 노드(flow)는 가장 긴 글자가 원 안에 들어갈 때만 뽑힌다(cards.flow_geom 치수)."""
+    m = run(work(tmp_path, {"plate": "모둠경제"}), FLOW)
+    assert m["fits"] is False and "flow" not in m["looks"], m
