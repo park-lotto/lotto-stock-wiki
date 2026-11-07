@@ -83,23 +83,8 @@ GATE_MIN_WORKERS = 2
 
 
 def _free_mb():
-    """지금 쓸 수 있는 메모리(MB) = min(남은 물리 메모리, 남은 커밋). 못 재면 큰 값(막지 않는다)."""
-    try:
-        import ctypes
-
-        class _MS(ctypes.Structure):
-            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
-                        ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
-                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
-                        ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
-                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
-        m = _MS()
-        m.dwLength = ctypes.sizeof(_MS)
-        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
-        # 물리 메모리와 커밋(가상 메모리 포함) 여유 중 작은 쪽 — 10-26 RAM 15GB 남았는데 커밋 38.7/39.9GB 로 새 할당이 실패했다(관제 275)
-        return int(min(m.ullAvailPhys, m.ullAvailPageFile) / 2 ** 20)
-    except Exception:  # noqa: BLE001
-        return 10 ** 6
+    """지금 쓸 수 있는 메모리(MB) — 재는 법의 주인은 merge_gate.free_mb(관제 336: 관문 중 감시와 같은 값을 본다)."""
+    return merge_gate.free_mb()
 
 
 def _gate_target_workers(free_mb):
@@ -1750,15 +1735,10 @@ def _rerun_on_main(stage, ids):
             rc, out = run(["git", "checkout"], wt)
         if rc != 0:
             raise TrackError("main 재실행 폴더를 못 풀었다: %s" % out[-300:])
-        env = dict(os.environ, PYTHONIOENCODING="utf-8")
-        # main 코드의 finish 시험이 이 프로세스가 쥔 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
-        for _k in ("TMP", "TEMP", "TMPDIR"):
-            env[_k] = str(tmp)
-        # 파일 통째로(카드 083) — id 하나씩이면 같은 파일 안 순서 영향이 사라져 '원래 실패'를 못 가른다
-        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--tb=no", "-rfE"]
-                           + merge_gate.test_files_of(ids),
-                           cwd=str(wt), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
-        got = merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
+        # 파일 통째로(카드 083) — id 하나씩이면 같은 파일 안 순서 영향이 사라져 '원래 실패'를 못 가른다.
+        # ★pytest 는 관문 주인 merge_gate.run_pytest 로만(관제 336) — 묶음·남은 메모리 감시·개별 임시 폴더/락(카드 075)을 거기서 한다.
+        _rc, out = merge_gate.run_pytest(wt, merge_gate.test_files_of(ids), workers=0)
+        got = merge_gate.parse_failed(out)
         return {f for f in got if f in set(ids)}
     finally:
         run(["git", "worktree", "remove", "--force", str(wt)], stage)
