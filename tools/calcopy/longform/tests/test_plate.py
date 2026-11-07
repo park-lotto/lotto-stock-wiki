@@ -181,3 +181,10 @@ def test_side_word_keeps_number_with_unit(tmp_path):
     """옆 큰 글자: '5845만 원' 의 단위가 혼자 다음 줄로 떨어지지 않는다(timing.glued)."""
     m = run(work(tmp_path, {"plate": "모둠경제"}), WRAP)
     assert m["last_w"] > 150, m   # 마지막 줄이 '원' 한 글자(약 70px)면 실패
+
+
+def test_captions_hold_through_line_gaps(tmp_path):
+    """판 줄 간격(0.31)에서도 문장 사이에 자막이 꺼지지 않는다(timing.make_schedule 이 다음 자막까지 늘린다)."""
+    code = "from studio.timing import make_schedule\ntl = make_schedule()\nS = tl['subs']\nprint(json.dumps(dict(gaps=[round(b['t0'] - a['t1'], 3) for a, b in zip(S, S[1:])])))"
+    m = run(work(tmp_path, {"plate": "모둠경제"}, LINES), code)
+    assert all(g <= 0 or g >= 1.0 for g in m["gaps"]), m

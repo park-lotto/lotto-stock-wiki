@@ -3,7 +3,7 @@ import os, sys, re, json, math, wave, subprocess, importlib.util, random
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-from .cfg import HERE, P, WORK, E, load_cfg
+from .cfg import HERE, P, WORK, E, load_cfg, font_file, font_path
 CFG = load_cfg()
 W, H = CFG["width"], CFG["height"]; FPS = CFG["fps_num"] / CFG["fps_den"]
 C = {k: tuple(v) for k, v in CFG["colors"].items()}
@@ -19,10 +19,7 @@ _fc = {}
 def face(name, size):
     k = (name, size)
     if k not in _fc:
-        path = {"B": "Pretendard-Bold.otf", "XB": "Pretendard-ExtraBold.otf", "K": "Pretendard-Black.otf", "M": "Pretendard-Medium.otf",
-                "R": "Pretendard-Regular.otf", "SB": "Pretendard-SemiBold.otf", "SERIF": "HANBatangB.ttf",
-                "HAN": "BlackHanSans-Regular.ttf", "PEN": "NanumPenScript-Regular.ttf", "AN": "Anton-Regular.ttf", "MONO": "JetBrainsMono-Bold.ttf", "GM": CFG.get("font_main", "GmarketSansBold.otf")}[name]
-        _fc[k] = ImageFont.truetype(P("fonts", path), size)
+        _fc[k] = ImageFont.truetype(font_path(font_file(name, CFG)), size)
     return _fc[k]
 
 

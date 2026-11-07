@@ -21,3 +21,16 @@ def load_cfg():
     cfg.update(work)
     if plate: cfg["plate"] = plate
     return cfg
+
+# 글꼴 지도의 주인. 장면 그리기(settings.face)와 시작 점검(steps/checkup.py)이 둘 다 이것을 읽는다.
+# 글꼴 파일은 꾸러미 fonts/ 에(gitignore — 손으로 채움), 없으면 Windows 글꼴 폴더에서 찾는다.
+FONTS = {"B": "Pretendard-Bold.otf", "XB": "Pretendard-ExtraBold.otf", "K": "Pretendard-Black.otf", "R": "Pretendard-Regular.otf", "SB": "Pretendard-SemiBold.otf",
+         "SERIF": "HANBatangB.ttf", "HAN": "BlackHanSans-Regular.ttf", "AN": "Anton-Regular.ttf", "MONO": "JetBrainsMono-Bold.ttf"}
+def font_file(name, cfg):
+    return cfg.get("font_main", "GmarketSansBold.otf") if name == "GM" else FONTS[name]
+def font_path(fn):
+    local = P("fonts", fn); sysf = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", fn)
+    return local if os.path.exists(local) or not os.path.exists(sysf) else sysf
+def missing_fonts(cfg):
+    """시작 점검용: 지도에 있는데 어디에도 없는 글꼴 파일"""
+    return sorted(fn for fn in {font_file(k, cfg) for k in list(FONTS) + ["GM"]} if not os.path.exists(font_path(fn)))

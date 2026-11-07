@@ -55,7 +55,7 @@ def make_frame(t, tl):
     frame.alpha_composite(corner_marks(s["chapter"], br))
     if s["type"] != "typo" or CFG["caption_all_shots"]:
         if s["type"] != "typo": source_mark(frame, s, shot_src(s), ART_BOX if s["type"] == "article" else None)
-        so = next((x for x in subs if x["t0"] <= t < x["t1"] + 0.1), None)
+        so = next((x for x in subs if x["t0"] <= t < x["t1"]), None)   # 쉼 메우기는 timing.make_schedule 이 한다
         if so: caption_bar(frame, so["text"], t - so["t0"])
     return frame
 

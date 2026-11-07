@@ -57,6 +57,8 @@ def make_schedule():
     for x in out:
         for (a, b, txt) in cut_caption(x["text"], x["t0"], x["t1"]): subs.append(dict(t0=a, t1=b, text=txt))
     if CFG["outro_style"] == "thanks": subs.append(dict(t0=round(end_narr + 0.4, 3), t1=round(total, 3), text=CFG["outro_text"]))
+    for a, b in zip(subs, subs[1:]):   # 자막 시각의 주인: 문장 사이 쉼(1초 미만)에는 앞 자막을 다음 자막까지 남긴다(줄 간격이 커져도 깜빡이지 않게)
+        if 0 < b["t0"] - a["t1"] < 1.0: a["t1"] = b["t0"]
     tl = dict(total=round(total, 3), end_narr=round(end_narr, 3), lines=out, shots=shots, events=events, subs=subs)
     json.dump(tl, open(os.path.join(BUILD, "timeline.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"총 {total/60:.2f}분 · 샷 {len(shots)} · 자막 {len(subs)} · 범퍼 {sum(e['kind'].startswith('bumper') for e in events)}")

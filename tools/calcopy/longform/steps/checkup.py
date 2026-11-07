@@ -49,7 +49,9 @@ def ck_disk():
 
 
 def ck_assets():
-    miss = [p for p in ("fonts/Pretendard-Bold.otf", "fonts/GmarketSansBold.otf", "fonts/BlackHanSans-Regular.ttf", "fonts/Anton-Regular.ttf", "fonts/JetBrainsMono-Bold.ttf", "media/bgm/Bass_Walker.mp3",
+    sys.path.insert(0, HERE); os.environ.setdefault("SHORCL_WORK", WORK)
+    from studio.cfg import load_cfg, missing_fonts   # 글꼴 목록은 studio/cfg.FONTS 한 곳
+    miss = missing_fonts(load_cfg()) + [p for p in ("media/bgm/Bass_Walker.mp3",
                         "media/bgm/Thinking_Music.mp3", "media/bgm/Local_Forecast.mp3", "media/bgm/Pamgaea.mp3", "media/sfx/pop_appear.mp3")
             if not os.path.exists(os.path.join(HERE, p))]
     return (not miss, "글꼴·음악 준비됨" if not miss else f"글꼴·음악 {len(miss)}개가 없습니다", "프리셋 꾸러미를 다시 받아 주세요")
