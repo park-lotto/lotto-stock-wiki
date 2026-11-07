@@ -1,0 +1,218 @@
+{
+ "sseolbanjang__6aUSMLv3fDc": {
+  "tempo": {
+   "low": 166.7,
+   "low_ac": 0.18,
+   "all": 166.7,
+   "all_ac": 0.17
+  },
+  "centroid_hz": 591.0,
+  "match": [
+   [
+    "everything",
+    0.695
+   ],
+   [
+    "unstoppable",
+    0.687
+   ],
+   [
+    "machi_no_dorufin",
+    0.558
+   ]
+  ],
+  "dur": 59.4
+ },
+ "sseolbanjang__9M7HNy_WO4s": {
+  "tempo": {
+   "low": 178.2,
+   "low_ac": 0.22,
+   "all": 84.7,
+   "all_ac": 0.16
+  },
+  "centroid_hz": 292.0,
+  "match": [
+   [
+    "chubina",
+    0.73
+   ],
+   [
+    "sweets",
+    0.713
+   ],
+   [
+    "machi_no_dorufin",
+    0.693
+   ]
+  ],
+  "dur": 56.8
+ },
+ "sseolbanjang__In3qzumxEzU": {
+  "tempo": {
+   "low": 117.5,
+   "low_ac": 0.08,
+   "all": 178.2,
+   "all_ac": 0.17
+  },
+  "centroid_hz": 591.0,
+  "match": [
+   [
+    "yumetourou",
+    0.753
+   ],
+   [
+    "sweets",
+    0.625
+   ],
+   [
+    "free_bird",
+    0.567
+   ]
+  ],
+  "dur": 58.0
+ },
+ "sseolbanjang__LZdO8A186pI": {
+  "tempo": {
+   "low": 114.8,
+   "low_ac": 0.1,
+   "all": 184.6,
+   "all_ac": 0.13
+  },
+  "centroid_hz": 529.0,
+  "match": [
+   [
+    "otsukare_summer",
+    0.773
+   ],
+   [
+    "sweets",
+    0.711
+   ],
+   [
+    "lets_go",
+    0.707
+   ]
+  ],
+  "dur": 51.1
+ },
+ "sseolbanjang__QSECbX33eAw": {
+  "tempo": {
+   "low": 184.6,
+   "low_ac": 0.24,
+   "all": 184.6,
+   "all_ac": 0.17
+  },
+  "centroid_hz": 627.0,
+  "match": [
+   [
+    "free_bird",
+    0.835
+   ],
+   [
+    "sweets",
+    0.779
+   ],
+   [
+    "no_batidao",
+    0.681
+   ]
+  ],
+  "dur": 48.0
+ },
+ "sseolbanjang__VFR6i5qEW54": {
+  "tempo": {
+   "low": 87.6,
+   "low_ac": 0.07,
+   "all": 152.0,
+   "all_ac": 0.11
+  },
+  "centroid_hz": 533.0,
+  "match": [
+   [
+    "free_bird",
+    0.68
+   ],
+   [
+    "chubina",
+    0.623
+   ],
+   [
+    "otsukare_summer",
+    0.555
+   ]
+  ],
+  "dur": 52.3
+ },
+ "sseolbanjang__fxImmkM67jA": {
+  "tempo": {
+   "low": 120.2,
+   "low_ac": 0.28,
+   "all": 178.2,
+   "all_ac": 0.05
+  },
+  "centroid_hz": 651.0,
+  "match": [
+   [
+    "buttercup",
+    0.829
+   ],
+   [
+    "free_bird",
+    0.722
+   ],
+   [
+    "everything",
+    0.654
+   ]
+  ],
+  "dur": 58.7
+ },
+ "sseolbanjang__q7q4C9VjufI": {
+  "tempo": {
+   "low": 132.5,
+   "low_ac": 0.11,
+   "all": 184.6,
+   "all_ac": 0.14
+  },
+  "centroid_hz": 767.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.694
+   ],
+   [
+    "otsukare_summer",
+    0.64
+   ],
+   [
+    "sweets",
+    0.539
+   ]
+  ],
+  "dur": 59.3
+ },
+ "sseolbanjang__zShPlRP4m7A": {
+  "tempo": {
+   "low": 105.5,
+   "low_ac": 0.18,
+   "all": 184.6,
+   "all_ac": 0.2
+  },
+  "centroid_hz": 627.0,
+  "match": [
+   [
+    "otsukare_summer",
+    0.643
+   ],
+   [
+    "lets_go",
+    0.617
+   ],
+   [
+    "sweets",
+    0.593
+   ]
+  ],
+  "dur": 53.6
+ }
+}
