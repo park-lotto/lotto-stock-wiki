@@ -78,6 +78,11 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
 .qsteps li{display:flex;gap:12px;align-items:center;font-size:15px}
 .qsteps span{flex:none;width:26px;height:26px;border-radius:50%;background:var(--inset);border:1px solid var(--line);color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
 .qmsg{color:var(--sub);font-size:13px;margin-top:20px}
+.ostabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--inset);border:1px solid var(--line);border-radius:12px;margin:0 0 16px}
+.ostabs button{font:inherit;font-size:15px;font-weight:700;padding:10px 8px;border:0;border-radius:9px;background:transparent;color:var(--sub);cursor:pointer;transition:background-color .15s ease-out,color .15s ease-out,transform .15s ease-out}
+.ostabs button:hover{color:var(--txt)}
+.ostabs button:active{transform:scale(.97)}
+.ostabs button.on{background:var(--panel);color:var(--accent);box-shadow:0 0 0 1px var(--line)}
 .more{max-width:560px;margin:16px auto 0;color:var(--sub);font-size:13px}.more summary{cursor:pointer;text-align:center;padding:6px}
 .more .grid{grid-template-columns:minmax(0,1fr)}
 </style>
@@ -154,6 +159,10 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <div class="q">
       <h2>한 줄 붙여넣기로 설치</h2>
       <p class="qsub">Claude 구독만 있으면 나머지는 알아서 설치됩니다.</p>
+      <div class="ostabs" role="tablist" aria-label="설치할 컴퓨터">
+        <button type="button" role="tab" data-os="win" id="osWin">윈도우</button>
+        <button type="button" role="tab" data-os="mac" id="osMac">맥 (macOS)</button>
+      </div>
       <button class="btn pri qbtn" id="startCopy">설치 명령 복사하기</button>
       <ol class="qsteps" id="stepsWin">
         <li><span>1</span><div>위 버튼을 누릅니다</div></li>
@@ -166,7 +175,6 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
         <li><span>3</span><div>열린 창에서 <b>⌘ + V</b>를 누르고 <b>엔터</b> (macOS 14 이상 · 애플 칩·인텔 모두)</div></li>
       </ol>
       <div class="qmsg" id="startMsg">내 회원 인증이 들어 있습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div>
-      <div class="qmsg"><a href="#" id="osSwitch" style="color:inherit">맥에서 설치하나요?</a></div>
     </div>
     <details class="more"><summary>PC 관리 · 다른 설치 방법</summary>
       <div class="grid">
@@ -399,9 +407,10 @@ let startOs=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent)?'mac
 function showOs(){
   $('stepsWin').style.display=startOs==='win'?'':'none';
   $('stepsMac').style.display=startOs==='mac'?'':'none';
-  $('osSwitch').textContent=startOs==='mac'?'윈도에서 설치하나요?':'맥에서 설치하나요?';
+  for(const b of document.querySelectorAll('.ostabs button')){ const on=b.dataset.os===startOs; b.classList.toggle('on',on); b.setAttribute('aria-selected',on); }
+  $('startCopy').textContent=startOs==='mac'?'맥 설치 명령 복사하기':'윈도우 설치 명령 복사하기';
 }
-$('osSwitch').onclick=e=>{ e.preventDefault(); startOs=startOs==='mac'?'win':'mac'; showOs(); };
+for(const b of document.querySelectorAll('.ostabs button')) b.onclick=()=>{ startOs=b.dataset.os; showOs(); };
 showOs();
 $('startCopy').onclick=async()=>{
   try{ const r=await api('/api/claude/me/start_line?os='+startOs); await navigator.clipboard.writeText(r.line);
