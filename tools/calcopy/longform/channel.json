@@ -118,6 +118,7 @@
  "bgm_highpass": 150,
  "output_name": "완성본.mp4",
  "tempo": 1.2,
+ "voice_stretch": 1.0,
  "font_main": "GmarketSansBold.otf",
  "photo_motion": "pan",
  "logo_side": "right",

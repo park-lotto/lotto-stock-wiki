@@ -27,6 +27,8 @@
  "music": false,
  "target_lufs": -15.65,
  "voice": "Piljae",
+ "voice_stretch": 0.917,
+ "line_gap": 0.31,
  "source_style": "under_card",
  "source_format": "기사 원문 일부 · 출처: {src}",
  "colors": {"sub_bar": [248, 192, 56, 255], "blue": [248, 192, 56], "yellow": [248, 192, 56]},
@@ -44,6 +46,8 @@
   "music": "계획서 지시 '벤치는 계속 깔리는 BGM 없음(4편 근사)' → 끔. 효과음은 그대로",
   "target_lufs": "measure_*.json mix.lufs -15.8(EW5)·-15.6(VvO)·-14.3(q2d)·-15.7(qjM) → 중앙 -15.65",
   "voice": "계획서 지시 목소리 Piljae",
+  "voice_stretch": "벤치 EW5 말속도 6.91자/초(measure_EW5ajVHq2QE.json speech.cps) vs 우리 tempo 1.2 녹음 7.36자/초(modum_01 8922자/1211.5초) → 0.917 로 늘이면 6.75자/초. 늘임 전후 받아쓰기 일치율 0.920→0.917(8줄, faster-whisper medium). steps/narrate.py 자르기 필터 한 곳이 load_cfg 로 읽어 atempo 를 건다. Jev q_gap4 best_fix 0.86 · 두더지 0.22 · 메인 결정 11-07",
+  "line_gap": "벤치 3편(EW5·VvO·S3z2) ffmpeg silencedetect -40dB 쉼 중앙 0.448·0.464·0.469초, 0.8초 넘는 쉼 0개. 우리 줄 녹음 앞뒤 무음 0.060+0.095초 → 줄 사이 0.31초면 줄 이음 쉼 약 0.46초",
   "source_*": "화면_설명서.md:74 기사 카드 아래 '기사 원문 일부 · 출처: 매체 날짜' · 대표 frames/대표/자료캡처_EW5a_28s.png",
   "colors·typo_colors": "화면_설명서.md:38·50 C 틀 강조 노랑 #F8C038=[248,192,56] · 나머지 색은 기본(=looks/amber 계열 금색·어두운 바탕이 C 틀과 가장 가깝다) 위에 칸별로 얹는다"
  }

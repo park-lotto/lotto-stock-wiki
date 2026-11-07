@@ -17,6 +17,12 @@ sys.path.insert(0, os.path.join(HERE, "steps"))
 from textglue import glue
 from numread import say as yomi
 import keys
+# 소리 늘임은 판 칸(voice_stretch)이 정한다. 설정의 주인 load_cfg 를 그대로 부른다(작업 폴더 = 출력폴더의 위, SHORCL_WORK 가 있으면 그것)
+os.environ.setdefault("SHORCL_WORK", os.path.dirname(os.path.abspath(OUT)))
+sys.path.insert(0, HERE)
+from studio.cfg import load_cfg
+_CFG = load_cfg(); STRETCH = float(_CFG.get("voice_stretch", 1.0))
+print(f"판 {_CFG.get('plate') or '기본'} · voice_stretch {STRETCH}", flush=True)
 os.makedirs(os.path.join(OUT, "raw"), exist_ok=True); os.makedirs(os.path.join(OUT, "trim"), exist_ok=True)
 
 # 1) 대본 파싱
@@ -83,6 +89,7 @@ for l in todo:
     if not os.path.exists(raw): continue
     af = ("silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.06,"  # 첫소리 보존(-40dB 는 첫 단어를 뭉갠다)
           "areverse,silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.08,areverse,"
+          + (f"atempo={STRETCH}," if STRETCH != 1.0 else "") +   # 판의 말속도 맞춤(1.0 이면 필터가 예전과 같다)
           "aresample=48000,aformat=channel_layouts=mono")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", af, tr], check=True)
     d = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", tr],

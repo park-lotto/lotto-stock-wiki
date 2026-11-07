@@ -116,10 +116,47 @@ def test_schedule_plate_no_bumper_thanks_outro(tmp_path):
     assert m["ev"] == ["outro"], m["ev"]                          # 범퍼·챕터 와이프 없음
     assert m["subs"][-1] == PLATE["outro_text"]                   # 마지막 자막 = 감사 인사
     assert abs(m["last_t1"] - m["total"]) < 1e-6                  # 마지막 장면이 끝까지 이어진다(끝 화면 카드 없음)
-    assert abs(m["total"] - (8.0 + 0.1 * 4 + PLATE.get("chapter_gap", BASE["chapter_gap"]) + 0.4 + PLATE["outro_sec"])) < 0.01
+    assert abs(m["total"] - (8.0 + PLATE.get("line_gap", BASE["line_gap"]) * 4 + PLATE.get("chapter_gap", BASE["chapter_gap"]) + 0.4 + PLATE["outro_sec"])) < 0.01
 
 
 def test_schedule_default_unchanged(tmp_path):
     m = run(work(tmp_path, {}, LINES), SCHED)
     assert m["ev"] == ["bumper", "outro"] and m["subs"][-1] != "끝까지 시청해 주셔서 감사합니다"
     assert m["last_t1"] < m["total"]
+
+
+def _narrate(tmp_path, cfg):
+    """합성 소리(무음 0.3초 + 1초 소리 + 무음 0.3초)를 raw 에 두고 narrate.py 자르기만 돌린다(raw 가 있으면 녹음 호출 없음, 키도 가짜)."""
+    import wave, math, struct
+    wd = tmp_path / "n"; (wd / "voice" / "raw").mkdir(parents=True)
+    if cfg is not None: (wd / "channel.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+    (wd / "대본.md").write_text("## [훅]\n첫 문장입니다.\n", encoding="utf-8")
+    sr = 48000; fr = [0.0] * int(0.3 * sr) + [0.5 * math.sin(2 * math.pi * 220 * k / sr) for k in range(sr)] + [0.0] * int(0.3 * sr)
+    with wave.open(str(wd / "voice" / "raw" / "001.wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(b"".join(struct.pack("<h", int(x * 32767)) for x in fr))
+    env = dict(os.environ, TYPECAST_API_KEY="no-call", PYTHONIOENCODING="utf-8"); env.pop("SHORCL_PLATE", None); env.pop("SHORCL_WORK", None)
+    r = subprocess.run([sys.executable, "-X", "utf8", os.path.join(HERE, "steps", "narrate.py"), str(wd / "대본.md"), str(wd / "voice")], cwd=str(wd), env=env, capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stdout[-1500:] + r.stderr[-1500:]
+    L = json.load(open(wd / "voice" / "lines.json", encoding="utf-8"))
+    return L[0]["dur"], (wd / "voice" / "trim" / "001.wav").read_bytes(), r.stdout
+
+
+def test_narrate_stretch_default_is_old_filter(tmp_path):
+    """기본(voice_stretch 1.0)은 예전 자르기 필터와 같은 바이트."""
+    import subprocess as sp
+    dur, data, out = _narrate(tmp_path, None)
+    assert "voice_stretch 1.0" in out
+    raw = tmp_path / "n" / "voice" / "raw" / "001.wav"; old = tmp_path / "old.wav"
+    af = ("silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.06,"
+          "areverse,silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.08,areverse,"
+          "aresample=48000,aformat=channel_layouts=mono")
+    sp.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw), "-af", af, str(old)], check=True)
+    assert data == old.read_bytes()
+
+
+def test_narrate_stretch_plate(tmp_path):
+    """판 모둠경제(voice_stretch 0.917)는 자른 소리가 1/0.917 배 길다."""
+    d0, _, _ = _narrate(tmp_path / "a", None)
+    d1, _, out = _narrate(tmp_path / "b", {"plate": "모둠경제"})
+    assert "voice_stretch 0.917" in out
+    assert abs(d1 / d0 - 1 / PLATE["voice_stretch"]) < 0.03, (d0, d1)   # atempo 는 끝을 20~40ms 짧게 낸다(실녹음 3줄 1.080~1.089 / 기대 1.0905)
