@@ -87,12 +87,23 @@ def _run(cmd, cwd):
     for _k in ("TMP", "TEMP", "TMPDIR"):
         env[_k] = str(_priv)
     limit = gate_timeout()
+    low = []
+    stop = None
     try:
         p = subprocess.Popen(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                              encoding="utf-8", errors="replace", env=env)
+        stop = _watch_free_memory(p, low)
         try:
             out, err = p.communicate(timeout=limit)
             rc = p.returncode
+            if low:
+                # ★관문 자원 부족(관제 336, 11-07): 시험 일꾼이 메모리를 쌓아 PC 커밋이 바닥나면 같은 PC 의 Claude 세션·훅이
+                #   'malloc failed' 로 죽었다(14일 고갈 경보 102건 중 77건이 관문 중). 남은 메모리가 바닥 아래로 가면 시험 트리를 끝내고
+                #   실패 한 줄을 넣는다 → 병합은 거절·라이브 무사·PC 는 산다.
+                rc = GATE_LOW_MEMORY_RC
+                err = (err or "") + ("\nFAILED GATE_LOW_MEMORY::merge_gate_free_%dMB - 관문 자원 부족: 남은 메모리가 %dMB 아래라 "
+                                     "시험 프로세스를 끝냄(merge_gate.gate_abort_free_mb) — 다른 창이 메모리를 비운 뒤 다시 finish\n"
+                                     % (low[0], gate_abort_free_mb()))
         except subprocess.TimeoutExpired:
             # ★관문 시간 한도(관제 318, 11-04): 한도가 없어 시험 하나가 멈추면 병합 줄 전체가 끝없이 멈췄다
             #   (10-26 1시간 반 · 11-02 1시간 40분 · 11-02 16:36~ 34시간 — 실제 영상 ffmpeg 파이프 교착, 작업자 2개 CPU 0).
@@ -105,10 +116,83 @@ def _run(cmd, cwd):
             rc = 124
             err = (err or "") + f"\nFAILED GATE_TIMEOUT::merge_gate_{limit}s - 관문 시간 초과: 멈춘 시험이 있어 시험 프로세스를 끝냄(merge_gate.gate_timeout)\n"
     finally:
+        if stop is not None:
+            stop.set()
         # ★만든 곳이 치운다(관제 107): pytest 임시 파일이 이 폴더에 쌓여 한 번에 1.4~2.4GB — 안 지워서 하루 7개(11GB)가
         #   C 를 채워 finish 가 「No space left」로 죽었다(2026-10-03). 락·번호표 형제 폴더(gate_child_<pid>_*)도 함께.
         clean_gate_temp(_os.getpid())
     return rc, (out or "") + (err or "")
+
+
+# ── 관문 메모리(관제 336, 2026-11-07) ─────────────────────────────────────────────────────────────
+#  실측: 관문 명령 그대로(-n 2) 전체 시험을 한 pytest 로 돌리면 xdist 일꾼이 시험마다 남긴 메모리(캐시·모델·배열)를 놓지 않아
+#  4.3·4.9GB 로 커지고(합 9.2GB) 69% 에서 커밋 여유 5.6GB — 같은 시각 Windows 고갈 경보에 python 8.8GB, 훅 'malloc failed(1MB)',
+#  Claude 세션 2개가 꺼졌다. 시작 때 일꾼 수만 정하는 예산(track.GATE_WORKER_MB)으로는 못 막는다.
+#  → ① 시험 파일을 묶음으로 나눠 묶음마다 새 pytest(끝나면 메모리 반납) ② 돌면서 남은 메모리를 보고 바닥 아래면 끝낸다.
+GATE_CHUNK_FILES = 100       # 한 pytest 프로세스가 돌 시험 파일 수 — 환경변수 GATE_CHUNK_FILES 로 바꾼다
+GATE_ABORT_FREE_MB = 3000    # 관문 중 남은 메모리(물리·커밋 중 작은 쪽)가 이 아래면 시험 트리를 끝낸다 — Claude Code 는 2.5GB 근처에서 백그라운드 작업을 끈다
+GATE_MEM_POLL_SEC = 3        # 남은 메모리 재는 간격
+GATE_LOW_MEMORY_RC = 125     # 자원 부족으로 끝냈을 때 종료코드(124 = 시간 초과)
+
+
+def free_mb():
+    """(판단 주인 — 지금 쓸 수 있는 메모리 MB) = min(남은 물리 메모리, 남은 커밋). 못 재면 큰 값(막지 않는다).
+    ★커밋이 먼저 찬다(10-26 RAM 15GB 남았는데 커밋 38.7/39.9GB 로 새 할당 실패, 관제 275). track 의 자원 관문도 이걸 부른다."""
+    try:
+        import ctypes
+
+        class _MS(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        m = _MS()
+        m.dwLength = ctypes.sizeof(_MS)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
+            return 10 ** 6
+        return int(min(m.ullAvailPhys, m.ullAvailPageFile) / 2 ** 20)
+    except Exception:  # noqa: BLE001 — 윈도 밖(서버 등)은 재지 않는다
+        return 10 ** 6
+
+
+def _env_int(name, default, low=1):
+    try:
+        v = int(os.environ.get(name) or default)
+    except ValueError:
+        v = default
+    return max(low, v)
+
+
+def gate_abort_free_mb() -> int:
+    """(판단 주인 — 관문을 끝낼 남은 메모리 바닥 MB). 환경변수 GATE_ABORT_FREE_MB 로 바꾼다."""
+    return _env_int("GATE_ABORT_FREE_MB", GATE_ABORT_FREE_MB, low=0)
+
+
+def gate_chunk_files() -> int:
+    """(판단 주인 — pytest 한 번이 돌 시험 파일 수)."""
+    return _env_int("GATE_CHUNK_FILES", GATE_CHUNK_FILES)
+
+
+def _watch_free_memory(p, low, measure=None, poll=None):
+    """p 가 도는 동안 남은 메모리를 재다가 바닥(gate_abort_free_mb) 아래면 p 의 트리를 끝내고 low 에 그 값을 넣는다.
+    돌려주는 Event 를 set 하면 감시를 멈춘다."""
+    import threading
+    measure = measure or free_mb
+    poll = GATE_MEM_POLL_SEC if poll is None else poll
+    stop = threading.Event()
+
+    def _loop():
+        while not stop.wait(poll):
+            if p.poll() is not None:
+                return
+            f = measure()
+            if f < gate_abort_free_mb():
+                low.append(int(f))
+                kill_tree(p.pid)
+                return
+    threading.Thread(target=_loop, name="gate-mem-watch", daemon=True).start()
+    return stop
 
 
 GATE_TIMEOUT_SEC = 2400      # 관문 한 번(전체 pytest 보통 7~10분)의 한도 — 넘으면 멈춘 것으로 본다. 환경변수 GATE_TIMEOUT_SEC 로 바꾼다
@@ -210,6 +294,53 @@ def _tools_test_paths(cwd):
     return [p.relative_to(root).as_posix() for p in found]
 
 
+def expand_test_paths(cwd, paths):
+    """시험 경로 목록 → 시험 파일 목록(폴더는 그 안 test_*.py 를 정렬해 펼친다, 파일·id 는 그대로, 순서·중복 정리)."""
+    root = Path(cwd)
+    out = []
+    for p in paths:
+        d = root / str(p)
+        items = ([x.relative_to(root).as_posix() for x in sorted(d.rglob("test_*.py"))
+                  if "__pycache__" not in x.parts] if d.is_dir() else [str(p)])
+        for x in items:
+            if x not in out:
+                out.append(x)
+    return out
+
+
+def _merge_rc(rcs):
+    """묶음별 pytest 종료코드 → 하나. 이상(2·3·4·124·125…)이 하나라도 있으면 그 첫 값, 실패(1)가 있으면 1,
+    전부 수집 0(5)이면 5, 아니면 0. (묶음 하나가 시험 0개여서 5 가 나와도 전체를 망치지 않게)"""
+    bad = [r for r in rcs if r not in (0, 1, 5)]
+    if bad:
+        return bad[0]
+    if 1 in rcs:
+        return 1
+    return 5 if rcs and all(r == 5 for r in rcs) else 0
+
+
+def run_pytest(cwd, paths, run=_run, workers=None, chunk=None):
+    """(판단 주인 — 관문 pytest 실행, 관제 336) 관문의 pytest 는 전부 여기서만 띄운다(snapshot·rerun_ids·track._rerun_on_main).
+    시험 파일을 chunk(기본 gate_chunk_files)개씩 나눠 **묶음마다 새 pytest 프로세스**로 돌린다 — 일꾼이 시험마다 남긴
+    메모리가 묶음이 끝날 때 돌아온다(한 프로세스로 전부 돌면 일꾼 4~5GB, 11-07 실측). 남은 메모리 감시는 run(_run)이 한다.
+    workers: None = 자원 관문 값(_xdist_args) · 0 = 직렬 · n = -n n.
+    자원 부족(125)·시간 초과(124)면 남은 묶음을 돌리지 않는다(더 누르지 않는다). 돌려줌 (rc, 묶음 출력 전부)."""
+    files = expand_test_paths(cwd, paths)
+    if not files:
+        return 5, ""
+    xd = _xdist_args() if workers is None else (["-n", str(workers)] if workers else [])
+    size = max(1, int(chunk or gate_chunk_files()))
+    rcs, outs = [], []
+    for i in range(0, len(files), size):
+        rc, out = run([sys.executable, "-m", "pytest", *files[i:i + size], "-q", "--tb=no", "-rfE",
+                       "--continue-on-collection-errors", "-p", "no:cacheprovider", *xd], cwd)
+        rcs.append(rc)
+        outs.append(out or "")
+        if rc in (GATE_LOW_MEMORY_RC, 124):
+            break
+    return _merge_rc(rcs), "\n".join(outs)
+
+
 def snapshot(cwd=BASE, run=_run, paths=None):
     """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험).
     paths: 그 시험 파일들만(재시도 때 끼어든 코드와 관련된 것만 — 카드 092)."""
@@ -217,11 +348,7 @@ def snapshot(cwd=BASE, run=_run, paths=None):
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
     # ★--continue-on-collection-errors: tools 쪽 시험 파일 하나가 수집에서 죽어도 나머지는 돈다(전체 rc=2 로 게이트 무력화 금지).
     #   -rfE: 수집 오류(ERROR)도 실패 목록에 들어와 '새로 깨짐' 비교를 받는다.
-    rc_p, out_p = run(
-        [sys.executable, "-m", "pytest", *(list(paths) if paths else [f"{TARGET}/tests", *_tools_test_paths(cwd)]),
-         "-q", "--tb=no", "-rfE", "--continue-on-collection-errors", "-p", "no:cacheprovider", *_xdist_args()],
-        cwd,
-    )
+    rc_p, out_p = run_pytest(cwd, list(paths) if paths else [f"{TARGET}/tests", *_tools_test_paths(cwd)], run=run)
     return {
         "compile_ok": rc_c == 0,
         "compile_out": out_c[-4000:],
@@ -261,9 +388,7 @@ def rerun_ids(cwd, ids, run=_run, workers=None):
     if not ids:
         return set()
     files = test_files_of(ids)
-    extra = (["-n", str(workers)] if workers else (_xdist_args() if len(files) > 4 else []))
-    rc, out = run([sys.executable, "-m", "pytest", *files, "-q", "--tb=no", "-rfE", "--continue-on-collection-errors",
-                   "-p", "no:cacheprovider", *extra], cwd)
+    rc, out = run_pytest(cwd, files, run=run, workers=workers if workers else (None if len(files) > 4 else 0))
     failed = parse_failed(out)
     asked_files = {i for i in ids if "::" not in str(i)}
     return {f for f in failed if f in ids or f.split("::", 1)[0] in asked_files}
