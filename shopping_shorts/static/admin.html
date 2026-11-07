@@ -122,11 +122,31 @@ tbody tr:hover{background:#1b1b22}
    넣는다 → 본문은 남은 폭을 채우는 flex 자식이어야 한다. min-width:0이 없으면
    넓은 표가 사이드바를 밀어낸다(flex 자식 기본 min-width:auto). */
 .main{flex:1;min-width:0;padding:16px 20px 40px;overflow-x:auto}
+/* 정리(2026-11-07 관제 335) — 알림은 접힌 한 줄, 제작 현황이 맨 위, 잘 안 쓰는 것은 기타 도구 안 */
+.alertFold{margin:0 0 14px}
+.alertFold>summary{cursor:pointer;list-style:none;font-weight:800;font-size:14px;padding:10px 14px;border:1px solid #33353b;border-radius:10px;background:#141418}
+.alertFold>summary::-webkit-details-marker{display:none}
+.alertFold .afHint{float:right;font-weight:400;font-size:12px;color:#8a8a92}
+.alertFold[open] .afHint{display:none}
+.alertFoldBody{margin-top:8px;max-height:60vh;overflow:auto}
+.alertFoldBody .alertBoard{margin:0}
+.grouphead .gh-link{float:right;font-weight:600;font-size:12px;color:#4f9dfa;text-decoration:none}
+.subhead{font-size:13px;color:#cfd2d6;font-weight:700;margin:4px 0 8px}
+.quicknav .qbtn{min-width:0;padding:8px 12px;font-size:13px}
+#moreTools>summary{color:#a8a8b0}
+.moreBody{margin-top:12px}
+.moreBody>details.card,.moreBody>div.card{background:#121217}
 </style></head><body>
 <div class="main">
 <h1>🔐 관리자</h1>
-<div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
+<div class=sub>제작 현황 → 처리할 일 → 고객 순서. 자주 안 쓰는 도구는 맨 아래 「기타 도구」에 접어 두었습니다.</div>
 
+<!-- 알림 한 줄(2026-11-07 사장님 "알림 펼치기 다 접고", 관제 335) — 일반 경보·클로드형 경보·계정 변경 요청을
+     접힌 상자 하나에 모은다. 접기·건수 합산·전부 0이면 숨기기는 _alertFold 한 곳만 정한다.
+     세 그리기 함수는 자기 목록과 건수만 넘긴다(접기 코드를 각자 적지 마라 — 11-07 전엔 하나만 접혀 나머지 10건이 펼쳐졌다). -->
+<details class=alertFold id=alertFold style="display:none" ontoggle="window._abOpen=this.open">
+<summary id=alertFoldSum></summary>
+<div class=alertFoldBody>
 <!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
      끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
 <div class=alertBoard id=alertBoard></div>
@@ -134,56 +154,35 @@ tbody tr:hover{background:#1b1b22}
 <div class=alertBoard id=claudeAlertBoard></div>
 <!-- 숏클 기기 교체·Claude 계정 변경 승인(관제 296) — 판단은 claude_portal.decide_change, 여기는 그리기만. -->
 <div class=alertBoard id=claudeChangeBoard></div>
-<!-- 숏클 실시간(관제 304) — 회원 Claude ↔ 서버 ↔ 사장님 PC 대기실. 판단(무엇이 긴급인가·전달 표시)은 claude_live 한 곳, 여기는 그리기·보내기만. -->
-<details class=card id=claudeLiveCard ontoggle="if(this.open) renderClaudeLive()">
-<summary style="cursor:pointer;font-size:14px;font-weight:600">🛰 숏클 실시간 <span id=claudeLiveSummary style="font-weight:400;color:#8a8a92"></span></summary>
-<div id=claudeLiveMembers style="font-size:12px;margin-top:10px"></div>
-<div style="display:flex;gap:6px;align-items:flex-start;margin:10px 0">
-  <input id=claudeLiveCid placeholder="회원 번호" style="width:90px">
-  <textarea id=claudeLiveText rows=2 maxlength=1000 placeholder="회원 Claude 에게 보낼 말(1000자까지) — 1분 안에 다음 도구 응답에 실립니다" style="flex:1"></textarea>
-  <button onclick="sendClaudeLive()">보내기</button>
-  <span id=claudeLiveMsg class=msg></span>
 </div>
-<div id=claudeLiveEvents style="font-size:12px;max-height:360px;overflow:auto"></div>
-<pre id=claudeLiveFix style="display:none;font-size:11px;white-space:pre-wrap;max-height:420px;overflow:auto;background:#101014;border:1px solid #2a2a30;border-radius:8px;padding:10px;margin-top:10px"></pre>
-</details>
-<!-- 숏클 회원 관리(관제 329) — 계정 연결·등록 PC·지금 쓰는 PC·규칙 설정. 판단은 claude_portal.admin_members·guard_settings, 여기는 그리기·누르기만. -->
-<details class=card id=claudeMembersCard ontoggle="if(this.open) renderClaudeMembers()">
-<summary style="cursor:pointer;font-size:14px;font-weight:600">🔐 숏클 회원 관리 <span id=cmSummary style="font-weight:400;color:#8a8a92"></span></summary>
-<div id=cmRules style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;margin:12px 0;padding:10px 12px;background:#101014;border:1px solid #2a2a30;border-radius:8px">
-  <label>PC 등록 한도 <select id=cmMax style="background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select> 대</label>
-  <label>최소 엔진 <input id=cmEngine placeholder="1.0.100" style="width:90px;background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"></label>
-  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type=checkbox id=cmAcct style="width:auto;margin:0"> Claude 계정 바뀌면 승인 받기</label>
-  <span style="color:#8a8a92">· 동시 접속은 늘 PC 1대</span>
-  <button class=bkey onclick="saveClaudeGuard()">규칙 저장</button>
-  <span id=cmMsg class=msg></span>
-</div>
-<div id=cmTable style="font-size:13px"></div>
-</details>
-<details class=card id=controlCard>
-<summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
-<div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
-<div id=controlBoard style="font-size:12px"></div>
 </details>
 
-<!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
-     외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
-     ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
-<nav class=quicknav>
-  <!-- 제작 현황판(2026-09-02) — 회원이 오늘 뭘 만들고 있나 + 실제 영상. /ops와 형제. -->
-  <a href="/admin/checks" target="_blank" rel="noopener" class="qbtn hot">🩺 관리점검표<small>오늘 어디가 아픈가</small></a>
-  <a href="/admin/production" target="_blank" rel="noopener" class="qbtn hot">🎬 오늘 제작 현황<small>회원이 만든 영상</small></a>
-  <a href="/admin/calcopy" target="_blank" rel="noopener" class="qbtn hot">🧬 칼카피 홈<small>창고·채널프리셋·엔진·작업기록·결과물</small></a>
-  <a href="/shortem_preset" target="_blank" rel="noopener" class="qbtn hot">🧬 숏템프리셋<small>브랜드·스타일·결과물</small></a>
-  <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
-  <a href="/apiwatch" target="_blank" rel="noopener" class="qbtn hot">🔑 API 관측판<small>키가 버티나</small></a>
-  <!-- 크롤링 관측판(2026-09-01) — /ops와 형제. 저긴 서버 자원, 여긴 매일 도는 크롤이다.
-       ★링크를 여기 같이 둔다: 화면만 만들고 링크를 안 걸어 "안 열린다"가 됐다(실측). -->
-  <a href="/crawl" target="_blank" rel="noopener" class="qbtn hot">🕸 크롤링 관측판<small>오늘 크롤이 살았나</small></a>
-  <a href="/refs" target="_blank" rel="noopener" class=qbtn>📋 레퍼런스 채널<small>수집 소스 관리</small></a>
-  <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
-  <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
-</nav>
+
+<!-- 제작 현황(2026-11-07 사장님 "필요한 건 제작현황") — 숫자는 /api/admin/production(app._admin_production) 그대로 그리기만. -->
+<h2 class=grouphead>🎬 제작 현황 <span class=wlnote>오늘 · 30초마다 갱신</span>
+  <a href="/admin/production" target="_blank" rel="noopener" class=gh-link>전체 보기 ↗</a></h2>
+<div class=summary id=prodSummary>
+  <div class=sbox><div class=sk>만드는 중</div><div class=sv id=pr_run>–</div></div>
+  <div class=sbox><div class=sk>영상 나온 것</div><div class=sv id=pr_made>–</div></div>
+  <div class=sbox><div class=sk>실패</div><div class=sv id=pr_fail>–</div></div>
+  <div class=sbox><div class=sk>만든 사람</div><div class=sv id=pr_people>–</div></div>
+  <div class=sbox><div class=sk>총 접수</div><div class=sv id=pr_total>–</div></div>
+</div>
+<!-- 작업 라인(2026-08-26 사장님 "지금 작업중인 사람들 작업 라인을 라이브로 볼수있어?")
+     ★종전엔 큐 화면이 아예 없었다. /api/admin/capacity가 숫자(running·queued)는 줬지만
+       **누가 무엇을 하는지**를 몰라 사장님이 매번 물어봐야 했다.
+     ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
+       아무도 몰랐다 — '오래 걸림' 경고만 있었어도 그때 바로 붉게 떴다. -->
+<div class=subhead>🚦 작업 라인 <span class=wlnote>5초마다 자동 갱신</span></div>
+
+<div class="card">
+  <h2>지금 <span id=wlnow>–</span> <span id=wlMsg class=msg></span></h2>
+  <div id=wlcap class=wlcap>불러오는 중…</div>
+  <table><thead><tr><th class=mini>상태</th><th>고객</th><th>작업</th><th class=mini>경과</th><th>작업번호</th><th>비고</th></tr></thead>
+  <tbody id=wlrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
 <!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. -->
 <div class=summary id=summary>
@@ -193,78 +192,6 @@ tbody tr:hover{background:#1b1b22}
   <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
   <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
 </div>
-
-<details class=card>
-  <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
-  <div id=settings class=setgrid></div>
-  <button class=save onclick=saveSettings()>설정 저장</button>
-</details>
-
-<!-- 작업 라인(2026-08-26 사장님 "지금 작업중인 사람들 작업 라인을 라이브로 볼수있어?")
-     ★종전엔 큐 화면이 아예 없었다. /api/admin/capacity가 숫자(running·queued)는 줬지만
-       **누가 무엇을 하는지**를 몰라 사장님이 매번 물어봐야 했다.
-     ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
-       아무도 몰랐다 — '오래 걸림' 경고만 있었어도 그때 바로 붉게 떴다. -->
-<h2 class=grouphead>🚦 작업 라인 <span class=wlnote>5초마다 자동 갱신</span></h2>
-
-<div class="card">
-  <h2>지금 <span id=wlnow>–</span> <span id=wlMsg class=msg></span></h2>
-  <div id=wlcap class=wlcap>불러오는 중…</div>
-  <table><thead><tr><th class=mini>상태</th><th>고객</th><th>작업</th><th class=mini>경과</th><th>작업번호</th><th>비고</th></tr></thead>
-  <tbody id=wlrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
-</div>
-
-<details class=card>
-  <summary>🕘 최근 1시간 완료·실패 (<span id=wlrcnt>0</span>건)</summary>
-  <table><thead><tr><th class=mini>결과</th><th>고객</th><th>작업</th><th class=mini>걸린시간</th><th>끝난시각</th><th>오류</th></tr></thead>
-  <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
-</details>
-
-
-<!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "그냥 모든 대본에 앞에 감탄사 켜고 끄기 버튼").
-     코드가 첫 문장 앞에 "와, "/"여러분 "을 얹는다(add_hook_opener) — 그 강제만 끈다.
-     모델이 스스로 쓴 감탄사는 그대로다. 반영은 다른 서버 프로세스 기준 최대 1분(캐시). -->
-<details class=card>
-  <summary style="cursor:pointer;font-weight:800">✍ 대본 생성 규칙</summary>
-  <h2>훅 감탄사 자동 붙이기 <span id=hoMsg class=msg></span></h2>
-  <p style="color:#8b95a3;font-size:13px;margin:6px 0 10px">
-    켜면 대본 첫 문장 앞에 <b>"와, "</b>(서술형 절반) 또는 <b>"여러분 "</b>(권유형)을 코드가 얹습니다.
-    질문형·채이 스타일은 원래 안 붙습니다. 끄면 <b>모든 스타일</b>에서 안 붙입니다
-    (모델이 스스로 쓴 감탄사는 그대로).
-  </p>
-  <button id=hoBtn class=btn onclick="toggleHookOpener()">불러오는 중…</button>
-</details>
-
-<h2 class=grouphead>🔔 오늘 처리할 일</h2>
-
-<!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
-     묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
-     ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
-<details class="card wait" id="probeCard">
-  <summary style="cursor:pointer;font-weight:800">🎞 1단계 정확도 측정</summary>
-  <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
-    <span style="float:right;font-size:13px;font-weight:400">
-      소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
-      <button id=probeStart onclick="startProbe()" style="margin-left:6px;padding:4px 12px;cursor:pointer">▶ 측정 시작</button>
-    </span></h2>
-  <div id=pProg style="font-size:13px;color:#8a8a92;margin:4px 0 8px">아직 안 돌렸습니다.</div>
-  <table><thead><tr><th>비교 편수</th><th>기존(classic)</th><th>B1</th><th>B1 우위</th><th>기존 우위</th><th>동점</th><th>미판정</th><th>B1 빈 묘사</th><th>B1 편당 초</th></tr></thead>
-  <tbody id=psum><tr><td colspan=9 class=empty>—</td></tr></tbody></table>
-  <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
-  <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
-  <tbody id=prows></tbody></table></details>
-</details>
-
-<!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
-<details class="card wait" id="diagCard">
-  <summary style="cursor:pointer;font-weight:800">🩺 작업 진단</summary>
-  <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
-    <span style="float:right;font-size:13px;font-weight:400">
-      <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
-      <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
-    </span></h2>
-  <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
-</details>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
@@ -295,15 +222,6 @@ tbody tr:hover{background:#1b1b22}
 
 <div class=mask id=cmask onclick="if(event.target===this)closeCust()">
   <div class=modal id=cmodal></div>
-</div>
-
-<h2 class=grouphead>💳 결제 내역</h2>
-<!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
-<div class=card>
-  <h2>결제 내역 <span id=plSum class=wlnote></span>
-    <select id=plFilter onchange="renderLedger()" style="margin-left:8px"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select></h2>
-  <table><thead><tr><th>시각</th><th>가입 프로그램</th><th>상품</th><th>금액</th><th class=mini>수단</th><th class=mini>상태</th><th>결제자</th><th>연락처</th><th>이메일</th><th class=mini>계정</th></tr></thead>
-  <tbody id=plrows><tr><td colspan=10 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <h2 class=grouphead>👥 고객 관리</h2>
@@ -338,6 +256,131 @@ tbody tr:hover{background:#1b1b22}
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
   <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
+
+<h2 class=grouphead>💳 결제 내역</h2>
+<!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
+<div class=card>
+  <h2>결제 내역 <span id=plSum class=wlnote></span>
+    <select id=plFilter onchange="renderLedger()" style="margin-left:8px"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select></h2>
+  <table><thead><tr><th>시각</th><th>가입 프로그램</th><th>상품</th><th>금액</th><th class=mini>수단</th><th class=mini>상태</th><th>결제자</th><th>연락처</th><th>이메일</th><th class=mini>계정</th></tr></thead>
+  <tbody id=plrows><tr><td colspan=10 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<h2 class=grouphead>🔗 바로가기</h2>
+<!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
+     외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
+     ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
+<nav class=quicknav>
+  <!-- 제작 현황판(2026-09-02) — 회원이 오늘 뭘 만들고 있나 + 실제 영상. /ops와 형제. -->
+  <a href="/admin/checks" target="_blank" rel="noopener" class=qbtn>🩺 관리점검표<small>오늘 어디가 아픈가</small></a>
+  <a href="/admin/production" target="_blank" rel="noopener" class=qbtn>🎬 오늘 제작 현황<small>회원이 만든 영상</small></a>
+  <a href="/admin/calcopy" target="_blank" rel="noopener" class=qbtn>🧬 칼카피 홈<small>창고·채널프리셋·엔진·작업기록·결과물</small></a>
+  <a href="/shortem_preset" target="_blank" rel="noopener" class=qbtn>🧬 숏템프리셋<small>브랜드·스타일·결과물</small></a>
+  <a href="/ops" target="_blank" rel="noopener" class=qbtn>📊 관측판<small>서버가 버티나</small></a>
+  <a href="/apiwatch" target="_blank" rel="noopener" class=qbtn>🔑 API 관측판<small>키가 버티나</small></a>
+  <!-- 크롤링 관측판(2026-09-01) — /ops와 형제. 저긴 서버 자원, 여긴 매일 도는 크롤이다.
+       ★링크를 여기 같이 둔다: 화면만 만들고 링크를 안 걸어 "안 열린다"가 됐다(실측). -->
+  <a href="/crawl" target="_blank" rel="noopener" class=qbtn>🕸 크롤링 관측판<small>오늘 크롤이 살았나</small></a>
+  <a href="/refs" target="_blank" rel="noopener" class=qbtn>📋 레퍼런스 채널<small>수집 소스 관리</small></a>
+  <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
+  <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
+</nav>
+
+<!-- 기타 도구(2026-11-07, 관제 335) — 평소 안 여는 카드. 지운 게 아니라 접어 둔 것이다(되돌리기 쉽게). -->
+<details class=card id=moreTools>
+<summary>🗂 기타 도구 — 숏클 실시간·숏클 회원·관제 보드·설정·대본 규칙·최근 1시간·작업 진단·정확도 측정</summary>
+<div class=moreBody>
+<!-- 숏클 실시간(관제 304) — 회원 Claude ↔ 서버 ↔ 사장님 PC 대기실. 판단(무엇이 긴급인가·전달 표시)은 claude_live 한 곳, 여기는 그리기·보내기만. -->
+<details class=card id=claudeLiveCard ontoggle="if(this.open) renderClaudeLive()">
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🛰 숏클 실시간 <span id=claudeLiveSummary style="font-weight:400;color:#8a8a92"></span></summary>
+<div id=claudeLiveMembers style="font-size:12px;margin-top:10px"></div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin:10px 0">
+  <input id=claudeLiveCid placeholder="회원 번호" style="width:90px">
+  <textarea id=claudeLiveText rows=2 maxlength=1000 placeholder="회원 Claude 에게 보낼 말(1000자까지) — 1분 안에 다음 도구 응답에 실립니다" style="flex:1"></textarea>
+  <button onclick="sendClaudeLive()">보내기</button>
+  <span id=claudeLiveMsg class=msg></span>
+</div>
+<div id=claudeLiveEvents style="font-size:12px;max-height:360px;overflow:auto"></div>
+<pre id=claudeLiveFix style="display:none;font-size:11px;white-space:pre-wrap;max-height:420px;overflow:auto;background:#101014;border:1px solid #2a2a30;border-radius:8px;padding:10px;margin-top:10px"></pre>
+</details>
+
+<!-- 숏클 회원 관리(관제 329) — 계정 연결·등록 PC·지금 쓰는 PC·규칙 설정. 판단은 claude_portal.admin_members·guard_settings, 여기는 그리기·누르기만. -->
+<details class=card id=claudeMembersCard ontoggle="if(this.open) renderClaudeMembers()">
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🔐 숏클 회원 관리 <span id=cmSummary style="font-weight:400;color:#8a8a92"></span></summary>
+<div id=cmRules style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;margin:12px 0;padding:10px 12px;background:#101014;border:1px solid #2a2a30;border-radius:8px">
+  <label>PC 등록 한도 <select id=cmMax style="background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select> 대</label>
+  <label>최소 엔진 <input id=cmEngine placeholder="1.0.100" style="width:90px;background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:6px 8px"></label>
+  <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type=checkbox id=cmAcct style="width:auto;margin:0"> Claude 계정 바뀌면 승인 받기</label>
+  <span style="color:#8a8a92">· 동시 접속은 늘 PC 1대</span>
+  <button class=bkey onclick="saveClaudeGuard()">규칙 저장</button>
+  <span id=cmMsg class=msg></span>
+</div>
+<div id=cmTable style="font-size:13px"></div>
+</details>
+
+<details class=card id=controlCard>
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
+<div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
+<div id=controlBoard style="font-size:12px"></div>
+</details>
+
+<details class=card>
+  <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
+  <div id=settings class=setgrid></div>
+  <button class=save onclick=saveSettings()>설정 저장</button>
+</details>
+
+<!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "그냥 모든 대본에 앞에 감탄사 켜고 끄기 버튼").
+     코드가 첫 문장 앞에 "와, "/"여러분 "을 얹는다(add_hook_opener) — 그 강제만 끈다.
+     모델이 스스로 쓴 감탄사는 그대로다. 반영은 다른 서버 프로세스 기준 최대 1분(캐시). -->
+<details class=card>
+  <summary style="cursor:pointer;font-weight:800">✍ 대본 생성 규칙</summary>
+  <h2>훅 감탄사 자동 붙이기 <span id=hoMsg class=msg></span></h2>
+  <p style="color:#8b95a3;font-size:13px;margin:6px 0 10px">
+    켜면 대본 첫 문장 앞에 <b>"와, "</b>(서술형 절반) 또는 <b>"여러분 "</b>(권유형)을 코드가 얹습니다.
+    질문형·채이 스타일은 원래 안 붙습니다. 끄면 <b>모든 스타일</b>에서 안 붙입니다
+    (모델이 스스로 쓴 감탄사는 그대로).
+  </p>
+  <button id=hoBtn class=btn onclick="toggleHookOpener()">불러오는 중…</button>
+</details>
+
+<details class=card>
+  <summary>🕘 최근 1시간 완료·실패 (<span id=wlrcnt>0</span>건)</summary>
+  <table><thead><tr><th class=mini>결과</th><th>고객</th><th>작업</th><th class=mini>걸린시간</th><th>끝난시각</th><th>오류</th></tr></thead>
+  <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
+</details>
+
+<!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
+<details class="card wait" id="diagCard">
+  <summary style="cursor:pointer;font-weight:800">🩺 작업 진단</summary>
+  <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
+      <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
+    </span></h2>
+  <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
+</details>
+
+<!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
+     묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
+     ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
+<details class="card wait" id="probeCard">
+  <summary style="cursor:pointer;font-weight:800">🎞 1단계 정확도 측정</summary>
+  <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
+      <button id=probeStart onclick="startProbe()" style="margin-left:6px;padding:4px 12px;cursor:pointer">▶ 측정 시작</button>
+    </span></h2>
+  <div id=pProg style="font-size:13px;color:#8a8a92;margin:4px 0 8px">아직 안 돌렸습니다.</div>
+  <table><thead><tr><th>비교 편수</th><th>기존(classic)</th><th>B1</th><th>B1 우위</th><th>기존 우위</th><th>동점</th><th>미판정</th><th>B1 빈 묘사</th><th>B1 편당 초</th></tr></thead>
+  <tbody id=psum><tr><td colspan=9 class=empty>—</td></tr></tbody></table>
+  <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
+  <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
+  <tbody id=prows></tbody></table></details>
+</details>
+</div>
+</details>
+
 
 <script>
 
@@ -405,7 +448,7 @@ async function renderAlertBoard(){
        if(!r.ok) return; d=await r.json(); }catch(e){ return; }
   if(!d||!d.ok) return;
   const open=(d.alerts||[]).filter(a=>a&&!a.resolved);
-  if(!open.length){ box.innerHTML=''; return; }   // 멀쩡할 땐 조용하다(빈 상자를 안 띄운다)
+  if(!open.length){ box.innerHTML=''; if(typeof _alertFold==='function') _alertFold('ops',0,0); return; }   // 멀쩡할 땐 조용하다(빈 상자를 안 띄운다)
   // 급한 것부터 — 고객영향 → 운영주의 → 정보. 같은 등급이면 최신순(id는 epoch초).
   const rank={'고객영향':0,'운영주의':1,'정보':2};
   open.sort((a,b)=>(rank[a.grade]??1)-(rank[b.grade]??1) || (b.id||0)-(a.id||0));
@@ -417,7 +460,7 @@ async function renderAlertBoard(){
   const TH={'고객영향':{c:'cust',l:'🚨 고객 영향 사고 — 지금 확인'},
             '정보':{c:'info',l:'ℹ️ 알림'},
             '운영주의':{c:'ops',l:'⚠️ 운영 주의 — 자동 우회됨, 서비스 정상'}};
-  // 알림은 접어 둔다(사장님 11-01). 다시 그려도 펼친 상태는 유지한다.
+  // 접기·요약 줄은 _alertFold 한 곳이 정한다(11-07). 여기는 목록과 건수만.
   const nCust=open.filter(a=>a.grade==='고객영향').length;
   const list=open.map(a=>{
     const t=TH[a.grade]||TH['운영주의'];
@@ -432,8 +475,8 @@ async function renderAlertBoard(){
       + '</div>'
       + '<button class=abx onclick="closeAlert('+JSON.stringify(a.id)+')">닫기</button></div>';
   }).join('');
-  box.innerHTML='<details class=abAll ontoggle="window._abOpen=this.open"'+(globalThis._abOpen?' open':'')+'><summary style="cursor:pointer;font-weight:800;font-size:14px;padding:10px 14px;border:1px solid #33353b;border-radius:10px;color:'
-    +(nCust?'#ff8080':'#ffc85c')+'">🔔 알림 '+open.length+'건'+(nCust?' · 고객 영향 '+nCust+'건':'')+' — 눌러서 보기</summary><div style="margin-top:8px">'+list+'</div></details>';
+  box.innerHTML=list;
+  if(typeof _alertFold==='function') _alertFold('ops',open.length,nCust);
 }
 // ── 관제 보드(2026-09-30, 카드 004) — 카드 파싱·상태는 서버(/api/admin/control/board → tools/control.py) 한 곳. 여기선 그리기만.
 const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'로컬검증':5,'병합':6,'서버반영':7,'라이브실측':8,'완료':9};
@@ -505,11 +548,38 @@ async function closeAlert(id){
   renderAlertBoard();
 }
 // 클로드형 경보(관제 234) — 미해제만. 해제 = 확인함(정지 경보면 그 고객 정지도 풀린다 — 서버 resolve_alert).
+// ── 알림 접기 주인(2026-11-07 관제 335) — 세 알림(일반·클로드형·계정 변경)의 접기·건수 합산·숨기기는 여기 한 곳.
+//   그리기 함수는 _alertFold(종류, 건수, 급한 건수)만 부른다. 기본은 접힘, 펼친 상태는 다시 그려도 유지.
+const _AF={ops:[0,0],claude:[0,0],change:[0,0]};
+function _alertFold(kind,n,urgent){
+  _AF[kind]=[n||0,urgent||0];
+  const box=document.getElementById('alertFold'), sum=document.getElementById('alertFoldSum'); if(!box||!sum) return;
+  const total=_AF.ops[0]+_AF.claude[0]+_AF.change[0];
+  box.style.display=total?'':'none';
+  if(globalThis._abOpen) box.open=true;
+  const cust=_AF.ops[1]+_AF.claude[1], dec=_AF.change[0];
+  const parts=[];
+  if(cust) parts.push('<b style="color:#ff8080">고객 영향 '+cust+'</b>');
+  if(dec) parts.push('<b style="color:#ffd479">결정할 것 '+dec+'</b>');
+  if(_AF.ops[0]) parts.push('운영 '+_AF.ops[0]);
+  if(_AF.claude[0]) parts.push('클로드형 '+_AF.claude[0]);
+  sum.innerHTML='🔔 알림 '+total+'건 <span style="font-weight:400;color:#a8a8b0">· '+parts.join(' · ')+'</span> <span class=afHint>눌러서 보기</span>';
+  sum.style.borderColor=cust?'#7a2b2b':(dec?'#6a4a10':'#33353b');
+}
+// ── 제작 현황 요약(2026-11-07) — 숫자는 /api/admin/production 그대로. 여기는 그리기만.
+async function loadProdSummary(){
+  let d=null;
+  try{ const r=await fetch('/api/admin/production?days=0&limit=300'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const st=(d&&d.stat)||{}; const set=(id,v,need)=>{ const e=document.getElementById(id); if(!e) return; e.textContent=(v==null?'–':v); e.classList.toggle('need',!!need); };
+  set('pr_run',st.running); set('pr_made',st.made); set('pr_fail',st.failed,(st.failed||0)>0); set('pr_people',st.people); set('pr_total',st.total);
+}
+loadProdSummary(); setInterval(()=>{ if(!document.hidden) loadProdSummary(); },30000);
 async function renderClaudeAlerts(){
   const box=document.getElementById('claudeAlertBoard'); if(!box) return;
   let d=null;
   try{ const r=await fetch('/api/admin/claude/alerts'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
   const open=(d&&d.alerts)||[];
+  _alertFold('claude',open.length,open.filter(a=>a.level==='suspend'||a.level==='alert').length);
   if(!open.length){ box.innerHTML=''; return; }
   const LV={warn:'경고',throttle:'속도 제한',suspend:'일시 정지',alert:'관리자 확인'};
   box.innerHTML=open.map(a=>'<div class="ab '+(a.level==='suspend'||a.level==='alert'?'cust':'ops')+'"><div style="flex:1;min-width:0">'
@@ -523,6 +593,7 @@ async function renderClaudeChanges(){
   let d=null;
   try{ const r=await fetch('/api/admin/claude/changes'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
   const open=(d&&d.changes)||[];
+  _alertFold('change',open.length,0);
   box.innerHTML=open.map(a=>'<div class="ab ops"><div style="flex:1;min-width:0">'
     + '<div class=abl>🖥 숏클 '+(a.kind==='device'?'기기 교체':'Claude 계정 변경')+' 요청</div>'
     + '<div class=abt>'+_abEsc(a.member||('고객 '+a.cid))+(a.kind==='device'?' · '+_abEsc(a.old_name)+' → '+_abEsc(a.name):'')+'</div>'
