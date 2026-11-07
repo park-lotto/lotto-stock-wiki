@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="20.4" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(20.4);
+// 4회차 장면 s11b — 나도 될까? 키보드로 한 줄 (20.4초, 사장님 11-04 추가) · 문장 시각 = py ink/times.py s11b
+// 0.19 이런 생각? / 1.92 나도 될까? / 3.92 컴퓨터도 모르는데 / 5.22 딱 하나 / 6.65 AI한테 한 줄 / 10.87 처음 보셨던 것처럼 / 12.83 외국인 한국 화장품 영상 만들어 줘 / 15.23 그 한 줄이 전부 / 17.19 자판 칠 줄 알면 시작
+const Y = "#F4E28A", CL = "#D97757";
+// ===== 컷1 나도 될까? (−1 ~ 5.22) =====
+const c1 = cutL(S, -1, 5.22, { push: [1.0, 1.04], ox: 500, oy: 500 });
+const st1 = stageN(c1);
+st1.fill(ell(480, 620, 500, 480, { n: 30 }), "#D9D4CC", -99, 0.35);
+INKHERO.put(c1, "g_o_frustr_head", { x: 480, y: 410, sc: 1.85, s: 0.05, dur: 1.0 });
+c1.text("좋은 건 알겠는데…", { x: 1000, y: 250, size: 96, font: "gae", s: 0.3, gap: 0.04 });
+const me = c1.text("나도 될까?", { x: 1000, y: 500, size: 190, s: 1.95, gap: 0.09, c: "#D9622B" });
+c1.text("컴퓨터도 잘 모르는데?", { x: 1000, y: 760, size: 100, s: 3.95, gap: 0.05 });
+// ===== 컷2 딱 하나 — 키보드로 한 줄 (5.22 ~ 10.87) =====
+const c2 = cutL(S, 5.22, 10.87, { push: [1.0, 1.04], ox: 960, oy: 600 });
+const one = c2.text("딱 하나만 할 줄 알면 됩니다", { x: 960, y: 170, size: 110, s: 5.25, gap: 0.045, anchor: "c" });
+c2.underline(one.box(0, 1), 6.4, 0.3);
+const kb = rr(360, 430, 1200, 440, 30); c2.fill(kb, "#FFFFFF", 6.6, 0.95, 0.2); c2.line(kb, 6.6, 0.5, { w: 9 });
+for (let r = 0; r < 4; r++) for (let k = 0; k < 11 - (r === 3 ? 7 : 0); k++) {
+  const w = r === 3 ? 600 : 86, x = r === 3 ? 660 : 410 + k * 101 + r * 20, y = 470 + r * 98, key = rr(x, y, w, 78, 12);
+  c2.fill(key, r === 3 ? Y : "#F3EFE6", 6.9 + (r * 11 + k) * 0.012, 0.9, 0.1); c2.line(key, 6.9 + (r * 11 + k) * 0.012, 0.08, { w: 4, pen: false });
+}
+c2.text("AI한테 “만들어 줘” 한 줄", { x: 960, y: 1010, size: 100, s: 8.0, gap: 0.05, anchor: "c", c: CL });
+// ===== 컷3 맨 처음 그 한 줄 (10.87 ~ 15.23) =====
+const c3 = cutL(S, 10.87, 15.23, { push: [1.0, 1.03], ox: 960, oy: 540 });
+c3.text("영상 맨 처음에 보셨던 것처럼", { x: 960, y: 200, size: 100, font: "gae", s: 10.9, gap: 0.04, anchor: "c" });
+const box = rr(180, 400, 1560, 300, 40); c3.fill(box, "#FFFFFF", 11.2, 0.97, 0.2); c3.line(box, 11.2, 0.5, { w: 9 });
+c3.fill(rr(1600, 600, 90, 70, 16), CL, 11.6, 0.9, 0.2);
+c3.text("외국인 한국화장품 영상 만들어줘..", { x: 260, y: 570, size: 100, s: 12.85, gap: 0.075 });
+c3.fill(rr(240, 760, 330, 70, 14), "#F3EFE6", 11.5, 0.9, 0.2);
+c3.text("Claude", { x: 270, y: 815, size: 50, font: "num", s: 11.5 });
+// ===== 컷4 그 한 줄이 전부 → 자판 칠 줄 알면 시작 (15.23 ~) =====
+const c4 = cutL(S, 15.23, 1e9, { push: [1.05, 1.0], ox: 960, oy: 540 });
+const st4 = stageN(c4);
+st4.fill(ell(1450, 620, 460, 460, { n: 30 }), Y, -99, 0.35);
+INKHERO.put(c4, "g_o_hope", { x: 1450, y: 400, sc: 1.8, s: 15.25, dur: 1.0 });
+const all = c4.text("그 한 줄이 전부", { x: 120, y: 280, size: 140, s: 15.3, gap: 0.06 });
+c4.underline(all.box(2, 3), 16.6, 0.3);
+c4.text("자판을 칠 줄 아시면", { x: 120, y: 560, size: 110, s: 17.2, gap: 0.05 });
+const go = c4.text("시작할 수 있습니다", { x: 120, y: 760, size: 130, s: 18.6, gap: 0.05, c: CL });
+
+S.start();
+});
+</script></body></html>

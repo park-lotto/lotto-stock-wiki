@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="19.4" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(19.4);
+// 4회차 장면 s10 — 해외 시장 (19.4초) · 문장 시각 = py ink/times.py s10 (★확인 안 된 대사: 숏클 다른 언어 완성본 확인 전)
+// 0.40 상관없다 생각? / 4.09 한국 시장 좁다 / 6.79 일본·미국·러시아·동남아 / 11.94 비교 안 되게 큼 / 15.80 첫걸음 = 클로드
+const Y = "#F4E28A", CL = "#D97757";
+// ===== 컷1 상관없다? (−1 ~ 4.09) =====
+const c1 = cutL(S, -1, 4.09, { push: [1.0, 1.04], ox: 500, oy: 500 });
+const st1 = stageN(c1);
+st1.fill(ell(500, 620, 500, 480, { n: 30 }), SKY, -99, 0.38);
+INKHERO.put(c1, "g_o_laptop_blank", { x: 500, y: 410, sc: 1.85, s: 0.05, dur: 1.1 });
+c1.text("해외 채널?", { x: 1050, y: 360, size: 140, s: 0.4, gap: 0.07 });
+c1.text("나랑 상관없는 얘기…", { x: 1050, y: 580, size: 100, font: "gae", s: 1.8, gap: 0.05, c: "#8C8A86" });
+// ===== 컷2 한국은 좁다 → 세계 (4.09 ~ 11.94) =====
+const c2 = cutL(S, 4.09, 11.94, { push: [1.0, 1.05], ox: 960, oy: 560 });
+art(c2, "prop.globe", { x: 960, y: 1000, sc: 2.0, s: 4.1 });
+const kr = c2.text("한국 시장은 좁다", { x: 960, y: 170, size: 110, s: 4.3, gap: 0.05, anchor: "c" });
+c2.underline(kr.box(5, 6), 5.6, 0.3);
+[["일본", 330, 360, 6.8], ["미국", 1590, 360, 8.2], ["러시아", 300, 760, 9.2], ["동남아", 1620, 760, 10.2]].forEach(([s, x, y, t]) => {
+  const b = rr(x - 170, y - 85, 340, 150, 22); c2.fill(b, Y, t, 0.6, 0.2); c2.line(b, t, 0.35, { w: 7 });
+  c2.text(s, { x, y: y + 20, size: 92, s: t + 0.15, gap: 0.05, anchor: "c" });
+});
+// ===== 컷3 비교도 안 되게 큼 (11.94 ~ 15.80) =====
+const c3 = cutL(S, 11.94, 15.80, { pan: [20, -20] });
+const sk = ell(420, 600, 90, 90, { n: 20 }); c3.fill(sk, PINK, 12.0, 0.6, 0.2); c3.line(sk, 12.0, 0.3, { w: 7 });
+c3.text("한국", { x: 420, y: 790, size: 80, font: "gae", s: 12.2, anchor: "c" });
+const bg = ell(1250, 560, 420, 380, { n: 40 }); c3.fill(bg, SKY, 12.6, 0.55, 0.3); c3.line(bg, 12.6, 0.6, { w: 9 });
+c3.text("해외 쇼핑쇼츠 시장", { x: 1250, y: 540, size: 96, s: 13.0, gap: 0.05, anchor: "c" });
+const cmp = c3.text("비교도 안 되게 크다", { x: 1250, y: 680, size: 96, s: 14.0, gap: 0.05, anchor: "c", c: "#D9622B" });
+c3.underline(cmp.box(0, 5), 15.0, 0.3);
+// ===== 컷4 첫걸음 = 클로드 (15.80 ~) =====
+const c4 = cutL(S, 15.80, 1e9, { push: [1.05, 1.0], ox: 960, oy: 540 });
+[[300, 900], [560, 760], [820, 620], [1080, 480]].forEach(([x, y], i) => { const st = rr(x, y, 240, 1080 - y, 6); c4.fill(st, i === 0 ? CL : BEIGE, 15.85 + i * 0.12, 0.55, 0.2); c4.line(st, 15.85 + i * 0.12, 0.25, { w: 7 }); });
+c4.text("1", { x: 420, y: 1000, size: 110, font: "num", s: 16.2, anchor: "c" });
+c4.text("그 시장의 첫걸음", { x: 1400, y: 260, size: 110, s: 16.0, gap: 0.05, anchor: "c" });
+const f2 = c4.text("= 클로드 배우기", { x: 1400, y: 430, size: 130, s: 17.0, gap: 0.06, anchor: "c", c: CL });
+c4.circleMark(f2.box(2, 4), 18.2, 0.4);
+
+S.start();
+});
+</script></body></html>

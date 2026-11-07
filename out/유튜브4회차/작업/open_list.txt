@@ -1,0 +1,2 @@
+file 'C:/Users/CH/Desktop/로또의 주식/.tracks/유튜브제작/out/유튜브4회차/작업/open_ui_av.mp4'
+file 'C:/Users/CH/Desktop/로또의 주식/.tracks/유튜브제작/out/유튜브4회차/작업/open_short.mp4'

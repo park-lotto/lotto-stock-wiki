@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GB"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#svg, #bgn { position: absolute; left: 0; top: 0; }
+#tdiv { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: radial-gradient(ellipse at center, rgba(120,90,40,0) 58%, rgba(120,90,40,0.07) 100%); pointer-events: none; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="12.1" data-width="1920" data-height="1080">
+<svg id="bgn" width="1920" height="1080" viewBox="0 0 1920 1080"><filter id="nz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.9 0"/></filter><rect width="1920" height="1080" filter="url(#nz)" opacity="0.07"/></svg>
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<div id="tdiv"></div>
+<div id="vig"></div>
+<svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible;z-index:20"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/hq.js"></script><script src="brand/assets.js"></script><script src="brand/hero_strokes.js"></script><script src="brand/hero_put.js"></script><script src="brand/helpers.js"></script>
+<script>
+const {Scene,person,robot,smooth,ell,cloud,poly,rr,ln,pl,tube,mk,INK,ORG,SKIN,SHIRT,HAIR,BEIGE,SKY,PINK,eo,seg,clamp,qo,J,f} = HQ;
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GB"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+const S = new Scene(12.1);
+// 4회차 장면 s04 — 이제는 클로드 하나면 (12.1초) · 문장 시각 = py ink/times.py s04
+// 0.14 얼마나 답답 / 1.52 클로드 하나면 / 3.38 프로그램 여러 개 X / 5.90 뜯어보기·만들기 = 클로드 / 10.49 대딸깍 시대
+const Y = "#F4E28A", CL = "#D97757";
+// ===== 컷1 (−1 ~ 1.52) =====
+const c1 = cutL(S, -1, 1.52, { push: [1.0, 1.03], ox: 500, oy: 500 });
+const st1 = stageN(c1);
+st1.fill(ell(500, 620, 520, 500, { n: 30 }), SKY, -99, 0.38);
+INKHERO.put(c1, "g_o_laptop_tired", { x: 500, y: 420, sc: 1.85, stat: true, color: -99 });
+c1.text("얼마나", { x: 1050, y: 380, size: 130, s: 0.15, gap: 0.06 });
+c1.text("답답하셨을까요", { x: 1050, y: 580, size: 140, s: 0.5, gap: 0.05 });
+// ===== 컷2 클로드 하나 vs 프로그램 여러 개 (1.52 ~ 5.90) =====
+const c2 = cutL(S, 1.52, 5.90, { push: [1.0, 1.04], ox: 1250, oy: 540 });
+[[120, 250, 4.0], [190, 330, 4.15], [260, 410, 4.3], [330, 490, 4.45]].forEach(([x, y, t], i) => {
+  const w = rr(x, y, 380, 260, 14); c2.fill(w, ["#FFFFFF", SKY, PINK, Y][i], t - 0.6, 0.9, 0.2); c2.line(w, t - 0.6, 0.3, { w: 6 });
+  c2.line(ln(x, y + 40, x + 380, y + 40), t - 0.45, 0.15, { w: 4, pen: false });
+});
+c2.text("프로그램 여러 개", { x: 450, y: 860, size: 90, font: "gae", s: 3.5, gap: 0.05, anchor: "c" });
+c2.line(ln(110, 230, 730, 780), 4.9, 0.25, { c: ORG, w: 18 }); c2.line(ln(110, 780, 730, 230), 5.1, 0.25, { c: ORG, w: 18 });
+const cw = rr(900, 200, 880, 620, 26); c2.fill(cw, "#FFFFFF", 1.55, 0.95, 0.2); c2.line(cw, 1.55, 0.6, { w: 9 });
+c2.line(ln(900, 290, 1780, 290), 2.0, 0.2, { w: 6 });
+c2.fill(ell(960, 245, 18, 18, { n: 12 }), CL, 2.1, 0.95, 0.15);
+c2.text("Claude", { x: 1000, y: 262, size: 60, font: "num", s: 2.1 });
+const one = c2.text("클로드 하나면", { x: 1340, y: 480, size: 130, s: 2.3, gap: 0.06, anchor: "c" });
+c2.text("됩니다", { x: 1340, y: 670, size: 150, s: 2.9, gap: 0.07, anchor: "c", c: CL });
+c2.underline(one.box(0, 2), 3.3, 0.3);
+// ===== 컷3 뜯어보기·만들기 → 클로드가 (5.90 ~ 10.49) =====
+const c3 = cutL(S, 5.90, 10.49, { pan: [-20, 20] });
+const k1 = rr(120, 220, 640, 200, 24); c3.fill(k1, Y, 5.95, 0.55, 0.25); c3.line(k1, 5.95, 0.4, { w: 8 });
+c3.text("뼈대 뜯어보기", { x: 440, y: 340, size: 100, s: 6.1, gap: 0.05, anchor: "c" });
+const k2 = rr(120, 560, 640, 200, 24); c3.fill(k2, SKY, 7.5, 0.55, 0.25); c3.line(k2, 7.5, 0.4, { w: 8 });
+c3.text("내 스타일로 만들기", { x: 440, y: 680, size: 92, s: 7.65, gap: 0.05, anchor: "c" });
+c3.line(pl([[780, 320], [1060, 470]]), 8.9, 0.25, { w: 9 }); c3.line(pl([[780, 660], [1060, 510]]), 9.0, 0.25, { w: 9 });
+const cb = ell(1400, 490, 300, 230, { n: 30 }); c3.fill(cb, CL, 9.1, 0.3, 0.25); c3.line(cb, 9.1, 0.4, { w: 9 });
+const cg = c3.text("클로드가", { x: 1400, y: 470, size: 130, s: 9.2, gap: 0.06, anchor: "c" });
+c3.text("합니다", { x: 1400, y: 610, size: 110, font: "gae", s: 9.7, gap: 0.05, anchor: "c" });
+// ===== 컷4 대딸깍 시대 (10.49 ~) =====
+const c4 = cutL(S, 10.49, 1e9, { push: [1.06, 1.0], ox: 960, oy: 540 });
+const st4 = stageN(c4);
+st4.fill(ell(1450, 620, 460, 460, { n: 30 }), Y, -99, 0.35);
+INKHERO.put(c4, "g_o_phone_wow", { x: 1450, y: 400, sc: 1.8, stat: true, color: -99 });
+const dd = c4.text("대딸깍", { x: 140, y: 480, size: 230, s: 10.5, gap: 0.09 });
+c4.text("시대", { x: 200, y: 760, size: 200, s: 10.85, gap: 0.09, c: "#D9622B" });
+c4.underline(dd.box(), 11.3, 0.3);
+
+S.start();
+});
+</script></body></html>
