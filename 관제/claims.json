@@ -363,5 +363,10 @@
     "at": "2026-09-29 23:55",
     "card": 40,
     "track": "장면폰트"
+  },
+  "tools/track.py:_known_main_failures": {
+    "at": "2026-11-07 13:28",
+    "card": 336,
+    "track": "관문메모리묶음"
   }
 }
