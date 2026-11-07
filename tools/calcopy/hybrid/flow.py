@@ -394,9 +394,10 @@ class _Stop(Exception):
     auto = 잠깐의 문제라 회원에게 알리기 전에 **스스로 한 번** 다시 해 본다(사장님 10-26 '회원을 당황하게 하지 마라').
     detail = 속사정(검사 항목·오류 글) — 기록(st.log·stopped.detail)에만, 회원 문구에는 안 싣는다."""
     def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False, auto: bool = False, detail: str = "",
-                 origin_missing: bool = False, ask_member: bool = False):
+                 origin_missing: bool = False, ask_member: bool = False, redo: str | None = None):
         super().__init__(why)
-        self.ask_member = ask_member          # 회원만 풀 수 있는 것(키·준비·과제 한도를 다 쓴 뒤) — 제작자 과제(_task)로 돌리지 않는다
+        self.redo = redo                      # 고치기 한도·같은 원인 연속(_tries) 멈춤의 key — 다시 시도로 안 풀린다(주인 _retry_route)
+        self.ask_member = ask_member         # 회원만 풀 수 있는 것(키·준비·과제 한도를 다 쓴 뒤) — 제작자 과제(_task)로 돌리지 않는다
         self.why, self.fix, self.retry, self.final, self.auto, self.detail = why, fix, retry, final, auto, detail
         self.origin_missing = origin_missing
 
@@ -506,13 +507,14 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
             if e.detail:
                 st["log"].append(f"멈춤 속사정({ph}): {str(e.detail)[:400]}")
             ak = f"{retry}:{e.why}"
-            if e.auto and retry and not (st.get("auto_tries") or {}).get(ak):      # 회원에게 알리기 전에 스스로 한 번(잠깐의 문제)
+            route = _retry_route(st, retry, e.redo) if e.auto and retry else None
+            if route and not (st.get("auto_tries") or {}).get(ak):      # 회원에게 알리기 전에 스스로 한 번(잠깐의 문제)
                 st.setdefault("auto_tries", {})[ak] = 1
                 st["log"].append(f"스스로 다시 시도: {e.why} → {retry}")
-                st["phase"] = retry
+                st["phase"] = route["goto"]
                 m, rp, user = {}, {}, {}
-                if retry == st.get("_asker") and st.get("_asker_in"):
-                    m, rp = st["_asker_in"].get("m") or {}, st["_asker_in"].get("rp") or {}
+                if route.get("feed"):
+                    m, rp = route["feed"].get("m") or {}, route["feed"].get("rp") or {}
                 continue
             task = _task(st, e, ph, retry)              # 회원에게 묻기 전에 — 회원 Claude(제작자)가 가이드·도구로 푸는 과제(사장님 10-26)
             if task:
@@ -520,7 +522,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
                 return _out(st, "review", ph, review=[task])
             st["phase"] = "stopped"
             st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": retry} if retry else {}), **({"detail": str(e.detail)[:400]} if e.detail else {}),
-                             **({"origin_missing": True} if e.origin_missing else {})}
+                             **({"origin_missing": True} if e.origin_missing else {}), **({"redo": e.redo} if e.redo else {})}
             return _out(st, "stop", ph, why=e.why, fix=e.fix, retry_ok=True if retry else None)
         m, rp, user = {}, {}, {}           # 한 번 먹은 입력은 다음 단계로 넘기지 않는다
         if "goto" in r:
@@ -736,8 +738,20 @@ def redo_stop_words(causes: list, stuck: bool = False) -> tuple[str, str]:
     return why, "다시 시도를 누르시면 숏템이 멈춘 곳부터 다시 맞춰 볼게요"
 
 
-# 되풀이 멈춤 뒤 '다시 시도' 가 돌아갈 단계 — 같은 질문 다시(옛 계획 그대로 검사)가 아니라 계획을 새로 만든다(10-26: 계획 함수를 고쳐도 다시 시도가 옛 시간표만 재검사)
-REDO_RETRY = {"plan": "plan"}
+RETRY_REFUSED = ("★이 멈춤은 같은 원인 반복·고치기 한도라 다시 시도(retry)가 안 듣는다 — 같은 답·같은 횟수로 돌아가 같은 자리에서 또 멈춘다."
+                 " back(그 단계 새로)·waive(권고로 넘기기)·submit(직접 만들기) 중에서 골라라.")
+
+
+def _retry_route(st: dict, r: str | None, redo: str | None = None) -> dict | None:
+    """(판단 주인 — 다시 시도 갈 곳) 실행 고리의 스스로 다시 시도·ph_stopped(회원 버튼·제작자 과제 retry)가 부른다.
+    None = 다시 시도로는 안 풀리는 멈춤: 고치기 한도·같은 원인 연속(_tries, redo=key) — 사장님 11-02 '다시 시도는 횟수를 지우지 않는다'라
+      같은 자리에서 또 멈추고, 옛 답 재주입이 회원이 고친 파일을 덮었다(11-07 이성택 #12661 · 이전 땜 2d03e9904·533c1b666).
+    그 밖의 잠깐의 멈춤 = 일을 시킨 단계(_asker)면 받았던 입력을 다시 먹인다."""
+    if redo or not r:
+        return None
+    if r == st.get("_asker") and st.get("_asker_in"):
+        return {"goto": r, "feed": st["_asker_in"]}
+    return {"goto": r}
 
 
 def _tries(st: dict, key: str, limit: int, causes: list | None = None, at: str | None = None) -> int:
@@ -758,12 +772,12 @@ def _tries(st: dict, key: str, limit: int, causes: list | None = None, at: str |
     if n > limit:
         st["log"].append(f"고치기 한도: {key} {limit}번 · 원인 {cs}")
         w, f = redo_stop_words(cs)
-        raise _Stop(w, f, detail=f"고치기 한도 {key} {limit}번 · 원인 {cs}", retry=REDO_RETRY.get(key))
+        raise _Stop(w, f, detail=f"고치기 한도 {key} {limit}번 · 원인 {cs}", redo=key)
     hist = (st.get("redo_hist") or {}).get(key) or []
     if cs and len(hist) >= REDO_STUCK and all(h == hist[-1] for h in hist[-REDO_STUCK:]):
         st["log"].append(f"같은 원인 {REDO_STUCK}번 연속: {key} {cs} — 한도 전 멈춤")
         w, f = redo_stop_words(cs, stuck=True)
-        raise _Stop(w, f, detail=f"같은 원인 {REDO_STUCK}번 연속 {key} · {cs}", retry=REDO_RETRY.get(key))
+        raise _Stop(w, f, detail=f"같은 원인 {REDO_STUCK}번 연속 {key} · {cs}", redo=key)
     return n
 
 
@@ -1282,13 +1296,18 @@ def ph_stopped(st, m, rp, u):
         st.pop("stopped", None)
         return _given_origin(st, vid)
     if u.get("retry") and r:
+        so = st.get("stopped") or {}
+        route = _retry_route(st, r, so.get("redo"))
+        if route is None:
+            # 횟수를 다 쓴 단계는 다시 시도로 안 풀린다 — 옛 답을 다시 먹이지 않고 제작자 과제를 다시 낸다(같은 막힘 열쇠라 TASK_PER_KEY 로 끝난다)
+            st["_retry_refused"] = True
+            st["log"].append(f"다시 시도 거절(고치기 한도·같은 원인 연속 {so.get('redo')}) → 제작자 과제 다시")
+            raise _Stop(so.get("why") or "아직 마무리되지 않은 편이에요", so.get("fix") or AGAIN, retry=r, redo=so.get("redo"),
+                        detail=so.get("detail") or "", origin_missing=bool(so.get("origin_missing")))
         st.pop("stopped", None)
         # 다시 시도는 잠깐의 문제를 풀 뿐 — 고치기 횟수·같은 원인 기록(redo_hist)은 그대로 둔다(10-31 티라미수 8번, 관제 304 검사표 5).
-        #   횟수를 다 쓴 단계는 다시 시도로 안 풀린다 — 다음 칸은 제작자 과제의 back(그 단계만 새로)·waive·submit.
         st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k not in RETRY_CLEAR}
-        if r == st.get("_asker") and st.get("_asker_in"):
-            return {"goto": r, "feed": st["_asker_in"]}
-        return {"goto": r}
+        return route
     raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r,
                 ask_member=True, origin_missing=bool((st.get("stopped") or {}).get("origin_missing")))   # 이미 회원에게 간 멈춤을 다시 보여 줄 뿐(과제로 또 돌리지 않는다)
 
@@ -1372,14 +1391,16 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     if n.get(key, 0) >= TASK_PER_KEY or sum(n.values()) >= TASK_TOTAL:
         return None
     n[key] = n.get(key, 0) + 1
-    stg = _stage(ph, st)
+    stg = _stage(retry if ph in ("task_got", "stopped") else ph, st)     # 다시 시도 거절로 다시 낸 과제 = 멈춘 단계 그대로(back 검사가 단계를 본다)
     traps = (TRAPS_FOREIGN if _fmt(st) == "해외원본형" else TRAPS).get(stg["key"], [])
     rid = f"task_{sum(n.values())}"
-    st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400]}
+    st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400],
+                   **({"redo": e.redo} if e.redo else {})}
     st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
     spent = int((time.time() - float(st.get("started_at") or time.time())) / 60)
     over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if _over_budget(st) else ""
-    ask = (TASK_ASK + over + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
+    refused = (RETRY_REFUSED + NL + NL) if st.pop("_retry_refused", None) or e.redo else ""
+    ask = (refused + TASK_ASK + over + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
            + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
@@ -1415,7 +1436,8 @@ def ph_task_got(st, m, rp, u):
     a = _reply(rp, t.get("id") or "task", ("action",))
     act = str(a.get("action") or "").strip()
     st["log"].append(f"제작자 과제 답 {t.get('id')}: {act} · {str(a.get('note') or '')[:200]}")
-    stopped = {"why": t.get("why"), "fix": t.get("fix"), "retry": t.get("retry"), **({"origin_missing": True} if t.get("origin_missing") else {})}
+    stopped = {"why": t.get("why"), "fix": t.get("fix"), "retry": t.get("retry"), **({"origin_missing": True} if t.get("origin_missing") else {}),
+               **({"redo": t["redo"], "detail": t.get("detail") or ""} if t.get("redo") else {})}
     url, prod = str(a.get("origin_url") or "").strip(), str(a.get("product") or "").strip()
     if act == "give" and url and t.get("stage") == "origin":
         if _fmt(st) == "해외원본형":
