@@ -2661,6 +2661,136 @@
    "y": 67.34,
    "bench": "채움 잉크 y≈1249~1338(가운데 1293/1920) — 2편 같음, 나레·원음 같은 자리"
   }
+ },
+ "sseolbanjang": {
+  "label": "썰반장 영화썰",
+  "desc": "나레 흰 BMDOHYEON 100px + 검정 테 12px 팝 · 원음 대사 같은 글꼴 테 7px 즉시 · 인물마다 채움색(변형 spk_*)",
+  "font": "BMDOHYEON",
+  "size": 108,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.14em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F9F95B",
+    "#38FF19",
+    "#85C0F9",
+    "#F38A90"
+   ]
+  },
+  "emph": {
+   "font": "BMDOHYEON",
+   "size": 108,
+   "color": "#F9F95B",
+   "style": {
+    "WebkitTextStroke": "0.14em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "speakers": {
+   "narr": {
+    "text": {
+     "color": "#FFFFFF",
+     "style": {
+      "WebkitTextStroke": "0.24em #000000"
+     }
+    },
+    "enter": {
+     "kind": "keyframes",
+     "keyframes": [
+      {
+       "t": 0,
+       "scale": 100
+      },
+      {
+       "t": 0.067,
+       "scale": 122
+      },
+      {
+       "t": 0.133,
+       "scale": 94
+      },
+      {
+       "t": 0.2,
+       "scale": 100
+      }
+     ]
+    },
+    "bench": "나레 191/191 꾸밈·instant 0 — 팝 5/9편 133~230ms(폭 110~128% → 92~96% → 100%, narr_enter_meas.json QSEC 111→128→128→111→102→100) · 테 11~14px(행 스캔 5편 중앙 12 → 0.24em)"
+   },
+   "orig": {
+    "enter": "",
+    "bench": "원음 instant 116/157 · 테 6~8px(링 스캔 r≈6~7 → 0.14em)"
+   }
+  },
+  "variants": {
+   "spk_white": {
+    "text": {
+     "color": "#FFFFFF"
+    },
+    "why": "원음 화자색 흰(render_bench.speaker_variant 가 고른다)"
+   },
+   "spk_yellow": {
+    "text": {
+     "color": "#F9F95B"
+    },
+    "why": "화자색 노랑 — 팔레트 #F9F95B"
+   },
+   "spk_green": {
+    "text": {
+     "color": "#38FF19"
+    },
+    "why": "화자색 연두 #38FF19"
+   },
+   "spk_sky": {
+    "text": {
+     "color": "#85C0F9"
+    },
+    "why": "화자색 하늘 #85C0F9"
+   },
+   "spk_pink": {
+    "text": {
+     "color": "#F38A90"
+    },
+    "why": "화자색 분홍 #F38A90"
+   },
+   "spk_red": {
+    "text": {
+     "color": "#E70002"
+    },
+    "why": "화자색 빨강 #E70002"
+   }
+  },
+  "stickers": {},
+  "bench": "channel/sseolbanjang/스타일분석.md §1(줄판독 9편 366줄 · 팔레트.json) — 원음 화자색 122/157줄 · 같은 화자 한 색 25/35",
+  "place": {
+   "y": 70.36,
+   "bench": "나레 채움 잉크 y1306~1396 중앙 1351/1920(n=189, 7/9편) — 원음도 같은 띠 1280~1385"
+  }
  }
 }/*PACKS*/;
   // 효과마다 붙는 조건(관제 235) — 벤치에서 언제·어느 줄에 붙었나. 판 등록 작업자가 편마다 배치를 계산하는 근거. 코드는 읽지 않는다.

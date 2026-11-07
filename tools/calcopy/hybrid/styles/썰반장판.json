@@ -1,0 +1,875 @@
+{
+ "name": "썰반장판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "썸네일 카드 0/9편(스타일분석 §9 — 0초 = 제목 2줄 + 원본 첫 장면) · 연예인 얼굴 규칙 없음(영화 장면)",
+ "_note": "썰반장(@썰반장) 영화썰 1차 판(11-07) — 외국 영화·드라마 장면 + 남성 나레 존댓말 팝 자막 + 원음 대사 인물색 번역 자막. 근거 channel/sseolbanjang/{스타일분석.md, 줄판독/ 9편 366줄, _kal/sseolbanjang판_초안.json}. 렌더 = render_bench.py(이 파일만 보고 그린다).",
+ "bench": {
+  "ko": "썰반장",
+  "channel": "https://www.youtube.com/@썰반장",
+  "analysis": "channel/sseolbanjang/스타일분석.md",
+  "line_reads": "channel/sseolbanjang/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\sseolbanjang\\src",
+  "sfx_events": "channel/sseolbanjang/_kal/sfx_events.json",
+  "sfx_key": null,
+  "palette": "channel/sseolbanjang/팔레트.json",
+  "rules_counted": "channel/sseolbanjang/_kal/규칙빈도.json",
+  "why_sfx_events": "sfx_events.py sseolbanjang --detect --asr C:/숏템_칼카피/sseolbanjang/work/asrw(로컬 위스퍼 small) — 후보 77 → 낱말 거름 뒤 56, 표식 일치가 우연보다 낮아 효과음 규칙 없음(스타일분석 §7)",
+  "sound": {
+   "narr_report": "channel/sseolbanjang/_kal/narr_report.json",
+   "bgm_fp": "channel/sseolbanjang/_kal/bgm_fp.json",
+   "handconst": "C:/숏템_칼카피/sseolbanjang/work/style/손상수_실측.json"
+  }
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [],
+  "why": "벤치 나레 남성 — narr_report(줄판독 화자 '나레' 구간) f0 중앙 138.7~195.1Hz(9편 중앙 175.0) · 닮은 우리 목소리 1위 9/9편 남성(도윤 3·지성 2·지훈 2·박창수 1·민준 1, 보정 1위 0.74·3위 0.89). 사장님 'TTS 상관없다' → 남성 추천 1순위 박창수(박창수 5위 안 5/9편). 필재는 5위 안 2편이지만 금지(10-20)."
+ },
+ "cps_target": 7.74,
+ "_cps_target": "나레 글자/자막 초 편 중앙 7.74(6.96~8.21, n=9 · handconst cps_target)",
+ "bgm": {
+  "id": null,
+  "db_below_voice": 12.29,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.0,
+  "duck_narr_db": 0.0,
+  "why": "BGM 곡 식별 불가·유무 미측정(스타일분석 §7 — 말 없는 바닥 −12.3dB 가 영화 원음인지 덧붙인 곡인지 가를 분리 모델 없음, measure_task = 사장님 귀 1회) → 1차는 배경음 없음(원음 그대로). 곡을 정하면 id 칸 한 곳만"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 통합 −14.5~−12.1(중앙 −13.9)"
+ },
+ "length": {
+  "min": 50,
+  "max": 59,
+  "why": "벤치 9편 47.98~59.26초(중앙 56.69) — 1차 시험편 목표 50~59(지휘)"
+ },
+ "timing": {
+  "gap": 0.06,
+  "gap_after_tts": 0.04,
+  "gap_after_orig": 0.08,
+  "gap_oo": 0.06,
+  "tail": 1.185,
+  "why": "handconst sseolbanjang(로컬 위스퍼 낱말) — 줄 경계 소리 쉼 중앙 0.06초(n=199, p25 0·p75 0.14) · 나레 뒤 0.04(n=88) · 원음 뒤 0.08(n=111) · 원음→원음 0.06(n=41) · tail = 마지막 말 끝→영상 끝 편 중앙 1.185초(0.004~5.701, 편 차이 큼)"
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   514,
+   1080,
+   938
+  ],
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 150,
+    "ink_top": 197,
+    "color": "#FBFF0C",
+    "max_w": 965,
+    "why": "1줄 노랑(팔레트 제목 #FBFF0C 7/7편, 프레임 #F8F808) 외곽선 없음 · 잉크 y197~341(q7q4)·편마다 193~231 시작 · px = Jalnan2 역산 폭 145·높이 153(q7q4 '사람 좋아한') — fontmatch 1위가 SBAggroB 2·yg-jalnan 2·Cafe24Ohsquare 2·Jalnan2 1편으로 갈림(미확정, 눈 대조 필요) · 폭은 편마다 줄을 가득 채움(x57~1022) → max_w 965"
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 150,
+    "ink_top": 347,
+    "color": "#FB4445",
+    "max_w": 965,
+    "why": "2줄 빨강(편 #E60008~#FE423E, 중앙 근방 #FB4445·#ED3042) 잉크 y347~490 — 창 위 514 바로 위에 붙음"
+   }
+  ],
+  "logo": null,
+  "watermark": null,
+  "credit": {
+   "font": "Pretendard-SemiBold.otf",
+   "px": 44,
+   "color": "#FFFFFF",
+   "align": "left",
+   "x": 56,
+   "ink_top": 1483,
+   "why": "'© <작품명>' 흰 왼쪽 x56 잉크 y1483~1527 8/9편 — 글은 대본 source_label('© ' 붙여 적는다) · 자리 주인 render_bench.credit_xy(align left)"
+  },
+  "why": "벤치 9편 틀 실측(스타일분석 §2): 검정 바탕 · 창 8/9편 0,514~1080,1452 · 로고·워터마크 0/9 · Jev 보류(뿌리 0.75·근본 0.55·한줄기 0.22·두더지 0.36 — 최빈 1벌+변형 칸이 후보 중 1위, 변형 칸은 스키마 주인 요청)",
+  "_variants": {
+   "zShP_white_yellow": "1줄 흰 #FFFFFF 큰 글(잉크 177px)+2줄 노랑 #FDF601 작은 글(95px) 1/9편",
+   "LZdO_tall_src": "세로 원본 1/9편 — 창 [0,281,1080,1386], 제목 y40~133·171~265(잉크 94px), 낱말마다 노랑/흰·빨강/흰, 출처 '출처 : Yoll' 가운데 y1685~1726"
+  }
+ },
+ "caption": {
+  "pack": "sseolbanjang",
+  "pack_default": {
+   "narr.first": "pop",
+   "narr.rest": "pop",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "_typing": "타이핑 0/366줄 — 안 씀(칸만)",
+  "chunk_max_chars": 11,
+  "band": [
+   1306,
+   1396
+  ],
+  "speaker_colors": {
+   "흰": "#FFFFFF",
+   "노랑": "#F9F95B",
+   "연두": "#38FF19",
+   "하늘": "#85C0F9",
+   "분홍": "#F38A90",
+   "빨강": "#E70002"
+  },
+  "why_speaker_colors": "원음 대사 화자색 122/157줄(흰 외 노랑·연두·하늘·분홍·빨강, 팔레트.json) · 같은 화자 한 색 25/35 — 대본 speakers{인물:{color: 이 이름표 또는 hex}} + 원음 줄 caps_who. 주인 render_bench.speaker_variant → 자막팩 sseolbanjang 변형 spk_*",
+  "why": "자막팩 sseolbanjang(11-07 새 팩 — BMDOHYEON 100px·나레 테 12px 팝 키프레임·원음 테 7px 즉시) · 나레 191/191 등장 꾸밈 → pop 고정 · 원음 instant 116/157 → cut · chunk_max_chars 11 = 나레 조각 p90(n=191) · band = 나레 잉크 y 중앙(n=189)",
+  "_band_variants": {
+   "window_center": "zShP·LZdO 나레 y916~998(창 가운데) 2/9편"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "why": "motion zoom_in 0/348줄 → 밀기 0 · 원본 카메라 그대로 · 전환 = 하드컷만(cut 224·특수 4/374, _common 기본 cut 1.0)",
+  "shot": {
+   "median": 1.53,
+   "p90": 3.8,
+   "per_ep_median": [
+    1.1,
+    3.87
+   ],
+   "shots_per_ep": [
+    10,
+    46
+   ],
+   "why": "뜯기 cuts.bench 9편 합친 샷 244개 중앙 1.53초·p90 3.8초 · 편 샷 수 10~46(중앙 29) · 편 중앙 1.10(In3q)~3.87(LZdO)"
+  }
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 규칙 없음(sfx_events 표식 일치 전부 우연 이하 · 줄판독 sfx 1/366) — 배치 rules.sfx max 0"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "pop",
+    "narr.rest": "pop",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "나레 꾸밈 191/191(팝 5/9편·팝+흐림 4/9편 → 1차 팝) · 원음 instant 116/157(스타일분석 §12 채택)"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — 표식 ±0.15초 자막 8/56(우연 0.23)·전환 1/56(0.10)·컷 5/56(0.14) 전부 우연 이하(§7)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0/9편(§8)"
+   },
+   "transition": {
+    "kinds": [
+     "cut"
+    ],
+    "why": "하드컷만(§3)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/sseolbanjang/줄판독/",
+   "n_videos": 9,
+   "slots": {
+    "narr.first": {
+     "n": 87,
+     "enter": {
+      "pop": 0.701,
+      "other": 0.299
+     },
+     "emph": 0.023
+    },
+    "narr.rest": {
+     "n": 104,
+     "enter": {
+      "pop": 0.673,
+      "other": 0.327
+     },
+     "emph": 0.01
+    },
+    "orig.first": {
+     "n": 84,
+     "enter": {
+      "cut": 0.75,
+      "other": 0.155,
+      "fade": 0.048,
+      "pop": 0.048
+     },
+     "emph": 0.012
+    },
+    "orig.rest": {
+     "n": 91,
+     "enter": {
+      "cut": 0.692,
+      "other": 0.264,
+      "pop": 0.033,
+      "fade": 0.011
+     },
+     "emph": 0.033
+    }
+   },
+   "share": {
+    "emph": 0.444,
+    "typing": 0.0,
+    "sfx": 0.0
+   },
+   "stickers": {
+    "circle_arrow": 0.111,
+    "other": 0.111
+   },
+   "transition": {
+    "cut": 0.992,
+    "flash": 0.003,
+    "zoomblur": 0.003,
+    "black": 0.003
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "6aUSMLv3fDc",
+     "n": 41,
+     "slots": {
+      "narr.first": {
+       "n": 8,
+       "enter": {
+        "pop": 8
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 19,
+       "enter": {
+        "pop": 19
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 8,
+       "enter": {
+        "cut": 5,
+        "fade": 3
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 4,
+        "other": 1,
+        "pop": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 38,
+      "flash": 1,
+      "zoomblur": 1
+     },
+     "n_trans": 40,
+     "roles": {
+      "hook": 3,
+      "body": 34,
+      "reveal": 2,
+      "twist": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "9M7HNy_WO4s",
+     "n": 43,
+     "slots": {
+      "narr.first": {
+       "n": 8,
+       "enter": {
+        "other": 8
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 15,
+       "enter": {
+        "other": 14,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 8,
+       "enter": {
+        "other": 6,
+        "cut": 1,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "other": 12
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {},
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 42
+     },
+     "n_trans": 42,
+     "roles": {
+      "hook": 3,
+      "body": 29,
+      "twist": 3,
+      "reveal": 5,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "fxImmkM67jA",
+     "n": 45,
+     "slots": {
+      "narr.first": {
+       "n": 11,
+       "enter": {
+        "other": 11
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "other": 5
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 11,
+       "enter": {
+        "cut": 11
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 17,
+        "other": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본 나레(흰 굵은 고딕+검정 외곽)": 16,
+      "화자색 대사": 28,
+      "강조 빨강 떨림(같은 화자의 코랄 줄과 다른 색)": 1
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 44
+     },
+     "n_trans": 44,
+     "roles": {
+      "hook": 2,
+      "body": 36,
+      "reveal": 3,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "In3qzumxEzU",
+     "n": 44,
+     "slots": {
+      "narr.first": {
+       "n": 11,
+       "enter": {
+        "pop": 11
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 13,
+       "enter": {
+        "pop": 13
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 11,
+       "enter": {
+        "cut": 9,
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 9
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰 굵은 고딕+검정 외곽)": 24,
+      "대사 손글씨(흰, 굵은 검정 외곽)": 1,
+      "대사(노랑)": 2,
+      "대사 두 줄(노랑)": 2,
+      "대사 두 줄(코랄 빨강)": 1,
+      "대사(하늘)": 1,
+      "대사(주황)": 2,
+      "대사 두 줄(연두)": 2,
+      "대사 두 줄(하늘)": 1,
+      "작은 괄호 속마음(흰) — 창 맨 위": 1,
+      "강조(흰 큰 굵은 글+회색 입체 그림자)": 1,
+      "강조(빨강 굵은 글)": 1,
+      "대사(분홍빛 빨강)": 3,
+      "강조 손글씨(흰 큰 글)": 1,
+      "대사(연두)": 1
+     },
+     "sfx": [],
+     "no_caption": 7,
+     "transitions": {
+      "cut": 43
+     },
+     "n_trans": 43,
+     "roles": {
+      "hook": 3,
+      "body": 33,
+      "reveal": 3,
+      "twist": 2,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "LZdO8A186pI",
+     "n": 33,
+     "slots": {
+      "narr.first": {
+       "n": 7,
+       "enter": {
+        "other": 7
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 15,
+       "enter": {
+        "other": 15
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "other": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본 나레(흰 굵은 고딕+검정 외곽)": 22,
+      "손글씨 흰+검정 상자": 7,
+      "손글씨 노랑 + 흔들림": 1,
+      "손글씨 노랑+검정 상자": 2,
+      "손글씨 흰 꼬리표(창 위쪽, 상자 없음·검정 번짐)": 1
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 32
+     },
+     "n_trans": 32,
+     "roles": {
+      "hook": 2,
+      "body": 27,
+      "reveal": 2,
+      "twist": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "q7q4C9VjufI",
+     "n": 45,
+     "slots": {
+      "narr.first": {
+       "n": 13,
+       "enter": {
+        "pop": 13
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 13,
+       "enter": {
+        "cut": 11,
+        "other": 1,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 9
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "pop": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 굵은 고딕+검정 외곽)": 23,
+      "작은 인물옆 글(흰+검정 외곽)": 1,
+      "작은 괄호 속마음(흰)": 2,
+      "작은 괄호 욕설(빨강, 가림 @)": 1,
+      "기본(흰, 얇은 굵기 — 대사)": 9,
+      "감정 손글씨(분홍)": 1,
+      "작은 괄호 대사(흰) — 곰을 따라 움직임": 1,
+      "강조(빨강 큰 굵은 글)": 1,
+      "감정 손글씨(흰)": 1,
+      "대사(노랑)": 1,
+      "대사(초록)": 1,
+      "대사(주황)": 1,
+      "대사(초록, 작게)": 1,
+      "대사(노랑, 작게)": 1
+     },
+     "sfx": [],
+     "no_caption": 5,
+     "transitions": {
+      "cut": 44
+     },
+     "n_trans": 44,
+     "roles": {
+      "hook": 3,
+      "body": 37,
+      "twist": 1,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "QSECbX33eAw",
+     "n": 37,
+     "slots": {
+      "narr.first": {
+       "n": 9,
+       "enter": {
+        "pop": 9
+       },
+       "emph": 2
+      },
+      "orig.first": {
+       "n": 9,
+       "enter": {
+        "other": 6,
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 13,
+       "enter": {
+        "other": 8,
+        "cut": 3,
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "pop": 6
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 35,
+      "black": 1
+     },
+     "n_trans": 36,
+     "roles": {
+      "hook": 3,
+      "body": 25,
+      "reveal": 1,
+      "twist": 3,
+      "end": 5
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "VFR6i5qEW54",
+     "n": 39,
+     "slots": {
+      "narr.first": {
+       "n": 12,
+       "enter": {
+        "pop": 12
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 11,
+       "enter": {
+        "cut": 10,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 11,
+        "other": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 4,
+       "enter": {
+        "pop": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 38
+     },
+     "n_trans": 38,
+     "roles": {
+      "hook": 2,
+      "body": 23,
+      "reveal": 4,
+      "twist": 5,
+      "end": 5
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "zShPlRP4m7A",
+     "n": 39,
+     "slots": {
+      "narr.first": {
+       "n": 8,
+       "enter": {
+        "pop": 8
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "pop": 17
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 7,
+       "enter": {
+        "cut": 7
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "cut": 6,
+        "pop": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰 굵은 고딕+검정 외곽, 창 가운데)": 25,
+      "카드 번역(흰 큰 글, 창 아래)": 1,
+      "카드 번역(흰 큰 글, 괄호)": 2,
+      "대사(빨강)": 4,
+      "대사(노랑)": 2,
+      "작은 괄호 속마음(흰) — 창 맨 위": 1,
+      "대사(흰)": 1,
+      "대사(노랑, 작게) — 곰을 따라 움직임": 1,
+      "작은 괄호(빨강)": 2
+     },
+     "sfx": [],
+     "no_caption": 5,
+     "transitions": {
+      "cut": 38
+     },
+     "n_trans": 38,
+     "roles": {
+      "hook": 3,
+      "reveal": 4,
+      "body": 24,
+      "twist": 5,
+      "end": 3
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "script": {
+  "brief": [
+   "박자(벤치 9편 줄판독): ① 훅 0~3초 = 나레 2~3토막 상황 설정('[때·곳·조건] + [대상]' 관형 구절 — '자고 일어났더니'·'마당에 주차된 차에') → ② 원음 대사 + 나레 다리('~하는데요') → ③ 고조 → ④ 반전(길이 67% 근처) → ⑤ 끝 = 나레 결과 요약 또는 원음 한마디. CTA 없음.",
+   "나레: 존댓말 0.84 · 어미 '~죠 / ~는데요 / ~다 / ~습니다' · 연결어 하지만·그런데·결국·바로·그러자 · 한 문장을 8자 안팎 2~3토막으로 끊는다(토막 끝은 조사·관형형, 문장 끝 토막만 어미).",
+   "원음: 외국 대사를 한국어 구어로 번역(존댓 0.37·의문 0.33) · 덩어리 8자 안팎(최대 19) · 인물마다 색(대본 speakers·caps_who).",
+   "나레 비중: 자막 덩어리 52%(편 0.36~0.67) · 초 기준 36%(0.31~0.46) — 나레는 장면에서 실제로 일어나는 일만(지어낸 사실 금지)."
+  ],
+  "example": [
+   "자신의 수명을",
+   "마당에 주차된 차에",
+   "눈보라 때문에"
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "첫 줄 나레 9/9(줄판독)"
+   },
+   {
+    "id": "title_chars",
+    "kind": "title_chars",
+    "min": 3,
+    "max": 7,
+    "why": "벤치 9편 제목 줄마다 5~7자('사람 좋아한'·'아기 곰의 최후'·'자판기 안에') — 판 제목 150px·max_w 965 에 7자까지 들어간다(1바퀴: 9자 '이혼하려던 여자에게'가 100px 로 줄어 픽셀 대조 밖)"
+   },
+   {
+    "id": "count_tts",
+    "kind": "count",
+    "of": "tts",
+    "min": 7,
+    "max": 13,
+    "why": "나레 차례 편별 8·8·11·7·9·12·11·13·8(줄판독 9편)"
+   },
+   {
+    "id": "count_orig",
+    "kind": "count",
+    "of": "orig",
+    "min": 6,
+    "max": 13,
+    "why": "원음 차례 편별 8·8·11·6·9·11·11·13·7"
+   },
+   {
+    "id": "tts_chars",
+    "kind": "tts_chars",
+    "min": 3,
+    "max": 32,
+    "why": "나레 차례 자수 n=87 최소 3·중앙 14·p90 30·최대 51 → 상한 32(p90+여유)"
+   },
+   {
+    "id": "cap_chars",
+    "kind": "cap_chars",
+    "of": "tts",
+    "max": "chunk_max_chars",
+    "why": "나레 조각 상한 = caption.chunk_max_chars 11(p90, 최대 14)"
+   },
+   {
+    "id": "cap_chars_orig",
+    "kind": "cap_chars",
+    "of": "orig",
+    "max": 19,
+    "why": "원음 조각 자수 중앙 8·p90 14·최대 19(n=157)"
+   },
+   {
+    "id": "narr_share",
+    "kind": "narr_share",
+    "min": 0.3,
+    "max": 0.5,
+    "why": "나레 초/편 길이 0.31~0.46(중앙 0.36) — 이 자는 나레/(나레+원음) 초라 조금 높게"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 50,
+    "max": 59,
+    "why": "판 length 칸과 같게"
+   }
+  ]
+ },
+ "packs": {
+  "caption": {
+   "pack": "sseolbanjang",
+   "from": "11-07 새 팩 — 벤치와 같은 팩 없음(BMDOHYEON 100px 흰·테 12px 팩 0개, 초안 caption.why)"
+  }
+ },
+ "_todo": [
+  "BGM 유무·곡(사장님 귀 1회)",
+  "제목 글꼴 Jalnan2·SBAggroB·Cafe24Ohsquare 눈 대조",
+  "나레 팝+흐림 4/9편 변형(편 변수 — rules_of 주인 요청 중)",
+  "placement.py count 로 counted 채우기"
+ ]
+}

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import difflib
+from pathlib import Path
 import re
 
 NO_FACE = {"", "없음", "none", "None"}
@@ -219,11 +220,38 @@ def shot_text(shots: list[dict]) -> str:
     return "\n".join(one(s) for s in shots or [])
 
 
+FILM_LICENSES = ("public_domain",)          # 영화 재료로 받는 권리 — 퍼블릭도메인만(11-07 지휘: 근거 없으면 거절)
+FILM_PD_MARKS = ("public domain", "퍼블릭도메인", "publicdomain")
+
+
+def film_problem(M: dict, src: str, F: dict) -> str | None:
+    """영화 재료 한 파일의 권리 판정(source_rule_static ④ 가 부른다) — 문제면 거절 글, 통과면 None."""
+    F = F if isinstance(F, dict) else {}
+    lic = str(F.get("license") or "").strip().lower()
+    if lic not in FILM_LICENSES:
+        return f"영화 {src}({F.get('title') or '?'}) 권리 '{lic or '없음'}' — 퍼블릭도메인(license public_domain)이 확인된 영화만 쓴다"
+    ev = str(F.get("evidence") or "").strip()
+    if not ev:
+        return f"영화 {src} 퍼블릭도메인 근거 파일(evidence)이 없다 — 출처_라이선스.md 꼴로 근거를 적는다"
+    p = Path(ev) if Path(ev).is_absolute() else Path(str(M.get("cand_dir") or ".")) / ev
+    if not p.is_file():
+        return f"영화 {src} 근거 파일 {p} 이 없다 — 퍼블릭도메인 근거 없이는 못 쓴다"
+    body = p.read_text(encoding="utf-8", errors="replace")
+    low = body.lower()
+    if src not in body or not any(m in low for m in FILM_PD_MARKS):
+        return f"영화 {src} 근거 파일 {p.name} 에 그 파일 이름·퍼블릭도메인 표시가 없다"
+    return None
+
+
 def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: dict) -> list[str]:
     """재료 출처 규칙 ①② + 다른 출연자 샷(사장님 10-21 "반드시 원본을 찾아서 / 다른 채널의 연예인 영상을 그대로 가져다 쓰면 절대 안 된다").
     ① 벤치(남의 쇼츠)는 재료가 아니다 ② 사람 얼굴 컷은 원본 파일만 ③' 원본 컷 ss 가 주인공 없는 다른 출연자 샷이면 안 된다.
-    ③ 장면 전환(프레임 차)은 영상이 있어야 재므로 PC(runner_ops.source_rule_scan)가 재고 서버가 합친다."""
+    ③ 장면 전환(프레임 차)은 영상이 있어야 재므로 PC(runner_ops.source_rule_scan)가 재고 서버가 합친다.
+    ④ 영화 갈래(11-07 썰반장 — Jev q1b best_fix E): 재료.json film{src: {title, license, evidence}} 에 적힌 영화 파일은 그 영화가 곧 원본이다.
+       퍼블릭도메인(license public_domain)이고 근거 파일(evidence, cand_dir 기준)에 그 파일 이름과 퍼블릭도메인 표시가 있을 때만 통과 — 없으면 거절.
+       film 칸이 없는 파일은 옛 규칙 그대로(원본 아닌 얼굴 컷 거절). 벤치는 film 이라 적어도 거절."""
     out = []
+    films = M.get("film") or {}
     for line, cuts in (M.get("cuts") or {}).items():
         for c in cuts if isinstance(cuts, list) else [cuts]:
             src = str(c.get("src") or "")
@@ -231,6 +259,10 @@ def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: 
             stem = src.rsplit(".", 1)[0]
             if src.startswith("bench") or (bench_id and src.startswith(bench_id)):
                 out.append(f"{line}: 벤치(남의 쇼츠) {src} 를 재료로 썼다 — 원본·제품 영상만 쓴다")
+            elif src in films:
+                why = film_problem(M, src, films[src])
+                if why:
+                    out.append(f"{line}: {why}")
             elif face not in NO_FACE and src not in origin_names:
                 out.append(f"{line}: 사람 얼굴 컷({c.get('face')})이 원본이 아닌 {src} 에서 왔다 — 연예인 장면은 원본 파일({', '.join(sorted(origin_names))})에서만")
             elif src in origin_names and c.get("ss") is not None and stem in shots_by_src:

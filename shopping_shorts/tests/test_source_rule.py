@@ -387,3 +387,45 @@ def test_origin_read_gets_big_frame_for_label():
     r = flow.ph_bench_got(st, {"bench": {"id": "b", "sheet": "bench/sheet.jpg", "big": "bench/big.jpg", "lines": []}}, {}, {})
     rv = r["review"][0]
     assert any(x.get("file") == "bench/big.jpg" for x in rv["show"]) and "둘째 그림" in rv["ask"] and st["bench"]["big"] == "bench/big.jpg"
+
+
+# ── 영화 갈래(썰반장 칼카피 시험편 · Jev q1b best_fix E — must4 뿌리 0.85·근본 0.77·한줄기 0.73·두더지 0.14) ──
+def _film_M(tmp_path, license="public_domain", text=None, evidence="출처_라이선스.md"):
+    if text is not None:
+        (tmp_path / evidence).write_text(text, encoding="utf-8")
+    return {"cand_dir": str(tmp_path), "film": {"charade_scene.mp4": {"title": "Charade (1963)", "license": license, "evidence": evidence}},
+            "cuts": {"N1": [{"src": "charade_scene.mp4", "ss": 0.0, "face": "레지나"}]}}
+
+
+def test_film_public_domain_with_evidence_passes(tmp_path):
+    M = _film_M(tmp_path, text="charade_scene.mp4 — Public Domain Mark 1.0 (퍼블릭도메인)")
+    assert RU.source_rule_static(M, set(), "", {}) == []
+
+
+def test_film_without_evidence_file_rejected(tmp_path):
+    bad = RU.source_rule_static(_film_M(tmp_path), set(), "", {})
+    assert bad and bad[0].startswith("N1:") and "근거" in bad[0]
+
+
+def test_film_evidence_must_name_file_and_public_domain(tmp_path):
+    bad = RU.source_rule_static(_film_M(tmp_path, text="다른 영화 메모"), set(), "", {})
+    assert bad and bad[0].startswith("N1:")
+
+
+def test_film_license_not_public_domain_rejected(tmp_path):
+    bad = RU.source_rule_static(_film_M(tmp_path, license="unknown", text="charade_scene.mp4 Public Domain"), set(), "", {})
+    assert bad and "퍼블릭도메인" in bad[0]
+
+
+def test_undeclared_film_face_cut_still_rejected():
+    M = {"cuts": {"N1": [{"src": "charade_scene.mp4", "ss": 0.0, "face": "레지나"}]}}      # film 칸 없음 = 옛 규칙 그대로(원본 아닌 얼굴 컷)
+    bad = RU.source_rule_static(M, set(), "", {})
+    assert bad and bad[0].startswith("N1:") and "원본" in bad[0]
+
+
+def test_film_is_never_bench(tmp_path):
+    M = _film_M(tmp_path, text="charade_scene.mp4 Public Domain")
+    M["film"]["benchX.mp4"] = M["film"].pop("charade_scene.mp4")
+    M["cuts"]["N1"][0]["src"] = "benchX.mp4"
+    bad = RU.source_rule_static(M, set(), "benchX", {})
+    assert bad and "벤치" in bad[0]

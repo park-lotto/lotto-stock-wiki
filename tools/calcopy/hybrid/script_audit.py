@@ -238,6 +238,10 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     if k == "title_lines":   # 훅 카드 제목 줄 수(10-29 썰템쇼: 판 훅 틀은 흰·연두 2줄인데 대본이 1줄만 써서 연두 줄이 빈 채 렌더)
         n = len(d.get("title_lines") or [])
         return r["min"] <= n <= r["max"], f"제목 {n}줄 ({r['min']}~{r['max']})"
+    if k == "title_chars":   # 제목 줄마다 글자 수(공백 뺀, 11-07 썰반장: 9자 제목이 판 max_w 에 걸려 150→100px — 벤치는 줄마다 5~7자)
+        n = [nchar("".join(str(c[0]) for c in line if isinstance(c, list) and c)) for line in d.get("title_lines") or [] if isinstance(line, list)]
+        bad = [f"{i + 1}줄 {x}자" for i, x in enumerate(n) if not r.get("min", 0) <= x <= r["max"]]
+        return not bad, f"제목 줄 글자 {n} ({r.get('min', 0)}~{r['max']}) 밖 {bad}"
     if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         sel = [l for l in L if (l.get("kind") == "orig") == (r.get("of") == "orig")] if r.get("of") in ("tts", "orig") else L   # of = 나레/원음 번역 자막 따로(자수 자가 다르다)
@@ -322,6 +326,8 @@ def rule_text(r: dict, st: dict) -> str:
         return f"금지: {r.get('why', r['pattern'])}"
     if k == "speaker_lines":
         return f"화자 대사 줄(who 칸) {r['min']}~{r['max']}개 — " + str(r.get("why") or "")
+    if k == "title_chars":
+        return f"제목 줄마다 글자 수(공백 뺀) {rng()}자" + (f" — {r['why']}" if r.get("why") else "")
     if k == "title_lines":
         return f"제목(title_lines) {rng()}줄" + (f" — {r['why']}" if r.get("why") else "")
     if k == "cap_chars":

@@ -141,6 +141,26 @@
     ]
    },
    "note": "프리셋 손질 — frames/frame_<id>.json 을 _hand/ 로 손질(실측 근거 notes) → preset_save → 다시 실행 (견본 channel/starpickroom/preset/spr_preset.py · 자동본 C:\\숏템_칼카피\\sseolbanjang\\frames)"
+  },
+  "make": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-11-07 20:01",
+   "outputs": {
+    "ours_mp4": "C:/숏템_칼카피/sseolbanjang/test/make/final.mp4",
+    "ours_lines": "C:/숏템_칼카피/sseolbanjang/test/make/자막표.json"
+   },
+   "note": "시험편 있음"
+  },
+  "verify": {
+   "state": "waiting_human",
+   "sec": 416.2,
+   "at": "2026-11-07 20:08",
+   "outputs": {
+    "table": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\_kal\\재현일치도.md",
+    "verdict": "미달"
+   },
+   "note": "재현일치도 미달 — 미달이면 어긋난 항목을 고쳐 make 부터"
   }
  },
  "asked": {},
@@ -166,5 +186,7 @@
    "QSECbX33eAw"
   ],
   "views_per_sub": 0.16
- }
+ },
+ "ours_mp4": "C:/숏템_칼카피/sseolbanjang/test/make/final.mp4",
+ "ours_lines": "C:/숏템_칼카피/sseolbanjang/test/make/자막표.json"
 }

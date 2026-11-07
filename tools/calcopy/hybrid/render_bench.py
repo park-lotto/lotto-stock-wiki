@@ -258,6 +258,35 @@ def who_prefix(L: dict, j: int) -> str:
     return f"{w} : " if w and j == 0 else ""
 
 
+def speaker_variant(S: dict, st: dict, L: dict, j: int, packs: dict | None = None) -> str | None:
+    """(판단 주인 — 원음 대사 자막 인물색, 11-07 썰반장: 벤치 원음 157줄 중 122줄 화자색) 원음 줄 L 의 j번째 덩어리 → 자막팩 줄 변형 이름 | None.
+    대본 caps_who[j](인물) → 대본 speakers[인물].color(판 팔레트 이름표 또는 #hex) → 판 caption.speaker_colors(쓸 수 있는 색 팔레트) 안인지 →
+    판 자막팩 variants 중 text.color 가 그 색인 변형. 판에 speaker_colors 가 없거나 대본에 caps_who 가 없으면 None(옛 동작 그대로).
+    없는 인물·팔레트 밖 색·팩에 없는 색·caps_who 수가 덩어리 수와 다름 = StageError(조용히 흰색으로 빠지지 않게).
+    timeline 이 원음 덩어리 variant_force 로 싣고 placement.place 가 그대로 받는다(Jev q_color3 통과 — 뿌리 0.86·근본 0.71·한줄기 0.80·두더지 0.15)."""
+    pal = (st.get("caption") or {}).get("speaker_colors")
+    who = L.get("caps_who")
+    if not pal or L.get("kind") != "orig" or not who:
+        return None
+    n = len(L.get("caps_rel") or [])
+    if len(who) != n:
+        raise StageError(f"줄 {L.get('id')} caps_who {len(who)}개 ≠ 자막 덩어리 {n}개 — 덩어리마다 인물을 적는다")
+    name = str(who[j] or "").strip()
+    sp = (S.get("speakers") or {}).get(name)
+    if not isinstance(sp, dict) or not sp.get("color"):
+        raise StageError(f"줄 {L.get('id')} 덩어리 {j + 1} 인물 '{name}' 이 대본 speakers 에 없다(색 모름) — speakers{{인물: {{color}}}}")
+    c = str(sp["color"]).strip()
+    hexes = {str(v).upper(): k for k, v in pal.items()}
+    hx = str(pal[c]).upper() if c in pal else c.upper()
+    if hx not in hexes:
+        raise StageError(f"인물 '{name}' 색 {c} 이 판 팔레트 밖이다(caption.speaker_colors {list(pal)}) — 벤치 화자색만 쓴다")
+    P = (packs if packs is not None else caption_packs()).get((st.get("caption") or {}).get("pack")) or {}
+    for vname, v in (P.get("variants") or {}).items():
+        if str(((v or {}).get("text") or {}).get("color") or "").upper() == hx:
+            return vname
+    raise StageError(f"인물 '{name}' 색 {hx}({hexes[hx]}) 변형이 자막팩 '{(st.get('caption') or {}).get('pack')}' 에 없다 — caption-motions.js 팩 variants 에 넣는다")
+
+
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
     """sent = {줄 id: {dur, raw, tempo}} (None 이면 글자÷cps 어림). 반환 = lines(줄 시각)·rows(자막 덩어리)·cuts(화면)·opos(원음 조각)·end."""
     from tools.calcopy.hybrid.material_fit import action_order       # 대사 동작 ↔ 컷 동작(페이블 E3) — 동작 컷 우선 + 없으면 경고
@@ -294,8 +323,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             lines[L["id"]] = [round(t0, 3), round(t, 3)]
             for j, c in enumerate(caps_of(L)):
                 c0, c1 = max(0.0, c["s0"] - h), min(t - t0, max(0.0, c["s1"] - h))
+                spk = speaker_variant(S, st, L, j)      # 인물색 변형(주인 speaker_variant) — 없으면 옛 줄 그대로
                 rows.append({"line": L["id"], "j": j, "speaker": "orig", "text": c["text"], "t0": round(t0 + c0, 3), "t1": round(t0 + c1, 3),
-                             **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
+                             **{k: c[k] for k in CAP_EXTRA if c.get(k)}, **({"variant_force": spk} if spk else {})})
         else:
             s = (sent or {}).get(L["id"])
             d = s["dur"] if s else round(nchar(L["tts"]) / est, 3)
@@ -1038,6 +1068,24 @@ def title_segs(F: dict, S: dict) -> list:
     return out
 
 
+def credit_xy(C: dict, bb, left: int | None = None) -> tuple[int, int]:
+    """(판단 주인 — 출처 줄 자리) 판 frame.credit 칸 + 글 잉크 상자 bb(textbbox) → 그릴 왼쪽 위 (x, y). frame_png(틀 안)·render_base(in_window) 가 같이 부른다.
+    align = left|center — 기본은 옛 그대로(틀 안 = 화면 가운데, in_window = x 왼쪽 끝). left = x(또는 left 인자 — 핀 뒤 자리)가 잉크 왼쪽 끝.
+    세로 = ink_top(잉크 위) | cy(가운데) | center(가운데). 11-07 썰반장: '© 작품명' 왼쪽 x56·잉크 y1483(Jev q_credit2 통과)."""
+    align = C.get("align") or ("left" if C.get("in_window") else "center")
+    if align == "left":
+        x = (left if left is not None else int(C["x"])) - bb[0]
+    elif align == "center":
+        x = W // 2 - (bb[2] - bb[0]) // 2 - bb[0]
+    else:
+        raise StageError(f"frame.credit.align '{align}' — left|center")
+    if "ink_top" in C:
+        y = C["ink_top"] - bb[1]
+    else:
+        y = (C["cy"] if "cy" in C else C["center"]) - (bb[1] + bb[3]) // 2
+    return int(x), int(y)
+
+
 def frame_png(S: dict, st: dict, out: Path) -> Path:
     """틀 한 장(창 자리는 투명). frame.kind = window(바탕 + 제목 줄들 + 로고 + 출처 + 워터마크, 기본) ·
     post(게시글형: 머리띠·작성자 줄·본문 상자·조회수 줄·짤 자리 + 같은 제목 줄·출처·로고) · full(전체화면 — 창 = 화면 전체, 가운데 자막 띠·제목·로고만)."""
@@ -1073,8 +1121,7 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
     if C and S.get("source_label") and not C.get("in_window"):
         f = _font(C["font"], C["px"])
         bb = d.textbbox((0, 0), S["source_label"], font=f)
-        top = C["ink_top"] - bb[1] if "ink_top" in C else C["center"] - (bb[1] + bb[3]) // 2
-        d.text((W // 2 - (bb[2] - bb[0]) // 2 - bb[0], top), S["source_label"], font=f, fill=_rgb(C["color"]))
+        d.text(credit_xy(C, bb), S["source_label"], font=f, fill=_rgb(C["color"]))
     WM = F.get("watermark")
     if WM:
         f = _font(WM["font"], WM["px"])
@@ -3345,7 +3392,7 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
             cd.ellipse([px_, CR["cy"] - P["r"] - 6, px_ + 2 * P["r"], CR["cy"] + P["r"] - 6], fill=_rgb(P["color"]), outline=(0, 0, 0), width=2)
             cd.line([px_ + P["r"], CR["cy"] + P["r"] - 6, px_ + P["r"], CR["cy"] + P["r"] + 8], fill=_rgb(P["color"]), width=4)
             px_ += 2 * P["r"] + 8
-        _spaced(cd, (px_ - bb[0], CR["cy"] - (bb[1] + bb[3]) // 2), S["source_label"], f, 0, fill=_rgb(CR["color"]),
+        _spaced(cd, credit_xy(CR, bb, left=px_), S["source_label"], f, 0, fill=_rgb(CR["color"]),
                 stroke_width=CR.get("stroke", 0), stroke_fill=_rgb(CR.get("stroke_color", "#000000")))
         cim.save(R / "credit.png")
         k = len([a for a in ins if a == "-i"])
