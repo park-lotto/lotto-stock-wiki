@@ -7,14 +7,25 @@ def mark_icon(size):
     d.polygon([(s * .4, s * .3), (s * .4, s * .7), (s * .72, s * .5)], fill=GOLD + (255,))
     return im
 
+def logo_badge(im):
+    """원형 배지 로고(판 칸 logo_box = x, y, 지름). 영상 내내 같은 자리."""
+    x, y, dia = CFG["logo_box"]; ring = tuple(CFG["logo_ring"]); s = 4; big = Image.new("RGBA", (dia * s, dia * s), (0, 0, 0, 0)); d = ImageDraw.Draw(big)
+    d.ellipse([0, 0, dia * s - 1, dia * s - 1], fill=(14, 22, 34, 255)); d.ellipse([0, 0, dia * s - 1, dia * s - 1], outline=ring + (255,), width=6 * s)
+    d.ellipse([9 * s, 9 * s, (dia - 9) * s, (dia - 9) * s], outline=GOLD + (255,), width=2 * s)
+    n = CFG.get("logo_text") or CFG["channel_name"]; f = fit_face("HAN", 36 * s, n, (dia - 26) * s, 10 * s)
+    d.text((dia * s / 2, dia * s / 2), n, font=f, fill=(255, 255, 255, 255), anchor="mm", stroke_width=s, stroke_fill=(0, 0, 0, 200))
+    im.alpha_composite(big.resize((dia, dia), Image.LANCZOS), (x, y))
+
 _ui = {}
 def paint_corners(chapter, bright):
-    """위쪽 얇은 표시줄: 빛 점과 채널명, 반대편에 챕터."""
+    """위쪽 고정 표시: 로고(빛 점+채널명 또는 원형 배지), 반대편에 챕터."""
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im); left = CFG.get("logo_side", "right") == "right"
-    ink = (20, 22, 26) if bright else INK; n = CFG["channel_name"]; f = face("GM", 28); w = d.textlength(n, font=f)
-    x = 54 if left else W - 54 - w - 28
-    d.ellipse([x, 44, x + 16, 60], fill=GOLD + (255,)); d.text((x + 28, 37), n, font=f, fill=ink + (255,), stroke_width=2, stroke_fill=(0, 0, 0, 0 if bright else 150))
-    if chapter and chapter not in CFG.get("no_capsule", []):
+    ink = (20, 22, 26) if bright else INK
+    if CFG["logo_style"] == "badge": logo_badge(im)
+    else:
+        n = CFG["channel_name"]; f = face("GM", 28); w = d.textlength(n, font=f); x = 54 if left else W - 54 - w - 28
+        d.ellipse([x, 44, x + 16, 60], fill=GOLD + (255,)); d.text((x + 28, 37), n, font=f, fill=ink + (255,), stroke_width=2, stroke_fill=(0, 0, 0, 0 if bright else 150))
+    if CFG["chapter_label"] and chapter and chapter not in CFG.get("no_capsule", []):
         spaced(im, chapter.split(" : ")[-1], W - 54 if left else 54, 40, 24, ink, 3, right=left)
     return im
 
@@ -33,13 +44,28 @@ def low_shade():
 
 NUMTOK = re.compile(r"\d[\d,.]*(?:%|만|천|억|조|원|달러|배|명|개월|개|년|월|분기)*(?: \d천)?(?: ?(?:원|달러|명))?")
 def caption_bar(frame, text, p):
-    """띠 없이 아래 그늘 위에 뜬 글자. 숫자는 강조색으로 빛난다."""
-    frame.alpha_composite(low_shade()); f = face("GM", 50); d = ImageDraw.Draw(frame); w = d.textlength(text, font=f)
-    x = (W - w) / 2; y = H - 104 + int((1 - smooth(p / 0.12)) * 14); i = 0
-    for m in list(NUMTOK.finditer(text)) + [None]:
+    """자막. 기본 = 띠 없이 아래 그늘 위에 뜬 글자, 숫자는 강조색. 판이 caption_box 를 주면 반투명 상자 + 왼쪽 막대."""
+    if CFG["caption_shade"]: frame.alpha_composite(low_shade())
+    f = face(CFG["caption_font"], CFG["caption_size"]); d = ImageDraw.Draw(frame); w = d.textlength(text, font=f)
+    x = (W - w) / 2; y = H - 104 + (int((1 - smooth(p / 0.12)) * 14) if CFG["caption_rise"] else 0); i = 0
+    bx = CFG["caption_box"]
+    if bx:
+        bw = w + 2 * bx["pad"] + bx["bar_w"]; x0 = (W - bw) / 2; lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
+        dl.rounded_rectangle([x0, bx["y0"], x0 + bw, bx["y1"]], radius=bx["radius"], fill=tuple(bx["rgba"]))
+        dl.rectangle([x0, bx["y0"], x0 + bx["bar_w"] - 1, bx["y1"]], fill=tuple(bx["bar_rgb"]) + (255,)); frame.alpha_composite(lay)
+        x = x0 + bx["bar_w"] + bx["pad"]; tb = d.textbbox((0, 0), text, font=f); y = (bx["y0"] + bx["y1"]) / 2 - (tb[1] + tb[3]) / 2
+    toks = list(NUMTOK.finditer(text)) if CFG["caption_num_accent"] else []
+    for m in toks + [None]:
         a = text[i: m.start() if m else len(text)]
         if a: d.text((x, y), a, font=f, fill=(255, 255, 255, 255), stroke_width=3, stroke_fill=(0, 0, 0, 230)); x += d.textlength(a, font=f)
         if m: d.text((x, y), m[0], font=f, fill=GOLD + (255,), stroke_width=3, stroke_fill=(0, 0, 0, 230)); x += d.textlength(m[0], font=f); i = m.end()
+
+def source_mark(frame, s, src, box=None):
+    """출처 표시의 주인. 판이 under_card 이고 카드 자리(box)가 있으면 카드 아래 오른쪽 작은 글자, 아니면 위 표시줄 아래."""
+    if CFG["source_style"] == "under_card" and box and src:
+        t = CFG["source_format"].format(src=src); f = face("B", 26); d = ImageDraw.Draw(frame)
+        d.text((box[2], box[3] + 8), t, font=f, fill=(225, 228, 232, 255), anchor="ra", stroke_width=2, stroke_fill=(0, 0, 0, 160)); return
+    frame.alpha_composite(source_line(src, False))
 
 _src = {}
 def source_line(src, bright):

@@ -1,5 +1,6 @@
 # 연출의 주인: 어떤 장면이 어떤 모션을 쓸지 여기서만 정한다. 같은 모션은 전부 한 바퀴 돌기 전에 다시 나오지 않는다.
 import math, random
+from .settings import CFG
 STAGES = ["push", "pull", "window", "slant", "slant_r", "strips", "iris", "tilt", "cinema", "duo", "offset"]
 MOVES = ["in", "out", "rise", "sink"]
 NUMBERS = ["orbit", "side", "gauge", "slam", "flood", "echo"]
@@ -8,12 +9,12 @@ TYPES = ["rise", "slam", "drop", "spread", "type", "wipe"]
 LABELS = ["chain", "list", "flow"]
 VERSUS = ["panels", "diagonal", "stacked"]
 QUOTES = ["center", "rail"]
-CUTS = ["flash", "slices", "punch", "whip", "shutter", "sweep", "iris", "none"]
+CUTS = list(CFG["cuts"])   # 판마다 다르다(channel.json cuts)
 WIPES = ["diagonal", "blinds", "split"]
 BUMPERS = ["lines", "shutter", "rings"]
 NOTES = ["leader", "slash", "ribbon", "block"]
 TINTS = ["base", "navy", "wine", "teal"]
-BEAT_SEC = 3.8
+BEAT_SEC = CFG["beat_sec"]   # 한 사진 샷 안에서 무대를 바꾸는 간격
 
 class Bag:
     """한 바퀴를 다 쓰기 전에 같은 것을 다시 꺼내지 않는 주머니."""

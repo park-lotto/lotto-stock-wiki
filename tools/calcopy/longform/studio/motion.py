@@ -12,7 +12,7 @@ def night():
         r = np.sqrt(((x - W / 2) / (W * 0.6)) ** 2 + ((y - H / 2) / (H * 0.6)) ** 2)
         arr = np.array(NIGHT, np.float32) + (np.clip(1 - r, 0, 1) ** 2)[..., None] * np.array(GOLD, np.float32) * 0.07
         im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGB"); d = ImageDraw.Draw(im)
-        for gx in range(60, W, 60):
+        for gx in (range(60, W, 60) if CFG["dot_grid"] else ()):
             for gy in range(60, H, 60): d.point((gx, gy), fill=(46, 50, 60))
         _night = im
     return _night.copy()
@@ -21,6 +21,7 @@ _noise = []
 def film_grain(frame, t):
     """필름 입자. 초당 12번 바뀐다."""
     global _noise
+    if not CFG["film_grain"]: return frame.convert("RGB")
     if not _noise:
         rng = np.random.default_rng(11)
         _noise = [np.asarray(Image.fromarray(rng.integers(0, 256, (H // 3, W // 3), dtype=np.uint8)).resize((W, H), Image.BILINEAR), np.int16)[..., None] // 64 - 2 for _ in range(6)]
@@ -143,11 +144,16 @@ def dark(tint="base", t=0.0):
         _tinted[tint] = Image.fromarray(np.clip(np.asarray(night(), np.int16) + add, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
     return _tinted[tint].copy()
 
-CUT_SEC = 0.16
+CUT_SEC = CFG["cut_sec"]
+def blend_cut(prev, cur, p):
+    """디졸브: 나가는 화면과 들어오는 화면을 섞는다(p 0→1)."""
+    return Image.blend(prev.convert("RGBA"), cur.convert("RGBA"), max(0.0, min(1.0, p)))   # 고른 속도로 섞는다
 def cut_in(frame, kind, p):
     """새 화면이 들어오는 순간(0.16초)."""
     if kind == "none" or p >= 1 or p < 0: return frame
     q = smooth(p)
+    if kind == "dissolve": return frame   # 섞기는 나가는 화면이 있어야 해서 output.make_frame 이 blend_cut 으로 한다
+    if kind == "blur": return frame.filter(ImageFilter.GaussianBlur(18 * (1 - q))) if q < 0.98 else frame
     if kind == "flash": frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(235 * (1 - p)))))
     elif kind == "sweep": light_sweep(frame, p)
     elif kind == "punch":

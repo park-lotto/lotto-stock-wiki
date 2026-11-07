@@ -2,6 +2,8 @@
 from .settings import *
 from .timing import *
 from .footage import *
+ART_W, ART_H, ART_Y = 1440, 780, 128   # 기사 카드 자리 — 출처 표시(marks.source_mark)도 이 자리를 쓴다
+ART_BOX = ((W - ART_W) // 2, ART_Y, (W + ART_W) // 2, ART_Y + ART_H)
 _art = {}
 def load_article(name):
     if name not in _art:
@@ -36,7 +38,7 @@ def card_news(s, lt, T, tl):
     def union(bs): return [min(b[0] for b in bs), min(b[1] for b in bs), max(b[2] for b in bs), max(b[3] for b in bs)]
     U = union(allb); fx = (U[0] + U[2]) / 2; fy = (U[1] + U[3]) / 2
     # 보여 줄 창: 처음엔 기사 위쪽(제목)부터, 첫 동그라미 전에 구절로 내려오며 살짝 확대
-    DW, DH = 1440, 780; aw, ah = art.size
+    DW, DH = ART_W, ART_H; aw, ah = art.size
     # 처음엔 기사 폭 전체 → 첫 동그라미 때 첫 구절이 화면 폭 60%쯤 되게 확대
     B0 = union(boxes[0]); pw = max(200, B0[2] - B0[0])
     z0 = DW / aw; z1 = min(max(z0, 0.6 * DW / pw), z0 * 1.45, 1.0)
@@ -64,7 +66,7 @@ def card_news(s, lt, T, tl):
                 if gi > 0: do.line([(b[0], b[3] + 6), (b[0] + (b[2] - b[0]) * gi, b[3] + 6 - 3 * gi)], fill=(235, 30, 30, 255), width=8)
     view.alpha_composite(hl); view.alpha_composite(ov)
     # 카드(그림자) 등장: 아래에서 올라오며
-    q = smooth(lt / 0.35); x0 = (W - DW) // 2; y0 = 128 + int((1 - q) * 120)
+    q = smooth(lt / 0.35); x0 = (W - DW) // 2; y0 = ART_Y + int((1 - q) * 120)
     sh = Image.new("RGBA", (W, H), (0, 0, 0, 0)); ImageDraw.Draw(sh).rectangle([x0 + 10, y0 + 16, x0 + DW + 10, y0 + DH + 16], fill=(0, 0, 0, int(150 * q)))
     img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(14)))
     if q < 1: view.putalpha(view.getchannel("A").point(lambda v: int(v * q)))

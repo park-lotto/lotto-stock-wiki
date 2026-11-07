@@ -154,5 +154,33 @@
    239,
    235
   ]
- }
+ },
+ "logo_style": "dot",
+ "chapter_label": true,
+ "caption_font": "GM",
+ "caption_size": 50,
+ "caption_num_accent": true,
+ "caption_shade": true,
+ "caption_rise": true,
+ "caption_box": null,
+ "caption_all_shots": false,
+ "film_grain": true,
+ "dot_grid": true,
+ "beat_sec": 3.8,
+ "cut_sec": 0.16,
+ "cuts": [
+  "flash",
+  "slices",
+  "punch",
+  "whip",
+  "shutter",
+  "sweep",
+  "iris",
+  "none"
+ ],
+ "bumpers": true,
+ "chapter_wipe": true,
+ "outro_style": "cards",
+ "music": true,
+ "source_style": "top"
 }

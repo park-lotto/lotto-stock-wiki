@@ -16,11 +16,13 @@ def make_schedule():
     short_before = set(break_points(lines))
     for l in lines:
         if l["type"] == "bumper":
+            if not CFG["bumpers"]: continue   # 판이 범퍼를 끄면 대본의 범퍼 자리는 시간 없이 지나간다
             events.append(dict(kind="bumper", t=t, dur=CFG["bumper_main_sec"])); t += CFG["bumper_main_sec"]; continue
         if l["type"] == "skip" or l["i"] in skip: continue
         just_bumped = bool(events) and events[-1]["kind"] == "bumper" and abs(events[-1]["t"] + events[-1]["dur"] - t) < 1e-6
         if prev_ch is not None and l["chapter"] != prev_ch and not just_bumped:
-            if l["chapter"] in short_before:
+            if not CFG["chapter_wipe"]: t += CFG["chapter_gap"]   # 챕터 표지 없이 숨만 쉰다
+            elif CFG["bumpers"] and l["chapter"] in short_before:
                 events.append(dict(kind="bumper_short", t=t, dur=CFG["bumper_short_sec"])); t += CFG["bumper_short_sec"]
             else:  # 종이 대각선 와이프(0.45초) + 휙
                 events.append(dict(kind="wipe", t=t, dur=CFG["chapter_gap"])); t += CFG["chapter_gap"]
@@ -48,16 +50,20 @@ def make_schedule():
         s["t1"] = round(nxt, 3)
     # 0초 시작 보정
     shots[0]["t0"] = 0.0
+    if CFG["outro_style"] == "thanks": shots[-1]["t1"] = round(total, 3)   # 끝 화면 카드 대신 마지막 장면이 이어지고 감사 자막
     # (r4) 같은 그림을 다른 구도로 다시 끊던 것은 '초점이 왔다갔다'로 보여서 없앴다 → 한 컷 안에서 천천히 이동
     # 자막 조각
     subs = []
     for x in out:
         for (a, b, txt) in cut_caption(x["text"], x["t0"], x["t1"]): subs.append(dict(t0=a, t1=b, text=txt))
+    if CFG["outro_style"] == "thanks": subs.append(dict(t0=round(end_narr + 0.4, 3), t1=round(total, 3), text=CFG["outro_text"]))
     tl = dict(total=round(total, 3), end_narr=round(end_narr, 3), lines=out, shots=shots, events=events, subs=subs)
     json.dump(tl, open(os.path.join(BUILD, "timeline.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"총 {total/60:.2f}분 · 샷 {len(shots)} · 자막 {len(subs)} · 범퍼 {sum(e['kind'].startswith('bumper') for e in events)}")
     durs = [s["t1"] - s["t0"] for s in shots]
     print(f"샷 길이 평균 {np.mean(durs):.2f}초 · 최소 {min(durs):.2f} · 최대 {max(durs):.2f}")
+    if CFG.get("shot_target_sec"):   # 판의 컷 리듬(장면표가 정한다 — 여기서는 알리기만)
+        print(f"[판 {CFG.get('plate')}] 샷 길이 중앙 {np.median(durs):.2f}초 / 판 목표 {CFG['shot_target_sec']}초 · 한 샷 안 등장 간격 목표 {CFG.get('element_every_sec')}초")
     return tl
 
 NOBREAK_AFTER = {"이", "그", "저", "안", "못", "좀", "더", "잘", "다", "또", "제일", "딱", "꼭", "한", "두", "세", "그냥", "아주", "진짜", "엄청", "확"}

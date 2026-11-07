@@ -56,40 +56,41 @@ def make_soundtrack(tl):
     for e in tl["events"]:
         if e["kind"] == "wipe" and "whoosh" in sfx: place(fx, cut(sfx["whoosh"][int(0.25 * SR):], 0.35), max(0, e["t"] - 0.05), db(-17))
     # 음악: 본편 BGM(챕터 바뀌면 곡 교체) + 징글 + 아웃트로
-    main = load_pcm(P(CFG["bgm_main"])); alt = load_pcm(P(CFG["bgm_alt"])); jg = load_pcm(P(CFG["jingle"]))
-    alt_t = next((x["t0"] for x in tl["lines"] if x["chapter"] == CFG["bgm_alt_from_chapter"]), None)
-    def loop_fill(a, t0, t1, g):
-        pos = t0
-        while t1 - pos > 0.05:
-            seg = a[: int(min(len(a), (t1 - pos) * SR))].copy()
-            fl = min(len(seg) // 2, int(1.0 * SR))
-            if fl > 0: seg[:fl] *= np.linspace(0, 1, fl); seg[-fl:] *= np.linspace(1, 0, fl)
-            place(mus, seg, pos, g)
-            step = len(seg) / SR - 1.0
-            if step <= 0.5: break
-            pos += step
-    outro = next(e for e in tl["events"] if e["kind"] == "outro")
-    segs, cur = [], 0.0
-    for e in tl["events"]:
-        if e["kind"].startswith("bumper"): segs.append((cur, e["t"])); cur = e["t"] + e["dur"]
-    segs.append((cur, outro["t"]))
-    from scipy.signal import butter, sosfilt
-    hp = butter(4, CFG.get("bgm_highpass", 150), "highpass", fs=SR, output="sos")
-    def prep(a):  # 저음 깎고 곡마다 음량(RMS) 맞추기
-        a = sosfilt(hp, a).astype(np.float32); r = np.sqrt(np.mean(a[: SR * 90] ** 2)) + 1e-9
-        return a * (db(-20) / r)
-    rot = [prep(load_pcm(P(x))) for x in CFG.get("bgm_rotation", [CFG["bgm_main"]])]
-    for j, (a, b) in enumerate(segs):
-        loop_fill(rot[j % len(rot)], a, b, db(CFG["bgm_db"]))
-    for e in tl["events"]:
-        if e["kind"].startswith("bumper"):
-            j = jg[int(CFG["jingle_start"] * SR): int((CFG["jingle_start"] + e["dur"] + 0.3) * SR)].copy()
-            f = int(0.3 * SR); j[-f:] *= np.linspace(1, 0, f); place(mus, j, e["t"], db(CFG["jingle_db"]))
-            if "whoosh" in sfx: place(fx, cut(sfx["whoosh"], 0.5), e["t"], db(-12))
-            if "thud" in sfx: place(fx, cut(sfx["thud"], 0.5), e["t"] + (0.35 if e["kind"] == "bumper_short" else 0.6), db(-9))
-    o = jg[int(CFG["outro_music_start"] * SR): int((CFG["outro_music_start"] + outro["dur"]) * SR)].copy()
-    f = int(2.0 * SR); o[:int(0.05 * SR)] *= np.linspace(0, 1, int(0.05 * SR)); o[-f:] *= np.linspace(1, 0, f)
-    place(mus, o, outro["t"], db(CFG["jingle_db"]))
+    if CFG["music"]:   # 판이 음악을 끄면 BGM·징글·아웃트로 음악을 깔지 않는다(효과음은 그대로)
+        main = load_pcm(P(CFG["bgm_main"])); alt = load_pcm(P(CFG["bgm_alt"])); jg = load_pcm(P(CFG["jingle"]))
+        alt_t = next((x["t0"] for x in tl["lines"] if x["chapter"] == CFG["bgm_alt_from_chapter"]), None)
+        def loop_fill(a, t0, t1, g):
+            pos = t0
+            while t1 - pos > 0.05:
+                seg = a[: int(min(len(a), (t1 - pos) * SR))].copy()
+                fl = min(len(seg) // 2, int(1.0 * SR))
+                if fl > 0: seg[:fl] *= np.linspace(0, 1, fl); seg[-fl:] *= np.linspace(1, 0, fl)
+                place(mus, seg, pos, g)
+                step = len(seg) / SR - 1.0
+                if step <= 0.5: break
+                pos += step
+        outro = next(e for e in tl["events"] if e["kind"] == "outro")
+        segs, cur = [], 0.0
+        for e in tl["events"]:
+            if e["kind"].startswith("bumper"): segs.append((cur, e["t"])); cur = e["t"] + e["dur"]
+        segs.append((cur, outro["t"]))
+        from scipy.signal import butter, sosfilt
+        hp = butter(4, CFG.get("bgm_highpass", 150), "highpass", fs=SR, output="sos")
+        def prep(a):  # 저음 깎고 곡마다 음량(RMS) 맞추기
+            a = sosfilt(hp, a).astype(np.float32); r = np.sqrt(np.mean(a[: SR * 90] ** 2)) + 1e-9
+            return a * (db(-20) / r)
+        rot = [prep(load_pcm(P(x))) for x in CFG.get("bgm_rotation", [CFG["bgm_main"]])]
+        for j, (a, b) in enumerate(segs):
+            loop_fill(rot[j % len(rot)], a, b, db(CFG["bgm_db"]))
+        for e in tl["events"]:
+            if e["kind"].startswith("bumper"):
+                j = jg[int(CFG["jingle_start"] * SR): int((CFG["jingle_start"] + e["dur"] + 0.3) * SR)].copy()
+                f = int(0.3 * SR); j[-f:] *= np.linspace(1, 0, f); place(mus, j, e["t"], db(CFG["jingle_db"]))
+                if "whoosh" in sfx: place(fx, cut(sfx["whoosh"], 0.5), e["t"], db(-12))
+                if "thud" in sfx: place(fx, cut(sfx["thud"], 0.5), e["t"] + (0.35 if e["kind"] == "bumper_short" else 0.6), db(-9))
+        o = jg[int(CFG["outro_music_start"] * SR): int((CFG["outro_music_start"] + outro["dur"]) * SR)].copy()
+        f = int(2.0 * SR); o[:int(0.05 * SR)] *= np.linspace(0, 1, int(0.05 * SR)); o[-f:] *= np.linspace(1, 0, f)
+        place(mus, o, outro["t"], db(CFG["jingle_db"]))
     mix = narr * db(0) + fx + mus
     mix = np.clip(mix, -1, 1)
     out = os.path.join(BUILD, "mix_raw.wav")
