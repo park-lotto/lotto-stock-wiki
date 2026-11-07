@@ -145,7 +145,7 @@
   "make": {
    "state": "done",
    "sec": 0.0,
-   "at": "2026-11-07 20:01",
+   "at": "2026-11-07 20:30",
    "outputs": {
     "ours_mp4": "C:/숏템_칼카피/sseolbanjang/test/make/final.mp4",
     "ours_lines": "C:/숏템_칼카피/sseolbanjang/test/make/자막표.json"
@@ -154,8 +154,8 @@
   },
   "verify": {
    "state": "waiting_human",
-   "sec": 416.2,
-   "at": "2026-11-07 20:08",
+   "sec": 466.6,
+   "at": "2026-11-07 20:38",
    "outputs": {
     "table": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\_kal\\재현일치도.md",
     "verdict": "미달"

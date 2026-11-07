@@ -4,8 +4,8 @@
   {
    "key": "len.duration",
    "bench": 56.69,
-   "ours": 53.467,
-   "diff": -5.7,
+   "ours": 52.667,
+   "diff": -7.1,
    "judge": "in",
    "core": true,
    "why": "길이 차 ≤15%(검수 B1·compare len.duration)"
@@ -13,8 +13,8 @@
   {
    "key": "cut.median",
    "bench": 1.75,
-   "ours": 1.92,
-   "diff": 9.7,
+   "ours": 1.98,
+   "diff": 13.1,
    "judge": "in",
    "core": true,
    "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)",
@@ -39,7 +39,7 @@
   {
    "key": "chunk.chars",
    "bench": 7,
-   "ours": 7,
+   "ours": 7.0,
    "diff": 0.0,
    "judge": "in",
    "core": true,
@@ -52,8 +52,8 @@
   {
    "key": "chunk.sec",
    "bench": 1.03,
-   "ours": 1.02,
-   "diff": -1.0,
+   "ours": 0.94,
+   "diff": -8.7,
    "judge": "in",
    "core": true,
    "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)",
@@ -144,8 +144,8 @@
   {
    "key": "plain.rate",
    "bench": 0.295,
-   "ours": 0.511,
-   "diff": 21.6,
+   "ours": 0.542,
+   "diff": 24.7,
    "judge": "in",
    "core": true,
    "why": "꾸밈 없는 줄 비율 차 ≤20%p('없는 것도 스타일')",
@@ -166,7 +166,7 @@
   {
    "key": "narr.share",
    "bench": 0.535,
-   "ours": 0.489,
+   "ours": 0.458,
    "diff": "벤치 0.356~0.667",
    "judge": "in",
    "core": false,
@@ -254,29 +254,33 @@
   }
  ],
  "n_bench": 9,
- "ours_n_lines": 45,
+ "ours_n_lines": 48,
  "ours_media": {
-  "duration": 53.47,
-  "cut_median": 1.92,
-  "n_cuts": 18,
+  "duration": 52.67,
+  "cut_median": 1.98,
+  "n_cuts": 22,
   "cut_at": [
+   2.567,
    7.467,
-   8.433,
-   8.733,
+   8.4,
    10.6,
    11.967,
    15.2,
-   22.467,
+   19.833,
    24.433,
    27.833,
    29.633,
-   31.6,
+   31.4,
    35.667,
-   36.667,
+   36.7,
    37.767,
    39.567,
    41.067,
-   49.967
+   44.333,
+   45.1,
+   45.7,
+   47.0,
+   49.167
   ],
   "lufs": -14.1,
   "tp": -1.4,
@@ -707,7 +711,7 @@
  },
  "pixel": {
   "verdict": "미달",
-  "n_in": 7,
+  "n_in": 8,
   "n_criteria": 21,
   "out": [
    "영상 창 [x,y,w,h]",
@@ -720,8 +724,7 @@
    "첫 줄 높이 중앙(px)",
    "외곽선 있음(다수)",
    "등장효과(최빈)",
-   "자막당 초 중앙",
-   "컷 길이 p90(초)"
+   "자막당 초 중앙"
   ],
   "failed": [
    "창 위 띠1 [196,506) 글자 높이(px) (failed:우리: glyph_style 이 이 띠에서 글자를 못 찾음)",
