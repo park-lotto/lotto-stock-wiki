@@ -1,0 +1,1850 @@
+{
+ "id": "VFR6i5qEW54",
+ "dur": 52.219,
+ "fps": 29.97,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "다른 사람의",
+   "colors": [
+    {
+     "word": "다른 사람의",
+     "hex": "#FCFF1B"
+    }
+   ],
+   "y": [
+    227,
+    376
+   ]
+  },
+  {
+   "text": "생각이 들리는 능력",
+   "colors": [
+    {
+     "word": "생각이 들리는 능력",
+     "hex": "#EE4641"
+    }
+   ],
+   "y": [
+    398,
+    502
+   ]
+  }
+ ],
+ "source_label": "© Legion",
+ "layout": {
+  "title_y": [
+   227,
+   502
+  ],
+  "title_font": "둥근 굵은 고딕(외곽선 없음, 가장자리 어두운 테 약간) — 2.5초 확대 title_zoom.png",
+  "window": [
+   0,
+   514,
+   1080,
+   1451
+  ],
+  "caption_band": [
+   1226,
+   1411
+  ],
+  "source_y": [
+   1483,
+   1536
+  ],
+  "source_hex": "#FFFFFF",
+  "source_x": [
+   56,
+   282
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "bg_rgb": [
+   0,
+   0,
+   0
+  ],
+  "below_source": "검정(로고·워터마크 없음 — 1초 간격 전체 시트 full_00/01 52장 눈 확인)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.07,
+   "speaker": "나레",
+   "text": "거래가 성사되기 직전",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "훅",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "회의실 넓게 — 커피 나르는 신입·앉은 사람들",
+   "fit": 6,
+   "cut_at": [
+    1.07
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 1.07,
+   "t1": 2.2,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "속마음 (그냥 서명해 상@논아)",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#238BF8",
+   "role": "훅",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1257,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 상대 남자 입가 근접",
+   "fit": 8,
+   "cut_at": [
+    1.07,
+    2.2
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "form": "2단: 위 흰 작은 '속마음'(잉크 ~30px) + 아래 파랑 괄호 줄(외곽 ~4px)"
+  },
+  {
+   "t0": 2.2,
+   "t1": 3.57,
+   "speaker": "나레",
+   "text": "상대 회사의 생각을 들은 신입",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1311,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "고개 숙인 신입 옆얼굴",
+   "fit": 8,
+   "cut_at": [
+    2.2,
+    3.57
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 3.57,
+   "t1": 6.01,
+   "speaker": "원음:상대(나이 든 남자·연두)",
+   "text": "속마음 (부품 불량인데 ㅎ)",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#3BFF1D",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1257,
+    1403
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "나이 든 상대 남자 얼굴 → 4.5초부터 흐린 배경으로 화면 이동",
+   "fit": 7,
+   "cut_at": [
+    3.57
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "form": "2단: 흰 '속마음' + 연두 괄호 줄"
+  },
+  {
+   "t0": 6.01,
+   "t1": 6.61,
+   "speaker": "나레",
+   "text": "그는 바로",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "다른 노인 얼굴(대머리) 반쯤",
+   "fit": 4,
+   "cut_at": [
+    6.61
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 6.61,
+   "t1": 7.07,
+   "speaker": "원음:신입",
+   "text": "잠시만요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FFFFFF",
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입 얼굴 근접(말하는 입)",
+   "fit": 9,
+   "cut_at": [
+    6.61,
+    7.07
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "흰 대사 — 나레와 같은 흰색이지만 외곽 ~6px·등장 instant·자동자막(vtt)에 없음 → 원음"
+  },
+  {
+   "t0": 7.07,
+   "t1": 8.24,
+   "speaker": "나레",
+   "text": "거래를 중단시켰는데요",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "회의실 넓게 — 신입이 일어서 말림",
+   "fit": 8,
+   "cut_at": [
+    7.07,
+    8.24
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 8.24,
+   "t1": 9.01,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "누구시죠..?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#ED3B44",
+   "role": "질문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장(여자) 얼굴 — 묻는 입",
+   "fit": 9,
+   "cut_at": [
+    8.24,
+    9.01
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 9.01,
+   "t1": 11.31,
+   "speaker": "원음:불명(안경 쓴 남자 추정·주황)",
+   "text": "그냥 커피 심부름하는 친구예요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#F5A616",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1187,
+    1400
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "신입과 안경 쓴 남자 서 있음 → 끌고 감",
+   "fit": 7,
+   "cut_at": [
+    9.01
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "두 줄(그냥 커피 심부름하는 / 친구예요). 화자 입 모양 확인 못 함 — 주황은 이 편에서 1번뿐"
+  },
+  {
+   "t0": 12.18,
+   "t1": 13.21,
+   "speaker": "나레",
+   "text": "그런데 끌려가던 중",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1310,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "끌려가는 신입 뒷모습 → 회의 탁자",
+   "fit": 7,
+   "cut_at": [
+    12.61,
+    13.21
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 13.21,
+   "t1": 14.65,
+   "speaker": "원음:신입",
+   "text": "저 사람 중요한 걸 말 안 했어요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FFFFFF",
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "끌려가며 돌아보는 신입",
+   "fit": 9,
+   "cut_at": [
+    13.21,
+    14.65
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "두 줄(저 사람 / 중요한 걸 말 안 했어요). 어두운 바탕이라 외곽 두께 링 스캔 불가"
+  },
+  {
+   "t0": 16.05,
+   "t1": 17.45,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "ㅋㅋ뭐야 협박인가요?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#2484F4",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 상대 남자(넓게, 뒤에 나이 든 남자)",
+   "fit": 8,
+   "cut_at": [
+    17.12
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 18.02,
+   "t1": 18.65,
+   "speaker": "나레",
+   "text": "상대 회사의",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 얼굴",
+   "fit": 6,
+   "cut_at": [
+    18.65
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 18.65,
+   "t1": 19.82,
+   "speaker": "나레",
+   "text": "어색한 반응을 본 사장은",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "어색하게 웃는 상대 남자",
+   "fit": 8,
+   "cut_at": [
+    18.65
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 19.82,
+   "t1": 20.82,
+   "speaker": "나레",
+   "text": "쎄함을 감지했죠",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "상대 남자 → 20.05 사장 표정",
+   "fit": 8,
+   "cut_at": [
+    20.05
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 22.56,
+   "t1": 24.06,
+   "speaker": "불명(편집 설명 자막 — 목소리 없음)",
+   "text": "나감",
+   "layer": "썰반장",
+   "outline": "없음(그림자 약함)",
+   "glow": null,
+   "enter": "fade",
+   "fill_hex": "#FFFEFD",
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1262,
+    1379
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "사장이 자리를 뜸(빈 창밖) → 웃는 상대 남자",
+   "fit": 7,
+   "cut_at": [
+    22.56,
+    24.06
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "enter_ms": 130,
+   "font_note": "손글씨풍 얇은 붓글씨, 외곽 없음 — 22.69 흐림 → 22.82 진함(0.1초 띠 fr_d)"
+  },
+  {
+   "t0": 24.06,
+   "t1": 25.29,
+   "speaker": "원음:신입",
+   "text": "중요한 걸 놓치고 있으세요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FFFFFF",
+   "role": "질문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "복도 — 신입 얼굴",
+   "fit": 9,
+   "cut_at": [
+    24.06,
+    25.29
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 25.29,
+   "t1": 25.86,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "그럴리가",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#EB444B",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 얼굴",
+   "fit": 9,
+   "cut_at": [
+    25.29,
+    25.86
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 25.86,
+   "t1": 27.46,
+   "speaker": "나레",
+   "text": "신입은 소송이 걸려있다고 말했고",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "증거",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입 말하는 얼굴",
+   "fit": 8,
+   "cut_at": [
+    25.86,
+    27.46
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄(신입은 / 소송이 걸려있다고 말했고)"
+  },
+  {
+   "t0": 27.46,
+   "t1": 28.43,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "그걸 어떻게 알았지?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#EC3E47",
+   "role": "질문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "놀란 사장",
+   "fit": 9,
+   "cut_at": [
+    27.46,
+    28.43
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 28.43,
+   "t1": 29.5,
+   "speaker": "원음:신입",
+   "text": "저 초능력자예요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FFFFFF",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입 얼굴",
+   "fit": 9,
+   "cut_at": [
+    28.43,
+    29.5
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 29.5,
+   "t1": 30.16,
+   "speaker": "나레",
+   "text": "속는 셈치고",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 얼굴",
+   "fit": 7,
+   "cut_at": [
+    29.5,
+    30.16
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 30.16,
+   "t1": 31.36,
+   "speaker": "나레",
+   "text": "한 번 떠보라고 하는데요",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입 얼굴",
+   "fit": 7,
+   "cut_at": [
+    30.16,
+    31.36
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 31.36,
+   "t1": 32.83,
+   "speaker": "원음:신입",
+   "text": "부품 불량 문제는 어떻게 할 거냐고 물어보세요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FFFFFF",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1394
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 → 32.23 신입",
+   "fit": 8,
+   "cut_at": [
+    31.36,
+    32.23
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄(부품 불량 문제는 / 어떻게 할 거냐고 물어보세요)"
+  },
+  {
+   "t0": 32.83,
+   "t1": 33.23,
+   "speaker": "나레",
+   "text": "그러자",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입 옆얼굴",
+   "fit": 4,
+   "cut_at": [
+    33.23
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 33.23,
+   "t1": 35.7,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "부품 불량 문제는 어떻게 하실 거죠?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#EC3E48",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "회의실 — 사장 웃으며 묻기",
+   "fit": 9,
+   "cut_at": [
+    33.23,
+    35.7
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄"
+  },
+  {
+   "t0": 35.7,
+   "t1": 36.44,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "네..?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#2684F1",
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "당황한 상대 남자",
+   "fit": 9,
+   "cut_at": [
+    35.7,
+    36.44
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 36.44,
+   "t1": 37.67,
+   "speaker": "나레",
+   "text": "바로 당황하는 상대 회사",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "당황한 백발 남자(상대 회사)",
+   "fit": 9,
+   "cut_at": [
+    36.44,
+    37.67
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 37.67,
+   "t1": 38.44,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "그게..",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#2B87F2",
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "말 더듬는 상대 남자",
+   "fit": 9,
+   "cut_at": [
+    37.67
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 38.44,
+   "t1": 39.61,
+   "speaker": "원음:상대(나이 든 남자·연두)",
+   "text": "속마음 (302건이나 되는데..)",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#2FFF75",
+   "role": "증거",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1398
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 내리깐 나이 든 상대 남자",
+   "fit": 9,
+   "cut_at": [
+    39.61
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "form": "2단: 흰 '속마음' + 연두 괄호 줄"
+  },
+  {
+   "t0": 39.61,
+   "t1": 42.31,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "무슨 말씀을 하시는 건지",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#2184F4",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "사장 → 40.61 신입(손짓)",
+   "fit": 6,
+   "cut_at": [
+    39.61,
+    40.61,
+    42.31
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "화면엔 사장·신입, 파랑이라 상대 남자 말로 적음(입 모양 미확인)"
+  },
+  {
+   "t0": 40.61,
+   "t1": 42.31,
+   "speaker": "원음:신입",
+   "text": "(302개)",
+   "layer": "썰반장-작은괄호",
+   "outline": "검정 ~3px",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#FEFDFE",
+   "role": "증거",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    927,
+    982
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신입이 사장 쪽으로 귓속말하듯",
+   "fit": 8,
+   "cut_at": [
+    40.61,
+    42.31
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "작은 괄호 줄 x 663~841 — 신입 머리 오른쪽 창 위쪽(y≈930). 아래 줄과 시간이 겹쳐 층을 따로 적음"
+  },
+  {
+   "t0": 42.31,
+   "t1": 43.74,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "302건이었군요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#EB3D46",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 얼굴(눈 찡긋)",
+   "fit": 9,
+   "cut_at": [
+    42.31
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 43.74,
+   "t1": 47.31,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "출시된 지 겨우 6주된 제품치고 대단한데요",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#EB4048",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사장 얼굴",
+   "fit": 8,
+   "cut_at": [
+    47.31
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄(출시된 지 겨우 / 6주된 제품치고 대단한데요)"
+  },
+  {
+   "t0": 47.31,
+   "t1": 48.15,
+   "speaker": "원음:상대(어두운 머리 남자·파랑)",
+   "text": "여기까지 하죠",
+   "layer": "썰반장",
+   "outline": "검정 얇게 ~3px",
+   "glow": null,
+   "enter": "기타(가로 움직임 흐림 → 커짐 → 줄어 자리 잡음, 0.2초)",
+   "fill_hex": "#E4000A",
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1282,
+    1389
+   ],
+   "emph": [
+    {
+     "word": "여기까지 하죠",
+     "hex": "#E4000A",
+     "outline": "검정 얇게",
+     "grow": "잉크 높이 127→107px(47.31~47.41)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "상대 남자 얼굴 근접(입 열림)",
+   "fit": 8,
+   "cut_at": [
+    47.31,
+    48.15
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "★화자색 예외: 파랑 인물 줄인데 진한 빨강 큰 글(잉크 높이 107px, 다른 대사 77px). 입 모양은 상대 남자, 문맥상 사장 말일 수도 — 미확정"
+  },
+  {
+   "t0": 48.15,
+   "t1": 48.88,
+   "speaker": "나레",
+   "text": "신입은 그렇게",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "넓게 — 노인과 유리벽 뒤 신입",
+   "fit": 7,
+   "cut_at": [
+    48.15
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 48.88,
+   "t1": 49.92,
+   "speaker": "나레",
+   "text": "회사를 구하게 되죠",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 넓은 화면",
+   "fit": 7,
+   "cut_at": [
+    49.92
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 49.92,
+   "t1": 50.92,
+   "speaker": "원음:사장(여자·빨강)",
+   "text": "(따라와)",
+   "layer": "썰반장",
+   "outline": "검정 ~3px",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#E9353D",
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1329,
+    1398
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "사장이 지나감 → 50.38 신입 걸어 나옴",
+   "fit": 8,
+   "cut_at": [
+    49.92,
+    50.38
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "작은 괄호 대사(둥근 글꼴, 잉크 높이 69px) — 창 아래쪽 가운데"
+  },
+  {
+   "t0": 50.92,
+   "t1": 52.22,
+   "speaker": "나레",
+   "text": "이 능력 갖고 싶으신가요?",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔: 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 230,
+   "enter_curve": [
+    [
+     0.0,
+     100
+    ],
+    [
+     0.033,
+     109
+    ],
+    [
+     0.067,
+     103
+    ],
+    [
+     0.1,
+     91
+    ],
+    [
+     0.133,
+     90
+    ],
+    [
+     0.167,
+     96
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1399
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "신입 걸어 나감(전신)",
+   "fit": 5,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none",
+   "note": "끝 질문형 맺음(CTA 아님)"
+  }
+ ],
+ "beats": "훅(0~2.2초: '거래가 성사되기 직전' + 상대 속마음 '그냥 서명해') → 공개(3.6초 '부품 불량인데 ㅎ') → 고조(6~8초 신입 '잠시만요' 거래 중단) → 반전(12~14.6초 끌려가며 '중요한 걸 말 안 했어요') → 본문(18~33초 사장 의심·신입 '초능력자' 설득) → 공개(33~47초 사장이 302건 들춤·상대 당황) → 끝(47~52초 '여기까지 하죠' + 나레 '회사를 구하게 되죠' + 질문형 맺음 '이 능력 갖고 싶으신가요?')",
+ "narr_share": "나레 16/39줄, 나레 16.2초/자막(썰반장 층) 47.6초(영상 52.2초)",
+ "notes": [
+  "형식 = 외국 드라마(© Legion) 장면 + 한국어 나레·대사 자막 — 지휘자 관찰과 같음(근거 2.5초 프레임 full_2.5.png)",
+  "★나레 줄 등장 = pop(크기 100→109→91→100%, 0.23초) 16/16줄 · 대사 줄 = instant(컷과 함께 바로) 21/23줄(예외: 22.56 '나감' fade, 47.31 '여기까지 하죠' 흐림+커짐). 등장 방식으로 나레/대사가 갈린다(chg.py 잉크 높이 7프레임 곡선, 0.1초 띠 fr_a·fr_b)",
+  "★나레 외곽 ~11px vs 대사 외곽 ~6px(링 스캔 12.6·24.6·28.9·32.0초) — 신입 대사가 나레와 같은 흰색이라 외곽 두께·등장·vtt 로 가름",
+  "나레/원음 가르기 근거: 자동자막 vtt 에 나레 줄만 있고 대사 줄은 없음(영어 원음). 목소리 성별 = 확인 못 함(소리 판독 창구 없음)",
+  "'속마음' 줄 = 흰 작은 '속마음' 라벨(잉크 ~30px, y≈1257~1290) + 인물색 괄호 줄 2단 — 3번(1.07·3.57·38.44초)",
+  "작은 괄호 줄 2개: '(302개)' 흰(창 위쪽 y≈930, 40.61~42.31초) · '(따라와)' 빨강 둥근 글(창 아래 가운데, 49.92~50.92초)",
+  "스티커 0개(1초 전체 시트 52장·0.5초 위쪽 시트 up_00/01 105장 눈 확인)",
+  "전환 = 34컷 전부 하드컷(cuts.jpg 컷 앞뒤 5프레임 눈 확인). motion 'cam' = 편집 줌·팬 없이 원본 움직임 그대로로 봄(편집 줌 여부는 픽셀로 재지 않음)",
+  "효과음(sfx) = 판독 못 함 — 소리 판독 창구 없음, 고주파 온셋(72개)은 말소리와 구분 불가. 전부 null",
+  "글꼴 이름 = 미측정(나레·대사 같은 굵은 각진 고딕 계열로 보임, 등록 글꼴 대조 안 함)",
+  "'여기까지 하죠' 화자 미확정(입은 상대 남자, 문맥은 사장 쪽일 수 있음)",
+  "자막 없는 구간: 11.31~12.18 · 14.65~16.05 · 17.45~18.02 · 20.82~22.56초"
+ ],
+ "name_evidence": [
+  "'신입'·'사장'·'상대' = 화면 자막 낱말(배역 이름 아님) · 배우 이름은 화면에 없음 · 출처 '© Legion'",
+  "'불명' = 화자를 화면으로 못 가린 줄"
+ ],
+ "_made_by": "줄판독 워커(Claude 눈 + 픽셀 측정 meas.py·chg.py, 그림 C:/숏템_칼카피/sseolbanjang/work/<id>/) 2026-11-07",
+ "frame0": {
+  "what": "회의실 넓은 화면(신입 뒷모습·사람들)+고정 제목",
+  "face_frac": 0.0,
+  "text": "",
+  "kind": "scene"
+ },
+ "speaker_colors": {
+  "나레": {
+   "fill": "#FFFFFF",
+   "outline": "검정 ~11px",
+   "enter": "pop 230ms",
+   "n": 16
+  },
+  "원음:신입": {
+   "fill": "#FFFFFF",
+   "outline": "검정 ~6px",
+   "n": 6,
+   "same_color": "6/6"
+  },
+  "원음:사장(여자)": {
+   "fill": "#EB3D46 계열(#E9353D~#ED3B44)",
+   "n": 7,
+   "same_color": "7/7"
+  },
+  "원음:상대(어두운 머리 남자)": {
+   "fill": "#2484F4 계열(#2184F4~#2B87F2)",
+   "n": 6,
+   "same_color": "5/6 (47.31 '여기까지 하죠'만 빨강 #E4000A 강조형 — 화자 미확정)"
+  },
+  "원음:상대(나이 든 남자)": {
+   "fill": "#3BFF1D / #2FFF75 연두",
+   "n": 2,
+   "same_color": "2/2(같은 연두 계열, 두 번째가 조금 푸름)"
+  },
+  "원음:불명(안경 남자 추정)": {
+   "fill": "#F5A616",
+   "n": 1
+  },
+  "불명(편집 자막 '나감')": {
+   "fill": "#FFFEFD 손글씨",
+   "n": 1
+  }
+ }
+}

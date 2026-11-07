@@ -1,0 +1,1514 @@
+{
+ "id": "9M7HNy_WO4s",
+ "dur": 56.69,
+ "fps": 29.97,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "아빠 차 운전한",
+   "colors": [
+    {
+     "word": "아빠 차 운전한",
+     "hex": "#F8FF10"
+    }
+   ],
+   "y": [
+    193,
+    347
+   ]
+  },
+  {
+   "text": "11살 딸",
+   "colors": [
+    {
+     "word": "11살 딸",
+     "hex": "#E60008"
+    }
+   ],
+   "y": [
+    363,
+    505
+   ]
+  }
+ ],
+ "source_label": "© SHANE & LIANA",
+ "layout": {
+  "title_y": [
+   193,
+   505
+  ],
+  "title_font": "둥근 굵은 고딕(외곽선 없음) — 2.5초 확대 title_zoom.png",
+  "window": [
+   0,
+   514,
+   1080,
+   1451
+  ],
+  "caption_band": [
+   1211,
+   1419
+  ],
+  "source_y": [
+   1485,
+   1528
+  ],
+  "source_hex": "#FFFFFF",
+  "source_x": [
+   61,
+   488
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "bg_rgb": [
+   0,
+   0,
+   0
+  ],
+  "below_source": "검정(로고·워터마크 없음 — 1초 간격 전체 시트 full_00/01 57장 눈 확인)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.97,
+   "speaker": "나레",
+   "text": "마당에 주차된 차에",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "훅",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "마당의 흰 지프 옆을 걷는 가족",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none",
+   "note": "0.00 프레임 흐림 → 0.03 선명(fr_a)"
+  },
+  {
+   "t0": 0.97,
+   "t1": 1.84,
+   "speaker": "나레",
+   "text": "올라타는 딸",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "훅",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1344,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "딸이 차 문으로 올라탐",
+   "fit": 8,
+   "cut_at": [
+    1.83
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 2.17,
+   "t1": 3.04,
+   "speaker": "원음:아빠",
+   "text": "런던~!!!",
+   "layer": "썰반장",
+   "outline": "검정 굵은 테(픽셀풍 각진 테)",
+   "glow": null,
+   "enter": "shake",
+   "fill_hex": "#39FF1C",
+   "role": "훅",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    575,
+    678
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "차 안 운전석에 앉은 딸(밖에서 부르는 소리)",
+   "fit": 6,
+   "cut_at": [
+    3.04
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "enter_ms": 330,
+   "note": "창 위 오른쪽 작은 대사(x≈609~908). 2.17 등장 뒤 크기·자리 흔들림(2.20~2.47 잉크 윗변 552↔591). 화자 = 연두(아빠색) 근거, 입 모양 없음"
+  },
+  {
+   "t0": 3.04,
+   "t1": 3.7,
+   "speaker": "원음:아빠",
+   "text": "다른 거 함부로",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#39FF1A",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1300,
+    1410
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "차 옆에서 말하는 아빠(몸만 보임)",
+   "fit": 6,
+   "cut_at": [
+    3.04
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 3.7,
+   "t1": 4.8,
+   "speaker": "원음:아빠",
+   "text": "만지면 위험하니까",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#34FF14",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1279,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 화면",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 4.8,
+   "t1": 6.41,
+   "speaker": "원음:아빠",
+   "text": "에어컨만 켜고 있어",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#38FF19",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "아빠가 차 쪽을 가리킴",
+   "fit": 6,
+   "cut_at": [
+    6.41
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 6.41,
+   "t1": 7.31,
+   "speaker": "나레",
+   "text": "그런데 아빠 눈치를",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "차 안 딸(눈 내리깜)",
+   "fit": 7,
+   "cut_at": [
+    6.41
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 7.31,
+   "t1": 8.14,
+   "speaker": "나레",
+   "text": "슥 보더니",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1303,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "딸 옆을 봄",
+   "fit": 8,
+   "cut_at": [
+    8.14
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "뜯기 OCR '속보데니'·자동자막 '쓱' → 화면 글자는 '슥 보더니'(4배 확대 z_sok2.png)"
+  },
+  {
+   "t0": 9.48,
+   "t1": 10.44,
+   "speaker": "원음:아빠",
+   "text": "런던?!!!",
+   "layer": "썰반장",
+   "outline": "검정 ~4px",
+   "glow": null,
+   "enter": "instant",
+   "fill_hex": "#D5001C",
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1412
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "차가 움직이자 아빠가 돌아봄(몸)",
+   "fit": 7,
+   "cut_at": [
+    9.48
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "기울어진 손글씨풍 빨강. 10.31~10.44 흐려지며 사라짐(fade out)"
+  },
+  {
+   "t0": 10.54,
+   "t1": 12.05,
+   "speaker": "원음:아빠",
+   "text": "런던!!!",
+   "layer": "썰반장",
+   "outline": "검정 굵게 + 움직임 흐림",
+   "glow": null,
+   "enter": "shake",
+   "fill_hex": "#CE0009",
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1151,
+    1451
+   ],
+   "emph": [
+    {
+     "word": "런던!!!",
+     "hex": "#CE0009",
+     "outline": "검정 굵게",
+     "grow": "다른 대사보다 약 3배 큰 글(잉크 높이 ~250px)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "아빠가 차를 쫓아 뛰기 시작",
+   "fit": 8,
+   "cut_at": [
+    12.08
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "note": "큰 빨강 글이 프레임마다 자리를 바꿔 흔들림(10.71~10.94 fr_d), 12.0 흐려지며 사라짐"
+  },
+  {
+   "t0": 12.08,
+   "t1": 13.48,
+   "speaker": "나레",
+   "text": "차가 앞으로 출발하는데요",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "지프가 길로 나가고 아빠가 뛰어감",
+   "fit": 9,
+   "cut_at": [
+    12.08,
+    13.48
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 13.48,
+   "t1": 14.48,
+   "speaker": "나레",
+   "text": "위험천만한 상황에",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "차 안 뒷유리로 보이는 마당(차 안 카메라)",
+   "fit": 6,
+   "cut_at": [
+    13.48
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 14.48,
+   "t1": 15.75,
+   "speaker": "나레",
+   "text": "전력으로 쫓아가는 아빠",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1344,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "뒷유리 너머 뛰어오는 아빠",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none"
+  },
+  {
+   "t0": 15.75,
+   "t1": 17.92,
+   "speaker": "원음:삼촌(추정 — 차 안 웃음, 얼굴 안 보임)",
+   "text": "ㅋㅋㅋㅋㅋㅋㅋㅋ",
+   "layer": "썰반장",
+   "outline": "어두운 입체 그림자 #2E2528(아래 오른쪽, 두께 ~12px)",
+   "glow": null,
+   "enter": "pop",
+   "fill_hex": "#FFFEFF",
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1280,
+    1371
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 차 안 화면",
+   "fit": 5,
+   "cut_at": [
+    17.92
+   ],
+   "motion": "cam",
+   "confidence": "신호",
+   "transition": "cut",
+   "enter_ms": 70,
+   "note": "ㅋ 8글자(16.5초 확대 z_kk.png). 15.75 작게 → 15.78 크게. 화자 추정: 운전한 사람이 삼촌(47.85~50초 공개) — 목소리 확인 못 함"
+  },
+  {
+   "t0": 17.92,
+   "t1": 18.49,
+   "speaker": "나레",
+   "text": "다행히 차는",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1327,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "차 안 딸",
+   "fit": 6,
+   "cut_at": [
+    17.92
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 18.49,
+   "t1": 19.85,
+   "speaker": "나레",
+   "text": "얼마 가지 않아 멈췄고",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "다리",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "차 안 딸 웃음",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none"
+  },
+  {
+   "t0": 20.49,
+   "t1": 21.62,
+   "speaker": "원음:아빠",
+   "text": "너 뭐하는 거야? 미쳤어???",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#3BFF1D",
+   "role": "고조",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1237,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "창밖을 보는 딸(아빠는 화면 밖)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none",
+   "note": "두 줄(너 뭐하는 거야? / 미쳤어???)",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 21.62,
+   "t1": 22.62,
+   "speaker": "원음:딸",
+   "text": "아니.. 괜찮아요..",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#EB5AE2",
+   "role": "답",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1313,
+    1409
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "딸 옆얼굴",
+   "fit": 9,
+   "cut_at": [
+    22.62
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 22.62,
+   "t1": 23.59,
+   "speaker": "나레",
+   "text": "위험한 딸의 행동에",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "아빠 몸통(차 안)",
+   "fit": 5,
+   "cut_at": [
+    22.62
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 23.59,
+   "t1": 24.49,
+   "speaker": "나레",
+   "text": "화낼 수 있었지만",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 화면",
+   "fit": 5,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none"
+  },
+  {
+   "t0": 24.49,
+   "t1": 25.69,
+   "speaker": "나레",
+   "text": "감정을 억누른 채",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "가슴에 손 얹는 아빠",
+   "fit": 8,
+   "cut_at": [
+    25.69
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 25.69,
+   "t1": 27.33,
+   "speaker": "원음:아빠",
+   "text": "아빠가하는 말은 잘 들었어야지!",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#34FF14",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1245,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "차 안 아빠 말함",
+   "fit": 9,
+   "cut_at": [
+    25.69,
+    27.33
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄(아빠가하는 말은 / 잘 들었어야지!) — 띄어쓰기 화면 그대로",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 27.33,
+   "t1": 29.36,
+   "speaker": "원음:아빠",
+   "text": "왜 차를 운전하고 싶었어? 응???",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#31FF11",
+   "role": "질문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1245,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "아빠 얼굴(말함)",
+   "fit": 9,
+   "cut_at": [
+    27.33,
+    29.36
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 29.36,
+   "t1": 31.36,
+   "speaker": "원음:아빠",
+   "text": "아무거나 만지면 위험하니까",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#39FF1C",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1238,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "듣는 딸 얼굴",
+   "fit": 6,
+   "cut_at": [
+    29.36
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 31.36,
+   "t1": 33.33,
+   "speaker": "원음:아빠",
+   "text": "에어컨만 키라고 말했잖아!",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#36FF1A",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1211,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "듣는 딸 얼굴",
+   "fit": 6,
+   "cut_at": [
+    33.33
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 33.33,
+   "t1": 35.37,
+   "speaker": "원음:아빠",
+   "text": "만약 네가 다쳤다면 어쩔 뻔했어?",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#36FF16",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1245,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "아빠 얼굴(말함)",
+   "fit": 9,
+   "cut_at": [
+    33.33,
+    35.37
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "note": "두 줄",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 35.37,
+   "t1": 36.2,
+   "speaker": "나레",
+   "text": "알아듣게 타이르며",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1303,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "마당 넓게 — 차에서 내린 딸",
+   "fit": 6,
+   "cut_at": [
+    35.37
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 36.2,
+   "t1": 37.34,
+   "speaker": "나레",
+   "text": "집으로 돌아왔는데요",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1303,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 화면",
+   "fit": 6,
+   "cut_at": [
+    37.34
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 37.34,
+   "t1": 38.37,
+   "speaker": "원음:아빠",
+   "text": "집에 들어가",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#36FF16",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1344,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "아빠가 집 쪽을 가리킴",
+   "fit": 8,
+   "cut_at": [
+    37.34
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 38.37,
+   "t1": 39.24,
+   "speaker": "원음:아빠",
+   "text": "지금 당장 들어가",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#39FF1A",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1332,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 화면",
+   "fit": 8,
+   "cut_at": [
+    39.24
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 39.24,
+   "t1": 39.97,
+   "speaker": "원음:아빠",
+   "text": "진심이야!",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#38FF19",
+   "role": "본문",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1283,
+    1415
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "집 앞 걷는 딸·엄마",
+   "fit": 6,
+   "cut_at": [
+    39.24
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 39.97,
+   "t1": 41.14,
+   "speaker": "나레",
+   "text": "하지만 아빠가 하는 말에도",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1301,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "걷는 딸·엄마",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none"
+  },
+  {
+   "t0": 41.14,
+   "t1": 42.01,
+   "speaker": "나레",
+   "text": "철없는 딸은",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1300,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "엄마·아이들",
+   "fit": 5,
+   "cut_at": [
+    42.01
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 42.01,
+   "t1": 43.31,
+   "speaker": "나레",
+   "text": "다시 차를 향해 달려가죠",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "반전",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "딸이 다시 뛰어감",
+   "fit": 9,
+   "cut_at": [
+    42.01,
+    42.74
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 43.31,
+   "t1": 44.04,
+   "speaker": "나레",
+   "text": "그런데 그때",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "이음",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1300,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "뛰어가는 딸 다리",
+   "fit": 5,
+   "cut_at": [
+    44.04
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 45.15,
+   "t1": 46.11,
+   "speaker": "원음:딸",
+   "text": "삼촌~",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#EA5AE0",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1280,
+    1416
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "차 뒤로 숨는 아이들 / 트렁크에서 나오는 사람",
+   "fit": 7,
+   "cut_at": [
+    45.08
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 46.11,
+   "t1": 46.81,
+   "speaker": "원음:아빠",
+   "text": "이게 뭔..????",
+   "layer": "썰반장",
+   "outline": "검정 ~6px(링 스캔 r≈6~7px에서 끊김)",
+   "glow": null,
+   "enter": "slide",
+   "fill_hex": "#38FF19",
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1280,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 화면(차 뒤쪽)",
+   "fit": 6,
+   "cut_at": [
+    46.81
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut",
+   "enter_ms": 430,
+   "enter_curve_note": "위에서 아래로 44~54px 내려오며 감속(25.69 y 1198→1242, 21.69 1260→1314, 37.34 1297→1341 — chg.py 프레임별 잉크 윗변)"
+  },
+  {
+   "t0": 47.85,
+   "t1": 48.88,
+   "speaker": "나레",
+   "text": "알고보니 운전을 한 건",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "차 안 뒷좌석 — 딸과 숨어 있던 사람",
+   "fit": 8,
+   "cut_at": [
+    47.85,
+    48.88
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 48.88,
+   "t1": 50.02,
+   "speaker": "나레",
+   "text": "아빠의 동생이었고",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1328,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "딸과 삼촌(흰 티셔츠)",
+   "fit": 8,
+   "cut_at": [
+    48.88,
+    50.02
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 50.02,
+   "t1": 52.62,
+   "speaker": "나레",
+   "text": "아무것도 모르고 쫓아오는 아빠",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "pop",
+   "enter_ms": 130,
+   "role": "공개",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1202,
+    1418
+   ],
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 원 + 빨간 화살표(차 안 물건 가리킴 — 무엇인지 미확인)",
+     "x": 102,
+     "y": 782,
+     "w": 160,
+     "t_in": 50.02,
+     "t_out": 52.62,
+     "anim": "원 고정, 화살표 위오른쪽(50.0)→오른쪽(51.0~52.5)으로 자리 이동"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "운전석 삼촌 얼굴 + 빨간 원·화살표",
+   "fit": 6,
+   "cut_at": [
+    50.02,
+    52.62
+   ],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "cut",
+   "enter_curve": [
+    [
+     0.0,
+     10
+    ],
+    [
+     0.033,
+     35
+    ],
+    [
+     0.067,
+     80
+    ],
+    [
+     0.1,
+     112
+    ],
+    [
+     0.2,
+     100
+    ]
+   ],
+   "note": "두 줄(아무것도 모르고 / 쫓아오는 아빠). 이 편 나레 중 이 줄만 작은 글에서 커지는 pop(50.05 아주 작게 → 50.15 최대 → 50.32 자리 — fr_f)"
+  },
+  {
+   "t0": 52.62,
+   "t1": 53.62,
+   "speaker": "나레",
+   "text": "딸과 삼촌이 준비한",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물총 든 아빠(몸)",
+   "fit": 6,
+   "cut_at": [
+    52.62
+   ],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "cut"
+  },
+  {
+   "t0": 53.62,
+   "t1": 54.72,
+   "speaker": "나레",
+   "text": "몰래카메라였습니다",
+   "layer": "썰반장",
+   "outline": "검정 ~11px(링 스캔 12.6·14.0·25.2·53.0초, 밝은 바탕에서 r≈12px까지 검정)",
+   "glow": null,
+   "fill_hex": "#FFFFFF",
+   "enter": "기타(흐림→선명, 0.13초 — 첫 프레임 흐린 글, 4프레임 안에 선명)",
+   "enter_ms": 130,
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1310,
+    1419
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "물총 든 아빠 — 물 맞음",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "픽셀",
+   "transition": "none"
+  },
+  {
+   "t0": 54.72,
+   "t1": 56.69,
+   "speaker": "불명(아빠 속마음 추정 — 흰 글, 아빠색 연두 아님)",
+   "text": "이번만 참는다..",
+   "layer": "썰반장",
+   "outline": "검정 ~6px",
+   "glow": null,
+   "enter": "shake",
+   "fill_hex": "#FFFFFF",
+   "role": "끝",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    613,
+    731
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "벽 앞 물총 든 아빠 전신",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "confidence": "눈",
+   "transition": "none",
+   "note": "창 위쪽(y≈613~731) 흰 대사, 54.72 바로 뜬 뒤 끝까지 x 743~788·y 613~637 흔들림(fr_g)"
+  }
+ ],
+ "beats": "훅(0~3초: '마당에 주차된 차에 올라타는 딸' + 부르는 소리 '런던~!!!') → 본문(3~6초 아빠 당부 '에어컨만 켜고 있어') → 다리(6.4~8초 '아빠 눈치를 슥 보더니') → 고조(9.5~16초 차 출발·'런던!!!'·'전력으로 쫓아가는 아빠'·ㅋㅋ) → 다리(18~22.6초 차 멈춤·'미쳤어???') → 본문(22.6~37초 아빠 감정 누르고 타이름) → 반전(40~44초 딸 다시 차로 뜀) → 공개(45~52.6초 '삼촌~'·운전한 건 아빠 동생) → 끝(52.6~56.7초 '몰래카메라였습니다' + '이번만 참는다..')",
+ "narr_share": "나레 23/43줄, 나레 25.2초/자막(썰반장 층) 52.1초(영상 56.7초)",
+ "notes": [
+  "★지휘자 관찰과 다른 점: 이 편은 영화가 아니라 외국 유튜버 가족 몰래카메라 영상(© SHANE & LIANA) + 한국어 나레·대사 자막 — 형식(나레+인물색 대사)은 같다",
+  "★나레 등장 = 흐림→선명 0.13초(첫 프레임 흐린 글, 0.00 fr_a) 22/23줄 · 1줄(50.02 '아무것도 모르고 쫓아오는 아빠')만 작게→크게 pop. VFR6 의 나레 pop(크기 출렁)과 다르다",
+  "★대사(연두·분홍) 등장 = 위에서 아래로 44~54px 미끄러져 내려오며 감속 0.4~0.5초(slide) 15/15줄 — chg.py 프레임별 잉크 윗변(25.69·21.69·37.34초 등)·fr_i/fr_j/fr_k/fr_l 띠. 단 3.04·4.80초 두 줄은 장면 잡음으로 윗변을 못 재고 글자 수 늘어남(0.4초)만 봤다",
+  "나레 외곽 ~11px vs 대사 외곽 ~6px — VFR6 와 같은 규칙",
+  "나레/원음 가르기 근거: 자동자막(vtt·뜯기 받아쓰기)에 나레 줄만 있고 연두·분홍 대사는 없음(영어 원음). 목소리 성별 = 확인 못 함",
+  "강조 큰 글: '런던!!!' 빨강 약 3배 크기·흔들림(10.54~12.05) 1개 · 'ㅋㅋㅋㅋㅋㅋㅋㅋ' 흰+어두운 입체 그림자(15.75~17.92) 1개",
+  "스티커 1개: 빨간 원+화살표(50.02~52.62, 원 x≈102~260·y≈782~951) — 가리키는 물건이 무엇인지 미확인",
+  "창 위쪽 대사 2개: '런던~!!!'(2.17~3.04, y 575~678) · '이번만 참는다..'(54.72~56.69, y≈613~731)",
+  "전환 = 25컷 전부 하드컷(cuts.jpg 컷 앞뒤 5프레임 눈 확인). motion 'cam' = 원본 손떨림·이동 그대로로 봄(편집 줌은 재지 않음)",
+  "효과음(sfx) = 판독 못 함 — 소리 판독 창구 없음, 고주파 온셋 68개는 말소리와 구분 불가. 전부 null",
+  "글꼴 이름 = 미측정. 'ㅋㅋ' 줄은 다른 둥근 글꼴, '런던?!!!' 은 기울어진 손글씨풍",
+  "자막 없는 구간: 1.84~2.17 · 8.14~9.48 · 19.85~20.49 · 44.04~45.15 · 46.81~47.85초"
+ ],
+ "name_evidence": [
+  "'아빠'·'딸'·'삼촌' = 화면 글자(제목 '아빠 차 운전한 11살 딸', 자막 '딸과 삼촌이 준비한') · '런던' = 화면 자막 '런던~!!!' (딸 이름으로 보이나 확인 안 함) · 출처 '© SHANE & LIANA'"
+ ],
+ "_made_by": "줄판독 워커(Claude 눈 + 픽셀 측정 meas.py·chg.py, 그림 C:/숏템_칼카피/sseolbanjang/work/<id>/) 2026-11-07",
+ "frame0": {
+  "what": "마당 흰 지프 옆 가족(엄마·아이들 몸)+고정 제목",
+  "face_frac": 0.0,
+  "text": "",
+  "kind": "scene"
+ },
+ "speaker_colors": {
+  "나레": {
+   "fill": "#FFFFFF",
+   "outline": "검정 ~11px",
+   "enter": "흐림→선명 0.13초(22/23), 1줄 pop",
+   "n": 23
+  },
+  "원음:아빠": {
+   "fill": "#38FF19 연두(#31FF11~#3BFF1D)",
+   "n": 16,
+   "same_color": "14/16 연두 — 예외 2줄은 이름 부르짖기 '런던?!!!' #D5001C·'런던!!!' #CE0009 빨강 강조"
+  },
+  "원음:딸": {
+   "fill": "#EB5AE2 분홍",
+   "n": 2,
+   "same_color": "2/2"
+  },
+  "원음:삼촌(추정)": {
+   "fill": "#FFFEFF 흰+어두운 입체 그림자 'ㅋㅋ'",
+   "n": 1
+  },
+  "불명(아빠 속마음 추정)": {
+   "fill": "#FFFFFF 외곽 ~6px",
+   "n": 1
+  }
+ }
+}

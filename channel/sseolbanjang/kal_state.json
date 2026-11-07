@@ -1,0 +1,192 @@
+{
+ "slug": "sseolbanjang",
+ "ref": "https://www.youtube.com/@썰반장",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 1792.5,
+   "at": "2026-11-07 18:25",
+   "outputs": {
+    "ids": [
+     "q7q4C9VjufI",
+     "In3qzumxEzU",
+     "zShPlRP4m7A",
+     "VFR6i5qEW54",
+     "9M7HNy_WO4s",
+     "LZdO8A186pI",
+     "fxImmkM67jA",
+     "6aUSMLv3fDc",
+     "QSECbX33eAw"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기"
+   },
+   "note": "뜯기 9편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 24.6,
+   "at": "2026-11-07 17:53",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\sseolbanjang\\top.json"
+   },
+   "note": "썰반장 구독 307000 편 999 조회중앙 49,000 최대 23,000,000 (구독 대비 중앙 0.16)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 127.7,
+   "at": "2026-11-07 17:55",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\sseolbanjang\\src",
+    "ids": [
+     "q7q4C9VjufI",
+     "In3qzumxEzU",
+     "zShPlRP4m7A",
+     "VFR6i5qEW54",
+     "9M7HNy_WO4s",
+     "LZdO8A186pI",
+     "fxImmkM67jA",
+     "6aUSMLv3fDc",
+     "QSECbX33eAw"
+    ]
+   },
+   "note": "받음 9/10(1080p, C 여유 1755.6GB) 실패 ['kCZHZyz-ByY: -do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies\\n']"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 466.5,
+   "at": "2026-11-07 18:33",
+   "outputs": {
+    "dirs": {
+     "q7q4C9VjufI": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_q7q4C9VjufI",
+     "In3qzumxEzU": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_In3qzumxEzU",
+     "zShPlRP4m7A": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_zShPlRP4m7A",
+     "VFR6i5qEW54": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_VFR6i5qEW54",
+     "9M7HNy_WO4s": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_9M7HNy_WO4s",
+     "LZdO8A186pI": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_LZdO8A186pI",
+     "fxImmkM67jA": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_fxImmkM67jA",
+     "6aUSMLv3fDc": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_6aUSMLv3fDc",
+     "QSECbX33eAw": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_QSECbX33eAw"
+    }
+   },
+   "note": "시트·0.1초 띠 9편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.3,
+   "at": "2026-11-07 18:33",
+   "outputs": {
+    "skeletons": [
+     "q7q4C9VjufI",
+     "In3qzumxEzU",
+     "zShPlRP4m7A",
+     "VFR6i5qEW54",
+     "9M7HNy_WO4s",
+     "LZdO8A186pI",
+     "fxImmkM67jA",
+     "6aUSMLv3fDc",
+     "QSECbX33eAw"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 9편 새로, 묶음 9편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.3,
+   "at": "2026-11-07 18:33",
+   "outputs": {
+    "pending": {
+     "q7q4C9VjufI": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.9) 칸 누락(strict): transition",
+      "줄0(0.0~0.9) 칸 누락(strict): motion",
+      "줄0(0.0~0.9) 칸 누락(strict): confidence",
+      "줄0(0.0~0.9) speaker 미기입"
+     ],
+     "In3qzumxEzU": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.7) 칸 누락(strict): transition",
+      "줄0(0.0~0.7) 칸 누락(strict): motion",
+      "줄0(0.0~0.7) 칸 누락(strict): confidence",
+      "줄0(0.0~0.7) speaker 미기입"
+     ],
+     "zShPlRP4m7A": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.8) 칸 누락(strict): transition",
+      "줄0(0.0~0.8) 칸 누락(strict): motion",
+      "줄0(0.0~0.8) 칸 누락(strict): confidence",
+      "줄0(0.0~0.8) speaker 미기입"
+     ],
+     "VFR6i5qEW54": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.1) 칸 누락(strict): transition",
+      "줄0(0.0~1.1) 칸 누락(strict): motion",
+      "줄0(0.0~1.1) 칸 누락(strict): confidence",
+      "줄0(0.0~1.1) speaker 미기입"
+     ],
+     "9M7HNy_WO4s": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.1) 칸 누락(strict): transition",
+      "줄0(0.0~1.1) 칸 누락(strict): motion",
+      "줄0(0.0~1.1) 칸 누락(strict): confidence",
+      "줄0(0.0~1.1) speaker 미기입"
+     ],
+     "LZdO8A186pI": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.2) 칸 누락(strict): transition",
+      "줄0(0.0~1.2) 칸 누락(strict): motion",
+      "줄0(0.0~1.2) 칸 누락(strict): confidence",
+      "줄0(0.0~1.2) speaker 미기입"
+     ],
+     "fxImmkM67jA": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.7) 칸 누락(strict): transition",
+      "줄0(0.0~0.7) 칸 누락(strict): motion",
+      "줄0(0.0~0.7) 칸 누락(strict): confidence",
+      "줄0(0.0~0.7) speaker 미기입"
+     ],
+     "6aUSMLv3fDc": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~0.6) 칸 누락(strict): transition",
+      "줄0(0.0~0.6) 칸 누락(strict): motion",
+      "줄0(0.0~0.6) 칸 누락(strict): confidence",
+      "줄0(0.0~0.6) speaker 미기입"
+     ],
+     "QSECbX33eAw": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.0) 칸 누락(strict): transition",
+      "줄0(0.0~1.0) 칸 누락(strict): motion",
+      "줄0(0.0~1.0) 칸 누락(strict): confidence",
+      "줄0(0.0~1.0) speaker 미기입"
+     ]
+    }
+   },
+   "note": "줄판독 미완 9/9편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "n": 10,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "썰반장",
+  "url": "https://www.youtube.com/@썰반장/shorts",
+  "subs": 307000,
+  "total": 999,
+  "view_median": 49000,
+  "view_max": 23000000,
+  "top_ids": [
+   "kCZHZyz-ByY",
+   "q7q4C9VjufI",
+   "In3qzumxEzU",
+   "zShPlRP4m7A",
+   "VFR6i5qEW54",
+   "9M7HNy_WO4s",
+   "LZdO8A186pI",
+   "fxImmkM67jA",
+   "6aUSMLv3fDc",
+   "QSECbX33eAw"
+  ],
+  "views_per_sub": 0.16
+ }
+}

@@ -1,0 +1,1494 @@
+{
+ "id": "LZdO8A186pI",
+ "dur": 50.984,
+ "fps": 29.97,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "호그와트 입학",
+   "colors": [
+    {
+     "word": "호그와트",
+     "hex": "#FBEF03"
+    },
+    {
+     "word": "입학",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "통지서가 날라왔다",
+   "colors": [
+    {
+     "word": "통지서가",
+     "hex": "#FC0001"
+    },
+    {
+     "word": "날라왔다",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : Yoll",
+ "layout": {
+  "window": [
+   0,
+   281,
+   1080,
+   1666
+  ],
+  "caption_band": [
+   902,
+   1094
+  ],
+  "title_y": [
+   [
+    39,
+    134
+   ],
+   [
+    170,
+    265
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1685,
+   1726
+  ],
+  "source_x": [
+   443,
+   640
+  ],
+  "source_hex": "#FFFFFF",
+  "source_align": "가운데",
+  "logo_y": null,
+  "watermark": null,
+  "tag_y": [
+   413,
+   471
+  ],
+  "note": "검정 바탕 + 위 제목 2줄(낱말마다 색: 1줄 노랑+흰·2줄 빨강+흰, 굵은 고딕) + 창 y281~1666 가로 꽉 참(세로 영상, q7·6aUS 의 가로 영화 창과 다름) + 나레 y≈920~998 · 손글씨 대사 y≈1034~1088 · 꼬리표 y413~471 + 창 아래 가운데 흰 '출처 : Yoll' + 그 아래 검정(로고·워터마크 없음)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.233,
+   "speaker": "나레",
+   "text": "어느 날 창 밖에 찾아온",
+   "layer": "썰반장",
+   "role": "훅",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    902,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    149,
+    946
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "창밖 창턱의 부엉이(실내에서 넓게)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 1.233,
+   "t1": 1.867,
+   "speaker": "나레",
+   "text": "한 부엉이",
+   "layer": "썰반장",
+   "role": "훅",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    920,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    379,
+    761
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "창밖 부엉이가 편지를 물고 있음(넓게)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 2.867,
+   "t1": 4.1,
+   "speaker": "나레",
+   "text": "부엉이는 웬 편지 하나를",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    920,
+    1016
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    120,
+    957
+   ],
+   "fill_hex": "#FFFEFE",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "편지 문 부엉이 상반신",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 4.1,
+   "t1": 5.2,
+   "speaker": "나레",
+   "text": "물고 있었는데요",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    262,
+    816
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "편지 문 부엉이 상반신",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 5.2,
+   "t1": 7.133,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "뭐시여.. 이 호그와트 풍경은",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    240,
+    841
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "편지 문 부엉이 근접(창틀 옆)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 7.133,
+   "t1": 7.767,
+   "speaker": "나레",
+   "text": "하지만",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    920,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    431,
+    1077
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 근접",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 11.0,
+   "t1": 11.967,
+   "speaker": "나레",
+   "text": "좀처럼 편지를",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    917,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    301,
+    1079
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손이 편지를 잡아당김·부엉이가 물고 버팀",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 11.967,
+   "t1": 13.0,
+   "speaker": "나레",
+   "text": "내어 주지 않는 부엉이",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    999
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    161,
+    978
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손이 편지를 잡아당김",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 13.0,
+   "t1": 13.667,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "내놓으쇼",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    450,
+    959
+   ],
+   "fill_hex": "#FDFFFF",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손이 편지를 잡아당김",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 13.667,
+   "t1": 14.567,
+   "speaker": "원음:부엉이(울음 — 손글씨 노랑)",
+   "text": "꾸애엥에에ㅔ엥ㄱ",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "shake(세로 흔들림+모션블러 — 화면과 함께 0.9초 내내, yel_flick.jpg 프레임 409~418)",
+   "enter_ms": 0,
+   "variant": "손글씨 노랑 + 흔들림",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": null,
+   "fill_hex": "#EAE320",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "편지를 문 부엉이·화면 세로 흔들림",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 14.567,
+   "t1": 15.733,
+   "speaker": "나레",
+   "text": "그는 눈을 부릅뜬 채",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1016
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    198,
+    1073
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 얼굴(눈)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 15.733,
+   "t1": 16.933,
+   "speaker": "나레",
+   "text": "편지를 놔주질 않고",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    999
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    213,
+    1077
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손이 편지를 당김",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 16.933,
+   "t1": 17.9,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "편지 달라니까?",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1089
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    381,
+    704
+   ],
+   "fill_hex": "#FFFFFE",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "편지 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 17.9,
+   "t1": 18.8,
+   "speaker": "원음:부엉이(울음 — 손글씨 노랑)",
+   "text": "꾸애엥에에ㅔ엥ㄱ",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 노랑+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    352,
+    720
+   ],
+   "fill_hex": "#EAE320",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 18.8,
+   "t1": 24.167,
+   "speaker": "불명(글만 뜨는 꼬리표 — 읽는 목소리 확인 못 함)",
+   "text": "편지 절대 안주는 우편 배달부",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰 꼬리표(창 위쪽, 상자 없음·검정 번짐)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    413,
+    471
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    225,
+    855
+   ],
+   "fill_hex": "#FFFDFF",
+   "outline": "없음 — 검정 번짐 약 12px(행 스캔)",
+   "glow": "검정 번짐",
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 얼굴 근접 + 손이 편지를 당김(창 위쪽 꼬리표)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 24.167,
+   "t1": 25.2,
+   "speaker": "나레",
+   "text": "그러자 집 주인은",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    1016
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    249,
+    1069
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "창밖 부엉이 넓게(창틀)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 25.2,
+   "t1": 26.433,
+   "speaker": "나레",
+   "text": "다른 방법을 생각해 내죠",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1016
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    124,
+    993
+   ],
+   "fill_hex": "#FDFCFC",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "창밖 부엉이 넓게",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 26.433,
+   "t1": 27.533,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "부선생님이 좋아하시는",
+   "layer": "썰반장",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1089
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    295,
+    977
+   ],
+   "fill_hex": "#FFFCFD",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손에 쥔 쥐 인형",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 27.533,
+   "t1": 28.4,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "쥐 인형입니다",
+   "layer": "썰반장",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    390,
+    1022
+   ],
+   "fill_hex": "#FFFCFB",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손에 쥔 쥐 인형",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 28.4,
+   "t1": 28.967,
+   "speaker": "나레",
+   "text": "그러나",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    429,
+    653
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "쥐 인형을 내민 손",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 31.033,
+   "t1": 31.9,
+   "speaker": "나레",
+   "text": "부엉이는 여전히",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    920,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    261,
+    859
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "쥐 인형·편지 문 부엉이",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 31.9,
+   "t1": 32.9,
+   "speaker": "나레",
+   "text": "꿈쩍도 하질 않는데",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    913,
+    1016
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    211,
+    886
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "쥐 인형·편지 문 부엉이",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 32.9,
+   "t1": 33.6,
+   "speaker": "나레",
+   "text": "그렇다면",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    390,
+    704
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "창밖 부엉이 넓게",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 33.6,
+   "t1": 35.733,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "자자 여우 인형이랑 바꿔 바꿔",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1028,
+    1094
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    221,
+    863
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "여우 인형을 내민 손",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 35.733,
+   "t1": 38.467,
+   "speaker": "원음:부엉이(울음 — 손글씨 노랑)",
+   "text": "꾸애엥에에ㅔ엥ㄱ",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 노랑+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1088
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    352,
+    720
+   ],
+   "fill_hex": "#E9E31C",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 얼굴 근접(여우 인형 아래)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 38.467,
+   "t1": 39.633,
+   "speaker": "나레",
+   "text": "이에 혹시나 싶어",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    920,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    251,
+    827
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손가락이 부엉이 부리 쪽으로",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 39.633,
+   "t1": 40.2,
+   "speaker": "나레",
+   "text": "부엉이의 코를",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    299,
+    778
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손가락이 부엉이 부리를 만짐",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 40.2,
+   "t1": 41.367,
+   "speaker": "나레",
+   "text": "만져보는 편지 주인",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    213,
+    865
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손가락이 부엉이 부리를 만짐",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 42.533,
+   "t1": 43.033,
+   "speaker": "나레",
+   "text": "그러자",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    429,
+    653
+   ],
+   "fill_hex": "#FEFCFD",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "편지를 놓는 부엉이 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 45.4,
+   "t1": 46.3,
+   "speaker": "나레",
+   "text": "그렇게 어렵게",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    301,
+    815
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 46.3,
+   "t1": 47.233,
+   "speaker": "나레",
+   "text": "얻어낸 편지는",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    303,
+    850
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부엉이 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 48.533,
+   "t1": 49.833,
+   "speaker": "원음:집 주인(편지 받는 사람 — 손글씨 흰 글+검정 상자)",
+   "text": "이런 쒸... 스팸이네",
+   "layer": "썰반장",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨 흰+검정 상자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1034,
+    1089
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    341,
+    746
+   ],
+   "fill_hex": "#FDFDFA",
+   "outline": "외곽선 없음 · 검정 반투명 상자(글 뒤 띠, 불투명도 눈 추정 약 70%)",
+   "glow": null,
+   "box": "검정 반투명 상자(글 폭+좌우 여백)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "펼친 편지 = 2018 월드컵 광고지",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨체(붓펜풍 가는 글 — 이름 미대조)",
+    "basis": "hand_zoom.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 49.833,
+   "t1": 50.984,
+   "speaker": "나레",
+   "text": "광고 전단지 였죠",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    923,
+    998
+   ],
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    249,
+    829
+   ],
+   "fill_hex": "#FEFFFE",
+   "outline": "검정 약 14px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "광고지 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "segsheet_00·cap_a/b.jpg 눈 판독"
+   },
+   "motion": "cam(손에 든 폰 촬영 — 흔들림, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  }
+ ],
+ "beats": "훅(0~1.87 나레 '어느 날 창 밖에 찾아온·한 부엉이') → 나레(2.87~5.2 편지 물고 옴) → 원음 반응(5.2 '뭐시여.. 이 호그와트 풍경은') → 나레 갈등(7.13~16.93 편지를 안 줌) + 원음 실랑이('내놓으쇼'·'편지 달라니까?'·부엉이 '꾸애엥') → 꼬리표(18.8~24.17 '편지 절대 안주는 우편 배달부') → 나레 시도1(24.17~26.43) + 원음 공개(쥐 인형) → 실패(28.4~32.9) → 시도2(33.6 여우 인형, 부엉이 울음) → 시도3(38.47~41.37 코 만지기) → 나레 '그러자'(42.53) → 고조(45.4~47.23 '그렇게 어렵게 얻어낸 편지는') → 반전 원음('이런 쒸... 스팸이네') → 끝 나레('광고 전단지 였죠', CTA 없음)",
+ "narr_share": "나레 줄 22/33, 나레 20.98초/50.984초",
+ "notes": [
+  "★형식이 지휘자 관찰(외국 영화 장면)과 다르다: 이 편은 영화가 아니라 러시아 부엉이 영상(편지 우표 'ПОЧТА РОССИИ·МОСКВА', 출처 'Yoll' — cap_a/b.jpg 9.08·48.40초) + 한국어 나레 해설 + 손글씨 대사(사람·부엉이 몫 덧말). 출처 줄도 '© 영화명'이 아니라 '출처 : Yoll'.",
+  "창도 다르다: 세로 원본을 y281~1666(1385px)로 크게 넣었다(fxIm·q7 의 가로 영화 창 ≈940px 과 다름). 뼈대 window [0,281,1080,1386] 은 틀려서 f10.png 행 스캔 값으로 고쳤다.",
+  "대사 자막 꼴이 영화 편과 다르다: 인물별 채움색 고딕이 아니라 손글씨체 + 검정 반투명 상자(집 주인 흰 7줄·부엉이 노랑 3줄). 같은 화자 = 같은 색(7/7·3/3).",
+  "'원음:집 주인' 은 눈 추정이다 — 손 컷·내용('내놓으쇼'·'편지 달라니까?'·'여우 인형이랑 바꿔')으로 갈랐고, vtt 받아쓰기엔 이 줄들이 안 잡혔다(나레만 잡힘). 원본 사람 목소리인지·더빙인지·글만 뜨는지는 소리를 못 들어 확인 못 함.",
+  "18.8~24.17 '편지 절대 안주는 우편 배달부' = 창 위쪽(y413~471) 꼬리표 — 화자 불명(글만, vtt 에 없음).",
+  "등장: 나레만 2~3프레임 가로 모션블러 축소 등장(0.00·1.23·2.87 등 segsheet_00), 손글씨 줄은 한 번에(5.21·13.0·17.91·35.75). 13.67~14.57 부엉이 줄만 화면과 함께 세로 흔들림(yel_flick.jpg). 타이핑·커서 없음.",
+  "자막 없는 구간: 1.87~2.87, 7.77~11.0, 28.97~31.03, 41.37~42.53, 43.03~45.4, 47.23~48.53 (seg 잉크 ≈0~190 = 배경만).",
+  "뼈대 30줄 → 33줄: '꾸애엥' 첫 줄(13.67)·'편지 달라니까?' 뒤 '꾸애엥'(17.9)·꼬리표(18.8) 를 넣고 OCR 글을 프레임으로 고침('부선생님이'·'쥐 인형입니다' 확인).",
+  "스티커·짤 = 0개(sheet_01 2fps 40칸·mid 시트에서 없음).",
+  "확인 못 한 것: 효과음·BGM(sfx 전부 null), 나레 목소리 성별, 글꼴 이름 대조, 상자 불투명도 실측.",
+  "나레 y 는 마스크 실측(가장 큰 덩어리). 대부분 920~998(높이 ≈78px)이고, 902·905 시작·1016 끝 값 7줄은 뒤 배경(흰 창틀·편지)이 섞였을 수 있다 — 본 값은 920~998 ±3px."
+ ],
+ "name_evidence": [
+  "나레 자막 '그러자 집 주인은'(집 주인)",
+  "나레 자막 '한 부엉이'·'부엉이는 여전히'(부엉이)",
+  "출처 줄 '출처 : Yoll'"
+ ],
+ "_made_by": "오푸스 줄판독 워커(눈+픽셀: seg 30fps 경계·cut json·확대 크롭 마스크) 2026-11-07",
+ "speaker_colors": {
+  "원음:집 주인(흰 손글씨+검정 상자)": "7/7 같은 꼴",
+  "원음:부엉이(노랑 #EAE320 손글씨+검정 상자)": "3/3 같은 색",
+  "나레(흰 굵은 고딕)": "22/22",
+  "꼬리표(흰 손글씨, 상자 없음)": "1/1"
+ },
+ "frame0": {
+  "what": "실내에서 본 창밖 창턱 부엉이(넓게) + 나레 '어느 날 창 밖에 찾아온' 블러 등장 첫 프레임",
+  "text": "호그와트 입학 / 통지서가 날라왔다(제목)"
+ }
+}

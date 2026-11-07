@@ -1,0 +1,72 @@
+{
+ "slug": "sseolbanjang",
+ "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "q7q4C9VjufI",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\q7q4C9VjufI.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_q7q4C9VjufI",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\q7q4C9VjufI\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\q7q4C9VjufI.json"
+  },
+  {
+   "id": "In3qzumxEzU",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\In3qzumxEzU.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_In3qzumxEzU",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\In3qzumxEzU\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\In3qzumxEzU.json"
+  },
+  {
+   "id": "zShPlRP4m7A",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\zShPlRP4m7A.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_zShPlRP4m7A",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\zShPlRP4m7A\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\zShPlRP4m7A.json"
+  },
+  {
+   "id": "VFR6i5qEW54",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\VFR6i5qEW54.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_VFR6i5qEW54",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\VFR6i5qEW54\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\VFR6i5qEW54.json"
+  },
+  {
+   "id": "9M7HNy_WO4s",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\9M7HNy_WO4s.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_9M7HNy_WO4s",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\9M7HNy_WO4s\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\9M7HNy_WO4s.json"
+  },
+  {
+   "id": "LZdO8A186pI",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\LZdO8A186pI.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_LZdO8A186pI",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\LZdO8A186pI\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\LZdO8A186pI.json"
+  },
+  {
+   "id": "fxImmkM67jA",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\fxImmkM67jA.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_fxImmkM67jA",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\fxImmkM67jA\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\fxImmkM67jA.json"
+  },
+  {
+   "id": "6aUSMLv3fDc",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\6aUSMLv3fDc.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_6aUSMLv3fDc",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\6aUSMLv3fDc\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\6aUSMLv3fDc.json"
+  },
+  {
+   "id": "QSECbX33eAw",
+   "mp4": "C:\\숏템_칼카피\\sseolbanjang\\src\\QSECbX33eAw.mp4",
+   "frames": "C:\\숏템_칼카피\\sseolbanjang\\kal\\frames_QSECbX33eAw",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\뜯기\\QSECbX33eAw\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sseolbanjang\\줄판독\\QSECbX33eAw.json"
+  }
+ ],
+ "workers": 4,
+ "per_worker": 2
+}

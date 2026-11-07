@@ -1,0 +1,1371 @@
+{
+ "id": "QSECbX33eAw",
+ "dur": 47.981,
+ "fps": 29.97,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "무슨 일이 있어도",
+   "colors": [
+    {
+     "word": "무슨 일이 있어도",
+     "hex": "#FAFF0B"
+    }
+   ],
+   "y": [
+    204,
+    341
+   ]
+  },
+  {
+   "text": "눈을 떼선 안돼",
+   "colors": [
+    {
+     "word": "눈을 떼선 안돼",
+     "hex": "#E72A41"
+    }
+   ],
+   "y": [
+    357,
+    509
+   ]
+  }
+ ],
+ "title_note": "굵은 둥근 고딕, 1줄 노랑·2줄 빨강, 편 내내 고정(6aUS 와 같은 틀). 검정 바탕이라 외곽선 판별 못 함. 10초 프레임 픽셀 중앙값",
+ "source_label": "© 닥터 후",
+ "layout": {
+  "title_y": [
+   204,
+   509
+  ],
+  "title_x": [
+   59,
+   1021
+  ],
+  "window": [
+   0,
+   514,
+   1080,
+   1451
+  ],
+  "caption_band": [
+   1214,
+   1394
+  ],
+  "source_y": [
+   1466,
+   1507
+  ],
+  "source_x": [
+   77,
+   261
+  ],
+  "source_hex": "#FFFFFF",
+  "logo_y": null,
+  "watermark": null,
+  "bg_hex": "#000000",
+  "below_source": "1507~1920 검정, 로고·워터마크 없음(10초 프레임 행 스캔)",
+  "_from": "10초 원본 프레임 행 스캔(잉크 줄 204~341 / 357~509 / 514~1451 / 1466~1507)"
+ },
+ "frame0": {
+  "what": "남자 뒷모습(문 쪽) + 나레 첫 줄 '문을 여는 순간'",
+  "face_frac": 0.0,
+  "text": ""
+ },
+ "name_evidence": [
+  "제리코: 1.03~2.13 자막 '제리코! 안돼!!' — 금발 여자가 남자를 부르는 말(화면 글자)"
+ ],
+ "speaker_legend": {
+  "원음:금발여자": "금발 단발 여자(이름 화면 글자 없음 — 장면 묘사 이름. 출처 '닥터 후'의 주인공으로 보이나 화면 글자로 확인 안 됨)",
+  "원음:제리코": "안경 쓴 남자 — 자막 '제리코! 안돼!!' 로 이름 확인",
+  "원음:검은머리여자": "42.5~44.1 눈을 비비는 검은 머리 여자(이름 화면 글자 없음)"
+ },
+ "stickers_total": 0,
+ "beats": "훅(0~3.7 나레 '문을 여는 순간' → 원음 빨강 흔들림 '제리코! 안돼!!' → 나레 '그 앞을 막아선 수많은 석상'(노랑 강조)) → 질문(3.7 원음 하늘 '이것들이 어떻게...') → 규칙 대사(5.1~8.8 원음 분홍 4줄 '천천히 집으로 들어와 / 눈을 떼지 말고 / 고개 돌리지 말고 / 눈도 깜빡이지 마') → 다리 나레(8.8~13.1 '만약 잠시라도 눈을 뗀다면'(노랑 강조) '순식간에 거리를 좁혀오는데요') → 고조(14.1 분홍 큰 글 '당장 문을 잠궈!' → 하늘 질문 2줄) → 정체 공개(17.0 '우는 천사들이야') → 규칙2(18.4~26.3 분홍 5줄 + 나레 '심지어') → 해결책 나레(26.3~31.6 '막을 방법도 없는 탓에 … 숨는 것 뿐이었죠' 사이 분홍 '모든 문을 잠궈') → 반전(31.6 나레 '하지만' → 하늘 괄호 속마음 '(이제 이 문만 잠구면..)' → 검정 전환 → 빨강 기운 큰 글 '거기 있었구나?' → 흰 두 겹 큰 글 'ㅈ됐다...' → 붓글씨 의성어 '콰과광' 흔들림) → 끝(37.9~40.1 나레 '한 번 눈에 띈 사람은 끝까지 따라오는 천사들'(노랑 강조) → 빨강 흔들림 '빨리 도망가요!' → 나레 '그리고' → 손글씨 괄호 '(눈에 뭔가...)' → 무자막 2.1초 → 빨강 명조 페이드 '이미 당해버린 일행..' 47.9 끝 · CTA 없음)",
+ "notes": [
+  "★형식: 외국 드라마(출처 줄 '© 닥터 후') 장면 + 한국어 나레 + 원음 대사 한국어 자막 — 지휘자 관찰과 같음. 제목·창·출처 틀이 6aUS 와 같다(창 0,514~1080,1451 두 편 같음, 10초 프레임)",
+  "나레/원음 가르기 근거: 흰 줄은 vtt 에 한국어로 잡힘(2.99 '문을 여는 순간 그 앞을 막아던', 11.5 '만약 잠시라도 눈을 뗀다면', 13.5 '순식간에 거리를 좁혀오는데요', 21.2 '심지어', 29.0~30.6 '막을 방법도 없는 탓에 피할 방법이라곤…', 39.8 '한번 눈에 뛴 사람은 끝까지 따라오는 천사들', 42.2 '그리고') · 색 줄(분홍·하늘·빨강)은 vtt 에 없음([음악]) → 영어 원음. 목소리 성별은 소리를 직접 못 들어 미확인",
+  "화자색(셈): 원음:금발여자 분홍 #F38A90 12/13 + 빨강 흔들림 1/13('제리코! 안돼!!' 외침 — 외침은 빨강) · 원음:제리코 하늘 #85C0F9 4/4(괄호 속마음 포함) · 원음:검은머리여자 흰 손글씨 1/1 · 불명 4줄('빨리 도망가요!' 빨강 흔들림 · '거기 있었구나?' 진빨강 흰 테 · '콰과광' 의성어 · '이미 당해버린 일행..' 빨강 명조) · 나레 흰 15/15(그중 3줄 노랑 낱말 강조, 1줄 'ㅈ됐다...' 두 겹 큰 글) → 인물마다 같은 색이 지켜진다(분홍=여자, 하늘=남자), 외침만 빨강으로 예외",
+  "등장 효과(셈, 썰반장 층 37줄): pop 16(나레 흰 14줄 — capseg 76→84→68→76px 튕김 · 'ㅈ됐다...'·'거기 있었구나?') · glitch 11(분홍 원음 12줄 중 11줄, 2프레임 위 조각→완전·빨간 줄무늬 잔상, '당장 문을 잠궈!'는 줄 내내 흔들림까지) · instant 6(하늘 4줄 · 분홍 '눈을 떼지 말고' 6.30 컷과 함께 · '(눈에 뭔가...)') · shake 3(빨강 외침 2줄 · '콰과광') · fade 1('이미 당해버린 일행..'). 타이핑 없음 → type_cps 전부 null",
+  "강조: 나레 줄 안 노랑 낱말 강조 3번('수많은 석상' 2.13 · '눈을 뗀다면' 8.80 · '천사들' 38.87, 강조색 #FAFF0C = 제목 1줄 노랑과 같은 색, 3.0·9.5·39.5초 픽셀) — 6aUS 편엔 없던 꾸밈",
+  "스티커 0개(0.2초 띠 240칸 전부 눈으로)",
+  "원본박힘 층 0줄 — 이 편은 영상 안에 박힌 글자가 없다(0.5초 창 시트 96칸)",
+  "감정·강조 글꼴 갈래: '거기 있었구나?'(굵은 기운 글·흰 테·빨간 글로우, 잉크 높이 약 140px) · 'ㅈ됐다...'(아주 굵은 글·두 겹 외곽, 약 150px) · '콰과광'(붓 손글씨) · '(눈에 뭔가...)'(손글씨풍 명조) · '이미 당해버린 일행..'(명조) — 반전·끝 자리에만 몰려 있다(34~48초)",
+  "무자막 구간: 10.4~11.3(줌블러 전환) · 13.1~14.1 · 37.5~37.9 · 40.1~41.0(문고리) · 44.1~46.2(눈 근접)",
+  "뼈대와 다른 점: 추가 7줄('제리코! 안돼!!' · '당장 문을 잠궈!' · '콰과광' · '빨리 도망가요!' · '그리고' · '이미 당해버린 일행..' + 글 빈 줄 2개 '거기 있었구나?'·'ㅈ됐다...' 채움) · 고침('쉽지어'→'심지어') · 쪼개진 줄 합침('(이제 이 문만 잠구면..)' 3→1) · 빈 줄 15.3~15.9 뺌",
+  "컷: cut json 30fps 검출에서 자막만 바뀐 가짜 3개(27.63·38.9·39.0 — 같은 장면, 0.5초 시트) 뺌. 10.83 줌블러 · 34.17 검정",
+  "motion 칸 = 줄 처음↔끝(첫 컷 전까지) 창 영역 회색 평균 차 <15 이면 still, 아니면 cam",
+  "확인 못 한 것: 목소리 성별·TTS 여부 · 효과음 자리(콰과광 외 sfx null — 소리 판독 안 함) · 'ㅈ됐다...' 나레인지(vtt '좋다.' 신호만) · '거기 있었구나?'·'빨리 도망가요!' 화자 · 제목 외곽선 · 손글씨·명조 글꼴 이름"
+ ],
+ "lines": [
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 0.0,
+   "t1": 1.03,
+   "text": "문을 여는 순간",
+   "role": "훅",
+   "scene": "기타",
+   "scene_desc": "남자 뒷모습이 문 쪽으로",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    0.7
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 17.1
+  },
+  {
+   "layer": "썰반장",
+   "enter": "shake(줄 내내 위아래 떨림 ±약 25px + 중간에 가로 줄무늬 글리치 몇 프레임 · capseg y 매 프레임 바뀜)",
+   "y": [
+    1250,
+    1390
+   ],
+   "fill_hex": "#E90F05",
+   "outline": "검정 약 11px + 어두운 그림자(눈)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 약 85px",
+   "confidence": "픽셀",
+   "t0": 1.03,
+   "t1": 2.13,
+   "text": "제리코! 안돼!!",
+   "speaker": "원음:금발여자",
+   "role": "훅",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자가 손을 뻗으며 외침",
+   "fit": 8,
+   "note": "'제리코'는 이 줄 화면 글자에서 온 이름(남자)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 28.9
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFBF0",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 2.13,
+   "t1": 3.7,
+   "text": "그 앞을 막아선 수많은 석상",
+   "emph": [
+    {
+     "word": "수많은 석상",
+     "hex": "#FAFF0C",
+     "outline": "검정 #000000 약 11px(행 스캔 10~12px)"
+    }
+   ],
+   "role": "훅",
+   "scene": "기타",
+   "scene_desc": "남자 어깨 너머 천사 석상 무리",
+   "fit": 9,
+   "note": "줄 채움 #FEFDFF + 강조 노랑 #FAFF0C(3.0초 픽셀). 첫 프레임 줄이 왼쪽 밖으로 넘칠 만큼 커짐(2.2초 시트)",
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    3.63
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 30.6
+  },
+  {
+   "speaker": "원음:제리코",
+   "layer": "썰반장",
+   "enter": "instant",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#85C0F9",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 3.7,
+   "t1": 5.07,
+   "text": "이것들이 어떻게...",
+   "role": "질문",
+   "scene": "얼굴",
+   "scene_desc": "안경 쓴 남자 겁먹은 얼굴",
+   "fit": 8,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    5.07
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 13.5
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 5.13,
+   "t1": 6.3,
+   "text": "천천히 집으로 들어와",
+   "role": "본문",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자 근접",
+   "fit": 7,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    6.3
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 6.4
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "instant(컷과 함께 바뀜)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 6.3,
+   "t1": 7.3,
+   "text": "눈을 떼지 말고",
+   "role": "본문",
+   "scene": "기타",
+   "scene_desc": "천사 석상들",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    6.3,
+    7.3
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 28.3
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 7.4,
+   "t1": 8.17,
+   "text": "고개 돌리지 말고",
+   "role": "본문",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자 외침",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "still",
+   "motion_diff": 10.2
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 8.23,
+   "t1": 8.8,
+   "text": "눈도 깜빡이지 마",
+   "role": "본문",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자 근접",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    8.63
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 10.0
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FDFBE5",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 8.8,
+   "t1": 10.37,
+   "text": "만약 잠시라도 눈을 뗀다면",
+   "emph": [
+    {
+     "word": "눈을 뗀다면",
+     "hex": "#FAFF0C",
+     "outline": "검정 #000000 약 11px(행 스캔 10~12px)"
+    }
+   ],
+   "role": "다리",
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴·석상 흐린 컷",
+   "fit": 6,
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 41.8
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 11.33,
+   "t1": 12.2,
+   "text": "순식간에 거리를",
+   "role": "고조",
+   "scene": "얼굴",
+   "scene_desc": "남자가 소리치며 돌아섬(10.83 줌블러 뒤)",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 25.9
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 12.2,
+   "t1": 13.07,
+   "text": "좁혀오는데요",
+   "role": "고조",
+   "scene": "기타",
+   "scene_desc": "계단 앞 남자와 여자",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    13.07
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 18.0
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임) + 줄 내내 shake",
+   "y": [
+    1250,
+    1394
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 약 90px(다른 분홍 줄보다 큼)",
+   "confidence": "픽셀",
+   "t0": 14.13,
+   "t1": 14.97,
+   "text": "당장 문을 잠궈!",
+   "role": "고조",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자 외침",
+   "fit": 8,
+   "note": "뼈대에 빠진 줄 — 추가",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    14.97
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 19.5
+  },
+  {
+   "speaker": "원음:제리코",
+   "layer": "썰반장",
+   "enter": "instant",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#85C0F9",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 14.97,
+   "t1": 15.9,
+   "text": "어떻게 움직이는 거야?",
+   "role": "질문",
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴",
+   "fit": 7,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    14.97
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 24.7
+  },
+  {
+   "speaker": "원음:제리코",
+   "layer": "썰반장",
+   "enter": "instant",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#85C0F9",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 15.9,
+   "t1": 16.97,
+   "text": "그냥 석상 아니었어?",
+   "role": "질문",
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴",
+   "fit": 7,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    16.97
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 22.6
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 17.03,
+   "t1": 18.3,
+   "text": "우는 천사들이야",
+   "role": "공개",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자 근접",
+   "fit": 7,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 22.7
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 18.37,
+   "t1": 19.63,
+   "text": "우리가 눈을 떼는 순간",
+   "role": "답",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 19.3
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 19.7,
+   "t1": 20.97,
+   "text": "곧장 달려들 거야",
+   "role": "답",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "still",
+   "motion_diff": 12.9
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 20.97,
+   "t1": 21.57,
+   "text": "심지어",
+   "role": "이음",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 4,
+   "note": "뼈대 OCR '쉽지어' → '심지어'",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 20.8
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 21.63,
+   "t1": 23.07,
+   "text": "만약 살짝이라도 닿는 순간",
+   "role": "고조",
+   "scene": "얼굴",
+   "scene_desc": "21.97 컷 뒤 남자 얼굴(분홍=여자 목소리가 남자 컷 위로 이어짐)",
+   "fit": 5,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    21.97
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 17.9
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 23.13,
+   "t1": 24.17,
+   "text": "돌처럼 변해서",
+   "role": "고조",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 5,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    23.73
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 11.9
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 24.23,
+   "t1": 26.3,
+   "text": "평생을 살게 될 거야",
+   "role": "고조",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 5,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    26.3
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 16.0
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 26.3,
+   "t1": 27.63,
+   "text": "막을 방법도 없는 탓에",
+   "role": "본문",
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴 → 27.27 여자",
+   "fit": 5,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    26.3,
+    27.27
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 10.6
+  },
+  {
+   "speaker": "원음:금발여자",
+   "layer": "썰반장",
+   "enter": "glitch(2프레임 약 0.07초: 위쪽 조각만 → 윗부분 → 완전, 빨간 줄무늬 잔상 · 0.2초 시트 7.4·18.4·23.2초 프레임)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#F38A90",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 27.73,
+   "t1": 28.6,
+   "text": "모든 문을 잠궈",
+   "role": "본문",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    28.6
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 15.3
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 28.6,
+   "t1": 29.4,
+   "text": "피할 방법이라곤",
+   "role": "본문",
+   "scene": "기타",
+   "scene_desc": "벽돌 벽 복도",
+   "fit": 4,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    28.6,
+    29.4
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 16.0
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 29.4,
+   "t1": 30.67,
+   "text": "그들의 눈에 띄지 않는 곳에",
+   "role": "본문",
+   "scene": "기타",
+   "scene_desc": "복도 끝 남자",
+   "fit": 5,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    29.4
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 49.8
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 30.67,
+   "t1": 31.57,
+   "text": "숨는 것 뿐이었죠",
+   "role": "본문",
+   "scene": "기타",
+   "scene_desc": "어둠 속 남자",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    30.8,
+    31.57
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 0.0
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 31.57,
+   "t1": 32.03,
+   "text": "하지만",
+   "role": "반전",
+   "scene": "기타",
+   "scene_desc": "어둠 속 손",
+   "fit": 3,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    31.57
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 27.4
+  },
+  {
+   "speaker": "원음:제리코",
+   "layer": "썰반장",
+   "enter": "instant",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#85C0F9",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 32.03,
+   "t1": 34.03,
+   "text": "(이제 이 문만 잠구면..)",
+   "role": "본문",
+   "scene": "손·제품 근접",
+   "scene_desc": "문 잠그는 손·어둠",
+   "fit": 7,
+   "note": "괄호 = 속마음. 같은 하늘색이라 제리코 줄로 봄. 뼈대에서 셋으로 쪼개진 줄을 하나로",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    32.37,
+    32.57,
+    32.77
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 21.2
+  },
+  {
+   "t0": 34.03,
+   "t1": 35.33,
+   "text": "거기 있었구나?",
+   "speaker": "불명",
+   "layer": "썰반장",
+   "role": "반전",
+   "enter": "pop(약 0.2초 동안 크기 줄며 자리 잡음, capseg)",
+   "y": [
+    1214,
+    1366
+   ],
+   "fill_hex": "#990D1F",
+   "outline": "흰 테 약 4px + 빨간 글로우(눈)",
+   "glow": "#E0203A 추정(눈)",
+   "font": "굵은 기운(이탤릭) 고딕 — 나레와 다름(눈)",
+   "size_px": "잉크 높이 약 140px",
+   "scene": "기타",
+   "scene_desc": "어둠 속 파란 빛 천사 석상(34.17 검정 전환 뒤)",
+   "fit": 8,
+   "confidence": "눈",
+   "note": "뼈대에 글이 빈 줄 — 채움. vtt 에 한국어 없음, 화자 불명(천사 쪽 말로 보이나 미확인)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    34.17,
+    35.33
+   ],
+   "transition": "black",
+   "motion": "still",
+   "motion_diff": 0.0
+  },
+  {
+   "t0": 35.37,
+   "t1": 36.43,
+   "text": "ㅈ됐다...",
+   "speaker": "나레",
+   "layer": "썰반장",
+   "role": "반전",
+   "enter": "pop(약 0.1초)",
+   "y": [
+    1214,
+    1382
+   ],
+   "fill_hex": "#FBFCFD",
+   "outline": "두 겹 — 안쪽 검정 + 바깥 흰 테(눈)",
+   "glow": null,
+   "font": "아주 굵은 고딕(나레보다 큼, 눈)",
+   "size_px": "잉크 높이 약 150px",
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴 근접(파란 빛)",
+   "fit": 8,
+   "confidence": "신호",
+   "note": "뼈대 빈 줄 — 채움. vtt 35.7 '좋다.'(한국어) → 나레 목소리로 봄(신호 추정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    35.33,
+    36.43
+   ],
+   "transition": "cut",
+   "motion": "still",
+   "motion_diff": 12.4
+  },
+  {
+   "t0": 36.47,
+   "t1": 37.53,
+   "text": "콰과광",
+   "speaker": "불명",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "shake(줄 내내 위치·기울기 흔들림, capseg y 매 프레임 바뀜)",
+   "y": [
+    1214,
+    1430
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "없음(옅은 그림자, 눈)",
+   "glow": null,
+   "font": "붓 손글씨체(눈)",
+   "size_px": "잉크 높이 약 90px",
+   "scene": "얼굴",
+   "scene_desc": "금발 여자가 고개 숙임",
+   "fit": 6,
+   "confidence": "눈",
+   "sfx": "콰과광 글자 자리 — 쾅 소리 추정(소리 미측정)",
+   "note": "뼈대에 없던 줄 — 추가. 의성어 글자(효과음 표기)",
+   "emph": [],
+   "sticker": [],
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    36.43,
+    37.53
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 22.0
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 37.87,
+   "t1": 38.87,
+   "text": "한 번 눈에 띈 사람은",
+   "role": "끝",
+   "scene": "기타",
+   "scene_desc": "얼굴 가린 천사 석상",
+   "fit": 6,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 49.7
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFCF8",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 38.87,
+   "t1": 40.1,
+   "text": "끝까지 따라오는 천사들",
+   "emph": [
+    {
+     "word": "천사들",
+     "hex": "#FAFF0C",
+     "outline": "검정 #000000 약 11px(행 스캔 10~12px)"
+    }
+   ],
+   "role": "끝",
+   "scene": "기타",
+   "scene_desc": "같은 석상",
+   "fit": 8,
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    40.1
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 23.2
+  },
+  {
+   "layer": "썰반장",
+   "enter": "shake(줄 내내 위아래 떨림 ±약 25px + 중간에 가로 줄무늬 글리치 몇 프레임 · capseg y 매 프레임 바뀜)",
+   "y": [
+    1250,
+    1390
+   ],
+   "fill_hex": "#E90F05",
+   "outline": "검정 약 11px + 어두운 그림자(눈)",
+   "glow": null,
+   "font": "나레와 같은 굵은 고딕(눈)",
+   "size_px": "잉크 높이 약 85px",
+   "confidence": "픽셀",
+   "t0": 41.0,
+   "t1": 41.97,
+   "text": "빨리 도망가요!",
+   "speaker": "불명",
+   "role": "끝",
+   "scene": "기타",
+   "scene_desc": "계단 앞 검은 머리 여자와 금발 여자",
+   "fit": 6,
+   "note": "뼈대에 빠진 줄 — 추가. 둘 중 누가 말하는지 화면으로 못 가림",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    41.97
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 24.1
+  },
+  {
+   "speaker": "나레",
+   "layer": "썰반장",
+   "enter": "pop(첫 프레임 100% → 2~3프레임 약 105% → 4~5프레임 약 95% → 100%, 약 0.2초 튕김 · capseg 30fps 잉크 높이 76→84→68→76px)",
+   "y": [
+    1290,
+    1366
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": "검정 #000000 약 11px(행 스캔 10~12px)",
+   "glow": null,
+   "font": "BMDOHYEON 후보(fontmatch 0.91, 눈 대조 비슷)",
+   "size_px": "잉크 높이 76px",
+   "confidence": "픽셀",
+   "t0": 41.97,
+   "t1": 42.37,
+   "text": "그리고",
+   "role": "이음",
+   "scene": "기타",
+   "scene_desc": "손에 쥔 종이",
+   "fit": 3,
+   "note": "뼈대에 빠진 줄 — 추가(vtt '그리고')",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    41.97
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "motion_diff": 17.1
+  },
+  {
+   "t0": 42.47,
+   "t1": 44.13,
+   "text": "(눈에 뭔가...)",
+   "speaker": "원음:검은머리여자",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "instant(첫 1프레임 옅음)",
+   "y": [
+    1266,
+    1394
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "없음(옅은 그림자, 눈)",
+   "glow": null,
+   "font": "손글씨풍 명조 기운 글(눈)",
+   "size_px": "잉크 높이 약 80px(괄호 포함)",
+   "scene": "얼굴",
+   "scene_desc": "검은 머리 여자가 눈을 비빔",
+   "fit": 8,
+   "confidence": "눈",
+   "note": "괄호 = 속마음/작은 말. 눈 비비는 사람 = 검은 머리 여자",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [
+    44.13
+   ],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 25.6
+  },
+  {
+   "t0": 46.23,
+   "t1": 47.9,
+   "text": "이미 당해버린 일행..",
+   "speaker": "불명",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "fade(46.23 옅음 → 46.40 완전, 47.53~47.90 사라짐)",
+   "y": [
+    1270,
+    1358
+   ],
+   "fill_hex": "#DE000B",
+   "outline": "없음(어두운 그림자, 눈)",
+   "glow": null,
+   "font": "명조(세리프) 계열(눈)",
+   "size_px": "잉크 높이 약 60px",
+   "scene": "기타",
+   "scene_desc": "흐린 바닥(먼지)",
+   "fit": 5,
+   "confidence": "픽셀",
+   "note": "뼈대에 빠진 줄 — 추가. vtt 에 말 없음 → 말 없는 끝 자막 추정",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "type_cps": null,
+   "cursor": false,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "motion_diff": 26.4
+  }
+ ],
+ "narr_share": "나레 줄 15/37(썰반장 층), 나레 초 14.96/41.66초(자막 있는 시간), 편 길이 47.981초",
+ "speaker_colors": {
+  "나레": {
+   "#FEFDFF": 11,
+   "#FEFBF0": 1,
+   "#FDFBE5": 1,
+   "#FBFCFD": 1,
+   "#FEFCF8": 1
+  },
+  "원음:금발여자": {
+   "#E90F05": 1,
+   "#F38A90": 12
+  },
+  "원음:제리코": {
+   "#85C0F9": 4
+  },
+  "불명": {
+   "#990D1F": 1,
+   "#FFFFFF": 1,
+   "#E90F05": 1,
+   "#DE000B": 1
+  },
+  "원음:검은머리여자": {
+   "#FFFFFF": 1
+  }
+ }
+}

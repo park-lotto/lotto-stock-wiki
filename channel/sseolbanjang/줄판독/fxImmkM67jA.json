@@ -1,0 +1,2145 @@
+{
+ "id": "fxImmkM67jA",
+ "dur": 58.625,
+ "fps": 29.97,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "가는 말이 고와야",
+   "colors": [
+    {
+     "word": "가는 말이 고와야",
+     "hex": "#FDFD01"
+    }
+   ]
+  },
+  {
+   "text": "오는 말도 곱다",
+   "colors": [
+    {
+     "word": "오는 말도 곱다",
+     "hex": "#FE423E"
+    }
+   ]
+  }
+ ],
+ "source_label": "© 크리스마스 스톰",
+ "layout": {
+  "window": [
+   0,
+   514,
+   1080,
+   1451
+  ],
+  "caption_band": [
+   1213,
+   1398
+  ],
+  "title_y": [
+   [
+    231,
+    353
+   ],
+   [
+    362,
+    503
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1483,
+   1527
+  ],
+  "source_x": [
+   70,
+   426
+  ],
+  "source_hex": "#FFFFFF",
+  "source_align": "왼쪽",
+  "logo_y": null,
+  "watermark": null,
+  "note": "검정 바탕 + 위 제목 2줄(1줄 노랑·2줄 코랄빨강, 굵은 둥근 고딕, 외곽 없음) + 영화 창 y514~1451 가로 꽉 참 + 창 안 아래 자막(나레 y1320~1397 · 대사 1줄 y1305~1380 · 2줄 y1215~1386) + 창 아래 왼쪽 흰 '© 크리스마스 스톰' + 그 아래 검정(로고·워터마크 없음, f10.png 행 스캔 1527 아래 잉크 0)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.7,
+   "speaker": "나레",
+   "text": "눈보라 때문에",
+   "layer": "썰반장",
+   "role": "훅",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    310,
+    771
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "공항 로비를 걷는 두 여자(넓은 샷)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 0.7,
+   "t1": 1.77,
+   "speaker": "나레",
+   "text": "비행기가 결항되자",
+   "layer": "썰반장",
+   "role": "훅",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1398
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    242,
+    850
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "항공사 카운터 넓은 샷",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 1.77,
+   "t1": 2.33,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "죄송합니다만",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1299,
+    1374
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    316,
+    768
+   ],
+   "fill_hex": "#FBFB63",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "카운터 뒤 직원(중간 샷)",
+   "fit": 8,
+   "cut_at": [
+    1.767
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 2.33,
+   "t1": 3.13,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "앞에 계신 분이...",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1304,
+    1379
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    261,
+    821
+   ],
+   "fill_hex": "#FAFA65",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 손짓",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 3.13,
+   "t1": 5.1,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "미안한데\n노르웨이어는 몰라요",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1213,
+    1385
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    187,
+    894
+   ],
+   "fill_hex": "#EC4F5B",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "모피 코트 여자 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    3.133
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.93,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "영어로 하세요",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1384
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    305,
+    778
+   ],
+   "fill_hex": "#EC4F5D",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "모피 코트 여자 얼굴 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 5.93,
+   "t1": 7.43,
+   "speaker": "나레",
+   "text": "항공사 직원을 찾아 간 여자",
+   "layer": "썰반장",
+   "role": "다리",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    91,
+    996
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 근접 → 6.27 컷 직원 어깨너머",
+   "fit": 6,
+   "cut_at": [
+    5.967,
+    6.267
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 7.43,
+   "t1": 7.97,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "손님...?",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1298,
+    1372
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    417,
+    666
+   ],
+   "fill_hex": "#F8FA64",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 손짓(어깨너머)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 7.97,
+   "t1": 9.33,
+   "speaker": "원음:여자(무례한 첫 손님 — 강조 빨강)",
+   "text": "망할 손님 소리 그만하고",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "shake(등장 즉시 · 떠 있는 내내 x ±4px·y ±7px 떨림 + 빨강 번짐 깜빡)",
+   "enter_ms": 0,
+   "variant": "강조 빨강 떨림(같은 화자의 코랄 줄과 다른 색)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1293,
+    1376
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    87,
+    998
+   ],
+   "fill_hex": "#E00006",
+   "outline": "검정 약 10px + 바깥 빨강 번짐",
+   "glow": "빨강(#E00006 계열) 번짐 · 프레임마다 세기 깜빡",
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "모피 코트 여자 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    7.967
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 9.33,
+   "t1": 10.43,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "나 일등석이니까",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1381
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    267,
+    820
+   ],
+   "fill_hex": "#EC4F5C",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 상반신",
+   "fit": 8,
+   "cut_at": [
+    9.333
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 10.43,
+   "t1": 11.93,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "다음 런던행 비행기에\n태워줘요",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1213,
+    1385
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    173,
+    902
+   ],
+   "fill_hex": "#EC4D5B",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    10.433
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 11.93,
+   "t1": 12.67,
+   "speaker": "나레",
+   "text": "열이 받은 그녀는",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    263,
+    821
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 어깨너머(손짓)",
+   "fit": 5,
+   "cut_at": [
+    11.933
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 12.67,
+   "t1": 14.0,
+   "speaker": "나레",
+   "text": "억지를 부리기 시작했고",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1398
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    151,
+    933
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 어깨너머",
+   "fit": 5,
+   "cut_at": [
+    12.667
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 14.0,
+   "t1": 15.47,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "플래티넘 카드도 있고",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1311,
+    1386
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    174,
+    907
+   ],
+   "fill_hex": "#EB4F5D",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 상반신",
+   "fit": 8,
+   "cut_at": [
+    14.0
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 15.47,
+   "t1": 17.33,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "멤버십 마일리지에\n아메리칸 익스프레스",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    186,
+    891
+   ],
+   "fill_hex": "#EC4F5B",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 상반신",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 17.33,
+   "t1": 18.1,
+   "speaker": "원음:여자(무례한 첫 손님, 코랄)",
+   "text": "이딴 거 다 있다고요",
+   "layer": "썰반장",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1381
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    202,
+    880
+   ],
+   "fill_hex": "#EC4E5D",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 상반신",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 18.1,
+   "t1": 19.03,
+   "speaker": "나레",
+   "text": "참다 못한 직원은",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    263,
+    821
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "고개 숙인 직원 근접",
+   "fit": 8,
+   "cut_at": [
+    18.1
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 19.03,
+   "t1": 20.37,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "이게 날씨를 바꿔주나요?",
+   "layer": "썰반장",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    115,
+    968
+   ],
+   "fill_hex": "#FCFC61",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 20.37,
+   "t1": 21.97,
+   "speaker": "나레",
+   "text": "따끔한 일침을 날려버리는데",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    78,
+    1007
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 얼굴 근접(듣는 중)",
+   "fit": 6,
+   "cut_at": [
+    20.367
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 21.97,
+   "t1": 24.97,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "아메리칸 익스프레스나\n플래티넘 카드나",
+   "layer": "썰반장",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    149,
+    932
+   ],
+   "fill_hex": "#FCFB60",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    21.967,
+    24.0
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 24.97,
+   "t1": 27.3,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "이딴 것들로\n날씨를 못 바꾼다면",
+   "layer": "썰반장",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    211,
+    862
+   ],
+   "fill_hex": "#FBFC61",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여자 얼굴 근접(반응 샷 — 말하는 사람은 화면 밖)",
+   "fit": 6,
+   "cut_at": [
+    24.967
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 27.3,
+   "t1": 28.43,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "당분간은\n여기 계셔야겠네요",
+   "layer": "썰반장",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    225,
+    852
+   ],
+   "fill_hex": "#FBFB62",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    27.3
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 28.43,
+   "t1": 29.63,
+   "speaker": "나레",
+   "text": "결국 말문이 막힌 여자는",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    140,
+    960
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "여자가 돌아서 걸어감(뒤에 두 번째 손님)",
+   "fit": 7,
+   "cut_at": [
+    28.433
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 29.63,
+   "t1": 30.9,
+   "speaker": "나레",
+   "text": "곧바로 자리를 떠나죠",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    187,
+    896
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 5,
+   "cut_at": [
+    29.633
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 30.9,
+   "t1": 31.53,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "죄송합니다",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1303,
+    1378
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    353,
+    728
+   ],
+   "fill_hex": "#FAFC64",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 31.53,
+   "t1": 32.73,
+   "speaker": "나레",
+   "text": "직원은 감정을 억누르며",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    152,
+    930
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님(체크 코트) 상반신",
+   "fit": 4,
+   "cut_at": [
+    31.533
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 32.73,
+   "t1": 34.03,
+   "speaker": "나레",
+   "text": "다음 손님을 응대하는데",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    153,
+    933
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 상반신",
+   "fit": 7,
+   "cut_at": [
+    32.733
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 34.03,
+   "t1": 35.33,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "제가 파리에 가야 하는데",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1306,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    125,
+    956
+   ],
+   "fill_hex": "#B0FF65",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 상반신",
+   "fit": 8,
+   "cut_at": [
+    34.033
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 35.33,
+   "t1": 38.13,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "날씨 때문에\n전부 취소된 거죠?",
+   "layer": "썰반장",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1385
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    229,
+    854
+   ],
+   "fill_hex": "#B0FF64",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    35.333
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 38.13,
+   "t1": 39.03,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "네 맞습니다",
+   "layer": "썰반장",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1305,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    342,
+    744
+   ],
+   "fill_hex": "#FBFB61",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 8,
+   "cut_at": [
+    38.133
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 39.03,
+   "t1": 40.5,
+   "speaker": "나레",
+   "text": "무례했던 이전 손님과 달리",
+   "layer": "썰반장",
+   "role": "이음",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    101,
+    979
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 4,
+   "cut_at": [
+    39.033,
+    39.967
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 40.5,
+   "t1": 42.17,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "이런 날 일하면\n스트레스 많이 받죠..?",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1213,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    169,
+    912
+   ],
+   "fill_hex": "#AFFF63",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 얼굴 근접(웃음)",
+   "fit": 8,
+   "cut_at": [
+    40.5,
+    42.0
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 42.17,
+   "t1": 43.2,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "마음이 짠하네요",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1308,
+    1385
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    263,
+    812
+   ],
+   "fill_hex": "#B1FF65",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접(반응 샷 — 말하는 사람은 화면 밖)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 43.2,
+   "t1": 44.83,
+   "speaker": "나레",
+   "text": "그녀는 따뜻한 인사를 건넸고",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    64,
+    1019
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 5,
+   "cut_at": [
+    43.2
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 44.83,
+   "t1": 46.43,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "티켓 좀 보여주실래요?",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    153,
+    930
+   ],
+   "fill_hex": "#FBFC5F",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 8,
+   "cut_at": [
+    44.833
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 46.43,
+   "t1": 47.47,
+   "speaker": "나레",
+   "text": "이에 감동한 직원은",
+   "layer": "썰반장",
+   "role": "다리",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    226,
+    859
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님이 티켓을 건넴",
+   "fit": 6,
+   "cut_at": [
+    46.433
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 47.47,
+   "t1": 49.27,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "원래는 이러면 안 되지만",
+   "layer": "썰반장",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    123,
+    960
+   ],
+   "fill_hex": "#FBFB60",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 8,
+   "cut_at": [
+    47.467
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 49.27,
+   "t1": 50.73,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "손님 같은 분은\n정말 드물거든요",
+   "layer": "썰반장",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1384
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    267,
+    816
+   ],
+   "fill_hex": "#FBFC5F",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 얼굴(반응 샷 — 말하는 사람은 화면 밖)",
+   "fit": 6,
+   "cut_at": [
+    49.267
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 50.73,
+   "t1": 53.57,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "VIP 라운지\n입장 권한을 드렸어요",
+   "layer": "썰반장",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1215,
+    1386
+   ],
+   "lines_n": 2,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    177,
+    906
+   ],
+   "fill_hex": "#FBFA5F",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": 21,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 중간 샷",
+   "fit": 8,
+   "cut_at": [
+    50.733
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 53.57,
+   "t1": 54.63,
+   "speaker": "나레",
+   "text": "그녀에게 작은 선물로",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    187,
+    896
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 근접(웃음)",
+   "fit": 6,
+   "cut_at": [
+    53.567
+   ],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 54.63,
+   "t1": 55.33,
+   "speaker": "나레",
+   "text": "보답합니다",
+   "layer": "썰반장",
+   "role": "본문",
+   "enter": "기타(가로 모션블러 축소 등장 — 첫 프레임 가로로 번지고 넓게·2~3프레임 뒤 정상)",
+   "enter_ms": 100,
+   "variant": "기본 나레(흰 굵은 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1397
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    359,
+    879
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 12px(행 스캔 중앙값, 그림자 섞임)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 근접(웃음)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 고딕(각진 — 지마켓 산스 Bold 계열 눈 추정, 미대조)",
+    "basis": "0.03초 프레임 눈 판독(work/fxImmkM67jA/on1·on2.jpg)"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 55.33,
+   "t1": 55.93,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "그럼...",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1303,
+    1376
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    437,
+    640
+   ],
+   "fill_hex": "#FAFB62",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접",
+   "fit": 8,
+   "cut_at": [
+    55.333
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 55.93,
+   "t1": 56.77,
+   "speaker": "원음:직원(항공사 직원, 노랑)",
+   "text": "메리 크리스마스!",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1307,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    249,
+    824
+   ],
+   "fill_hex": "#FAFA64",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "직원 얼굴 근접(웃음)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 56.77,
+   "t1": 57.7,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "메리 크리스마스예요",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1306,
+    1378
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    189,
+    894
+   ],
+   "fill_hex": "#B0FF67",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 근접",
+   "fit": 8,
+   "cut_at": [
+    56.767
+   ],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  },
+  {
+   "t0": 57.7,
+   "t1": 58.625,
+   "speaker": "원음:손님(두 번째 손님, 연두)",
+   "text": "진심으로...",
+   "layer": "썰반장",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "화자색 대사",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1306,
+    1380
+   ],
+   "lines_n": 1,
+   "x": "가운데",
+   "align": "center",
+   "ink_x": [
+    365,
+    720
+   ],
+   "fill_hex": "#B2FF68",
+   "outline": "검정 약 7~8px(행 스캔 중앙값)",
+   "glow": null,
+   "box": null,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "두 번째 손님 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "굵은 둥근 고딕(나레와 다른 글꼴 — 잘난체/써라운드 계열 눈 추정, 미대조)",
+    "basis": "mid_a~c.jpg 눈 대조 — 'ㅎ·ㅇ' 둥근 꼴이 나레와 다르다"
+   },
+   "motion": "cam(영화 장면 — 고정·느린 이동, 눈 추정)",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각: capseg 30fps seg·컷 cutdet / y·채움 hex·외곽 px: 확대 크롭 마스크) / 눈(글·화자·역할·fit·등장) / 신호(motion) / sfx 미측정(소리 못 들음)"
+  }
+ ],
+ "beats": "훅(0~1.77 나레 '눈보라 때문에·비행기가 결항되자') → 원음 대치(1.77~5.93 직원·여자 '노르웨이어는 몰라요·영어로 하세요') → 나레 다리(5.93 '항공사 직원을 찾아 간 여자') → 원음 고조(7.43~18.1 '망할 손님 소리'(빨강 떨림)·일등석·카드 자랑) → 나레(18.1 '참다 못한 직원은') → 원음 답(19.03~28.43 직원 일침 '이게 날씨를 바꿔주나요?·당분간은 여기 계셔야겠네요') → 나레 결말1(28.43~30.9 여자 떠남) → 나레 전환(31.53~34.03 다음 손님) → 원음 대비(34.03~43.2 친절한 손님 '스트레스 많이 받죠..?') → 나레(43.2~47.47) → 원음 공개(47.47~53.57 'VIP 라운지 입장 권한') → 나레 후일담(53.57~55.33 '작은 선물로 보답합니다') → 끝 원음 인사('메리 크리스마스'·'진심으로...', CTA 없음)",
+ "narr_share": "나레 줄 16/45, 나레 18.74초/58.625초",
+ "notes": [
+  "형식 = 외국 영화(노르웨이어 대화 — vtt 끝부분 'God jul·verkligen' 원어 받아쓰기) 장면 + 한국어 나레 해설 + 인물별 색 대사 자막. 지휘자 관찰(영화 썰)과 같다.",
+  "뼈대(뜯기 OCR) 41줄 중 대사 줄 다수가 2줄의 아랫줄만 잡혔고 대사 13줄이 통째로 빠져 있었다 → 0.03초 seg 경계와 프레임으로 45줄로 다시 셌다(mid_a~c.jpg).",
+  "창 위치: 뼈대 window [0,514,1080,938] 은 틀렸다 → f10.png 행 스캔 [0,514,1080,1451].",
+  "화자색 = 인물마다 하나(직원 노랑·첫 손님 코랄·두 번째 손님 연두), 나레만 흰색. 예외 1줄 = 7.97~9.33 진빨강 떨림(같은 첫 손님의 화난 말).",
+  "등장: 나레 흰 줄만 2~3프레임 가로 모션블러 축소 등장(0.00·5.93·20.37 등 on1·on2.jpg), 색 대사 줄은 전부 한 번에(1.77·3.13·19.03·44.87·49.27 확인). 타이핑 없음, 커서 없음.",
+  "대사 줄은 거의 컷에 맞춰 바뀐다(줄 시작 45 중 transition=cut 줄 수는 lines 칸 참조).",
+  "스티커·짤·괄호 작은 줄·손글씨 감정 줄 = 이 편엔 없다(mid 시트 44칸·0.03초 띠에서 0개).",
+  "확인 못 한 것: 효과음·BGM(소리를 듣지 못함 — sfx 전부 null), 나레 목소리 성별, 글꼴 이름(등록 글꼴 잉크 비 대조 안 함), 원어 대사와 한국어 자막의 대응.",
+  "fit 은 눈 추정(말하는 사람 얼굴이 화면에 있으면 8, 반응 샷 6, 나레 연결 줄 4~6)."
+ ],
+ "name_evidence": [
+  "나레 자막 '항공사 직원을 찾아 간 여자'·'참다 못한 직원은'(직원·여자)",
+  "나레 자막 '다음 손님을 응대하는데'(손님)",
+  "출처 줄 '© 크리스마스 스톰'"
+ ],
+ "_made_by": "오푸스 줄판독 워커(눈+픽셀: seg 30fps 경계·cut json·확대 크롭 마스크) 2026-11-07",
+ "speaker_colors": {
+  "원음:직원(노랑 #FBFB61 계열)": "15/15 줄 같은 색(얼굴이 화면에 있는 줄 13/15, 나머지 2줄은 상대 반응 샷)",
+  "원음:여자(코랄 #EC4F5C 계열)": "7/8 줄 코랄 + 1줄(7.97~9.33 '망할 손님 소리 그만하고')만 진빨강 #E00006 떨림 강조 · 얼굴 화면 8/8",
+  "원음:손님(연두 #B0FF65 계열)": "6/6 같은 색(얼굴 5/6, 1줄은 직원 반응 샷)",
+  "나레(흰 #FDFDFD)": "16/16"
+ },
+ "frame0": {
+  "what": "공항 로비를 걷는 두 여자(넓은 샷) + 나레 '눈보라 때문에' 블러 등장 첫 프레임",
+  "text": "가는 말이 고와야 / 오는 말도 곱다(제목)"
+ }
+}
