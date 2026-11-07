@@ -34,20 +34,20 @@ CAP_INK_TH = 0.012     # 띠 안 '밝은(>200) 화소 옆 2px 이 어두운(<110
 CAP_RATE_TH = 0.3      # 표본 프레임의 이만큼 이상에 자막이 있으면 caption=있음
 MISSING = "미측정"
 
-# (key, kind, tol, core, why) — 계획서 §2-1 합격선(후보, 실측 뒤 조정). kind 뜻 = match_core.judge_cell
+# (key, kind, tol, core, why[, opt]) — 합격선 정의는 이 표 한 곳(opt 뜻 = match_core.match). 계획서 §2-1 합격선(후보, 실측 뒤 조정). kind 뜻 = match_core.judge_cell
 LONG_RULES = [
-    ("len.duration", "rel", 15, True, "길이 ±15% 또는 벤치 min~max"),
+    ("len.duration", "range", 0, True, "길이 = 벤치 전체 편 min~max ±5% — Jev q6b F4(신뢰 0.99 · must4 보류 뿌리 0.64·근본 0.55·한줄기 0.21·두더지 0.52 — 대안 두더지 0.76~0.82라 진행)", {"span_pad": 0.05}),
     ("chapter.n", "db", 1, True, "챕터 수 ±1개(info.json chapters / 우리 timeline 챕터)"),
-    ("chapter.sec", "rel", 20, True, "챕터 중앙 길이 ±20%"),
+    ("chapter.sec", "range", 0, True, "챕터 중앙 길이 = 벤치 전체 편 min~max ±5% — Jev q6b F4(신뢰 0.99 · must4 보류 뿌리 0.64·근본 0.55·한줄기 0.21·두더지 0.52 — 대안 두더지 0.76~0.82라 진행)", {"span_pad": 0.05}),
     ("hook.sec", "rel", 30, True, "훅 끝(과거 장면 복귀 첫 단어 자막 시각, 판독 json — hook_of) ±30%. 벤치 31~50초 leave-one-out 4/4(Jev q2a_훅c 통과)"),
     ("chapter.first", "rel", 20, False, "첫 챕터 경계까지 초 — 참고(올린 사람의 챕터 나누기: 30·38·196·334초 두 갈래)"),
-    ("shot_mix", "pctp", 10, True, "샷 종류 비율 종류마다 ±10%p(화면 판독 screen.json)"),
+    ("shot_mix", "pctp", 10, True, "샷 종류 비율 = 같은 틀 벤치 한 편(match same_look_bench) 종류마다 ±10%p, 다른 틀은 참고 행 — Jev q6b F4(신뢰 0.99 · must4 보류 뿌리 0.64·근본 0.55·한줄기 0.21·두더지 0.52 — 대안 두더지 0.76~0.82라 진행)", {"same_look": True}),
     ("cut.median", "rel_slow", 30, True, "컷 중앙(_cuts 같은 함수 — 디졸브 포함) +30%/−15%"),
     ("still.rate", "pctp", 10, True, "정지 컷 시간 비율 ±10%p(자막 띠 뺀 위쪽 프레임 차이)"),
     ("cut.p90", "rel", 30, False, "컷 길이 90번째 백분위 — 참고(긴 컷 꼬리)"),
     ("caption", "eq", 0, True, "자막 유무 같음(하단 띠 글자 잉크)"),
     ("caption.rate", "pctp", 10, False, "자막 있는 표본 비율 — 참고"),
-    ("speech.cps", "rel", 10, True, "나레 글자/초(공백 제외 ÷ 말한 초) ±10%"),
+    ("speech.cps", "range", 0, True, "나레 글자/초(공백 제외 ÷ 말한 초) = 벤치 전체 편 min~max ±5% — Jev q6b F4(신뢰 0.99 · must4 보류 뿌리 0.64·근본 0.55·한줄기 0.21·두더지 0.52 — 대안 두더지 0.76~0.82라 진행)", {"span_pad": 0.05}),
     ("mix.lufs", "db", 1, False, "통합 LUFS 벤치와 비교 — 참고(사장님 통일 목표 −14±1 은 따로 본다, 계획서 §9 #9)"),
 ]
 
@@ -305,7 +305,7 @@ def loo(stats: list[dict], names: list[str]) -> dict:
     """(검사 도구) leave-one-out — 편마다 나머지 편을 벤치로 match. 기준 칸이 벤치 자신도 못 넘으면 합격선이 너무 좁다는 뜻."""
     res = {}
     for i, n in enumerate(names):
-        res[n] = match_core.match(LONG_RULES, stats[:i] + stats[i + 1:], stats[i])
+        res[n] = match_core.match(LONG_RULES, stats[:i] + stats[i + 1:], stats[i])   # 참고 표 — 같은 틀 지정 없음(shot_mix 는 미측정으로 나온다)
     return res
 
 
@@ -333,6 +333,7 @@ def main(argv=None):
     c = sub.add_parser("match")
     c.add_argument("--bench", nargs="+", required=True); c.add_argument("--ours", required=True); c.add_argument("--out", required=True)
     c.add_argument("--title", default="")
+    c.add_argument("--same-look", dest="same_look", help="같은 틀 벤치 id(shot_mix 비교 편, 예: EW5ajVHq2QE)")
     lo = sub.add_parser("loo", help="벤치 자기시험: 한 편씩 '우리'로 놓고 나머지와 같은 자로 — 벤치가 못 넘는 합격선을 찾는다")
     lo.add_argument("--bench", nargs="+", required=True); lo.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -346,7 +347,7 @@ def main(argv=None):
         print(loo_md(T))
     else:
         B = [json.load(open(p, encoding="utf-8")) for p in a.bench]
-        T = match_core.match(LONG_RULES, B, json.load(open(a.ours, encoding="utf-8")))
+        T = match_core.match(LONG_RULES, B, json.load(open(a.ours, encoding="utf-8")), same_look_bench=a.same_look)
         Path(a.out).write_text(match_core.match_md(T, a.title), encoding="utf-8")
         print(("통과" if T["pass"] else "미달"), "· 미달 기준 칸:", T["core_fail"])
 

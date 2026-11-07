@@ -57,3 +57,22 @@ def test_rel0_count_rule():
 
 def test_rel_slow_zero_bench_failed():
     assert judge_cell("rel_slow", 30, 0, 1.0)[0] == "failed"
+
+
+def test_span_pad_range():
+    R = [("len.duration", "range", 0, True, "길이", {"span_pad": 0.05})]
+    B = [{"len.duration": 1400}, {"len.duration": 2000}]
+    assert match(R, B, {"len.duration": 2090})["pass"] is True      # 2000×1.05=2100 안
+    assert match(R, B, {"len.duration": 2110})["pass"] is False
+    assert match(R, B, {"len.duration": 1335})["pass"] is True      # 1400×0.95=1330 안
+
+
+def test_same_look_bench():
+    R = [("shot_mix", "pctp", 10, True, "샷", {"same_look": True})]
+    B = [{"src": "x/A.mp4", "shot_mix": {"글자": 0.5, "사진": 0.5}}, {"src": "x/B.mp4", "shot_mix": {"글자": 0.2, "사진": 0.8}}]
+    o = {"shot_mix": {"글자": 0.45, "사진": 0.55}}
+    T = match(R, B, o, same_look_bench="A")
+    assert T["pass"] is True and [r["key"] for r in T["rows"]] == ["shot_mix", "shot_mix(다른 틀)"]
+    assert T["rows"][1]["core"] is False and T["rows"][1]["judge"] == "out"
+    assert match(R, B, o, same_look_bench="B")["pass"] is False
+    assert match(R, B, o)["rows"][0]["judge"] == "failed"            # 같은 틀 미지정 = 통과 아님

@@ -13,6 +13,7 @@
 # TODO(나중 일): 쇼츠 match_table 의 칸별 판정도 이 judge_cell 로 옮긴다(지금은 쇼츠 라인을 건드리지 않는다 — 판정이 두 벌인 상태).
 from __future__ import annotations
 
+import os
 from statistics import median
 
 SPAN_MIN = 3        # 벤치 편별 범위(min~max)로 넓히려면 벤치가 이만큼 있어야 한다(kal_analyze.SPAN_MIN 과 같은 값)
@@ -109,15 +110,43 @@ def _span(key: str, kind: str, vals: list):
     return None
 
 
-def match(rules, bench_stats: list[dict], ours_stats: dict) -> dict:
-    """(판단 주인) rules = [(key, kind, tol, core, why)] · bench_stats = 벤치 편마다 measure() 결과 · ours_stats = 우리 measure().
+def _bench_id(s: dict) -> str:
+    return str(s.get("id") or os.path.splitext(os.path.basename(str(s.get("src") or "")))[0])
+
+
+def match(rules, bench_stats: list[dict], ours_stats: dict, same_look_bench: str | None = None) -> dict:
+    """(판단 주인) rules = [(key, kind, tol, core, why[, opt])] · bench_stats = 벤치 편마다 measure() 결과 · ours_stats = 우리 measure().
+    opt(칸 규칙 꼬리 dict — 합격선 정의는 규칙 표 한 곳, 판정은 judge_cell):
+      {"span_pad": 0.05} = 벤치 전체 편 min~max 를 위아래 5% 넓힌 범위(range 판정 · 편 수 1편부터)
+      {"same_look": True} = same_look_bench(같은 틀 벤치 id) 한 편 값과 비교 · 나머지 편은 '<key>(다른 틀)' 참고 행. 지정 없으면 failed
     → {"rows": [{key, bench, ours, diff, judge, core, why, bench_span?}], "pass": 기준 칸 전부 in, "core_fail": [in 아닌 기준 칸]}"""
     rows = []
-    for key, kind, tol, core, why in rules:
+    for rule in rules:
+        key, kind, tol, core, why = rule[:5]
+        opt = rule[5] if len(rule) > 5 else {}
+        o = ours_stats.get(key)
+        if opt.get("same_look"):
+            same = [s for s in bench_stats if same_look_bench and _bench_id(s) == same_look_bench]
+            other = [s for s in bench_stats if not (same_look_bench and _bench_id(s) == same_look_bench)]
+            b = same[0].get(key) if same else None
+            judge, diff = judge_cell(kind, tol, b, o) if same else ("failed", "같은 틀 벤치 미지정" if not same_look_bench else f"벤치에 {same_look_bench} 없음")
+            rows.append({"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": bool(core), "n_bench": len(same),
+                         "why": why + f" — 같은 틀 벤치 {same_look_bench or '?'}"})
+            ov = [s.get(key) for s in other]
+            ob = _bench_value(kind, ov)
+            j2, d2 = judge_cell(kind, tol, ob, o)
+            rows.append({"key": key + "(다른 틀)", "bench": ob, "ours": o, "diff": d2, "judge": j2, "core": False,
+                         "n_bench": sum(not _missing(v) for v in ov), "why": "다른 틀 벤치 중앙과 비교 — 참고"})
+            continue
         vals = [s.get(key) for s in bench_stats]
         b = _bench_value(kind, vals)
-        sp = _span(key, kind, vals) if kind in ("rel", "rel0", "rel_slow", "pctp", "range") else None
-        o = ours_stats.get(key)
+        if "span_pad" in opt:
+            sp = _span("len.duration", kind, vals)        # 1편부터 min~max(RANGE_ALWAYS 와 같은 규칙)
+            pad = float(opt["span_pad"])
+            sp = (sp[0] * (1 - pad), sp[1] * (1 + pad)) if isinstance(sp, tuple) else sp
+            sp = (round(sp[0], 4), round(sp[1], 4)) if isinstance(sp, tuple) else sp
+        else:
+            sp = _span(key, kind, vals) if kind in ("rel", "rel0", "rel_slow", "pctp", "range") else None
         cd = ours_stats.get("len.duration") if kind == "rel0" and key.endswith(".rate") else None
         judge, diff = judge_cell(kind, tol, b, o, sp, count_dur=cd if isinstance(cd, (int, float)) else None)
         rows.append({"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": bool(core), "why": why,
