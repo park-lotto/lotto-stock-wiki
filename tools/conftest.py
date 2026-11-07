@@ -22,4 +22,10 @@ def _no_batch_gather(monkeypatch):
     # ★시험은 PC 의 실제 남은 메모리에 끌려가면 안 된다 — 관문 안에서 돌면 관문 자신의 일꾼 8개가 메모리를 써서
     #   finish 시험 45개가 '남은 메모리 5.6GB' 를 줄줄이 기다렸다(2026-10-15 실측: 같은 시험 119초 vs 3초).
     #   _free_mb 를 직접 바꾸는 시험은 자기 monkeypatch 가 나중에 걸려 그대로 이긴다.
-    monkeypatch.setattr(track, "_free_mb", lambda: 10 ** 6, raising=False)
+    #   ★관제 336: 재는 법의 주인은 merge_gate.free_mb — track._free_mb 는 그걸 부르기만 하므로 주인을 바꾼다
+    #   (track._free_mb 를 통째로 바꾸면 '두 곳이 같은 값을 본다' 는 시험이 가려진다).
+    try:
+        import merge_gate
+        monkeypatch.setattr(merge_gate, "free_mb", lambda: 10 ** 6, raising=False)
+    except Exception:  # noqa: BLE001 — merge_gate 를 못 읽으면 예전처럼 track 쪽만
+        monkeypatch.setattr(track, "_free_mb", lambda: 10 ** 6, raising=False)
