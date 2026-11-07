@@ -39,7 +39,8 @@ LONG_RULES = [
     ("len.duration", "rel", 15, True, "길이 ±15% 또는 벤치 min~max"),
     ("chapter.n", "db", 1, True, "챕터 수 ±1개(info.json chapters / 우리 timeline 챕터)"),
     ("chapter.sec", "rel", 20, True, "챕터 중앙 길이 ±20%"),
-    ("hook.sec", "rel", 20, True, "첫 챕터 경계까지 초 ±20%"),
+    ("hook.sec", "rel", 30, True, "훅 끝(과거 장면 복귀 첫 단어 자막 시각, 판독 json — hook_of) ±30%. 벤치 31~50초 leave-one-out 4/4(Jev q2a_훅c 통과)"),
+    ("chapter.first", "rel", 20, False, "첫 챕터 경계까지 초 — 참고(올린 사람의 챕터 나누기: 30·38·196·334초 두 갈래)"),
     ("shot_mix", "pctp", 10, True, "샷 종류 비율 종류마다 ±10%p(화면 판독 screen.json)"),
     ("cut.median", "rel_slow", 30, True, "컷 중앙(_cuts 같은 함수 — 디졸브 포함) +30%/−15%"),
     ("still.rate", "pctp", 10, True, "정지 컷 시간 비율 ±10%p(자막 띠 뺀 위쪽 프레임 차이)"),
@@ -226,7 +227,17 @@ def shot_mix_from(screen_json: str) -> tuple:
     return ({k: round(v / tot, 4) for k, v in sorted(acc.items())} if tot else MISSING), n, sorted(cuts)[1:]
 
 
-def measure(mp4: str, info_json=None, vtt=None, screen_json=None, timeline=None, chapters=None) -> dict:
+def hook_of(read_json) -> tuple:
+    """(판단 주인) 훅 끝 초 — 벤치·우리 같은 꼴 판독 json {'hook': {'sec': ..}} 에서만 읽는다(정의 = 과거 장면으로 되돌아가는 첫 단어의 자막 시작 시각).
+    우리 완성본도 같은 대본 판독 절차를 우리 자막에 돌려 같은 꼴 파일을 만든다 — timeline 에서 따로 계산하지 않는다(판단 두 벌 금지). 없으면 미측정."""
+    if not (read_json and os.path.exists(read_json)):
+        return MISSING, MISSING
+    h = (json.load(open(read_json, encoding="utf-8")).get("hook") or {})
+    v = h.get("sec")
+    return (round(float(v), 2), f"판독 {os.path.basename(read_json)} hook.sec") if isinstance(v, (int, float)) else (MISSING, MISSING)
+
+
+def measure(mp4: str, info_json=None, vtt=None, screen_json=None, timeline=None, chapters=None, read_json=None) -> dict:
     """(측정 주인) 롱폼 한 편 → LONG_RULES 칸 값. 못 잰 칸은 '미측정'(통과 아님 — match_core 가 failed 로 판정)."""
     t_start = time.time()
     pr = _ffprobe(mp4)
@@ -253,9 +264,10 @@ def measure(mp4: str, info_json=None, vtt=None, screen_json=None, timeline=None,
         ch = sorted(set(ch))
         cl = [b - a for a, b in zip(ch, ch[1:] + [dur])]
         out.update({"chapter.n": len(ch), "chapter.sec": round(statistics.median(cl), 2),
-                    "hook.sec": round(ch[1], 2) if len(ch) > 1 else MISSING, "chapter.at": ch})
+                    "chapter.first": round(ch[1], 2) if len(ch) > 1 else MISSING, "chapter.at": ch})
     else:
-        out.update({"chapter.n": MISSING, "chapter.sec": MISSING, "hook.sec": MISSING})
+        out.update({"chapter.n": MISSING, "chapter.sec": MISSING, "chapter.first": MISSING})
+    out["hook.sec"], out["hook.from"] = hook_of(read_json)
     out["chapter.from"] = ch_from
     if vtt and os.path.exists(vtt):
         c, s = speech_from_vtt(vtt); src = "vtt"
@@ -289,20 +301,49 @@ def cut_agreement(auto: list[float], hand: list[float], tol: float = 0.5) -> dic
             "recall": round(hit / len(hand), 4) if hand else MISSING, "precision": round(hit / len(auto), 4) if auto else MISSING, "tol_s": tol}
 
 
+def loo(stats: list[dict], names: list[str]) -> dict:
+    """(검사 도구) leave-one-out — 편마다 나머지 편을 벤치로 match. 기준 칸이 벤치 자신도 못 넘으면 합격선이 너무 좁다는 뜻."""
+    res = {}
+    for i, n in enumerate(names):
+        res[n] = match_core.match(LONG_RULES, stats[:i] + stats[i + 1:], stats[i])
+    return res
+
+
+def loo_md(T: dict) -> str:
+    names = list(T)
+    mark = {"in": "✓", "out": "✗", "failed": "미측정"}
+    L = ["| 칸 | 기준 | " + " | ".join(names) + " |", "|---|---|" + "---|" * len(names)]
+    for k, r0 in enumerate(T[names[0]]["rows"]):
+        cells = []
+        for n in names:
+            r = T[n]["rows"][k]
+            cells.append(f"{mark[r['judge']]} {r['ours'] if not isinstance(r['ours'], dict) else '분포'} (차 {r['diff']})")
+        L.append(f"| {r0['key']} | {'기준' if r0['core'] else '참고'} | " + " | ".join(cells) + " |")
+    L.append("| **판정** | | " + " | ".join(("통과" if T[n]["pass"] else "미달: " + ", ".join(T[n]["core_fail"])) for n in names) + " |")
+    return "\n".join(L) + "\n"
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     m = sub.add_parser("measure")
     m.add_argument("mp4"); m.add_argument("--info"); m.add_argument("--vtt"); m.add_argument("--screen"); m.add_argument("--timeline")
+    m.add_argument("--read", help="대본 판독 json(hook.sec) — 벤치·우리 같은 꼴")
     m.add_argument("--out", required=True)
     c = sub.add_parser("match")
     c.add_argument("--bench", nargs="+", required=True); c.add_argument("--ours", required=True); c.add_argument("--out", required=True)
     c.add_argument("--title", default="")
+    lo = sub.add_parser("loo", help="벤치 자기시험: 한 편씩 '우리'로 놓고 나머지와 같은 자로 — 벤치가 못 넘는 합격선을 찾는다")
+    lo.add_argument("--bench", nargs="+", required=True); lo.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     if a.cmd == "measure":
-        r = measure(a.mp4, a.info, a.vtt, a.screen, a.timeline)
+        r = measure(a.mp4, a.info, a.vtt, a.screen, a.timeline, read_json=a.read)
         Path(a.out).write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
         print(json.dumps({k: v for k, v in r.items() if k not in ("cut.at", "chapter.at")}, ensure_ascii=False))
+    elif a.cmd == "loo":
+        T = loo([json.load(open(p, encoding="utf-8")) for p in a.bench], [Path(p).stem.replace("measure_", "") for p in a.bench])
+        Path(a.out).write_text(loo_md(T), encoding="utf-8")
+        print(loo_md(T))
     else:
         B = [json.load(open(p, encoding="utf-8")) for p in a.bench]
         T = match_core.match(LONG_RULES, B, json.load(open(a.ours, encoding="utf-8")))

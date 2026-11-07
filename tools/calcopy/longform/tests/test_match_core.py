@@ -45,3 +45,15 @@ def test_match_len_uses_bench_range():
     rules = [("len.duration", "rel", 15, True, "길이")]
     bench = [{"len.duration": 1000}, {"len.duration": 2000}]
     assert match(rules, bench, {"len.duration": 1900})["pass"] is True     # 중앙 1500 ±15% 밖이지만 벤치 범위 안
+
+
+def test_rel0_count_rule():
+    # 원본 n_ok: 벤치 0.051/초 × 28.5초 = 1.45발 → 우리 1발(0.035)은 ±30% 밖이지만 가장 가까운 정수 발 수라 in
+    assert judge_cell("rel0", 30, 0.051, 1 / 28.5)[0] == "out"
+    assert judge_cell("rel0", 30, 0.051, 1 / 28.5, count_dur=28.5)[0] == "in"
+    T = match([("sfx.rate", "rel0", 30, True, "효과음")], [{"sfx.rate": 0.051}], {"sfx.rate": 1 / 28.5, "len.duration": 28.5})
+    assert T["pass"] is True
+
+
+def test_rel_slow_zero_bench_failed():
+    assert judge_cell("rel_slow", 30, 0, 1.0)[0] == "failed"

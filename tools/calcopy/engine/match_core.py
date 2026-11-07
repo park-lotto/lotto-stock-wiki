@@ -1,6 +1,15 @@
 # 재현일치도 비교 주인(관제 337 모둠경제 롱폼, Jev F4 근본해결 0.79·두더지 0.16).
 # 벤치 측정값 묶음 ↔ 우리 측정값 한 벌을 칸 규칙(key, kind, tol, core, why)으로 비교한다. 측정은 하지 않는다(측정 주인 = 각 라인의 measure).
-# kind 의 뜻은 쇼츠 tools/calcopy/engine/kal_analyze.match_table(543줄~)과 같다 — 거기서 그대로 옮겼다.
+# kind 의 뜻은 쇼츠 tools/calcopy/engine/kal_analyze.match_table(543줄~)을 따른다. 원본과 **다른 점**(일부러 · 감시 지적 11-07):
+#  ① range: 원본은 len.duration 의 brange(벤치 min~max)를 rel 판정에만 쓰고 range 칸엔 brange 가 있을 때만 — 여기선 rel·rel0·rel_slow·pctp·range
+#     모든 칸에 벤치 편별 min~max(span)를 넘긴다(편 수 SPAN_MIN 이상일 때 · len.duration 은 1편부터 — RANGE_ALWAYS).
+#     원본도 rel·rel0·rel_slow·pctp 는 _bench_span 으로 같은 넓히기를 한다. range 는 span 이 없으면 out(원본은 brange 없으면 out — 같음).
+#  ② rel_slow: 원본은 b=0 이면 0 나누기로 죽는다 → 여기선 failed('벤치 0').
+#  ③ rel0 발 수 규칙(원본 n_ok: key 가 '.rate' 로 끝나고 |(o−b)×우리 길이| ≤ 0.5발이면 in): judge_cell 의 count_dur 인자로 넣었다 — match 가
+#     rel0·'.rate' 칸에 우리 len.duration 을 넘긴다(원본과 같은 조건).
+#  ④ 원본의 쇼츠 전용 특수 in 3종은 **뺐다**: '.원음/.나레 둘 다 0줄 = 해당 없음' · fx.pos 꾸밈 0 해당 없음 · cut.median 둘 다 한 샷.
+#     하이브리드 판 목표값 비교(HYBRID_OWN_KEYS)·len.duration 판 범위(own_len)도 없다. 롱폼에 필요해지면 칸 규칙으로 따로 넣는다.
+#  ⑤ 원본 judge 'skip'(비교 안 함) 없음 — in/out/failed 셋뿐.
 # TODO(나중 일): 쇼츠 match_table 의 칸별 판정도 이 judge_cell 로 옮긴다(지금은 쇼츠 라인을 건드리지 않는다 — 판정이 두 벌인 상태).
 from __future__ import annotations
 
@@ -23,10 +32,11 @@ def _in_span(o, span) -> bool:
     return bool(span) and _num(o) and span[0] - 1e-9 <= o <= span[1] + 1e-9
 
 
-def judge_cell(kind: str, tol: float, bench, ours, span=None):
+def judge_cell(kind: str, tol: float, bench, ours, span=None, count_dur=None):
     """(판단 주인) 칸 하나 판정 → (judge, diff). judge ∈ in/out/failed — 못 잰 값(None·'미측정')은 failed(통과 아님).
     span = 벤치 편별 범위 (lo, hi) · pctp 분포 칸이면 {칸: (lo, hi)}.
     rel: |차%| ≤ tol 또는 span 안 · rel0: 벤치 0 이면 우리도 0 · rel_slow: 빠른 쪽(음수)은 tol 의 절반만, 느린 쪽은 tol 또는 span 위끝까지
+    count_dur(rel0 만): 우리 길이(초) — |(o−b)×count_dur| ≤ 0.5(가장 가까운 정수 발 수)면 in(원본 n_ok)
     db: |차| ≤ tol(절대 차 — LUFS·개수) · pctp: 비율 차 %p ≤ tol(분포면 칸마다, 한쪽에만 있는 칸은 0) · eq: 같음 · range: span 안."""
     if kind not in KINDS:
         raise ValueError(f"모르는 kind: {kind}")
@@ -63,7 +73,8 @@ def judge_cell(kind: str, tol: float, bench, ours, span=None):
         return ("in" if (diff is not None and abs(diff) <= tol) or _in_span(o, span) else "out"), diff
     if kind == "rel0":
         diff = round((o - b) / b * 100, 1) if b else (0.0 if not o else "벤치 0")
-        return ("in" if (b and abs(diff) <= tol) or (not b and not o) or _in_span(o, span) else "out"), diff
+        n_ok = bool(b and count_dur and abs((o - b) * count_dur) <= 0.5)
+        return ("in" if (b and abs(diff) <= tol) or (not b and not o) or n_ok or _in_span(o, span) else "out"), diff
     # rel_slow
     if not b:
         return "failed", "벤치 0"
@@ -107,7 +118,8 @@ def match(rules, bench_stats: list[dict], ours_stats: dict) -> dict:
         b = _bench_value(kind, vals)
         sp = _span(key, kind, vals) if kind in ("rel", "rel0", "rel_slow", "pctp", "range") else None
         o = ours_stats.get(key)
-        judge, diff = judge_cell(kind, tol, b, o, sp)
+        cd = ours_stats.get("len.duration") if kind == "rel0" and key.endswith(".rate") else None
+        judge, diff = judge_cell(kind, tol, b, o, sp, count_dur=cd if isinstance(cd, (int, float)) else None)
         rows.append({"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": bool(core), "why": why,
                      "n_bench": sum(not _missing(v) for v in vals), **({"bench_span": sp} if sp else {})})
     core_fail = [r["key"] for r in rows if r["core"] and r["judge"] != "in"]

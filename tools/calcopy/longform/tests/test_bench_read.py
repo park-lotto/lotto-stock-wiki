@@ -25,7 +25,7 @@ def test_cuts_still_chapters_cps(synth):
     assert abs(m["len.duration"] - 9.0) < 0.2
     assert abs(m["cut.median"] - 3.0) < 0.2
     assert abs(m["still.rate"] - 2 / 3) < 0.08              # 파랑·빨강 정지, testsrc 는 움직임
-    assert m["chapter.n"] == 3 and abs(m["chapter.sec"] - 3.0) < 0.2 and m["hook.sec"] == 3.0
+    assert m["chapter.n"] == 3 and abs(m["chapter.sec"] - 3.0) < 0.2 and m["chapter.first"] == 3.0 and m["hook.sec"] == "미측정"
     assert abs(m["speech.cps"] - 9 / 4.0) < 0.01             # 공백 뺀 9글자 ÷ 말한 4초
     assert m["shot_mix"] == "미측정" and m["caption"] == "없음"
     assert isinstance(m["mix.lufs"], float)
